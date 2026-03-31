@@ -1,7 +1,15 @@
 import React from "react";
 
+export type LearningTrack =
+  | "hangul"
+  | "vocab"
+  | "dialogs"
+  | "listen"
+  | "immersion"
+  | null;
+
 export type Progress = {
-  learningTrack: "hangul" | "vocab" | "dialogs" | null;
+  learningTrack: LearningTrack;
   xp: number;
   streak: number;
   isPremium: boolean;
@@ -19,7 +27,7 @@ const initialProgress: Progress = {
 };
 
 type StoreValue = {
-  setTrack: (t: Progress["learningTrack"]) => void;
+  setTrack: (t: LearningTrack) => void;
   progress: Progress;
   setProgress: React.Dispatch<React.SetStateAction<Progress>>;
   complete: (id: string) => void;
@@ -32,7 +40,7 @@ const StoreContext = React.createContext<StoreValue | undefined>(undefined);
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [progress, setProgress] = React.useState<Progress>(initialProgress);
 
-  const setTrack = (t: Progress["learningTrack"]) => {
+  const setTrack = (t: LearningTrack) => {
     setProgress((p) => ({ ...p, learningTrack: t }));
   };
 
@@ -72,7 +80,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
 export function useStore() {
   const ctx = React.useContext(StoreContext);
-  if (!ctx)
+  if (!ctx) {
     throw new Error("StoreProvider missing. Wrap app in StoreProvider.");
+  }
   return ctx;
 }

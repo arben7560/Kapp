@@ -1,912 +1,920 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import React, { useRef, useState } from "react";
+import {
+  LayoutChangeEvent,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const BG0 = "#070812";
-const TXT = "rgba(255,255,255,0.94)";
-const MUTED = "rgba(255,255,255,0.66)";
-const MUTED_SOFT = "rgba(255,255,255,0.56)";
-const LINE = "rgba(255,255,255,0.10)";
+const BG = "#060816";
+const TXT = "rgba(255,255,255,0.96)";
+const MUTED = "rgba(255,255,255,0.7)";
 const CARD = "rgba(255,255,255,0.06)";
-const CARD_SOFT = "rgba(255,255,255,0.035)";
-const WHITE_SOFT = "rgba(255,255,255,0.05)";
+const LINE = "rgba(255,255,255,0.1)";
 
-const CYAN = "rgba(34,211,238,0.60)";
-const CYAN_BG = "rgba(34,211,238,0.13)";
+const PINK = "#F472B6";
+const CYAN = "#22D3EE";
+const PURPLE = "#8B5CF6";
+const ORANGE = "#FB923C";
 
-const PURPLE = "rgba(124,58,237,0.58)";
-const PURPLE_BG = "rgba(124,58,237,0.11)";
-
-const PINK = "rgba(255,99,132,0.44)";
-const PINK_BG = "rgba(255,99,132,0.10)";
-
-const GOLD = "rgba(251,191,36,0.40)";
-const GOLD_BG = "rgba(251,191,36,0.10)";
-
-const ORANGE = "rgba(251,146,60,0.46)";
-const ORANGE_BG = "rgba(251,146,60,0.10)";
-
-type AccessTab = "free" | "premium";
-type ThemeTab =
-  | "all"
-  | "cafe"
-  | "metro"
-  | "restaurant"
-  | "airport"
-  | "hotel"
-  | "help"
-  | "health";
-
-type Accent = "cyan" | "purple" | "pink" | "gold" | "orange" | "neutral";
-
-type ModuleItem = {
-  id: string;
-  emoji: string;
-  title: string;
-  desc: string;
-  shortHint: string;
-  access: "free" | "premium";
-  theme: ThemeTab;
-  accent: Accent;
-  badge: string;
-  tags: string[];
-  learnLabel: string;
-  iaLabel?: string;
-  learnRoute: string;
-  iaRoute?: string;
+const fonts = {
+  bold: "Outfit_700Bold",
+  black: "Outfit_900Black",
+  medium: "Outfit_500Medium",
+  kr: "NotoSansKR_700Bold",
 };
 
-function getAccentColors(accent: Accent) {
-  if (accent === "purple") {
-    return {
-      border: PURPLE,
-      bg: PURPLE_BG,
-      soft: "rgba(124,58,237,0.08)",
-      glow: "rgba(124,58,237,0.14)",
-      text: "rgba(216,180,255,0.96)",
-    };
-  }
+type ThemeKey = "cafe" | "metro" | "restaurant";
 
-  if (accent === "pink") {
-    return {
-      border: PINK,
-      bg: PINK_BG,
-      soft: "rgba(255,99,132,0.08)",
-      glow: "rgba(255,99,132,0.12)",
-      text: "rgba(255,200,215,0.96)",
-    };
-  }
-
-  if (accent === "gold") {
-    return {
-      border: GOLD,
-      bg: GOLD_BG,
-      soft: "rgba(251,191,36,0.08)",
-      glow: "rgba(251,191,36,0.12)",
-      text: "rgba(255,231,172,0.98)",
-    };
-  }
-
-  if (accent === "orange") {
-    return {
-      border: ORANGE,
-      bg: ORANGE_BG,
-      soft: "rgba(251,146,60,0.08)",
-      glow: "rgba(251,146,60,0.12)",
-      text: "rgba(255,210,176,0.98)",
-    };
-  }
-
-  if (accent === "neutral") {
-    return {
-      border: "rgba(255,255,255,0.16)",
-      bg: "rgba(255,255,255,0.05)",
-      soft: "rgba(255,255,255,0.04)",
-      glow: "rgba(255,255,255,0.06)",
-      text: "rgba(255,255,255,0.92)",
-    };
-  }
-
-  return {
-    border: CYAN,
-    bg: CYAN_BG,
-    soft: "rgba(34,211,238,0.08)",
-    glow: "rgba(34,211,238,0.13)",
-    text: "rgba(190,246,255,0.98)",
-  };
-}
-
-function GlassCard({
-  children,
-  compact = false,
-}: {
-  children: React.ReactNode;
-  compact?: boolean;
-}) {
-  return (
-    <View
-      style={{
-        backgroundColor: CARD,
-        borderColor: LINE,
-        borderWidth: 1,
-        borderRadius: compact ? 22 : 26,
-        padding: compact ? 13 : 16,
-      }}
-    >
-      {children}
-    </View>
-  );
-}
-
-function ProgressBar({ value }: { value: number }) {
-  return (
-    <View
-      style={{
-        height: 8,
-        borderRadius: 999,
-        backgroundColor: "rgba(255,255,255,0.08)",
-        overflow: "hidden",
-      }}
-    >
-      <View
-        style={{
-          width: `${value}%`,
-          height: "100%",
-          backgroundColor: "rgba(34,211,238,0.82)",
-        }}
-      />
-    </View>
-  );
-}
-
-function TopChip({
-  label,
-  accent = "neutral",
-}: {
-  label: string;
-  accent?: Accent;
-}) {
-  const colors = getAccentColors(accent);
-
-  return (
-    <View
-      style={{
-        paddingHorizontal: 11,
-        paddingVertical: 7,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.bg,
-      }}
-    >
-      <Text style={{ color: TXT, fontWeight: "900", fontSize: 11 }}>
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-function FilterPill({
-  label,
-  active,
-  onPress,
-  accent = "neutral",
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-  accent?: Accent;
-}) {
-  const colors = getAccentColors(accent);
-
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
-        opacity: pressed ? 0.92 : 1,
-        paddingHorizontal: 13,
-        paddingVertical: 9,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: active ? colors.border : LINE,
-        backgroundColor: active ? colors.bg : "rgba(255,255,255,0.04)",
-      })}
-    >
-      <Text
-        style={{
-          color: TXT,
-          fontWeight: "900",
-          fontSize: 13,
-        }}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
-function StatStep({
-  index,
-  label,
-  active = false,
-}: {
-  index: string;
-  label: string;
-  active?: boolean;
-}) {
-  return (
-    <View
-      style={{
-        flex: 1,
-        minWidth: 88,
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: active ? CYAN : LINE,
-        backgroundColor: active ? CYAN_BG : CARD_SOFT,
-        paddingHorizontal: 12,
-        paddingVertical: 11,
-      }}
-    >
-      <Text
-        style={{
-          color: active ? "rgba(220,251,255,0.96)" : MUTED_SOFT,
-          fontWeight: "900",
-          fontSize: 11,
-          textTransform: "uppercase",
-          letterSpacing: 0.4,
-        }}
-      >
-        {index}
-      </Text>
-      <Text
-        style={{
-          color: TXT,
-          fontWeight: "900",
-          fontSize: 14,
-          marginTop: 5,
-        }}
-      >
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-function SmallBadge({
-  label,
-  accent = "neutral",
-}: {
-  label: string;
-  accent?: Accent;
-}) {
-  const colors = getAccentColors(accent);
-
-  return (
-    <View
-      style={{
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.bg,
-      }}
-    >
-      <Text
-        style={{
-          color: TXT,
-          fontWeight: "900",
-          fontSize: 11,
-        }}
-      >
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-function ModuleTag({ label, accent }: { label: string; accent: Accent }) {
-  const colors = getAccentColors(accent);
-
-  return (
-    <View
-      style={{
-        paddingHorizontal: 9,
-        paddingVertical: 5,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.soft,
-      }}
-    >
-      <Text
-        style={{
-          color: colors.text,
-          fontWeight: "800",
-          fontSize: 11,
-        }}
-      >
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-function PrimaryCTA({
-  label,
-  onPress,
-  accent = "cyan",
-}: {
-  label: string;
-  onPress: () => void;
-  accent?: Accent;
-}) {
-  const colors = getAccentColors(accent);
-
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
-        opacity: pressed ? 0.94 : 1,
-        paddingVertical: 13,
-        borderRadius: 17,
-        borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.bg,
-        alignItems: "center",
-      })}
-    >
-      <Text style={{ color: TXT, fontWeight: "900", fontSize: 15 }}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
-function SecondaryCTA({
-  label,
-  onPress,
-}: {
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
-        opacity: pressed ? 0.94 : 1,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: PURPLE,
-        backgroundColor: "rgba(124,58,237,0.08)",
-        paddingVertical: 10,
-        alignItems: "center",
-      })}
-    >
-      <Text style={{ color: TXT, fontWeight: "900", fontSize: 14 }}>
-        {label}
-      </Text>
-      <Text
-        style={{
-          color: "rgba(255,255,255,0.54)",
-          fontSize: 11,
-          marginTop: 3,
-          fontWeight: "700",
-        }}
-      >
-        voix • choix • simulation
-      </Text>
-    </Pressable>
-  );
-}
-
-function PremiumCTA({
-  label,
-  onPress,
-}: {
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
-        opacity: pressed ? 0.94 : 1,
-        paddingVertical: 13,
-        borderRadius: 17,
-        borderWidth: 1,
-        borderColor: GOLD,
-        backgroundColor: GOLD_BG,
-        alignItems: "center",
-      })}
-    >
-      <Text style={{ color: TXT, fontWeight: "900", fontSize: 15 }}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
-function ModuleCard({ item }: { item: ModuleItem }) {
-  const colors = getAccentColors(item.accent);
-
-  return (
-    <View
-      style={{
-        backgroundColor: CARD,
-        borderColor: LINE,
-        borderWidth: 1,
-        borderRadius: 26,
-        padding: 15,
-        marginBottom: 15,
-        overflow: "hidden",
-      }}
-    >
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          top: -28,
-          left: -18,
-          width: 108,
-          height: 108,
-          borderRadius: 999,
-          backgroundColor: colors.glow,
-        }}
-      />
-
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          bottom: -52,
-          right: -38,
-          width: 130,
-          height: 130,
-          borderRadius: 999,
-          backgroundColor: "rgba(255,255,255,0.03)",
-        }}
-      />
-
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 12,
-        }}
-      >
-        <View style={{ flex: 1 }}>
-          <Text
-            style={{
-              color: TXT,
-              fontSize: 22,
-              fontWeight: "900",
-              lineHeight: 28,
-            }}
-          >
-            {item.emoji} {item.title}
-          </Text>
-
-          <Text
-            style={{
-              color: MUTED,
-              marginTop: 6,
-              lineHeight: 20,
-              fontSize: 14,
-            }}
-          >
-            {item.desc}
-          </Text>
-        </View>
-
-        <SmallBadge
-          label={item.badge}
-          accent={item.access === "premium" ? "gold" : "neutral"}
-        />
-      </View>
-
-      <View style={{ height: 11 }} />
-
-      <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-        {item.tags.map((tag) => (
-          <ModuleTag
-            key={`${item.id}_${tag}`}
-            label={tag}
-            accent={item.accent}
-          />
-        ))}
-      </View>
-
-      <View style={{ height: 12 }} />
-
-      <View
-        style={{
-          borderRadius: 16,
-          borderWidth: 1,
-          borderColor: "rgba(255,255,255,0.07)",
-          backgroundColor: WHITE_SOFT,
-          paddingHorizontal: 12,
-          paddingVertical: 11,
-        }}
-      >
-        <Text
-          style={{
-            color: "rgba(255,255,255,0.82)",
-            lineHeight: 20,
-            fontWeight: "700",
-          }}
-        >
-          {item.shortHint}
-        </Text>
-      </View>
-
-      <View style={{ height: 12 }} />
-
-      <View style={{ gap: 9 }}>
-        {item.access === "premium" ? (
-          <PremiumCTA
-            label={item.learnLabel}
-            onPress={() => router.push(item.learnRoute as any)}
-          />
-        ) : (
-          <PrimaryCTA
-            label={item.learnLabel}
-            onPress={() => router.push(item.learnRoute as any)}
-            accent={item.accent}
-          />
-        )}
-
-        {!!item.iaRoute && !!item.iaLabel && (
-          <SecondaryCTA
-            label={item.iaLabel}
-            onPress={() => router.push(item.iaRoute as any)}
-          />
-        )}
-      </View>
-    </View>
+function go(pathname: string, params?: Record<string, string>) {
+  requestAnimationFrame(() =>
+    router.push({
+      pathname: pathname as never,
+      params: params as never,
+    }),
   );
 }
 
 export default function SpeakScreen() {
-  const [accessTab, setAccessTab] = useState<AccessTab>("free");
-  const [themeTab, setThemeTab] = useState<ThemeTab>("all");
+  const scrollRef = useRef<ScrollView>(null);
+  const [themesY, setThemesY] = useState(0);
 
-  const modules = useMemo<ModuleItem[]>(
-    () => [
-      {
-        id: "cafe",
-        emoji: "☕",
-        title: "Café — Commander & payer",
-        desc: "Commande et paiement dans un café coréen.",
-        shortHint: "Commander, préciser sur place / à emporter, puis payer.",
-        access: "free",
-        theme: "cafe",
-        accent: "cyan",
-        badge: "Gratuit",
-        tags: ["commande", "à emporter", "paiement"],
-        learnLabel: "Apprendre les bases",
-        iaLabel: "🤖 Pratiquer avec l’IA",
-        learnRoute: "/lesson/cafe",
-        iaRoute: "/lesson/cafeIA",
-      },
-      {
-        id: "metro",
-        emoji: "🚇",
-        title: "Métro — Directions & sorties",
-        desc: "Se repérer dans le métro de Séoul.",
-        shortHint:
-          "Demander une ligne, vérifier la direction, trouver la bonne sortie.",
-        access: "free",
-        theme: "metro",
-        accent: "purple",
-        badge: "Gratuit",
-        tags: ["direction", "correspondance", "sortie"],
-        learnLabel: "Apprendre les bases",
-        iaLabel: "🤖 Pratiquer avec l’IA",
-        learnRoute: "/lesson/metro",
-        iaRoute: "/lesson/metroIA",
-      },
-      {
-        id: "restaurant",
-        emoji: "🍜",
-        title: "Restaurant — Commander un plat",
-        desc: "Manger plus naturellement en Corée.",
-        shortHint: "Commander, demander non épicé, de l’eau et l’addition.",
-        access: "free",
-        theme: "restaurant",
-        accent: "orange",
-        badge: "Gratuit",
-        tags: ["plat", "eau", "addition"],
-        learnLabel: "Apprendre les bases",
-        iaLabel: "🤖 Pratiquer avec l’IA",
-        learnRoute: "/lesson/restaurant",
-        iaRoute: "/lesson/restaurantIA",
-      },
-      {
-        id: "airport",
-        emoji: "✈️",
-        title: "Aéroport — Vols & bagages",
-        desc: "S’orienter et gérer un imprévu.",
-        shortHint: "Check-in, comptoir, porte et bagages.",
-        access: "premium",
-        theme: "airport",
-        accent: "gold",
-        badge: "Premium",
-        tags: ["check-in", "porte", "bagages"],
-        learnLabel: "Débloquer le module",
-        learnRoute: "/lesson/airport",
-      },
-      {
-        id: "hotel",
-        emoji: "🏨",
-        title: "Hôtel — Check-in & services",
-        desc: "Gérer l’arrivée et le séjour.",
-        shortHint: "Réception, wifi, serviettes et check-out.",
-        access: "premium",
-        theme: "hotel",
-        accent: "pink",
-        badge: "Premium",
-        tags: ["réception", "wifi", "check-out"],
-        learnLabel: "Débloquer le module",
-        learnRoute: "/lesson/hotel",
-      },
-      {
-        id: "help",
-        emoji: "🧭",
-        title: "Aide — Demander un renseignement",
-        desc: "Quand tu es perdu ou hésitant.",
-        shortHint: "Demander son chemin, faire répéter, mieux comprendre.",
-        access: "premium",
-        theme: "help",
-        accent: "pink",
-        badge: "Premium",
-        tags: ["chemin", "répéter", "comprendre"],
-        learnLabel: "Débloquer le module",
-        learnRoute: "/lesson/help",
-      },
-      {
-        id: "health",
-        emoji: "🏥",
-        title: "Santé — Pharmacie & aide rapide",
-        desc: "Réagir vite si tu ne te sens pas bien.",
-        shortHint: "Décrire un symptôme simple et demander de l’aide.",
-        access: "premium",
-        theme: "health",
-        accent: "pink",
-        badge: "Premium",
-        tags: ["symptômes", "pharmacie", "urgence légère"],
-        learnLabel: "Débloquer le module",
-        learnRoute: "/lesson/health",
-      },
-    ],
-    [],
-  );
+  const [sheetVisible, setSheetVisible] = useState(false);
+  const [selectedTheme, setSelectedTheme] = useState<ThemeKey | null>(null);
 
-  const filteredModules = useMemo(() => {
-    return modules.filter((item) => {
-      const accessMatch =
-        accessTab === "free"
-          ? item.access === "free"
-          : item.access === "premium";
-
-      const themeMatch = themeTab === "all" ? true : item.theme === themeTab;
-      return accessMatch && themeMatch;
+  const scrollToThemes = () => {
+    scrollRef.current?.scrollTo({
+      y: Math.max(themesY - 12, 0),
+      animated: true,
     });
-  }, [accessTab, themeTab, modules]);
+  };
 
-  const freeCount = modules.filter((m) => m.access === "free").length;
-  const premiumCount = modules.filter((m) => m.access === "premium").length;
+  const openThemeSheet = (theme: ThemeKey) => {
+    setSelectedTheme(theme);
+    setSheetVisible(true);
+  };
+
+  const closeThemeSheet = () => {
+    setSheetVisible(false);
+  };
+
+  const getThemeConfig = (theme: ThemeKey | null) => {
+    switch (theme) {
+      case "cafe":
+        return {
+          icon: "☕",
+          title: "Café",
+          accent: PINK,
+          accentBg: "rgba(244,114,182,0.12)",
+          textRoute: "/lesson/cafe",
+          iaRoute: "/lesson/cafeIA",
+          iaRouteParams: { mode: "guided" },
+          iaRealRoute: "/lesson/cafeIA",
+          iaRealRouteParams: { mode: "real" },
+        };
+      case "metro":
+        return {
+          icon: "🚇",
+          title: "Métro",
+          accent: CYAN,
+          accentBg: "rgba(34,211,238,0.12)",
+          textRoute: "/lesson/metro",
+          iaRoute: "/lesson/metroIA",
+          iaRouteParams: undefined,
+          iaRealRoute: null,
+          iaRealRouteParams: undefined,
+        };
+
+      case "restaurant":
+        return {
+          icon: "🍽️",
+          title: "Restaurant",
+          accent: ORANGE,
+          accentBg: "rgba(251,146,60,0.12)",
+          textRoute: "/lesson/restaurant",
+          iaRoute: "/lesson/restaurantIA",
+          iaRouteParams: undefined,
+          iaRealRoute: null,
+          iaRealRouteParams: undefined,
+        };
+      default:
+        return null;
+    }
+  };
+
+  const themeConfig = getThemeConfig(selectedTheme);
 
   return (
-    <LinearGradient colors={[BG0, "#0b0b1d", "#0b0f22"]} style={{ flex: 1 }}>
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          top: -100,
-          left: -70,
-          width: 210,
-          height: 210,
-          borderRadius: 999,
-          backgroundColor: "rgba(124,58,237,0.12)",
-        }}
-      />
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          bottom: -120,
-          right: -80,
-          width: 250,
-          height: 250,
-          borderRadius: 999,
-          backgroundColor: "rgba(34,211,238,0.08)",
-        }}
-      />
+    <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
+      <LinearGradient colors={[BG, "#090D1D", "#0B1123"]} style={{ flex: 1 }}>
+        <View pointerEvents="none" style={styles.pageGlowTopLeft} />
+        <View pointerEvents="none" style={styles.pageGlowBottomRight} />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 110 }}>
-        <View
-          style={{
-            borderRadius: 28,
-            padding: 18,
-            backgroundColor: "rgba(255,255,255,0.04)",
-            borderWidth: 1,
-            borderColor: "rgba(255,255,255,0.08)",
-            overflow: "hidden",
-          }}
+        <ScrollView
+          ref={scrollRef}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
         >
-          <View
-            pointerEvents="none"
-            style={{
-              position: "absolute",
-              top: -30,
-              right: -18,
-              width: 120,
-              height: 120,
-              borderRadius: 999,
-              backgroundColor: "rgba(124,58,237,0.10)",
-            }}
-          />
+          <Hero onStart={scrollToThemes} />
 
-          <Text
-            style={{
-              color: TXT,
-              fontSize: 31,
-              fontWeight: "900",
-              lineHeight: 38,
-            }}
-          >
-            🌍 Dialogues de voyage
-          </Text>
+          <View style={{ height: 20 }} />
 
-          <Text
-            style={{
-              color: MUTED,
-              marginTop: 8,
-              lineHeight: 22,
-              fontSize: 15,
-            }}
-          >
-            Apprends les bases, puis pratique avec l’IA dans des situations
-            réelles.
-          </Text>
+          <Modes />
 
-          <View style={{ height: 12 }} />
+          <View style={{ height: 20 }} />
 
-          <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-            <TopChip label="Bases utiles" accent="cyan" />
-            <TopChip label="Simulations IA" accent="purple" />
-            <TopChip label="Voyage réel" accent="gold" />
-          </View>
+          <Themes onLayoutY={setThemesY} onSelectTheme={openThemeSheet} />
+        </ScrollView>
 
-          <View style={{ height: 16 }} />
-
-          <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
-            <StatStep index="01" label="Bases" active />
-            <StatStep index="02" label="IA" />
-            <StatStep index="03" label="Révision" />
-          </View>
-
-          <View style={{ height: 12 }} />
-          <ProgressBar value={45} />
-        </View>
-
-        <View style={{ height: 14 }} />
-
-        <GlassCard compact>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 12,
-            }}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: TXT, fontSize: 18, fontWeight: "900" }}>
-                ✨ Explorer les modules
-              </Text>
-              <Text style={{ color: MUTED, marginTop: 5, lineHeight: 19 }}>
-                Choisis un accès puis un thème.
-              </Text>
-            </View>
-
-            <SmallBadge
-              label={`${filteredModules.length} affiché${filteredModules.length > 1 ? "s" : ""}`}
-              accent="neutral"
-            />
-          </View>
-
-          <View style={{ height: 12 }} />
-
-          <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-            <FilterPill
-              label={`Gratuit (${freeCount})`}
-              active={accessTab === "free"}
-              onPress={() => setAccessTab("free")}
-              accent="cyan"
-            />
-            <FilterPill
-              label={`Premium (${premiumCount})`}
-              active={accessTab === "premium"}
-              onPress={() => setAccessTab("premium")}
-              accent="gold"
-            />
-          </View>
-
-          <View style={{ height: 10 }} />
-
-          <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-            <FilterPill
-              label="Tous"
-              active={themeTab === "all"}
-              onPress={() => setThemeTab("all")}
-              accent="neutral"
-            />
-            <FilterPill
-              label="Café"
-              active={themeTab === "cafe"}
-              onPress={() => setThemeTab("cafe")}
-              accent="cyan"
-            />
-            <FilterPill
-              label="Métro"
-              active={themeTab === "metro"}
-              onPress={() => setThemeTab("metro")}
-              accent="purple"
-            />
-            <FilterPill
-              label="Restaurant"
-              active={themeTab === "restaurant"}
-              onPress={() => setThemeTab("restaurant")}
-              accent="orange"
-            />
-            <FilterPill
-              label="Aéroport"
-              active={themeTab === "airport"}
-              onPress={() => setThemeTab("airport")}
-              accent="gold"
-            />
-            <FilterPill
-              label="Hôtel"
-              active={themeTab === "hotel"}
-              onPress={() => setThemeTab("hotel")}
-              accent="pink"
-            />
-            <FilterPill
-              label="Aide"
-              active={themeTab === "help"}
-              onPress={() => setThemeTab("help")}
-              accent="pink"
-            />
-            <FilterPill
-              label="Santé"
-              active={themeTab === "health"}
-              onPress={() => setThemeTab("health")}
-              accent="pink"
-            />
-          </View>
-        </GlassCard>
-
-        <View style={{ height: 14 }} />
-
-        {filteredModules.length > 0 ? (
-          filteredModules.map((item) => (
-            <ModuleCard key={item.id} item={item} />
-          ))
-        ) : (
-          <GlassCard compact>
-            <Text style={{ color: TXT, fontSize: 18, fontWeight: "900" }}>
-              Aucun module affiché
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-              Change le filtre pour afficher d’autres situations.
-            </Text>
-          </GlassCard>
-        )}
-      </ScrollView>
-    </LinearGradient>
+        <ThemeModeSheet
+          visible={sheetVisible}
+          onClose={closeThemeSheet}
+          themeConfig={themeConfig}
+          selectedTheme={selectedTheme}
+        />
+      </LinearGradient>
+    </SafeAreaView>
   );
 }
+
+function Hero({ onStart }: { onStart: () => void }) {
+  return (
+    <View style={styles.hero}>
+      <View pointerEvents="none" style={styles.glow1} />
+      <View pointerEvents="none" style={styles.glow2} />
+
+      <DialogueVisual width={260} height={140} />
+
+      <View style={{ height: 18 }} />
+
+      <Text style={styles.heroEyebrow}>DIALOGUES RÉELS</Text>
+
+      <Text style={styles.title}>Dialogues</Text>
+
+      <Text style={styles.subtitle}>
+        Entre dans des scènes réelles et choisis le thème que tu veux explorer.
+      </Text>
+
+      <Pressable
+        onPress={onStart}
+        style={({ pressed }) => [styles.cta, { opacity: pressed ? 0.92 : 1 }]}
+      >
+        <LinearGradient
+          colors={["#7C3AED", "#8B5CF6", "#22D3EE"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.ctaInner}
+        >
+          <Text style={styles.ctaText}>▶ Commencer</Text>
+        </LinearGradient>
+      </Pressable>
+    </View>
+  );
+}
+
+function DialogueVisual({ width, height }: { width: number; height: number }) {
+  return (
+    <View
+      style={[
+        styles.dialogueVisual,
+        {
+          width,
+          height,
+        },
+      ]}
+    >
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          width: width * 0.55,
+          height: width * 0.55,
+          borderRadius: 999,
+          backgroundColor: "rgba(244,114,182,0.10)",
+        }}
+      />
+
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          width: width * 0.28,
+          height: width * 0.28,
+          borderRadius: 999,
+          backgroundColor: "rgba(244,114,182,0.16)",
+        }}
+      />
+
+      <Text
+        style={{
+          color: TXT,
+          fontSize: width * 0.18,
+          fontFamily: fonts.kr,
+        }}
+      >
+        회
+      </Text>
+    </View>
+  );
+}
+
+function Modes() {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionEyebrow}>MODES</Text>
+      <Text style={styles.sectionTitle}>3 façons d’apprendre</Text>
+      <Text style={styles.sectionSubtitle}>
+        Choisis une porte d’entrée selon ton envie du moment.
+      </Text>
+
+      <View style={{ height: 14 }} />
+
+      <ModeCard
+        title="Simulation IA"
+        subtitle="Parle et répond en temps réel dans une scène guidée."
+        color={PURPLE}
+        onPress={() => go("/lesson/cafeIA")}
+      />
+
+      <ModeCard
+        title="Voyage réel"
+        subtitle="Découvre des situations concrètes comme si tu étais à Séoul."
+        color={CYAN}
+        onPress={() => go("/lesson/gangnamRainRun")}
+      />
+
+      <ModeCard
+        title="Bases utiles"
+        subtitle="Révisions rapides pour installer les réflexes essentiels."
+        color={ORANGE}
+        onPress={() => go("/lesson/dialoguesBasics")}
+      />
+    </View>
+  );
+}
+
+function ModeCard({
+  title,
+  subtitle,
+  color,
+  onPress,
+}: {
+  title: string;
+  subtitle: string;
+  color: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.mode,
+        {
+          borderColor: color,
+          opacity: pressed ? 0.95 : 1,
+        },
+      ]}
+    >
+      <View
+        pointerEvents="none"
+        style={[
+          styles.modeGlow,
+          {
+            backgroundColor:
+              color === PURPLE
+                ? "rgba(139,92,246,0.12)"
+                : color === CYAN
+                  ? "rgba(34,211,238,0.12)"
+                  : "rgba(251,146,60,0.12)",
+          },
+        ]}
+      />
+
+      <Text style={styles.modeTitle}>{title}</Text>
+      <Text style={styles.modeSubtitle}>{subtitle}</Text>
+    </Pressable>
+  );
+}
+
+function Themes({
+  onLayoutY,
+  onSelectTheme,
+}: {
+  onLayoutY: (y: number) => void;
+  onSelectTheme: (theme: ThemeKey) => void;
+}) {
+  const handleLayout = (e: LayoutChangeEvent) => {
+    onLayoutY(e.nativeEvent.layout.y);
+  };
+
+  return (
+    <View onLayout={handleLayout} style={styles.section}>
+      <Text style={styles.sectionEyebrow}>THÈMES</Text>
+      <Text style={styles.sectionTitle}>Choisis un thème</Text>
+      <Text style={styles.sectionSubtitle}>
+        Sélectionne directement la scène que tu veux travailler.
+      </Text>
+
+      <View style={{ height: 14 }} />
+
+      <ThemeCard
+        icon="☕"
+        title="Café"
+        subtitle="Commander et payer"
+        accentColor={PINK}
+        onPress={() => onSelectTheme("cafe")}
+      />
+
+      <ThemeCard
+        icon="🚇"
+        title="Métro"
+        subtitle="Directions et sorties"
+        accentColor={CYAN}
+        onPress={() => onSelectTheme("metro")}
+      />
+
+      <ThemeCard
+        icon="🍽️"
+        title="Restaurant"
+        subtitle="Commander et interagir"
+        accentColor={ORANGE}
+        onPress={() => onSelectTheme("restaurant")}
+      />
+    </View>
+  );
+}
+
+function ThemeCard({
+  icon,
+  title,
+  subtitle,
+  accentColor,
+  onPress,
+}: {
+  icon: string;
+  title: string;
+  subtitle: string;
+  accentColor: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.theme,
+        {
+          opacity: pressed ? 0.95 : 1,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.themeAccentBar,
+          {
+            backgroundColor: accentColor,
+          },
+        ]}
+      />
+
+      <View
+        style={[
+          styles.themeIconWrap,
+          {
+            borderColor: accentColor,
+            backgroundColor:
+              accentColor === PINK
+                ? "rgba(244,114,182,0.12)"
+                : accentColor === CYAN
+                  ? "rgba(34,211,238,0.12)"
+                  : "rgba(251,146,60,0.12)",
+          },
+        ]}
+      >
+        <Text style={styles.themeIcon}>{icon}</Text>
+      </View>
+
+      <View style={{ flex: 1 }}>
+        <Text style={styles.themeTitle}>{title}</Text>
+        <Text style={styles.themeSubtitle}>{subtitle}</Text>
+      </View>
+
+      <Text style={styles.themeArrow}>›</Text>
+    </Pressable>
+  );
+}
+
+function ThemeModeSheet({
+  visible,
+  onClose,
+  themeConfig,
+  selectedTheme,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  selectedTheme: ThemeKey | null;
+  themeConfig: {
+    icon: string;
+    title: string;
+    accent: string;
+    accentBg: string;
+    textRoute: string;
+    iaRoute: string;
+    iaRouteParams?: Record<string, string>;
+    iaRealRoute: string | null;
+    iaRealRouteParams?: Record<string, string>;
+  } | null;
+}) {
+  const isCafe = selectedTheme === "cafe";
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.sheetOverlay}>
+        <Pressable style={styles.sheetBackdrop} onPress={onClose} />
+
+        <View style={styles.sheetWrap}>
+          <View style={styles.sheetHandle} />
+
+          <View style={styles.sheetCard}>
+            <View style={styles.sheetHeader}>
+              <View
+                style={[
+                  styles.sheetThemeIconWrap,
+                  {
+                    borderColor: themeConfig?.accent ?? PINK,
+                    backgroundColor:
+                      themeConfig?.accentBg ?? "rgba(255,255,255,0.08)",
+                  },
+                ]}
+              >
+                <Text style={styles.sheetThemeIcon}>
+                  {themeConfig?.icon ?? "✨"}
+                </Text>
+              </View>
+
+              <View style={{ flex: 1 }}>
+                <Text style={styles.sheetTitle}>
+                  {themeConfig?.title ?? "Thème"}
+                </Text>
+                <Text style={styles.sheetSubtitle}>
+                  {isCafe
+                    ? "Choisis ton style d’apprentissage"
+                    : "Choisis ton mode d’apprentissage"}
+                </Text>
+              </View>
+            </View>
+
+            <View style={{ height: 14 }} />
+
+            <SheetOptionCard
+              title="Version textuelle"
+              subtitle="Lire, comprendre et réviser les phrases du thème."
+              accentColor={themeConfig?.accent ?? PINK}
+              onPress={() => {
+                if (!themeConfig) return;
+                onClose();
+                go(themeConfig.textRoute);
+              }}
+            />
+
+            <SheetOptionCard
+              title="Simulation IA — guidée"
+              subtitle="Dialogue clair, progressif et plus pédagogique."
+              accentColor={themeConfig?.accent ?? PINK}
+              onPress={() => {
+                if (!themeConfig) return;
+                onClose();
+                go(themeConfig.iaRoute, themeConfig.iaRouteParams);
+              }}
+            />
+
+            {isCafe && themeConfig?.iaRealRoute ? (
+              <SheetOptionCard
+                title="Simulation IA — café réel"
+                subtitle="Répliques plus directes, plus natives et plus immersives."
+                accentColor={themeConfig.accent}
+                onPress={() => {
+                  if (!themeConfig?.iaRealRoute) return;
+                  onClose();
+                  go(themeConfig.iaRealRoute, themeConfig.iaRealRouteParams);
+                }}
+              />
+            ) : null}
+
+            <Pressable
+              onPress={onClose}
+              style={({ pressed }) => [
+                styles.sheetCloseButton,
+                { opacity: pressed ? 0.92 : 1 },
+              ]}
+            >
+              <Text style={styles.sheetCloseText}>Fermer</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function SheetOptionCard({
+  title,
+  subtitle,
+  accentColor,
+  onPress,
+}: {
+  title: string;
+  subtitle: string;
+  accentColor: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.sheetOption,
+        {
+          borderColor: accentColor,
+          opacity: pressed ? 0.95 : 1,
+        },
+      ]}
+    >
+      <View
+        pointerEvents="none"
+        style={[
+          styles.sheetOptionGlow,
+          {
+            backgroundColor:
+              accentColor === PINK
+                ? "rgba(244,114,182,0.10)"
+                : accentColor === CYAN
+                  ? "rgba(34,211,238,0.10)"
+                  : "rgba(251,146,60,0.10)",
+          },
+        ]}
+      />
+
+      <View style={{ flex: 1, paddingRight: 10 }}>
+        <Text style={styles.sheetOptionTitle}>{title}</Text>
+        <Text style={styles.sheetOptionSubtitle}>{subtitle}</Text>
+      </View>
+
+      <Text style={styles.sheetOptionArrow}>›</Text>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  pageGlowTopLeft: {
+    position: "absolute",
+    top: -120,
+    left: -110,
+    width: 220,
+    height: 220,
+    borderRadius: 999,
+    backgroundColor: "rgba(139,92,246,0.10)",
+  },
+
+  pageGlowBottomRight: {
+    position: "absolute",
+    bottom: -150,
+    right: -120,
+    width: 260,
+    height: 260,
+    borderRadius: 999,
+    backgroundColor: "rgba(34,211,238,0.10)",
+  },
+
+  hero: {
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: LINE,
+    backgroundColor: CARD,
+    padding: 20,
+    alignItems: "center",
+    overflow: "hidden",
+  },
+
+  glow1: {
+    position: "absolute",
+    top: -40,
+    left: -40,
+    width: 120,
+    height: 120,
+    borderRadius: 999,
+    backgroundColor: "rgba(139,92,246,0.12)",
+  },
+
+  glow2: {
+    position: "absolute",
+    bottom: -40,
+    right: -40,
+    width: 120,
+    height: 120,
+    borderRadius: 999,
+    backgroundColor: "rgba(34,211,238,0.12)",
+  },
+
+  dialogueVisual: {
+    borderRadius: 28,
+    borderWidth: 1.5,
+    borderColor: PINK,
+    backgroundColor: "rgba(244,114,182,0.13)",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+
+  heroEyebrow: {
+    color: "rgba(255,255,255,0.58)",
+    fontSize: 11,
+    letterSpacing: 1.3,
+    fontFamily: fonts.black,
+    marginBottom: 8,
+  },
+
+  title: {
+    color: TXT,
+    fontSize: 34,
+    fontFamily: fonts.black,
+  },
+
+  subtitle: {
+    color: MUTED,
+    textAlign: "center",
+    marginTop: 8,
+    marginBottom: 16,
+    fontFamily: fonts.medium,
+    lineHeight: 21,
+    maxWidth: 300,
+  },
+
+  cta: {
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+
+  ctaInner: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+
+  ctaText: {
+    color: "white",
+    fontFamily: fonts.bold,
+    fontSize: 14,
+  },
+
+  section: {
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: LINE,
+    backgroundColor: CARD,
+    padding: 16,
+    overflow: "hidden",
+  },
+
+  sectionEyebrow: {
+    color: "rgba(255,255,255,0.52)",
+    fontSize: 11,
+    letterSpacing: 1.2,
+    fontFamily: fonts.black,
+    marginBottom: 6,
+  },
+
+  sectionTitle: {
+    color: TXT,
+    fontSize: 20,
+    fontFamily: fonts.black,
+  },
+
+  sectionSubtitle: {
+    color: MUTED,
+    fontSize: 14,
+    marginTop: 6,
+    lineHeight: 20,
+    fontFamily: fonts.medium,
+  },
+
+  mode: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 10,
+    backgroundColor: "rgba(255,255,255,0.03)",
+    overflow: "hidden",
+  },
+
+  modeGlow: {
+    position: "absolute",
+    top: -14,
+    right: -12,
+    width: 72,
+    height: 72,
+    borderRadius: 999,
+  },
+
+  modeTitle: {
+    color: TXT,
+    fontSize: 16,
+    fontFamily: fonts.bold,
+  },
+
+  modeSubtitle: {
+    color: MUTED,
+    fontSize: 13,
+    marginTop: 4,
+    lineHeight: 18,
+    fontFamily: fonts.medium,
+  },
+
+  theme: {
+    borderWidth: 1,
+    borderColor: LINE,
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 10,
+    backgroundColor: "rgba(255,255,255,0.03)",
+    flexDirection: "row",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+
+  themeAccentBar: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+  },
+
+  themeIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+
+  themeIcon: {
+    fontSize: 18,
+  },
+
+  themeTitle: {
+    color: TXT,
+    fontSize: 16,
+    fontFamily: fonts.bold,
+  },
+
+  themeSubtitle: {
+    color: MUTED,
+    fontSize: 13,
+    marginTop: 4,
+    fontFamily: fonts.medium,
+  },
+
+  themeArrow: {
+    color: "rgba(255,255,255,0.6)",
+    fontSize: 28,
+    fontFamily: fonts.medium,
+    marginLeft: 8,
+    marginTop: -2,
+  },
+
+  sheetOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.40)",
+  },
+
+  sheetBackdrop: {
+    flex: 1,
+  },
+
+  sheetWrap: {
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+  },
+
+  sheetHandle: {
+    alignSelf: "center",
+    width: 42,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.24)",
+    marginBottom: 10,
+  },
+
+  sheetCard: {
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: LINE,
+    backgroundColor: "#0B1123",
+    padding: 16,
+    overflow: "hidden",
+  },
+
+  sheetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  sheetThemeIconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+
+  sheetThemeIcon: {
+    fontSize: 22,
+  },
+
+  sheetTitle: {
+    color: TXT,
+    fontSize: 21,
+    fontFamily: fonts.black,
+  },
+
+  sheetSubtitle: {
+    color: MUTED,
+    fontSize: 14,
+    fontFamily: fonts.medium,
+    marginTop: 4,
+  },
+
+  sheetOption: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 10,
+    backgroundColor: "rgba(255,255,255,0.03)",
+    flexDirection: "row",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+
+  sheetOptionGlow: {
+    position: "absolute",
+    top: -18,
+    right: -12,
+    width: 84,
+    height: 84,
+    borderRadius: 999,
+  },
+
+  sheetOptionTitle: {
+    color: TXT,
+    fontSize: 16,
+    fontFamily: fonts.bold,
+    marginBottom: 4,
+  },
+
+  sheetOptionSubtitle: {
+    color: MUTED,
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: fonts.medium,
+  },
+
+  sheetOptionArrow: {
+    color: "rgba(255,255,255,0.65)",
+    fontSize: 28,
+    fontFamily: fonts.medium,
+    marginLeft: 8,
+    marginTop: -2,
+  },
+
+  sheetCloseButton: {
+    marginTop: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    backgroundColor: "rgba(255,255,255,0.04)",
+    paddingVertical: 13,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  sheetCloseText: {
+    color: TXT,
+    fontSize: 14,
+    fontFamily: fonts.bold,
+  },
+});

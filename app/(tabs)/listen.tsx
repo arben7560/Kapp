@@ -1,729 +1,471 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Pressable, ScrollView, Text, View } from "react-native";
+import React from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import CafeAvatar from "../../components/ai/CafeAvatar";
 
-const BG0 = "#070812";
-const BG1 = "#0d1322";
-const BG2 = "#151122";
+const BG0 = "#060816";
+const BG1 = "#090D1D";
+const BG2 = "#0B1123";
 
-const TXT = "rgba(255,255,255,0.94)";
-const MUTED = "rgba(255,255,255,0.64)";
-const LINE = "rgba(255,255,255,0.10)";
-const CARD = "rgba(255,255,255,0.06)";
-const CYAN = "rgba(34,211,238,0.55)";
+const TXT = "rgba(255,255,255,0.96)";
+const MUTED = "rgba(255,255,255,0.78)";
+const SOFT = "rgba(255,255,255,0.56)";
+const CARD = "rgba(255,255,255,0.065)";
+const CARD_SOFT = "rgba(255,255,255,0.042)";
+const LINE = "rgba(255,255,255,0.11)";
+const LINE_STRONG = "rgba(255,255,255,0.16)";
+
+const PINK = "#F472B6";
+const PINK_BG = "rgba(244,114,182,0.14)";
+
+const CYAN = "#22D3EE";
 const CYAN_BG = "rgba(34,211,238,0.12)";
-const PURPLE = "rgba(124,58,237,0.55)";
-const PURPLE_BG = "rgba(124,58,237,0.12)";
-const GREEN = "rgba(34,197,94,0.45)";
-const GREEN_BG = "rgba(34,197,94,0.12)";
-const RED = "rgba(239,68,68,0.45)";
-const RED_BG = "rgba(239,68,68,0.12)";
 
-type Exercise = {
+const ORANGE = "#FB923C";
+const ORANGE_BG = "rgba(251,146,60,0.12)";
+
+type ListenTheme = {
   id: string;
-  narrator?: string;
-  audio: string;
-  question: string;
-  translation: string;
-  choices: string[];
-  correct: string;
-  hint?: string;
+  title: string;
+  subtitle: string;
+  icon: string;
+  accent: string;
+  accentBg: string;
+  route:
+    | "/listen/CafeListen"
+    | "/listen/MetroListen"
+    | "/listen/RestaurantListen";
 };
 
-const EXERCISES: Exercise[] = [
+const THEMES: ListenTheme[] = [
   {
-    id: "1",
-    narrator: "Tu entends une phrase simple dans un café à Séoul.",
-    audio: "주문하시겠어요?",
-    question: "Que veut dire cette phrase ?",
-    translation: "Voulez-vous commander ?",
-    choices: [
-      "Voulez-vous commander ?",
-      "Vous êtes combien ?",
-      "Voulez-vous payer ?",
-    ],
-    correct: "Voulez-vous commander ?",
-    hint: "On entend souvent cette phrase quand le serveur vient prendre la commande.",
+    id: "cafe",
+    title: "Café",
+    subtitle: "Commander et payer",
+    icon: "☕",
+    accent: PINK,
+    accentBg: PINK_BG,
+    route: "/listen/CafeListen",
   },
   {
-    id: "2",
-    narrator: "Annonce ou indication dans le métro.",
-    audio: "몇 번 출구예요?",
-    question: "Quel est le bon sens ?",
-    translation: "C’est la sortie numéro combien ?",
-    choices: [
-      "Dans quelle direction allez-vous ?",
-      "C’est la sortie numéro combien ?",
-      "Où est la correspondance ?",
-    ],
-    correct: "C’est la sortie numéro combien ?",
-    hint: "출구 = sortie.",
+    id: "metro",
+    title: "Métro",
+    subtitle: "Directions et sorties",
+    icon: "🚇",
+    accent: CYAN,
+    accentBg: CYAN_BG,
+    route: "/listen/MetroListen",
   },
   {
-    id: "3",
-    narrator:
-      "Tu entends une réponse utile pour demander quelque chose de doux au restaurant.",
-    audio: "안 매운 걸로 주세요.",
-    question: "Que veut dire cette phrase ?",
-    translation: "Quelque chose de non piquant, s'il vous plaît.",
-    choices: [
-      "Donnez-moi de l’eau, s'il vous plaît.",
-      "Je voudrais payer par carte.",
-      "Quelque chose de non piquant, s'il vous plaît.",
-    ],
-    correct: "Quelque chose de non piquant, s'il vous plaît.",
-    hint: "매운 = épicé. 안 = ne pas.",
-  },
-  {
-    id: "4",
-    narrator: "Tu demandes une ligne dans le métro.",
-    audio: "2호선 어디에서 타요?",
-    question: "Que signifie cette phrase ?",
-    translation: "Où est-ce que je prends la ligne 2 ?",
-    choices: [
-      "Où est-ce que je prends la ligne 2 ?",
-      "La ligne 2 est fermée ?",
-      "La ligne 2 arrive bientôt ?",
-    ],
-    correct: "Où est-ce que je prends la ligne 2 ?",
-    hint: "타요 = prendre / monter.",
+    id: "restaurant",
+    title: "Restaurant",
+    subtitle: "Commander et interagir",
+    icon: "🍽️",
+    accent: ORANGE,
+    accentBg: ORANGE_BG,
+    route: "/listen/RestaurantListen",
   },
 ];
 
-function SmallAction({
-  label,
+function ThemeRow({
+  title,
+  subtitle,
+  icon,
+  accent,
+  accentBg,
   onPress,
-  tone = "ghost",
-  disabled = false,
 }: {
-  label: string;
+  title: string;
+  subtitle: string;
+  icon: string;
+  accent: string;
+  accentBg: string;
   onPress: () => void;
-  tone?: "ghost" | "cyan" | "purple";
-  disabled?: boolean;
 }) {
-  const style =
-    tone === "cyan"
-      ? { backgroundColor: CYAN_BG, borderColor: CYAN }
-      : tone === "purple"
-        ? { backgroundColor: PURPLE_BG, borderColor: PURPLE }
-        : {
-            backgroundColor: "rgba(255,255,255,0.04)",
-            borderColor: "rgba(255,255,255,0.08)",
-          };
-
   return (
     <Pressable
-      disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => ({
-        flex: 1,
-        opacity: disabled ? 0.55 : pressed ? 0.92 : 1,
-        borderRadius: 14,
-        paddingVertical: 12,
-        alignItems: "center",
-        justifyContent: "center",
+        opacity: pressed ? 0.94 : 1,
+        borderRadius: 22,
         borderWidth: 1,
-        ...style,
+        borderColor: LINE,
+        backgroundColor: "rgba(255,255,255,0.04)",
+        overflow: "hidden",
       })}
     >
-      <Text style={{ color: TXT, fontSize: 14, fontWeight: "800" }}>
-        {label}
-      </Text>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          minHeight: 88,
+        }}
+      >
+        <View
+          style={{
+            width: 4,
+            alignSelf: "stretch",
+            backgroundColor: accent,
+          }}
+        />
+
+        <View
+          style={{
+            width: 56,
+            alignItems: "center",
+            justifyContent: "center",
+            marginLeft: 14,
+            marginRight: 12,
+          }}
+        >
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: accent,
+              backgroundColor: accentBg,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text style={{ fontSize: 18 }}>{icon}</Text>
+          </View>
+        </View>
+
+        <View style={{ flex: 1, paddingRight: 12 }}>
+          <Text
+            style={{
+              color: TXT,
+              fontSize: 17,
+              fontWeight: "800",
+            }}
+          >
+            {title}
+          </Text>
+
+          <Text
+            style={{
+              color: MUTED,
+              fontSize: 14,
+              marginTop: 4,
+              lineHeight: 19,
+            }}
+          >
+            {subtitle}
+          </Text>
+        </View>
+
+        <View style={{ paddingRight: 16 }}>
+          <Text
+            style={{
+              color: "rgba(255,255,255,0.72)",
+              fontSize: 22,
+              fontWeight: "700",
+            }}
+          >
+            ›
+          </Text>
+        </View>
+      </View>
     </Pressable>
   );
 }
 
-export default function ListenIaScreen() {
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const translateAnim = useRef(new Animated.Value(0)).current;
-  const speechTokenRef = useRef(0);
-
-  const [index, setIndex] = useState(0);
-  const [speaking, setSpeaking] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [result, setResult] = useState<null | { ok: boolean }>(null);
-  const [score, setScore] = useState(0);
-
-  const exercise = EXERCISES[index];
-  const finished = !exercise;
-
-  const progress = useMemo(() => {
-    if (EXERCISES.length === 0 || finished) return 100;
-    return ((index + 1) / EXERCISES.length) * 100;
-  }, [index, finished]);
-
-  useEffect(() => {
-    if (!exercise) return;
-
-    const id = setTimeout(() => {
-      playAudio();
-    }, 120);
-
-    return () => clearTimeout(id);
-  }, [index, exercise]);
-
-  useEffect(() => {
-    return () => {
-      Speech.stop();
-      speechTokenRef.current += 1;
-    };
-  }, []);
-
-  const stopSpeech = () => {
-    Speech.stop();
-    speechTokenRef.current += 1;
-    setSpeaking(false);
-  };
-
-  const playAudio = () => {
-    if (!exercise) return;
-
-    const token = speechTokenRef.current + 1;
-    speechTokenRef.current = token;
-
-    Speech.stop();
-    setSpeaking(true);
-
-    Speech.speak(exercise.audio, {
-      language: "ko-KR",
-      rate: 0.9,
-      pitch: 1,
-      onDone: () => {
-        if (speechTokenRef.current !== token) return;
-        setSpeaking(false);
-      },
-      onStopped: () => {
-        if (speechTokenRef.current !== token) return;
-        setSpeaking(false);
-      },
-      onError: () => {
-        if (speechTokenRef.current !== token) return;
-        setSpeaking(false);
-      },
-    });
-  };
-
-  const animateChange = (update: () => void) => {
-    stopSpeech();
-
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 140,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateAnim, {
-        toValue: 8,
-        duration: 140,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      update();
-
-      fadeAnim.setValue(0);
-      translateAnim.setValue(8);
-
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 180,
-          useNativeDriver: true,
-        }),
-        Animated.timing(translateAnim, {
-          toValue: 0,
-          duration: 180,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    });
-  };
-
-  const submitAnswer = (answer: string) => {
-    if (!exercise || result) return;
-
-    const ok = answer === exercise.correct;
-    setSelectedAnswer(answer);
-    setResult({ ok });
-
-    if (ok) {
-      setScore((s) => s + 1);
-    }
-  };
-
-  const nextExercise = () => {
-    animateChange(() => {
-      setSelectedAnswer(null);
-      setResult(null);
-      setIndex((prev) => prev + 1);
-    });
-  };
-
-  const resetSession = () => {
-    animateChange(() => {
-      setSelectedAnswer(null);
-      setResult(null);
-      setScore(0);
-      setIndex(0);
-    });
-  };
-
-  const getChoiceStyle = (choice: string) => {
-    if (!exercise || !result) {
-      return {
-        borderColor: LINE,
-        backgroundColor: "rgba(255,255,255,0.04)",
-      };
-    }
-
-    if (choice === exercise.correct) {
-      return {
-        borderColor: GREEN,
-        backgroundColor: GREEN_BG,
-      };
-    }
-
-    if (choice === selectedAnswer && choice !== exercise.correct) {
-      return {
-        borderColor: RED,
-        backgroundColor: RED_BG,
-      };
-    }
-
-    return {
-      borderColor: LINE,
-      backgroundColor: "rgba(255,255,255,0.04)",
-    };
-  };
-
-  if (finished) {
-    return (
-      <LinearGradient colors={[BG0, BG1, BG2]} style={{ flex: 1 }}>
-        <SafeAreaView style={{ flex: 1 }}>
-          <View
-            style={{
-              flex: 1,
-              padding: 20,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <View
-              style={{
-                width: "100%",
-                backgroundColor: CARD,
-                borderColor: LINE,
-                borderWidth: 1,
-                borderRadius: 24,
-                padding: 20,
-              }}
-            >
-              <Text
-                style={{
-                  color: TXT,
-                  fontSize: 26,
-                  fontWeight: "900",
-                  textAlign: "center",
-                }}
-              >
-                Session IA terminée 🎉
-              </Text>
-
-              <Text
-                style={{
-                  color: MUTED,
-                  marginTop: 10,
-                  textAlign: "center",
-                  lineHeight: 22,
-                }}
-              >
-                Bravo. Tu as terminé cette mini-session d’écoute immersive.
-              </Text>
-
-              <View style={{ height: 16 }} />
-
-              <View
-                style={{
-                  alignSelf: "center",
-                  paddingHorizontal: 14,
-                  paddingVertical: 10,
-                  borderRadius: 999,
-                  borderWidth: 1,
-                  borderColor: CYAN,
-                  backgroundColor: CYAN_BG,
-                }}
-              >
-                <Text style={{ color: TXT, fontWeight: "900", fontSize: 15 }}>
-                  Score : {score} / {EXERCISES.length}
-                </Text>
-              </View>
-
-              <View style={{ height: 16 }} />
-
-              <SmallAction
-                label="Recommencer"
-                onPress={resetSession}
-                tone="cyan"
-              />
-
-              <View style={{ height: 10 }} />
-
-              <SmallAction
-                label="Retour"
-                onPress={() => router.back()}
-                tone="ghost"
-              />
-            </View>
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
-    );
-  }
-
+export default function ListenIndexScreen() {
   return (
     <LinearGradient colors={[BG0, BG1, BG2]} style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+      <SafeAreaView style={{ flex: 1 }}>
         <ScrollView
-          contentContainerStyle={{
-            paddingHorizontal: 16,
-            paddingTop: 12,
-            paddingBottom: 24,
-          }}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 28 }}
         >
-          <Pressable
-            onPress={() => router.back()}
-            style={{ paddingVertical: 8, marginBottom: 2 }}
-            hitSlop={10}
-          >
-            <Text style={{ color: MUTED, fontWeight: "800" }}>← Retour</Text>
-          </Pressable>
-
-          <Text style={{ color: TXT, fontSize: 28, fontWeight: "900" }}>
-            Écoute — IA immersive
-          </Text>
-
-          <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-            Écoute une phrase, comprends rapidement, puis choisis le bon sens.
-          </Text>
-
-          <View style={{ height: 14 }} />
-
           <View
             style={{
-              height: 10,
-              borderRadius: 999,
-              backgroundColor: "rgba(255,255,255,0.08)",
-              overflow: "hidden",
+              paddingHorizontal: 16,
+              paddingTop: 8,
             }}
           >
             <View
               style={{
-                width: `${progress}%`,
-                height: "100%",
-                backgroundColor: "rgba(34,211,238,0.78)",
-              }}
-            />
-          </View>
-
-          <View style={{ height: 12 }} />
-
-          <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
-            <View
-              style={{
-                paddingHorizontal: 12,
-                paddingVertical: 7,
-                borderRadius: 999,
+                borderRadius: 30,
+                overflow: "hidden",
                 borderWidth: 1,
-                borderColor: CYAN,
-                backgroundColor: CYAN_BG,
+                borderColor: LINE,
+                backgroundColor: CARD,
               }}
             >
-              <Text style={{ color: TXT, fontWeight: "900", fontSize: 12 }}>
-                Exercice {Math.min(index + 1, EXERCISES.length)} /{" "}
-                {EXERCISES.length}
-              </Text>
-            </View>
-
-            <View
-              style={{
-                paddingHorizontal: 12,
-                paddingVertical: 7,
-                borderRadius: 999,
-                borderWidth: 1,
-                borderColor: PURPLE,
-                backgroundColor: PURPLE_BG,
-              }}
-            >
-              <Text style={{ color: TXT, fontWeight: "900", fontSize: 12 }}>
-                Mode écoute guidée
-              </Text>
-            </View>
-          </View>
-
-          <View style={{ height: 14 }} />
-
-          <View
-            style={{
-              backgroundColor: "rgba(255,255,255,0.04)",
-              borderRadius: 24,
-              borderWidth: 1,
-              borderColor: LINE,
-              overflow: "hidden",
-              padding: 14,
-              marginBottom: 12,
-            }}
-          >
-            <LinearGradient
-              colors={[
-                "rgba(124,58,237,0.10)",
-                "rgba(34,211,238,0.06)",
-                "rgba(255,255,255,0.02)",
-              ]}
-              style={{
-                alignItems: "center",
-                borderRadius: 20,
-              }}
-            >
-              <CafeAvatar speaking={speaking} compact={false} immersive />
-
-              <Text
+              <LinearGradient
+                colors={[
+                  "rgba(24,20,52,0.96)",
+                  "rgba(10,18,40,0.94)",
+                  "rgba(7,14,28,0.98)",
+                ]}
                 style={{
-                  color: TXT,
-                  fontSize: 22,
-                  fontWeight: "900",
-                  marginTop: 12,
+                  paddingHorizontal: 18,
+                  paddingTop: 18,
+                  paddingBottom: 22,
                 }}
               >
-                Listening Coach
-              </Text>
-
-              <Text
-                style={{
-                  color: MUTED,
-                  fontSize: 13,
-                  marginTop: 4,
-                  marginBottom: 12,
-                }}
-              >
-                Écoute courte et compréhension rapide
-              </Text>
-
-              <Animated.View
-                style={{
-                  width: "100%",
-                  opacity: fadeAnim,
-                  transform: [{ translateY: translateAnim }],
-                }}
-              >
-                {!!exercise.narrator && (
-                  <View
-                    style={{
-                      width: "100%",
-                      borderRadius: 18,
-                      paddingHorizontal: 12,
-                      paddingVertical: 10,
-                      backgroundColor: "rgba(255,255,255,0.05)",
-                      borderWidth: 1,
-                      borderColor: "rgba(255,255,255,0.08)",
-                      marginBottom: 10,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: TXT,
-                        fontSize: 14,
-                        lineHeight: 20,
-                        fontWeight: "700",
-                      }}
-                    >
-                      {exercise.narrator}
-                    </Text>
-                  </View>
-                )}
+                <View
+                  style={{
+                    position: "absolute",
+                    width: 140,
+                    height: 140,
+                    borderRadius: 999,
+                    backgroundColor: "rgba(244,114,182,0.10)",
+                    top: -34,
+                    left: -20,
+                  }}
+                />
 
                 <View
                   style={{
-                    width: "100%",
-                    borderRadius: 20,
-                    paddingHorizontal: 14,
-                    paddingVertical: 14,
-                    backgroundColor: "rgba(10,10,16,0.42)",
-                    borderWidth: 1,
-                    borderColor: speaking
-                      ? "rgba(124,58,237,0.34)"
-                      : "rgba(255,255,255,0.08)",
+                    position: "absolute",
+                    width: 170,
+                    height: 170,
+                    borderRadius: 999,
+                    backgroundColor: "rgba(34,211,238,0.11)",
+                    bottom: -58,
+                    right: -40,
+                  }}
+                />
+
+                <View
+                  style={{
+                    alignItems: "center",
+                    marginTop: 4,
                   }}
                 >
-                  <Text
+                  <View
                     style={{
-                      color: "rgba(255,255,255,0.56)",
-                      fontSize: 11,
-                      fontWeight: "800",
-                      marginBottom: 6,
-                      textTransform: "uppercase",
-                      letterSpacing: 0.6,
+                      width: 228,
+                      height: 108,
+                      borderRadius: 28,
+                      borderWidth: 1.5,
+                      borderColor: PINK,
+                      backgroundColor: "rgba(244,114,182,0.08)",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
                     }}
                   >
-                    Compréhension
-                  </Text>
-
-                  <Text
-                    style={{
-                      color: TXT,
-                      fontSize: 19,
-                      lineHeight: 27,
-                      fontWeight: "900",
-                    }}
-                  >
-                    {exercise.question}
-                  </Text>
+                    <View
+                      style={{
+                        position: "absolute",
+                        width: 112,
+                        height: 112,
+                        borderRadius: 999,
+                        backgroundColor: "rgba(244,114,182,0.10)",
+                      }}
+                    />
+                    <View
+                      style={{
+                        width: 58,
+                        height: 58,
+                        borderRadius: 999,
+                        backgroundColor: "rgba(244,114,182,0.16)",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: TXT,
+                          fontSize: 28,
+                          fontWeight: "700",
+                        }}
+                      >
+                        듣
+                      </Text>
+                    </View>
+                  </View>
                 </View>
-              </Animated.View>
-            </LinearGradient>
+
+                <Text
+                  style={{
+                    color: SOFT,
+                    textAlign: "center",
+                    fontSize: 11,
+                    fontWeight: "800",
+                    letterSpacing: 1.6,
+                    marginTop: 16,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Écoute réelle
+                </Text>
+
+                <Text
+                  style={{
+                    color: TXT,
+                    textAlign: "center",
+                    fontSize: 24,
+                    fontWeight: "900",
+                    marginTop: 8,
+                  }}
+                >
+                  Écoute
+                </Text>
+
+                <Text
+                  style={{
+                    color: MUTED,
+                    textAlign: "center",
+                    fontSize: 16,
+                    lineHeight: 24,
+                    marginTop: 10,
+                    paddingHorizontal: 10,
+                  }}
+                >
+                  Entraîne ton oreille avec des scènes concrètes et choisis le
+                  thème que tu veux pratiquer.
+                </Text>
+
+                <View style={{ alignItems: "center", marginTop: 20 }}>
+                  <Pressable
+                    onPress={() => router.push("/listen/CafeListen")}
+                    style={({ pressed }) => ({
+                      opacity: pressed ? 0.93 : 1,
+                      borderRadius: 16,
+                      overflow: "hidden",
+                    })}
+                  >
+                    <LinearGradient
+                      colors={["#7C3AED", "#38BDF8"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={{
+                        minWidth: 132,
+                        height: 48,
+                        borderRadius: 16,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        paddingHorizontal: 18,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "white",
+                          fontSize: 15,
+                          fontWeight: "800",
+                        }}
+                      >
+                        ▶ Commencer
+                      </Text>
+                    </LinearGradient>
+                  </Pressable>
+                </View>
+              </LinearGradient>
+            </View>
           </View>
 
           <View
             style={{
-              backgroundColor: CARD,
-              borderRadius: 22,
-              borderWidth: 1,
-              borderColor: LINE,
-              padding: 14,
-              marginBottom: 12,
+              paddingHorizontal: 16,
+              marginTop: 14,
             }}
           >
-            <SmallAction
-              label={speaking ? "🔊 Lecture..." : "🔊 Écouter la phrase"}
-              onPress={playAudio}
-              tone="purple"
-              disabled={speaking}
-            />
-
-            <View style={{ height: 12 }} />
-
-            {exercise.choices.map((choice) => {
-              const choiceStyle = getChoiceStyle(choice);
-
-              return (
-                <Pressable
-                  key={choice}
-                  disabled={!!result}
-                  onPress={() => submitAnswer(choice)}
-                  style={({ pressed }) => ({
-                    opacity: pressed ? 0.92 : 1,
-                    paddingVertical: 14,
-                    paddingHorizontal: 14,
-                    marginTop: 10,
-                    borderWidth: 1,
-                    borderColor: choiceStyle.borderColor,
-                    borderRadius: 16,
-                    backgroundColor: choiceStyle.backgroundColor,
-                  })}
-                >
-                  <Text
-                    style={{
-                      color: TXT,
-                      fontSize: 16,
-                      fontWeight: "800",
-                    }}
-                  >
-                    {choice}
-                  </Text>
-                </Pressable>
-              );
-            })}
-
-            {result && (
-              <View
+            <View
+              style={{
+                borderRadius: 28,
+                borderWidth: 1,
+                borderColor: LINE,
+                backgroundColor: CARD_SOFT,
+                overflow: "hidden",
+              }}
+            >
+              <LinearGradient
+                colors={["rgba(255,255,255,0.02)", "rgba(255,255,255,0.01)"]}
                 style={{
-                  marginTop: 16,
-                  padding: 14,
-                  borderRadius: 16,
-                  borderWidth: 1,
-                  borderColor: result.ok ? GREEN : RED,
-                  backgroundColor: result.ok ? GREEN_BG : RED_BG,
+                  paddingHorizontal: 16,
+                  paddingTop: 16,
+                  paddingBottom: 16,
                 }}
               >
                 <Text
                   style={{
-                    color: TXT,
-                    fontSize: 15,
-                    fontWeight: "900",
+                    color: SOFT,
+                    fontSize: 11,
+                    fontWeight: "800",
+                    letterSpacing: 1.6,
+                    textTransform: "uppercase",
                   }}
                 >
-                  {result.ok ? "✅ Correct" : "❌ Incorrect"}
+                  Thèmes
                 </Text>
 
-                <Text style={{ color: TXT, marginTop: 12, fontWeight: "900" }}>
-                  Phrase entendue
-                </Text>
-                <Text style={{ color: MUTED, marginTop: 4 }}>
-                  {exercise.audio}
-                </Text>
-
-                <Text style={{ color: TXT, marginTop: 12, fontWeight: "900" }}>
-                  Sens naturel
-                </Text>
-                <Text style={{ color: MUTED, marginTop: 4 }}>
-                  {exercise.translation}
+                <Text
+                  style={{
+                    color: TXT,
+                    fontSize: 19,
+                    fontWeight: "900",
+                    marginTop: 8,
+                  }}
+                >
+                  Choisis un thème
                 </Text>
 
-                {!!exercise.hint && (
-                  <>
-                    <Text
-                      style={{ color: TXT, marginTop: 12, fontWeight: "900" }}
-                    >
-                      Indice
-                    </Text>
-                    <Text style={{ color: MUTED, marginTop: 4 }}>
-                      {exercise.hint}
-                    </Text>
-                  </>
-                )}
+                <Text
+                  style={{
+                    color: MUTED,
+                    fontSize: 15,
+                    lineHeight: 22,
+                    marginTop: 6,
+                    marginBottom: 14,
+                  }}
+                >
+                  Sélectionne directement la scène d’écoute que tu veux
+                  travailler.
+                </Text>
 
-                <View style={{ height: 14 }} />
-
-                <View style={{ flexDirection: "row", gap: 10 }}>
-                  <SmallAction
-                    label="🔁 Réécouter"
-                    onPress={playAudio}
-                    tone="purple"
-                  />
-                  <SmallAction
-                    label="Suivant"
-                    onPress={nextExercise}
-                    tone="cyan"
-                  />
+                <View style={{ gap: 12 }}>
+                  {THEMES.map((theme) => (
+                    <ThemeRow
+                      key={theme.id}
+                      title={theme.title}
+                      subtitle={theme.subtitle}
+                      icon={theme.icon}
+                      accent={theme.accent}
+                      accentBg={theme.accentBg}
+                      onPress={() => router.push(theme.route)}
+                    />
+                  ))}
                 </View>
-              </View>
-            )}
+              </LinearGradient>
+            </View>
           </View>
 
           <View
             style={{
-              paddingHorizontal: 14,
-              paddingVertical: 12,
-              borderRadius: 18,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.10)",
-              backgroundColor: "rgba(255,255,255,0.03)",
+              paddingHorizontal: 16,
+              marginTop: 14,
             }}
           >
-            <Text
+            <View
               style={{
-                color: "rgba(255,255,255,0.60)",
-                textAlign: "center",
-                lineHeight: 20,
-                fontWeight: "700",
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: LINE_STRONG,
+                backgroundColor: "rgba(255,255,255,0.03)",
+                paddingHorizontal: 14,
+                paddingVertical: 12,
               }}
             >
-              Astuce : écoute une première fois globalement, puis une seconde
-              fois pour repérer les mots-clés.
-            </Text>
+              <Text
+                style={{
+                  color: SOFT,
+                  textAlign: "center",
+                  lineHeight: 20,
+                  fontWeight: "700",
+                }}
+              >
+                Astuce : commence par un thème familier, puis refais la scène
+                plusieurs fois pour habituer ton oreille au rythme naturel.
+              </Text>
+            </View>
           </View>
         </ScrollView>
       </SafeAreaView>
