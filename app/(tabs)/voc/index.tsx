@@ -1,241 +1,309 @@
+import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Animated,
+  Dimensions,
+  Easing,
   LayoutChangeEvent,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const BG0 = "#070812";
-const BG1 = "#0B0B1D";
-const BG2 = "#0B0F22";
+const { width } = Dimensions.get("window");
 
-const TXT = "rgba(255,255,255,0.96)";
-const MUTED = "rgba(255,255,255,0.74)";
-const SOFT = "rgba(255,255,255,0.56)";
-const FAINT = "rgba(255,255,255,0.42)";
+// ──────────────────────────────────────────────
+// DESIGN SYSTEM — ALIGNÉ SUR SPEAK / HANGUL
+// ──────────────────────────────────────────────
+const BG_DEEP = "#050508";
+const BG_NAVY = "#0A0D1A";
+const TXT = "rgba(255,255,255,0.98)";
+const MUTED = "rgba(255,255,255,0.68)";
+const FAINT = "rgba(255,255,255,0.45)";
 
-const CARD = "rgba(255,255,255,0.065)";
-const CARD_SOFT = "rgba(255,255,255,0.045)";
-const LINE = "rgba(255,255,255,0.11)";
-const LINE_STRONG = "rgba(255,255,255,0.16)";
-
-const CYAN = "#22D3EE";
-const CYAN_SOFT = "rgba(34,211,238,0.16)";
 const PINK = "#F472B6";
-const PINK_SOFT = "rgba(244,114,182,0.16)";
-const VIOLET = "#8B5CF6";
-const VIOLET_SOFT = "rgba(139,92,246,0.18)";
+const CYAN = "#22D3EE";
 const ORANGE = "#FB923C";
-const ORANGE_SOFT = "rgba(251,146,60,0.16)";
+const PURPLE = "#C084FC";
 const TEAL = "#14B8A6";
-const TEAL_SOFT = "rgba(20,184,166,0.16)";
 
-function HeroOrb({
-  size,
-  color,
-  top,
-  left,
-  right,
-  bottom,
-  opacity = 1,
-}: {
-  size: number;
-  color: string;
-  top?: number;
-  left?: number;
-  right?: number;
-  bottom?: number;
-  opacity?: number;
-}) {
-  return (
-    <View
-      style={{
-        position: "absolute",
-        width: size,
-        height: size,
-        borderRadius: 999,
-        backgroundColor: color,
-        top,
-        left,
-        right,
-        bottom,
-        opacity,
-      }}
-    />
-  );
-}
+const NEON = {
+  purple: {
+    core: PURPLE,
+    halo: "rgba(168,85,247,0.42)",
+    ambient: "rgba(168,85,247,0.22)",
+  },
+  cyan: {
+    core: CYAN,
+    halo: "rgba(34,211,238,0.42)",
+    ambient: "rgba(34,211,238,0.22)",
+  },
+  pink: {
+    core: PINK,
+    halo: "rgba(244,114,182,0.42)",
+    ambient: "rgba(244,114,182,0.22)",
+  },
+  orange: {
+    core: ORANGE,
+    halo: "rgba(251,146,60,0.42)",
+    ambient: "rgba(251,146,60,0.22)",
+  },
+  teal: {
+    core: TEAL,
+    halo: "rgba(20,184,166,0.40)",
+    ambient: "rgba(20,184,166,0.20)",
+  },
+} as const;
 
-function Pill({
-  label,
-  tint,
-  tintBg,
-}: {
-  label: string;
-  tint: string;
-  tintBg: string;
-}) {
+const fonts = {
+  medium: "Outfit_500Medium",
+  bold: "Outfit_700Bold",
+  black: "Outfit_900Black",
+  kr: "NotoSansKR_700Bold",
+};
+
+type NeonKey = keyof typeof NEON;
+
+// ──────────────────────────────────────────────
+// BACKGROUND
+// ──────────────────────────────────────────────
+function CinematicBackground() {
   return (
-    <View
-      style={{
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: tint,
-        backgroundColor: tintBg,
-      }}
-    >
-      <Text
-        style={{
-          color: TXT,
-          fontSize: 13,
-          fontWeight: "800",
-        }}
-      >
-        {label}
-      </Text>
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <LinearGradient
+        colors={[BG_DEEP, BG_NAVY]}
+        style={StyleSheet.absoluteFill}
+      />
+
+      <View
+        style={[
+          styles.pageGlow,
+          {
+            top: -140,
+            left: -90,
+            backgroundColor: "rgba(168,85,247,0.07)",
+          },
+        ]}
+      />
+      <View
+        style={[
+          styles.pageGlow,
+          {
+            bottom: 80,
+            right: -100,
+            backgroundColor: "rgba(34,211,238,0.05)",
+          },
+        ]}
+      />
+
+      <BlurView intensity={92} tint="dark" style={StyleSheet.absoluteFill} />
     </View>
   );
 }
 
-function CTAButton({ label, onPress }: { label: string; onPress: () => void }) {
+// ──────────────────────────────────────────────
+// GLASS PILL
+// ──────────────────────────────────────────────
+function GlassPill({
+  label,
+  colorName = "cyan",
+  active = true,
+}: {
+  label: string;
+  colorName?: NeonKey;
+  active?: boolean;
+}) {
+  const neon = NEON[colorName];
+
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
-        opacity: pressed ? 0.92 : 1,
-      })}
-    >
-      <LinearGradient
-        colors={["#7C3AED", "#8B5CF6", "#38BDF8"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{
-          minWidth: 230,
-          paddingVertical: 16,
-          paddingHorizontal: 24,
-          borderRadius: 20,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+    <View style={styles.pillWrap}>
+      <BlurView
+        intensity={active ? 28 : 16}
+        tint="dark"
+        style={StyleSheet.absoluteFill}
+      />
+      <View
+        style={[
+          styles.pillInner,
+          {
+            backgroundColor: active
+              ? "rgba(255,255,255,0.08)"
+              : "rgba(255,255,255,0.045)",
+            borderColor: active
+              ? "rgba(255,255,255,0.14)"
+              : "rgba(255,255,255,0.08)",
+          },
+        ]}
       >
         <Text
-          style={{
-            color: "#FFFFFF",
-            fontSize: 16,
-            fontWeight: "900",
-          }}
+          style={[
+            styles.pillText,
+            {
+              color: active ? neon.core : TXT,
+              textShadowColor: active ? neon.halo : "transparent",
+            },
+          ]}
         >
-          ▶ Explorer les thèmes
+          {label}
         </Text>
-      </LinearGradient>
-    </Pressable>
+      </View>
+    </View>
   );
 }
 
+// ──────────────────────────────────────────────
+// HERO
+// ──────────────────────────────────────────────
+function Hero({ onExplorePress }: { onExplorePress: () => void }) {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.06,
+          duration: 3400,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 3400,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, [pulseAnim]);
+
+  return (
+    <View style={styles.heroContainer}>
+      <Text style={styles.heroEyebrow}>LEXIQUE ESSENTIEL</Text>
+      <Text style={styles.heroTitle}>Vocabulaire</Text>
+
+      <BlurView intensity={88} tint="dark" style={styles.glassCard}>
+        <LinearGradient
+          colors={[
+            "rgba(255,255,255,0.09)",
+            "transparent",
+            "rgba(251,146,60,0.07)",
+          ]}
+          style={StyleSheet.absoluteFill}
+        />
+
+        <View style={styles.cardHeader}>
+          <View style={[styles.statusDot, { backgroundColor: ORANGE }]} />
+          <Text style={styles.cardHeaderText}>MOTS DU QUOTIDIEN</Text>
+        </View>
+
+        <View style={styles.cardMainContent}>
+          <Animated.Text
+            style={[
+              styles.krBig,
+              {
+                transform: [{ scale: pulseAnim }],
+                textShadowColor: ORANGE,
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 28,
+              },
+            ]}
+          >
+            어휘
+          </Animated.Text>
+
+          <View style={styles.speechBubble}>
+            <Text style={styles.bubbleText}>
+              Apprends les mots essentiels par le thème de ton choix.
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.cardFooterWrap}>
+          <View style={styles.cardFooterRow}>
+            <GlassPill label="Quotidien" colorName="orange" active />
+            <GlassPill label="Situations" colorName="cyan" active={false} />
+            <GlassPill label="Oral naturel" colorName="pink" active={false} />
+          </View>
+        </View>
+      </BlurView>
+    </View>
+  );
+}
+
+// ──────────────────────────────────────────────
+// THEME CARD — MÊME PRINCIPE QUE SCENES / ÉTAPES
+// ──────────────────────────────────────────────
 function ThemeCard({
   title,
   subtitle,
   href,
   icon,
-  accent,
-  accentBg,
+  colorName,
 }: {
   title: string;
   subtitle: string;
   href: string;
   icon: string;
-  accent: string;
-  accentBg: string;
+  colorName: NeonKey;
 }) {
+  const neon = NEON[colorName];
+
   return (
     <Link href={href as any} asChild>
-      <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}>
-        <View
-          style={{
-            backgroundColor: CARD,
-            borderColor: LINE,
-            borderWidth: 1,
-            borderRadius: 24,
-            minHeight: 108,
-            overflow: "hidden",
-            flexDirection: "row",
-            alignItems: "center",
-            paddingRight: 14,
-          }}
-        >
-          <View
-            style={{
-              width: 6,
-              alignSelf: "stretch",
-              backgroundColor: accent,
-              borderTopRightRadius: 999,
-              borderBottomRightRadius: 999,
-            }}
-          />
+      <Pressable
+        style={({ pressed }) => [
+          styles.themeCard,
+          { opacity: pressed ? 0.85 : 1 },
+        ]}
+      >
+        <View style={styles.themeCardShell}>
+          <BlurView intensity={80} tint="dark" style={styles.themeCardBlur}>
+            <LinearGradient
+              colors={[neon.ambient, `${neon.core}08`, "transparent"]}
+              start={{ x: 0.0, y: 0.5 }}
+              end={{ x: 1.0, y: 0.5 }}
+              style={StyleSheet.absoluteFill}
+            />
 
-          <View
-            style={{
-              width: 58,
-              height: 58,
-              borderRadius: 18,
-              borderWidth: 1.3,
-              borderColor: accent,
-              backgroundColor: accentBg,
-              alignItems: "center",
-              justifyContent: "center",
-              marginLeft: 14,
-              marginRight: 14,
-            }}
-          >
-            <Text style={{ fontSize: 28 }}>{icon}</Text>
-          </View>
+            <View
+              style={[styles.cardAccentLine, { backgroundColor: neon.core }]}
+            />
 
-          <View style={{ flex: 1, minWidth: 0, paddingVertical: 16 }}>
-            <Text
-              style={{
-                color: TXT,
-                fontSize: 18,
-                fontWeight: "800",
-                marginBottom: 4,
-              }}
-              numberOfLines={2}
+            <View
+              style={[
+                styles.iconBox,
+                {
+                  backgroundColor: `${neon.core}22`,
+                  borderColor: `${neon.core}50`,
+                },
+              ]}
             >
-              {title}
-            </Text>
+              <Text style={styles.themeIcon}>{icon}</Text>
+            </View>
 
-            <Text
-              style={{
-                color: MUTED,
-                fontSize: 15,
-                lineHeight: 22,
-              }}
-              numberOfLines={2}
-            >
-              {subtitle}
-            </Text>
-          </View>
+            <View style={styles.stepTextWrap}>
+              <Text style={styles.themeTitle}>{title}</Text>
+              <Text style={styles.themeSub}>{subtitle}</Text>
+            </View>
 
-          <Text
-            style={{
-              color: SOFT,
-              fontSize: 30,
-              fontWeight: "400",
-              marginLeft: 10,
-            }}
-          >
-            ›
-          </Text>
+            <View style={styles.arrowWrap}>
+              <Text style={styles.arrow}>›</Text>
+            </View>
+          </BlurView>
         </View>
       </Pressable>
     </Link>
   );
 }
 
+// ──────────────────────────────────────────────
+// PAGE
+// ──────────────────────────────────────────────
 export default function VocabularyHub() {
   const scrollRef = useRef<ScrollView>(null);
   const [themesY, setThemesY] = useState(0);
@@ -257,281 +325,317 @@ export default function VocabularyHub() {
       subtitle: "Temps, saisons, température, phrases utiles.",
       href: "/voc/meteo",
       icon: "🌦️",
-      accent: CYAN,
-      accentBg: CYAN_SOFT,
+      colorName: "cyan" as const,
     },
     {
       title: "Objets du quotidien",
-      subtitle: "Maison, bureau, sac, tech… les noms les plus utiles.",
+      subtitle: "Maison, bureau, sac, tech… les mots les plus utiles.",
       href: "/voc/objets",
       icon: "👜",
-      accent: ORANGE,
-      accentBg: ORANGE_SOFT,
+      colorName: "orange" as const,
     },
     {
       title: "Animaux",
       subtitle: "Animaux courants et vocabulaire simple du quotidien.",
       href: "/voc/animals",
       icon: "🐾",
-      accent: PINK,
-      accentBg: PINK_SOFT,
+      colorName: "pink" as const,
     },
     {
       title: "Voyage",
       subtitle: "Aéroport, hôtel, transports, imprévus utiles.",
       href: "/voc/voyage",
       icon: "✈️",
-      accent: CYAN,
-      accentBg: CYAN_SOFT,
+      colorName: "cyan" as const,
     },
     {
       title: "Lieux & bâtiments",
       subtitle: "Repères, étages, bâtiments, orientation simple.",
       href: "/voc/lieux",
       icon: "🏢",
-      accent: VIOLET,
-      accentBg: VIOLET_SOFT,
+      colorName: "purple" as const,
     },
     {
       title: "Santé & corps humain",
       subtitle: "Corps, symptômes simples, pharmacie, urgences légères.",
       href: "/voc/health",
       icon: "🩺",
-      accent: TEAL,
-      accentBg: TEAL_SOFT,
+      colorName: "teal" as const,
     },
   ] as const;
 
   return (
-    <LinearGradient colors={[BG0, BG1, BG2]} style={{ flex: 1 }}>
-      <HeroOrb size={260} color="rgba(124,58,237,0.18)" top={-120} left={-90} />
-      <HeroOrb
-        size={340}
-        color="rgba(34,211,238,0.14)"
-        bottom={-165}
-        right={-110}
-      />
-      <HeroOrb size={180} color="rgba(236,72,153,0.08)" top={120} right={-70} />
+    <SafeAreaView style={{ flex: 1, backgroundColor: BG_DEEP }} edges={["top"]}>
+      <CinematicBackground />
 
       <ScrollView
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingTop: 12,
-          paddingBottom: 140,
-        }}
+        contentContainerStyle={styles.scrollContent}
       >
-        {/* HERO */}
-        <View
-          style={{
-            backgroundColor: CARD,
-            borderColor: LINE,
-            borderWidth: 1,
-            borderRadius: 30,
-            padding: 16,
-            marginBottom: 22,
-            overflow: "hidden",
-            marginTop: 30,
-          }}
-        >
-          <HeroOrb
-            size={210}
-            color="rgba(139,92,246,0.12)"
-            top={-68}
-            left={-22}
-          />
-          <HeroOrb
-            size={150}
-            color="rgba(139,92,246,0.12)"
-            top={34}
-            left={92}
-          />
-          <HeroOrb
-            size={104}
-            color="rgba(139,92,246,0.18)"
-            top={74}
-            left={118}
-          />
-          <HeroOrb
-            size={170}
-            color="rgba(244,114,182,0.10)"
-            top={78}
-            right={-46}
-          />
-          <HeroOrb
-            size={180}
-            color="rgba(34,211,238,0.14)"
-            bottom={-78}
-            right={-34}
-          />
+        <Hero onExplorePress={handleExplorePress} />
 
-          <View
-            style={{
-              borderRadius: 30,
-              borderWidth: 2,
-              borderColor: VIOLET,
-              backgroundColor: "rgba(139,92,246,0.10)",
-              height: 158,
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 26,
-            }}
-          >
-            <View
-              style={{
-                width: 118,
-                height: 118,
-                borderRadius: 999,
-                backgroundColor: "rgba(139,92,246,0.14)",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text
-                style={{
-                  color: TXT,
-                  fontSize: 58,
-                  fontWeight: "700",
-                }}
-              >
-                말
-              </Text>
-            </View>
-          </View>
+        <View style={{ height: 48 }} />
 
-          <Text
-            style={{
-              color: FAINT,
-              fontSize: 12,
-              fontWeight: "800",
-              letterSpacing: 2.6,
-              textAlign: "center",
-              marginBottom: 10,
-            }}
-          >
-            VOCABULAIRE
+        <View style={styles.section}>
+          <Text onLayout={handleThemesLayout} style={styles.sectionTitle}>
+            Thèmes
           </Text>
 
-          <Text
-            style={{
-              color: TXT,
-              fontSize: 34,
-              lineHeight: 40,
-              fontWeight: "300",
-              textAlign: "center",
-              marginBottom: 14,
-            }}
-          >
-            Mots & situations
-          </Text>
-
-          <Text
-            style={{
-              color: MUTED,
-              textAlign: "center",
-              fontSize: 16,
-              lineHeight: 30,
-              paddingHorizontal: 14,
-              marginBottom: 24,
-            }}
-          >
-            Apprends les mots essentiels par thème, avec exemples courts et
-            utiles dans la vraie vie. Les dialogues plus longs sont dans{" "}
-            <Text style={{ color: TXT, fontWeight: "800" }}>Parler</Text>.
-          </Text>
-
-          <View style={{ alignItems: "center", marginBottom: 18 }}>
-            <CTAButton
-              label="Explorer les thèmes"
-              onPress={handleExplorePress}
+          {THEMES.map((theme) => (
+            <ThemeCard
+              key={theme.href}
+              title={theme.title}
+              subtitle={theme.subtitle}
+              href={theme.href}
+              icon={theme.icon}
+              colorName={theme.colorName}
             />
-          </View>
-
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-              flexWrap: "wrap",
-              gap: 10,
-            }}
-          >
-            <Pill label="Quotidien" tint={CYAN} tintBg={CYAN_SOFT} />
-            <Pill
-              label="Situations"
-              tint={"rgba(255,255,255,0.24)"}
-              tintBg={"rgba(255,255,255,0.04)"}
-            />
-            <Pill
-              label="Oral naturel"
-              tint={"#A3A33A"}
-              tintBg={"rgba(163,163,58,0.12)"}
-            />
-          </View>
-        </View>
-
-        {/* THEMES */}
-        <View
-          onLayout={handleThemesLayout}
-          style={{
-            backgroundColor: CARD,
-            borderColor: LINE,
-            borderWidth: 1,
-            borderRadius: 30,
-            padding: 16,
-            overflow: "hidden",
-          }}
-        >
-          <Text
-            style={{
-              color: FAINT,
-              fontSize: 12,
-              fontWeight: "800",
-              letterSpacing: 2.2,
-              marginBottom: 8,
-            }}
-          >
-            THÈMES
-          </Text>
-
-          <Text
-            style={{
-              color: TXT,
-              fontSize: 22,
-              lineHeight: 28,
-              fontWeight: "400",
-              marginBottom: 8,
-            }}
-          >
-            Choisis un thème
-          </Text>
-
-          <Text
-            style={{
-              color: MUTED,
-              fontSize: 16,
-              lineHeight: 27,
-              marginBottom: 18,
-            }}
-          >
-            Sélectionne directement le vocabulaire que tu veux travailler.
-          </Text>
-
-          <View style={{ gap: 14 }}>
-            {THEMES.map((theme) => (
-              <ThemeCard
-                key={theme.href}
-                title={theme.title}
-                subtitle={theme.subtitle}
-                href={theme.href}
-                icon={theme.icon}
-                accent={theme.accent}
-                accentBg={theme.accentBg}
-              />
-            ))}
-          </View>
+          ))}
         </View>
       </ScrollView>
-    </LinearGradient>
+    </SafeAreaView>
   );
 }
+
+// ──────────────────────────────────────────────
+// STYLES
+// ──────────────────────────────────────────────
+const styles = StyleSheet.create({
+  pageGlow: {
+    position: "absolute",
+    width: width * 0.9,
+    height: width * 0.9,
+    borderRadius: width * 0.45,
+  },
+
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 140,
+  },
+
+  heroContainer: {
+    alignItems: "center",
+  },
+
+  heroEyebrow: {
+    color: ORANGE,
+    fontFamily: fonts.bold,
+    fontSize: 13.5,
+    letterSpacing: 3.2,
+    marginBottom: 8,
+    textTransform: "uppercase",
+  },
+
+  heroTitle: {
+    color: TXT,
+    fontSize: 46,
+    fontFamily: fonts.black,
+    letterSpacing: -1.4,
+    marginTop: 15,
+    marginBottom: 35,
+  },
+
+  glassCard: {
+    width: 340,
+    minHeight: 252,
+    borderRadius: 34,
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.16)",
+    overflow: "hidden",
+    padding: 24,
+    justifyContent: "space-between",
+    backgroundColor: "rgba(255,255,255,0.02)",
+  },
+
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+
+  cardHeaderText: {
+    color: MUTED,
+    fontSize: 11.5,
+    fontFamily: fonts.bold,
+    letterSpacing: 1.6,
+  },
+
+  cardMainContent: {
+    alignItems: "center",
+    marginVertical: 12,
+  },
+
+  krBig: {
+    color: TXT,
+    fontSize: 56,
+    fontFamily: fonts.kr,
+    marginBottom: 16,
+  },
+
+  speechBubble: {
+    backgroundColor: "rgba(0,0,0,0.48)",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    width: "100%",
+    marginBottom: 18,
+  },
+
+  bubbleText: {
+    color: MUTED,
+    fontSize: 14.5,
+    lineHeight: 21,
+    textAlign: "center",
+    fontFamily: fonts.medium,
+  },
+
+  heroButtonPressable: {
+    marginTop: 2,
+  },
+
+  heroButtonShell: {
+    minWidth: 230,
+    paddingHorizontal: 28,
+    paddingVertical: 16,
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: ORANGE,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    backgroundColor: "rgba(255,255,255,0.03)",
+  },
+
+  heroButtonText: {
+    color: TXT,
+    fontSize: 16,
+    fontFamily: fonts.bold,
+  },
+
+  cardFooterWrap: {
+    marginTop: 10,
+  },
+
+  cardFooterRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+
+  pillWrap: {
+    overflow: "hidden",
+    borderRadius: 999,
+  },
+
+  pillInner: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 999,
+  },
+
+  pillText: {
+    fontSize: 10,
+    fontFamily: fonts.black,
+    textTransform: "uppercase",
+    letterSpacing: 1.6,
+    textShadowRadius: 6,
+  },
+
+  section: {
+    width: "100%",
+  },
+
+  sectionTitle: {
+    color: TXT,
+    fontSize: 23,
+    fontFamily: fonts.black,
+    letterSpacing: -0.7,
+    marginBottom: 20,
+  },
+
+  themeCardShell: {
+    borderRadius: 26,
+    overflow: "hidden",
+    backgroundColor: "rgba(255,255,255,0.02)",
+    marginBottom: 14,
+  },
+
+  themeCardBlur: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 18,
+    position: "relative",
+    minHeight: 94,
+  },
+
+  cardAccentLine: {
+    position: "absolute",
+    left: 0,
+    top: 18,
+    bottom: 18,
+    width: 2,
+    borderTopRightRadius: 4,
+    borderBottomRightRadius: 4,
+    opacity: 0.9,
+  },
+
+  iconBox: {
+    width: 58,
+    height: 58,
+    borderRadius: 18,
+    borderWidth: 0.5,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 18,
+  },
+
+  themeIcon: {
+    fontSize: 26,
+  },
+
+  stepTextWrap: {
+    flex: 1,
+    justifyContent: "center",
+    paddingRight: 12,
+  },
+
+  themeTitle: {
+    color: TXT,
+    fontSize: 19,
+    fontFamily: fonts.bold,
+    letterSpacing: -0.4,
+  },
+
+  themeSub: {
+    color: MUTED,
+    fontSize: 14,
+    marginTop: 4,
+    fontFamily: fonts.medium,
+    lineHeight: 20,
+  },
+
+  arrowWrap: {
+    justifyContent: "center",
+    alignItems: "center",
+    minWidth: 24,
+    alignSelf: "stretch",
+  },
+
+  arrow: {
+    color: MUTED,
+    fontSize: 26,
+    fontWeight: "300",
+  },
+});

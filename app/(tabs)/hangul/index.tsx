@@ -1,708 +1,524 @@
+import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
-import React, { useRef, useState } from "react";
+import React from "react";
 import {
-  LayoutChangeEvent,
+  Animated,
+  Easing,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../../_store";
 
-const BG0 = "#070812";
-const BG1 = "#0B0B1D";
-const BG2 = "#0B0F22";
+// ──────────────────────────────────────────────
+// DESIGN SYSTEM
+// ──────────────────────────────────────────────
+const BG_DEEP = "#050508";
+const BG_NAVY = "#0A0D1A";
+const TXT = "rgba(255,255,255,0.98)";
+const MUTED = "rgba(255,255,255,0.68)";
 
-const TXT = "rgba(255,255,255,0.96)";
-const MUTED = "rgba(255,255,255,0.74)";
-const SOFT = "rgba(255,255,255,0.56)";
-const FAINT = "rgba(255,255,255,0.42)";
-
-const CARD = "rgba(255,255,255,0.065)";
-const CARD_SOFT = "rgba(255,255,255,0.045)";
-const CARD_DEEP = "rgba(14,18,36,0.92)";
-const LINE = "rgba(255,255,255,0.11)";
-const LINE_STRONG = "rgba(255,255,255,0.16)";
-
-const CYAN = "#22D3EE";
-const CYAN_SOFT = "rgba(34,211,238,0.18)";
 const PINK = "#F472B6";
-const PINK_SOFT = "rgba(244,114,182,0.16)";
-const VIOLET = "#8B5CF6";
-const VIOLET_SOFT = "rgba(139,92,246,0.18)";
+const CYAN = "#22D3EE";
 const ORANGE = "#FB923C";
-const ORANGE_SOFT = "rgba(251,146,60,0.16)";
-const TEAL = "#14B8A6";
-const TEAL_SOFT = "rgba(20,184,166,0.16)";
+const PURPLE = "#C084FC";
 
-const SECTION_GAP = 18;
-const ITEM_GAP = 14;
-const INNER_PAD = 16;
+const fonts = {
+  bold: "Outfit_700Bold",
+  black: "Outfit_900Black",
+  medium: "Outfit_500Medium",
+  kr: "NotoSansKR_700Bold",
+};
 
-function SectionEyebrow({ label }: { label: string }) {
-  return (
-    <Text
-      style={{
-        color: FAINT,
-        fontSize: 12,
-        fontWeight: "800",
-        letterSpacing: 2.2,
-        marginBottom: 8,
-      }}
-    >
-      {label}
-    </Text>
-  );
-}
-
-function GlassCard({
-  children,
-  mb = SECTION_GAP,
-  padding = INNER_PAD,
-}: {
-  children: React.ReactNode;
-  mb?: number;
-  padding?: number;
-}) {
-  return (
-    <View
-      style={{
-        backgroundColor: CARD,
-        borderColor: LINE,
-        borderWidth: 1,
-        borderRadius: 28,
-        padding,
-        marginBottom: mb,
-        overflow: "hidden",
-      }}
-    >
-      {children}
-    </View>
-  );
-}
-
-function HeroOrb({
-  size,
-  color,
-  top,
-  left,
-  right,
-  bottom,
-  opacity = 1,
-}: {
-  size: number;
-  color: string;
-  top?: number;
-  left?: number;
-  right?: number;
-  bottom?: number;
-  opacity?: number;
-}) {
-  return (
-    <View
-      style={{
-        position: "absolute",
-        width: size,
-        height: size,
-        borderRadius: 999,
-        backgroundColor: color,
-        top,
-        left,
-        right,
-        bottom,
-        opacity,
-      }}
-    />
-  );
-}
-
-function Pill({
-  label,
-  active,
-  tint = CYAN,
-  tintBg = CYAN_SOFT,
-}: {
-  label: string;
-  active?: boolean;
-  tint?: string;
-  tintBg?: string;
-}) {
-  return (
-    <View
-      style={{
-        paddingHorizontal: 12,
-        paddingVertical: 7,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: active ? tint : "rgba(255,255,255,0.35)",
-        backgroundColor: active ? tintBg : "rgba(255,255,255,0.05)",
-      }}
-    >
-      <Text
-        style={{
-          color: TXT,
-          fontWeight: "800",
-          fontSize: 12,
-        }}
-      >
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-function CTAButton({ label, onPress }: { label: string; onPress: () => void }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}
-    >
-      <LinearGradient
-        colors={["#7C3AED", "#8B5CF6", "#38BDF8"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{
-          paddingVertical: 15,
-          paddingHorizontal: 22,
-          borderRadius: 18,
-          alignSelf: "flex-start",
-          minWidth: 170,
-          alignItems: "center",
-        }}
-      >
-        <Text
-          style={{
-            color: "white",
-            fontWeight: "900",
-            fontSize: 15,
-          }}
-        >
-          ▶ {label}
-        </Text>
-      </LinearGradient>
-    </Pressable>
-  );
-}
-
-function ModeCard({
-  title,
-  subtitle,
-  borderColor,
-  glowColor,
-}: {
+type HangulModule = {
   title: string;
-  subtitle: string;
-  borderColor: string;
-  glowColor: string;
-}) {
-  return (
-    <View
-      style={{
-        backgroundColor: CARD_SOFT,
-        borderColor,
-        borderWidth: 1.2,
-        borderRadius: 24,
-        padding: 18,
-        overflow: "hidden",
-      }}
-    >
-      <View
-        style={{
-          position: "absolute",
-          right: -8,
-          top: -10,
-          width: 92,
-          height: 92,
-          borderRadius: 999,
-          backgroundColor: glowColor,
-        }}
-      />
-      <Text
-        style={{
-          color: TXT,
-          fontSize: 17,
-          fontWeight: "800",
-          marginBottom: 6,
-        }}
-      >
-        {title}
-      </Text>
-      <Text
-        style={{
-          color: MUTED,
-          fontSize: 14,
-          lineHeight: 22,
-        }}
-      >
-        {subtitle}
-      </Text>
-    </View>
-  );
-}
-
-function ModuleCard({
-  title,
-  subtitle,
-  href,
-  tag,
-  accent,
-  accentBg,
-  icon,
-}: {
-  title: string;
-  subtitle: string;
-  href: string;
-  tag?: string;
-  accent: string;
-  accentBg: string;
+  sub: string;
   icon: string;
+  href: string;
+  accent: string;
+  gradient: string[];
+};
+
+const HANGUL_MODULES: HangulModule[] = [
+  {
+    title: "Voyelles de base",
+    sub: "6 voyelles",
+    href: "/(tabs)/hangul/vowels-basic",
+    icon: "ㅏ",
+    accent: PINK,
+    gradient: [
+      "rgba(244, 114, 182, 0.22)",
+      "rgba(244, 114, 182, 0.08)",
+      "transparent",
+    ],
+  },
+  {
+    title: "Consonnes de base",
+    sub: "14 consonnes",
+    href: "/(tabs)/hangul/consonants-basic",
+    icon: "ㄱ",
+    accent: CYAN,
+    gradient: [
+      "rgba(34, 211, 238, 0.22)",
+      "rgba(34, 211, 238, 0.08)",
+      "transparent",
+    ],
+  },
+  {
+    title: "Voyelles composées",
+    sub: "Combinaisons avancées",
+    href: "/(tabs)/hangul/vowels-compound",
+    icon: "ㅘ",
+    accent: PURPLE,
+    gradient: [
+      "rgba(192, 132, 252, 0.22)",
+      "rgba(192, 132, 252, 0.08)",
+      "transparent",
+    ],
+  },
+  {
+    title: "Consonnes doubles",
+    sub: "Sons tendus",
+    href: "/(tabs)/hangul/consonants-tense",
+    icon: "ㄲ",
+    accent: PINK,
+    gradient: [
+      "rgba(244, 114, 182, 0.22)",
+      "rgba(244, 114, 182, 0.08)",
+      "transparent",
+    ],
+  },
+  {
+    title: "Batchim",
+    sub: "Consonnes finales",
+    href: "/(tabs)/hangul/batchim",
+    icon: "각",
+    accent: CYAN,
+    gradient: [
+      "rgba(34, 211, 238, 0.22)",
+      "rgba(34, 211, 238, 0.08)",
+      "transparent",
+    ],
+  },
+];
+
+// ──────────────────────────────────────────────
+// SCREEN
+// ──────────────────────────────────────────────
+export default function HangulHub() {
+  const { progress } = useStore();
+  const displayLevel = Math.max(1, progress.hangulLevel ?? 1);
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: BG_DEEP }}>
+      <LinearGradient colors={[BG_DEEP, BG_NAVY]} style={{ flex: 1 }}>
+        <View
+          style={[
+            styles.pageGlow,
+            { top: -140, left: -100, backgroundColor: "rgba(168,85,247,0.07)" },
+          ]}
+        />
+        <View
+          style={[
+            styles.pageGlow,
+            {
+              bottom: 100,
+              right: -90,
+              backgroundColor: "rgba(34,211,238,0.05)",
+            },
+          ]}
+        />
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <HangulHero displayLevel={displayLevel} />
+
+          <View style={{ height: 48 }} />
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Étapes d'apprentissage</Text>
+
+            {HANGUL_MODULES.map((module) => (
+              <HangulStepCard
+                key={module.href}
+                title={module.title}
+                sub={module.sub}
+                icon={module.icon}
+                href={module.href}
+                accent={module.accent}
+                gradient={module.gradient}
+              />
+            ))}
+          </View>
+        </ScrollView>
+      </LinearGradient>
+    </SafeAreaView>
+  );
+}
+
+// ──────────────────────────────────────────────
+// HERO
+// ──────────────────────────────────────────────
+function HangulHero({ displayLevel }: { displayLevel: number }) {
+  const pulseAnim = React.useRef(new Animated.Value(1)).current;
+
+  React.useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.06,
+          duration: 3400,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 3400,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, []);
+
+  return (
+    <View style={styles.heroContainer}>
+      <Text style={styles.heroEyebrow}>SÉOUL IMMERSION</Text>
+      <Text style={styles.heroTitle}>Hangul</Text>
+
+      <BlurView intensity={88} tint="dark" style={styles.glassCard}>
+        <LinearGradient
+          colors={[
+            "rgba(255,255,255,0.09)",
+            "transparent",
+            "rgba(244,114,182,0.07)",
+          ]}
+          style={StyleSheet.absoluteFill}
+        />
+
+        <View style={styles.cardHeader}>
+          <View style={[styles.statusDot, { backgroundColor: "#F472B6" }]} />
+          <Text style={styles.cardHeaderText}>FONDATIONS CORÉENNES</Text>
+        </View>
+
+        <View style={styles.cardMainContent}>
+          {/* 🔥 VERSION ANIMÉE */}
+          <Animated.Text
+            style={[
+              styles.krBig,
+              {
+                transform: [{ scale: pulseAnim }],
+                textShadowColor: "#F472B6",
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 28,
+              },
+            ]}
+          >
+            한글
+          </Animated.Text>
+
+          <View style={styles.speechBubble}>
+            <Text style={styles.bubbleText}>
+              Apprendre l'alphabet coréen par étape.
+            </Text>
+          </View>
+        </View>
+
+        {/* footer inchangé */}
+      </BlurView>
+    </View>
+  );
+}
+
+// ──────────────────────────────────────────────
+// STEP CARD — EXACTEMENT MÊME LOGIQUE QUE SCENES
+// ──────────────────────────────────────────────
+function HangulStepCard({
+  title,
+  sub,
+  icon,
+  href,
+  accent,
+  gradient,
+}: {
+  title: string;
+  sub: string;
+  icon: string;
+  href: string;
+  accent: string;
+  gradient: string[];
 }) {
   return (
     <Link href={href as any} asChild>
-      <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}>
-        <View
-          style={{
-            backgroundColor: CARD,
-            borderColor: LINE,
-            borderWidth: 1,
-            borderRadius: 24,
-            padding: 14,
-            overflow: "hidden",
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <View
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 14,
-              bottom: 14,
-              width: 5,
-              borderTopRightRadius: 999,
-              borderBottomRightRadius: 999,
-              backgroundColor: accent,
-            }}
-          />
+      <Pressable
+        style={({ pressed }) => [
+          styles.themeCard,
+          { opacity: pressed ? 0.85 : 1 },
+        ]}
+      >
+        <View style={styles.themeCardShell}>
+          <BlurView intensity={80} tint="dark" style={styles.themeCardBlur}>
+            <LinearGradient
+              colors={gradient}
+              start={{ x: 0.0, y: 0.5 }}
+              end={{ x: 1.0, y: 0.5 }}
+              style={StyleSheet.absoluteFill}
+            />
 
-          <View
-            style={{
-              width: 58,
-              height: 58,
-              borderRadius: 18,
-              borderWidth: 1.3,
-              borderColor: accent,
-              backgroundColor: accentBg,
-              alignItems: "center",
-              justifyContent: "center",
-              marginLeft: 14,
-              marginRight: 14,
-            }}
-          >
-            <Text style={{ fontSize: 27 }}>{icon}</Text>
-          </View>
+            <View
+              style={[styles.cardAccentLine, { backgroundColor: accent }]}
+            />
 
-          <View style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>
-            <Text
-              style={{
-                color: TXT,
-                fontSize: 18,
-                fontWeight: "900",
-              }}
-              numberOfLines={2}
+            <View
+              style={[
+                styles.iconBox,
+                {
+                  backgroundColor: `${accent}22`,
+                  borderColor: `${accent}50`,
+                },
+              ]}
             >
-              {title}
-            </Text>
+              <Text style={styles.hangulIcon}>{icon}</Text>
+            </View>
 
-            <Text
-              style={{
-                color: MUTED,
-                marginTop: 5,
-                lineHeight: 21,
-                fontSize: 14,
-              }}
-              numberOfLines={2}
-            >
-              {subtitle}
-            </Text>
-          </View>
+            <View style={styles.stepTextWrap}>
+              <Text style={styles.themeTitle}>{title}</Text>
+              <Text style={styles.themeSub}>{sub}</Text>
+            </View>
 
-          <View style={{ alignItems: "flex-end", justifyContent: "center" }}>
-            {!!tag && (
-              <View
-                style={{
-                  paddingHorizontal: 11,
-                  paddingVertical: 7,
-                  borderRadius: 999,
-                  borderWidth: 1,
-                  borderColor: accent,
-                  backgroundColor: accentBg,
-                  marginBottom: 10,
-                }}
-              >
-                <Text
-                  style={{
-                    color: TXT,
-                    fontWeight: "900",
-                    fontSize: 12,
-                  }}
-                >
-                  {tag}
-                </Text>
-              </View>
-            )}
-
-            <Text
-              style={{
-                color: "rgba(255,255,255,0.55)",
-                fontSize: 28,
-                fontWeight: "500",
-                marginTop: tag ? 0 : 2,
-              }}
-            >
-              ›
-            </Text>
-          </View>
+            <View style={styles.arrowWrap}>
+              <Text style={styles.arrow}>›</Text>
+            </View>
+          </BlurView>
         </View>
       </Pressable>
     </Link>
   );
 }
 
-export default function HangulHub() {
-  const { progress } = useStore();
+// ──────────────────────────────────────────────
+// STYLES
+// ──────────────────────────────────────────────
+const styles = StyleSheet.create({
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 140,
+  },
 
-  const scrollRef = useRef<ScrollView>(null);
-  const [modulesY, setModulesY] = useState(0);
+  pageGlow: {
+    position: "absolute",
+    width: 340,
+    height: 340,
+    borderRadius: 170,
+  },
 
-  const handleModulesLayout = (e: LayoutChangeEvent) => {
-    setModulesY(e.nativeEvent.layout.y);
-  };
+  heroContainer: {
+    alignItems: "center",
+  },
 
-  const handleStartPress = () => {
-    scrollRef.current?.scrollTo({
-      y: Math.max(modulesY - 12, 0),
-      animated: true,
-    });
-  };
+  heroEyebrow: {
+    color: PINK,
+    fontFamily: fonts.bold,
+    fontSize: 13.5,
+    letterSpacing: 3.2,
+    marginBottom: 8,
+  },
 
-  const MODULES = [
-    {
-      title: "Voyelles de base",
-      subtitle: "Les 6 voyelles essentielles pour commencer à lire.",
-      href: "/(tabs)/hangul/vowels-basic",
-      tag: "ÉTAPE 1",
-      accent: PINK,
-      accentBg: PINK_SOFT,
-      icon: "ㅏ",
-    },
-    {
-      title: "Consonnes de base",
-      subtitle: "Les consonnes clés avec syllabes et repères de lecture.",
-      href: "/(tabs)/hangul/consonants-basic",
-      tag: "ÉTAPE 2",
-      accent: CYAN,
-      accentBg: CYAN_SOFT,
-      icon: "ㄱ",
-    },
-    {
-      title: "Voyelles composées",
-      subtitle: "Découvre les combinaisons fréquentes et leur prononciation.",
-      href: "/(tabs)/hangul/vowels-compound",
-      tag: "ÉTAPE 3",
-      accent: VIOLET,
-      accentBg: VIOLET_SOFT,
-      icon: "ㅘ",
-    },
-    {
-      title: "Consonnes doubles",
-      subtitle: "Travaille les sons tendus avec écoute et répétition.",
-      href: "/(tabs)/hangul/consonants-tense",
-      tag: "ÉTAPE 4",
-      accent: ORANGE,
-      accentBg: ORANGE_SOFT,
-      icon: "ㄲ",
-    },
-    {
-      title: "Batchim",
-      subtitle: "Comprends les consonnes finales et entraîne ta lecture.",
-      href: "/(tabs)/hangul/batchim",
-      tag: "ÉTAPE 5",
-      accent: TEAL,
-      accentBg: TEAL_SOFT,
-      icon: "각",
-    },
-  ] as const;
+  heroTitle: {
+    color: TXT,
+    fontSize: 46,
+    fontFamily: fonts.black,
+    letterSpacing: -1.4,
+    marginTop: 15,
+    marginBottom: 35,
+  },
 
-  const displayLevel = Math.max(1, progress.hangulLevel ?? 1);
+  glassCard: {
+    width: 340,
+    minHeight: 242,
+    borderRadius: 34,
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.16)",
+    overflow: "hidden",
+    padding: 24,
+    justifyContent: "space-between",
+    backgroundColor: "rgba(255,255,255,0.02)",
+  },
 
-  return (
-    <LinearGradient colors={[BG0, BG1, BG2]} style={{ flex: 1 }}>
-      {/* blobs globaux */}
-      <HeroOrb size={260} color="rgba(124,58,237,0.18)" top={-120} left={-90} />
-      <HeroOrb
-        size={340}
-        color="rgba(34,211,238,0.14)"
-        bottom={-165}
-        right={-110}
-      />
-      <HeroOrb size={180} color="rgba(236,72,153,0.09)" top={120} right={-70} />
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
 
-      <ScrollView
-        ref={scrollRef}
-        contentContainerStyle={{ padding: 16, paddingBottom: 140 }}
-      >
-        {/* HERO */}
-        <GlassCard mb={22} padding={0}>
-          <View
-            style={{
-              padding: 16,
-              overflow: "hidden",
-              borderRadius: 28,
-            }}
-          >
-            <HeroOrb
-              size={210}
-              color="rgba(244,114,182,0.10)"
-              top={-70}
-              left={-40}
-            />
-            <HeroOrb
-              size={148}
-              color="rgba(139,92,246,0.16)"
-              top={18}
-              left={58}
-            />
-            <HeroOrb
-              size={92}
-              color="rgba(244,114,182,0.18)"
-              top={62}
-              left={104}
-            />
-            <HeroOrb
-              size={170}
-              color="rgba(34,211,238,0.14)"
-              bottom={-70}
-              right={-44}
-            />
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
 
-            <View
-              style={{
-                borderRadius: 30,
-                borderWidth: 2,
-                borderColor: PINK,
-                backgroundColor: "rgba(244,114,182,0.10)",
-                height: 168,
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 18,
-              }}
-            >
-              <View
-                style={{
-                  width: 112,
-                  height: 112,
-                  borderRadius: 999,
-                  backgroundColor: "rgba(244,114,182,0.13)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Text
-                  style={{
-                    color: TXT,
-                    fontSize: 58,
-                    fontWeight: "700",
-                  }}
-                >
-                  회
-                </Text>
-              </View>
-            </View>
+  cardHeaderText: {
+    color: MUTED,
+    fontSize: 11.5,
+    fontFamily: fonts.bold,
+    letterSpacing: 1.6,
+  },
 
-            <Text
-              style={{
-                color: FAINT,
-                fontSize: 12,
-                fontWeight: "800",
-                letterSpacing: 2.4,
-                textAlign: "center",
-                marginBottom: 8,
-              }}
-            >
-              FONDATIONS
-            </Text>
+  cardMainContent: {
+    alignItems: "center",
+    marginVertical: 12,
+  },
 
-            <Text
-              style={{
-                color: TXT,
-                fontSize: 34,
-                lineHeight: 40,
-                fontWeight: "300",
-                textAlign: "center",
-                marginBottom: 10,
-              }}
-            >
-              Hangul
-            </Text>
+  krBig: {
+    color: TXT,
+    fontSize: 56,
+    fontFamily: fonts.kr,
+    marginBottom: 16,
+  },
 
-            <Text
-              style={{
-                color: MUTED,
-                textAlign: "center",
-                fontSize: 16,
-                lineHeight: 28,
-                paddingHorizontal: 10,
-                marginBottom: 18,
-              }}
-            >
-              Apprends l’alphabet coréen pas à pas, avec lecture, écoute et
-              progression guidée.
-            </Text>
+  speechBubble: {
+    display: "flex",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.48)",
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    width: "100%",
+  },
 
-            <View style={{ alignItems: "center", marginBottom: 14 }}>
-              <CTAButton label="Commencer" onPress={handleStartPress} />
-            </View>
+  bubbleText: {
+    color: MUTED,
+    fontSize: 14.5,
+    lineHeight: 21,
+    textAlign: "center",
+    fontFamily: fonts.medium,
+  },
 
-            <View
-              style={{
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "row",
-                flexWrap: "wrap",
-                gap: 10,
-              }}
-            >
-              <Pill
-                label={`Progression ${displayLevel}/5`}
-                active
-                tint={PINK}
-                tintBg={PINK_SOFT}
-              />
-              <Pill label="Lecture guidée" />
-              <Pill label="Audio + exemples" />
-            </View>
-          </View>
-        </GlassCard>
+  cardFooterWrap: {
+    marginTop: 8,
+  },
 
-        {/* MODULES */}
-        <View onLayout={handleModulesLayout}>
-          <GlassCard mb={22}>
-            <SectionEyebrow label="MODULES" />
-            <Text
-              style={{
-                color: TXT,
-                fontSize: 22,
-                lineHeight: 28,
-                fontWeight: "400",
-                marginBottom: 8,
-              }}
-            >
-              Choisis une étape
-            </Text>
+  cardFooterRow: {
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "center",
+    marginBottom: 10,
+  },
 
-            <Text
-              style={{
-                color: MUTED,
-                fontSize: 16,
-                lineHeight: 27,
-                marginBottom: 18,
-              }}
-            >
-              Sélectionne directement la base que tu veux travailler.
-            </Text>
+  cardFooterSingle: {
+    flexDirection: "row",
+    justifyContent: "center",
+  },
 
-            <View style={{ gap: ITEM_GAP }}>
-              {MODULES.map((m) => (
-                <ModuleCard
-                  key={m.href}
-                  title={m.title}
-                  subtitle={m.subtitle}
-                  href={m.href}
-                  tag={m.tag}
-                  accent={m.accent}
-                  accentBg={m.accentBg}
-                  icon={m.icon}
-                />
-              ))}
-            </View>
-          </GlassCard>
-        </View>
+  miniTag: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.15)",
+  },
 
-        {/* ASSIMILATION */}
-        <GlassCard mb={0}>
-          <View
-            style={{
-              backgroundColor: "rgba(34,211,238,0.10)",
-              borderColor: "rgba(34,211,238,0.32)",
-              borderWidth: 1,
-              borderRadius: 22,
-              padding: 16,
-              overflow: "hidden",
-            }}
-          >
-            <HeroOrb
-              size={140}
-              color="rgba(34,211,238,0.10)"
-              top={-45}
-              right={-28}
-            />
-            <SectionEyebrow label="LECTURE NATURELLE" />
+  miniTagText: {
+    color: TXT,
+    fontSize: 11.5,
+    fontFamily: fonts.medium,
+  },
 
-            <Text
-              style={{
-                color: TXT,
-                fontSize: 21,
-                lineHeight: 27,
-                fontWeight: "800",
-                marginBottom: 8,
-              }}
-            >
-              Prêt pour une lecture plus réelle ?
-            </Text>
+  section: {
+    width: "100%",
+  },
 
-            <Text
-              style={{
-                color: MUTED,
-                fontSize: 15,
-                lineHeight: 24,
-                marginBottom: 16,
-              }}
-            >
-              Les règles d’assimilation, liaisons, nasalisation et tensification
-              sont regroupées dans un module séparé.
-            </Text>
+  sectionTitle: {
+    color: TXT,
+    fontSize: 23,
+    fontFamily: fonts.black,
+    marginBottom: 28,
+    letterSpacing: -0.7,
+  },
 
-            <Link href={"/assimilation" as any} asChild>
-              <Pressable
-                style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}
-              >
-                <View
-                  style={{
-                    backgroundColor: "rgba(34,211,238,0.14)",
-                    borderColor: "rgba(34,211,238,0.55)",
-                    borderWidth: 1,
-                    paddingVertical: 14,
-                    borderRadius: 18,
-                    alignItems: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: TXT,
-                      fontWeight: "900",
-                      fontSize: 15,
-                    }}
-                  >
-                    Aller à Assimilation
-                  </Text>
-                </View>
-              </Pressable>
-            </Link>
-          </View>
-        </GlassCard>
-      </ScrollView>
-    </LinearGradient>
-  );
-}
+  // conteneur qui force la vraie séparation visuelle carte par carte
+  themeCardShell: {
+    borderRadius: 26,
+    overflow: "hidden",
+    backgroundColor: "rgba(255,255,255,0.02)",
+    marginBottom: 14,
+  },
+
+  themeCardBlur: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 18,
+    position: "relative",
+    minHeight: 94,
+  },
+
+  cardAccentLine: {
+    position: "absolute",
+    left: 0,
+    top: 18,
+    bottom: 18,
+    width: 2,
+    borderTopRightRadius: 4,
+    borderBottomRightRadius: 4,
+    opacity: 0.9,
+  },
+
+  iconBox: {
+    width: 58,
+    height: 58,
+    borderRadius: 18,
+    borderWidth: 0.5,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 18,
+  },
+
+  hangulIcon: {
+    fontSize: 28,
+    fontFamily: fonts.kr,
+    color: TXT,
+  },
+
+  stepTextWrap: {
+    flex: 1,
+    justifyContent: "center",
+    paddingRight: 12,
+  },
+
+  themeTitle: {
+    color: TXT,
+    fontSize: 19,
+    fontFamily: fonts.bold,
+    letterSpacing: -0.4,
+  },
+
+  themeSub: {
+    color: MUTED,
+    fontSize: 14,
+    marginTop: 4,
+    fontFamily: fonts.medium,
+  },
+
+  arrowWrap: {
+    justifyContent: "center",
+    alignItems: "center",
+    minWidth: 24,
+    alignSelf: "stretch",
+  },
+
+  arrow: {
+    color: MUTED,
+    fontSize: 26,
+    fontWeight: "300",
+  },
+});

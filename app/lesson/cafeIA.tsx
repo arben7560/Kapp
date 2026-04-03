@@ -1,11 +1,11 @@
-import { useEventListener } from "expo";
 import { LinearGradient } from "expo-linear-gradient";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   useWindowDimensions,
   View,
@@ -15,7 +15,6 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
-import ChoiceChips from "../../components/ai/ChoiceChips";
 import {
   cafeDialogueData,
   type DialogueChoice,
@@ -23,42 +22,41 @@ import {
   type DialogueScenario,
 } from "./data/cafe/cafe";
 
-type ModeType = "guided" | "real";
-type DialogueNodeWithVideo = DialogueNode & {
-  videoSources?: number[];
+// ==================== DESIGN SYSTEM ====================
+const BG_DEEP = "#050508";
+const BG_NAVY = "#0A0D1A";
+const TXT = "rgba(255,255,255,0.98)";
+const MUTED = "rgba(255,255,255,0.64)";
+const SOFT = "rgba(255,255,255,0.48)";
+const LINE = "rgba(255,255,255,0.08)";
+
+const PINK = "#F472B6";
+const CYAN = "#22D3EE";
+const PURPLE = "#A855F7";
+
+const fonts = {
+  bold: "Outfit_700Bold",
+  black: "Outfit_900Black",
+  medium: "Outfit_500Medium",
+  kr: "NotoSansKR_700Bold",
 };
 
 // ==================== VIDEOS ====================
 const welcomeCafeReal = require("../../assets/ai/cafe/welcomeCafeReal.mp4");
 const orderConfirmationJuiceReal = require("../../assets/ai/cafe/orderConfirmationJuiceReal.mp4");
 const orderConfirmationCakeReal = require("../../assets/ai/cafe/orderConfirmationCakeReal.mp4");
+const pricePaimentChooseReal = require("../../assets/ai/cafe/pricePaimentChooseReal.mp4");
+const byCashReceiptReal = require("../../assets/ai/cafe/byCashReceiptReal.mp4");
+const byCardReceiptReal = require("../../assets/ai/cafe/byCardReceiptReal.mp4");
+const takeOutThanksReal = require("../../assets/ai/cafe/takeOutThanksReal.mp4");
+const jingdonbelReal = require("../../assets/ai/cafe/jingdonbelReal.mp4");
 
-// ==================== CONFIG VIDEO ====================
-const VIDEO_MAX_SIZE = 270;
+type ModeType = "guided" | "real";
 
-// ==================== COLORS ====================
-const BG0 = "#05070F";
-const BG1 = "#09111D";
-const BG2 = "#100D1A";
-
-const TXT_PRIMARY = "rgba(255,255,255,0.98)";
-const TXT_SECONDARY = "rgba(255,255,255,0.78)";
-const TXT_MUTED = "rgba(255,255,255,0.58)";
-const TXT_KOREAN = "rgba(255,255,255,0.94)";
-
-const LINE = "rgba(255,255,255,0.09)";
-const CARD = "rgba(255,255,255,0.045)";
-const CARD_DARK = "rgba(7,9,17,0.85)";
-const CARD_SOFT = "rgba(255,255,255,0.035)";
-
-const PURPLE_SOFT = "rgba(139,92,246,0.14)";
-const PURPLE_LINE = "rgba(168,85,247,0.34)";
-const CYAN_SOFT = "rgba(34,211,238,0.14)";
-const CYAN_LINE = "rgba(34,211,238,0.34)";
-const ACTIVE_LINE = "rgba(168,85,247,0.45)";
-
-const ACCENT_GUIDED = "#C4B5FD";
-const ACCENT_REAL = "#67E8F9";
+type DialogueNodeWithVideo = DialogueNode & {
+  videoSource?: number;
+  videoSources?: number[];
+};
 
 // ==================== HELPERS ====================
 function normalizeMode(rawMode: string | string[] | undefined): ModeType {
@@ -66,20 +64,21 @@ function normalizeMode(rawMode: string | string[] | undefined): ModeType {
   return value === "real" ? "real" : "guided";
 }
 
-function getDisplayKorean(node: DialogueNode): string {
-  return node.korean ?? "";
-}
-
-function getDisplayFrench(node: DialogueNode): string {
-  return node.french ?? "";
-}
-
 function getProgressIndex(nodeId: string): number {
   const id = nodeId.toLowerCase();
 
-  if (/welcome|start|intro|accueil|begin|ped_welcome|real_welcome/.test(id)) {
+  if (/welcome|start|intro|accueil|begin|ped_welcome|real_welcome/.test(id))
     return 0;
+
+  if (
+    /surplace|takeout|place|pickup|drinkhere|포장|매장|choice_place|order_type|confirm|order|choice|menu/.test(
+      id,
+    )
+  ) {
+    return 1;
   }
+
+  if (/payment|pay|card|cash|receipt|결제|카드|현금/.test(id)) return 2;
 
   if (
     /final|finish|done|end|bell|wait|pickup_done|complete|완료|진동벨|ready/.test(
@@ -89,22 +88,9 @@ function getProgressIndex(nodeId: string): number {
     return 3;
   }
 
-  if (/payment|pay|card|cash|receipt|결제|카드|현금/.test(id)) {
-    return 2;
-  }
-
-  if (
-    /surplace|takeout|place|pickup|drinkhere|포장|매장|choice_place|order_type/.test(
-      id,
-    )
-  ) {
-    return 1;
-  }
-
   return 0;
 }
 
-// On attache ici les vidéos réelles aux bons nœuds de cafe.ts
 function attachRealVideosToScenario(
   scenario: DialogueScenario,
 ): DialogueScenario {
@@ -114,674 +100,784 @@ function attachRealVideosToScenario(
     clonedNodes[nodeId] = { ...node };
   }
 
-  if (clonedNodes.real_welcome) {
+  if (clonedNodes.real_welcome)
     clonedNodes.real_welcome.videoSources = [welcomeCafeReal];
-  }
 
-  if (clonedNodes.real_confirm) {
+  if (clonedNodes.real_confirm)
     clonedNodes.real_confirm.videoSources = [orderConfirmationJuiceReal];
-  }
 
-  if (clonedNodes.real_confirm_alt) {
+  if (clonedNodes.real_confirm_alt)
     clonedNodes.real_confirm_alt.videoSources = [orderConfirmationCakeReal];
-  }
 
-  return {
-    ...scenario,
-    nodes: clonedNodes,
-  };
+  if (clonedNodes.real_payment_here)
+    clonedNodes.real_payment_here.videoSources = [pricePaimentChooseReal];
+
+  if (clonedNodes.real_payment_takeout)
+    clonedNodes.real_payment_takeout.videoSources = [pricePaimentChooseReal];
+
+  if (clonedNodes.real_cash_done_here)
+    clonedNodes.real_cash_done_here.videoSources = [byCashReceiptReal];
+
+  if (clonedNodes.real_cash_done_takeout)
+    clonedNodes.real_cash_done_takeout.videoSources = [byCashReceiptReal];
+
+  if (clonedNodes.real_card_done_here)
+    clonedNodes.real_card_done_here.videoSources = [byCardReceiptReal];
+
+  if (clonedNodes.real_card_done_takeout)
+    clonedNodes.real_card_done_takeout.videoSources = [byCardReceiptReal];
+
+  if (clonedNodes.real_takeout_end)
+    clonedNodes.real_takeout_end.videoSources = [takeOutThanksReal];
+
+  if (clonedNodes.real_here_end)
+    clonedNodes.real_here_end.videoSources = [jingdonbelReal];
+
+  return { ...scenario, nodes: clonedNodes };
 }
 
-// ==================== UI ====================
-function SmallAction({
-  label,
-  onPress,
-  disabled = false,
-}: {
-  label: string;
-  onPress: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      style={({ pressed }) => ({
-        flex: 1,
-        minHeight: 52,
-        borderRadius: 18,
-        paddingVertical: 14,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: disabled
-          ? "rgba(255,255,255,0.025)"
-          : pressed
-            ? "rgba(255,255,255,0.09)"
-            : "rgba(255,255,255,0.055)",
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.10)",
-      })}
-    >
-      <Text
-        style={{
-          color: TXT_PRIMARY,
-          fontSize: 13.5,
-          fontWeight: "800",
-        }}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
+function getAutoAdvanceDelay(node: DialogueNodeWithVideo, mode: ModeType) {
+  const textLength = (node.korean?.length || 0) + (node.french?.length || 0);
+  const base = mode === "real" ? 2600 : 2200;
+  const byLength = Math.min(textLength * 20, 1800);
+  return base + byLength;
 }
 
-function CurrentStepIndicator({
-  label,
-  mode,
-}: {
-  label: string;
-  mode: ModeType;
-}) {
-  return (
-    <View style={{ alignItems: "center", marginBottom: 20 }}>
-      <View
-        style={{
-          paddingHorizontal: 20,
-          paddingVertical: 9,
-          borderRadius: 999,
-          backgroundColor: mode === "real" ? CYAN_SOFT : PURPLE_SOFT,
-          borderWidth: 1,
-          borderColor: mode === "real" ? CYAN_LINE : PURPLE_LINE,
-        }}
-      >
-        <Text
-          style={{
-            color: "#fff",
-            fontWeight: "800",
-            fontSize: 14,
-          }}
-        >
-          {label}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-function HintCard({ text }: { text: string }) {
-  return (
-    <View
-      style={{
-        marginTop: 12,
-        borderRadius: 16,
-        padding: 14,
-        backgroundColor: "rgba(255,255,255,0.04)",
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.09)",
-      }}
-    >
-      <Text
-        style={{
-          color: TXT_SECONDARY,
-          fontSize: 12.8,
-          lineHeight: 19,
-          fontWeight: "600",
-        }}
-      >
-        {text}
-      </Text>
-    </View>
-  );
-}
-
-function KoreanInteractiveText({ text }: { text: string }) {
-  return (
-    <Text
-      style={{
-        color: TXT_KOREAN,
-        fontSize: 17.5,
-        lineHeight: 26,
-        fontWeight: "700",
-      }}
-    >
-      {text}
-    </Text>
-  );
-}
-
-// ==================== SCREEN ====================
+// ==================== MAIN ====================
 export default function CafeIaScreen() {
+  const [displayedVideoSource, setDisplayedVideoSource] = useState<
+    number | null
+  >(null);
   const insets = useSafeAreaInsets();
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const params = useLocalSearchParams();
-
   const mode = normalizeMode(params.mode as string | string[] | undefined);
 
-  const currentScenario: DialogueScenario = useMemo(() => {
+  const scrollRef = useRef<ScrollView>(null);
+  const mountedRef = useRef(true);
+  const iaAutoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasAdvancedFromVideoRef = useRef(false);
+
+  const [currentNodeId, setCurrentNodeId] = useState(
+    cafeDialogueData.pedagogical.startNodeId,
+  );
+  const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isSceneEnded, setIsSceneEnded] = useState(false);
+
+  const currentScenario = useMemo(() => {
     return mode === "real"
       ? attachRealVideosToScenario(cafeDialogueData.real)
       : cafeDialogueData.pedagogical;
   }, [mode]);
 
-  const iaAutoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const choiceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mountedRef = useRef(true);
+  const currentNode = currentScenario.nodes[currentNodeId] as
+    | DialogueNodeWithVideo
+    | undefined;
 
-  const [currentNodeId, setCurrentNodeId] = useState(
-    currentScenario.startNodeId,
-  );
-  const [currentAi, setCurrentAi] = useState("");
-  const [currentAiMeaning, setCurrentAiMeaning] = useState("");
-  const [currentNarrator, setCurrentNarrator] = useState("");
-  const [currentChoices, setCurrentChoices] = useState<DialogueChoice[]>([]);
-  const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
-  const [selectedChoiceHint, setSelectedChoiceHint] = useState("");
-  const [progressIndex, setProgressIndex] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [isSceneEnded, setIsSceneEnded] = useState(false);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const progressIndex = getProgressIndex(currentNodeId);
+  const steps = ["Accueil", "Choix", "Paiement", "Final"];
 
-  const currentNode = useMemo<DialogueNodeWithVideo | undefined>(() => {
-    return currentScenario.nodes[currentNodeId] as
-      | DialogueNodeWithVideo
-      | undefined;
-  }, [currentScenario.nodes, currentNodeId]);
+  const videoSources =
+    currentNode?.videoSources ||
+    (currentNode?.videoSource ? [currentNode.videoSource] : []);
 
-  const currentVideoSources = useMemo(() => {
-    if (!currentNode || currentNode.type !== "ia") return undefined;
+  const currentVideoSource = videoSources.length > 0 ? videoSources[0] : null;
 
-    if (currentNode.videoSources && currentNode.videoSources.length > 0) {
-      return currentNode.videoSources;
+  const player = useVideoPlayer(displayedVideoSource, (playerInstance) => {
+    playerInstance.loop = false;
+  });
+  // 🔥 GARDE LA DERNIÈRE VIDÉO IA
+  useEffect(() => {
+    if (currentNode?.type === "ia" && currentVideoSource) {
+      setDisplayedVideoSource(currentVideoSource);
     }
+  }, [currentNode, currentVideoSource]);
+  const videoHeight = Math.min(screenWidth * 0.9, screenHeight * 0.34);
 
-    if (currentNode.videoSource) {
-      return [currentNode.videoSource];
-    }
+  const goToNextNode = useCallback((node?: DialogueNodeWithVideo) => {
+    if (!node || !mountedRef.current) return;
 
-    return undefined;
-  }, [currentNode]);
-
-  const currentVideoSource =
-    currentVideoSources && currentVideoSources.length > 0
-      ? currentVideoSources[currentVideoIndex]
-      : null;
-
-  const contentWidth = Math.min(screenWidth - 24, 360);
-  const videoSize = Math.min(contentWidth, VIDEO_MAX_SIZE);
-
-  const modeAccentBg = mode === "real" ? CYAN_SOFT : PURPLE_SOFT;
-  const modeAccentBorder = mode === "real" ? CYAN_LINE : PURPLE_LINE;
-  const currentActiveLine = mode === "real" ? CYAN_LINE : ACTIVE_LINE;
-
-  const clearIaAutoTimer = useCallback(() => {
-    if (iaAutoTimerRef.current) {
-      clearTimeout(iaAutoTimerRef.current);
-      iaAutoTimerRef.current = null;
+    if (node.nextNodeId) {
+      setCurrentNodeId(node.nextNodeId);
+    } else {
+      setIsSceneEnded(true);
     }
   }, []);
 
-  const clearChoiceTimer = useCallback(() => {
-    if (choiceTimerRef.current) {
-      clearTimeout(choiceTimerRef.current);
-      choiceTimerRef.current = null;
-    }
-  }, []);
-
-  const resetUiState = useCallback(() => {
+  // Reset scenario on mode change
+  useEffect(() => {
+    setCurrentNodeId(currentScenario.startNodeId);
     setSelectedChoiceId(null);
-    setSelectedChoiceHint("");
-    setCurrentChoices([]);
-    setCurrentAi("");
-    setCurrentAiMeaning("");
-    setCurrentNarrator("");
     setIsTransitioning(false);
     setIsSceneEnded(false);
-    setIsVideoPlaying(false);
-    setCurrentVideoIndex(0);
-  }, []);
+    hasAdvancedFromVideoRef.current = false;
+  }, [currentScenario]);
 
-  const getCurrentStepLabel = useCallback((): string => {
-    if (progressIndex === 0) return "Accueil";
-    if (progressIndex === 1) return "Choix";
-    if (progressIndex === 2) return "Paiement";
-    if (progressIndex === 3) return "Finalisation";
-    return "Accueil";
-  }, [progressIndex]);
-
-  const syncNodeToUi = useCallback(
-    (nodeId: string) => {
-      clearIaAutoTimer();
-      clearChoiceTimer();
-
-      const node = currentScenario.nodes[nodeId] as
-        | DialogueNodeWithVideo
-        | undefined;
-
-      if (!node) {
-        setCurrentAi("Erreur de dialogue");
-        setCurrentAiMeaning(`Nœud "${nodeId}" introuvable.`);
-        setCurrentNarrator("");
-        setCurrentChoices([]);
-        setIsSceneEnded(true);
-        setIsTransitioning(false);
-        setIsVideoPlaying(false);
-        setCurrentVideoIndex(0);
-        return;
-      }
-
-      setProgressIndex(getProgressIndex(nodeId));
-      setSelectedChoiceHint("");
-      setIsSceneEnded(false);
-
-      const displayKorean = getDisplayKorean(node);
-      const displayFrench = getDisplayFrench(node);
-
-      if (node.type === "ia") {
-        setCurrentNarrator("");
-        setCurrentAi(displayKorean);
-        setCurrentAiMeaning(displayFrench);
-        setCurrentVideoIndex(0);
-
-        const nextNode = node.nextNodeId
-          ? (currentScenario.nodes[node.nextNodeId] as
-              | DialogueNodeWithVideo
-              | undefined)
-          : undefined;
-
-        if (nextNode?.type === "user_choice") {
-          setCurrentChoices(nextNode.choices ?? []);
-        } else {
-          setCurrentChoices([]);
-        }
-
-        setIsVideoPlaying(!!node.videoSources?.length);
-
-        if (!node.nextNodeId) {
-          setIsSceneEnded(true);
-          setIsTransitioning(false);
-          return;
-        }
-
-        if (nextNode?.type === "ia") {
-          setIsTransitioning(true);
-          iaAutoTimerRef.current = setTimeout(
-            () => {
-              if (mountedRef.current) {
-                setCurrentNodeId(node.nextNodeId as string);
-              }
-            },
-            mode === "real" ? 1550 : 1850,
-          );
-        } else {
-          setIsTransitioning(false);
-        }
-
-        return;
-      }
-
-      setCurrentNarrator("Choisis la réponse la plus adaptée.");
-      setCurrentAi(
-        mode === "real"
-          ? "어떻게 대답할까요?"
-          : "가장 적절한 표현을 골라 보세요.",
-      );
-      setCurrentAiMeaning(
-        mode === "real"
-          ? "Réponds comme dans une interaction simple et naturelle."
-          : "Choisis la formulation la plus adaptée.",
-      );
-      setCurrentChoices(node.choices ?? []);
-      setIsTransitioning(false);
-      setIsVideoPlaying(false);
-      setCurrentVideoIndex(0);
-    },
-    [clearChoiceTimer, clearIaAutoTimer, currentScenario.nodes, mode],
-  );
-
+  // Track mount / cleanup
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      clearIaAutoTimer();
-      clearChoiceTimer();
+      if (iaAutoTimerRef.current) clearTimeout(iaAutoTimerRef.current);
     };
-  }, [clearChoiceTimer, clearIaAutoTimer]);
+  }, []);
 
+  // Reset per node
   useEffect(() => {
-    clearIaAutoTimer();
-    clearChoiceTimer();
-    resetUiState();
-    setCurrentNodeId(currentScenario.startNodeId);
+    hasAdvancedFromVideoRef.current = false;
+
+    if (iaAutoTimerRef.current) {
+      clearTimeout(iaAutoTimerRef.current);
+      iaAutoTimerRef.current = null;
+    }
+  }, [currentNodeId]);
+
+  // Start / replace video when node changes
+  useEffect(() => {
+    if (!currentNode) return;
+    if (!displayedVideoSource) return;
+
+    try {
+      player.replace(displayedVideoSource);
+
+      // On ne relance la lecture que sur un vrai nœud IA avec vidéo.
+      if (currentNode.type === "ia" && currentVideoSource) {
+        player.play();
+      } else {
+        // En user_choice, on garde simplement l’image affichée.
+        player.pause();
+      }
+    } catch {
+      // ignore
+    }
   }, [
-    clearChoiceTimer,
-    clearIaAutoTimer,
-    currentScenario.startNodeId,
-    resetUiState,
+    currentNode,
+    currentNodeId,
+    currentVideoSource,
+    displayedVideoSource,
+    player,
   ]);
 
+  // Advance on video end for IA nodes with video
+  // Advance on real video end for IA nodes with video
   useEffect(() => {
-    syncNodeToUi(currentNodeId);
-  }, [currentNodeId, syncNodeToUi]);
+    if (!currentNode) return;
+    if (currentNode.type !== "ia") return;
+    if (!currentVideoSource) return;
+    if (isTransitioning || isSceneEnded) return;
 
-  const handleChoice = useCallback(
-    (choice: DialogueChoice) => {
-      if (isTransitioning) return;
+    const interval = setInterval(() => {
+      if (!mountedRef.current) return;
+      if (hasAdvancedFromVideoRef.current) return;
 
-      clearIaAutoTimer();
-      clearChoiceTimer();
-      setIsTransitioning(true);
+      const duration = player.duration ?? 0;
+      const currentTime = player.currentTime ?? 0;
 
-      setSelectedChoiceId(choice.id);
-      setSelectedChoiceHint(
-        choice.romanization
-          ? `${choice.korean}\n${choice.romanization}`
-          : choice.korean,
-      );
+      // attendre que la vidéo ait vraiment commencé
+      if (duration <= 0) return;
 
-      choiceTimerRef.current = setTimeout(() => {
-        if (mountedRef.current) {
-          setCurrentNodeId(choice.nextNodeId);
-          setSelectedChoiceId(null);
-        }
-      }, 220);
-    },
-    [clearChoiceTimer, clearIaAutoTimer, isTransitioning],
-  );
+      // marge de sécurité pour éviter les problèmes de précision
+      const isNearEnd = currentTime >= duration - 0.08;
 
-  const restartScene = useCallback(() => {
-    clearIaAutoTimer();
-    clearChoiceTimer();
-    resetUiState();
-    setCurrentNodeId(currentScenario.startNodeId);
+      if (isNearEnd) {
+        hasAdvancedFromVideoRef.current = true;
+        clearInterval(interval);
+        goToNextNode(currentNode);
+      }
+    }, 120);
+
+    return () => clearInterval(interval);
   }, [
-    clearChoiceTimer,
-    clearIaAutoTimer,
-    currentScenario.startNodeId,
-    resetUiState,
+    currentNode,
+    currentVideoSource,
+    isTransitioning,
+    isSceneEnded,
+    player,
+    goToNextNode,
+  ]);
+  // Auto-advance only for IA nodes without video
+  useEffect(() => {
+    if (!currentNode) return;
+    if (currentNode.type !== "ia") return;
+    if (currentVideoSource) return;
+    if (isTransitioning || isSceneEnded) return;
+
+    const delay = getAutoAdvanceDelay(currentNode, mode);
+
+    iaAutoTimerRef.current = setTimeout(() => {
+      if (!mountedRef.current) return;
+      goToNextNode(currentNode);
+    }, delay);
+
+    return () => {
+      if (iaAutoTimerRef.current) {
+        clearTimeout(iaAutoTimerRef.current);
+        iaAutoTimerRef.current = null;
+      }
+    };
+  }, [
+    currentNode,
+    currentVideoSource,
+    mode,
+    isTransitioning,
+    isSceneEnded,
+    goToNextNode,
   ]);
 
-  const firstSource =
-    currentVideoSources && currentVideoSources.length > 0
-      ? currentVideoSources[0]
-      : null;
-
-  const secondSource =
-    currentVideoSources && currentVideoSources.length > 1
-      ? currentVideoSources[1]
-      : null;
-
-  const playerA = useVideoPlayer(firstSource, (videoPlayer) => {
-    videoPlayer.loop = false;
-  });
-
-  const playerB = useVideoPlayer(secondSource, (videoPlayer) => {
-    videoPlayer.loop = false;
-  });
-
-  const [activePlayerKey, setActivePlayerKey] = useState<"A" | "B">("A");
-
-  const activePlayer = activePlayerKey === "A" ? playerA : playerB;
-  const standbyPlayer = activePlayerKey === "A" ? playerB : playerA;
-
+  // Scroll lower content into view on node change
   useEffect(() => {
-    setActivePlayerKey("A");
-    setCurrentVideoIndex(0);
+    const t = setTimeout(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }, 180);
+    return () => clearTimeout(t);
+  }, [currentNodeId]);
 
-    if (!currentVideoSources || currentVideoSources.length === 0) {
-      setIsVideoPlaying(false);
-      return;
-    }
+  const handleChoice = (choice: DialogueChoice) => {
+    if (isTransitioning || isSceneEnded) return;
 
-    // Charge la première vidéo sur A
-    playerA.replace(currentVideoSources[0]);
-    playerA.play();
+    setIsTransitioning(true);
+    setSelectedChoiceId(choice.id);
 
-    // Précharge la deuxième si elle existe
-    if (currentVideoSources.length > 1) {
-      playerB.replace(currentVideoSources[1]);
-    }
+    setTimeout(() => {
+      if (!mountedRef.current) return;
+      setCurrentNodeId(choice.nextNodeId);
+      setSelectedChoiceId(null);
+      setIsTransitioning(false);
+    }, 320);
+  };
 
-    setIsVideoPlaying(true);
-  }, [currentNodeId, currentVideoSources, playerA, playerB]);
+  const handleRestart = () => {
+    setCurrentNodeId(currentScenario.startNodeId);
+    setSelectedChoiceId(null);
+    setIsTransitioning(false);
+    setIsSceneEnded(false);
+    hasAdvancedFromVideoRef.current = false;
+  };
 
-  useEventListener(playerA, "playingChange", ({ isPlaying }) => {
-    if (activePlayerKey === "A") {
-      setIsVideoPlaying(isPlaying);
-    }
-  });
-
-  useEventListener(playerB, "playingChange", ({ isPlaying }) => {
-    if (activePlayerKey === "B") {
-      setIsVideoPlaying(isPlaying);
-    }
-  });
-
-  useEventListener(playerA, "playToEnd", () => {
-    if (activePlayerKey !== "A") return;
-
-    if (currentVideoSources && currentVideoSources.length > 1) {
-      setActivePlayerKey("B");
-      playerB.play();
-      setCurrentVideoIndex(1);
-      return;
-    }
-
-    setIsVideoPlaying(false);
-  });
-
-  useEventListener(playerB, "playToEnd", () => {
-    if (activePlayerKey !== "B") return;
-    setIsVideoPlaying(false);
-  });
-
-  const restartCurrentVideo = useCallback(() => {
-    if (!currentVideoSources || currentVideoSources.length === 0) return;
-
-    setActivePlayerKey("A");
-    setCurrentVideoIndex(0);
-
-    playerA.replace(currentVideoSources[0]);
-    playerA.play();
-
-    if (currentVideoSources.length > 1) {
-      playerB.replace(currentVideoSources[1]);
-    }
-
-    setIsVideoPlaying(true);
-  }, [currentVideoSources, playerA, playerB]);
-  const currentStepLabel = getCurrentStepLabel();
+  const isUserChoice = currentNode?.type === "user_choice";
 
   return (
-    <LinearGradient colors={[BG0, BG1, BG2]} style={{ flex: 1 }}>
+    <LinearGradient colors={[BG_DEEP, BG_NAVY]} style={{ flex: 1 }}>
+      <View
+        style={[
+          styles.glow,
+          {
+            top: -70,
+            right: -60,
+            backgroundColor:
+              mode === "real"
+                ? "rgba(34,211,238,0.08)"
+                : "rgba(168,85,247,0.10)",
+          },
+        ]}
+      />
+      <View
+        style={[
+          styles.glow,
+          {
+            top: 120,
+            left: -90,
+            backgroundColor: "rgba(244,114,182,0.06)",
+          },
+        ]}
+      />
+
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: 12,
-            paddingTop: 10,
-            paddingBottom: insets.bottom + 110,
-          }}
+        <View
+          style={[
+            styles.header,
+            { paddingTop: Math.max(6, insets.top * 0.15) },
+          ]}
         >
-          <View style={{ width: contentWidth, alignSelf: "center" }}>
-            <View style={{ alignItems: "center", marginBottom: 16 }}>
-              <View
-                style={{
-                  paddingHorizontal: 18,
-                  paddingVertical: 8,
-                  borderRadius: 999,
-                  backgroundColor: modeAccentBg,
-                  borderWidth: 1,
-                  borderColor: modeAccentBorder,
-                }}
-              >
-                <Text
-                  style={{
-                    color: TXT_PRIMARY,
-                    fontWeight: "900",
-                    fontSize: 13.5,
-                  }}
-                >
-                  {mode === "real"
-                    ? "Mode Réel • Immersif"
-                    : "Mode Guidé • Pédagogique"}
-                </Text>
-              </View>
-            </View>
+          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+            <Text style={styles.backTxt}>✕</Text>
+          </Pressable>
 
-            <CurrentStepIndicator label={currentStepLabel} mode={mode} />
-
-            {!!currentNarrator && (
-              <View
-                style={{
-                  borderRadius: 18,
-                  padding: 16,
-                  backgroundColor: CARD_SOFT,
-                  borderWidth: 1,
-                  borderColor: LINE,
-                  marginBottom: 20,
-                }}
-              >
-                <Text
-                  style={{
-                    color: TXT_SECONDARY,
-                    fontSize: 13.2,
-                    lineHeight: 19,
-                    fontWeight: "600",
-                    textAlign: "center",
-                  }}
-                >
-                  {currentNarrator}
-                </Text>
-              </View>
-            )}
-
-            <View style={{ alignItems: "center", marginBottom: 20 }}>
-              <View
-                style={{
-                  width: videoSize,
-                  height: videoSize,
-                  backgroundColor: "#000",
-                  borderRadius: 24,
-                  overflow: "hidden",
-                  borderWidth: 2,
-                  borderColor: isVideoPlaying
-                    ? currentActiveLine
-                    : "rgba(255,255,255,0.12)",
-                }}
-              >
-                {currentVideoSource ? (
-                  <VideoView
-                    player={activePlayer}
-                    useExoShutter={false}
-                    style={{ flex: 1, backgroundColor: "#000" }}
-                    contentFit="cover"
-                    nativeControls={false}
-                    allowsFullscreen={false}
-                    allowsPictureInPicture={false}
-                    surfaceType="textureView"
-                  />
-                ) : (
-                  <View
-                    style={{
-                      flex: 1,
-                      justifyContent: "center",
-                      alignItems: "center",
-                      backgroundColor: "#000",
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: TXT_MUTED,
-                        fontSize: 13,
-                        textAlign: "center",
-                        paddingHorizontal: 18,
-                      }}
-                    >
-                      Aucune vidéo disponible pour cette réplique.
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-
-            <View
-              style={{
-                backgroundColor: CARD_DARK,
-                borderRadius: 24,
-                padding: 18,
-                borderWidth: 1,
-                borderColor: isVideoPlaying ? currentActiveLine : LINE,
-                marginBottom: 18,
-              }}
+          <View
+            style={[
+              styles.modeBadge,
+              { borderColor: mode === "real" ? CYAN : PURPLE },
+            ]}
+          >
+            <Text
+              style={[
+                styles.modeTxt,
+                { color: mode === "real" ? CYAN : PURPLE },
+              ]}
             >
-              <KoreanInteractiveText text={currentAi} />
+              {mode === "real" ? "MODE RÉEL" : "MODE GUIDÉ"}
+            </Text>
+          </View>
 
-              {!!currentAiMeaning && (
-                <Text
-                  style={{
-                    color: mode === "real" ? ACCENT_REAL : ACCENT_GUIDED,
-                    fontSize: 14.2,
-                    lineHeight: 21,
-                    marginTop: 10,
-                  }}
-                >
-                  {currentAiMeaning}
-                </Text>
-              )}
-            </View>
+          <View style={{ width: 42 }} />
+        </View>
 
-            {currentChoices.length > 0 && (
-              <View
-                style={{
-                  backgroundColor: CARD,
-                  borderRadius: 24,
-                  padding: 16,
-                  borderWidth: 1,
-                  borderColor: LINE,
-                  marginBottom: 16,
-                }}
-              >
-                <Text
-                  style={{
-                    color: TXT_PRIMARY,
-                    fontSize: 17,
-                    fontWeight: "900",
-                    marginBottom: 12,
-                  }}
-                >
-                  Ta réponse
-                </Text>
+        <ScrollView
+          ref={scrollRef}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scroll}
+        >
+          <View style={styles.stepsContainer}>
+            {steps.map((s, i) => {
+              const active = i === progressIndex;
+              const done = i <= progressIndex;
+              const accent = mode === "real" ? CYAN : PURPLE;
 
-                <ChoiceChips
-                  choices={currentChoices}
-                  disabled={isTransitioning}
-                  selectedId={selectedChoiceId}
-                  onSelect={handleChoice}
-                />
+              return (
+                <View key={s} style={styles.stepWrapper}>
+                  <View
+                    style={[
+                      styles.stepDot,
+                      done && {
+                        backgroundColor: accent,
+                        opacity: active ? 1 : 0.7,
+                      },
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.stepLabel,
+                      active && {
+                        color: TXT,
+                        fontFamily: fonts.bold,
+                      },
+                    ]}
+                  >
+                    {s}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
 
-                {!!selectedChoiceHint && <HintCard text={selectedChoiceHint} />}
+          <View
+            style={[
+              styles.videoContainer,
+              {
+                height: videoHeight,
+                borderColor:
+                  mode === "real"
+                    ? "rgba(34,211,238,0.40)"
+                    : "rgba(168,85,247,0.42)",
+              },
+            ]}
+          >
+            {displayedVideoSource ? (
+              <VideoView
+                player={player}
+                style={styles.video}
+                contentFit="cover"
+                nativeControls={false}
+                allowsFullscreen={false}
+                allowsPictureInPicture={false}
+              />
+            ) : (
+              <View style={styles.videoFallback}>
+                <Text style={styles.videoFallbackEmoji}>👩‍🍳</Text>
               </View>
             )}
 
-            {isSceneEnded && (
-              <View style={{ marginTop: 10 }}>
-                <View style={{ flexDirection: "row", gap: 12 }}>
-                  <SmallAction
-                    label="🔊 Rejouer la vidéo"
-                    onPress={restartCurrentVideo}
-                    disabled={!currentVideoSource}
-                  />
-                  <SmallAction
-                    label="↺ Nouvelle scène"
-                    onPress={restartScene}
-                  />
+            <LinearGradient
+              colors={["transparent", "rgba(0,0,0,0.62)"]}
+              style={styles.videoOverlay}
+            />
+          </View>
+
+          <View style={styles.aiCard}>
+            <Text style={styles.aiKr}>{currentNode?.korean || "..."}</Text>
+
+            {currentNode?.french ? (
+              <Text style={styles.aiFr}>{currentNode.french}</Text>
+            ) : null}
+          </View>
+
+          <View style={styles.interactionSection}>
+            <Text style={styles.sectionTitle}>Ta réponse</Text>
+
+            {isSceneEnded ? (
+              <View style={styles.endCard}>
+                <Text style={styles.endTitle}>Scène terminée</Text>
+                <Text style={styles.endSubtitle}>
+                  Tu peux rejouer cette scène ou revenir au menu.
+                </Text>
+
+                <View style={styles.endActions}>
+                  <Pressable
+                    onPress={handleRestart}
+                    style={({ pressed }) => [
+                      styles.endActionPrimary,
+                      { opacity: pressed ? 0.92 : 1 },
+                    ]}
+                  >
+                    <LinearGradient
+                      colors={
+                        mode === "real" ? [CYAN, "#56CCF2"] : [PURPLE, PINK]
+                      }
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.endActionPrimaryInner}
+                    >
+                      <Text style={styles.endActionPrimaryText}>Rejouer</Text>
+                    </LinearGradient>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => router.back()}
+                    style={({ pressed }) => [
+                      styles.endActionSecondary,
+                      { opacity: pressed ? 0.9 : 1 },
+                    ]}
+                  >
+                    <Text style={styles.endActionSecondaryText}>Retour</Text>
+                  </Pressable>
                 </View>
+              </View>
+            ) : isUserChoice ? (
+              <View style={styles.choicesGrid}>
+                {currentNode?.choices?.map((choice) => {
+                  const isSelected = selectedChoiceId === choice.id;
+                  const accent = mode === "real" ? CYAN : PURPLE;
+
+                  return (
+                    <Pressable
+                      key={choice.id}
+                      onPress={() => handleChoice(choice)}
+                      style={({ pressed }) => [
+                        styles.choiceBtn,
+                        isSelected && {
+                          borderColor: accent,
+                          backgroundColor: "rgba(255,255,255,0.08)",
+                        },
+                        pressed && { opacity: 0.92 },
+                      ]}
+                    >
+                      <View
+                        pointerEvents="none"
+                        style={[
+                          styles.choiceGlow,
+                          {
+                            backgroundColor:
+                              mode === "real"
+                                ? "rgba(34,211,238,0.08)"
+                                : "rgba(168,85,247,0.10)",
+                          },
+                        ]}
+                      />
+
+                      <Text style={styles.choiceKr}>{choice.korean}</Text>
+                      <Text style={styles.choiceFr}>{choice.label}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            ) : (
+              <View style={styles.waitingCard}>
+                <View style={styles.waitingPulseRow}>
+                  <View style={styles.waitingDot} />
+                  <Text style={styles.waitingTxt}>
+                    Écoute de l’interlocuteur...
+                  </Text>
+                </View>
+
+                <Text style={styles.waitingSub}>
+                  La scène continue automatiquement.
+                </Text>
               </View>
             )}
           </View>
+
+          <View style={{ height: Math.max(22, insets.bottom + 8) }} />
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
 }
+
+const styles = StyleSheet.create({
+  scroll: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+
+  glow: {
+    position: "absolute",
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+  },
+
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+  },
+
+  backBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+  },
+
+  backTxt: {
+    color: TXT,
+    fontSize: 18,
+  },
+
+  modeBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    borderRadius: 99,
+    borderWidth: 1,
+    backgroundColor: "rgba(255,255,255,0.03)",
+  },
+
+  modeTxt: {
+    fontSize: 10,
+    fontFamily: fonts.bold,
+    letterSpacing: 1.4,
+  },
+
+  stepsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 22,
+    marginTop: 6,
+  },
+
+  stepWrapper: {
+    alignItems: "center",
+    flex: 1,
+  },
+
+  stepDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "rgba(255,255,255,0.16)",
+    marginBottom: 8,
+  },
+
+  stepLabel: {
+    color: MUTED,
+    fontSize: 12,
+    fontFamily: fonts.medium,
+  },
+
+  videoContainer: {
+    width: "100%",
+    borderRadius: 32,
+    overflow: "hidden",
+    backgroundColor: "#000",
+    borderWidth: 1,
+  },
+
+  video: {
+    flex: 1,
+  },
+
+  videoFallback: {
+    flex: 1,
+    backgroundColor: "#0F1220",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  videoFallbackEmoji: {
+    fontSize: 56,
+  },
+
+  videoOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 88,
+  },
+
+  aiCard: {
+    marginTop: -28,
+    marginHorizontal: 18,
+    backgroundColor: "rgba(10,13,26,0.96)",
+    borderRadius: 26,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    shadowColor: "#000",
+    shadowOpacity: 0.32,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 7,
+  },
+
+  aiKr: {
+    color: TXT,
+    fontSize: 21,
+    lineHeight: 31,
+    fontFamily: fonts.kr,
+    textAlign: "center",
+    marginBottom: 10,
+  },
+
+  aiFr: {
+    color: MUTED,
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: "center",
+    fontStyle: "italic",
+  },
+
+  interactionSection: {
+    marginTop: 26,
+    minHeight: 220,
+  },
+
+  sectionTitle: {
+    color: TXT,
+    fontSize: 18,
+    fontFamily: fonts.black,
+    marginBottom: 14,
+    marginLeft: 4,
+  },
+
+  choicesGrid: {
+    gap: 12,
+  },
+
+  choiceBtn: {
+    backgroundColor: "rgba(255,255,255,0.03)",
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: LINE,
+    overflow: "hidden",
+  },
+
+  choiceGlow: {
+    position: "absolute",
+    top: -20,
+    right: -12,
+    width: 86,
+    height: 86,
+    borderRadius: 43,
+  },
+
+  choiceKr: {
+    color: TXT,
+    fontSize: 16,
+    lineHeight: 22,
+    fontFamily: fonts.bold,
+    marginBottom: 6,
+  },
+
+  choiceFr: {
+    color: MUTED,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+
+  waitingCard: {
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(255,255,255,0.025)",
+    paddingVertical: 26,
+    paddingHorizontal: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 132,
+  },
+
+  waitingPulseRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+
+  waitingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "rgba(255,255,255,0.50)",
+    marginRight: 10,
+  },
+
+  waitingTxt: {
+    color: TXT,
+    fontSize: 15,
+    fontFamily: fonts.medium,
+  },
+
+  waitingSub: {
+    color: SOFT,
+    fontSize: 13,
+    textAlign: "center",
+  },
+
+  endCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    backgroundColor: "rgba(255,255,255,0.03)",
+    padding: 18,
+  },
+
+  endTitle: {
+    color: TXT,
+    fontSize: 18,
+    fontFamily: fonts.black,
+    marginBottom: 6,
+  },
+
+  endSubtitle: {
+    color: MUTED,
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+
+  endActions: {
+    gap: 10,
+  },
+
+  endActionPrimary: {
+    borderRadius: 18,
+    overflow: "hidden",
+  },
+
+  endActionPrimaryInner: {
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  endActionPrimaryText: {
+    color: "white",
+    fontSize: 14,
+    fontFamily: fonts.bold,
+  },
+
+  endActionSecondary: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    backgroundColor: "rgba(255,255,255,0.04)",
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  endActionSecondaryText: {
+    color: TXT,
+    fontSize: 14,
+    fontFamily: fonts.bold,
+  },
+});

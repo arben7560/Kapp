@@ -1,785 +1,330 @@
+import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import * as Speech from "expo-speech";
 import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import {
+  Dimensions,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-// Optionnel: npx expo install expo-haptics
 let Haptics: any = null;
 try {
-   
   Haptics = require("expo-haptics");
 } catch {}
 
-const BG0 = "#070812";
-const TXT = "rgba(255,255,255,0.92)";
-const MUTED = "rgba(255,255,255,0.68)";
-const LINE = "rgba(255,255,255,0.12)";
-const CARD = "rgba(255,255,255,0.06)";
-const NEON = "rgba(34,211,238,0.55)";
-const NEON_BG = "rgba(34,211,238,0.14)";
-const ACTIVE_BG = "rgba(34,211,238,0.22)";
-const ACTIVE_BORDER = "rgba(34,211,238,0.75)";
+const { width } = Dimensions.get("window");
 
-type Tense = "ㄲ" | "ㄸ" | "ㅃ" | "ㅆ" | "ㅉ";
-type Plain = "ㄱ" | "ㄷ" | "ㅂ" | "ㅅ" | "ㅈ";
-type Key = Tense | Plain;
+const BG_DEEP = "#050508";
+const TXT = "rgba(255,255,255,0.96)";
+const MUTED = "rgba(255,255,255,0.55)";
+const ACCENT = "#22D3EE"; // Cyan
+const PINK = "#F472B6"; // Rose
+const CARD_BORDER = "rgba(255,255,255,0.12)";
 
-type Meta = {
-  label: string; // kk/tt...
-  examples: string[]; // 까 꺼 꼬 꾸
-  base?: Plain; // correspondance simple
-};
+// --- COMPOSANTS UI PREMIUM ---
 
-function Card({ children }: { children: React.ReactNode }) {
-  return (
-    <View
-      style={{
-        backgroundColor: CARD,
-        borderColor: LINE,
-        borderWidth: 1,
-        borderRadius: 22,
-        padding: 14,
-        marginBottom: 14,
-      }}
-    >
+const GlassCard = ({ children, style }: any) => (
+  <View style={[styles.cardWrapper, style]}>
+    <BlurView intensity={20} tint="dark" style={styles.glassContent}>
+      <LinearGradient
+        colors={["rgba(255,255,255,0.05)", "transparent"]}
+        style={StyleSheet.absoluteFill}
+      />
       {children}
-    </View>
-  );
-}
+    </BlurView>
+  </View>
+);
 
-function PillButton({
-  label,
-  active,
-  onPress,
-  disabled,
-}: {
-  label: string;
-  active?: boolean;
-  onPress?: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <Pressable
-      onPress={disabled ? undefined : onPress}
-      hitSlop={10}
-      style={({ pressed }) => ({
-        opacity: disabled ? 0.5 : pressed ? 0.9 : 1,
-        borderWidth: 1,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderRadius: 999,
-        alignItems: "center",
-        backgroundColor: active ? ACTIVE_BG : "rgba(255,255,255,0.05)",
-        borderColor: active ? ACTIVE_BORDER : LINE,
-      })}
-    >
-      <Text style={{ color: TXT, fontWeight: "900" }}>{label}</Text>
-    </Pressable>
-  );
-}
-
-function PrimaryButton({
-  label,
-  onPress,
-  disabled,
-}: {
-  label: string;
-  onPress?: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <Pressable
-      onPress={disabled ? undefined : onPress}
-      hitSlop={10}
-      style={({ pressed }) => ({
-        opacity: disabled ? 0.5 : pressed ? 0.9 : 1,
-        borderWidth: 1,
-        paddingVertical: 12,
-        borderRadius: 16,
-        alignItems: "center",
-        backgroundColor: NEON_BG,
-        borderColor: NEON,
-      })}
-    >
-      <Text style={{ color: TXT, fontWeight: "900" }}>{label}</Text>
-    </Pressable>
-  );
-}
-
-function GhostButton({
-  label,
-  onPress,
-  disabled,
-}: {
-  label: string;
-  onPress?: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <Pressable
-      onPress={disabled ? undefined : onPress}
-      hitSlop={10}
-      style={({ pressed }) => ({
-        opacity: disabled ? 0.5 : pressed ? 0.9 : 1,
-        backgroundColor: "rgba(255,255,255,0.06)",
-        borderColor: LINE,
-        borderWidth: 1,
-        paddingVertical: 12,
-        borderRadius: 16,
-        alignItems: "center",
-      })}
-    >
-      <Text style={{ color: TXT, fontWeight: "900" }}>{label}</Text>
-    </Pressable>
-  );
-}
-
-function Tile({
-  text,
-  label,
-  isActive,
-  isTouched,
-  onPress,
-}: {
-  text: string;
-  label?: string;
-  isActive: boolean;
-  isTouched: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      hitSlop={12}
-      style={({ pressed }) => ({
-        opacity: pressed ? 0.86 : 1,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: isActive ? ACTIVE_BORDER : LINE,
-        backgroundColor: isActive
-          ? ACTIVE_BG
-          : isTouched
-            ? "rgba(255,255,255,0.07)"
-            : "rgba(255,255,255,0.05)",
-        minWidth: 78,
-        alignItems: "center",
-      })}
-    >
-      <Text style={{ color: TXT, fontSize: 20, fontWeight: "900" }}>
-        {text}
-      </Text>
-      {!!label && (
-        <Text
-          style={{
-            color: MUTED,
-            marginTop: 4,
-            fontSize: 12,
-            fontWeight: "800",
-          }}
-        >
-          {label}
-        </Text>
-      )}
-    </Pressable>
-  );
-}
+const Pill = ({ label, active, onPress }: any) => (
+  <Pressable
+    onPress={onPress}
+    style={({ pressed }) => [
+      styles.pill,
+      active && styles.pillActive,
+      { opacity: pressed ? 0.7 : 1 },
+    ]}
+  >
+    <Text style={[styles.pillText, active && styles.pillTextActive]}>
+      {label}
+    </Text>
+  </Pressable>
+);
 
 export default function ConsonantsTense() {
-  const tense = React.useMemo(
-    () => ["ㄲ", "ㄸ", "ㅃ", "ㅆ", "ㅉ"] as const,
-    [],
-  );
-  const plain = React.useMemo(
-    () => ["ㄱ", "ㄷ", "ㅂ", "ㅅ", "ㅈ"] as const,
-    [],
-  );
-  const vowels4 = React.useMemo(() => ["ㅏ", "ㅓ", "ㅗ", "ㅜ"] as const, []);
-
-  const meta = React.useMemo<Record<Tense, Meta>>(
-    () => ({
-      ㄲ: { label: "kk", examples: ["까", "꺼", "꼬", "꾸"], base: "ㄱ" },
-      ㄸ: { label: "tt", examples: ["따", "떠", "또", "뚜"], base: "ㄷ" },
-      ㅃ: { label: "pp", examples: ["빠", "뻐", "뽀", "뿌"], base: "ㅂ" },
-      ㅆ: { label: "ss", examples: ["싸", "써", "쏘", "쑤"], base: "ㅅ" },
-      ㅉ: { label: "jj", examples: ["짜", "쩌", "쪼", "쭈"], base: "ㅈ" },
-    }),
-    [],
-  );
-
-  // Pour comparaison: syllabes simples correspondantes (ga/geo/go/gu etc.)
-  const plainExamples = React.useMemo<Record<Plain, string[]>>(
-    () => ({
-      ㄱ: ["가", "거", "고", "구"],
-      ㄷ: ["다", "더", "도", "두"],
-      ㅂ: ["바", "버", "보", "부"],
-      ㅅ: ["사", "서", "소", "수"],
-      ㅈ: ["자", "저", "조", "주"],
-    }),
-    [],
-  );
-
-  // ===== Controls =====
-  const [rate, setRate] = React.useState<0.75 | 0.85 | 0.92>(0.85);
-  const [gapMs, setGapMs] = React.useState<200 | 320 | 420>(320);
-  const [repeatCount, setRepeatCount] = React.useState<1 | 2>(1);
-  const [showLabels, setShowLabels] = React.useState(true);
-
-  // ===== Audio state =====
-  const [isSpeaking, setIsSpeaking] = React.useState(false);
+  const tense = ["ㄲ", "ㄸ", "ㅃ", "ㅆ", "ㅉ"];
   const [activeKey, setActiveKey] = React.useState<string | null>(null);
+  const [isSpeaking, setIsSpeaking] = React.useState(false);
+  const [rate, setRate] = React.useState(0.85);
 
-  // ===== Progress =====
-  const [touched, setTouched] = React.useState<Record<Tense, boolean>>({
-    ㄲ: false,
-    ㄸ: false,
-    ㅃ: false,
-    ㅆ: false,
-    ㅉ: false,
-  });
-
-  const touchedCount = React.useMemo(
-    () => tense.reduce((acc, k) => acc + (touched[k] ? 1 : 0), 0),
-    [tense, touched],
-  );
-
-  // ===== Quiz =====
-  const [quizOn, setQuizOn] = React.useState(false);
-  const [quizTarget, setQuizTarget] = React.useState<Tense | null>(null);
-  const [quizReveal, setQuizReveal] = React.useState(false);
-  const [quizFeedback, setQuizFeedback] = React.useState<
-    "correct" | "wrong" | null
-  >(null);
-
-  const haptic = React.useCallback(async () => {
+  const haptic = async () => {
     try {
-      if (Haptics?.selectionAsync) await Haptics.selectionAsync();
+      await Haptics?.selectionAsync();
     } catch {}
-  }, []);
+  };
 
-  const stopAll = React.useCallback(async () => {
-    Speech.stop();
-    setIsSpeaking(false);
-    setActiveKey(null);
+  const playCompare = async (base: string, tense: string) => {
     await haptic();
-  }, [haptic]);
-
-  // ===== Queue TTS via onDone (fiable, pas de timers de durée) =====
-  const speakParts = React.useCallback(
-    (
-      parts: string[],
-      opts?: { highlightKey?: string; repeat?: number; onDoneAll?: () => void },
-    ) => {
-      const repeat = opts?.repeat ?? 1;
-
-      Speech.stop();
-      setIsSpeaking(true);
-
-      let i = 0;
-
-      const step = () => {
-        if (i >= parts.length) {
-          setIsSpeaking(false);
-          if (opts?.highlightKey) setActiveKey(null);
-          opts?.onDoneAll?.();
-          return;
-        }
-
-        const p = parts[i];
-
-        Speech.speak(p, {
-          language: "ko-KR",
-          rate,
-          pitch: 1.0,
-          onDone: () => {
-            if (repeat === 2) {
-              setTimeout(() => {
-                Speech.speak(p, {
-                  language: "ko-KR",
-                  rate,
-                  pitch: 1.0,
-                  onDone: () => {
-                    i += 1;
-                    setTimeout(step, gapMs);
-                  },
-                  onStopped: () => {
-                    setIsSpeaking(false);
-                    if (opts?.highlightKey) setActiveKey(null);
-                  },
-                  onError: () => {
-                    setIsSpeaking(false);
-                    if (opts?.highlightKey) setActiveKey(null);
-                  },
-                });
-              }, gapMs);
-              return;
-            }
-
-            i += 1;
-            setTimeout(step, gapMs);
-          },
-          onStopped: () => {
-            setIsSpeaking(false);
-            if (opts?.highlightKey) setActiveKey(null);
-          },
-          onError: () => {
-            setIsSpeaking(false);
-            if (opts?.highlightKey) setActiveKey(null);
-          },
-        });
-      };
-
-      step();
-    },
-    [gapMs, rate],
-  );
-
-  // ===== Play functions =====
-  const playTenseLetter = React.useCallback(
-    async (k: Tense) => {
-      await haptic();
-
-      setTouched((prev) => ({ ...prev, [k]: true }));
-
-      if (!quizOn) setActiveKey(k);
-
-      // On joue les exemples syllabiques (4 voyelles) pour sentir la tension
-      speakParts(meta[k].examples, {
-        highlightKey: quizOn ? undefined : k,
-        repeat: repeatCount,
-      });
-    },
-    [haptic, meta, quizOn, repeatCount, speakParts],
-  );
-
-  const playTenseSyllable = React.useCallback(
-    async (syllable: string) => {
-      await haptic();
-      if (!quizOn) setActiveKey(syllable);
-      speakParts([syllable], {
-        highlightKey: quizOn ? undefined : syllable,
-        repeat: repeatCount,
-      });
-    },
-    [haptic, quizOn, repeatCount, speakParts],
-  );
-
-  // Comparaison A/B alternée (clé pédagogique)
-  const playCompare = React.useCallback(
-    async (base: Plain, tenseKey: Tense) => {
-      await haptic();
-
-      const a = plainExamples[base]; // ex: 가 거 고 구
-      const b = meta[tenseKey].examples; // ex: 까 꺼 꼬 꾸
-
-      // A/B sur chaque voyelle + retour
-      // 가 까 거 꺼 고 꼬 구 꾸 (puis répète le bloc une 2e fois)
-      const parts: string[] = [];
-      for (let i = 0; i < Math.min(a.length, b.length); i++) {
-        parts.push(a[i], b[i]);
-      }
-      // On rajoute un second passage (contraste plus clair)
-      parts.push(...parts);
-
-      setTouched((prev) => ({ ...prev, [tenseKey]: true }));
-      setActiveKey(null); // pas de spoiler/guide trop fort
-
-      speakParts(parts, { repeat: 1 });
-    },
-    [haptic, meta, plainExamples, speakParts],
-  );
-
-  const playAll = React.useCallback(async () => {
-    await haptic();
-
-    // “Écouter tout” tendu = une syllabe repère par lettre (séquencé)
-    const seq: { key: Tense; syll: string }[] = [
-      { key: "ㄲ", syll: "까" },
-      { key: "ㄸ", syll: "따" },
-      { key: "ㅃ", syll: "빠" },
-      { key: "ㅆ", syll: "싸" },
-      { key: "ㅉ", syll: "짜" },
-    ];
-
-    let idx = 0;
-
-    Speech.stop();
+    setActiveKey(tense);
     setIsSpeaking(true);
-    setActiveKey(null);
-
-    const next = () => {
-      if (idx >= seq.length) {
-        setIsSpeaking(false);
-        setActiveKey(null);
-        return;
-      }
-
-      const { key, syll } = seq[idx];
-
-      if (!quizOn) setActiveKey(key);
-      setTouched((prev) => ({ ...prev, [key]: true }));
-
-      Speech.speak(syll, {
-        language: "ko-KR",
-        rate,
-        pitch: 1.0,
-        onDone: () => {
-          idx += 1;
-          setTimeout(next, gapMs);
-        },
-        onStopped: () => {
-          setIsSpeaking(false);
-          setActiveKey(null);
-        },
-        onError: () => {
-          setIsSpeaking(false);
-          setActiveKey(null);
-        },
-      });
-    };
-
-    next();
-  }, [gapMs, haptic, quizOn, rate]);
-
-  const resetProgress = React.useCallback(async () => {
-    await haptic();
-    setTouched({ ㄲ: false, ㄸ: false, ㅃ: false, ㅆ: false, ㅉ: false });
-  }, [haptic]);
-
-  // ===== Quiz (sans highlight pendant audio) =====
-  const startQuiz = React.useCallback(async () => {
-    await haptic();
-    setQuizOn(true);
-    setQuizReveal(false);
-    setQuizFeedback(null);
-
-    const pick = tense[Math.floor(Math.random() * tense.length)];
-    setQuizTarget(pick);
-
     Speech.stop();
-    setIsSpeaking(true);
-    setActiveKey(null);
-
-    speakParts([meta[pick].examples[0]], {
-      // ex: 까 / 따 / 빠 / 싸 / 짜
-      repeat: repeatCount,
-      onDoneAll: () => setIsSpeaking(false),
+    // Simulation simple de comparaison sonore
+    Speech.speak(base + "ㅏ", {
+      language: "ko-KR",
+      rate,
+      onDone: () => {
+        setTimeout(
+          () =>
+            Speech.speak(tense + "ㅏ", {
+              language: "ko-KR",
+              rate,
+              onDone: () => {
+                setIsSpeaking(false);
+                setActiveKey(null);
+              },
+            }),
+          300,
+        );
+      },
     });
-  }, [haptic, meta, repeatCount, speakParts, tense]);
-
-  const replayQuiz = React.useCallback(async () => {
-    if (!quizTarget) return;
-    await haptic();
-
-    Speech.stop();
-    setIsSpeaking(true);
-    setActiveKey(null);
-
-    speakParts([meta[quizTarget].examples[0]], {
-      repeat: repeatCount,
-      onDoneAll: () => setIsSpeaking(false),
-    });
-  }, [haptic, meta, quizTarget, repeatCount, speakParts]);
-
-  const exitQuiz = React.useCallback(async () => {
-    await haptic();
-    setQuizOn(false);
-    setQuizTarget(null);
-    setQuizReveal(false);
-    setQuizFeedback(null);
-  }, [haptic]);
-
-  const answerQuiz = React.useCallback(
-    async (choice: Tense) => {
-      if (!quizTarget) return;
-
-      const ok = choice === quizTarget;
-      setQuizFeedback(ok ? "correct" : "wrong");
-      setQuizReveal(true);
-
-      setTouched((prev) => ({ ...prev, [choice]: true }));
-
-      try {
-        if (Haptics?.notificationAsync) {
-          await Haptics.notificationAsync(
-            ok
-              ? Haptics.NotificationFeedbackType.Success
-              : Haptics.NotificationFeedbackType.Error,
-          );
-        }
-      } catch {}
-    },
-    [quizTarget],
-  );
-
-  React.useEffect(() => {
-    return () => {
-      Speech.stop();
-    };
-  }, []);
+  };
 
   return (
-    <LinearGradient colors={[BG0, "#0b0b1d", "#0b0f22"]} style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 140 }}>
-        <Link href="/hangul" asChild>
-          <Pressable style={{ paddingVertical: 8 }} hitSlop={10}>
-            <Text style={{ color: MUTED, fontWeight: "800" }}>← Retour</Text>
-          </Pressable>
-        </Link>
+    <SafeAreaView style={styles.container}>
+      <LinearGradient
+        colors={[BG_DEEP, "#0D0F1A"]}
+        style={StyleSheet.absoluteFill}
+      />
 
-        <Text style={{ color: TXT, fontSize: 22, fontWeight: "900" }}>
-          Consonnes doubles (tendues)
-        </Text>
+      {/* Glows ambiants identiques à Dialogues */}
+      <View
+        style={[
+          styles.ambientGlow,
+          { top: -50, right: -100, backgroundColor: PINK, opacity: 0.08 },
+        ]}
+      />
+      <View
+        style={[
+          styles.ambientGlow,
+          { bottom: 100, left: -120, backgroundColor: ACCENT, opacity: 0.06 },
+        ]}
+      />
 
-        <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-          Les consonnes tendues sonnent plus{" "}
-          <Text style={{ color: TXT, fontWeight: "900" }}>sèches</Text> et
-          <Text style={{ color: TXT, fontWeight: "900" }}> comprimées</Text>. Le
-          plus efficace est la comparaison directe (가 ↔ 까, 다 ↔ 따…).
-        </Text>
-
-        <View style={{ height: 12 }} />
-
-        {/* Progress + status */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 12,
-          }}
-        >
-          <Text style={{ color: TXT, fontWeight: "900" }}>
-            Progression : {touchedCount}/5{touchedCount === 5 ? " ✅" : ""}
-          </Text>
-          <Text style={{ color: MUTED, fontWeight: "800" }}>
-            {isSpeaking ? "🔊 Lecture…" : "🎧 Casque conseillé"}
-          </Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Link href="/hangul" asChild>
+            <Pressable hitSlop={20}>
+              <Text style={styles.backText}>← Retour</Text>
+            </Pressable>
+          </Link>
+          <Text style={styles.sectionLabel}>HANGUL FOUNDATION</Text>
+          <Text style={styles.pageTitle}>Consonnes{"\n"}tendues</Text>
         </View>
 
-        {/* Controls */}
-        <Card>
-          <View
-            style={{
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: "rgba(34,211,238,0.35)",
-              backgroundColor: "rgba(34,211,238,0.08)",
-              padding: 12,
-            }}
+        {/* Info Card - Style "Comment apprendre" */}
+        <GlassCard>
+          <View style={styles.cardHeaderRow}>
+            <View style={[styles.statusDot, { backgroundColor: ACCENT }]} />
+            <Text style={styles.cardHeaderLabel}>DIDACTIQUE</Text>
+          </View>
+          <Text style={styles.instructionText}>
+            Les consonnes tendues ne sont pas "plus fortes", mais{" "}
+            <Text style={{ color: ACCENT }}>sans aspiration</Text> et plus
+            sèches.
+          </Text>
+
+          <View style={styles.pillsRow}>
+            <Pill
+              label={`VITESSE: ${rate}`}
+              active
+              onPress={() => setRate(rate === 0.85 ? 0.75 : 0.85)}
+            />
+            <Pill label="MODE COMPARAISON" active />
+          </View>
+        </GlassCard>
+
+        {/* Section Comparaison - La plus importante */}
+        <Text style={styles.subTitle}>Exercice de contraste</Text>
+        <View style={styles.comparisonGrid}>
+          {[
+            ["ㄱ", "ㄲ"],
+            ["ㄷ", "ㄸ"],
+            ["ㅂ", "ㅃ"],
+            ["ㅅ", "ㅆ"],
+            ["ㅈ", "ㅉ"],
+          ].map(([p, t]) => (
+            <Pressable
+              key={t}
+              onPress={() => playCompare(p, t)}
+              style={({ pressed }) => [
+                styles.compareTile,
+                activeKey === t && { borderColor: ACCENT, borderWidth: 1.5 },
+                { opacity: pressed ? 0.8 : 1 },
+              ]}
+            >
+              <BlurView
+                intensity={activeKey === t ? 40 : 10}
+                tint="dark"
+                style={styles.tileInner}
+              >
+                <Text style={styles.tileTextPlain}>{p}</Text>
+                <Text style={styles.tileArrow}>↔</Text>
+                <Text
+                  style={[
+                    styles.tileTextTense,
+                    activeKey === t && { color: ACCENT },
+                  ]}
+                >
+                  {t}
+                </Text>
+              </BlurView>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* Action Button */}
+        <Pressable style={styles.mainActionBtn} onPress={() => Speech.stop()}>
+          <LinearGradient
+            colors={[ACCENT, "#0891B2"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.btnGradient}
           >
-            <Text style={{ color: TXT, fontWeight: "900" }}>
-              💡 Comment apprendre
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-              • “Double” ≠ plus fort : c’est surtout{" "}
-              <Text style={{ color: TXT, fontWeight: "900" }}>
-                sans aspiration
-              </Text>
-              et plus “serré”.{"\n"}• Compare toujours avec la simple (가/까,
-              다/따…).{"\n"}• Ne souffle pas : l’air sort moins que ㅋ/ㅌ/ㅍ/ㅊ.
-            </Text>
-          </View>
+            <Text style={styles.btnText}>🔊 Écouter tout le cycle</Text>
+          </LinearGradient>
+        </Pressable>
 
-          <View style={{ height: 12 }} />
-
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-            <PillButton
-              label={showLabels ? "Labels : ON" : "Labels : OFF"}
-              active={showLabels}
-              onPress={async () => {
-                await haptic();
-                setShowLabels((v) => !v);
-              }}
-            />
-            <PillButton
-              label={`Vitesse : ${rate}`}
-              active
-              onPress={async () => {
-                await haptic();
-                setRate((r) => (r === 0.75 ? 0.85 : r === 0.85 ? 0.92 : 0.75));
-              }}
-            />
-            <PillButton
-              label={`Pause : ${gapMs}ms`}
-              active
-              onPress={async () => {
-                await haptic();
-                setGapMs((g) => (g === 200 ? 320 : g === 320 ? 420 : 200));
-              }}
-            />
-            <PillButton
-              label={repeatCount === 2 ? "Répéter : x2" : "Répéter : x1"}
-              active={repeatCount === 2}
-              onPress={async () => {
-                await haptic();
-                setRepeatCount((c) => (c === 1 ? 2 : 1));
-              }}
-            />
-            <PillButton
-              label={quizOn ? "Quiz : ON" : "Quiz : OFF"}
-              active={quizOn}
-              onPress={quizOn ? exitQuiz : startQuiz}
-              disabled={isSpeaking}
-            />
-          </View>
-        </Card>
-
-        {/* Comparaison (section clé) */}
-        <Card>
-          <Text style={{ color: TXT, fontWeight: "900" }}>
-            ⚡ Comparer (simple ↔ tendue)
+        {/* Footer info */}
+        <View style={styles.footerInfo}>
+          <Text style={styles.footerLabel}>ASTUCE</Text>
+          <Text style={styles.footerText}>
+            Imaginez bloquer votre respiration une fraction de seconde avant de
+            relâcher le son.
           </Text>
-          <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-            Clique une paire pour entendre l’alternance. (C’est le meilleur
-            exercice.)
-          </Text>
-
-          <View style={{ height: 10 }} />
-
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-            <PillButton
-              label="ㄱ ↔ ㄲ"
-              onPress={() => playCompare("ㄱ", "ㄲ")}
-            />
-            <PillButton
-              label="ㄷ ↔ ㄸ"
-              onPress={() => playCompare("ㄷ", "ㄸ")}
-            />
-            <PillButton
-              label="ㅂ ↔ ㅃ"
-              onPress={() => playCompare("ㅂ", "ㅃ")}
-            />
-            <PillButton
-              label="ㅅ ↔ ㅆ"
-              onPress={() => playCompare("ㅅ", "ㅆ")}
-            />
-            <PillButton
-              label="ㅈ ↔ ㅉ"
-              onPress={() => playCompare("ㅈ", "ㅉ")}
-            />
-          </View>
-
-          <View style={{ height: 12 }} />
-
-          {!isSpeaking ? (
-            <PrimaryButton
-              label="🔊 Écouter tout (repères)"
-              onPress={playAll}
-              disabled={quizOn}
-            />
-          ) : (
-            <PrimaryButton label="⏹ Stop" onPress={stopAll} />
-          )}
-        </Card>
-
-        {/* Quiz */}
-        {quizOn && (
-          <Card>
-            <Text style={{ color: TXT, fontWeight: "900" }}>
-              🎯 Quiz — Quelle consonne est-ce ?
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-              Appuie sur{" "}
-              <Text style={{ color: TXT, fontWeight: "900" }}>Rejouer</Text>,
-              puis choisis la consonne. (Pas de highlight pendant le son.)
-            </Text>
-
-            <View style={{ height: 10 }} />
-
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-              <PillButton label="🔁 Rejouer" onPress={replayQuiz} active />
-              <PillButton label="➡️ Nouveau" onPress={startQuiz} />
-              <PillButton
-                label="⏹ Stop"
-                onPress={stopAll}
-                disabled={!isSpeaking}
-              />
-            </View>
-
-            {quizReveal && quizTarget && (
-              <View style={{ marginTop: 12 }}>
-                <Text style={{ color: TXT, fontWeight: "900" }}>
-                  {quizFeedback === "correct" ? "✅ Correct" : "❌ Presque"}
-                </Text>
-                <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-                  Réponse :{" "}
-                  <Text style={{ color: TXT, fontWeight: "900" }}>
-                    {quizTarget}
-                  </Text>{" "}
-                  ({meta[quizTarget].label}){"  "}→ ex:{" "}
-                  {meta[quizTarget].examples[0]}
-                </Text>
-              </View>
-            )}
-          </Card>
-        )}
-
-        {/* Section A: Lettres tendues */}
-        <Card>
-          <Text style={{ color: TXT, fontWeight: "900", marginBottom: 10 }}>
-            A — Lettres tendues
-          </Text>
-
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-            {tense.map((k) => (
-              <Tile
-                key={k}
-                text={k}
-                label={showLabels ? meta[k].label : undefined}
-                isActive={!quizOn && activeKey === k}
-                isTouched={touched[k]}
-                onPress={() => {
-                  if (quizOn) answerQuiz(k);
-                  else playTenseLetter(k);
-                }}
-              />
-            ))}
-          </View>
-        </Card>
-
-        {/* Section B: Syllabes exemples */}
-        <Card>
-          <Text style={{ color: TXT, fontWeight: "900", marginBottom: 10 }}>
-            B — Exemples syllabiques (4 voyelles)
-          </Text>
-
-          <Text style={{ color: MUTED, marginBottom: 10, lineHeight: 20 }}>
-            Tapote une syllabe pour l’imiter (x2 si activé). Puis compare via
-            les boutons au-dessus.
-          </Text>
-
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-            {tense.flatMap((k) =>
-              meta[k].examples.map((syll) => (
-                <Tile
-                  key={`${k}-${syll}`}
-                  text={syll}
-                  label={showLabels ? meta[k].label : undefined}
-                  isActive={!quizOn && activeKey === syll}
-                  isTouched={touched[k]}
-                  onPress={() => playTenseSyllable(syll)}
-                />
-              )),
-            )}
-          </View>
-
-          <View style={{ height: 12 }} />
-
-          <GhostButton
-            label="🔁 Reset progression (0/5)"
-            onPress={resetProgress}
-            disabled={isSpeaking}
-          />
-        </Card>
-
-        {/* Always available stop */}
-        <Card>
-          <GhostButton label="⏹ Stop audio" onPress={stopAll} />
-        </Card>
+        </View>
       </ScrollView>
-    </LinearGradient>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: BG_DEEP },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 60 },
+  ambientGlow: {
+    position: "absolute",
+    width: 400,
+    height: 400,
+    borderRadius: 200,
+  },
+
+  header: { marginTop: 20, marginBottom: 40 },
+  backText: { color: MUTED, fontSize: 15, marginBottom: 20 },
+  sectionLabel: {
+    color: PINK,
+    fontSize: 12,
+    letterSpacing: 4,
+    fontWeight: "800",
+    marginBottom: 8,
+  },
+  pageTitle: {
+    color: TXT,
+    fontSize: 48,
+    fontWeight: "900",
+    letterSpacing: -1.5,
+    lineHeight: 52,
+  },
+
+  // Glass Cards
+  cardWrapper: {
+    borderRadius: 32,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    marginBottom: 30,
+  },
+  glassContent: { padding: 24 },
+  cardHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: 10 },
+  cardHeaderLabel: {
+    color: MUTED,
+    fontSize: 11,
+    letterSpacing: 2,
+    fontWeight: "700",
+  },
+  instructionText: {
+    color: TXT,
+    fontSize: 17,
+    lineHeight: 26,
+    marginBottom: 20,
+    fontWeight: "500",
+  },
+  pillsRow: { flexDirection: "row", gap: 10 },
+
+  // Tiles
+  subTitle: { color: TXT, fontSize: 22, fontWeight: "800", marginBottom: 20 },
+  comparisonGrid: { gap: 12 },
+  compareTile: {
+    height: 90,
+    borderRadius: 24,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  tileInner: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 30,
+  },
+  tileTextPlain: { color: MUTED, fontSize: 32, fontWeight: "300" },
+  tileArrow: { color: "rgba(255,255,255,0.2)", fontSize: 20 },
+  tileTextTense: { color: TXT, fontSize: 42, fontWeight: "900" },
+
+  // Pills
+  pill: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  pillActive: { backgroundColor: "rgba(34,211,238,0.15)", borderColor: ACCENT },
+  pillText: { color: MUTED, fontSize: 11, fontWeight: "800" },
+  pillTextActive: { color: ACCENT },
+
+  // Main Button
+  mainActionBtn: {
+    marginTop: 30,
+    borderRadius: 24,
+    overflow: "hidden",
+    height: 64,
+  },
+  btnGradient: { flex: 1, justifyContent: "center", alignItems: "center" },
+  btnText: { color: "#000", fontWeight: "900", fontSize: 16 },
+
+  // Footer
+  footerInfo: { marginTop: 40, paddingHorizontal: 4 },
+  footerLabel: {
+    color: PINK,
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 2,
+    marginBottom: 8,
+  },
+  footerText: { color: MUTED, fontSize: 14, lineHeight: 22 },
+});
