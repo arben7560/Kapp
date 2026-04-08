@@ -1,21 +1,18 @@
-import {
-  preload,
-  setAudioModeAsync,
-  useAudioPlayer,
-  useAudioPlayerStatus,
-} from "expo-audio";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link } from "expo-router";
-import React from "react";
+import * as Speech from "expo-speech";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Animated,
   Dimensions,
+  Easing,
+  PanResponder,
   Pressable,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -26,520 +23,1112 @@ try {
 
 const { width } = Dimensions.get("window");
 
+// ──────────────────────────────────────────────
+// DESIGN TOKENS
+// ──────────────────────────────────────────────
 const BG_DEEP = "#050508";
-const BG_TOP = "#0A0C14";
-const TXT = "rgba(255,255,255,0.96)";
-const TXT_SOFT = "rgba(255,255,255,0.74)";
-const MUTED = "rgba(255,255,255,0.52)";
-const ACCENT = "#22D3EE";
+const BG_TOP = "#0A0D1A";
+
+const TXT = "rgba(255,255,255,0.98)";
+const MUTED = "rgba(255,255,255,0.68)";
+const TXT_SOFT = "rgba(255,255,255,0.72)";
+
 const PINK = "#F472B6";
-const VIOLET = "#8B5CF6";
+const CYAN = "#22D3EE";
+const VIOLET = "#7B51D8";
+const GREEN = "#10B981";
 
-const TILE_GAP = 16;
-const TILE_SIZE = (width - 48 - TILE_GAP) / 2;
+const HAIR = "rgba(255,255,255,0.10)";
+const HAIR_STRONG = "rgba(255,255,255,0.16)";
 
-// Audio assets (tes assets existants)
-const audioGa = require("../../../assets/audio/hangul/consonants-basic/가.mp3");
-const audioNa = require("../../../assets/audio/hangul/consonants-basic/나.mp3");
-const audioDa = require("../../../assets/audio/hangul/consonants-basic/다.mp3");
-const audioRa = require("../../../assets/audio/hangul/consonants-basic/라.mp3");
-const audioMa = require("../../../assets/audio/hangul/consonants-basic/마.mp3");
-const audioBa = require("../../../assets/audio/hangul/consonants-basic/바.mp3");
-const audioSa = require("../../../assets/audio/hangul/consonants-basic/사.mp3");
-const audioA = require("../../../assets/audio/hangul/consonants-basic/아.mp3");
-const audioJa = require("../../../assets/audio/hangul/consonants-basic/자.mp3");
-const audioHa = require("../../../assets/audio/hangul/consonants-basic/하.mp3");
+const RADIUS_XL = 34;
+const RADIUS_M = 22;
+const RADIUS_PILL = 999;
 
-const audioKa = require("../../../assets/audio/hangul/consonants-basic/카.mp3");
-const audioTa = require("../../../assets/audio/hangul/consonants-basic/타.mp3");
-const audioPa = require("../../../assets/audio/hangul/consonants-basic/파.mp3");
-const audioCha = require("../../../assets/audio/hangul/consonants-basic/차.mp3");
+const fonts = {
+  bold: "Outfit_700Bold",
+  black: "Outfit_900Black",
+  medium: "Outfit_500Medium",
+  kr: "NotoSansKR_700Bold",
+};
 
-preload(audioGa);
-preload(audioNa);
-preload(audioDa);
-preload(audioRa);
-preload(audioMa);
-preload(audioBa);
-preload(audioSa);
-preload(audioA);
-preload(audioJa);
-preload(audioHa);
-preload(audioKa);
-preload(audioTa);
-preload(audioPa);
-preload(audioCha);
+// ──────────────────────────────────────────────
+// DATA
+// ──────────────────────────────────────────────
+type BasicConsonant = {
+  char: string;
+  syllable: string;
+  romanization: string;
+  tone: "cyan" | "pink" | "violet" | "neutral";
+};
 
-const BASE_CONSONANTS = [
-  { char: "ㄱ", label: "g / k", syllable: "가", audio: audioGa, tone: "base" },
-  { char: "ㄴ", label: "n", syllable: "나", audio: audioNa, tone: "base" },
-  { char: "ㄷ", label: "d / t", syllable: "다", audio: audioDa, tone: "base" },
-  { char: "ㄹ", label: "r / l", syllable: "라", audio: audioRa, tone: "base" },
-  { char: "ㅁ", label: "m", syllable: "마", audio: audioMa, tone: "base" },
-  { char: "ㅂ", label: "b / p", syllable: "바", audio: audioBa, tone: "base" },
-  { char: "ㅅ", label: "s", syllable: "사", audio: audioSa, tone: "base" },
-  { char: "ㅇ", label: "∅ / ng", syllable: "아", audio: audioA, tone: "base" },
-  { char: "ㅈ", label: "j", syllable: "자", audio: audioJa, tone: "base" },
-  { char: "ㅎ", label: "h", syllable: "하", audio: audioHa, tone: "base" },
-] as const;
+type ContrastPair = {
+  id: string;
+  left: BasicConsonant;
+  right: BasicConsonant;
+};
 
-const ASPIRATED_CONSONANTS = [
-  { char: "ㅋ", label: "kʰ", syllable: "카", audio: audioKa, tone: "air" },
-  { char: "ㅌ", label: "tʰ", syllable: "타", audio: audioTa, tone: "air" },
-  { char: "ㅍ", label: "pʰ", syllable: "파", audio: audioPa, tone: "air" },
-  { char: "ㅊ", label: "chʰ", syllable: "차", audio: audioCha, tone: "air" },
-] as const;
+const BASIC_CONSONANTS: BasicConsonant[] = [
+  { char: "ㄱ", syllable: "가", romanization: "g / k", tone: "cyan" },
+  { char: "ㄴ", syllable: "나", romanization: "n", tone: "neutral" },
+  { char: "ㄷ", syllable: "다", romanization: "d / t", tone: "pink" },
+  { char: "ㄹ", syllable: "라", romanization: "r / l", tone: "violet" },
+  { char: "ㅁ", syllable: "마", romanization: "m", tone: "neutral" },
+  { char: "ㅂ", syllable: "바", romanization: "b / p", tone: "cyan" },
+  { char: "ㅅ", syllable: "사", romanization: "s", tone: "pink" },
+  { char: "ㅇ", syllable: "아", romanization: "∅ / ng", tone: "violet" },
+  { char: "ㅈ", syllable: "자", romanization: "j", tone: "cyan" },
+  { char: "ㅎ", syllable: "하", romanization: "h", tone: "neutral" },
+];
 
-const ALL_CONSONANTS = [...BASE_CONSONANTS, ...ASPIRATED_CONSONANTS] as const;
-type ConsonantItem = (typeof ALL_CONSONANTS)[number];
+const CONTRASTS: ContrastPair[] = [
+  {
+    id: "gk",
+    left: { char: "ㄱ", syllable: "가", romanization: "g / k", tone: "cyan" },
+    right: { char: "ㅋ", syllable: "카", romanization: "kʰ", tone: "violet" },
+  },
+  {
+    id: "dt",
+    left: { char: "ㄷ", syllable: "다", romanization: "d / t", tone: "pink" },
+    right: { char: "ㅌ", syllable: "타", romanization: "tʰ", tone: "cyan" },
+  },
+  {
+    id: "bp",
+    left: { char: "ㅂ", syllable: "바", romanization: "b / p", tone: "cyan" },
+    right: { char: "ㅍ", syllable: "파", romanization: "pʰ", tone: "pink" },
+  },
+  {
+    id: "jch",
+    left: { char: "ㅈ", syllable: "자", romanization: "j", tone: "cyan" },
+    right: { char: "ㅊ", syllable: "차", romanization: "chʰ", tone: "violet" },
+  },
+];
 
-// ==================== COMPOSANT HERO ====================
-function HeroCard({
-  featured,
-  showLabel,
-  rate,
-  onToggleLabel,
-  onToggleRate,
-  onPlay,
-  isSpeaking,
-}: {
-  featured: ConsonantItem;
-  showLabel: boolean;
-  rate: number;
-  onToggleLabel: () => void;
-  onToggleRate: () => void;
-  onPlay: () => void;
-  isSpeaking: boolean;
-}) {
+// ──────────────────────────────────────────────
+// HELPERS
+// ──────────────────────────────────────────────
+function toneGlow(tone: BasicConsonant["tone"]) {
+  switch (tone) {
+    case "cyan":
+      return "rgba(34,211,238,0.18)";
+    case "pink":
+      return "rgba(244,114,182,0.15)";
+    case "violet":
+      return "rgba(123,81,216,0.16)";
+    default:
+      return "rgba(255,255,255,0.08)";
+  }
+}
+
+function toneGradient(tone: BasicConsonant["tone"]) {
+  switch (tone) {
+    case "cyan":
+      return [
+        "rgba(34,211,238,0.12)",
+        "rgba(255,255,255,0.03)",
+        "rgba(34,211,238,0.02)",
+      ];
+    case "pink":
+      return [
+        "rgba(244,114,182,0.12)",
+        "rgba(255,255,255,0.03)",
+        "rgba(244,114,182,0.02)",
+      ];
+    case "violet":
+      return [
+        "rgba(123,81,216,0.12)",
+        "rgba(255,255,255,0.03)",
+        "rgba(123,81,216,0.02)",
+      ];
+    default:
+      return [
+        "rgba(255,255,255,0.07)",
+        "rgba(255,255,255,0.03)",
+        "rgba(255,255,255,0.02)",
+      ];
+  }
+}
+
+function stopSpeech() {
+  try {
+    Speech.stop();
+  } catch {}
+}
+
+function speakKorean(text: string, rate = 0.84) {
+  return new Promise<void>((resolve) => {
+    stopSpeech();
+    Speech.speak(text, {
+      language: "ko-KR",
+      rate,
+      pitch: 1,
+      onDone: () => resolve(),
+      onStopped: () => resolve(),
+      onError: () => resolve(),
+    });
+  });
+}
+
+function wait(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+// ──────────────────────────────────────────────
+// GLASS
+// ──────────────────────────────────────────────
+function SpecularEdge() {
   return (
-    <View style={styles.heroShell}>
-      <BlurView intensity={32} tint="dark" style={styles.heroCard}>
-        <LinearGradient
-          colors={["rgba(34,211,238,0.18)", "rgba(139,92,246,0.06)"]}
-          style={StyleSheet.absoluteFillObject}
-        />
-
-        <View style={styles.heroTopRow}>
-          <View style={styles.liveRow}>
-            <View style={styles.liveDot} />
-            <Text style={styles.liveText}>LIVE PRONUNCIATION</Text>
-          </View>
-
-          <Pressable onPress={onPlay} hitSlop={12}>
-            <Text style={styles.heroPlay}>{isSpeaking ? "■" : "▶"}</Text>
-          </Pressable>
-        </View>
-
-        <View style={styles.heroCenter}>
-          <Text style={styles.heroChar}>{featured.char}</Text>
-          <Text style={styles.heroSyllable}>{featured.syllable}</Text>
-          {showLabel && <Text style={styles.heroLabel}>{featured.label}</Text>}
-        </View>
-
-        <View style={styles.heroPillsRow}>
-          <Pressable
-            style={[styles.pill, showLabel && styles.pillActive]}
-            onPress={onToggleLabel}
-          >
-            <Text style={[styles.pillText, showLabel && styles.pillTextActive]}>
-              {showLabel ? "Romanisation ON" : "Romanisation OFF"}
-            </Text>
-          </Pressable>
-
-          <Pressable style={styles.pill} onPress={onToggleRate}>
-            <Text style={styles.pillText}>
-              Vitesse {rate === 1 ? "native" : "x0.85"}
-            </Text>
-          </Pressable>
-        </View>
-      </BlurView>
+    <View pointerEvents="none" style={styles.specularWrap}>
+      <LinearGradient
+        colors={[
+          "rgba(255,255,255,0.16)",
+          "rgba(255,255,255,0.05)",
+          "transparent",
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.specularLine}
+      />
     </View>
   );
 }
 
-// ==================== COMPOSANT SECTION ====================
-function MinimalSection({
-  eyebrow,
-  title,
-  items,
-  activeKey,
-  showLabel,
-  onPressItem,
+function GlassChrome({
+  radius,
+  tone = "neutral",
 }: {
-  eyebrow: string;
-  title: string;
-  items: readonly ConsonantItem[];
-  activeKey: string | null;
-  showLabel: boolean;
-  onPressItem: (item: ConsonantItem) => void;
+  radius: number;
+  tone?: BasicConsonant["tone"];
 }) {
   return (
-    <View style={styles.sectionWrap}>
-      <Text style={styles.sectionEyebrow}>{eyebrow}</Text>
-      <Text style={styles.sectionTitle}>{title}</Text>
+    <>
+      <LinearGradient
+        colors={toneGradient(tone)}
+        start={{ x: 0.08, y: 0 }}
+        end={{ x: 0.92, y: 1 }}
+        style={[StyleSheet.absoluteFillObject, { borderRadius: radius }]}
+      />
 
-      <View style={styles.grid}>
-        {items.map((item) => (
-          <ConsonantTile
-            key={item.char}
-            item={item}
-            active={activeKey === item.char}
-            showLabel={showLabel}
-            onPress={() => onPressItem(item)}
-          />
-        ))}
-      </View>
-    </View>
+      <View
+        pointerEvents="none"
+        style={[
+          styles.diffusedOrb,
+          {
+            top: -38,
+            left: -30,
+            width: 180,
+            height: 140,
+            borderRadius: 100,
+            backgroundColor: toneGlow(tone),
+          },
+        ]}
+      />
+
+      <View
+        pointerEvents="none"
+        style={[
+          styles.diffusedOrb,
+          {
+            right: -28,
+            bottom: -24,
+            width: 150,
+            height: 120,
+            borderRadius: 80,
+            backgroundColor: "rgba(255,255,255,0.04)",
+          },
+        ]}
+      />
+
+      <View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFillObject,
+          {
+            borderRadius: radius,
+            borderWidth: 0.5,
+            borderColor: "rgba(255,255,255,0.05)",
+          },
+        ]}
+      />
+
+      <LinearGradient
+        pointerEvents="none"
+        colors={["rgba(255,255,255,0.04)", "transparent", "rgba(0,0,0,0.22)"]}
+        locations={[0, 0.42, 1]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={[StyleSheet.absoluteFillObject, { borderRadius: radius }]}
+      />
+
+      <LinearGradient
+        pointerEvents="none"
+        colors={["rgba(255,255,255,0.10)", "transparent"]}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 0.14, y: 0.5 }}
+        style={[
+          styles.leftSheen,
+          { borderTopLeftRadius: radius, borderBottomLeftRadius: radius },
+        ]}
+      />
+
+      <SpecularEdge />
+    </>
   );
 }
 
-// ==================== COMPOSANT TILE ====================
-function ConsonantTile({
-  item,
+function Capsule({
+  label,
   active,
-  showLabel,
   onPress,
 }: {
-  item: ConsonantItem;
-  active: boolean;
-  showLabel: boolean;
+  label: string;
+  active?: boolean;
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={styles.tileWrap}>
-      <BlurView
-        intensity={active ? 65 : 25}
-        tint="dark"
-        style={styles.tileBlur}
-      >
-        <LinearGradient
-          colors={
-            item.tone === "air"
-              ? ["rgba(139,92,246,0.18)", "rgba(139,92,246,0.05)"]
-              : ["rgba(34,211,238,0.12)", "rgba(244,114,182,0.05)"]
-          }
-          style={StyleSheet.absoluteFillObject}
-        />
-
-        <View style={styles.tileCenter}>
-          <Text style={[styles.tileChar, active && { color: ACCENT }]}>
-            {item.char}
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
+    >
+      <View style={styles.capsuleShell}>
+        <BlurView intensity={20} tint="dark" style={styles.capsuleBlur}>
+          <LinearGradient
+            colors={
+              active
+                ? ["rgba(34,211,238,0.11)", "rgba(255,255,255,0.03)"]
+                : ["rgba(255,255,255,0.05)", "rgba(255,255,255,0.02)"]
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFillObject}
+          />
+          <View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFillObject,
+              styles.capsuleInnerBorder,
+              active && { borderColor: "rgba(34,211,238,0.24)" },
+            ]}
+          />
+          <Text
+            style={[styles.capsuleText, active && styles.capsuleTextActive]}
+          >
+            {label}
           </Text>
-          <Text style={styles.tileSyllable}>{item.syllable}</Text>
-          {showLabel && <Text style={styles.tileLabel}>{item.label}</Text>}
-        </View>
-      </BlurView>
+        </BlurView>
+      </View>
     </Pressable>
   );
 }
 
-export default function ConsonantsBasic() {
-  const [activeKey, setActiveKey] = React.useState<string | null>(null);
-  const [isSpeaking, setIsSpeaking] = React.useState(false);
-  const [showLabel, setShowLabel] = React.useState(true);
-  const [rate, setRate] = React.useState(1);
+function DialogueStyleBubble({ text }: { text: string }) {
+  return (
+    <View style={styles.speechBubble}>
+      <Text style={styles.bubbleText}>{text}</Text>
+    </View>
+  );
+}
 
-  const cycleQueueRef = React.useRef<ConsonantItem[] | null>(null);
-  const cycleIndexRef = React.useRef(0);
-  const activeModeRef = React.useRef<"single" | "cycle" | null>(null);
+function ContrastMiniCard({
+  item,
+  showRomanization,
+}: {
+  item: BasicConsonant;
+  showRomanization: boolean;
+}) {
+  return (
+    <View style={styles.soundPanel}>
+      <BlurView intensity={22} tint="dark" style={styles.soundPanelBlur}>
+        <GlassChrome radius={RADIUS_M} tone={item.tone} />
+        <Text style={styles.soundPanelChar}>{item.char}</Text>
+        <Text style={styles.soundPanelSyllable}>{item.syllable}</Text>
+        {showRomanization && (
+          <Text style={styles.soundPanelRoman}>{item.romanization}</Text>
+        )}
+      </BlurView>
+    </View>
+  );
+}
 
-  const player = useAudioPlayer(null, { updateInterval: 100 });
-  const status = useAudioPlayerStatus(player);
+// ──────────────────────────────────────────────
+// SCREEN
+// ──────────────────────────────────────────────
+export default function ConsonantsBasicScreen() {
+  const [voiceIndex, setVoiceIndex] = useState(0);
+  const [contrastIndex, setContrastIndex] = useState(0);
+  const [voicePlaying, setVoicePlaying] = useState(false);
+  const [contrastPlaying, setContrastPlaying] = useState(false);
+  const [showRomanization, setShowRomanization] = useState(true);
 
-  React.useEffect(() => {
-    setAudioModeAsync({
-      playsInSilentMode: true,
-      shouldPlayInBackground: false,
-      interruptionMode: "mixWithOthers",
-    }).catch(() => {});
-  }, []);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
-  const haptic = async () => {
-    try {
-      await Haptics?.selectionAsync();
-    } catch {}
+  const currentVoice = useMemo(
+    () => BASIC_CONSONANTS[voiceIndex],
+    [voiceIndex],
+  );
+  const currentContrast = useMemo(
+    () => CONTRASTS[contrastIndex],
+    [contrastIndex],
+  );
+
+  const translateY = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -7],
+  });
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 850,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 4800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 4800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.06,
+          duration: 3400,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 3400,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+
+    return () => stopSpeech();
+  }, [fadeAnim, floatAnim, pulseAnim]);
+
+  const playVoice = async (item?: BasicConsonant) => {
+    const target = item ?? currentVoice;
+    setVoicePlaying(true);
+    Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle.Light);
+    await speakKorean(target.syllable, 0.84);
+    setVoicePlaying(false);
   };
 
-  const stopInternal = React.useCallback(async () => {
-    cycleQueueRef.current = null;
-    cycleIndexRef.current = 0;
-    activeModeRef.current = null;
-    setIsSpeaking(false);
-    setActiveKey(null);
+  const goVoicePrev = async () => {
+    const next =
+      voiceIndex === 0 ? BASIC_CONSONANTS.length - 1 : voiceIndex - 1;
+    setVoiceIndex(next);
+    Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle.Light);
+    await wait(90);
+    await playVoice(BASIC_CONSONANTS[next]);
+  };
 
-    try {
-      player.pause();
-      await player.seekTo(0);
-    } catch {}
-  }, [player]);
+  const goVoiceNext = async () => {
+    const next =
+      voiceIndex === BASIC_CONSONANTS.length - 1 ? 0 : voiceIndex + 1;
+    setVoiceIndex(next);
+    Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle.Light);
+    await wait(90);
+    await playVoice(BASIC_CONSONANTS[next]);
+  };
 
-  const playItemInternal = React.useCallback(
-    async (item: ConsonantItem) => {
-      setActiveKey(item.char);
-      setIsSpeaking(true);
+  const playContrast = async () => {
+    setContrastPlaying(true);
+    Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle.Light);
+    await speakKorean(currentContrast.left.syllable, 0.82);
+    await wait(140);
+    await speakKorean(currentContrast.right.syllable, 0.82);
+    setContrastPlaying(false);
+  };
 
-      try {
-        player.pause();
-        player.replace(item.audio);
-        player.setPlaybackRate(rate);
-        await player.seekTo(0);
-        player.play();
-      } catch {
-        setIsSpeaking(false);
-        setActiveKey(null);
-      }
-    },
-    [player, rate],
-  );
+  const goContrastPrev = () => {
+    setContrastIndex((prev) => (prev === 0 ? CONTRASTS.length - 1 : prev - 1));
+    Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle.Light);
+  };
 
-  React.useEffect(() => {
-    if (!status?.isLoaded || !status.didJustFinish) return;
+  const goContrastNext = () => {
+    setContrastIndex((prev) => (prev === CONTRASTS.length - 1 ? 0 : prev + 1));
+    Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle.Light);
+  };
 
-    if (activeModeRef.current === "single") {
-      setActiveKey(null);
-      setIsSpeaking(false);
-      activeModeRef.current = null;
-      return;
-    }
-
-    if (activeModeRef.current === "cycle" && cycleQueueRef.current) {
-      const nextIndex = cycleIndexRef.current + 1;
-      if (nextIndex >= cycleQueueRef.current.length) {
-        stopInternal();
-        return;
-      }
-      cycleIndexRef.current = nextIndex;
-      playItemInternal(cycleQueueRef.current[nextIndex]);
-    }
-  }, [status?.didJustFinish, status?.isLoaded, playItemInternal, stopInternal]);
-
-  const playConsonant = React.useCallback(
-    async (item: ConsonantItem) => {
-      await haptic();
-      cycleQueueRef.current = null;
-      cycleIndexRef.current = 0;
-      activeModeRef.current = "single";
-      playItemInternal(item);
-    },
-    [playItemInternal],
-  );
-
-  const playCycle = React.useCallback(async () => {
-    await haptic();
-    cycleQueueRef.current = [...ALL_CONSONANTS];
-    cycleIndexRef.current = 0;
-    activeModeRef.current = "cycle";
-    playItemInternal(ALL_CONSONANTS[0]);
-  }, [playItemInternal]);
-
-  const featuredItem =
-    ALL_CONSONANTS.find((item) => item.char === activeKey) ??
-    BASE_CONSONANTS[0];
+  const voicePanResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gesture) =>
+        Math.abs(gesture.dx) > 18 && Math.abs(gesture.dy) < 20,
+      onPanResponderRelease: (_, gesture) => {
+        if (gesture.dx < -40) {
+          goVoiceNext();
+        } else if (gesture.dx > 40) {
+          goVoicePrev();
+        }
+      },
+    }),
+  ).current;
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: BG_DEEP }}>
       <StatusBar barStyle="light-content" />
 
-      <LinearGradient
-        colors={[BG_DEEP, BG_TOP]}
-        style={StyleSheet.absoluteFillObject}
-      />
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <Link href="/hangul" asChild>
-            <Pressable hitSlop={20}>
-              <Text style={styles.backText}>← Retour</Text>
-            </Pressable>
-          </Link>
-          <Text style={styles.eyebrow}>SÉOUL IMMERSION</Text>
-          <Text style={styles.pageTitle}>Consonnes</Text>
-        </View>
-
-        {/* Hero Card */}
-        <HeroCard
-          featured={featuredItem}
-          showLabel={showLabel}
-          rate={rate}
-          onToggleLabel={() => setShowLabel(!showLabel)}
-          onToggleRate={() => setRate(rate === 1 ? 0.85 : 1)}
-          onPlay={isSpeaking ? stopInternal : playCycle}
-          isSpeaking={isSpeaking}
+      <LinearGradient colors={[BG_DEEP, BG_TOP]} style={{ flex: 1 }}>
+        <View
+          style={[
+            styles.pageGlow,
+            {
+              top: -140,
+              left: -100,
+              backgroundColor: "rgba(168,85,247,0.07)",
+            },
+          ]}
+        />
+        <View
+          style={[
+            styles.pageGlow,
+            {
+              bottom: 100,
+              right: -90,
+              backgroundColor: "rgba(34,211,238,0.05)",
+            },
+          ]}
         />
 
-        {/* Sets */}
-        <MinimalSection
-          eyebrow="SET 01"
-          title="Base"
-          items={BASE_CONSONANTS}
-          activeKey={activeKey}
-          showLabel={showLabel}
-          onPressItem={playConsonant}
-        />
-
-        <MinimalSection
-          eyebrow="SET 02"
-          title="Aspirées"
-          items={ASPIRATED_CONSONANTS}
-          activeKey={activeKey}
-          showLabel={showLabel}
-          onPressItem={playConsonant}
-        />
-
-        {/* Bouton principal */}
-        <Pressable
-          onPress={isSpeaking ? stopInternal : playCycle}
-          style={styles.bottomCtaWrap}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
-          <BlurView intensity={30} tint="dark" style={styles.bottomCta}>
-            <Text style={styles.bottomCtaText}>
-              {isSpeaking ? "Arrêter l’écoute" : "Écouter tout le set"}
-            </Text>
+          <Animated.View
+            style={{
+              opacity: fadeAnim,
+              transform: [{ translateY }],
+            }}
+          >
+            <View style={styles.heroContainer}>
+              <Text style={styles.heroEyebrow}>SÉOUL IMMERSION</Text>
+              <Text style={styles.heroTitle}>Consonnes</Text>
+            </View>
+          </Animated.View>
+
+          <View style={styles.contrastGuideWrap}>
+            <Text style={styles.contrastGuideText}>Consonnes de bases</Text>
+          </View>
+
+          <View {...voicePanResponder.panHandlers}>
+            <BlurView intensity={42} tint="dark" style={styles.heroCard}>
+              <GlassChrome radius={RADIUS_XL} tone={currentVoice.tone} />
+
+              <View style={styles.cardTopRow}>
+                <View style={styles.liveRow}>
+                  <View style={styles.liveDot} />
+                  <Text style={styles.liveLabel}>LIVE VOICE</Text>
+                </View>
+
+                <Pressable
+                  style={styles.roundPlayShell}
+                  onPress={() => playVoice()}
+                >
+                  <BlurView
+                    intensity={18}
+                    tint="dark"
+                    style={styles.roundPlayButton}
+                  >
+                    <Text
+                      style={[
+                        styles.roundPlayText,
+                        voicePlaying && { color: CYAN },
+                      ]}
+                    >
+                      PLAY
+                    </Text>
+                  </BlurView>
+                </Pressable>
+              </View>
+
+              <View style={styles.heroMiddleRow}>
+                <Pressable onPress={goVoicePrev} style={styles.navShell}>
+                  <BlurView intensity={18} tint="dark" style={styles.navCircle}>
+                    <Text style={styles.navArrow}>‹</Text>
+                  </BlurView>
+                </Pressable>
+
+                <View style={styles.heroCenter}>
+                  <Animated.Text
+                    style={[
+                      styles.heroChar,
+                      {
+                        transform: [{ scale: pulseAnim }],
+                      },
+                    ]}
+                  >
+                    {currentVoice.char}
+                  </Animated.Text>
+
+                  <Text style={styles.heroSyllable}>
+                    {currentVoice.syllable}
+                  </Text>
+
+                  {showRomanization && (
+                    <Text style={styles.heroRomanization}>
+                      {currentVoice.romanization}
+                    </Text>
+                  )}
+                </View>
+
+                <Pressable onPress={goVoiceNext} style={styles.navShell}>
+                  <BlurView intensity={18} tint="dark" style={styles.navCircle}>
+                    <Text style={styles.navArrow}>›</Text>
+                  </BlurView>
+                </Pressable>
+              </View>
+
+              <View style={styles.voiceBubbleWrap}>
+                <DialogueStyleBubble text="Écoute et répète" />
+              </View>
+            </BlurView>
+          </View>
+
+          <View style={styles.contrastGuideWrap}>
+            <Text style={styles.contrastGuideText}>Consonnes aspirées</Text>
+          </View>
+
+          <BlurView intensity={40} tint="dark" style={styles.contrastCard}>
+            <GlassChrome radius={RADIUS_XL} tone={currentContrast.left.tone} />
+
+            <View style={styles.contrastHeaderRow}>
+              <View style={styles.liveRow}>
+                <View style={styles.liveDot} />
+                <Text style={styles.liveLabel}>LIVE CONTRAST</Text>
+              </View>
+
+              <Text style={styles.counterText}>
+                {contrastIndex + 1}/{CONTRASTS.length}
+              </Text>
+            </View>
+
+            <View style={styles.contrastStage}>
+              <Pressable
+                onPress={goContrastPrev}
+                style={styles.stageArrowShell}
+              >
+                <Text style={styles.stageArrowText}>‹</Text>
+              </Pressable>
+
+              <View style={styles.contrastCore}>
+                <ContrastMiniCard
+                  item={currentContrast.left}
+                  showRomanization={showRomanization}
+                />
+
+                <View style={styles.transitionWrap}>
+                  <LinearGradient
+                    colors={[
+                      "transparent",
+                      "rgba(255,255,255,0.10)",
+                      "rgba(255,255,255,0.18)",
+                      "rgba(255,255,255,0.10)",
+                      "transparent",
+                    ]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    style={styles.transitionLine}
+                  />
+                  <Text style={styles.transitionArrow}>→</Text>
+                </View>
+
+                <ContrastMiniCard
+                  item={currentContrast.right}
+                  showRomanization={showRomanization}
+                />
+              </View>
+
+              <Pressable
+                onPress={goContrastNext}
+                style={styles.stageArrowShell}
+              >
+                <Text style={styles.stageArrowText}>›</Text>
+              </Pressable>
+            </View>
+
+            <Pressable onPress={playContrast} style={styles.compactPlayShell}>
+              <BlurView
+                intensity={20}
+                tint="dark"
+                style={styles.compactPlayButton}
+              >
+                <LinearGradient
+                  colors={["rgba(255,255,255,0.05)", "rgba(255,255,255,0.02)"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFillObject}
+                />
+                <Text
+                  style={[
+                    styles.compactPlayText,
+                    contrastPlaying && { color: CYAN },
+                  ]}
+                >
+                  Écoute la différence
+                </Text>
+                <Text style={styles.compactPlayArrow}>›</Text>
+              </BlurView>
+            </Pressable>
+
+            <View style={styles.romanizationRow}>
+              <Capsule
+                label="Romanisation"
+                active={showRomanization}
+                onPress={() => setShowRomanization((v) => !v)}
+              />
+            </View>
           </BlurView>
-        </Pressable>
-      </ScrollView>
+        </ScrollView>
+      </LinearGradient>
     </SafeAreaView>
   );
 }
 
-// ==================== STYLES ====================
+// ──────────────────────────────────────────────
+// STYLES
+// ──────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: BG_DEEP },
+  container: {
+    flex: 1,
+    backgroundColor: BG_DEEP,
+  },
 
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 100,
+    paddingTop: 20,
+    paddingBottom: 140,
   },
 
-  header: { marginTop: 20, marginBottom: 28 },
-  backText: { color: MUTED, fontSize: 16, fontWeight: "600" },
-  eyebrow: {
-    color: PINK,
-    fontSize: 12.5,
-    letterSpacing: 4,
-    fontWeight: "800",
-    marginBottom: 8,
+  pageGlow: {
+    position: "absolute",
+    width: 340,
+    height: 340,
+    borderRadius: 170,
   },
-  pageTitle: { color: TXT, fontSize: 42, fontWeight: "900", lineHeight: 46 },
 
-  // Hero Card
-  heroShell: {
-    marginBottom: 36,
-    borderRadius: 32,
-    overflow: "hidden",
-    borderWidth: 1.5,
-    borderColor: "rgba(34,211,238,0.25)",
-  },
-  heroCard: {
-    borderRadius: 32,
-    padding: 22,
-    overflow: "hidden",
-  },
-  heroTopRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  heroContainer: {
     alignItems: "center",
-    marginBottom: 20,
-  },
-  liveRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  liveDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 999,
-    backgroundColor: "#14D3A6",
-  },
-  liveText: {
-    color: "#aaa",
-    fontSize: 12.5,
-    fontWeight: "800",
-    letterSpacing: 2.5,
-  },
-  heroPlay: { color: "#fff", fontSize: 22 },
-
-  heroCenter: { alignItems: "center", marginVertical: 12 },
-  heroChar: { fontSize: 96, fontWeight: "900", color: TXT, lineHeight: 96 },
-  heroSyllable: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: TXT_SOFT,
-    marginTop: 4,
-  },
-  heroLabel: { fontSize: 18, color: TXT_SOFT, marginTop: 8 },
-
-  heroPillsRow: {
-    flexDirection: "row",
-    gap: 12,
-    justifyContent: "center",
-    marginTop: 12,
   },
 
-  pill: {
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-  },
-  pillActive: { backgroundColor: "rgba(34,211,238,0.18)", borderColor: ACCENT },
-
-  pillText: { color: TXT_SOFT, fontSize: 12, fontWeight: "700" },
-  pillTextActive: { color: TXT },
-
-  // Section
-  sectionWrap: { marginBottom: 36 },
-  sectionEyebrow: {
-    color: MUTED,
-    fontSize: 12,
-    letterSpacing: 3,
-    fontWeight: "700",
+  heroEyebrow: {
+    color: PINK,
+    fontFamily: fonts.bold,
+    fontSize: 13.5,
+    letterSpacing: 3.2,
     marginBottom: 8,
   },
-  sectionTitle: {
+
+  heroTitle: {
     color: TXT,
-    fontSize: 28,
-    fontWeight: "800",
+    fontSize: 46,
+    fontFamily: fonts.black,
+    letterSpacing: -1.4,
+    marginTop: 15,
+    marginBottom: 35,
+  },
+
+  heroCard: {
+    borderRadius: RADIUS_XL,
+    paddingTop: 22,
+    paddingHorizontal: 18,
+    paddingBottom: 20,
+    overflow: "hidden",
+    marginBottom: 18,
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+
+  contrastCard: {
+    borderRadius: RADIUS_XL,
+    paddingTop: 18,
+    paddingHorizontal: 18,
+    paddingBottom: 18,
+    overflow: "hidden",
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.08)",
+    marginTop: 6,
+  },
+
+  specularWrap: {
+    position: "absolute",
+    top: 0,
+    left: 18,
+    right: 18,
+    height: 1,
+  },
+
+  specularLine: {
+    width: "100%",
+    height: 1,
+    opacity: 0.55,
+  },
+
+  contrastGuideWrap: {
+    marginTop: 30,
+    paddingHorizontal: 6,
+    marginBottom: 10,
+  },
+
+  contrastGuideText: {
+    color: "white",
+    fontSize: 22.5,
+    letterSpacing: 0.4,
+    fontFamily: fonts.medium,
+  },
+
+  diffusedOrb: {
+    position: "absolute",
+  },
+
+  leftSheen: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 18,
+    opacity: 0.18,
+  },
+
+  cardTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 18,
   },
 
-  grid: {
+  contrastHeaderRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    alignItems: "center",
     justifyContent: "space-between",
-    gap: TILE_GAP,
+    marginBottom: 24,
   },
 
-  tileWrap: {
-    width: TILE_SIZE,
-    borderRadius: 26,
+  liveRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  liveDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: GREEN,
+  },
+
+  liveLabel: {
+    color: MUTED,
+    fontSize: 11.5,
+    fontFamily: fonts.bold,
+    letterSpacing: 1.6,
+  },
+
+  counterText: {
+    color: "rgba(255,255,255,0.70)",
+    fontSize: 13,
+    fontFamily: fonts.bold,
+    letterSpacing: 0.5,
+  },
+
+  roundPlayShell: {
+    borderRadius: RADIUS_PILL,
     overflow: "hidden",
-    borderWidth: 1.5,
-    borderColor: "rgba(255,255,255,0.1)",
   },
 
-  tileBlur: {
-    padding: 16,
+  roundPlayButton: {
+    width: 82,
+    height: 40,
+    borderRadius: RADIUS_PILL,
     alignItems: "center",
-    minHeight: 180,
+    justifyContent: "center",
+    borderWidth: 0.5,
+    borderColor: HAIR_STRONG,
+    backgroundColor: "rgba(255,255,255,0.03)",
+    overflow: "hidden",
   },
 
-  tileChar: { fontSize: 64, fontWeight: "900", color: TXT },
-  tileSyllable: { fontSize: 20, color: TXT_SOFT, marginTop: 6 },
-  tileLabel: { fontSize: 15, color: ACCENT, marginTop: 4 },
+  roundPlayText: {
+    color: TXT,
+    fontSize: 15,
+    fontFamily: fonts.bold,
+    letterSpacing: 1.8,
+  },
 
-  // Bottom CTA
-  bottomCtaWrap: { marginTop: 20 },
-  bottomCta: {
-    borderRadius: 999,
-    paddingVertical: 18,
+  heroMiddleRow: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  navShell: {
+    borderRadius: RADIUS_PILL,
+    overflow: "hidden",
+  },
+
+  navCircle: {
+    width: 74,
+    height: 74,
+    borderRadius: RADIUS_PILL,
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
-    borderColor: "rgba(34,211,238,0.3)",
+    borderColor: HAIR,
+    backgroundColor: "rgba(255,255,255,0.03)",
+    overflow: "hidden",
   },
-  bottomCtaText: { color: TXT, fontSize: 17, fontWeight: "800" },
+
+  navArrow: {
+    color: TXT_SOFT,
+    fontSize: 36,
+    lineHeight: 36,
+    textAlign: "center",
+    textAlignVertical: "center",
+    includeFontPadding: false,
+    fontWeight: "300",
+  },
+
+  heroCenter: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 8,
+  },
+
+  heroChar: {
+    color: TXT,
+    fontSize: 122,
+    lineHeight: 124,
+    fontFamily: fonts.kr,
+    letterSpacing: -4.8,
+  },
+
+  heroSyllable: {
+    color: TXT,
+    fontSize: 34,
+    lineHeight: 38,
+    fontFamily: fonts.kr,
+    marginTop: -2,
+  },
+
+  heroRomanization: {
+    color: TXT_SOFT,
+    fontSize: 18,
+    lineHeight: 22,
+    fontFamily: fonts.medium,
+    marginTop: 8,
+  },
+
+  voiceBubbleWrap: {
+    alignItems: "center",
+    marginTop: 15,
+    marginBottom: 4,
+  },
+
+  speechBubble: {
+    backgroundColor: "rgba(0,0,0,0.48)",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    minWidth: width * 0.64,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  bubbleText: {
+    color: MUTED,
+    fontSize: 14.5,
+    lineHeight: 21,
+    fontStyle: "italic",
+    fontFamily: fonts.medium,
+    textAlign: "center",
+  },
+
+  contrastStage: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+
+  stageArrowShell: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    minWidth: 32,
+  },
+
+  stageArrowText: {
+    color: "rgba(255,255,255,0.55)",
+    fontSize: 52,
+    lineHeight: 52,
+    textAlign: "center",
+    includeFontPadding: false,
+    fontWeight: "300",
+  },
+
+  contrastCore: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+  },
+
+  soundPanel: {
+    width: 102,
+    borderRadius: RADIUS_M,
+    overflow: "hidden",
+  },
+
+  soundPanelBlur: {
+    height: 196,
+    borderRadius: RADIUS_M,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    overflow: "hidden",
+  },
+
+  soundPanelChar: {
+    color: TXT,
+    fontSize: 72,
+    lineHeight: 76,
+    fontFamily: fonts.kr,
+    letterSpacing: -2.4,
+  },
+
+  soundPanelSyllable: {
+    color: TXT,
+    fontSize: 23,
+    lineHeight: 27,
+    fontFamily: fonts.kr,
+    marginTop: 16,
+  },
+
+  soundPanelRoman: {
+    color: TXT_SOFT,
+    fontSize: 15,
+    lineHeight: 19,
+    fontFamily: fonts.medium,
+    marginTop: 8,
+  },
+
+  transitionWrap: {
+    width: 32,
+    height: 196,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+
+  transitionLine: {
+    position: "absolute",
+    width: 26,
+    height: 1,
+    opacity: 0.55,
+  },
+
+  transitionArrow: {
+    color: "rgba(255,255,255,0.52)",
+    fontSize: 34,
+    lineHeight: 34,
+    textAlign: "center",
+    includeFontPadding: false,
+    fontWeight: "300",
+  },
+
+  compactPlayShell: {
+    borderRadius: RADIUS_PILL,
+    overflow: "hidden",
+    marginBottom: 10,
+  },
+
+  compactPlayButton: {
+    height: 58,
+    borderRadius: RADIUS_PILL,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255,255,255,0.025)",
+    overflow: "hidden",
+    paddingHorizontal: 22,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  compactPlayText: {
+    color: TXT,
+    fontSize: 17,
+    lineHeight: 20,
+    fontFamily: fonts.bold,
+    letterSpacing: -0.2,
+  },
+
+  compactPlayArrow: {
+    color: TXT_SOFT,
+    fontSize: 24,
+    lineHeight: 24,
+    textAlign: "center",
+    includeFontPadding: false,
+    fontWeight: "300",
+  },
+
+  romanizationRow: {
+    alignItems: "center",
+  },
+
+  capsuleShell: {
+    width: 172,
+    borderRadius: RADIUS_PILL,
+    overflow: "hidden",
+  },
+
+  capsuleBlur: {
+    minHeight: 46,
+    borderRadius: RADIUS_PILL,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: HAIR,
+    overflow: "hidden",
+  },
+
+  capsuleInnerBorder: {
+    borderRadius: RADIUS_PILL,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.03)",
+  },
+
+  capsuleText: {
+    color: "rgba(255,255,255,0.66)",
+    fontSize: 13,
+    lineHeight: 16,
+    fontFamily: fonts.bold,
+    textAlign: "center",
+  },
+
+  capsuleTextActive: {
+    color: TXT,
+  },
 });

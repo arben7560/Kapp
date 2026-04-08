@@ -2,7 +2,14 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore, type LearningTrack } from "../../_store";
 
@@ -250,7 +257,11 @@ export default function Home() {
             <View style={styles.heroLogoWrap}>
               <View style={styles.heroLogoHalo} />
               <View style={styles.heroLogoRow}>
-                <Text style={styles.heroHan}>한</Text>
+                <Image
+                  source={require("../../assets/images/gyeongbokgung-palace.png")}
+                  style={styles.heroPalace}
+                  resizeMode="contain"
+                />
                 <View>
                   <Text style={styles.heroLingua}>Lingua</Text>
                   <Text style={styles.heroSeoul}>Seoul</Text>
@@ -259,7 +270,7 @@ export default function Home() {
             </View>
 
             <Text style={styles.heroEyebrow}>SEOUL NIGHT LEARNING</Text>
-            <Text style={styles.heroKr}>서울 몰입</Text>
+            <Text style={styles.heroKr}>Immersion Séoul</Text>
             <Text style={styles.heroLead}>
               Entrez dans Séoul. Écoutez,{"\n"}lisez, parlez.
             </Text>
@@ -422,13 +433,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  heroHan: {
-    fontSize: 68,
-    fontFamily: fonts.krBold,
-    color: "#E0BBFF",
+  heroPalace: {
+    width: 68,
+    height: 68,
     marginRight: 12,
-    textShadowColor: "#C084FC",
-    textShadowRadius: 12,
   },
 
   heroLingua: {
@@ -455,7 +463,7 @@ const styles = StyleSheet.create({
 
   heroKr: {
     color: "#FFF",
-    fontSize: 44,
+    fontSize: 35,
     fontFamily: fonts.krBold,
     marginBottom: 12,
     letterSpacing: -1,
