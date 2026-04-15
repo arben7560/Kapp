@@ -1,10 +1,11 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
+  Dimensions,
   Easing,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -14,13 +15,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const { width } = Dimensions.get("window");
+
 // ──────────────────────────────────────────────
-// DESIGN SYSTEM
+// DESIGN SYSTEM & ASSETS (Refined)
 // ──────────────────────────────────────────────
-const BG_DEEP = "#050508";
-const BG_NAVY = "#0A0D1A";
+const BG_DEEP = "#040508";
+const BG_NAVY = "#080B16";
 const TXT = "rgba(255,255,255,0.98)";
-const MUTED = "rgba(255,255,255,0.68)";
+const MUTED = "rgba(255,255,255,0.72)";
+const SOFT = "rgba(255,255,255,0.45)";
 
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
@@ -33,12 +37,22 @@ const fonts = {
   kr: "NotoSansKR_700Bold",
 };
 
+const ASSETS = {
+  cafe: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=600&auto=format&fit=crop",
+  metro:
+    "https://images.unsplash.com/photo-1538332576228-eb5b4c4de6f5?q=80&w=600&auto=format&fit=crop",
+  restaurant:
+    "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=600&auto=format&fit=crop",
+  cityOverlay:
+    "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=1200&auto=format&fit=crop",
+};
+
 type ThemeKey = "cafe" | "metro" | "restaurant";
 
 type ThemeConfig = {
   title: string;
   sub: string;
-  icon: string;
+  image: string;
   accent: string;
   textRoute: string;
   guidedRoute: string;
@@ -51,7 +65,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
   cafe: {
     title: "Le Café",
     sub: "Hongdae • 14:00",
-    icon: "☕",
+    image: ASSETS.cafe,
     accent: PINK,
     textRoute: "/lesson/cafe",
     guidedRoute: "/lesson/cafeIA",
@@ -62,7 +76,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
   metro: {
     title: "Le Métro",
     sub: "Ligne 2 • Gangnam",
-    icon: "🚇",
+    image: ASSETS.metro,
     accent: CYAN,
     textRoute: "/lesson/metro",
     guidedRoute: "/lesson/metroIA",
@@ -70,7 +84,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
   restaurant: {
     title: "Restaurant",
     sub: "Itaewon • Dîner",
-    icon: "🍽️",
+    image: ASSETS.restaurant,
     accent: ORANGE,
     textRoute: "/lesson/restaurant",
     guidedRoute: "/lesson/restaurantIA",
@@ -84,217 +98,188 @@ export default function SpeakScreen() {
   const [sheetVisible, setSheetVisible] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<ThemeKey | null>(null);
 
+  const screenEntryScale = useRef(new Animated.Value(1.05)).current;
+  const screenEntryOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(screenEntryOpacity, {
+        toValue: 1,
+        duration: 900,
+        useNativeDriver: true,
+      }),
+      Animated.spring(screenEntryScale, {
+        toValue: 1,
+        friction: 9,
+        tension: 15,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   const openThemeSheet = (theme: ThemeKey) => {
     setSelectedTheme(theme);
     setSheetVisible(true);
   };
 
-  const closeSheet = () => {
-    setSheetVisible(false);
-    setSelectedTheme(null);
-  };
-
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: BG_DEEP }}>
-      <LinearGradient colors={[BG_DEEP, BG_NAVY]} style={{ flex: 1 }}>
-        <View
-          style={[
-            styles.pageGlow,
-            { top: -140, left: -100, backgroundColor: "rgba(168,85,247,0.07)" },
-          ]}
-        />
-        <View
-          style={[
-            styles.pageGlow,
-            {
-              bottom: 100,
-              right: -90,
-              backgroundColor: "rgba(34,211,238,0.05)",
-            },
-          ]}
-        />
+    <View style={{ flex: 1, backgroundColor: BG_DEEP }}>
+      {/* City Background Texture - Réinjection de la ville */}
+      <Image
+        source={{ uri: ASSETS.cityOverlay }}
+        style={[StyleSheet.absoluteFill, { opacity: 0.22 }]} // Opacité augmentée pour texture
+        blurRadius={12}
+      />
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+      <LinearGradient
+        colors={["rgba(4,5,8,0.4)", "rgba(8,11,22,0.85)", BG_DEEP]}
+        style={StyleSheet.absoluteFill}
+      />
+
+      <SafeAreaView style={{ flex: 1 }}>
+        <Animated.View
+          style={{
+            flex: 1,
+            opacity: screenEntryOpacity,
+            transform: [{ scale: screenEntryScale }],
+          }}
         >
-          <Hero />
-          <View style={{ height: 48 }} />
-          <Scenes onSelectTheme={openThemeSheet} />
-        </ScrollView>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            <View style={styles.header}>
+              <Text style={styles.headerEyebrow}>SÉOUL IMMERSION</Text>
+              <Text style={styles.headerTitle}>Interactions</Text>
+            </View>
+
+            <Hero />
+
+            <View style={styles.sectionDivider}>
+              <Text style={styles.sectionLabel}>SÉQUENCES DISPONIBLES</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <Scenes onSelectTheme={openThemeSheet} />
+          </ScrollView>
+        </Animated.View>
 
         <ThemeModeSheet
           visible={sheetVisible}
-          onClose={closeSheet}
+          onClose={() => setSheetVisible(false)}
           selectedTheme={selectedTheme}
         />
-      </LinearGradient>
-    </SafeAreaView>
-  );
-}
-
-// ──────────────────────────────────────────────
-// HERO
-// ──────────────────────────────────────────────
-function Hero() {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const floatAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 850,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(floatAnim, {
-          toValue: 1,
-          duration: 4800,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(floatAnim, {
-          toValue: 0,
-          duration: 4800,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ]),
-    ).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.06,
-          duration: 3400,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 3400,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ]),
-    ).start();
-  }, [fadeAnim, floatAnim, pulseAnim]);
-
-  const translateY = floatAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, -7],
-  });
-
-  return (
-    <View style={styles.heroContainer}>
-      <Text style={styles.heroEyebrow}>SÉOUL IMMERSION</Text>
-      <Text style={styles.heroTitle}>Dialogues</Text>
-
-      <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY }] }}>
-        <BlurView intensity={88} tint="dark" style={styles.glassCard}>
-          <LinearGradient
-            colors={[
-              "rgba(255,255,255,0.09)",
-              "transparent",
-              "rgba(244,114,182,0.07)",
-            ]}
-            style={StyleSheet.absoluteFill}
-          />
-
-          <View style={styles.cardHeader}>
-            <View style={styles.statusDot} />
-            <Text style={styles.cardHeaderText}>LIVE FROM HONGDAE</Text>
-          </View>
-
-          <View style={styles.cardMainContent}>
-            <Animated.Text
-              style={[
-                styles.krBig,
-                {
-                  transform: [{ scale: pulseAnim }],
-                  textShadowColor: "#F472B6",
-                  textShadowOffset: { width: 0, height: 0 },
-                  textShadowRadius: 28,
-                },
-              ]}
-            >
-              어서 오세요
-            </Animated.Text>
-
-            <View style={styles.speechBubble}>
-              <Text style={styles.bubbleText}>
-                "Un iced americano, s'il vous plaît."
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.cardFooter}>
-            {["Réel", "Guidé", "Vrai"].map((t, i) => (
-              <View key={i} style={styles.miniTag}>
-                <Text style={styles.miniTagText}>{t}</Text>
-              </View>
-            ))}
-          </View>
-        </BlurView>
-      </Animated.View>
+      </SafeAreaView>
     </View>
   );
 }
 
 // ──────────────────────────────────────────────
-// SCENES
+// SUB-COMPONENTS
 // ──────────────────────────────────────────────
+
+function PulseDot() {
+  const pulse = useRef(new Animated.Value(0.4)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 0.4,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, []);
+
+  return <Animated.View style={[styles.statusDot, { opacity: pulse }]} />;
+}
+
+function Hero() {
+  const floatAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 4000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 4000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        transform: [
+          {
+            translateY: floatAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, -8],
+            }),
+          },
+        ],
+      }}
+    >
+      <BlurView intensity={70} tint="dark" style={styles.heroCard}>
+        <LinearGradient
+          colors={["rgba(255,255,255,0.08)", "transparent"]}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.cardHeader}>
+          <PulseDot />
+          <Text style={styles.cardHeaderText}>LIVE FROM HONGDAE</Text>
+        </View>
+        <View style={styles.cardContent}>
+          <Text style={styles.krBig}>어서 오세요</Text>
+          <View style={styles.speechBubble}>
+            <Text style={styles.bubbleText}>
+              "Un iced americano, s'il vous plaît."
+            </Text>
+          </View>
+        </View>
+      </BlurView>
+    </Animated.View>
+  );
+}
+
 function Scenes({
   onSelectTheme,
 }: {
   onSelectTheme: (theme: ThemeKey) => void;
 }) {
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Scènes</Text>
-
-      <ThemeCard
-        icon="☕"
-        title="Le Café"
-        sub="Hongdae • 14:00"
-        accent={PINK}
-        onPress={() => onSelectTheme("cafe")}
-      />
-
-      <ThemeCard
-        icon="🚇"
-        title="Le Métro"
-        sub="Ligne 2 • Gangnam"
-        accent={CYAN}
-        onPress={() => onSelectTheme("metro")}
-      />
-
-      <ThemeCard
-        icon="🍽️"
-        title="Restaurant"
-        sub="Itaewon • Dîner"
-        accent={ORANGE}
-        onPress={() => onSelectTheme("restaurant")}
-      />
+    <View style={styles.scenesGrid}>
+      {(Object.keys(THEME_CONFIG) as ThemeKey[]).map((key) => (
+        <ThemeCard
+          key={key}
+          config={THEME_CONFIG[key]}
+          onPress={() => onSelectTheme(key)}
+        />
+      ))}
     </View>
   );
 }
 
 function ThemeCard({
-  icon,
-  title,
-  sub,
-  accent,
+  config,
   onPress,
 }: {
-  icon: string;
-  title: string;
-  sub: string;
-  accent: string;
+  config: ThemeConfig;
   onPress: () => void;
 }) {
   return (
@@ -302,337 +287,91 @@ function ThemeCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.themeCard,
-        { opacity: pressed ? 0.9 : 1 },
+        { transform: [{ scale: pressed ? 0.98 : 1 }] },
       ]}
     >
-      <BlurView intensity={78} tint="dark" style={styles.themeCardBlur}>
-        {/* base glass */}
+      <View style={styles.cinemaVignette}>
+        <Image source={{ uri: config.image }} style={styles.vignetteImage} />
         <LinearGradient
-          colors={[
-            "rgba(255,255,255,0.045)",
-            "rgba(255,255,255,0.02)",
-            "rgba(255,255,255,0.01)",
-          ]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          colors={["transparent", "rgba(0,0,0,0.8)"]}
           style={StyleSheet.absoluteFill}
         />
-
-        {/* left color bloom */}
-        <LinearGradient
-          colors={[
-            `${accent}30`,
-            `${accent}14`,
-            "rgba(0,0,0,0.02)",
-            "transparent",
-          ]}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={styles.themeCardLeftGlow}
-        />
-
-        {/* soft inner sheen */}
-        <LinearGradient
-          colors={[
-            "rgba(255,255,255,0.06)",
-            "rgba(255,255,255,0.02)",
-            "transparent",
-          ]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0.85, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-
-        <View
-          style={[
-            styles.iconBox,
-            {
-              backgroundColor: `${accent}12`,
-              borderColor: `${accent}1E`,
-            },
-          ]}
-        >
-          <Text style={styles.icon}>{icon}</Text>
+        <View style={styles.vignetteContent}>
+          <View
+            style={[styles.vignetteAccent, { backgroundColor: config.accent }]}
+          />
+          <View>
+            <Text style={styles.vignetteTitle}>{config.title}</Text>
+            <Text style={styles.vignetteSub}>{config.sub}</Text>
+          </View>
         </View>
-
-        <View style={styles.themeTextWrap}>
-          <Text style={styles.themeTitle}>{title}</Text>
-          <Text style={styles.themeSub}>{sub}</Text>
+        <View style={styles.vignettePlay}>
+          <Text style={{ color: "white", fontSize: 18 }}>›</Text>
         </View>
-
-        <View style={styles.arrowWrap}>
-          <Text style={styles.arrow}>›</Text>
-        </View>
-      </BlurView>
+      </View>
     </Pressable>
   );
 }
 
 // ──────────────────────────────────────────────
-// MODAL
+// MODAL (Maintained and harmonized)
 // ──────────────────────────────────────────────
-function ThemeModeSheet({
-  visible,
-  onClose,
-  selectedTheme,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  selectedTheme: ThemeKey | null;
-}) {
-  const translateY = useRef(new Animated.Value(80)).current;
-  const backdropOpacity = useRef(new Animated.Value(0)).current;
-  const [mounted, setMounted] = useState(visible);
-
-  useEffect(() => {
-    if (visible && selectedTheme) {
-      setMounted(true);
-      translateY.setValue(80);
-      backdropOpacity.setValue(0);
-
-      Animated.parallel([
-        Animated.timing(backdropOpacity, {
-          toValue: 1,
-          duration: 220,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(translateY, {
-          toValue: 0,
-          duration: 260,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else if (mounted) {
-      Animated.parallel([
-        Animated.timing(backdropOpacity, {
-          toValue: 0,
-          duration: 180,
-          easing: Easing.in(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(translateY, {
-          toValue: 80,
-          duration: 220,
-          easing: Easing.in(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]).start(({ finished }) => {
-        if (finished) setMounted(false);
-      });
-    }
-  }, [visible, selectedTheme, mounted, backdropOpacity, translateY]);
-
-  if (!mounted || !selectedTheme) return null;
-
-  const config = THEME_CONFIG[selectedTheme];
-
-  const go = (pathname: string, params?: Record<string, string>) => {
-    onClose();
-    requestAnimationFrame(() => {
-      router.push({ pathname: pathname as never, params: params as never });
-    });
-  };
+function ThemeModeSheet({ visible, onClose, selectedTheme }: any) {
+  if (!visible || !selectedTheme) return null;
+  const config = THEME_CONFIG[selectedTheme as ThemeKey];
 
   return (
     <Modal
-      visible={mounted}
+      visible={visible}
       transparent
-      animationType="none"
+      animationType="slide"
       onRequestClose={onClose}
-      statusBarTranslucent
     >
       <View style={styles.sheetRoot}>
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            StyleSheet.absoluteFillObject,
-            styles.sheetBackdrop,
-            { opacity: backdropOpacity },
-          ]}
-        />
-
-        <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
-
-        <Animated.View
-          style={[
-            styles.sheetAnimatedWrap,
-            {
-              transform: [{ translateY }],
-            },
-          ]}
-        >
-          <BlurView intensity={92} tint="dark" style={styles.sheetWrap}>
-            <LinearGradient
-              colors={[
-                "rgba(255,255,255,0.045)",
-                "transparent",
-                "rgba(255,255,255,0.015)",
-              ]}
-              start={{ x: 0.5, y: 0 }}
-              end={{ x: 0.5, y: 1 }}
-              style={StyleSheet.absoluteFill}
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <BlurView intensity={90} tint="dark" style={styles.sheetWrap}>
+          <View style={styles.sheetHandle} />
+          <View style={styles.sheetHeader}>
+            <Image source={{ uri: config.image }} style={styles.sheetHeroImg} />
+            <View style={styles.sheetHeaderInfo}>
+              <Text style={styles.sheetTitle}>{config.title}</Text>
+              <Text style={styles.sheetSub}>{config.sub}</Text>
+            </View>
+          </View>
+          <View style={styles.sheetOptions}>
+            <SheetOptionCard
+              title="Version texte"
+              subtitle="Lecture et révision calme."
+              accent={config.accent}
+              onPress={onClose}
             />
-
-            <LinearGradient
-              colors={[
-                `${config.accent}12`,
-                `${config.accent}05`,
-                "transparent",
-              ]}
-              start={{ x: 0, y: 0.45 }}
-              end={{ x: 1, y: 0.55 }}
-              style={StyleSheet.absoluteFill}
+            <SheetOptionCard
+              title="Simulation guidée"
+              subtitle="IA interactive avec aide."
+              accent={config.accent}
+              onPress={onClose}
             />
-
-            <View style={styles.sheetHandle} />
-
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              bounces={false}
-              contentContainerStyle={styles.sheetScrollContent}
-            >
-              <View style={styles.sheetHeader}>
-                <View
-                  style={[
-                    styles.sheetHeroIcon,
-                    {
-                      backgroundColor: `${config.accent}14`,
-                      borderColor: `${config.accent}30`,
-                    },
-                  ]}
-                >
-                  <Text style={styles.sheetHeroIconText}>{config.icon}</Text>
-                </View>
-
-                <View style={styles.sheetHeaderTextWrap}>
-                  <Text style={styles.sheetTitle}>{config.title}</Text>
-                  <Text style={styles.sheetSubtitle}>{config.sub}</Text>
-                </View>
-              </View>
-
-              <Text style={styles.sheetSectionLabel}>Choisis ton mode</Text>
-
-              <View style={styles.sheetOptions}>
-                <SheetOptionCard
-                  title="Version texte"
-                  subtitle="Lire les phrases et revoir la scène à ton rythme."
-                  accent={config.accent}
-                  onPress={() => go(config.textRoute)}
-                />
-
-                <SheetOptionCard
-                  title="Simulation guidée"
-                  subtitle="Progressive, plus claire et rassurante."
-                  accent={config.accent}
-                  onPress={() => go(config.guidedRoute, config.guidedParams)}
-                />
-
-                {selectedTheme === "cafe" && config.realRoute && (
-                  <SheetOptionCard
-                    title="Simulation réelle"
-                    subtitle="Plus native, plus directe, plus immersive."
-                    accent={config.accent}
-                    onPress={() => go(config.realRoute!, config.realParams)}
-                  />
-                )}
-              </View>
-
-              <Pressable onPress={onClose} style={styles.closeButton}>
-                <BlurView
-                  intensity={24}
-                  tint="dark"
-                  style={StyleSheet.absoluteFill}
-                />
-                <LinearGradient
-                  colors={["rgba(255,255,255,0.04)", "rgba(255,255,255,0.02)"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-                <Text style={styles.closeButtonText}>Fermer</Text>
-              </Pressable>
-            </ScrollView>
-          </BlurView>
-        </Animated.View>
+            <SheetOptionCard
+              title="Simulation réelle"
+              subtitle="Immersion totale sans filet."
+              accent={config.accent}
+              onPress={onClose}
+            />
+          </View>
+        </BlurView>
       </View>
     </Modal>
   );
 }
 
-function SheetOptionCard({
-  title,
-  subtitle,
-  accent,
-  onPress,
-}: {
-  title: string;
-  subtitle: string;
-  accent: string;
-  onPress: () => void;
-}) {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  const handlePressIn = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.985,
-      useNativeDriver: true,
-      speed: 30,
-      bounciness: 4,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      useNativeDriver: true,
-      speed: 30,
-      bounciness: 4,
-    }).start();
-  };
-
+function SheetOptionCard({ title, subtitle, accent, onPress }: any) {
   return (
-    <Pressable
-      onPress={onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-    >
-      <Animated.View
-        style={[styles.sheetOptionCard, { transform: [{ scale: scaleAnim }] }]}
-      >
-        <BlurView intensity={76} tint="dark" style={styles.sheetOptionBlur}>
-          <LinearGradient
-            colors={[
-              `${accent}10`,
-              `${accent}04`,
-              "rgba(255,255,255,0.015)",
-              "transparent",
-            ]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={StyleSheet.absoluteFill}
-          />
-
-          <LinearGradient
-            colors={["rgba(255,255,255,0.045)", "transparent"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-
-          <View style={styles.sheetRow}>
-            <View style={styles.sheetTextBlock}>
-              <Text style={styles.sheetOptionTitle}>{title}</Text>
-              <Text style={styles.sheetOptionSubtitle}>{subtitle}</Text>
-            </View>
-
-            <View style={styles.sheetArrowWrap}>
-              <Text style={styles.sheetOptionArrow}>›</Text>
-            </View>
-          </View>
-        </BlurView>
-      </Animated.View>
+    <Pressable onPress={onPress} style={styles.optionCard}>
+      <View style={[styles.optionAccent, { backgroundColor: accent }]} />
+      <View>
+        <Text style={styles.optionTitle}>{title}</Text>
+        <Text style={styles.optionSub}>{subtitle}</Text>
+      </View>
     </Pressable>
   );
 }
@@ -641,384 +380,158 @@ function SheetOptionCard({
 // STYLES
 // ──────────────────────────────────────────────
 const styles = StyleSheet.create({
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 140,
-  },
-
-  pageGlow: {
-    position: "absolute",
-    width: 340,
-    height: 340,
-    borderRadius: 170,
-  },
-
-  heroContainer: {
-    alignItems: "center",
-  },
-
-  heroEyebrow: {
+  scrollContent: { paddingHorizontal: 22, paddingTop: 10, paddingBottom: 100 },
+  header: { alignItems: "center", marginBottom: 30 },
+  headerEyebrow: {
     color: PINK,
     fontFamily: fonts.bold,
-    fontSize: 13.5,
-    letterSpacing: 3.2,
-    marginBottom: 8,
+    fontSize: 12,
+    letterSpacing: 3,
+    opacity: 0.8,
   },
-
-  heroTitle: {
+  headerTitle: {
     color: TXT,
-    fontSize: 46,
+    fontSize: 42,
     fontFamily: fonts.black,
-    letterSpacing: -1.4,
-    marginTop: 15,
-    marginBottom: 35,
+    letterSpacing: -1,
   },
 
-  glassCard: {
-    width: 340,
-    minHeight: 242,
-    borderRadius: 34,
-    borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.16)",
-    overflow: "hidden",
+  heroCard: {
+    borderRadius: 32,
     padding: 24,
-    justifyContent: "space-between",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
   },
-
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    marginBottom: 20,
   },
-
   statusDot: {
-    width: 7,
-    height: 7,
+    width: 8,
+    height: 8,
     borderRadius: 4,
     backgroundColor: "#10B981",
+    shadowColor: "#10B981",
+    shadowRadius: 6,
+    shadowOpacity: 0.5,
   },
-
   cardHeaderText: {
     color: MUTED,
-    fontSize: 11.5,
+    fontSize: 11,
     fontFamily: fonts.bold,
-    letterSpacing: 1.6,
+    letterSpacing: 1.5,
   },
-
-  cardMainContent: {
-    alignItems: "center",
-    marginVertical: 12,
-  },
-
+  cardContent: { alignItems: "center" },
   krBig: {
     color: TXT,
-    fontSize: 37,
+    fontSize: 38,
     fontFamily: fonts.kr,
-    marginBottom: 16,
+    marginBottom: 15,
+    textShadowColor: PINK,
+    textShadowRadius: 20,
   },
-
   speechBubble: {
-    backgroundColor: "rgba(0,0,0,0.48)",
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderRadius: 18,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    padding: 16,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
+    borderColor: "rgba(255,255,255,0.1)",
   },
-
   bubbleText: {
     color: MUTED,
-    fontSize: 14.5,
-    lineHeight: 21,
+    fontSize: 15,
     fontStyle: "italic",
+    textAlign: "center",
   },
 
-  cardFooter: {
-    flexDirection: "row",
-    gap: 10,
-    justifyContent: "center",
-    marginTop: 8,
-  },
-
-  miniTag: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.15)",
-  },
-
-  miniTagText: {
-    color: TXT,
-    fontSize: 11.5,
-    fontFamily: fonts.medium,
-  },
-
-  cardAccentLine: {
-    position: "absolute",
-    left: 0,
-    top: 18,
-    bottom: 18,
-    width: 2,
-    borderTopRightRadius: 4,
-    borderBottomRightRadius: 4,
-    opacity: 0.9,
-  },
-
-  section: {
-    width: "100%",
-  },
-
-  sectionTitle: {
-    color: TXT,
-    fontSize: 22,
-    fontFamily: fonts.black,
-    letterSpacing: -0.6,
-    marginBottom: 18,
-  },
-
-  themeCard: {
-    marginBottom: 14,
-    borderRadius: 26,
-    overflow: "hidden",
-  },
-
-  themeCardBlur: {
-    minHeight: 96,
-    borderRadius: 26,
-    overflow: "hidden",
-    borderWidth: 0.8,
-    borderColor: "rgba(255,255,255,0.08)",
-    backgroundColor: "rgba(9,10,16,0.50)",
+  sectionDivider: {
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: 18,
-    paddingRight: 18,
-    paddingVertical: 16,
-    position: "relative",
+    marginVertical: 35,
+    gap: 15,
   },
-
-  themeCardLeftGlow: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: "58%",
-  },
-
-  iconBox: {
-    width: 58,
-    height: 58,
-    borderRadius: 18,
-    borderWidth: 0.8,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 16,
-    backgroundColor: "rgba(255,255,255,0.04)",
-  },
-
-  icon: {
-    fontSize: 27,
-  },
-
-  themeTextWrap: {
-    flex: 1,
-    justifyContent: "center",
-    paddingRight: 10,
-  },
-
-  themeTitle: {
-    color: TXT,
-    fontSize: 18,
+  sectionLabel: {
+    color: SOFT,
+    fontSize: 11,
     fontFamily: fonts.bold,
-    letterSpacing: -0.35,
+    letterSpacing: 2,
   },
+  dividerLine: { flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.1)" },
 
-  themeSub: {
-    color: "rgba(255,255,255,0.50)",
-    fontSize: 14,
-    marginTop: 4,
-    fontFamily: fonts.medium,
+  scenesGrid: { gap: 20 },
+  themeCard: { borderRadius: 28, overflow: "hidden" },
+  cinemaVignette: {
+    width: "100%",
+    aspectRatio: 16 / 9,
+    borderRadius: 28,
+    overflow: "hidden",
+    backgroundColor: "#111",
   },
-
-  arrowWrap: {
-    width: 28,
-    alignItems: "flex-end",
+  vignetteImage: { ...StyleSheet.absoluteFillObject, opacity: 0.8 },
+  vignetteContent: {
+    position: "absolute",
+    bottom: 18,
+    left: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  vignetteAccent: { width: 4, height: 32, borderRadius: 2 },
+  vignetteTitle: { color: "white", fontSize: 22, fontFamily: fonts.bold },
+  vignetteSub: { color: "rgba(255,255,255,0.6)", fontSize: 13 },
+  vignettePlay: {
+    position: "absolute",
+    top: 18,
+    right: 18,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    alignItems: "center",
     justifyContent: "center",
-    alignSelf: "stretch",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
   },
 
-  arrow: {
-    color: "rgba(255,255,255,0.38)",
-    fontSize: 24,
-    fontWeight: "300",
-    marginRight: 2,
-  },
-
-  // Modal
   sheetRoot: {
     flex: 1,
     justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.7)",
   },
-
-  sheetBackdrop: {
-    backgroundColor: "rgba(0,0,0,0.76)",
-  },
-
-  sheetAnimatedWrap: {
-    justifyContent: "flex-end",
-  },
-
   sheetWrap: {
-    overflow: "hidden",
-    borderTopLeftRadius: 34,
-    borderTopRightRadius: 34,
-    minHeight: 420,
-    maxHeight: "82%",
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    padding: 24,
+    paddingBottom: 40,
     borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.12)",
-    borderLeftColor: "rgba(255,255,255,0.06)",
-    borderRightColor: "rgba(255,255,255,0.06)",
-    backgroundColor: "rgba(8,10,16,0.72)",
+    borderTopColor: "rgba(255,255,255,0.2)",
   },
-
-  sheetScrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 18,
-    paddingBottom: 34,
-  },
-
   sheetHandle: {
-    alignSelf: "center",
     width: 40,
     height: 4,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.18)",
-    marginTop: 12,
-    marginBottom: 24,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: 20,
   },
-
-  sheetHeader: {
+  sheetHeader: { flexDirection: "row", gap: 15, marginBottom: 30 },
+  sheetHeroImg: { width: 100, height: 60, borderRadius: 15 },
+  sheetHeaderInfo: { justifyContent: "center" },
+  sheetTitle: { color: "white", fontSize: 24, fontFamily: fonts.bold },
+  sheetSub: { color: MUTED, fontSize: 14 },
+  sheetOptions: { gap: 15 },
+  optionCard: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 30,
-  },
-
-  sheetHeaderTextWrap: {
-    flex: 1,
-  },
-
-  sheetHeroIcon: {
-    width: 72,
-    height: 72,
+    padding: 18,
+    backgroundColor: "rgba(255,255,255,0.05)",
     borderRadius: 22,
-    borderWidth: 1,
     alignItems: "center",
-    justifyContent: "center",
-    marginRight: 18,
+    gap: 15,
   },
-
-  sheetHeroIconText: {
-    fontSize: 34,
-  },
-
-  sheetTitle: {
-    fontSize: 28,
-    fontFamily: fonts.black,
-    color: TXT,
-    letterSpacing: -0.8,
-  },
-
-  sheetSubtitle: {
-    fontSize: 15,
-    color: MUTED,
-    marginTop: 4,
-  },
-
-  sheetSectionLabel: {
-    color: "rgba(255,255,255,0.52)",
-    fontSize: 12,
-    fontFamily: fonts.bold,
-    letterSpacing: 2.2,
-    textTransform: "uppercase",
-    marginBottom: 16,
-  },
-
-  sheetOptions: {
-    gap: 16,
-    marginBottom: 26,
-  },
-
-  sheetOptionCard: {
-    borderRadius: 24,
-  },
-
-  sheetOptionBlur: {
-    overflow: "hidden",
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-    backgroundColor: "rgba(255,255,255,0.025)",
-    padding: 20,
-  },
-
-  sheetRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  sheetTextBlock: {
-    flex: 1,
-    paddingRight: 12,
-  },
-
-  sheetOptionTitle: {
-    fontSize: 17,
-    fontFamily: fonts.bold,
-    color: TXT,
-    marginBottom: 6,
-    letterSpacing: -0.2,
-  },
-
-  sheetOptionSubtitle: {
-    fontSize: 14,
-    color: MUTED,
-    lineHeight: 22,
-  },
-
-  sheetArrowWrap: {
-    justifyContent: "center",
-    alignItems: "center",
-    minWidth: 24,
-    alignSelf: "stretch",
-  },
-
-  sheetOptionArrow: {
-    color: "rgba(255,255,255,0.55)",
-    fontSize: 24,
-    fontWeight: "300",
-  },
-
-  closeButton: {
-    overflow: "hidden",
-    paddingVertical: 17,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    backgroundColor: "rgba(255,255,255,0.035)",
-    position: "relative",
-  },
-
-  closeButtonText: {
-    color: TXT,
-    fontSize: 17,
-    fontFamily: fonts.bold,
-  },
+  optionAccent: { width: 4, height: "100%", borderRadius: 2 },
+  optionTitle: { color: "white", fontSize: 17, fontFamily: fonts.bold },
+  optionSub: { color: SOFT, fontSize: 13 },
 });
