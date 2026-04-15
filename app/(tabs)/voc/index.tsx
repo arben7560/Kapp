@@ -1,12 +1,9 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Animated,
-  Dimensions,
   Easing,
-  LayoutChangeEvent,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,154 +12,97 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const { width } = Dimensions.get("window");
-
 // ──────────────────────────────────────────────
-// DESIGN SYSTEM — ALIGNÉ SUR SPEAK / HANGUL
+// DESIGN SYSTEM
 // ──────────────────────────────────────────────
 const BG_DEEP = "#050508";
 const BG_NAVY = "#0A0D1A";
 const TXT = "rgba(255,255,255,0.98)";
 const MUTED = "rgba(255,255,255,0.68)";
-const FAINT = "rgba(255,255,255,0.45)";
 
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
 const ORANGE = "#FB923C";
-const PURPLE = "#C084FC";
-const TEAL = "#14B8A6";
-
-const NEON = {
-  purple: {
-    core: PURPLE,
-    halo: "rgba(168,85,247,0.42)",
-    ambient: "rgba(168,85,247,0.22)",
-  },
-  cyan: {
-    core: CYAN,
-    halo: "rgba(34,211,238,0.42)",
-    ambient: "rgba(34,211,238,0.22)",
-  },
-  pink: {
-    core: PINK,
-    halo: "rgba(244,114,182,0.42)",
-    ambient: "rgba(244,114,182,0.22)",
-  },
-  orange: {
-    core: ORANGE,
-    halo: "rgba(251,146,60,0.42)",
-    ambient: "rgba(251,146,60,0.22)",
-  },
-  teal: {
-    core: TEAL,
-    halo: "rgba(20,184,166,0.40)",
-    ambient: "rgba(20,184,166,0.20)",
-  },
-} as const;
+const VIOLET = "#A78BFA";
+const GREEN = "#10B981";
 
 const fonts = {
-  medium: "Outfit_500Medium",
   bold: "Outfit_700Bold",
   black: "Outfit_900Black",
+  medium: "Outfit_500Medium",
   kr: "NotoSansKR_700Bold",
 };
 
-type NeonKey = keyof typeof NEON;
-
 // ──────────────────────────────────────────────
-// BACKGROUND
+// SCREEN
 // ──────────────────────────────────────────────
-function CinematicBackground() {
+export default function VocScreen() {
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <LinearGradient
-        colors={[BG_DEEP, BG_NAVY]}
-        style={StyleSheet.absoluteFill}
-      />
-
-      <View
-        style={[
-          styles.pageGlow,
-          {
-            top: -140,
-            left: -90,
-            backgroundColor: "rgba(168,85,247,0.07)",
-          },
-        ]}
-      />
-      <View
-        style={[
-          styles.pageGlow,
-          {
-            bottom: 80,
-            right: -100,
-            backgroundColor: "rgba(34,211,238,0.05)",
-          },
-        ]}
-      />
-
-      <BlurView intensity={92} tint="dark" style={StyleSheet.absoluteFill} />
-    </View>
-  );
-}
-
-// ──────────────────────────────────────────────
-// GLASS PILL
-// ──────────────────────────────────────────────
-function GlassPill({
-  label,
-  colorName = "cyan",
-  active = true,
-}: {
-  label: string;
-  colorName?: NeonKey;
-  active?: boolean;
-}) {
-  const neon = NEON[colorName];
-
-  return (
-    <View style={styles.pillWrap}>
-      <BlurView
-        intensity={active ? 28 : 16}
-        tint="dark"
-        style={StyleSheet.absoluteFill}
-      />
-      <View
-        style={[
-          styles.pillInner,
-          {
-            backgroundColor: active
-              ? "rgba(255,255,255,0.08)"
-              : "rgba(255,255,255,0.045)",
-            borderColor: active
-              ? "rgba(255,255,255,0.14)"
-              : "rgba(255,255,255,0.08)",
-          },
-        ]}
-      >
-        <Text
+    <SafeAreaView style={{ flex: 1, backgroundColor: BG_DEEP }}>
+      <LinearGradient colors={[BG_DEEP, BG_NAVY]} style={{ flex: 1 }}>
+        <View
           style={[
-            styles.pillText,
+            styles.pageGlow,
+            { top: -140, left: -100, backgroundColor: "rgba(168,85,247,0.07)" },
+          ]}
+        />
+        <View
+          style={[
+            styles.pageGlow,
             {
-              color: active ? neon.core : TXT,
-              textShadowColor: active ? neon.halo : "transparent",
+              bottom: 100,
+              right: -90,
+              backgroundColor: "rgba(34,211,238,0.05)",
             },
           ]}
+        />
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
-          {label}
-        </Text>
-      </View>
-    </View>
+          <Hero />
+          <View style={{ height: 48 }} />
+          <Themes />
+        </ScrollView>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }
 
 // ──────────────────────────────────────────────
 // HERO
 // ──────────────────────────────────────────────
-function Hero({ onExplorePress }: { onExplorePress: () => void }) {
+function Hero() {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const floatAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 850,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 4800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 4800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -179,222 +119,185 @@ function Hero({ onExplorePress }: { onExplorePress: () => void }) {
         }),
       ]),
     ).start();
-  }, [pulseAnim]);
+  }, [fadeAnim, floatAnim, pulseAnim]);
+
+  const translateY = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -7],
+  });
 
   return (
     <View style={styles.heroContainer}>
-      <Text style={styles.heroEyebrow}>LEXIQUE ESSENTIEL</Text>
+      <Text style={styles.heroEyebrow}>SÉOUL IMMERSION</Text>
       <Text style={styles.heroTitle}>Vocabulaire</Text>
 
-      <BlurView intensity={88} tint="dark" style={styles.glassCard}>
-        <LinearGradient
-          colors={[
-            "rgba(255,255,255,0.09)",
-            "transparent",
-            "rgba(251,146,60,0.07)",
-          ]}
-          style={StyleSheet.absoluteFill}
-        />
-
-        <View style={styles.cardHeader}>
-          <View style={[styles.statusDot, { backgroundColor: ORANGE }]} />
-          <Text style={styles.cardHeaderText}>MOTS DU QUOTIDIEN</Text>
-        </View>
-
-        <View style={styles.cardMainContent}>
-          <Animated.Text
-            style={[
-              styles.krBig,
-              {
-                transform: [{ scale: pulseAnim }],
-                textShadowColor: ORANGE,
-                textShadowOffset: { width: 0, height: 0 },
-                textShadowRadius: 28,
-              },
+      <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY }] }}>
+        <BlurView intensity={88} tint="dark" style={styles.glassCard}>
+          <LinearGradient
+            colors={[
+              "rgba(255,255,255,0.09)",
+              "transparent",
+              "rgba(244,114,182,0.07)",
             ]}
-          >
-            어휘
-          </Animated.Text>
+            style={StyleSheet.absoluteFill}
+          />
 
-          <View style={styles.speechBubble}>
-            <Text style={styles.bubbleText}>
-              Apprends les mots essentiels par le thème de ton choix.
-            </Text>
+          <View style={styles.cardHeader}>
+            <View style={styles.statusDot} />
+            <Text style={styles.cardHeaderText}>MOT DU QUOTIDIEN</Text>
           </View>
-        </View>
 
-        <View style={styles.cardFooterWrap}>
-          <View style={styles.cardFooterRow}>
-            <GlassPill label="Quotidien" colorName="orange" active />
-            <GlassPill label="Situations" colorName="cyan" active={false} />
-            <GlassPill label="Oral naturel" colorName="pink" active={false} />
+          <View style={styles.cardMainContent}>
+            <Animated.Text
+              style={[
+                styles.krBig,
+                {
+                  transform: [{ scale: pulseAnim }],
+                  textShadowColor: "#F472B6",
+                  textShadowOffset: { width: 0, height: 0 },
+                  textShadowRadius: 28,
+                },
+              ]}
+            >
+              어휘
+            </Animated.Text>
+
+            <View style={styles.speechBubble}>
+              <Text style={styles.bubbleText}>
+                "Le lexique, l&apos;essence de la langue."
+              </Text>
+            </View>
           </View>
-        </View>
-      </BlurView>
+
+          <View style={styles.cardFooter}>
+            {["Thèmes", "Favoris", "Quiz"].map((t, i) => (
+              <View key={i} style={styles.miniTag}>
+                <Text style={styles.miniTagText}>{t}</Text>
+              </View>
+            ))}
+          </View>
+        </BlurView>
+      </Animated.View>
     </View>
   );
 }
 
 // ──────────────────────────────────────────────
-// THEME CARD — MÊME PRINCIPE QUE SCENES / ÉTAPES
+// THEMES
 // ──────────────────────────────────────────────
-function ThemeCard({
-  title,
-  subtitle,
-  href,
-  icon,
-  colorName,
-}: {
-  title: string;
-  subtitle: string;
-  href: string;
-  icon: string;
-  colorName: NeonKey;
-}) {
-  const neon = NEON[colorName];
-
+function Themes() {
   return (
-    <Link href={href as any} asChild>
-      <Pressable
-        style={({ pressed }) => [
-          styles.themeCard,
-          { opacity: pressed ? 0.85 : 1 },
-        ]}
-      >
-        <View style={styles.themeCardShell}>
-          <BlurView intensity={80} tint="dark" style={styles.themeCardBlur}>
-            <LinearGradient
-              colors={[neon.ambient, `${neon.core}08`, "transparent"]}
-              start={{ x: 0.0, y: 0.5 }}
-              end={{ x: 1.0, y: 0.5 }}
-              style={StyleSheet.absoluteFill}
-            />
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Thèmes</Text>
 
-            <View
-              style={[styles.cardAccentLine, { backgroundColor: neon.core }]}
-            />
+      <ThemeCard icon="🌦️" title="Météo" sub="Temps et saisons" accent={CYAN} />
 
-            <View
-              style={[
-                styles.iconBox,
-                {
-                  backgroundColor: `${neon.core}22`,
-                  borderColor: `${neon.core}50`,
-                },
-              ]}
-            >
-              <Text style={styles.themeIcon}>{icon}</Text>
-            </View>
+      <ThemeCard
+        icon="👜"
+        title="Objets"
+        sub="Maison et bureau"
+        accent={ORANGE}
+      />
 
-            <View style={styles.stepTextWrap}>
-              <Text style={styles.themeTitle}>{title}</Text>
-              <Text style={styles.themeSub}>{subtitle}</Text>
-            </View>
+      <ThemeCard
+        icon="🐾"
+        title="Animaux"
+        sub="Faune et compagnie"
+        accent={PINK}
+      />
 
-            <View style={styles.arrowWrap}>
-              <Text style={styles.arrow}>›</Text>
-            </View>
-          </BlurView>
-        </View>
-      </Pressable>
-    </Link>
+      <ThemeCard
+        icon="✈️"
+        title="Voyage"
+        sub="Transport et hôtel"
+        accent={CYAN}
+      />
+
+      <ThemeCard
+        icon="🏢"
+        title="Lieux"
+        sub="Ville et bâtiments"
+        accent={VIOLET}
+      />
+    </View>
   );
 }
 
-// ──────────────────────────────────────────────
-// PAGE
-// ──────────────────────────────────────────────
-export default function VocabularyHub() {
-  const scrollRef = useRef<ScrollView>(null);
-  const [themesY, setThemesY] = useState(0);
-
-  const handleThemesLayout = (e: LayoutChangeEvent) => {
-    setThemesY(e.nativeEvent.layout.y);
-  };
-
-  const handleExplorePress = () => {
-    scrollRef.current?.scrollTo({
-      y: Math.max(themesY - 14, 0),
-      animated: true,
-    });
-  };
-
-  const THEMES = [
-    {
-      title: "Météo",
-      subtitle: "Temps, saisons, température, phrases utiles.",
-      href: "/voc/meteo",
-      icon: "🌦️",
-      colorName: "cyan" as const,
-    },
-    {
-      title: "Objets du quotidien",
-      subtitle: "Maison, bureau, sac, tech… les mots les plus utiles.",
-      href: "/voc/objets",
-      icon: "👜",
-      colorName: "orange" as const,
-    },
-    {
-      title: "Animaux",
-      subtitle: "Animaux courants et vocabulaire simple du quotidien.",
-      href: "/voc/animals",
-      icon: "🐾",
-      colorName: "pink" as const,
-    },
-    {
-      title: "Voyage",
-      subtitle: "Aéroport, hôtel, transports, imprévus utiles.",
-      href: "/voc/voyage",
-      icon: "✈️",
-      colorName: "cyan" as const,
-    },
-    {
-      title: "Lieux & bâtiments",
-      subtitle: "Repères, étages, bâtiments, orientation simple.",
-      href: "/voc/lieux",
-      icon: "🏢",
-      colorName: "purple" as const,
-    },
-    {
-      title: "Santé & corps humain",
-      subtitle: "Corps, symptômes simples, pharmacie, urgences légères.",
-      href: "/voc/health",
-      icon: "🩺",
-      colorName: "teal" as const,
-    },
-  ] as const;
-
+function ThemeCard({
+  icon,
+  title,
+  sub,
+  accent,
+}: {
+  icon: string;
+  title: string;
+  sub: string;
+  accent: string;
+}) {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: BG_DEEP }} edges={["top"]}>
-      <CinematicBackground />
+    <Pressable
+      style={({ pressed }) => [
+        styles.themeCard,
+        { opacity: pressed ? 0.9 : 1 },
+      ]}
+    >
+      <BlurView intensity={78} tint="dark" style={styles.themeCardBlur}>
+        <LinearGradient
+          colors={[
+            "rgba(255,255,255,0.045)",
+            "rgba(255,255,255,0.02)",
+            "rgba(255,255,255,0.01)",
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
 
-      <ScrollView
-        ref={scrollRef}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <Hero onExplorePress={handleExplorePress} />
+        <LinearGradient
+          colors={[
+            `${accent}30`,
+            `${accent}14`,
+            "rgba(0,0,0,0.02)",
+            "transparent",
+          ]}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={styles.themeCardLeftGlow}
+        />
 
-        <View style={{ height: 48 }} />
+        <LinearGradient
+          colors={[
+            "rgba(255,255,255,0.06)",
+            "rgba(255,255,255,0.02)",
+            "transparent",
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.85, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
 
-        <View style={styles.section}>
-          <Text onLayout={handleThemesLayout} style={styles.sectionTitle}>
-            Thèmes
-          </Text>
-
-          {THEMES.map((theme) => (
-            <ThemeCard
-              key={theme.href}
-              title={theme.title}
-              subtitle={theme.subtitle}
-              href={theme.href}
-              icon={theme.icon}
-              colorName={theme.colorName}
-            />
-          ))}
+        <View
+          style={[
+            styles.iconBox,
+            {
+              backgroundColor: `${accent}12`,
+              borderColor: `${accent}1E`,
+            },
+          ]}
+        >
+          <Text style={styles.icon}>{icon}</Text>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+
+        <View style={styles.themeTextWrap}>
+          <Text style={styles.themeTitle}>{title}</Text>
+          <Text style={styles.themeSub}>{sub}</Text>
+        </View>
+
+        <View style={styles.arrowWrap}>
+          <Text style={styles.arrow}>›</Text>
+        </View>
+      </BlurView>
+    </Pressable>
   );
 }
 
@@ -402,17 +305,17 @@ export default function VocabularyHub() {
 // STYLES
 // ──────────────────────────────────────────────
 const styles = StyleSheet.create({
-  pageGlow: {
-    position: "absolute",
-    width: width * 0.9,
-    height: width * 0.9,
-    borderRadius: width * 0.45,
-  },
-
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 140,
+  },
+
+  pageGlow: {
+    position: "absolute",
+    width: 340,
+    height: 340,
+    borderRadius: 170,
   },
 
   heroContainer: {
@@ -420,12 +323,11 @@ const styles = StyleSheet.create({
   },
 
   heroEyebrow: {
-    color: ORANGE,
+    color: PINK,
     fontFamily: fonts.bold,
     fontSize: 13.5,
     letterSpacing: 3.2,
     marginBottom: 8,
-    textTransform: "uppercase",
   },
 
   heroTitle: {
@@ -439,14 +341,13 @@ const styles = StyleSheet.create({
 
   glassCard: {
     width: 340,
-    minHeight: 252,
+    minHeight: 242,
     borderRadius: 34,
     borderWidth: 0.5,
     borderColor: "rgba(255,255,255,0.16)",
     overflow: "hidden",
     padding: 24,
     justifyContent: "space-between",
-    backgroundColor: "rgba(255,255,255,0.02)",
   },
 
   cardHeader: {
@@ -459,6 +360,7 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
+    backgroundColor: GREEN,
   },
 
   cardHeaderText: {
@@ -475,7 +377,7 @@ const styles = StyleSheet.create({
 
   krBig: {
     color: TXT,
-    fontSize: 56,
+    fontSize: 37,
     fontFamily: fonts.kr,
     marginBottom: 16,
   },
@@ -487,70 +389,35 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.12)",
-    width: "100%",
-    marginBottom: 18,
   },
 
   bubbleText: {
     color: MUTED,
     fontSize: 14.5,
     lineHeight: 21,
-    textAlign: "center",
-    fontFamily: fonts.medium,
+    fontStyle: "italic",
   },
 
-  heroButtonPressable: {
-    marginTop: 2,
-  },
-
-  heroButtonShell: {
-    minWidth: 230,
-    paddingHorizontal: 28,
-    paddingVertical: 16,
-    borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: ORANGE,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-    backgroundColor: "rgba(255,255,255,0.03)",
-  },
-
-  heroButtonText: {
-    color: TXT,
-    fontSize: 16,
-    fontFamily: fonts.bold,
-  },
-
-  cardFooterWrap: {
-    marginTop: 10,
-  },
-
-  cardFooterRow: {
+  cardFooter: {
     flexDirection: "row",
+    gap: 10,
     justifyContent: "center",
-    flexWrap: "wrap",
-    gap: 8,
+    marginTop: 8,
   },
 
-  pillWrap: {
-    overflow: "hidden",
+  miniTag: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
     borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.15)",
   },
 
-  pillInner: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 999,
-  },
-
-  pillText: {
-    fontSize: 10,
-    fontFamily: fonts.black,
-    textTransform: "uppercase",
-    letterSpacing: 1.6,
-    textShadowRadius: 6,
+  miniTagText: {
+    color: TXT,
+    fontSize: 11.5,
+    fontFamily: fonts.medium,
   },
 
   section: {
@@ -559,83 +426,87 @@ const styles = StyleSheet.create({
 
   sectionTitle: {
     color: TXT,
-    fontSize: 23,
+    fontSize: 22,
     fontFamily: fonts.black,
-    letterSpacing: -0.7,
-    marginBottom: 20,
+    letterSpacing: -0.6,
+    marginBottom: 18,
   },
 
-  themeCardShell: {
+  themeCard: {
+    marginBottom: 14,
     borderRadius: 26,
     overflow: "hidden",
-    backgroundColor: "rgba(255,255,255,0.02)",
-    marginBottom: 14,
   },
 
   themeCardBlur: {
+    minHeight: 96,
+    borderRadius: 26,
+    overflow: "hidden",
+    borderWidth: 0.8,
+    borderColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(9,10,16,0.50)",
     flexDirection: "row",
     alignItems: "center",
-    padding: 18,
+    paddingLeft: 18,
+    paddingRight: 18,
+    paddingVertical: 16,
     position: "relative",
-    minHeight: 94,
   },
 
-  cardAccentLine: {
+  themeCardLeftGlow: {
     position: "absolute",
     left: 0,
-    top: 18,
-    bottom: 18,
-    width: 2,
-    borderTopRightRadius: 4,
-    borderBottomRightRadius: 4,
-    opacity: 0.9,
+    top: 0,
+    bottom: 0,
+    width: "58%",
   },
 
   iconBox: {
     width: 58,
     height: 58,
     borderRadius: 18,
-    borderWidth: 0.5,
+    borderWidth: 0.8,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 18,
+    marginRight: 16,
+    backgroundColor: "rgba(255,255,255,0.04)",
   },
 
-  themeIcon: {
-    fontSize: 26,
+  icon: {
+    fontSize: 27,
   },
 
-  stepTextWrap: {
+  themeTextWrap: {
     flex: 1,
     justifyContent: "center",
-    paddingRight: 12,
+    paddingRight: 10,
   },
 
   themeTitle: {
     color: TXT,
-    fontSize: 19,
+    fontSize: 18,
     fontFamily: fonts.bold,
-    letterSpacing: -0.4,
+    letterSpacing: -0.35,
   },
 
   themeSub: {
-    color: MUTED,
+    color: "rgba(255,255,255,0.50)",
     fontSize: 14,
     marginTop: 4,
     fontFamily: fonts.medium,
-    lineHeight: 20,
   },
 
   arrowWrap: {
+    width: 28,
+    alignItems: "flex-end",
     justifyContent: "center",
-    alignItems: "center",
-    minWidth: 24,
     alignSelf: "stretch",
   },
 
   arrow: {
-    color: MUTED,
-    fontSize: 26,
+    color: "rgba(255,255,255,0.38)",
+    fontSize: 24,
     fontWeight: "300",
+    marginRight: 2,
   },
 });

@@ -262,11 +262,6 @@ function Scenes({
         title="Le Café"
         sub="Hongdae • 14:00"
         accent={PINK}
-        gradient={[
-          "rgba(244, 114, 182, 0.22)",
-          "rgba(244, 114, 182, 0.08)",
-          "transparent",
-        ]}
         onPress={() => onSelectTheme("cafe")}
       />
 
@@ -275,11 +270,6 @@ function Scenes({
         title="Le Métro"
         sub="Ligne 2 • Gangnam"
         accent={CYAN}
-        gradient={[
-          "rgba(34, 211, 238, 0.22)",
-          "rgba(34, 211, 238, 0.08)",
-          "transparent",
-        ]}
         onPress={() => onSelectTheme("metro")}
       />
 
@@ -288,11 +278,6 @@ function Scenes({
         title="Restaurant"
         sub="Itaewon • Dîner"
         accent={ORANGE}
-        gradient={[
-          "rgba(251, 146, 60, 0.22)",
-          "rgba(251, 146, 60, 0.08)",
-          "transparent",
-        ]}
         onPress={() => onSelectTheme("restaurant")}
       />
     </View>
@@ -304,14 +289,12 @@ function ThemeCard({
   title,
   sub,
   accent,
-  gradient,
   onPress,
 }: {
   icon: string;
   title: string;
   sub: string;
   accent: string;
-  gradient: string[];
   onPress: () => void;
 }) {
   return (
@@ -319,34 +302,67 @@ function ThemeCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.themeCard,
-        { opacity: pressed ? 0.85 : 1 },
+        { opacity: pressed ? 0.9 : 1 },
       ]}
     >
-      <BlurView intensity={80} tint="dark" style={styles.themeCardBlur}>
+      <BlurView intensity={78} tint="dark" style={styles.themeCardBlur}>
+        {/* base glass */}
         <LinearGradient
-          colors={gradient}
-          start={{ x: 0.0, y: 0.5 }}
-          end={{ x: 1.0, y: 0.5 }}
+          colors={[
+            "rgba(255,255,255,0.045)",
+            "rgba(255,255,255,0.02)",
+            "rgba(255,255,255,0.01)",
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
 
-        <View style={[styles.cardAccentLine, { backgroundColor: accent }]} />
+        {/* left color bloom */}
+        <LinearGradient
+          colors={[
+            `${accent}30`,
+            `${accent}14`,
+            "rgba(0,0,0,0.02)",
+            "transparent",
+          ]}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={styles.themeCardLeftGlow}
+        />
+
+        {/* soft inner sheen */}
+        <LinearGradient
+          colors={[
+            "rgba(255,255,255,0.06)",
+            "rgba(255,255,255,0.02)",
+            "transparent",
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.85, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
 
         <View
           style={[
             styles.iconBox,
-            { backgroundColor: `${accent}22`, borderColor: `${accent}50` },
+            {
+              backgroundColor: `${accent}12`,
+              borderColor: `${accent}1E`,
+            },
           ]}
         >
           <Text style={styles.icon}>{icon}</Text>
         </View>
 
-        <View style={{ flex: 1 }}>
+        <View style={styles.themeTextWrap}>
           <Text style={styles.themeTitle}>{title}</Text>
           <Text style={styles.themeSub}>{sub}</Text>
         </View>
 
-        <Text style={styles.arrow}>›</Text>
+        <View style={styles.arrowWrap}>
+          <Text style={styles.arrow}>›</Text>
+        </View>
       </BlurView>
     </Pressable>
   );
@@ -740,31 +756,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
   },
 
-  section: {
-    width: "100%",
-  },
-
-  sectionTitle: {
-    color: TXT,
-    fontSize: 23,
-    fontFamily: fonts.black,
-    letterSpacing: -0.7,
-    marginBottom: 20,
-  },
-
-  themeCard: {
-    marginBottom: 14,
-    borderRadius: 26,
-    overflow: "hidden",
-  },
-
-  themeCardBlur: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 18,
-    position: "relative",
-  },
-
   cardAccentLine: {
     position: "absolute",
     left: 0,
@@ -776,37 +767,94 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
 
+  section: {
+    width: "100%",
+  },
+
+  sectionTitle: {
+    color: TXT,
+    fontSize: 22,
+    fontFamily: fonts.black,
+    letterSpacing: -0.6,
+    marginBottom: 18,
+  },
+
+  themeCard: {
+    marginBottom: 14,
+    borderRadius: 26,
+    overflow: "hidden",
+  },
+
+  themeCardBlur: {
+    minHeight: 96,
+    borderRadius: 26,
+    overflow: "hidden",
+    borderWidth: 0.8,
+    borderColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(9,10,16,0.50)",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: 18,
+    paddingRight: 18,
+    paddingVertical: 16,
+    position: "relative",
+  },
+
+  themeCardLeftGlow: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: "58%",
+  },
+
   iconBox: {
     width: 58,
     height: 58,
     borderRadius: 18,
-    borderWidth: 0.5,
+    borderWidth: 0.8,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 18,
+    marginRight: 16,
+    backgroundColor: "rgba(255,255,255,0.04)",
   },
 
   icon: {
-    fontSize: 28,
+    fontSize: 27,
+  },
+
+  themeTextWrap: {
+    flex: 1,
+    justifyContent: "center",
+    paddingRight: 10,
   },
 
   themeTitle: {
     color: TXT,
-    fontSize: 19,
+    fontSize: 18,
     fontFamily: fonts.bold,
-    letterSpacing: -0.4,
+    letterSpacing: -0.35,
   },
 
   themeSub: {
-    color: MUTED,
+    color: "rgba(255,255,255,0.50)",
     fontSize: 14,
     marginTop: 4,
+    fontFamily: fonts.medium,
+  },
+
+  arrowWrap: {
+    width: 28,
+    alignItems: "flex-end",
+    justifyContent: "center",
+    alignSelf: "stretch",
   },
 
   arrow: {
-    color: MUTED,
-    fontSize: 26,
+    color: "rgba(255,255,255,0.38)",
+    fontSize: 24,
     fontWeight: "300",
+    marginRight: 2,
   },
 
   // Modal

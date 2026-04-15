@@ -1,29 +1,36 @@
+import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import {
+  Animated,
+  Easing,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const BG0 = "#060816";
-const BG1 = "#090D1D";
-const BG2 = "#0B1123";
-
-const TXT = "rgba(255,255,255,0.96)";
-const MUTED = "rgba(255,255,255,0.78)";
-const SOFT = "rgba(255,255,255,0.56)";
-const CARD = "rgba(255,255,255,0.065)";
-const CARD_SOFT = "rgba(255,255,255,0.042)";
-const LINE = "rgba(255,255,255,0.11)";
-const LINE_STRONG = "rgba(255,255,255,0.16)";
+// ──────────────────────────────────────────────
+// DESIGN SYSTEM
+// ──────────────────────────────────────────────
+const BG_DEEP = "#050508";
+const BG_NAVY = "#0A0D1A";
+const TXT = "rgba(255,255,255,0.98)";
+const MUTED = "rgba(255,255,255,0.68)";
 
 const PINK = "#F472B6";
-const PINK_BG = "rgba(244,114,182,0.14)";
-
 const CYAN = "#22D3EE";
-const CYAN_BG = "rgba(34,211,238,0.12)";
-
 const ORANGE = "#FB923C";
-const ORANGE_BG = "rgba(251,146,60,0.12)";
+
+const fonts = {
+  bold: "Outfit_700Bold",
+  black: "Outfit_900Black",
+  medium: "Outfit_500Medium",
+  kr: "NotoSansKR_700Bold",
+};
 
 type ListenTheme = {
   id: string;
@@ -31,7 +38,6 @@ type ListenTheme = {
   subtitle: string;
   icon: string;
   accent: string;
-  accentBg: string;
   route:
     | "/listen/CafeListen"
     | "/listen/MetroListen"
@@ -45,7 +51,6 @@ const THEMES: ListenTheme[] = [
     subtitle: "Commander et payer",
     icon: "☕",
     accent: PINK,
-    accentBg: PINK_BG,
     route: "/listen/CafeListen",
   },
   {
@@ -54,7 +59,6 @@ const THEMES: ListenTheme[] = [
     subtitle: "Directions et sorties",
     icon: "🚇",
     accent: CYAN,
-    accentBg: CYAN_BG,
     route: "/listen/MetroListen",
   },
   {
@@ -63,412 +67,480 @@ const THEMES: ListenTheme[] = [
     subtitle: "Commander et interagir",
     icon: "🍽️",
     accent: ORANGE,
-    accentBg: ORANGE_BG,
     route: "/listen/RestaurantListen",
   },
 ];
+
+// ──────────────────────────────────────────────
+// SCREEN
+// ──────────────────────────────────────────────
+export default function ListenIndexScreen() {
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: BG_DEEP }}>
+      <LinearGradient colors={[BG_DEEP, BG_NAVY]} style={{ flex: 1 }}>
+        <View
+          style={[
+            styles.pageGlow,
+            { top: -140, left: -100, backgroundColor: "rgba(168,85,247,0.07)" },
+          ]}
+        />
+        <View
+          style={[
+            styles.pageGlow,
+            {
+              bottom: 100,
+              right: -90,
+              backgroundColor: "rgba(34,211,238,0.05)",
+            },
+          ]}
+        />
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <ListenHero />
+          <View style={{ height: 48 }} />
+          <ThemesSection />
+        </ScrollView>
+      </LinearGradient>
+    </SafeAreaView>
+  );
+}
+
+// ──────────────────────────────────────────────
+// HERO
+// ──────────────────────────────────────────────
+function ListenHero() {
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const floatAnim = React.useRef(new Animated.Value(0)).current;
+  const pulseAnim = React.useRef(new Animated.Value(1)).current;
+
+  React.useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 850,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 4800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 4800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.06,
+          duration: 3400,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 3400,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, [fadeAnim, floatAnim, pulseAnim]);
+
+  const translateY = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -7],
+  });
+
+  return (
+    <View style={styles.heroContainer}>
+      <Text style={styles.heroEyebrow}>SÉOUL IMMERSION</Text>
+      <Text style={styles.heroTitle}>Écoute</Text>
+
+      <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY }] }}>
+        <BlurView intensity={88} tint="dark" style={styles.glassCard}>
+          <LinearGradient
+            colors={[
+              "rgba(255,255,255,0.09)",
+              "transparent",
+              "rgba(244,114,182,0.07)",
+            ]}
+            style={StyleSheet.absoluteFill}
+          />
+
+          <View style={styles.cardHeader}>
+            <View style={styles.statusDot} />
+            <Text style={styles.cardHeaderText}>ÉCOUTE RÉELLE</Text>
+          </View>
+
+          <View style={styles.cardMainContent}>
+            <Animated.Text
+              style={[
+                styles.krBig,
+                {
+                  transform: [{ scale: pulseAnim }],
+                  textShadowColor: "#F472B6",
+                  textShadowOffset: { width: 0, height: 0 },
+                  textShadowRadius: 28,
+                },
+              ]}
+            >
+              듣기
+            </Animated.Text>
+
+            <View style={styles.speechBubble}>
+              <Text style={styles.bubbleText}>
+                &quot;Entraîne ton oreille avec des scènes concrètes.&quot;
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.cardFooter}>
+            <Pressable
+              onPress={() => router.push("/listen/CafeListen")}
+              style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+            >
+              <View style={styles.miniTag}>
+                <Text style={styles.miniTagText}>Commencer</Text>
+              </View>
+            </Pressable>
+
+            <View style={styles.miniTag}>
+              <Text style={styles.miniTagText}>Oreille</Text>
+            </View>
+
+            <View style={styles.miniTag}>
+              <Text style={styles.miniTagText}>Scènes</Text>
+            </View>
+          </View>
+        </BlurView>
+      </Animated.View>
+    </View>
+  );
+}
+
+// ──────────────────────────────────────────────
+// THEMES
+// ──────────────────────────────────────────────
+function ThemesSection() {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Thèmes</Text>
+
+      {THEMES.map((theme) => (
+        <View key={theme.id} style={styles.themeCardSpacing}>
+          <ThemeRow
+            title={theme.title}
+            subtitle={theme.subtitle}
+            icon={theme.icon}
+            accent={theme.accent}
+            onPress={() => router.push(theme.route)}
+          />
+        </View>
+      ))}
+    </View>
+  );
+}
 
 function ThemeRow({
   title,
   subtitle,
   icon,
   accent,
-  accentBg,
   onPress,
 }: {
   title: string;
   subtitle: string;
   icon: string;
   accent: string;
-  accentBg: string;
   onPress: () => void;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => ({
-        opacity: pressed ? 0.94 : 1,
-        borderRadius: 22,
-        borderWidth: 1,
-        borderColor: LINE,
-        backgroundColor: "rgba(255,255,255,0.04)",
-        overflow: "hidden",
-      })}
+      style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
     >
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          minHeight: 88,
-        }}
-      >
-        <View
-          style={{
-            width: 4,
-            alignSelf: "stretch",
-            backgroundColor: accent,
-          }}
+      <BlurView intensity={78} tint="dark" style={styles.themeCardBlur}>
+        <LinearGradient
+          colors={[
+            "rgba(255,255,255,0.045)",
+            "rgba(255,255,255,0.02)",
+            "rgba(255,255,255,0.01)",
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+
+        <LinearGradient
+          colors={[
+            `${accent}30`,
+            `${accent}14`,
+            "rgba(0,0,0,0.02)",
+            "transparent",
+          ]}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={styles.themeCardLeftGlow}
+        />
+
+        <LinearGradient
+          colors={[
+            "rgba(255,255,255,0.06)",
+            "rgba(255,255,255,0.02)",
+            "transparent",
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.85, y: 1 }}
+          style={StyleSheet.absoluteFill}
         />
 
         <View
-          style={{
-            width: 56,
-            alignItems: "center",
-            justifyContent: "center",
-            marginLeft: 14,
-            marginRight: 12,
-          }}
+          style={[
+            styles.iconBox,
+            {
+              backgroundColor: `${accent}12`,
+              borderColor: `${accent}1E`,
+            },
+          ]}
         >
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: accent,
-              backgroundColor: accentBg,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text style={{ fontSize: 18 }}>{icon}</Text>
-          </View>
+          <Text style={styles.icon}>{icon}</Text>
         </View>
 
-        <View style={{ flex: 1, paddingRight: 12 }}>
-          <Text
-            style={{
-              color: TXT,
-              fontSize: 17,
-              fontWeight: "800",
-            }}
-          >
-            {title}
-          </Text>
-
-          <Text
-            style={{
-              color: MUTED,
-              fontSize: 14,
-              marginTop: 4,
-              lineHeight: 19,
-            }}
-          >
-            {subtitle}
-          </Text>
+        <View style={styles.themeTextWrap}>
+          <Text style={styles.themeTitle}>{title}</Text>
+          <Text style={styles.themeSub}>{subtitle}</Text>
         </View>
 
-        <View style={{ paddingRight: 16 }}>
-          <Text
-            style={{
-              color: "rgba(255,255,255,0.72)",
-              fontSize: 22,
-              fontWeight: "700",
-            }}
-          >
-            ›
-          </Text>
+        <View style={styles.arrowWrap}>
+          <Text style={styles.arrow}>›</Text>
         </View>
-      </View>
+      </BlurView>
     </Pressable>
   );
 }
 
-export default function ListenIndexScreen() {
-  return (
-    <LinearGradient colors={[BG0, BG1, BG2]} style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 28 }}
-        >
-          <View
-            style={{
-              paddingHorizontal: 16,
-              paddingTop: 8,
-            }}
-          >
-            <View
-              style={{
-                borderRadius: 30,
-                overflow: "hidden",
-                borderWidth: 1,
-                borderColor: LINE,
-                backgroundColor: CARD,
-              }}
-            >
-              <LinearGradient
-                colors={[
-                  "rgba(24,20,52,0.96)",
-                  "rgba(10,18,40,0.94)",
-                  "rgba(7,14,28,0.98)",
-                ]}
-                style={{
-                  paddingHorizontal: 18,
-                  paddingTop: 18,
-                  paddingBottom: 22,
-                }}
-              >
-                <View
-                  style={{
-                    position: "absolute",
-                    width: 140,
-                    height: 140,
-                    borderRadius: 999,
-                    backgroundColor: "rgba(244,114,182,0.10)",
-                    top: -34,
-                    left: -20,
-                  }}
-                />
+// ──────────────────────────────────────────────
+// STYLES
+// ──────────────────────────────────────────────
+const styles = StyleSheet.create({
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 140,
+  },
 
-                <View
-                  style={{
-                    position: "absolute",
-                    width: 170,
-                    height: 170,
-                    borderRadius: 999,
-                    backgroundColor: "rgba(34,211,238,0.11)",
-                    bottom: -58,
-                    right: -40,
-                  }}
-                />
+  pageGlow: {
+    position: "absolute",
+    width: 340,
+    height: 340,
+    borderRadius: 170,
+  },
 
-                <View
-                  style={{
-                    alignItems: "center",
-                    marginTop: 4,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 228,
-                      height: 108,
-                      borderRadius: 28,
-                      borderWidth: 1.5,
-                      borderColor: PINK,
-                      backgroundColor: "rgba(244,114,182,0.08)",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <View
-                      style={{
-                        position: "absolute",
-                        width: 112,
-                        height: 112,
-                        borderRadius: 999,
-                        backgroundColor: "rgba(244,114,182,0.10)",
-                      }}
-                    />
-                    <View
-                      style={{
-                        width: 58,
-                        height: 58,
-                        borderRadius: 999,
-                        backgroundColor: "rgba(244,114,182,0.16)",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: TXT,
-                          fontSize: 28,
-                          fontWeight: "700",
-                        }}
-                      >
-                        듣
-                      </Text>
-                    </View>
-                  </View>
-                </View>
+  heroContainer: {
+    alignItems: "center",
+  },
 
-                <Text
-                  style={{
-                    color: SOFT,
-                    textAlign: "center",
-                    fontSize: 11,
-                    fontWeight: "800",
-                    letterSpacing: 1.6,
-                    marginTop: 16,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Écoute réelle
-                </Text>
+  heroEyebrow: {
+    color: PINK,
+    fontFamily: fonts.bold,
+    fontSize: 13.5,
+    letterSpacing: 3.2,
+    marginBottom: 8,
+  },
 
-                <Text
-                  style={{
-                    color: TXT,
-                    textAlign: "center",
-                    fontSize: 24,
-                    fontWeight: "900",
-                    marginTop: 8,
-                  }}
-                >
-                  Écoute
-                </Text>
+  heroTitle: {
+    color: TXT,
+    fontSize: 46,
+    fontFamily: fonts.black,
+    letterSpacing: -1.4,
+    marginTop: 15,
+    marginBottom: 35,
+  },
 
-                <Text
-                  style={{
-                    color: MUTED,
-                    textAlign: "center",
-                    fontSize: 16,
-                    lineHeight: 24,
-                    marginTop: 10,
-                    paddingHorizontal: 10,
-                  }}
-                >
-                  Entraîne ton oreille avec des scènes concrètes et choisis le
-                  thème que tu veux pratiquer.
-                </Text>
+  glassCard: {
+    width: 340,
+    minHeight: 242,
+    borderRadius: 34,
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.16)",
+    overflow: "hidden",
+    padding: 24,
+    justifyContent: "space-between",
+  },
 
-                <View style={{ alignItems: "center", marginTop: 20 }}>
-                  <Pressable
-                    onPress={() => router.push("/listen/CafeListen")}
-                    style={({ pressed }) => ({
-                      opacity: pressed ? 0.93 : 1,
-                      borderRadius: 16,
-                      overflow: "hidden",
-                    })}
-                  >
-                    <LinearGradient
-                      colors={["#7C3AED", "#38BDF8"]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={{
-                        minWidth: 132,
-                        height: 48,
-                        borderRadius: 16,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        paddingHorizontal: 18,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: "white",
-                          fontSize: 15,
-                          fontWeight: "800",
-                        }}
-                      >
-                        ▶ Commencer
-                      </Text>
-                    </LinearGradient>
-                  </Pressable>
-                </View>
-              </LinearGradient>
-            </View>
-          </View>
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
 
-          <View
-            style={{
-              paddingHorizontal: 16,
-              marginTop: 14,
-            }}
-          >
-            <View
-              style={{
-                borderRadius: 28,
-                borderWidth: 1,
-                borderColor: LINE,
-                backgroundColor: CARD_SOFT,
-                overflow: "hidden",
-              }}
-            >
-              <LinearGradient
-                colors={["rgba(255,255,255,0.02)", "rgba(255,255,255,0.01)"]}
-                style={{
-                  paddingHorizontal: 16,
-                  paddingTop: 16,
-                  paddingBottom: 16,
-                }}
-              >
-                <Text
-                  style={{
-                    color: SOFT,
-                    fontSize: 11,
-                    fontWeight: "800",
-                    letterSpacing: 1.6,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Thèmes
-                </Text>
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: PINK,
+  },
 
-                <Text
-                  style={{
-                    color: TXT,
-                    fontSize: 19,
-                    fontWeight: "900",
-                    marginTop: 8,
-                  }}
-                >
-                  Choisis un thème
-                </Text>
+  cardHeaderText: {
+    color: MUTED,
+    fontSize: 11.5,
+    fontFamily: fonts.bold,
+    letterSpacing: 1.6,
+  },
 
-                <Text
-                  style={{
-                    color: MUTED,
-                    fontSize: 15,
-                    lineHeight: 22,
-                    marginTop: 6,
-                    marginBottom: 14,
-                  }}
-                >
-                  Sélectionne directement la scène d’écoute que tu veux
-                  travailler.
-                </Text>
+  cardMainContent: {
+    alignItems: "center",
+    marginVertical: 12,
+  },
 
-                <View style={{ gap: 12 }}>
-                  {THEMES.map((theme) => (
-                    <ThemeRow
-                      key={theme.id}
-                      title={theme.title}
-                      subtitle={theme.subtitle}
-                      icon={theme.icon}
-                      accent={theme.accent}
-                      accentBg={theme.accentBg}
-                      onPress={() => router.push(theme.route)}
-                    />
-                  ))}
-                </View>
-              </LinearGradient>
-            </View>
-          </View>
+  krBig: {
+    color: TXT,
+    fontSize: 37,
+    fontFamily: fonts.kr,
+    marginBottom: 16,
+  },
 
-          <View
-            style={{
-              paddingHorizontal: 16,
-              marginTop: 14,
-            }}
-          >
-            <View
-              style={{
-                borderRadius: 20,
-                borderWidth: 1,
-                borderColor: LINE_STRONG,
-                backgroundColor: "rgba(255,255,255,0.03)",
-                paddingHorizontal: 14,
-                paddingVertical: 12,
-              }}
-            >
-              <Text
-                style={{
-                  color: SOFT,
-                  textAlign: "center",
-                  lineHeight: 20,
-                  fontWeight: "700",
-                }}
-              >
-                Astuce : commence par un thème familier, puis refais la scène
-                plusieurs fois pour habituer ton oreille au rythme naturel.
-              </Text>
-            </View>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </LinearGradient>
-  );
-}
+  speechBubble: {
+    backgroundColor: "rgba(0,0,0,0.48)",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  bubbleText: {
+    color: MUTED,
+    fontSize: 14.5,
+    lineHeight: 21,
+    fontStyle: "italic",
+    fontFamily: fonts.medium,
+    textAlign: "center",
+  },
+
+  cardFooter: {
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "center",
+    marginTop: 8,
+  },
+
+  miniTag: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.15)",
+  },
+
+  miniTagText: {
+    color: TXT,
+    fontSize: 11.5,
+    fontFamily: fonts.medium,
+  },
+
+  section: {
+    width: "100%",
+  },
+
+  sectionTitle: {
+    color: TXT,
+    fontSize: 22,
+    fontFamily: fonts.black,
+    letterSpacing: -0.6,
+    marginBottom: 18,
+  },
+
+  themeCardSpacing: {
+    marginBottom: 14,
+  },
+
+  themeCardBlur: {
+    minHeight: 96,
+    borderRadius: 26,
+    overflow: "hidden",
+    borderWidth: 0.8,
+    borderColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(9,10,16,0.50)",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: 18,
+    paddingRight: 18,
+    paddingVertical: 16,
+    position: "relative",
+  },
+
+  themeCardLeftGlow: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: "58%",
+  },
+
+  iconBox: {
+    width: 58,
+    height: 58,
+    borderRadius: 18,
+    borderWidth: 0.8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 16,
+    backgroundColor: "rgba(255,255,255,0.04)",
+  },
+
+  icon: {
+    fontSize: 27,
+  },
+
+  themeTextWrap: {
+    flex: 1,
+    justifyContent: "center",
+    paddingRight: 10,
+  },
+
+  themeTitle: {
+    color: TXT,
+    fontSize: 18,
+    fontFamily: fonts.bold,
+    letterSpacing: -0.35,
+  },
+
+  themeSub: {
+    color: "rgba(255,255,255,0.50)",
+    fontSize: 14,
+    marginTop: 4,
+    fontFamily: fonts.medium,
+  },
+
+  arrowWrap: {
+    width: 28,
+    alignItems: "flex-end",
+    justifyContent: "center",
+    alignSelf: "stretch",
+  },
+
+  arrow: {
+    color: "rgba(255,255,255,0.38)",
+    fontSize: 24,
+    fontWeight: "300",
+    marginRight: 2,
+  },
+});

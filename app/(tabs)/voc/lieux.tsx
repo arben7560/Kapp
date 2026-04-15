@@ -1,102 +1,59 @@
+import { BlurView } from "expo-blur";
+import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import * as Speech from "expo-speech";
-import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  Dimensions,
+  Easing,
+  Pressable,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const BG0 = "#070812";
-const TXT = "rgba(255,255,255,0.92)";
-const MUTED = "rgba(255,255,255,0.65)";
-const LINE = "rgba(255,255,255,0.12)";
-const CARD = "rgba(255,255,255,0.06)";
-const NEON = "rgba(34,211,238,0.55)";
-const NEON_BG = "rgba(34,211,238,0.14)";
-const PINK = "rgba(251,113,133,0.45)";
-const PINK_BG = "rgba(251,113,133,0.12)";
+// ──────────────────────────────────────────────
+// DESIGN SYSTEM — aligned with speak.tsx
+// ──────────────────────────────────────────────
+const { width } = Dimensions.get("window");
 
-function Card({ children }: { children: React.ReactNode }) {
-  return (
-    <View
-      style={{
-        backgroundColor: CARD,
-        borderColor: LINE,
-        borderWidth: 1,
-        borderRadius: 22,
-        padding: 14,
-        marginBottom: 14,
-      }}
-    >
-      {children}
-    </View>
-  );
-}
+const BG_DEEP = "#050508";
+const BG_NAVY = "#0A0D1A";
+const TXT = "rgba(255,255,255,0.98)";
+const MUTED = "rgba(255,255,255,0.68)";
 
-function Button({
-  label,
-  onPress,
-  tone = "neon",
-  disabled,
-}: {
-  label: string;
-  onPress?: () => void;
-  tone?: "neon" | "ghost" | "danger";
-  disabled?: boolean;
-}) {
-  const style =
-    tone === "neon"
-      ? { backgroundColor: NEON_BG, borderColor: NEON }
-      : tone === "danger"
-        ? { backgroundColor: PINK_BG, borderColor: PINK }
-        : { backgroundColor: "rgba(255,255,255,0.06)", borderColor: LINE };
+const PINK = "#F472B6";
+const CYAN = "#22D3EE";
+const GREEN = "#10B981";
+const ORANGE = "#FB923C";
 
-  return (
-    <Pressable
-      disabled={disabled}
-      onPress={onPress}
-      hitSlop={10}
-      style={({ pressed }) => ({
-        opacity: disabled ? 0.5 : pressed ? 0.9 : 1,
-        borderWidth: 1,
-        paddingVertical: 12,
-        paddingHorizontal: 12,
-        borderRadius: 16,
-        alignItems: "center",
-        ...style,
-      })}
-    >
-      <Text style={{ color: TXT, fontWeight: "900" }}>{label}</Text>
-    </Pressable>
-  );
-}
+const CARD_WIDTH = Math.min(width - 40, 340);
 
-function Chip({ kr, fr, say }: { kr: string; fr: string; say: string }) {
-  return (
-    <Pressable
-      onPress={() => {
-        Speech.stop();
-        Speech.speak(say, { language: "ko-KR", rate: 0.92, pitch: 1.0 });
-      }}
-      hitSlop={10}
-      style={({ pressed }) => ({
-        opacity: pressed ? 0.88 : 1,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: LINE,
-        backgroundColor: "rgba(255,255,255,0.05)",
-        minWidth: 120,
-      })}
-    >
-      <Text style={{ color: TXT, fontWeight: "900", fontSize: 16 }}>{kr}</Text>
-      <Text
-        style={{ color: MUTED, marginTop: 4, fontWeight: "800", fontSize: 12 }}
-      >
-        {fr}
-      </Text>
-    </Pressable>
-  );
-}
+// ──────────────────────────────────────────────
+// TYPES
+// ──────────────────────────────────────────────
+type WordItem = {
+  id: string;
+  kr: string;
+  roman: string;
+  fr: string;
+  say: string;
+};
+
+type PhraseItem = {
+  id: string;
+  kr: string;
+  fr: string;
+  say: string;
+  icon: string;
+  accent: string;
+  gradient: [string, string, string];
+};
 
 type QuizItem = {
   id: string;
@@ -107,314 +64,1123 @@ type QuizItem = {
   explain: string;
 };
 
-function Quiz({ items }: { items: QuizItem[] }) {
-  const [index, setIndex] = React.useState(0);
-  const [selected, setSelected] = React.useState<number | null>(null);
-  const [show, setShow] = React.useState(false);
+// ──────────────────────────────────────────────
+// DATA
+// ──────────────────────────────────────────────
+const ESSENTIALS: WordItem[] = [
+  { id: "1", kr: "건물", roman: "geonmul", fr: "bâtiment", say: "건물" },
+  { id: "2", kr: "가게", roman: "gage", fr: "magasin", say: "가게" },
+  { id: "3", kr: "카페", roman: "kape", fr: "café", say: "카페" },
+  { id: "4", kr: "식당", roman: "sikdang", fr: "restaurant", say: "식당" },
+  {
+    id: "5",
+    kr: "편의점",
+    roman: "pyeonuijeom",
+    fr: "supérette",
+    say: "편의점",
+  },
+  { id: "6", kr: "병원", roman: "byeongwon", fr: "hôpital", say: "병원" },
+  { id: "7", kr: "약국", roman: "yakguk", fr: "pharmacie", say: "약국" },
+  { id: "8", kr: "호텔", roman: "hotel", fr: "hôtel", say: "호텔" },
+  { id: "9", kr: "학교", roman: "hakgyo", fr: "école", say: "학교" },
+  { id: "10", kr: "회사", roman: "hoesa", fr: "entreprise", say: "회사" },
+  {
+    id: "11",
+    kr: "1층",
+    roman: "il cheung",
+    fr: "1er étage (RDC)",
+    say: "일 층",
+  },
+  { id: "12", kr: "2층", roman: "i cheung", fr: "2e étage", say: "이 층" },
+  { id: "13", kr: "지하", roman: "jiha", fr: "sous-sol", say: "지하" },
+  {
+    id: "14",
+    kr: "엘리베이터",
+    roman: "ellibeiteo",
+    fr: "ascenseur",
+    say: "엘리베이터",
+  },
+];
+
+const PHRASES: PhraseItem[] = [
+  {
+    id: "p1",
+    kr: "여기 어디예요?",
+    fr: "On est où, ici ?",
+    say: "여기 어디예요?",
+    icon: "📍",
+    accent: PINK,
+    gradient: [
+      "rgba(244, 114, 182, 0.16)",
+      "rgba(244, 114, 182, 0.06)",
+      "transparent",
+    ],
+  },
+  {
+    id: "p2",
+    kr: "화장실이 어디예요?",
+    fr: "Où sont les toilettes ?",
+    say: "화장실이 어디예요?",
+    icon: "🚻",
+    accent: CYAN,
+    gradient: [
+      "rgba(34, 211, 238, 0.18)",
+      "rgba(34, 211, 238, 0.06)",
+      "transparent",
+    ],
+  },
+  {
+    id: "p3",
+    kr: "이 건물 1층에 있어요.",
+    fr: "C’est au RDC de ce bâtiment.",
+    say: "이 건물 일 층에 있어요.",
+    icon: "🏢",
+    accent: ORANGE,
+    gradient: [
+      "rgba(251, 146, 60, 0.18)",
+      "rgba(251, 146, 60, 0.06)",
+      "transparent",
+    ],
+  },
+  {
+    id: "p4",
+    kr: "2층으로 가 주세요.",
+    fr: "Allez au 2e étage, s’il vous plaît.",
+    say: "이 층으로 가 주세요.",
+    icon: "⬆️",
+    accent: "#A855F7",
+    gradient: [
+      "rgba(168, 85, 247, 0.18)",
+      "rgba(168, 85, 247, 0.06)",
+      "transparent",
+    ],
+  },
+  {
+    id: "p5",
+    kr: "지하철역 근처예요.",
+    fr: "C’est près de la station de métro.",
+    say: "지하철역 근처예요.",
+    icon: "🚇",
+    accent: "#38BDF8",
+    gradient: [
+      "rgba(56, 189, 248, 0.18)",
+      "rgba(56, 189, 248, 0.06)",
+      "transparent",
+    ],
+  },
+];
+
+const QUIZ_ITEMS: QuizItem[] = [
+  {
+    id: "q1",
+    prompt: "Quel mot veut dire “sous-sol” ?",
+    say: "지하",
+    choices: ["지하", "2층"],
+    correctIndex: 0,
+    explain: "지하 = sous-sol. 2층 = 2e étage.",
+  },
+  {
+    id: "q2",
+    prompt: "Quel mot veut dire “pharmacie” ?",
+    say: "약국",
+    choices: ["약국", "병원"],
+    correctIndex: 0,
+    explain: "약국 = pharmacie. 병원 = hôpital.",
+  },
+  {
+    id: "q3",
+    prompt: "Quelle phrase signifie “C’est au RDC de ce bâtiment” ?",
+    say: "이 건물 일 층에 있어요",
+    choices: ["이 건물 1층에 있어요", "지하철역 근처예요"],
+    correctIndex: 0,
+    explain: "1층 = RDC / 1er niveau. ~에 있어요 = c’est à / c’est situé à.",
+  },
+];
+
+// ──────────────────────────────────────────────
+// UTILS
+// ──────────────────────────────────────────────
+const triggerHaptic = (style = Haptics.ImpactFeedbackStyle.Light) => {
+  Haptics.impactAsync(style).catch(() => {});
+};
+
+const speakKo = (text: string) => {
+  Speech.stop();
+  Speech.speak(text, {
+    language: "ko-KR",
+    rate: 0.92,
+    pitch: 1.0,
+  });
+};
+
+function getWordSizing(text: string) {
+  const len = text.length;
+
+  if (len <= 1) {
+    return {
+      fontSize: width > 420 ? 40 : 36,
+      lineHeight: width > 420 ? 46 : 42,
+      letterSpacing: -0.8,
+    };
+  }
+
+  if (len <= 2) {
+    return {
+      fontSize: width > 420 ? 39 : 35,
+      lineHeight: width > 420 ? 45 : 41,
+      letterSpacing: -0.9,
+    };
+  }
+
+  if (len <= 3) {
+    return {
+      fontSize: width > 420 ? 37 : 33,
+      lineHeight: width > 420 ? 43 : 39,
+      letterSpacing: -1,
+    };
+  }
+
+  if (len <= 4) {
+    return {
+      fontSize: width > 420 ? 35 : 31,
+      lineHeight: width > 420 ? 41 : 37,
+      letterSpacing: -0.95,
+    };
+  }
+
+  return {
+    fontSize: width > 420 ? 31 : 27,
+    lineHeight: width > 420 ? 36 : 32,
+    letterSpacing: -0.8,
+  };
+}
+
+// ──────────────────────────────────────────────
+// HERO WORD CARD
+// ──────────────────────────────────────────────
+function EssentialWordCard({ items }: { items: WordItem[] }) {
+  const [index, setIndex] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  const current = items[index];
+  const wordSizing = getWordSizing(current.kr);
+
+  const animateChange = useCallback(
+    (cb: () => void) => {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 90,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }).start(() => {
+        cb();
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 150,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }).start();
+      });
+    },
+    [fadeAnim],
+  );
+
+  const handleNext = () => {
+    triggerHaptic();
+    animateChange(() => setIndex((prev) => (prev + 1) % items.length));
+  };
+
+  const handlePrev = () => {
+    triggerHaptic();
+    animateChange(() =>
+      setIndex((prev) => (prev - 1 + items.length) % items.length),
+    );
+  };
+
+  const playCurrent = useCallback(() => {
+    triggerHaptic(Haptics.ImpactFeedbackStyle.Medium);
+
+    Animated.sequence([
+      Animated.timing(pulseAnim, {
+        toValue: 1.04,
+        duration: 180,
+        easing: Easing.out(Easing.sin),
+        useNativeDriver: true,
+      }),
+      Animated.timing(pulseAnim, {
+        toValue: 1,
+        duration: 220,
+        easing: Easing.out(Easing.sin),
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    speakKo(current.say);
+  }, [current, pulseAnim]);
+
+  return (
+    <BlurView intensity={88} tint="dark" style={styles.glassCard}>
+      <LinearGradient
+        colors={[
+          "rgba(255,255,255,0.09)",
+          "transparent",
+          "rgba(34,211,238,0.06)",
+        ]}
+        style={StyleSheet.absoluteFill}
+      />
+
+      <View style={styles.cardHeader}>
+        <View style={styles.cardHeaderLeft}>
+          <View style={styles.statusDot} />
+          <Text style={styles.cardHeaderText}>LIVE VOICE</Text>
+        </View>
+
+        <Pressable
+          onPress={playCurrent}
+          style={({ pressed }) => [
+            styles.playMiniTag,
+            { opacity: pressed ? 0.82 : 1 },
+          ]}
+        >
+          <Text style={styles.playMiniTagText}>PLAY</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.heroCardMain}>
+        <Pressable
+          onPress={handlePrev}
+          style={({ pressed }) => [
+            styles.navCircle,
+            { opacity: pressed ? 0.78 : 1 },
+          ]}
+          hitSlop={12}
+        >
+          <Text style={styles.navArrow}>‹</Text>
+        </Pressable>
+
+        <Animated.View style={[styles.wordContent, { opacity: fadeAnim }]}>
+          <Animated.Text
+            style={[
+              styles.krBig,
+              wordSizing,
+              {
+                transform: [{ scale: pulseAnim }],
+                textShadowColor: "rgba(34, 211, 238, 0.18)",
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 8,
+              },
+            ]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.72}
+          >
+            {current.kr}
+          </Animated.Text>
+
+          <Text style={styles.wordRoman}>{current.roman}</Text>
+          <Text style={styles.wordFrench}>{current.fr}</Text>
+        </Animated.View>
+
+        <Pressable
+          onPress={handleNext}
+          style={({ pressed }) => [
+            styles.navCircle,
+            { opacity: pressed ? 0.78 : 1 },
+          ]}
+          hitSlop={12}
+        >
+          <Text style={styles.navArrow}>›</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.cardFooter}>
+        <Pressable
+          onPress={playCurrent}
+          style={({ pressed }) => [
+            styles.listenCapsule,
+            { opacity: pressed ? 0.86 : 1 },
+          ]}
+        >
+          <Text style={styles.listenCapsuleText}>Écoute et répète</Text>
+        </Pressable>
+      </View>
+    </BlurView>
+  );
+}
+
+// ──────────────────────────────────────────────
+// INFO CARD
+// ──────────────────────────────────────────────
+function InsightCard() {
+  return (
+    <BlurView intensity={80} tint="dark" style={styles.blockCard}>
+      <LinearGradient
+        colors={[
+          "rgba(255,255,255,0.05)",
+          "transparent",
+          "rgba(255,255,255,0.015)",
+        ]}
+        style={StyleSheet.absoluteFill}
+      />
+      <Text style={styles.blockTitle}>Astuce Corée</Text>
+      <Text style={styles.blockSubtitle}>
+        En Corée, beaucoup de commerces sont en étage ou en sous-sol. Apprendre
+        1층, 2층, 지하 et “~에 있어요” te sauve partout.
+      </Text>
+    </BlurView>
+  );
+}
+
+// ──────────────────────────────────────────────
+// VOCAB GRID
+// ──────────────────────────────────────────────
+function VocabGrid({ items }: { items: WordItem[] }) {
+  return (
+    <BlurView intensity={80} tint="dark" style={styles.blockCard}>
+      <LinearGradient
+        colors={[
+          "rgba(255,255,255,0.05)",
+          "transparent",
+          "rgba(255,255,255,0.015)",
+        ]}
+        style={StyleSheet.absoluteFill}
+      />
+
+      <Text style={styles.blockTitle}>Essentiels</Text>
+      <Text style={styles.blockSubtitle}>
+        Lieux fréquents, étages et vocab utile pour se repérer rapidement.
+      </Text>
+
+      <View style={styles.chipsWrap}>
+        {items.map((item) => (
+          <Pressable
+            key={item.id}
+            onPress={() => {
+              triggerHaptic();
+              speakKo(item.say);
+            }}
+            style={({ pressed }) => [
+              styles.chip,
+              { opacity: pressed ? 0.86 : 1 },
+            ]}
+          >
+            <Text style={styles.chipKr}>{item.kr}</Text>
+            <Text style={styles.chipFr}>{item.fr}</Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <Pressable
+        onPress={() =>
+          speakKo(
+            "건물 가게 카페 식당 편의점 병원 약국 호텔 학교 회사 일 층 이 층 지하 엘리베이터",
+          )
+        }
+        style={({ pressed }) => [
+          styles.secondaryCapsule,
+          { opacity: pressed ? 0.86 : 1 },
+        ]}
+      >
+        <Text style={styles.secondaryCapsuleText}>Écouter tout</Text>
+      </Pressable>
+    </BlurView>
+  );
+}
+
+// ──────────────────────────────────────────────
+// QUIZ
+// ──────────────────────────────────────────────
+function QuizCard({ items }: { items: QuizItem[] }) {
+  const [index, setIndex] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [show, setShow] = useState(false);
 
   const item = items[index];
 
   const next = () => {
     setSelected(null);
     setShow(false);
-    setIndex((i) => (i + 1) % items.length);
+    setIndex((prev) => (prev + 1) % items.length);
   };
 
   return (
-    <Card>
-      <Text style={{ color: TXT, fontSize: 18, fontWeight: "900" }}>
-        🎧 Mini-quiz écoute
-      </Text>
-      <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-        Appuie sur “Écouter”, puis choisis la réponse correcte.
+    <BlurView intensity={80} tint="dark" style={styles.blockCard}>
+      <LinearGradient
+        colors={[
+          "rgba(255,255,255,0.05)",
+          "transparent",
+          "rgba(255,255,255,0.015)",
+        ]}
+        style={StyleSheet.absoluteFill}
+      />
+
+      <Text style={styles.blockTitle}>Mini-quiz écoute</Text>
+      <Text style={styles.blockSubtitle}>
+        Appuie sur écouter, puis choisis la réponse correcte.
       </Text>
 
-      <View style={{ height: 12 }} />
-      <View
-        style={{
-          borderRadius: 18,
-          borderWidth: 1,
-          borderColor: LINE,
-          backgroundColor: "rgba(255,255,255,0.05)",
-          padding: 12,
-        }}
-      >
-        <Text style={{ color: TXT, fontWeight: "900" }}>{item.prompt}</Text>
+      <View style={styles.quizInner}>
+        <Text style={styles.quizPrompt}>{item.prompt}</Text>
 
-        <View style={{ height: 12 }} />
-        <Button
-          label="🔊 Écouter"
+        <Pressable
           onPress={() => {
-            Speech.stop();
-            Speech.speak(item.say, {
-              language: "ko-KR",
-              rate: 0.92,
-              pitch: 1.0,
-            });
+            triggerHaptic(Haptics.ImpactFeedbackStyle.Medium);
+            speakKo(item.say);
           }}
-        />
+          style={({ pressed }) => [
+            styles.secondaryCapsule,
+            { opacity: pressed ? 0.86 : 1, marginTop: 14 },
+          ]}
+        >
+          <Text style={styles.secondaryCapsuleText}>Écouter</Text>
+        </Pressable>
 
-        {item.choices.map((c, i) => {
-          const isSel = selected === i;
+        {item.choices.map((choice, i) => {
+          const isSelected = selected === i;
           const isCorrect = i === item.correctIndex;
 
-          const borderColor =
-            show && isCorrect
-              ? NEON
-              : show && isSel && !isCorrect
-                ? PINK
-                : isSel
-                  ? "rgba(255,255,255,0.35)"
-                  : LINE;
+          const borderColor = show
+            ? isCorrect
+              ? "rgba(34,211,238,0.65)"
+              : isSelected
+                ? "rgba(244,114,182,0.65)"
+                : "rgba(255,255,255,0.10)"
+            : isSelected
+              ? "rgba(255,255,255,0.28)"
+              : "rgba(255,255,255,0.10)";
 
-          const backgroundColor =
-            show && isCorrect
+          const backgroundColor = show
+            ? isCorrect
               ? "rgba(34,211,238,0.10)"
-              : show && isSel && !isCorrect
-                ? "rgba(251,113,133,0.10)"
-                : "rgba(255,255,255,0.04)";
+              : isSelected
+                ? "rgba(244,114,182,0.10)"
+                : "rgba(255,255,255,0.04)"
+            : "rgba(255,255,255,0.04)";
 
           return (
             <Pressable
               key={`${item.id}_${i}`}
               disabled={show}
-              onPress={() => setSelected(i)}
-              style={({ pressed }) => ({
-                opacity: pressed ? 0.9 : 1,
-                borderRadius: 16,
-                borderWidth: 1,
-                borderColor,
-                backgroundColor,
-                paddingVertical: 12,
-                paddingHorizontal: 12,
-                marginTop: 10,
-              })}
+              onPress={() => {
+                triggerHaptic();
+                setSelected(i);
+              }}
+              style={({ pressed }) => [
+                styles.choiceCard,
+                {
+                  opacity: pressed ? 0.88 : 1,
+                  borderColor,
+                  backgroundColor,
+                },
+              ]}
             >
-              <Text style={{ color: TXT, fontWeight: "900", fontSize: 16 }}>
-                {c}
-              </Text>
+              <Text style={styles.choiceText}>{choice}</Text>
             </Pressable>
           );
         })}
 
-        <View style={{ height: 12 }} />
-        <Button
-          tone="ghost"
-          label={show ? "Réponse affichée" : "✅ Vérifier"}
+        <Pressable
           disabled={selected === null || show}
           onPress={() => setShow(true)}
-        />
+          style={({ pressed }) => [
+            styles.secondaryCapsule,
+            {
+              opacity: selected === null || show ? 0.45 : pressed ? 0.86 : 1,
+              marginTop: 14,
+            },
+          ]}
+        >
+          <Text style={styles.secondaryCapsuleText}>
+            {show ? "Réponse affichée" : "Vérifier"}
+          </Text>
+        </Pressable>
 
         {show && (
           <>
-            <View style={{ height: 12 }} />
-            <View
-              style={{
-                borderRadius: 16,
-                borderWidth: 1,
-                borderColor: LINE,
-                backgroundColor: "rgba(255,255,255,0.05)",
-                padding: 12,
-              }}
-            >
-              <Text style={{ color: TXT, fontWeight: "900" }}>
+            <View style={styles.quizAnswerBox}>
+              <Text style={styles.quizAnswerTitle}>
                 Réponse : {item.choices[item.correctIndex]}
               </Text>
-              <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-                {item.explain}
-              </Text>
+              <Text style={styles.quizAnswerText}>{item.explain}</Text>
             </View>
 
-            <View style={{ height: 12 }} />
-            <Button label="➡️ Suivant" onPress={next} />
+            <Pressable
+              onPress={next}
+              style={({ pressed }) => [
+                styles.listenCapsule,
+                { opacity: pressed ? 0.86 : 1, marginTop: 14 },
+              ]}
+            >
+              <Text style={styles.listenCapsuleText}>Suivant</Text>
+            </Pressable>
           </>
         )}
 
-        <View style={{ height: 10 }} />
-        <Button
-          tone="danger"
-          label="⏹ Stop audio"
+        <Pressable
           onPress={() => Speech.stop()}
-        />
+          style={({ pressed }) => [
+            styles.stopCapsule,
+            { opacity: pressed ? 0.86 : 1 },
+          ]}
+        >
+          <Text style={styles.stopCapsuleText}>Stop audio</Text>
+        </Pressable>
       </View>
-    </Card>
+    </BlurView>
   );
 }
 
+// ──────────────────────────────────────────────
+// SCREEN
+// ──────────────────────────────────────────────
 export default function Buildings() {
-  const speak = React.useCallback((text: string) => {
-    Speech.stop();
-    Speech.speak(text, { language: "ko-KR", rate: 0.92, pitch: 1.0 });
+  useEffect(() => {
+    return () => {
+      Speech.stop();
+    };
   }, []);
 
-  // ✅ Essentiels : lieux + bâtiments + étages (vraiment utile en Corée)
-  const essentials = [
-    { kr: "건물", fr: "bâtiment", say: "건물" },
-    { kr: "가게", fr: "magasin", say: "가게" },
-    { kr: "카페", fr: "café", say: "카페" },
-    { kr: "식당", fr: "restaurant", say: "식당" },
-    { kr: "편의점", fr: "supérette", say: "편의점" },
-    { kr: "병원", fr: "hôpital", say: "병원" },
-    { kr: "약국", fr: "pharmacie", say: "약국" },
-    { kr: "호텔", fr: "hôtel", say: "호텔" },
-    { kr: "학교", fr: "école", say: "학교" },
-    { kr: "회사", fr: "entreprise", say: "회사" },
-    { kr: "1층", fr: "1er étage (RDC)", say: "일 층" },
-    { kr: "2층", fr: "2e étage", say: "이 층" },
-    { kr: "지하", fr: "sous-sol", say: "지하" },
-    { kr: "엘리베이터", fr: "ascenseur", say: "엘리베이터" },
-  ] as const;
-
-  // ✅ Phrases courtes : localisation + étage (hyper fréquent)
-  const phrases = [
-    { kr: "여기 어디예요?", fr: "On est où, ici ?", say: "여기 어디예요?" },
-    {
-      kr: "화장실이 어디예요?",
-      fr: "Où sont les toilettes ?",
-      say: "화장실이 어디예요?",
-    },
-    {
-      kr: "이 건물 1층에 있어요.",
-      fr: "C’est au RDC de ce bâtiment.",
-      say: "이 건물 일 층에 있어요.",
-    },
-    {
-      kr: "2층으로 가 주세요.",
-      fr: "Allez au 2e étage, s’il vous plaît.",
-      say: "이 층으로 가 주세요.",
-    },
-    {
-      kr: "지하철역 근처예요.",
-      fr: "C’est près de la station de métro.",
-      say: "지하철역 근처예요.",
-    },
-  ];
-
-  // ✅ Quiz écoute
-  const quizItems: QuizItem[] = [
-    {
-      id: "q1",
-      prompt: "Quel mot veut dire “sous-sol” ?",
-      say: "지하",
-      choices: ["지하", "2층"],
-      correctIndex: 0,
-      explain: "지하 = sous-sol. 2층 = 2e étage.",
-    },
-    {
-      id: "q2",
-      prompt: "Quel mot veut dire “pharmacie” ?",
-      say: "약국",
-      choices: ["약국", "병원"],
-      correctIndex: 0,
-      explain: "약국 = pharmacie. 병원 = hôpital.",
-    },
-    {
-      id: "q3",
-      prompt: "Quelle phrase signifie “C’est au RDC de ce bâtiment” ?",
-      say: "이 건물 1층에 있어요",
-      choices: ["이 건물 1층에 있어요", "지하철역 근처예요"],
-      correctIndex: 0,
-      explain: "1층 = RDC/1er niveau. ~에 있어요 = c’est à / c’est situé à.",
-    },
-  ];
-
   return (
-    <LinearGradient colors={[BG0, "#0b0b1d", "#0b0f22"]} style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 140 }}>
-        <Pressable
-          onPress={() => router.back()}
-          style={{ paddingVertical: 8 }}
-          hitSlop={10}
+    <SafeAreaView style={{ flex: 1, backgroundColor: BG_DEEP }}>
+      <StatusBar
+        barStyle="light-content"
+        translucent
+        backgroundColor="transparent"
+      />
+
+      <LinearGradient colors={[BG_DEEP, BG_NAVY]} style={{ flex: 1 }}>
+        <View
+          style={[
+            styles.pageGlow,
+            { top: -140, left: -100, backgroundColor: "rgba(168,85,247,0.07)" },
+          ]}
+        />
+        <View
+          style={[
+            styles.pageGlow,
+            {
+              bottom: 100,
+              right: -90,
+              backgroundColor: "rgba(34,211,238,0.05)",
+            },
+          ]}
+        />
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
-          <Text style={{ color: MUTED, fontWeight: "800" }}>← Retour</Text>
-        </Pressable>
-
-        <Text style={{ color: TXT, fontSize: 22, fontWeight: "900" }}>
-          Lieux & bâtiments (건물/장소)
-        </Text>
-        <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-          Vocab utile + étages (1층/2층/지하) + phrases courtes pour se repérer.
-        </Text>
-
-        <View style={{ height: 14 }} />
-
-        <Card>
-          <Text style={{ color: TXT, fontWeight: "900" }}>💡 Astuce Corée</Text>
-          <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-            En Corée, beaucoup de commerces sont en étage (2층/3층) ou en
-            sous-sol (지하). Apprendre 1층/2층/지하 + “~에 있어요” te sauve
-            partout.
-          </Text>
-        </Card>
-
-        <Card>
-          <Text style={{ color: TXT, fontSize: 18, fontWeight: "900" }}>
-            🏢 Essentiels
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-            Lieux fréquents + vocab “étage/ascenseur”.
-          </Text>
-
-          <View style={{ height: 12 }} />
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-            {essentials.map((x) => (
-              <Chip key={x.kr} kr={x.kr} fr={x.fr} say={x.say} />
-            ))}
+          <View style={styles.topBar}>
+            <Pressable
+              onPress={() => router.back()}
+              style={({ pressed }) => [
+                styles.topButton,
+                { opacity: pressed ? 0.84 : 1 },
+              ]}
+            >
+              <Text style={styles.topButtonText}>‹</Text>
+            </Pressable>
           </View>
 
-          <View style={{ height: 12 }} />
-          <Button
-            label="🔊 Écouter tout (rapide)"
-            onPress={() =>
-              speak(
-                "건물 가게 카페 식당 편의점 병원 약국 호텔 학교 회사 일 층 이 층 지하 엘리베이터",
-              )
-            }
-          />
-        </Card>
+          <View style={styles.heroContainer}>
+            <Text style={styles.heroEyebrow}>SÉOUL IMMERSION</Text>
+            <Text style={styles.heroTitle}>Lieux</Text>
+          </View>
 
-        <Card>
-          <Text style={{ color: TXT, fontSize: 18, fontWeight: "900" }}>
-            🗣️ Phrases courtes
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-            Très courtes, très utiles pour demander/indiquer un endroit.
-          </Text>
+          <View style={styles.wordCardWrap}>
+            <EssentialWordCard items={ESSENTIALS} />
+          </View>
 
-          {phrases.map((p, i) => (
+          <View style={{ height: 28 }} />
+
+          <InsightCard />
+
+          <View style={{ height: 28 }} />
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Essentiels</Text>
+          </View>
+
+          <VocabGrid items={ESSENTIALS} />
+
+          <View style={{ height: 28 }} />
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Phrases courtes</Text>
+          </View>
+
+          {PHRASES.map((item) => (
             <Pressable
-              key={i}
-              onPress={() => speak(p.say)}
-              style={({ pressed }) => ({
-                opacity: pressed ? 0.9 : 1,
-                marginTop: 10,
-                paddingVertical: 12,
-                paddingHorizontal: 12,
-                borderRadius: 16,
-                borderWidth: 1,
-                borderColor: LINE,
-                backgroundColor: "rgba(255,255,255,0.04)",
-              })}
+              key={item.id}
+              onPress={() => {
+                triggerHaptic();
+                speakKo(item.say);
+              }}
+              style={({ pressed }) => [
+                styles.themeCard,
+                { opacity: pressed ? 0.85 : 1 },
+              ]}
             >
-              <Text style={{ color: TXT, fontWeight: "900", fontSize: 16 }}>
-                {p.kr}
-              </Text>
-              <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-                {p.fr}
-              </Text>
+              <BlurView intensity={80} tint="dark" style={styles.themeCardBlur}>
+                <LinearGradient
+                  colors={item.gradient}
+                  start={{ x: 0.0, y: 0.5 }}
+                  end={{ x: 1.0, y: 0.5 }}
+                  style={StyleSheet.absoluteFill}
+                />
+
+                <View
+                  style={[
+                    styles.cardAccentLine,
+                    { backgroundColor: item.accent },
+                  ]}
+                />
+
+                <View
+                  style={[
+                    styles.iconBox,
+                    {
+                      backgroundColor: `${item.accent}22`,
+                      borderColor: `${item.accent}50`,
+                    },
+                  ]}
+                >
+                  <Text style={styles.icon}>{item.icon}</Text>
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.themeTitle}>{item.kr}</Text>
+                  <Text style={styles.themeSub}>{item.fr}</Text>
+                </View>
+
+                <Text style={styles.arrow}>›</Text>
+              </BlurView>
             </Pressable>
           ))}
 
-          <View style={{ height: 12 }} />
-          <Button
-            tone="danger"
-            label="⏹ Stop audio"
-            onPress={() => Speech.stop()}
-          />
-        </Card>
+          <View style={{ height: 28 }} />
 
-        <Quiz items={quizItems} />
-      </ScrollView>
-    </LinearGradient>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Mini-quiz</Text>
+          </View>
+
+          <QuizCard items={QUIZ_ITEMS} />
+
+          <View style={{ height: 100 }} />
+        </ScrollView>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }
+
+// ──────────────────────────────────────────────
+// STYLES
+// ──────────────────────────────────────────────
+const styles = StyleSheet.create({
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 140,
+  },
+
+  pageGlow: {
+    position: "absolute",
+    width: 340,
+    height: 340,
+    borderRadius: 170,
+  },
+
+  topBar: {
+    marginBottom: 14,
+  },
+
+  topButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+
+  topButtonText: {
+    color: TXT,
+    fontSize: 28,
+    fontWeight: "300",
+    marginTop: -2,
+  },
+
+  heroContainer: {
+    alignItems: "flex-start",
+  },
+
+  heroEyebrow: {
+    color: PINK,
+    fontSize: 13.5,
+    letterSpacing: 3.2,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+
+  heroTitle: {
+    color: TXT,
+    fontSize: 46,
+    fontWeight: "900",
+    letterSpacing: -1.4,
+    marginTop: 15,
+    marginBottom: 28,
+  },
+
+  wordCardWrap: {
+    alignItems: "center",
+  },
+
+  glassCard: {
+    width: CARD_WIDTH,
+    minHeight: 242,
+    borderRadius: 34,
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.16)",
+    overflow: "hidden",
+    padding: 24,
+    justifyContent: "space-between",
+  },
+
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  cardHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexShrink: 1,
+  },
+
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: GREEN,
+  },
+
+  cardHeaderText: {
+    color: MUTED,
+    fontSize: 11.5,
+    fontWeight: "700",
+    letterSpacing: 1.6,
+  },
+
+  playMiniTag: {
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.15)",
+  },
+
+  playMiniTagText: {
+    color: TXT,
+    fontSize: 11.5,
+    fontWeight: "500",
+  },
+
+  heroCardMain: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginVertical: 12,
+  },
+
+  navCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  navArrow: {
+    color: TXT,
+    fontSize: 34,
+    fontWeight: "300",
+    lineHeight: 34,
+    marginTop: -2,
+  },
+
+  wordContent: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 8,
+  },
+
+  krBig: {
+    color: TXT,
+    fontWeight: "700",
+    marginBottom: 12,
+    maxWidth: CARD_WIDTH - 150,
+    textAlign: "center",
+  },
+
+  wordRoman: {
+    color: TXT,
+    fontSize: 15.5,
+    fontWeight: "700",
+    marginBottom: 4,
+    textAlign: "center",
+  },
+
+  wordFrench: {
+    color: MUTED,
+    fontSize: 14,
+    textAlign: "center",
+  },
+
+  cardFooter: {
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 4,
+  },
+
+  listenCapsule: {
+    width: "100%",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255,255,255,0.08)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  listenCapsuleText: {
+    color: TXT,
+    fontSize: 17,
+    fontWeight: "700",
+  },
+
+  secondaryCapsule: {
+    width: "100%",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  secondaryCapsuleText: {
+    color: TXT,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+
+  stopCapsule: {
+    width: "100%",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(244,114,182,0.26)",
+    backgroundColor: "rgba(244,114,182,0.08)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 14,
+  },
+
+  stopCapsuleText: {
+    color: TXT,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+
+  section: {
+    width: "100%",
+  },
+
+  sectionTitle: {
+    color: TXT,
+    fontSize: 23,
+    fontWeight: "900",
+    letterSpacing: -0.7,
+    marginBottom: 20,
+  },
+
+  blockCard: {
+    overflow: "hidden",
+    borderRadius: 26,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(255,255,255,0.025)",
+    padding: 18,
+  },
+
+  blockTitle: {
+    color: TXT,
+    fontSize: 18,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+
+  blockSubtitle: {
+    color: MUTED,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 6,
+  },
+
+  chipsWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 14,
+    marginBottom: 14,
+  },
+
+  chip: {
+    minWidth: 108,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    backgroundColor: "rgba(255,255,255,0.05)",
+  },
+
+  chipKr: {
+    color: TXT,
+    fontSize: 15,
+    fontWeight: "800",
+  },
+
+  chipFr: {
+    color: MUTED,
+    fontSize: 12,
+    fontWeight: "700",
+    marginTop: 4,
+  },
+
+  themeCard: {
+    marginBottom: 14,
+    borderRadius: 26,
+    overflow: "hidden",
+  },
+
+  themeCardBlur: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 18,
+    position: "relative",
+  },
+
+  cardAccentLine: {
+    position: "absolute",
+    left: 0,
+    top: 18,
+    bottom: 18,
+    width: 2,
+    borderTopRightRadius: 4,
+    borderBottomRightRadius: 4,
+    opacity: 0.9,
+  },
+
+  iconBox: {
+    width: 58,
+    height: 58,
+    borderRadius: 18,
+    borderWidth: 0.5,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 18,
+  },
+
+  icon: {
+    fontSize: 28,
+  },
+
+  themeTitle: {
+    color: TXT,
+    fontSize: 18,
+    fontWeight: "700",
+    letterSpacing: -0.4,
+  },
+
+  themeSub: {
+    color: MUTED,
+    fontSize: 14,
+    marginTop: 4,
+    lineHeight: 20,
+  },
+
+  arrow: {
+    color: MUTED,
+    fontSize: 26,
+    fontWeight: "300",
+  },
+
+  quizInner: {
+    marginTop: 14,
+    padding: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    backgroundColor: "rgba(255,255,255,0.04)",
+  },
+
+  quizPrompt: {
+    color: TXT,
+    fontSize: 16,
+    fontWeight: "800",
+    lineHeight: 22,
+  },
+
+  choiceCard: {
+    marginTop: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+
+  choiceText: {
+    color: TXT,
+    fontSize: 16,
+    fontWeight: "800",
+  },
+
+  quizAnswerBox: {
+    marginTop: 14,
+    padding: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    backgroundColor: "rgba(255,255,255,0.05)",
+  },
+
+  quizAnswerTitle: {
+    color: TXT,
+    fontSize: 15,
+    fontWeight: "800",
+  },
+
+  quizAnswerText: {
+    color: MUTED,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 6,
+  },
+});
