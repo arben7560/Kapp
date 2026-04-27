@@ -278,7 +278,7 @@ export default function OnboardingScreen() {
 
   const openBasics = async () => {
     await tap();
-    router.push("/(tabs)" as any);
+    router.replace("/(tabs)" as any);
   };
 
   const animatedStyle = {
@@ -386,19 +386,53 @@ export default function OnboardingScreen() {
             <View style={styles.topRow}>
               <View style={styles.badge}>
                 <View style={[styles.badgeDot, { backgroundColor: PINK }]} />
-                <Text style={styles.badgeText}>SCÈNES RECOMMANDÉES</Text>
+                <Text style={styles.badgeText}>POINT D’ENTRÉE</Text>
               </View>
             </View>
 
             <View style={styles.sectionHead}>
-              <Text style={styles.sectionEyebrow}>
-                WHERE DO YOU WANT TO ENTER?
+              <Text style={styles.sectionEyebrow}>START HERE</Text>
+              <Text style={styles.sectionTitle}>Choisis ton entrée</Text>
+            </View>
+
+            <Pressable style={styles.homeEntryWrap} onPress={openBasics}>
+              <BlurView intensity={28} tint="dark" style={styles.homeEntryCard}>
+                <LinearGradient
+                  colors={[
+                    "rgba(244,114,182,0.16)",
+                    "rgba(34,211,238,0.12)",
+                    "rgba(255,255,255,0.03)",
+                  ]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+
+                <View style={styles.homeEntryTopRow}>
+                  <View style={styles.homeEntryPill}>
+                    <Text style={styles.homeEntryPillText}>
+                      ACCUEIL DE L’APP
+                    </Text>
+                  </View>
+
+                  <View style={styles.homeEntryArrowWrap}>
+                    <Text style={styles.homeEntryArrow}>→</Text>
+                  </View>
+                </View>
+
+                <Text style={styles.homeEntryTitle}>Commence içi</Text>
+                <Text style={styles.homeEntryText}>
+                  Accéder à la page d’accueil pour retrouver Hangul, vocabulaire
+                  et l’ensemble des sections de l’application.
+                </Text>
+              </BlurView>
+            </Pressable>
+
+            <View style={styles.subSectionHead}>
+              <Text style={styles.subSectionEyebrow}>
+                OU COMMENCER DIRECTEMENT
               </Text>
-              <Text style={styles.sectionTitle}>Choisis ta scène</Text>
-              <Text style={styles.sectionText}>
-                Trois scènes recommandées pour commencer immédiatement dans les
-                meilleures conditions.
-              </Text>
+              <Text style={styles.subSectionTitle}>Scènes recommandées</Text>
             </View>
 
             <ScrollView
@@ -513,34 +547,6 @@ export default function OnboardingScreen() {
                   Voir plus de scènes
                 </Text>
               </Pressable>
-
-              <Pressable style={styles.basicsCardWrap} onPress={openBasics}>
-                <BlurView intensity={24} tint="dark" style={styles.basicsCard}>
-                  <LinearGradient
-                    colors={[
-                      "rgba(255,255,255,0.05)",
-                      "rgba(255,255,255,0.02)",
-                    ]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                  />
-
-                  <View style={styles.basicsPill}>
-                    <Text style={styles.basicsPillText}>
-                      BASES ESSENTIELLES
-                    </Text>
-                  </View>
-
-                  <Text style={styles.basicsTitle}>
-                    Ou commencer par les bases essentielles
-                  </Text>
-                  <Text style={styles.basicsText}>
-                    Hangul, vocabulaire, fondations utiles pour entrer ensuite
-                    dans les scènes avec plus d’aisance.
-                  </Text>
-                </BlurView>
-              </Pressable>
             </ScrollView>
 
             <View style={styles.bottomBar}>
@@ -569,7 +575,9 @@ export default function OnboardingScreen() {
                     end={{ x: 1, y: 1 }}
                     style={StyleSheet.absoluteFill}
                   />
-                  <Text style={styles.primaryText}>Continuer</Text>
+                  <Text style={styles.primaryText}>
+                    Continuer vers la scène
+                  </Text>
                 </BlurView>
               </Pressable>
             </View>
@@ -909,7 +917,7 @@ const styles = StyleSheet.create({
 
   sectionHead: {
     marginTop: 22,
-    marginBottom: 18,
+    marginBottom: 16,
   },
 
   sectionEyebrow: {
@@ -934,6 +942,99 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: 8,
     maxWidth: "92%",
+  },
+
+  homeEntryWrap: {
+    borderRadius: 24,
+    overflow: "hidden",
+    marginBottom: 18,
+  },
+
+  homeEntryCard: {
+    borderRadius: 24,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    padding: 20,
+  },
+
+  homeEntryTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+
+  homeEntryPill: {
+    alignSelf: "flex-start",
+    height: 30,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    backgroundColor: "rgba(255,255,255,0.07)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.14)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  homeEntryPillText: {
+    color: TXT_SOFT,
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+  },
+
+  homeEntryArrowWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.14)",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  homeEntryArrow: {
+    color: TXT,
+    fontSize: 16,
+    fontWeight: "800",
+  },
+
+  homeEntryTitle: {
+    color: TXT,
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+  },
+
+  homeEntryText: {
+    color: "rgba(255,255,255,0.72)",
+    fontSize: 14,
+    lineHeight: 22,
+    marginTop: 8,
+  },
+
+  subSectionHead: {
+    marginBottom: 14,
+  },
+
+  subSectionEyebrow: {
+    color: "rgba(255,255,255,0.56)",
+    fontSize: 10.5,
+    fontWeight: "800",
+    letterSpacing: 1.6,
+    marginBottom: 6,
+  },
+
+  subSectionTitle: {
+    color: TXT,
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: "800",
+    letterSpacing: -0.4,
   },
 
   scroll: {
@@ -1031,56 +1132,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "600",
-  },
-
-  basicsCardWrap: {
-    marginTop: 6,
-    borderRadius: 22,
-    overflow: "hidden",
-  },
-
-  basicsCard: {
-    borderRadius: 22,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.14)",
-    backgroundColor: "rgba(255,255,255,0.04)",
-    padding: 18,
-  },
-
-  basicsPill: {
-    alignSelf: "flex-start",
-    height: 28,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-
-  basicsPillText: {
-    color: TXT_SOFT,
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1.1,
-  },
-
-  basicsTitle: {
-    color: TXT,
-    fontSize: 17,
-    lineHeight: 23,
-    fontWeight: "800",
-    letterSpacing: -0.3,
-  },
-
-  basicsText: {
-    color: "rgba(255,255,255,0.68)",
-    fontSize: 13.5,
-    lineHeight: 20,
-    marginTop: 7,
   },
 
   bottomBar: {

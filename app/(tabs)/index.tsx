@@ -18,6 +18,7 @@ import { useStore } from "../../_store";
 
 const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../assets/images/seoul-hub-bg.jpg");
+const HERO_CIRCLE = width * 0.76;
 
 // ──────────────────────────────────────────────
 // DESIGN TOKENS
@@ -26,7 +27,7 @@ const BG_DEEP = "#020306";
 const TXT = "rgba(255,255,255,0.96)";
 const MUTED = "rgba(255,255,255,0.60)";
 const SOFT = "rgba(255,255,255,0.45)";
-
+const VIOLET = "#8B5CF6";
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
 const AMBER = "#F59E0B";
@@ -40,57 +41,87 @@ const fonts = {
 
 const SEQUENCES: any[] = [
   {
-    title: "Les Signes",
+    title: "L'alphabet Coréen",
     label: "Hangul",
     color: CYAN,
     route: "/hangul",
     trackKey: "hangul",
     place: "CENTRE D'APPRENTISSAGE",
     narrative: "Décrypte l'âme visuelle de la ville.",
+    type: "pedagogical",
   },
   {
-    title: "Échanges",
+    title: "Vocabulaire Essentiel",
     label: "Restaurant",
     color: AMBER,
     route: "/voc",
     trackKey: "vocab",
     place: "ITAEWON • DINER",
     narrative: "Commence à exister dans la conversation.",
+    type: "pedagogical",
   },
   {
-    title: "Mouvements",
+    title: "Compter à Séoul",
+    label: "Comptage",
+    color: CYAN,
+    route: "/comptage",
+    trackKey: "numbers",
+    place: "HONGDAE • QUANTITÉS",
+    narrative: "Maîtrise les nombres dans le réel.",
+    type: "pedagogical",
+  },
+  {
+    title: "Compter le monde réel",
+    label: "Classificateurs",
+    color: "#34D399",
+    route: "/classificateur",
+    trackKey: "classifier",
+    place: "MARCHÉ • QUANTITÉS",
+    narrative: "Donne une forme aux objets et aux personnes.",
+    type: "pedagogical",
+  },
+  {
+    title: "Apprends en immersion",
     label: "Le Métro",
     color: PINK,
     route: "/speak",
     trackKey: "dialogs",
     place: "LIGNE 2 • SE DÉPLACER",
     narrative: "Navigue dans le flux de la capitale.",
+    type: "immersion",
+  },
+  {
+    title: "Développe ton écoute",
+    label: "Listen",
+    color: VIOLET,
+    route: "/listen",
+    trackKey: "listen",
+    place: "LIGNE 2 • ÉCOUTER",
+    narrative: "Affûte ton oreille au rythme de Séoul.",
+    type: "immersion",
   },
 ];
-
 export default function Home() {
   const { progress, setTrack } = useStore();
   const currentTrack = progress.learningTrack;
   const activeSeq =
     SEQUENCES.find((s) => s.trackKey === currentTrack) ?? SEQUENCES[0];
 
+  const pedagogicalSequences = SEQUENCES.filter(
+    (s) => s.type === "pedagogical",
+  );
+
+  const immersionSequences = SEQUENCES.filter((s) => s.type === "immersion");
+
   return (
     <SafeAreaView style={styles.safe}>
       <ImageBackground source={BACKGROUND_SOURCE} style={styles.bgImage}>
         <View style={styles.vignetteOverlay} />
+        <View style={styles.topFade} />
+        <View style={styles.bottomFade} />
 
-        <View
-          style={[
-            styles.ambientGlow,
-            { top: "10%", left: -50, backgroundColor: PINK, opacity: 0.12 },
-          ]}
-        />
-        <View
-          style={[
-            styles.ambientGlow,
-            { bottom: "20%", right: -50, backgroundColor: CYAN, opacity: 0.1 },
-          ]}
-        />
+        <View style={[styles.globalGlowLeft, { backgroundColor: PINK }]} />
+        <View style={[styles.globalGlowRight, { backgroundColor: CYAN }]} />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -106,12 +137,37 @@ export default function Home() {
             </Pressable>
           </View>
 
-          <View style={styles.heroSection}>
-            <Text style={styles.krMain}>서울</Text>
-            <Text style={styles.heroSub}>
-              L'expérience est ouverte.{"\n"}
-              <Text style={{ color: TXT }}>Où souhaites-tu te projeter ?</Text>
-            </Text>
+          <View style={styles.heroBlock}>
+            <View style={styles.heroVisualWrap}>
+              <View style={[styles.heroCirclePink, { backgroundColor: PINK }]} />
+              <View style={[styles.heroCircleCyan, { backgroundColor: CYAN }]} />
+
+              <BlurView intensity={22} tint="dark" style={styles.heroCircleGlass}>
+                <LinearGradient
+                  colors={[
+                    "rgba(255,255,255,0.06)",
+                    "rgba(255,255,255,0.02)",
+                    "rgba(255,255,255,0.01)",
+                  ]}
+                  start={{ x: 0.12, y: 0.08 }}
+                  end={{ x: 0.88, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+              </BlurView>
+
+              <View
+                style={[
+                  styles.heroLine,
+                  { backgroundColor: "rgba(34,211,238,0.34)" },
+                ]}
+              />
+
+              <Text style={styles.krMain}>서울</Text>
+              <Text style={styles.heroSub}>
+                L'expérience est ouverte.{"\n"}
+                <Text style={{ color: TXT }}>Où souhaites-tu te projeter ?</Text>
+              </Text>
+            </View>
           </View>
 
           {/* Animation Index 0 pour la carte principale */}
@@ -132,8 +188,31 @@ export default function Home() {
           </View>
 
           <View style={styles.grid}>
-            {SEQUENCES.map((seq, i) => (
+            {pedagogicalSequences.map((seq, i) => (
               <AnimatedFragment key={seq.trackKey} index={i + 1}>
+                <SequenceCard
+                  item={seq}
+                  isActive={seq.trackKey === currentTrack}
+                  onPress={() => {
+                    setTrack(seq.trackKey);
+                    router.push(seq.route);
+                  }}
+                />
+              </AnimatedFragment>
+            ))}
+          </View>
+
+          <View style={styles.sectionDivider}>
+            <Text style={styles.sectionTitle}>IMMERSION</Text>
+            <View style={styles.titleLine} />
+          </View>
+
+          <View style={styles.grid}>
+            {immersionSequences.map((seq, i) => (
+              <AnimatedFragment
+                key={seq.trackKey}
+                index={i + 1 + pedagogicalSequences.length}
+              >
                 <SequenceCard
                   item={seq}
                   isActive={seq.trackKey === currentTrack}
@@ -267,20 +346,29 @@ function SequenceCard({ item, isActive, onPress }: any) {
   return (
     <Pressable onPress={onPress} style={styles.seqCard}>
       <BlurView
-        intensity={isActive ? 80 : 30}
+        intensity={30}
         tint="dark"
         style={styles.seqBlur}
       >
+        <LinearGradient
+          colors={[`${item.color}18`, "transparent"]}
+          style={StyleSheet.absoluteFill}
+        />
         <View
           style={[
             styles.seqAccent,
-            { backgroundColor: item.color, opacity: isActive ? 1 : 0.3 },
+            { backgroundColor: item.color },
           ]}
         />
-        <Text style={[styles.seqPlace, { color: item.color }]}>
-          {item.place}
+
+        <View style={styles.seqText}>
+          <Text style={styles.seqTitle}>{item.title}</Text>
+          <Text style={styles.seqSub}>{item.narrative}</Text>
+        </View>
+
+        <Text style={[styles.seqArrow, isActive && { color: item.color, opacity: 0.8 }]}>
+          ›
         </Text>
-        <Text style={styles.seqTitle}>{item.title}</Text>
       </BlurView>
     </Pressable>
   );
@@ -294,13 +382,41 @@ const styles = StyleSheet.create({
   bgImage: { flex: 1 },
   vignetteOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.75)",
+    backgroundColor: "rgba(2,3,6,0.80)",
   },
-  ambientGlow: {
+
+  topFade: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.10)",
+  },
+
+  bottomFade: {
     position: "absolute",
-    width: 300,
-    height: 300,
-    borderRadius: 150,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 180,
+    backgroundColor: "rgba(2,3,6,0.24)",
+  },
+
+  globalGlowLeft: {
+    position: "absolute",
+    top: 140,
+    left: -90,
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    opacity: 0.08,
+  },
+
+  globalGlowRight: {
+    position: "absolute",
+    top: 300,
+    right: -120,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    opacity: 0.08,
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -335,17 +451,55 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 2,
   },
-  heroSection: {
+  heroBlock: {
+    marginTop: 8,
+    marginBottom: 18,
+  },
+  heroVisualWrap: {
     alignItems: "center",
-    marginBottom: 32,
+    justifyContent: "center",
+    minHeight: 330,
+    marginBottom: 8,
+  },
+  heroCirclePink: {
+    position: "absolute",
+    width: HERO_CIRCLE,
+    height: HERO_CIRCLE,
+    borderRadius: HERO_CIRCLE / 2,
+    left: -20,
+    top: 2,
+    opacity: 0.12,
+  },
+  heroCircleCyan: {
+    position: "absolute",
+    width: HERO_CIRCLE,
+    height: HERO_CIRCLE,
+    borderRadius: HERO_CIRCLE / 2,
+    right: -20,
+    top: 2,
+    opacity: 0.1,
+  },
+  heroCircleGlass: {
+    position: "absolute",
+    width: HERO_CIRCLE,
+    height: HERO_CIRCLE,
+    borderRadius: HERO_CIRCLE / 2,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+  },
+  heroLine: {
+    position: "absolute",
+    top: 84,
+    left: 56,
+    right: 56,
+    height: 1,
   },
   krMain: {
-    fontSize: 64,
+    fontSize: 74,
     fontFamily: fonts.krBold,
-    color: "white",
-    opacity: 0.15,
-    position: "absolute",
-    top: -20,
+    color: "rgba(245,252,255,0.98)",
+    marginBottom: 8,
   },
   heroSub: {
     fontSize: 18,
@@ -353,7 +507,7 @@ const styles = StyleSheet.create({
     color: MUTED,
     textAlign: "center",
     lineHeight: 26,
-    marginTop: 20,
+    maxWidth: 300,
   },
   mainCardWrap: {
     marginBottom: 32, // Réduit légèrement pour aérer la liste
@@ -365,6 +519,7 @@ const styles = StyleSheet.create({
   mainCard: {
     padding: 24,
   },
+  cardContent: {},
   cardKicker: {
     fontSize: 10,
     fontFamily: fonts.bold,
@@ -407,6 +562,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 15,
     marginBottom: 20,
+    marginTop: 20,
   },
   sectionTitle: {
     fontSize: 12,
@@ -425,34 +581,43 @@ const styles = StyleSheet.create({
   seqCard: {
     borderRadius: 20,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
   },
   seqBlur: {
-    padding: 16,
-    flexDirection: "column",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    minHeight: 90,
   },
   seqAccent: {
     position: "absolute",
     left: 0,
-    top: 12,
-    bottom: 12,
+    top: 14,
+    bottom: 14,
     width: 3,
     borderTopRightRadius: 4,
     borderBottomRightRadius: 4,
   },
-  seqPlace: {
-    fontSize: 10,
-    fontFamily: fonts.bold,
-    letterSpacing: 1,
-    marginBottom: 4,
-    marginLeft: 8,
+  seqText: {
+    flex: 1,
+    marginLeft: 10,
   },
   seqTitle: {
-    fontSize: 17,
+    fontSize: 18,
     fontFamily: fonts.bold,
     color: TXT,
-    marginLeft: 8,
+  },
+  seqSub: {
+    fontSize: 13,
+    fontFamily: fonts.medium,
+    color: MUTED,
+    marginTop: 2,
+  },
+  seqArrow: {
+    color: SOFT,
+    fontSize: 22,
+    opacity: 0.3,
   },
   settingsBtn: {
     width: 40,

@@ -1,7 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const BG_DEEP = "#050508";
 const TXT = "rgba(255,255,255,0.96)";
@@ -38,11 +39,11 @@ export default function IndexGate() {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ActivityIndicator size="small" color="rgba(255,255,255,0.72)" />
       <Text style={styles.title}>K-App</Text>
       <Text style={styles.subtitle}>Chargement de Séoul…</Text>
-    </View>
+    </SafeAreaView>
   );
 }
 

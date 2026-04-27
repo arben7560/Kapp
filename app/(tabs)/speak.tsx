@@ -1,11 +1,13 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
   Easing,
   Image,
+  ImageBackground,
   Modal,
   Pressable,
   ScrollView,
@@ -16,11 +18,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
+const BACKGROUND_SOURCE = require("../../assets/images/seoul-hub-bg.jpg");
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM & ASSETS (Refined)
 // ──────────────────────────────────────────────
-const BG_DEEP = "#040508";
+const BG_DEEP = "#020306";
 const BG_NAVY = "#080B16";
 const TXT = "rgba(255,255,255,0.98)";
 const MUTED = "rgba(255,255,255,0.72)";
@@ -43,8 +46,6 @@ const ASSETS = {
     "https://images.unsplash.com/photo-1538332576228-eb5b4c4de6f5?q=80&w=600&auto=format&fit=crop",
   restaurant:
     "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=600&auto=format&fit=crop",
-  cityOverlay:
-    "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=1200&auto=format&fit=crop",
 };
 
 type ThemeKey = "cafe" | "metro" | "restaurant";
@@ -80,6 +81,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
     accent: CYAN,
     textRoute: "/lesson/metro",
     guidedRoute: "/lesson/metroIA",
+    guidedParams: { mode: "guided" },
   },
   restaurant: {
     title: "Restaurant",
@@ -88,6 +90,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
     accent: ORANGE,
     textRoute: "/lesson/restaurant",
     guidedRoute: "/lesson/restaurantIA",
+    guidedParams: { mode: "guided" },
   },
 };
 
@@ -97,6 +100,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
 export default function SpeakScreen() {
   const [sheetVisible, setSheetVisible] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<ThemeKey | null>(null);
+  const [paywallVisible, setPaywallVisible] = useState(false);
 
   const screenEntryScale = useRef(new Animated.Value(1.05)).current;
   const screenEntryOpacity = useRef(new Animated.Value(0)).current;
@@ -123,20 +127,15 @@ export default function SpeakScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: BG_DEEP }}>
-      {/* City Background Texture - Réinjection de la ville */}
-      <Image
-        source={{ uri: ASSETS.cityOverlay }}
-        style={[StyleSheet.absoluteFill, { opacity: 0.22 }]} // Opacité augmentée pour texture
-        blurRadius={12}
-      />
+    <SafeAreaView style={styles.safe}>
+      <ImageBackground source={BACKGROUND_SOURCE} style={styles.bgImage}>
+        <View style={styles.vignetteOverlay} />
+        <View style={styles.topFade} />
+        <View style={styles.bottomFade} />
 
-      <LinearGradient
-        colors={["rgba(4,5,8,0.4)", "rgba(8,11,22,0.85)", BG_DEEP]}
-        style={StyleSheet.absoluteFill}
-      />
+        <View style={[styles.globalGlowLeft, { backgroundColor: PINK }]} />
+        <View style={[styles.globalGlowRight, { backgroundColor: CYAN }]} />
 
-      <SafeAreaView style={{ flex: 1 }}>
         <Animated.View
           style={{
             flex: 1,
@@ -168,9 +167,15 @@ export default function SpeakScreen() {
           visible={sheetVisible}
           onClose={() => setSheetVisible(false)}
           selectedTheme={selectedTheme}
+          onOpenPaywall={() => setPaywallVisible(true)}
         />
-      </SafeAreaView>
-    </View>
+
+        <PaywallModal
+          visible={paywallVisible}
+          onClose={() => setPaywallVisible(false)}
+        />
+      </ImageBackground>
+    </SafeAreaView>
   );
 }
 
@@ -180,6 +185,7 @@ export default function SpeakScreen() {
 
 function PulseDot() {
   const pulse = useRef(new Animated.Value(0.4)).current;
+
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
@@ -248,7 +254,7 @@ function Hero() {
           <Text style={styles.krBig}>어서 오세요</Text>
           <View style={styles.speechBubble}>
             <Text style={styles.bubbleText}>
-              "Un iced americano, s'il vous plaît."
+              &quot;Un iced americano, s&apos;il vous plaît.&quot;
             </Text>
           </View>
         </View>
@@ -306,7 +312,7 @@ function ThemeCard({
           </View>
         </View>
         <View style={styles.vignettePlay}>
-          <Text style={{ color: "white", fontSize: 18 }}>›</Text>
+          <Text style={styles.playIcon}>›</Text>
         </View>
       </View>
     </Pressable>
@@ -314,11 +320,46 @@ function ThemeCard({
 }
 
 // ──────────────────────────────────────────────
-// MODAL (Maintained and harmonized)
+// MODAL
 // ──────────────────────────────────────────────
-function ThemeModeSheet({ visible, onClose, selectedTheme }: any) {
+function ThemeModeSheet({
+  visible,
+  onClose,
+  selectedTheme,
+  onOpenPaywall,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  selectedTheme: ThemeKey | null;
+  onOpenPaywall: () => void;
+}) {
   if (!visible || !selectedTheme) return null;
-  const config = THEME_CONFIG[selectedTheme as ThemeKey];
+
+  const config = THEME_CONFIG[selectedTheme];
+
+  const goToText = () => {
+    onClose();
+    router.push(config.textRoute as any);
+  };
+
+  const goToGuided = () => {
+    onClose();
+    if (config.guidedParams) {
+      router.push({
+        pathname: config.guidedRoute as any,
+        params: config.guidedParams,
+      });
+      return;
+    }
+    router.push(config.guidedRoute as any);
+  };
+
+  const goToReal = () => {
+    if (!config.realRoute) return;
+
+    onClose();
+    onOpenPaywall();
+  };
 
   return (
     <Modal
@@ -331,6 +372,7 @@ function ThemeModeSheet({ visible, onClose, selectedTheme }: any) {
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <BlurView intensity={90} tint="dark" style={styles.sheetWrap}>
           <View style={styles.sheetHandle} />
+
           <View style={styles.sheetHeader}>
             <Image source={{ uri: config.image }} style={styles.sheetHeroImg} />
             <View style={styles.sheetHeaderInfo}>
@@ -338,25 +380,30 @@ function ThemeModeSheet({ visible, onClose, selectedTheme }: any) {
               <Text style={styles.sheetSub}>{config.sub}</Text>
             </View>
           </View>
+
           <View style={styles.sheetOptions}>
             <SheetOptionCard
               title="Version texte"
               subtitle="Lecture et révision calme."
               accent={config.accent}
-              onPress={onClose}
+              onPress={goToText}
             />
+
             <SheetOptionCard
               title="Simulation guidée"
               subtitle="IA interactive avec aide."
               accent={config.accent}
-              onPress={onClose}
+              onPress={goToGuided}
             />
-            <SheetOptionCard
-              title="Simulation réelle"
-              subtitle="Immersion totale sans filet."
-              accent={config.accent}
-              onPress={onClose}
-            />
+
+            {config.realRoute ? (
+              <SheetOptionCard
+                title="Simulation réelle"
+                subtitle="Immersion totale sans filet."
+                accent={config.accent}
+                onPress={goToReal}
+              />
+            ) : null}
           </View>
         </BlurView>
       </View>
@@ -364,7 +411,17 @@ function ThemeModeSheet({ visible, onClose, selectedTheme }: any) {
   );
 }
 
-function SheetOptionCard({ title, subtitle, accent, onPress }: any) {
+function SheetOptionCard({
+  title,
+  subtitle,
+  accent,
+  onPress,
+}: {
+  title: string;
+  subtitle: string;
+  accent: string;
+  onPress: () => void;
+}) {
   return (
     <Pressable onPress={onPress} style={styles.optionCard}>
       <View style={[styles.optionAccent, { backgroundColor: accent }]} />
@@ -377,10 +434,120 @@ function SheetOptionCard({ title, subtitle, accent, onPress }: any) {
 }
 
 // ──────────────────────────────────────────────
+// PAYWALL
+// ──────────────────────────────────────────────
+function PaywallModal({
+  visible,
+  onClose,
+}: {
+  visible: boolean;
+  onClose: () => void;
+}) {
+  if (!visible) return null;
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.sheetRoot}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+
+        <BlurView intensity={95} tint="dark" style={styles.paywallWrap}>
+          <View style={styles.sheetHandle} />
+
+          <View style={styles.paywallHero}>
+            <Text style={styles.paywallTitle}>IMMERSION RÉELLE</Text>
+            <Text style={styles.paywallSubtitle}>
+              Accède aux situations complètes de Séoul{"\n"}
+              et parle sans réfléchir.
+            </Text>
+          </View>
+
+          <View style={styles.paywallFeatures}>
+            <PaywallItem text="Dialogues dynamiques en temps réel" />
+            <PaywallItem text="Réponses naturelles sans assistance" />
+            <PaywallItem text="Scènes complètes : café, métro, restaurant" />
+            <PaywallItem text="Progression immersive continue" />
+          </View>
+
+          <Pressable style={styles.paywallCTA}>
+            <LinearGradient
+              colors={[PINK, CYAN]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <Text style={styles.paywallCTAText}>Continuer l’immersion</Text>
+          </Pressable>
+
+          <Pressable onPress={onClose}>
+            <Text style={styles.paywallClose}>Plus tard</Text>
+          </Pressable>
+        </BlurView>
+      </View>
+    </Modal>
+  );
+}
+
+function PaywallItem({ text }: { text: string }) {
+  return (
+    <View style={styles.paywallItem}>
+      <View style={styles.paywallDot} />
+      <Text style={styles.paywallItemText}>{text}</Text>
+    </View>
+  );
+}
+
+// ──────────────────────────────────────────────
 // STYLES
 // ──────────────────────────────────────────────
 const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: BG_DEEP },
+  bgImage: { flex: 1 },
+  vignetteOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(2,3,6,0.80)",
+  },
+
+  topFade: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.10)",
+  },
+
+  bottomFade: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 180,
+    backgroundColor: "rgba(2,3,6,0.24)",
+  },
+
+  globalGlowLeft: {
+    position: "absolute",
+    top: 140,
+    left: -90,
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    opacity: 0.08,
+  },
+
+  globalGlowRight: {
+    position: "absolute",
+    top: 300,
+    right: -120,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    opacity: 0.08,
+  },
+
   scrollContent: { paddingHorizontal: 22, paddingTop: 10, paddingBottom: 100 },
+
   header: { alignItems: "center", marginBottom: 30 },
   headerEyebrow: {
     color: PINK,
@@ -459,7 +626,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
     letterSpacing: 2,
   },
-  dividerLine: { flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.1)" },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.1)",
+  },
 
   scenesGrid: { gap: 20 },
   themeCard: { borderRadius: 28, overflow: "hidden" },
@@ -522,6 +693,7 @@ const styles = StyleSheet.create({
   sheetHeaderInfo: { justifyContent: "center" },
   sheetTitle: { color: "white", fontSize: 24, fontFamily: fonts.bold },
   sheetSub: { color: MUTED, fontSize: 14 },
+
   sheetOptions: { gap: 15 },
   optionCard: {
     flexDirection: "row",
@@ -532,6 +704,79 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   optionAccent: { width: 4, height: "100%", borderRadius: 2 },
+  playIcon: { color: "white", fontSize: 18, lineHeight: 20 },
   optionTitle: { color: "white", fontSize: 17, fontFamily: fonts.bold },
   optionSub: { color: SOFT, fontSize: 13 },
+
+  paywallWrap: {
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    padding: 24,
+    paddingBottom: 40,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.2)",
+  },
+
+  paywallHero: {
+    alignItems: "center",
+    marginBottom: 30,
+  },
+
+  paywallTitle: {
+    color: "white",
+    fontSize: 22,
+    fontFamily: fonts.bold,
+    letterSpacing: 1,
+  },
+
+  paywallSubtitle: {
+    color: MUTED,
+    textAlign: "center",
+    marginTop: 10,
+    fontSize: 14,
+  },
+
+  paywallFeatures: {
+    gap: 14,
+    marginBottom: 30,
+  },
+
+  paywallItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  paywallDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: PINK,
+  },
+
+  paywallItemText: {
+    color: TXT,
+    fontSize: 14,
+  },
+
+  paywallCTA: {
+    height: 54,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    marginBottom: 14,
+  },
+
+  paywallCTAText: {
+    color: "white",
+    fontSize: 15,
+    fontFamily: fonts.bold,
+  },
+
+  paywallClose: {
+    textAlign: "center",
+    color: SOFT,
+    fontSize: 13,
+  },
 });

@@ -401,6 +401,15 @@ function buildChoiceHint(label: string): string {
 export default function MetroIaScreen() {
   const insets = useSafeAreaInsets();
 
+  const goBackSafely = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/onboarding");
+  };
+
   const pulseAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const translateAnim = useRef(new Animated.Value(0)).current;
@@ -707,7 +716,7 @@ export default function MetroIaScreen() {
           }}
         >
           <View style={{ paddingBottom: 10 }}>
-            <Pressable onPress={() => router.back()} hitSlop={10}>
+            <Pressable onPress={goBackSafely} hitSlop={10}>
               <Text style={{ color: MUTED, fontWeight: "800", fontSize: 15 }}>
                 ← Retour
               </Text>

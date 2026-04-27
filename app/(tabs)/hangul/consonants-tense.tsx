@@ -1,1201 +1,665 @@
 import { BlurView } from "expo-blur";
+import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import * as Speech from "expo-speech";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Animated,
   Dimensions,
+  Easing,
+  ImageBackground,
   Pressable,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-let Haptics: any = null;
-try {
-  Haptics = require("expo-haptics");
-} catch {}
-
 const { width } = Dimensions.get("window");
+const BACKGROUND_SOURCE = require("../../../assets/images/seoul-hub-bg.jpg");
 
-const BG_DEEP = "#050508";
-const BG_TOP = "#0A0D16";
-const TXT = "rgba(255,255,255,0.96)";
-const TXT_SOFT = "rgba(255,255,255,0.76)";
-const MUTED = "rgba(255,255,255,0.55)";
-const CARD_BORDER = "rgba(255,255,255,0.12)";
-const CARD_FILL = "rgba(255,255,255,0.035)";
-const ACCENT = "#22D3EE";
+// --- DESIGN SYSTEM HARMONISÉ ---
 const PINK = "#F472B6";
+const CYAN = "#22D3EE";
+const VIOLET = "#A78BFA";
+const TXT_PRIMARY = "#FFFFFF";
+const TXT_SECONDARY = "rgba(255,255,255,0.80)";
+const MUTED = "rgba(255,255,255,0.45)";
+const GLASS_BORDER = "rgba(255,255,255,0.18)";
 
-const tenseSet = [
+// --- DATA & ASSETS ---
+const TENSE_DATA = [
   {
-    id: "kk",
-    letter: "ㄲ",
-    syllable: "까",
-    romanization: "kk / gg",
-    nativeLabel: "Tendue",
-    pairBase: { letter: "ㄱ", syllable: "가", label: "Soft" },
-    pairAspirated: { letter: "ㅋ", syllable: "카", label: "Air" },
-    title: "Soft / Air → Tense",
-    desc: "La consonne double serre davantage le son. Elle n'ajoute pas d'air : elle le retient.",
+    char: "ㄲ",
+    ex: "까",
+    roma: "kk",
+    desc: "Son sec et contracté",
+    tone: CYAN,
   },
   {
-    id: "tt",
-    letter: "ㄸ",
-    syllable: "따",
-    romanization: "tt / dd",
-    nativeLabel: "Tendue",
-    pairBase: { letter: "ㄷ", syllable: "다", label: "Soft" },
-    pairAspirated: { letter: "ㅌ", syllable: "타", label: "Air" },
-    title: "Soft / Air → Tense",
-    desc: "Le son tendu part plus net, plus comprimé. Il sonne sec, précis, sans souffle.",
+    char: "ㄸ",
+    ex: "따",
+    roma: "tt",
+    desc: "Attaque forte, sans souffle",
+    tone: PINK,
   },
   {
-    id: "pp",
-    letter: "ㅃ",
-    syllable: "빠",
-    romanization: "pp / bb",
-    nativeLabel: "Tendue",
-    pairBase: { letter: "ㅂ", syllable: "바", label: "Soft" },
-    pairAspirated: { letter: "ㅍ", syllable: "파", label: "Air" },
-    title: "Soft / Air → Tense",
-    desc: "La version double bloque légèrement l'air avant de relâcher un son plus dense.",
+    char: "ㅃ",
+    ex: "빠",
+    roma: "pp",
+    desc: "Explosion labiale tendue",
+    tone: VIOLET,
   },
+  { char: "ㅆ", ex: "싸", roma: "ss", desc: "Sifflante intense", tone: CYAN },
   {
-    id: "ss",
-    letter: "ㅆ",
-    syllable: "싸",
-    romanization: "ss",
-    nativeLabel: "Tendue",
-    pairBase: { letter: "ㅅ", syllable: "사", label: "Soft" },
-    pairAspirated: null,
-    title: "Soft → Tense",
-    desc: "Ici, la tension rend le son plus incisif. Ce n'est pas plus soufflé, mais plus serré.",
-  },
-  {
-    id: "jj",
-    letter: "ㅉ",
-    syllable: "짜",
-    romanization: "jj",
-    nativeLabel: "Tendue",
-    pairBase: { letter: "ㅈ", syllable: "자", label: "Soft" },
-    pairAspirated: { letter: "ㅊ", syllable: "차", label: "Air" },
-    title: "Soft / Air → Tense",
-    desc: "Le son double coupe plus franchement. Il garde l'énergie à l'intérieur avant l'attaque.",
+    char: "ㅉ",
+    ex: "짜",
+    roma: "jj",
+    desc: "Son 'dj' très marqué",
+    tone: PINK,
   },
 ];
 
-const contrastGroups = [
+const CONTRASTS = [
   {
-    id: "g",
-    title: "Soft → Tense",
-    small: "1/5",
-    desc: "Le son simple part plus doucement. Le son double devient plus fermé, plus serré.",
-    leftTone: "Soft",
-    rightTone: "Tense",
-    left: { letter: "ㄱ", syllable: "가" },
-    right: { letter: "ㄲ", syllable: "까" },
+    id: "g-kk",
+    left: { char: "ㄱ", roma: "g", tone: VIOLET },
+    right: { char: "ㄲ", roma: "kk", tone: CYAN },
+    accent: CYAN,
   },
   {
-    id: "k",
-    title: "Air → Tense",
-    small: "2/5",
-    desc: "Le son aspiré ajoute du souffle. Le son double retire l'air et resserre l'attaque.",
-    leftTone: "Air",
-    rightTone: "Tense",
-    left: { letter: "ㅋ", syllable: "카" },
-    right: { letter: "ㄲ", syllable: "까" },
-  },
-  {
-    id: "d",
-    title: "Soft → Tense",
-    small: "3/5",
-    desc: "La consonne simple reste souple. La double serre le départ du son plus nettement.",
-    leftTone: "Soft",
-    rightTone: "Tense",
-    left: { letter: "ㄷ", syllable: "다" },
-    right: { letter: "ㄸ", syllable: "따" },
-  },
-  {
-    id: "t",
-    title: "Air → Tense",
-    small: "4/5",
-    desc: "L'aspiration souffle vers l'extérieur. La consonne double garde l'énergie comprimée.",
-    leftTone: "Air",
-    rightTone: "Tense",
-    left: { letter: "ㅌ", syllable: "타" },
-    right: { letter: "ㄸ", syllable: "따" },
-  },
-  {
-    id: "b",
-    title: "Soft → Tense",
-    small: "5/5",
-    desc: "La double part plus sèche et plus dense que la consonne de base.",
-    leftTone: "Soft",
-    rightTone: "Tense",
-    left: { letter: "ㅂ", syllable: "바" },
-    right: { letter: "ㅃ", syllable: "빠" },
-  },
-  {
-    id: "p",
-    title: "Air → Tense",
-    small: "1/4",
-    desc: "L'aspirée relâche un souffle net. La double retire ce souffle pour un son plus compact.",
-    leftTone: "Air",
-    rightTone: "Tense",
-    left: { letter: "ㅍ", syllable: "파" },
-    right: { letter: "ㅃ", syllable: "빠" },
-  },
-  {
-    id: "s",
-    title: "Soft → Tense",
-    small: "2/4",
-    desc: "Avec ㅆ, le son garde la même famille mais devient plus tendu et incisif.",
-    leftTone: "Soft",
-    rightTone: "Tense",
-    left: { letter: "ㅅ", syllable: "사" },
-    right: { letter: "ㅆ", syllable: "싸" },
-  },
-  {
-    id: "j",
-    title: "Soft → Tense",
-    small: "3/4",
-    desc: "La consonne double démarre plus fort intérieurement, sans devenir aspirée.",
-    leftTone: "Soft",
-    rightTone: "Tense",
-    left: { letter: "ㅈ", syllable: "자" },
-    right: { letter: "ㅉ", syllable: "짜" },
-  },
-  {
-    id: "ch",
-    title: "Air → Tense",
-    small: "4/4",
-    desc: "ㅊ laisse sortir davantage d'air. ㅉ resserre le geste et coupe plus sec.",
-    leftTone: "Air",
-    rightTone: "Tense",
-    left: { letter: "ㅊ", syllable: "차" },
-    right: { letter: "ㅉ", syllable: "짜" },
+    id: "d-tt",
+    left: { char: "ㄷ", roma: "d", tone: CYAN },
+    right: { char: "ㄸ", roma: "tt", tone: PINK },
+    accent: PINK,
   },
 ];
 
-function speakText(
-  text: string,
-  rate: number,
-  onDone?: () => void,
-  onStart?: () => void,
-) {
-  Speech.stop();
-  onStart?.();
-  Speech.speak(text, {
-    language: "ko-KR",
-    rate,
-    onDone,
-    onStopped: onDone,
-    onError: onDone,
-  });
-}
+const CONTRAST_SPEECH_TEXTS = [
+  { left: "가", right: "까" },
+  { left: "다", right: "따" },
+];
 
-export default function ConsonantsTense() {
-  const [currentIndex, setCurrentIndex] = React.useState(0);
-  const [contrastIndex, setContrastIndex] = React.useState(0);
-  const [showRomanization, setShowRomanization] = React.useState(true);
-  const [rate, setRate] = React.useState(0.86);
-  const [speakingKey, setSpeakingKey] = React.useState<string | null>(null);
+const TENSE_SPEECH_TEXTS = ["까", "따", "빠", "싸", "짜"];
 
-  const current = tenseSet[currentIndex];
-  const currentContrast = contrastGroups[contrastIndex];
+// --- MINI COMPONENTS (SIGNATURES) ---
 
-  const haptic = async () => {
-    try {
-      await Haptics?.selectionAsync();
-    } catch {}
-  };
+const NeonHeaderLine = ({ color = PINK }) => (
+  <View
+    style={[styles.neonBar, { backgroundColor: color, shadowColor: color }]}
+  />
+);
 
-  const goPrev = async () => {
-    await haptic();
-    setCurrentIndex((prev) => (prev - 1 + tenseSet.length) % tenseSet.length);
-    Speech.stop();
-    setSpeakingKey(null);
-  };
-
-  const goNext = async () => {
-    await haptic();
-    setCurrentIndex((prev) => (prev + 1) % tenseSet.length);
-    Speech.stop();
-    setSpeakingKey(null);
-  };
-
-  const goContrastPrev = async () => {
-    await haptic();
-    setContrastIndex(
-      (prev) => (prev - 1 + contrastGroups.length) % contrastGroups.length,
-    );
-    Speech.stop();
-    setSpeakingKey(null);
-  };
-
-  const goContrastNext = async () => {
-    await haptic();
-    setContrastIndex((prev) => (prev + 1) % contrastGroups.length);
-    Speech.stop();
-    setSpeakingKey(null);
-  };
-
-  const playMain = async () => {
-    await haptic();
-    const key = `main-${current.id}`;
-    setSpeakingKey(key);
-
-    speakText(current.syllable, rate, () => setSpeakingKey(null));
-  };
-
-  const playBaseVsTense = async () => {
-    await haptic();
-    const key = `base-${current.id}`;
-    setSpeakingKey(key);
-
-    Speech.stop();
-    Speech.speak(current.pairBase.syllable, {
-      language: "ko-KR",
-      rate,
-      onDone: () => {
-        setTimeout(() => {
-          Speech.speak(current.syllable, {
-            language: "ko-KR",
-            rate,
-            onDone: () => setSpeakingKey(null),
-            onStopped: () => setSpeakingKey(null),
-            onError: () => setSpeakingKey(null),
-          });
-        }, 250);
-      },
-      onStopped: () => setSpeakingKey(null),
-      onError: () => setSpeakingKey(null),
-    });
-  };
-
-  const playAspiratedVsTense = async () => {
-    if (!current.pairAspirated) return;
-    await haptic();
-    const key = `asp-${current.id}`;
-    setSpeakingKey(key);
-
-    Speech.stop();
-    Speech.speak(current.pairAspirated.syllable, {
-      language: "ko-KR",
-      rate,
-      onDone: () => {
-        setTimeout(() => {
-          Speech.speak(current.syllable, {
-            language: "ko-KR",
-            rate,
-            onDone: () => setSpeakingKey(null),
-            onStopped: () => setSpeakingKey(null),
-            onError: () => setSpeakingKey(null),
-          });
-        }, 250);
-      },
-      onStopped: () => setSpeakingKey(null),
-      onError: () => setSpeakingKey(null),
-    });
-  };
-
-  const playContrastCard = async () => {
-    await haptic();
-    const key = `contrast-${currentContrast.id}`;
-    setSpeakingKey(key);
-
-    Speech.stop();
-    Speech.speak(currentContrast.left.syllable, {
-      language: "ko-KR",
-      rate,
-      onDone: () => {
-        setTimeout(() => {
-          Speech.speak(currentContrast.right.syllable, {
-            language: "ko-KR",
-            rate,
-            onDone: () => setSpeakingKey(null),
-            onStopped: () => setSpeakingKey(null),
-            onError: () => setSpeakingKey(null),
-          });
-        }, 250);
-      },
-      onStopped: () => setSpeakingKey(null),
-      onError: () => setSpeakingKey(null),
-    });
-  };
-
-  const playContrastLeft = async () => {
-    await haptic();
-    const key = `contrast-left-${currentContrast.id}`;
-    setSpeakingKey(key);
-
-    Speech.stop();
-    Speech.speak(currentContrast.left.syllable, {
-      language: "ko-KR",
-      rate,
-      onDone: () => setSpeakingKey(null),
-      onStopped: () => setSpeakingKey(null),
-      onError: () => setSpeakingKey(null),
-    });
-  };
-
-  const playContrastRight = async () => {
-    await haptic();
-    const key = `contrast-right-${currentContrast.id}`;
-    setSpeakingKey(key);
-
-    Speech.stop();
-    Speech.speak(currentContrast.right.syllable, {
-      language: "ko-KR",
-      rate,
-      onDone: () => setSpeakingKey(null),
-      onStopped: () => setSpeakingKey(null),
-      onError: () => setSpeakingKey(null),
-    });
-  };
-  const playAllCycle = async () => {
-    await haptic();
-    Speech.stop();
-    setSpeakingKey("cycle");
-
-    const sequence = tenseSet.flatMap((item) => {
-      const arr = [item.pairBase.syllable, item.syllable];
-      if (item.pairAspirated) {
-        arr.push(item.pairAspirated.syllable, item.syllable);
-      }
-      return arr;
-    });
-
-    let i = 0;
-    const speakNext = () => {
-      if (i >= sequence.length) {
-        setSpeakingKey(null);
-        return;
-      }
-
-      Speech.speak(sequence[i], {
-        language: "ko-KR",
-        rate,
-        onDone: () => {
-          i += 1;
-          setTimeout(speakNext, 220);
-        },
-        onStopped: () => setSpeakingKey(null),
-        onError: () => setSpeakingKey(null),
-      });
-    };
-
-    speakNext();
-  };
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={[BG_DEEP, BG_TOP, "#070912"]}
-        locations={[0, 0.45, 1]}
-        style={StyleSheet.absoluteFill}
+const AudioVisualizer = ({ active }: { active: boolean }) => (
+  <View style={styles.waveContainer}>
+    {[1, 2, 3, 4].map((i) => (
+      <View
+        key={i}
+        style={[
+          styles.waveBar,
+          { height: active ? 8 + Math.random() * 12 : 4 },
+        ]}
       />
+    ))}
+  </View>
+);
 
-      <View style={[styles.orb, styles.orbPinkTop]} />
-      <View style={[styles.orb, styles.orbCyanLeft]} />
-      <View style={[styles.orb, styles.orbPinkBottom]} />
-      <View style={[styles.orb, styles.orbCyanBottom]} />
+const PremiumSettingsBtn = () => (
+  <Pressable
+    style={styles.settingsCircle}
+    onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+  >
+    <Text style={styles.settingsIconText}>⚙</Text>
+  </Pressable>
+);
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+export default function ConsonantsDoubleScreen() {
+  const [index, setIndex] = useState(0);
+  const [contrastIdx, setContrastIdx] = useState(0);
+  const [showRoman, setShowRoman] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  const current = TENSE_DATA[index];
+  const contrast = CONTRASTS[contrastIdx];
+  const contrastSpeech = CONTRAST_SPEECH_TEXTS[contrastIdx];
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 2500,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2500,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+
+    return () => stopSpeech();
+  }, []);
+
+  const triggerHaptic = (style = Haptics.ImpactFeedbackStyle.Medium) =>
+    Haptics.impactAsync(style);
+
+  const handlePlay = async () => {
+    triggerHaptic(Haptics.ImpactFeedbackStyle.Heavy);
+    setIsPlaying(true);
+    await speakKorean(TENSE_SPEECH_TEXTS[index]);
+    setIsPlaying(false);
+  };
+
+  const animateSwitch = (direction: number) => {
+    triggerHaptic(Haptics.ImpactFeedbackStyle.Light);
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: direction * 30,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      const nextIdx =
+        direction === 1
+          ? (index + 1) % TENSE_DATA.length
+          : (index - 1 + TENSE_DATA.length) % TENSE_DATA.length;
+      setIndex(nextIdx);
+
+      slideAnim.setValue(direction * -30);
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 200,
+          easing: Easing.out(Easing.back(1)),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
+  };
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
+      <ImageBackground
+        source={BACKGROUND_SOURCE}
+        style={StyleSheet.absoluteFill}
+        blurRadius={12}
       >
-        <View style={styles.header}>
-          <Link href="/hangul" asChild>
-            <Pressable
-              hitSlop={20}
-              style={({ pressed }) => [{ opacity: pressed ? 0.65 : 1 }]}
-            >
-              <Text style={styles.backText}>← Retour</Text>
-            </Pressable>
-          </Link>
-
-          <Text style={styles.sectionLabel}>SÉOUL IMMERSION</Text>
-          <Text style={styles.pageTitle}>Consonnes{"\n"}tendues</Text>
-        </View>
-
-        {/* CARD PRINCIPALE */}
-        <View style={styles.cardShell}>
-          <BlurView intensity={26} tint="dark" style={styles.cardBlur}>
-            <LinearGradient
-              colors={[
-                "rgba(255,255,255,0.05)",
-                "rgba(255,255,255,0.015)",
-                "rgba(255,255,255,0.02)",
-              ]}
-              style={StyleSheet.absoluteFill}
-            />
-            <LinearGradient
-              colors={[
-                "rgba(244,114,182,0.10)",
-                "transparent",
-                "rgba(34,211,238,0.07)",
-              ]}
-              start={{ x: 0.1, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-
-            <View style={styles.specTop} />
-            <View style={styles.specSide} />
-
-            <View style={styles.cardHeaderRow}>
-              <View style={styles.liveLeft}>
-                <View style={styles.statusDot} />
-                <Text style={styles.liveLabel}>LIVE VOICE</Text>
-              </View>
-
-              <Pressable
-                onPress={playMain}
-                style={({ pressed }) => [
-                  styles.playCircle,
-                  speakingKey === `main-${current.id}` &&
-                    styles.playCircleActive,
-                  { opacity: pressed ? 0.75 : 1 },
-                ]}
-              >
-                <Text style={styles.playIcon}>▶</Text>
-              </Pressable>
-            </View>
-
-            <View style={styles.mainCenterRow}>
-              <Pressable
-                onPress={goPrev}
-                style={({ pressed }) => [
-                  styles.navCircle,
-                  { opacity: pressed ? 0.7 : 1 },
-                ]}
-              >
-                <Text style={styles.navArrow}>‹</Text>
-              </Pressable>
-
-              <View style={styles.mainGlyphWrap}>
-                <View style={styles.mainGlowPlate} />
-                <Text style={styles.mainGlyph}>{current.letter}</Text>
-                <Text style={styles.mainSyllable}>{current.syllable}</Text>
-                <Text style={styles.mainSub}>
-                  {showRomanization
-                    ? current.romanization
-                    : current.nativeLabel}
-                </Text>
-              </View>
-
-              <Pressable
-                onPress={goNext}
-                style={({ pressed }) => [
-                  styles.navCircle,
-                  { opacity: pressed ? 0.7 : 1 },
-                ]}
-              >
-                <Text style={styles.navArrow}>›</Text>
-              </Pressable>
-            </View>
-
-            <View style={styles.bottomPillsRow}>
-              <Pill
-                label="Romanisation"
-                active={showRomanization}
-                onPress={() => setShowRomanization(true)}
-              />
-              <Pill
-                label="Native"
-                active={!showRomanization}
-                onPress={() => setShowRomanization(false)}
-              />
-            </View>
-          </BlurView>
-        </View>
-
-        {/* CARD CONTRASTE */}
-        <View style={styles.cardShellSecondary}>
-          <BlurView intensity={24} tint="dark" style={styles.cardBlur}>
-            <LinearGradient
-              colors={[
-                "rgba(255,255,255,0.045)",
-                "rgba(255,255,255,0.015)",
-                "rgba(255,255,255,0.02)",
-              ]}
-              style={StyleSheet.absoluteFill}
-            />
-            <LinearGradient
-              colors={[
-                "rgba(34,211,238,0.08)",
-                "transparent",
-                "rgba(167,139,250,0.08)",
-              ]}
-              start={{ x: 0, y: 0.2 }}
-              end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-
-            <View style={styles.cardHeaderBetween}>
-              <View style={styles.liveLeft}>
-                <View style={styles.statusDot} />
-                <Text style={styles.liveLabel}>LIVE CONTRAST</Text>
-              </View>
-              <Text style={styles.counterText}>{currentContrast.small}</Text>
-            </View>
-
-            <View style={styles.contrastTopRow}>
-              <Pressable
-                onPress={goContrastPrev}
-                style={({ pressed }) => [
-                  styles.navCircle,
-                  { opacity: pressed ? 0.7 : 1 },
-                ]}
-              >
-                <Text style={styles.navArrow}>‹</Text>
-              </Pressable>
-
-              <View style={styles.contrastTitleWrap}>
-                <Text style={styles.contrastTitle}>
-                  {currentContrast.title}
-                </Text>
-                <Text style={styles.contrastDesc}>{currentContrast.desc}</Text>
-              </View>
-
-              <Pressable
-                onPress={goContrastNext}
-                style={({ pressed }) => [
-                  styles.navCircle,
-                  { opacity: pressed ? 0.7 : 1 },
-                ]}
-              >
-                <Text style={styles.navArrow}>›</Text>
-              </Pressable>
-            </View>
-
-            <View style={styles.compareCardsRow}>
-              <MiniCompareCard
-                tone={currentContrast.leftTone}
-                letter={currentContrast.left.letter}
-                syllable={currentContrast.left.syllable}
-                active={speakingKey === `contrast-${currentContrast.id}`}
-              />
-
-              <View style={styles.middleArrowWrap}>
-                <Text style={styles.middleArrow}>→</Text>
-              </View>
-
-              <MiniCompareCard
-                tone={currentContrast.rightTone}
-                letter={currentContrast.right.letter}
-                syllable={currentContrast.right.syllable}
-                active={speakingKey === `contrast-${currentContrast.id}`}
-                highlight
-              />
-            </View>
-
-            <View style={styles.actionsRow}>
-              <Pill
-                label="Écouter le contraste"
-                active={speakingKey === `contrast-${currentContrast.id}`}
-                onPress={playContrastCard}
-              />
-              {current.pairAspirated ? (
-                <Pill
-                  label="Aspirée → Double"
-                  active={speakingKey === `asp-${current.id}`}
-                  onPress={playAspiratedVsTense}
-                />
-              ) : (
-                <View style={styles.disabledPill}>
-                  <Text style={styles.disabledPillText}>Pas d’aspirée</Text>
-                </View>
-              )}
-            </View>
-          </BlurView>
-        </View>
-        <Pressable
-          onPress={playAllCycle}
-          style={({ pressed }) => [
-            styles.ctaWrap,
-            speakingKey === "cycle" && styles.ctaWrapActive,
-            { opacity: pressed ? 0.82 : 1 },
-          ]}
-        >
-          <LinearGradient
-            colors={["rgba(255,255,255,0.11)", "rgba(255,255,255,0.04)"]}
-            style={styles.ctaInner}
-          >
-            <LinearGradient
-              colors={["rgba(34,211,238,0.22)", "rgba(244,114,182,0.16)"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <Text style={styles.ctaText}>🔊 Écouter tout le cycle</Text>
-          </LinearGradient>
-        </Pressable>
-
-        <View style={styles.tipBox}>
-          <Text style={styles.tipLabel}>ASTUCE</Text>
-          <Text style={styles.tipText}>
-            Une consonne double n'est pas plus soufflée. Elle est plus serrée,
-            plus compacte, comme une attaque tenue à l'intérieur avant d'être
-            relâchée.
-          </Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
-function Pill({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active?: boolean;
-  onPress?: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.pill,
-        active && styles.pillActive,
-        { opacity: pressed ? 0.72 : 1 },
-      ]}
-    >
-      <Text style={[styles.pillText, active && styles.pillTextActive]}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
-function MiniCompareCard({
-  tone,
-  letter,
-  syllable,
-  active,
-  highlight,
-}: {
-  tone: string;
-  letter: string;
-  syllable: string;
-  active?: boolean;
-  highlight?: boolean;
-}) {
-  return (
-    <View
-      style={[styles.miniCardWrap, highlight && styles.miniCardWrapHighlight]}
-    >
-      <BlurView intensity={18} tint="dark" style={styles.miniCardInner}>
         <LinearGradient
-          colors={
-            highlight
-              ? ["rgba(167,139,250,0.14)", "rgba(244,114,182,0.06)"]
-              : ["rgba(34,211,238,0.08)", "rgba(255,255,255,0.02)"]
-          }
+          colors={["rgba(5,5,15,0.9)", "rgba(10,13,30,0.98)"]}
           style={StyleSheet.absoluteFill}
         />
-        <View
-          style={[
-            styles.miniTonePill,
-            highlight && styles.miniTonePillHighlight,
-          ]}
-        >
-          <Text
-            style={[
-              styles.miniToneText,
-              highlight && styles.miniToneTextHighlight,
-            ]}
-          >
-            {tone}
-          </Text>
-        </View>
 
-        <Text
-          style={[
-            styles.miniLetter,
-            active && highlight && { color: "#FFFFFF" },
-          ]}
-        >
-          {letter}
-        </Text>
-        <Text style={styles.miniSyllable}>{syllable}</Text>
-      </BlurView>
+        <SafeAreaView style={{ flex: 1 }}>
+          {/* Header row */}
+          <View style={styles.headerRow}>
+            <Pressable onPress={() => router.back()} style={styles.backBtn}>
+              <Text style={styles.backIcon}>‹</Text>
+            </Pressable>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.navEyebrow}>SÉOUL IMMERSION</Text>
+              <Text style={styles.navTitle}>Consonnes Tendues</Text>
+            </View>
+            <PremiumSettingsBtn />
+          </View>
+
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            {/* Signature Titre */}
+            <View style={styles.heroSection}>
+              <Text style={styles.heroTitle}>Doubles</Text>
+              <NeonHeaderLine color={PINK} />
+            </View>
+
+            <Text style={styles.sectionLabel}>FORCE ET TENSION</Text>
+
+            {/* Main Study Card */}
+            <View style={styles.mainCardContainer}>
+              <BlurView intensity={80} tint="dark" style={styles.glassCard}>
+                <LinearGradient
+                  colors={["rgba(255,255,255,0.15)", "transparent"]}
+                  style={StyleSheet.absoluteFill}
+                />
+
+                <View style={styles.cardHeader}>
+                  <View style={styles.liveTag}>
+                    <View
+                      style={[
+                        styles.liveDot,
+                        isPlaying && {
+                          backgroundColor: CYAN,
+                          shadowOpacity: 1,
+                        },
+                      ]}
+                    />
+                    <Text style={styles.liveText}>TENSE VOICE</Text>
+                  </View>
+                  <Text style={styles.counterText}>
+                    {index + 1} / {TENSE_DATA.length}
+                  </Text>
+                </View>
+
+                <View style={styles.cardBody}>
+                  <Animated.View
+                    style={[
+                      styles.wordContent,
+                      {
+                        opacity: fadeAnim,
+                        transform: [{ translateX: slideAnim }],
+                      },
+                    ]}
+                  >
+                    <Animated.Text
+                      style={[
+                        styles.krBig,
+                        {
+                          transform: [{ scale: pulseAnim }],
+                          textShadowColor: current.tone,
+                        },
+                      ]}
+                    >
+                      {current.char}
+                    </Animated.Text>
+                    {showRoman && (
+                      <Text style={[styles.romanBig, { color: current.tone }]}>
+                        {current.roma.toUpperCase()}
+                      </Text>
+                    )}
+                    <View style={styles.descBadge}>
+                      <Text style={styles.descText}>{current.desc}</Text>
+                    </View>
+                  </Animated.View>
+                </View>
+
+                {/* Commandes d'action */}
+                <View style={styles.actionRow}>
+                  <Pressable
+                    style={styles.navBtnSmall}
+                    onPress={() => animateSwitch(-1)}
+                  >
+                    <Text style={styles.navBtnIcon}>‹</Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.mainPlayBtn,
+                      pressed && { transform: [{ scale: 0.96 }] },
+                    ]}
+                    onPress={handlePlay}
+                  >
+                    <LinearGradient
+                      colors={[current.tone, "#4F46E5"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.playGradient}
+                    >
+                      <AudioVisualizer active={isPlaying} />
+                      <Text style={styles.playBtnText}>ÉCOUTER</Text>
+                    </LinearGradient>
+                  </Pressable>
+
+                  <Pressable
+                    style={styles.navBtnSmall}
+                    onPress={() => animateSwitch(1)}
+                  >
+                    <Text style={styles.navBtnIcon}>›</Text>
+                  </Pressable>
+                </View>
+              </BlurView>
+            </View>
+
+            {/* Section Contrastes */}
+            <Text style={styles.sectionLabel}>DISTINCTION VISUELLE</Text>
+            <View style={styles.contrastContainer}>
+              <View style={styles.contrastRow}>
+                {[contrast.left, contrast.right].map((item, i) => (
+                  <Pressable
+                    key={i}
+                    style={styles.halfCard}
+                    onPress={() => {
+                      triggerHaptic();
+                      speakKorean(i === 0 ? contrastSpeech.left : contrastSpeech.right);
+                    }}
+                  >
+                    <BlurView
+                      intensity={50}
+                      tint="dark"
+                      style={styles.halfGlass}
+                    >
+                      <View
+                        style={[
+                          styles.cardGlow,
+                          { backgroundColor: item.tone },
+                        ]}
+                      />
+                      <Text style={styles.contrastKr}>{item.char}</Text>
+                      <Text style={[styles.contrastRo, { color: item.tone }]}>
+                        {item.roma}
+                      </Text>
+                    </BlurView>
+                  </Pressable>
+                ))}
+                <View style={styles.absoluteArrow}>
+                  <Text
+                    style={[
+                      styles.neonArrow,
+                      {
+                        color: contrast.accent,
+                        textShadowColor: contrast.accent,
+                      },
+                    ]}
+                  >
+                    →
+                  </Text>
+                </View>
+              </View>
+
+              <Pressable
+                style={styles.diffButton}
+                onPress={() => {
+                  triggerHaptic();
+                  speakKorean(contrastSpeech.left);
+                  setTimeout(() => speakKorean(contrastSpeech.right), 1000);
+                }}
+              >
+                <LinearGradient
+                  colors={["rgba(255,255,255,0.12)", "rgba(255,255,255,0.05)"]}
+                  style={styles.diffGradient}
+                >
+                  <Text style={styles.diffText}>COMPARER LES SONS</Text>
+                </LinearGradient>
+              </Pressable>
+            </View>
+
+            {/* Footer de contrôle */}
+            <View style={styles.footer}>
+              <Pressable
+                onPress={() => {
+                  triggerHaptic();
+                  setShowRoman(!showRoman);
+                }}
+                style={styles.toggleBtn}
+              >
+                <Text style={[styles.toggleText, showRoman && { color: CYAN }]}>
+                  ROMANISATION : {showRoman ? "ON" : "OFF"}
+                </Text>
+                {showRoman && <View style={styles.activeDot} />}
+              </Pressable>
+            </View>
+
+            <View style={styles.bottomSpace} />
+          </ScrollView>
+        </SafeAreaView>
+      </ImageBackground>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BG_DEEP,
+  container: { flex: 1, backgroundColor: "#050508" },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
   },
+  scrollContent: { paddingHorizontal: 24 },
 
-  scrollContent: {
-    paddingHorizontal: 22,
-    paddingBottom: 64,
+  settingsCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
   },
-
-  orb: {
-    position: "absolute",
-    borderRadius: 999,
+  settingsIconText: { color: MUTED, fontSize: 18 },
+  backBtn: { marginRight: 16 },
+  backIcon: { color: "#fff", fontSize: 32 },
+  navEyebrow: {
+    color: PINK,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 2,
   },
+  navTitle: { color: TXT_SECONDARY, fontSize: 13 },
 
-  orbPinkTop: {
-    width: 320,
-    height: 320,
-    right: -70,
-    top: -40,
-    backgroundColor: "rgba(244,114,182,0.14)",
+  heroSection: { marginVertical: 20 },
+  heroTitle: {
+    color: "#fff",
+    fontSize: 52,
+    fontWeight: "900",
+    letterSpacing: -1.5,
   },
-
-  orbCyanLeft: {
-    width: 270,
-    height: 270,
-    left: -130,
-    top: 320,
-    backgroundColor: "rgba(34,211,238,0.12)",
-  },
-
-  orbPinkBottom: {
-    width: 260,
-    height: 260,
-    right: -90,
-    bottom: 130,
-    backgroundColor: "rgba(168,85,247,0.12)",
-  },
-
-  orbCyanBottom: {
-    width: 240,
-    height: 240,
-    left: 10,
-    bottom: -40,
-    backgroundColor: "rgba(34,211,238,0.08)",
-  },
-
-  header: {
+  neonBar: {
+    width: 45,
+    height: 4,
     marginTop: 8,
-    marginBottom: 22,
-  },
-
-  backText: {
-    color: MUTED,
-    fontSize: 15,
-    marginBottom: 26,
+    borderRadius: 2,
+    shadowRadius: 15,
+    shadowOpacity: 0.8,
   },
 
   sectionLabel: {
-    color: PINK,
-    fontSize: 12,
+    color: MUTED,
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 2.5,
+    marginBottom: 15,
+  },
+  mainCardContainer: { marginBottom: 35 },
+  glassCard: {
+    borderRadius: 32,
+    padding: 24,
+    borderWidth: 1.2,
+    borderColor: GLASS_BORDER,
+    overflow: "hidden",
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+  },
+  liveTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    shadowRadius: 4,
+  },
+  liveText: { color: "#fff", fontSize: 9, fontWeight: "900", letterSpacing: 1 },
+  counterText: { color: MUTED, fontSize: 12, fontWeight: "800" },
+
+  cardBody: { alignItems: "center", justifyContent: "center", minHeight: 220 },
+  wordContent: { alignItems: "center" },
+  krBig: {
+    color: "#fff",
+    fontSize: 125,
     fontWeight: "800",
-    letterSpacing: 4.2,
-    marginBottom: 10,
+    textShadowRadius: 30,
   },
-
-  pageTitle: {
-    color: TXT,
-    fontSize: 46,
-    lineHeight: 50,
-    fontWeight: "300",
-    letterSpacing: -1.8,
+  romanBig: {
+    fontSize: 20,
+    fontWeight: "900",
+    marginTop: -5,
+    letterSpacing: 6,
   },
-
-  cardShell: {
-    borderRadius: 34,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: CARD_BORDER,
-    backgroundColor: CARD_FILL,
-    marginBottom: 22,
-    shadowColor: "#000",
-    shadowOpacity: 0.32,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 10,
-  },
-
-  cardShellSecondary: {
-    borderRadius: 34,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: CARD_BORDER,
-    backgroundColor: CARD_FILL,
-    marginBottom: 18,
-    shadowColor: "#000",
-    shadowOpacity: 0.28,
-    shadowRadius: 22,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 8,
-  },
-
-  cardBlur: {
-    paddingHorizontal: 18,
-    paddingTop: 18,
-    paddingBottom: 18,
-    position: "relative",
-  },
-
-  specTop: {
-    position: "absolute",
-    top: 0,
-    left: 22,
-    right: 22,
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.16)",
-  },
-
-  specSide: {
-    position: "absolute",
-    top: 30,
-    bottom: 30,
-    left: 0,
-    width: 1,
+  descBadge: {
+    marginTop: 25,
     backgroundColor: "rgba(255,255,255,0.08)",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
   },
+  descText: { color: TXT_SECONDARY, fontSize: 14, fontStyle: "italic" },
 
-  cardHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 18,
-  },
-
-  cardHeaderBetween: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 14,
-  },
-
-  liveLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 999,
-    backgroundColor: "#21E6C1",
-    marginRight: 10,
-  },
-
-  liveLabel: {
-    color: "rgba(255,255,255,0.82)",
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 3.5,
-  },
-
-  playCircle: {
+  actionRow: { flexDirection: "row", alignItems: "center", marginTop: 30 },
+  navBtnSmall: {
     width: 54,
     height: 54,
     borderRadius: 27,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    backgroundColor: "rgba(255,255,255,0.05)",
-  },
-
-  playCircleActive: {
-    borderColor: "rgba(255,255,255,0.24)",
-    backgroundColor: "rgba(255,255,255,0.10)",
-  },
-
-  playIcon: {
-    color: TXT,
-    fontSize: 18,
-    marginLeft: 2,
-  },
-
-  mainCenterRow: {
-    minHeight: 235,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  navCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    backgroundColor: "rgba(255,255,255,0.04)",
-  },
-
-  navArrow: {
-    color: "rgba(255,255,255,0.70)",
-    fontSize: 30,
-    fontWeight: "300",
-    marginTop: -2,
-  },
-
-  mainGlyphWrap: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-  },
-
-  mainGlowPlate: {
-    position: "absolute",
-    width: 165,
-    height: 108,
-    borderRadius: 999,
-    backgroundColor: "rgba(244,114,182,0.16)",
-    top: 58,
-  },
-
-  mainGlyph: {
-    color: "rgba(255,255,255,0.94)",
-    fontSize: 118,
-    lineHeight: 120,
-    fontWeight: "700",
-    marginBottom: 2,
-  },
-
-  mainSyllable: {
-    color: TXT,
-    fontSize: 24,
-    fontWeight: "800",
-    marginTop: -2,
-  },
-
-  mainSub: {
-    color: TXT_SOFT,
-    fontSize: 18,
-    marginTop: 4,
-    fontWeight: "600",
-  },
-
-  bottomPillsRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 12,
-    marginTop: 8,
-  },
-
-  contrastTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 18,
-  },
-
-  contrastTitleWrap: {
-    flex: 1,
-    alignItems: "center",
-    paddingHorizontal: 12,
-  },
-
-  contrastTitle: {
-    color: TXT,
-    fontSize: 24,
-    fontWeight: "800",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-
-  contrastDesc: {
-    color: TXT_SOFT,
-    fontSize: 16,
-    lineHeight: 26,
-    textAlign: "center",
-    maxWidth: 260,
-  },
-
-  counterText: {
-    color: "rgba(255,255,255,0.72)",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-
-  compareCardsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 10,
-    marginTop: 6,
-  },
-
-  miniCardWrap: {
-    flex: 1,
-    borderRadius: 26,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    backgroundColor: "rgba(255,255,255,0.03)",
-  },
-
-  miniCardWrapHighlight: {
-    borderColor: "rgba(255,255,255,0.14)",
-  },
-
-  miniCardInner: {
-    minHeight: 190,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 16,
-    position: "relative",
-  },
-
-  miniTonePill: {
-    position: "absolute",
-    top: 14,
-    alignSelf: "center",
-    paddingHorizontal: 16,
-    height: 34,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    backgroundColor: "rgba(255,255,255,0.05)",
-  },
-
-  miniTonePillHighlight: {
     backgroundColor: "rgba(255,255,255,0.08)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
   },
-
-  miniToneText: {
-    color: "rgba(255,255,255,0.76)",
-    fontSize: 13,
-    fontWeight: "700",
+  navBtnIcon: { color: "#fff", fontSize: 28, fontWeight: "300" },
+  mainPlayBtn: {
+    flex: 1,
+    height: 60,
+    marginHorizontal: 16,
+    borderRadius: 20,
+    overflow: "hidden",
   },
-
-  miniToneTextHighlight: {
-    color: "rgba(255,255,255,0.90)",
-  },
-
-  miniLetter: {
-    color: "#FFFFFF",
-    fontSize: 72,
-    lineHeight: 76,
-    fontWeight: "800",
-    marginBottom: 8,
-  },
-
-  miniSyllable: {
-    color: "rgba(255,255,255,0.85)",
-    fontSize: 20,
-    fontWeight: "500",
-  },
-
-  middleArrowWrap: {
-    width: 30,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  middleArrow: {
-    color: "rgba(255,255,255,0.30)",
-    fontSize: 34,
-    fontWeight: "300",
-  },
-
-  actionsRow: {
+  playGradient: {
+    flex: 1,
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "center",
     gap: 12,
-    marginTop: 18,
-    flexWrap: "wrap",
   },
+  playBtnText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "900",
+    letterSpacing: 2,
+  },
+  waveContainer: { flexDirection: "row", gap: 4, alignItems: "center" },
+  waveBar: { width: 3, backgroundColor: "#fff", borderRadius: 2, opacity: 0.9 },
 
-  pill: {
-    minHeight: 48,
-    paddingHorizontal: 18,
-    borderRadius: 24,
+  contrastContainer: { marginBottom: 35 },
+  contrastRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    backgroundColor: "rgba(255,255,255,0.05)",
   },
-
-  pillActive: {
-    borderColor: "rgba(255,255,255,0.18)",
-    backgroundColor: "rgba(255,255,255,0.10)",
-  },
-
-  pillText: {
-    color: "rgba(255,255,255,0.85)",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-
-  pillTextActive: {
-    color: "#FFFFFF",
-  },
-
-  disabledPill: {
-    minHeight: 48,
-    paddingHorizontal: 18,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
-    backgroundColor: "rgba(255,255,255,0.025)",
-  },
-
-  disabledPillText: {
-    color: "rgba(255,255,255,0.34)",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-
-  ctaWrap: {
-    marginTop: 6,
+  halfCard: {
+    width: "45%",
+    height: 170,
     borderRadius: 28,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
+    borderColor: GLASS_BORDER,
   },
-
-  ctaWrapActive: {
-    borderColor: "rgba(255,255,255,0.18)",
+  halfGlass: { flex: 1, alignItems: "center", justifyContent: "center" },
+  cardGlow: {
+    position: "absolute",
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    opacity: 0.15,
+    filter: "blur(25px)",
   },
-
-  ctaInner: {
-    height: 68,
+  contrastKr: { color: "#fff", fontSize: 58, fontWeight: "700" },
+  contrastRo: { fontSize: 18, fontWeight: "900", marginTop: 6 },
+  absoluteArrow: {
+    position: "absolute",
+    left: "45%",
+    right: "45%",
     alignItems: "center",
-    justifyContent: "center",
+  },
+  neonArrow: {
+    fontSize: 28,
+    fontWeight: "bold",
+    shadowRadius: 12,
+    shadowOpacity: 1,
   },
 
-  ctaText: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "800",
-    letterSpacing: 0.2,
+  diffButton: {
+    marginTop: 20,
+    borderRadius: 18,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
   },
-
-  tipBox: {
-    marginTop: 24,
-    paddingHorizontal: 6,
-  },
-
-  tipLabel: {
-    color: PINK,
-    fontSize: 11,
+  diffGradient: { paddingVertical: 20, alignItems: "center" },
+  diffText: {
+    color: TXT_SECONDARY,
+    fontSize: 12,
     fontWeight: "900",
-    letterSpacing: 2.8,
-    marginBottom: 8,
+    letterSpacing: 2.5,
   },
 
-  tipText: {
-    color: MUTED,
-    fontSize: 14,
-    lineHeight: 22,
+  footer: { alignItems: "center", marginTop: 15 },
+  toggleBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
   },
+  toggleText: {
+    color: MUTED,
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+  },
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: CYAN,
+    shadowColor: CYAN,
+    shadowRadius: 8,
+    shadowOpacity: 1,
+  },
+  bottomSpace: { height: 120 },
 });
+
+async function speakKorean(text: string) {
+  return new Promise<void>((resolve) => {
+    stopSpeech();
+    Speech.speak(text, {
+      language: "ko-KR",
+      rate: 0.85,
+      onDone: () => resolve(),
+      onStopped: () => resolve(),
+      onError: () => resolve(),
+    });
+  });
+}
+
+function stopSpeech() {
+  try {
+    Speech.stop();
+  } catch {}
+}

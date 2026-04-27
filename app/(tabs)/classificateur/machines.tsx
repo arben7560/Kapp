@@ -3,161 +3,161 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Animated,
-  Dimensions,
-  Easing,
-  ImageBackground,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    Animated,
+    Dimensions,
+    Easing,
+    ImageBackground,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
 // ──────────────────────────────────────────────
-// DESIGN SYSTEM — CONSONANT ARCHITECTURE
+// DESIGN SYSTEM — TECH & PRECISION EDITION
 // ──────────────────────────────────────────────
 const COLORS = {
   bg: "#020306",
-  consonantBlue: "#60A5FA",
-  electricIndigo: "#6366F1",
-  steelText: "#94A3B8",
-  glowIndigo: "rgba(99, 102, 241, 0.15)",
+  techBlue: "#0EA5E9",
+  titanium: "#94A3B8",
+  neonCyan: "#22D3EE",
+  chrome: "#E2E8F0",
   txt: "rgba(255,255,255,0.96)",
   muted: "rgba(255,255,255,0.60)",
 };
 
 const SCENES = [
   {
-    id: "vocal-organs",
-    title: "L'Organe Vocal",
-    koreanTitle: "발성 기관 (Balseong)",
-    description:
-      "Les 5 formes de base miment la position de la langue et de la bouche.",
-    accent: COLORS.consonantBlue,
+    id: "electronics",
+    title: "Tech Store",
+    koreanTitle: "전자제품 매장 (Jeon-ja)",
+    description: "Acheter du matériel informatique de pointe.",
+    accent: COLORS.techBlue,
     image:
-      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&w=800&q=80",
     dialogue: [
       {
-        char: "Maître",
-        kr: "ㄱ은 혀가 입천장에 닿는 모양입니다.",
-        fr: "ㄱ (g) est la forme de la langue touchant le palais.",
+        char: "Client",
+        kr: "노트북 두 대랑 모니터 한 대 살게요.",
+        fr: "Je vais acheter deux ordinateurs portables et un moniteur.",
       },
       {
-        char: "Élève",
-        kr: "ㄴ은 반대로 혀가 아래로 내려가네요!",
-        fr: "ㄴ (n) est l'inverse, la langue descend vers le bas !",
+        char: "Vendeur",
+        kr: "네, 노트북 두 대 맞으시죠? 이쪽으로 오세요.",
+        fr: "Oui, deux ordinateurs (du-dae), c'est bien ça ? Venez par ici.",
       },
     ],
     expressions: [
       {
-        word: "ㄱ (g/k)",
-        rom: "gi-yeok",
-        mean: "Le Palais",
-        context: "Dos de la langue qui bloque le passage de l'air.",
+        word: "대 (臺)",
+        rom: "Dae",
+        mean: "Compteur de machines",
+        context:
+          "Utilisé pour les ordinateurs, téléphones, voitures et gros appareils.",
       },
       {
-        word: "ㄴ (n)",
-        rom: "nieun",
-        mean: "La Langue",
-        context: "Pointe de la langue qui touche les dents du haut.",
+        word: "노트북",
+        rom: "No-teu-buk",
+        mean: "Ordinateur portable",
+        context: "Le terme standard en coréen pour 'Laptop'.",
       },
       {
-        word: "ㅁ (m)",
-        rom: "mieum",
-        mean: "La Bouche",
-        context: "Un carré représentant la forme des lèvres fermées.",
+        word: "두 대",
+        rom: "Du dae",
+        mean: "2 machines",
+        context: "Dul devient 'Du' devant le classificateur.",
       },
     ],
   },
   {
-    id: "air-force",
-    title: "Le Souffle",
-    koreanTitle: "격음 (Gyeokeum)",
-    description: "Ajouter un trait signifie ajouter une expiration d'air.",
-    accent: COLORS.electricIndigo,
+    id: "street",
+    title: "Le Parking",
+    koreanTitle: "주차장 (Ju-cha-jang)",
+    description: "Identifier et compter les véhicules dans la ville.",
+    accent: COLORS.neonCyan,
     image:
-      "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=800&q=80",
     dialogue: [
-      {
-        char: "Guide",
-        kr: "ㄱ에서 ㅋ으로 갈 때 바람을 뱉으세요.",
-        fr: "Quand vous passez de ㄱ à ㅋ, expirez de l'air.",
-      },
       {
         char: "Moi",
-        kr: "ㅋ... ㅌ... 확실히 소리가 거칠어요!",
-        fr: "K... T... le son est nettement plus puissant !",
+        kr: "여기에 차가 몇 대 있어요?",
+        fr: "Combien de voitures y a-t-il ici ?",
       },
-    ],
-    expressions: [
-      {
-        word: "ㅋ (k)",
-        rom: "kieuk",
-        mean: "K Aspiré",
-        context: "Un trait ajouté à ㄱ pour marquer l'air.",
-      },
-      {
-        word: "ㅌ (t)",
-        rom: "tieut",
-        mean: "T Aspiré",
-        context: "Dérivé de ㄴ, avec plus de pression d'air.",
-      },
-      {
-        word: "ㅎ (h)",
-        rom: "hieut",
-        mean: "Le Gosier",
-        context: "Un cercle (gorge) avec un trait de souffle au-dessus.",
-      },
-    ],
-  },
-  {
-    id: "syllable-build",
-    title: "La Fusion",
-    koreanTitle: "글자 만들기",
-    description: "Combiner consonnes et voyelles pour créer des blocs sonores.",
-    accent: "#34D399",
-    image:
-      "https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=800&q=80",
-    dialogue: [
       {
         char: "Ami",
-        kr: "가, 나, 다... 읽을 수 있어요?",
-        fr: "Ga, Na, Da... Peux-tu les lire ?",
-      },
-      {
-        char: "Moi",
-        kr: "네! '가수'는 가수(singer) 맞죠?",
-        fr: "Oui ! 'Ga-su' veut dire chanteur, c'est ça ?",
+        kr: "세 대밖에 없어요. 주차 자리가 많네요.",
+        fr: "Il n'y en a que trois (se-dae). Il y a beaucoup de places.",
       },
     ],
     expressions: [
       {
-        word: "가수",
-        rom: "Ga-su",
-        mean: "Chanteur",
-        context: "Combinaison simple de ㄱ+ㅏ et ㅅ+ㅜ.",
+        word: "차 / 자동차",
+        rom: "Cha / Ja-dong-cha",
+        mean: "Voiture",
+        context: "L'objet le plus courant compté avec 'Dae'.",
       },
       {
-        word: "나라",
-        rom: "Na-ra",
-        mean: "Pays",
-        context: "ㄴ+ㅏ et ㄹ+ㅏ. Rythme fluide.",
+        word: "몇 대?",
+        rom: "Myeot dae?",
+        mean: "Combien de machines ?",
+        context: "Question essentielle pour les stocks ou les véhicules.",
       },
       {
-        word: "다리",
-        rom: "Da-ri",
-        mean: "Pont / Jambe",
-        context: "ㄷ+ㅏ et ㄹ+ㅣ. Mot très courant.",
+        word: "세 대",
+        rom: "Se dae",
+        mean: "3 voitures/machines",
+        context: "Set devient 'Se' devant le compteur.",
+      },
+    ],
+  },
+  {
+    id: "appliances",
+    title: "Équipement",
+    koreanTitle: "가전제품 (Ga-jeon)",
+    description: "Aménager son appartement avec de l'électroménager.",
+    accent: COLORS.titanium,
+    image:
+      "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80",
+    dialogue: [
+      {
+        char: "Moi",
+        kr: "에어컨 한 대 더 설치해 주세요.",
+        fr: "Veuillez installer un climatiseur de plus s'il vous plaît.",
+      },
+      {
+        char: "Technicien",
+        kr: "네, 거실에 한 대 설치하겠습니다.",
+        fr: "D'accord, je vais en installer un (han-dae) dans le salon.",
+      },
+    ],
+    expressions: [
+      {
+        word: "에어컨",
+        rom: "E-eo-keon",
+        mean: "Climatiseur",
+        context: "Appareil vital en été, toujours compté avec 'Dae'.",
+      },
+      {
+        word: "한 대",
+        rom: "Han dae",
+        mean: "1 machine",
+        context: "Hana devient 'Han' devant le classificateur.",
+      },
+      {
+        word: "설치하다",
+        rom: "Seol-chi-hada",
+        mean: "Installer",
+        context: "Verbe souvent associé aux machines lourdes.",
       },
     ],
   },
 ];
 
-export default function ConsonantsBasicImmersion() {
+export default function MachinesClassifierImmersion() {
   const [activeScene, setActiveScene] = useState(SCENES[0]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -166,7 +166,7 @@ export default function ConsonantsBasicImmersion() {
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 600,
-      easing: Easing.out(Easing.poly(4)),
+      easing: Easing.out(Easing.quad),
       useNativeDriver: true,
     }).start();
   }, [activeScene]);
@@ -180,20 +180,24 @@ export default function ConsonantsBasicImmersion() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scroll}
         >
-          {/* HEADER CONSONANTS */}
+          {/* HEADER TECH */}
           <View style={styles.header}>
             <Pressable onPress={() => router.back()} style={styles.backBtn}>
               <Text style={styles.backArrow}>‹</Text>
-              <Text style={styles.backText}>ARCHITECTURE</Text>
+              <Text style={styles.backText}>SÉOUL MODERNE</Text>
             </Pressable>
-            <View style={[styles.badge, { borderColor: activeScene.accent }]}>
-              <Text style={[styles.badgeText, { color: activeScene.accent }]}>
-                CONSONANTS 01
+            <View
+              style={[styles.typeBadge, { borderColor: activeScene.accent }]}
+            >
+              <Text
+                style={[styles.typeBadgeText, { color: activeScene.accent }]}
+              >
+                TECH COUNTER
               </Text>
             </View>
           </View>
 
-          {/* PROGRESS SELECTOR */}
+          {/* SCENE SELECTOR */}
           <View style={styles.tabContainer}>
             {SCENES.map((scene) => (
               <Pressable
@@ -221,7 +225,7 @@ export default function ConsonantsBasicImmersion() {
             ))}
           </View>
 
-          {/* INTERACTIVE LEARNING CARD */}
+          {/* INTERACTIVE LOGIC CARD */}
           <Animated.View
             style={{
               opacity: fadeAnim,
@@ -241,15 +245,15 @@ export default function ConsonantsBasicImmersion() {
                 style={StyleSheet.absoluteFill}
               />
 
-              <View style={styles.cardHeader}>
-                <Text style={[styles.krTitle, { color: activeScene.accent }]}>
+              <View style={styles.cardInfo}>
+                <Text style={[styles.krBadge, { color: activeScene.accent }]}>
                   {activeScene.koreanTitle}
                 </Text>
                 <Text style={styles.sceneTitle}>{activeScene.title}</Text>
                 <Text style={styles.sceneDesc}>{activeScene.description}</Text>
               </View>
 
-              <View style={styles.scriptSection}>
+              <View style={styles.chatSection}>
                 {activeScene.dialogue.map((line, idx) => (
                   <View
                     key={idx}
@@ -259,22 +263,22 @@ export default function ConsonantsBasicImmersion() {
                     ]}
                   >
                     <Text
-                      style={[styles.charTag, { color: activeScene.accent }]}
+                      style={[styles.charName, { color: activeScene.accent }]}
                     >
                       {line.char}
                     </Text>
-                    <Text style={styles.krLine}>{line.kr}</Text>
-                    <Text style={styles.frLine}>{line.fr}</Text>
+                    <Text style={styles.krText}>{line.kr}</Text>
+                    <Text style={styles.frText}>{line.fr}</Text>
                   </View>
                 ))}
               </View>
             </BlurView>
           </Animated.View>
 
-          {/* CONSONANT TOOLBOX */}
+          {/* TOOLBOX - TECH COUNTERS */}
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <Text style={styles.toolboxTitle}>CONSONANT TOOLBOX</Text>
+              <Text style={styles.toolboxTitle}>TECH TOOLBOX</Text>
               <View
                 style={[
                   styles.toolboxLine,
@@ -297,55 +301,13 @@ export default function ConsonantsBasicImmersion() {
                       { backgroundColor: activeScene.accent },
                     ]}
                   />
-                  <View style={styles.expBody}>
-                    <View style={styles.expHeaderRow}>
-                      <View style={styles.expLeftInfo}>
-                        <Text style={styles.expWord}>{exp.word}</Text>
-                        <View
-                          style={[
-                            styles.pronounceBox,
-                            { backgroundColor: `${activeScene.accent}20` },
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.expRom,
-                              { color: activeScene.accent },
-                            ]}
-                          >
-                            {exp.rom}
-                          </Text>
-                        </View>
-                      </View>
-
-                      {/* APPLE-LEVEL LISTEN BUTTON */}
-                      <Pressable
-                        style={({ pressed }) => [
-                          styles.appleListenBtn,
-                          {
-                            transform: [{ scale: pressed ? 0.94 : 1 }],
-                            opacity: pressed ? 0.7 : 1,
-                          },
-                        ]}
-                      >
-                        <BlurView
-                          intensity={30}
-                          tint="light"
-                          style={styles.appleListenBlur}
-                        >
-                          <Text
-                            style={[
-                              styles.appleListenIcon,
-                              { color: activeScene.accent },
-                            ]}
-                          >
-                            ▶
-                          </Text>
-                          <Text style={styles.appleListenText}>ÉCOUTER</Text>
-                        </BlurView>
-                      </Pressable>
-                    </View>
-
+                  <View style={styles.expContent}>
+                    <Text style={styles.expKr}>{exp.word}</Text>
+                    <Text
+                      style={[styles.expRom, { color: activeScene.accent }]}
+                    >
+                      {exp.rom}
+                    </Text>
                     <Text style={styles.expMean}>{exp.mean}</Text>
                     <Text style={styles.expCtx}>{exp.context}</Text>
                   </View>
@@ -366,7 +328,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(2,3,6,0.88)",
   },
-  scroll: { paddingHorizontal: 22, paddingBottom: 60 },
+  scroll: { paddingHorizontal: 22, paddingBottom: 80 },
 
   header: {
     flexDirection: "row",
@@ -382,13 +344,17 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 2,
   },
-  badge: {
-    paddingHorizontal: 10,
+  typeBadge: {
+    paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 6,
     borderWidth: 1,
   },
-  badgeText: { fontSize: 9, fontFamily: "Outfit_700Bold", letterSpacing: 1 },
+  typeBadgeText: {
+    fontSize: 9,
+    fontFamily: "Outfit_700Bold",
+    letterSpacing: 1,
+  },
 
   tabContainer: { flexDirection: "row", gap: 10, marginBottom: 25 },
   tab: {
@@ -408,8 +374,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.12)",
   },
-  cardHeader: { marginBottom: 30 },
-  krTitle: {
+  cardInfo: { marginBottom: 30 },
+  krBadge: {
     fontFamily: "NotoSansKR_700Bold",
     fontSize: 14,
     letterSpacing: 1.5,
@@ -418,43 +384,42 @@ const styles = StyleSheet.create({
   sceneTitle: {
     color: COLORS.txt,
     fontFamily: "Outfit_900Black",
-    fontSize: 30,
+    fontSize: 34,
   },
   sceneDesc: {
     color: COLORS.muted,
-    fontSize: 13,
+    fontSize: 14,
     fontStyle: "italic",
-    marginTop: 8,
-    lineHeight: 18,
+    marginTop: 5,
   },
 
-  scriptSection: { gap: 28 },
-  bubble: { maxWidth: "88%", padding: 16, borderRadius: 24 },
+  chatSection: { gap: 28 },
+  bubble: { maxWidth: "88%", padding: 18, borderRadius: 24 },
   bubbleL: {
     alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.04)",
+    backgroundColor: "rgba(255,255,255,0.05)",
     borderBottomLeftRadius: 4,
   },
   bubbleR: {
     alignSelf: "flex-end",
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: "rgba(255,255,255,0.12)",
     borderBottomRightRadius: 4,
   },
-  charTag: {
-    fontSize: 9,
+  charName: {
+    fontSize: 10,
     fontFamily: "Outfit_700Bold",
     textTransform: "uppercase",
-    letterSpacing: 1.5,
+    letterSpacing: 1,
     marginBottom: 6,
   },
-  krLine: {
+  krText: {
     color: COLORS.txt,
     fontFamily: "NotoSansKR_700Bold",
     fontSize: 18,
-    lineHeight: 25,
+    lineHeight: 26,
     marginBottom: 4,
   },
-  frLine: { color: COLORS.muted, fontSize: 12, fontFamily: "Outfit_500Medium" },
+  frText: { color: COLORS.muted, fontSize: 13, fontFamily: "Outfit_500Medium" },
 
   toolbox: { marginTop: 40 },
   toolboxHeader: {
@@ -466,7 +431,7 @@ const styles = StyleSheet.create({
   toolboxTitle: {
     color: COLORS.muted,
     fontFamily: "Outfit_700Bold",
-    fontSize: 12,
+    fontSize: 11,
     letterSpacing: 3,
   },
   toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
@@ -479,21 +444,19 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.05)",
   },
   expAccent: { position: "absolute", left: 0, top: 0, bottom: 0, width: 4 },
-  expBody: { padding: 20 },
-  expHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  expLeftInfo: { flexDirection: "row", alignItems: "center", gap: 10 },
-  expWord: {
+  expContent: { padding: 20 },
+  expKr: {
     color: COLORS.txt,
     fontFamily: "NotoSansKR_700Bold",
-    fontSize: 28,
+    fontSize: 24,
+    marginBottom: 2,
   },
-  pronounceBox: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  expRom: { fontSize: 12, fontFamily: "Outfit_700Bold" },
+  expRom: {
+    fontFamily: "Outfit_700Bold",
+    fontSize: 12,
+    marginBottom: 10,
+    textTransform: "uppercase",
+  },
   expMean: {
     color: COLORS.txt,
     fontFamily: "Outfit_700Bold",
@@ -501,28 +464,4 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   expCtx: { color: COLORS.muted, fontSize: 12, lineHeight: 18 },
-
-  appleListenBtn: {
-    borderRadius: 12,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
-  },
-  appleListenBlur: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 6,
-  },
-  appleListenIcon: {
-    fontSize: 10,
-    marginLeft: 2,
-  },
-  appleListenText: {
-    color: "rgba(255,255,255,0.8)",
-    fontFamily: "Outfit_700Bold",
-    fontSize: 10,
-    letterSpacing: 1,
-  },
 });

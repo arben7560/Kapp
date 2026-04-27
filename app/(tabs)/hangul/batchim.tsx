@@ -1,12 +1,14 @@
 import { BlurView } from "expo-blur";
+import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import * as Speech from "expo-speech";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
   Easing,
-  PanResponder,
+  ImageBackground,
   Pressable,
   ScrollView,
   StatusBar,
@@ -16,1177 +18,695 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-let Haptics: any = null;
-try {
-  Haptics = require("expo-haptics");
-} catch {}
-
 const { width } = Dimensions.get("window");
+const BACKGROUND_SOURCE = require("../../../assets/images/seoul-hub-bg.jpg");
 
-// ──────────────────────────────────────────────
-// DESIGN TOKENS
-// ──────────────────────────────────────────────
-const BG_DEEP = "#050508";
-const BG_TOP = "#0A0D1A";
-
-const TXT = "rgba(255,255,255,0.98)";
-const MUTED = "rgba(255,255,255,0.68)";
-const TXT_SOFT = "rgba(255,255,255,0.72)";
-
+// --- DESIGN SYSTEM HARMONISÉ ---
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
-const VIOLET = "#7B51D8";
-const GREEN = "#10B981";
+const VIOLET = "#A78BFA";
+const TXT_PRIMARY = "#FFFFFF";
+const TXT_SECONDARY = "rgba(255,255,255,0.80)";
+const MUTED = "rgba(255,255,255,0.45)";
+const GLASS_BORDER = "rgba(255,255,255,0.18)";
 
-const HAIR = "rgba(255,255,255,0.10)";
-const HAIR_STRONG = "rgba(255,255,255,0.16)";
-
-const RADIUS_XL = 34;
-const RADIUS_M = 22;
-const RADIUS_PILL = 999;
-
-const fonts = {
-  bold: "Outfit_700Bold",
-  black: "Outfit_900Black",
-  medium: "Outfit_500Medium",
-  kr: "NotoSansKR_700Bold",
-};
-
-// ──────────────────────────────────────────────
-// DATA
-// ──────────────────────────────────────────────
-type Tone = "cyan" | "pink" | "violet" | "neutral";
-
-type BatchimLesson = {
-  id: string;
-  closed: string; // 방
-  open: string; // 바
-  linked: string; // 방아
-  finalLabel: string; // ng final
-  closureHint: string;
-  liaisonHint: string;
-  tone: Tone;
-};
-
-const BATCHIM_LESSONS: BatchimLesson[] = [
+// --- DATA ---
+const BATCHIM_DATA = [
+  { char: "ㄱ", ex: "책", roma: "k", desc: "Son final 'K' net", tone: VIOLET },
+  { char: "ㄴ", ex: "안", roma: "n", desc: "Son final 'N' nasal", tone: CYAN },
   {
-    id: "bang",
-    closed: "방",
-    open: "바",
-    linked: "방아",
-    finalLabel: "ng final",
-    closureHint: "Le son se ferme à l’arrière, puis reste suspendu.",
-    liaisonHint: "Quand une voyelle suit, la résonance continue naturellement.",
-    tone: "violet",
+    char: "ㄹ",
+    ex: "달",
+    roma: "l",
+    desc: "Son final 'L' liquide",
+    tone: PINK,
   },
   {
-    id: "gak",
-    closed: "각",
-    open: "가",
-    linked: "가가",
-    finalLabel: "k coupé",
-    closureHint: "Le son se coupe net à la fin, sans voyelle relâchée.",
-    liaisonHint: "Avec une voyelle après, le flux repart plus clairement.",
-    tone: "cyan",
+    char: "ㅁ",
+    ex: "엄",
+    roma: "m",
+    desc: "Son final 'M' fermé",
+    tone: VIOLET,
   },
+  { char: "ㅂ", ex: "입", roma: "p", desc: "Son final 'P' labial", tone: CYAN },
   {
-    id: "bap",
-    closed: "밥",
-    open: "바",
-    linked: "바비",
-    finalLabel: "p coupé",
-    closureHint: "Les lèvres se ferment à la fin et arrêtent le souffle.",
-    liaisonHint: "La voyelle suivante relance le son avec plus de fluidité.",
-    tone: "pink",
-  },
-  {
-    id: "dat",
-    closed: "닫",
-    open: "다",
-    linked: "다다",
-    finalLabel: "t coupé",
-    closureHint: "La finale bloque le son juste avant la relâche.",
-    liaisonHint: "La voyelle suivante ouvre de nouveau le mouvement.",
-    tone: "violet",
-  },
-  {
-    id: "san",
-    closed: "산",
-    open: "사",
-    linked: "사나",
-    finalLabel: "n final",
-    closureHint: "La finale nasale laisse le son continuer dans le nez.",
-    liaisonHint: "Avec une voyelle après, la transition reste très fluide.",
-    tone: "neutral",
-  },
-  {
-    id: "bam",
-    closed: "밤",
-    open: "바",
-    linked: "바미",
-    finalLabel: "m final",
-    closureHint: "La bouche se ferme avec les lèvres, sans casser brutalement.",
-    liaisonHint: "La liaison donne une continuité douce et naturelle.",
-    tone: "cyan",
-  },
-  {
-    id: "dal",
-    closed: "달",
-    open: "다",
-    linked: "다라",
-    finalLabel: "l → r",
-    closureHint: "En finale, ㄹ reste posé comme un L bref.",
-    liaisonHint: "Entre voyelles, le son repart plus proche d’un R léger.",
-    tone: "pink",
+    char: "ㅇ",
+    ex: "강",
+    roma: "ng",
+    desc: "Son final 'NG' guttural",
+    tone: PINK,
   },
 ];
 
-// ──────────────────────────────────────────────
-// HELPERS
-// ──────────────────────────────────────────────
-function toneGlow(tone: Tone) {
-  switch (tone) {
-    case "cyan":
-      return "rgba(34,211,238,0.18)";
-    case "pink":
-      return "rgba(244,114,182,0.15)";
-    case "violet":
-      return "rgba(123,81,216,0.16)";
-    default:
-      return "rgba(255,255,255,0.08)";
-  }
-}
+const CONTRASTS = [
+  {
+    id: "gan-gang",
+    left: { word: "간", final: "ㄴ", roma: "gan", tone: CYAN },
+    right: { word: "강", final: "ㅇ", roma: "gang", tone: PINK },
+    accent: CYAN,
+  },
+  {
+    id: "san-sang",
+    left: { word: "산", final: "ㄴ", roma: "san", tone: CYAN },
+    right: { word: "상", final: "ㅇ", roma: "sang", tone: PINK },
+    accent: PINK,
+  },
+  {
+    id: "hyeon-hyeong",
+    left: { word: "현", final: "ㄴ", roma: "hyeon", tone: VIOLET },
+    right: { word: "형", final: "ㅇ", roma: "hyeong", tone: CYAN },
+    accent: VIOLET,
+  },
+  {
+    id: "ban-bang",
+    left: { word: "반", final: "ㄴ", roma: "ban", tone: PINK },
+    right: { word: "방", final: "ㅇ", roma: "bang", tone: CYAN },
+    accent: CYAN,
+  },
+  {
+    id: "mun-mung",
+    left: { word: "문", final: "ㄴ", roma: "mun", tone: VIOLET },
+    right: { word: "뭉", final: "ㅇ", roma: "mung", tone: PINK },
+    accent: PINK,
+  },
+];
 
-function toneGradient(tone: Tone) {
-  switch (tone) {
-    case "cyan":
-      return [
-        "rgba(34,211,238,0.12)",
-        "rgba(255,255,255,0.03)",
-        "rgba(34,211,238,0.02)",
-      ];
-    case "pink":
-      return [
-        "rgba(244,114,182,0.12)",
-        "rgba(255,255,255,0.03)",
-        "rgba(244,114,182,0.02)",
-      ];
-    case "violet":
-      return [
-        "rgba(123,81,216,0.12)",
-        "rgba(255,255,255,0.03)",
-        "rgba(123,81,216,0.02)",
-      ];
-    default:
-      return [
-        "rgba(255,255,255,0.07)",
-        "rgba(255,255,255,0.03)",
-        "rgba(255,255,255,0.02)",
-      ];
-  }
-}
+const CONTRAST_SPEECH_TEXTS = [
+  { left: "간", right: "강" },
+  { left: "산", right: "상" },
+  { left: "현", right: "형" },
+  { left: "반", right: "방" },
+  { left: "문", right: "뭉" },
+];
 
-function stopSpeech() {
-  try {
-    Speech.stop();
-  } catch {}
-}
+// --- MINI COMPONENTS (SIGNATURES) ---
 
-function speakKorean(text: string, rate = 0.84) {
-  return new Promise<void>((resolve) => {
-    stopSpeech();
-    Speech.speak(text, {
-      language: "ko-KR",
-      rate,
-      pitch: 1,
-      onDone: () => resolve(),
-      onStopped: () => resolve(),
-      onError: () => resolve(),
-    });
-  });
-}
+const NeonHeaderLine = ({ color = CYAN }) => (
+  <View
+    style={[styles.neonBar, { backgroundColor: color, shadowColor: color }]}
+  />
+);
 
-function wait(ms: number) {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms));
-}
-
-// ──────────────────────────────────────────────
-// GLASS HELPERS
-// ──────────────────────────────────────────────
-function SpecularEdge() {
-  return (
-    <View pointerEvents="none" style={styles.specularWrap}>
-      <LinearGradient
-        colors={[
-          "rgba(255,255,255,0.16)",
-          "rgba(255,255,255,0.05)",
-          "transparent",
-        ]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.specularLine}
-      />
-    </View>
-  );
-}
-
-function GlassChrome({
-  radius,
-  tone = "neutral",
-}: {
-  radius: number;
-  tone?: Tone;
-}) {
-  return (
-    <>
-      <LinearGradient
-        colors={toneGradient(tone)}
-        start={{ x: 0.08, y: 0 }}
-        end={{ x: 0.92, y: 1 }}
-        style={[StyleSheet.absoluteFillObject, { borderRadius: radius }]}
-      />
-
+const AudioVisualizer = ({ active }: { active: boolean }) => (
+  <View style={styles.waveContainer}>
+    {[1, 2, 3, 4].map((i) => (
       <View
-        pointerEvents="none"
+        key={i}
         style={[
-          styles.diffusedOrb,
-          {
-            top: -38,
-            left: -30,
-            width: 180,
-            height: 140,
-            borderRadius: 100,
-            backgroundColor: toneGlow(tone),
-          },
+          styles.waveBar,
+          { height: active ? 8 + Math.random() * 12 : 4 },
         ]}
       />
+    ))}
+  </View>
+);
 
-      <View
-        pointerEvents="none"
-        style={[
-          styles.diffusedOrb,
-          {
-            right: -28,
-            bottom: -24,
-            width: 150,
-            height: 120,
-            borderRadius: 80,
-            backgroundColor: "rgba(255,255,255,0.04)",
-          },
-        ]}
-      />
+const PremiumSettingsBtn = () => (
+  <Pressable
+    style={styles.settingsCircle}
+    onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+  >
+    <Text style={styles.settingsIconText}>⚙</Text>
+  </Pressable>
+);
 
-      <View
-        pointerEvents="none"
-        style={[
-          StyleSheet.absoluteFillObject,
-          {
-            borderRadius: radius,
-            borderWidth: 0.5,
-            borderColor: "rgba(255,255,255,0.05)",
-          },
-        ]}
-      />
+export default function BatchimScreen() {
+  const [index, setIndex] = useState(0);
+  const [contrastIdx, setContrastIdx] = useState(0);
+  const [showRoman, setShowRoman] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-      <LinearGradient
-        pointerEvents="none"
-        colors={["rgba(255,255,255,0.04)", "transparent", "rgba(0,0,0,0.22)"]}
-        locations={[0, 0.42, 1]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={[StyleSheet.absoluteFillObject, { borderRadius: radius }]}
-      />
-
-      <LinearGradient
-        pointerEvents="none"
-        colors={["rgba(255,255,255,0.10)", "transparent"]}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 0.14, y: 0.5 }}
-        style={[
-          styles.leftSheen,
-          { borderTopLeftRadius: radius, borderBottomLeftRadius: radius },
-        ]}
-      />
-
-      <SpecularEdge />
-    </>
-  );
-}
-
-function Capsule({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active?: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
-    >
-      <View style={styles.capsuleShell}>
-        <BlurView intensity={20} tint="dark" style={styles.capsuleBlur}>
-          <LinearGradient
-            colors={
-              active
-                ? ["rgba(34,211,238,0.11)", "rgba(255,255,255,0.03)"]
-                : ["rgba(255,255,255,0.05)", "rgba(255,255,255,0.02)"]
-            }
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFillObject}
-          />
-          <View
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFillObject,
-              styles.capsuleInnerBorder,
-              active && { borderColor: "rgba(34,211,238,0.24)" },
-            ]}
-          />
-          <Text
-            style={[styles.capsuleText, active && styles.capsuleTextActive]}
-          >
-            {label}
-          </Text>
-        </BlurView>
-      </View>
-    </Pressable>
-  );
-}
-
-function DialogueStyleBubble({ text }: { text: string }) {
-  return (
-    <View style={styles.speechBubble}>
-      <Text style={styles.bubbleText}>{text}</Text>
-    </View>
-  );
-}
-
-function ContrastMiniCard({
-  topLabel,
-  mainText,
-  romanization,
-  tone,
-  showRomanization,
-}: {
-  topLabel: string;
-  mainText: string;
-  romanization: string;
-  tone: Tone;
-  showRomanization: boolean;
-}) {
-  return (
-    <View style={styles.soundPanel}>
-      <BlurView intensity={22} tint="dark" style={styles.soundPanelBlur}>
-        <GlassChrome radius={RADIUS_M} tone={tone} />
-        <Text style={styles.soundPanelLabel}>{topLabel}</Text>
-        <Text style={styles.soundPanelMain}>{mainText}</Text>
-        {showRomanization && (
-          <Text style={styles.soundPanelRoman}>{romanization}</Text>
-        )}
-      </BlurView>
-    </View>
-  );
-}
-
-// ──────────────────────────────────────────────
-// SCREEN
-// ──────────────────────────────────────────────
-export default function BatchimBasicV2Screen() {
-  const [voiceIndex, setVoiceIndex] = useState(0);
-  const [contrastIndex, setContrastIndex] = useState(0);
-  const [voicePlaying, setVoicePlaying] = useState(false);
-  const [contrastPlaying, setContrastPlaying] = useState(false);
-  const [showRomanization, setShowRomanization] = useState(true);
-
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const floatAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
-  const currentVoice = useMemo(() => BATCHIM_LESSONS[voiceIndex], [voiceIndex]);
-  const currentContrast = useMemo(
-    () => BATCHIM_LESSONS[contrastIndex],
-    [contrastIndex],
-  );
-
-  const translateY = floatAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, -7],
-  });
+  const current = BATCHIM_DATA[index];
+  const contrast = CONTRASTS[contrastIdx];
+  const contrastSpeech = CONTRAST_SPEECH_TEXTS[contrastIdx];
 
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 850,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-
     Animated.loop(
       Animated.sequence([
-        Animated.timing(floatAnim, {
-          toValue: 1,
-          duration: 4800,
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 2500,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
-        Animated.timing(floatAnim, {
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2500,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, []);
+
+  const triggerHaptic = (style = Haptics.ImpactFeedbackStyle.Medium) =>
+    Haptics.impactAsync(style);
+
+  const speak = (text: string) => {
+    Speech.stop();
+    setIsPlaying(true);
+    Speech.speak(text, {
+      language: "ko-KR",
+      rate: 0.85,
+      onDone: () => setIsPlaying(false),
+      onStopped: () => setIsPlaying(false),
+    });
+  };
+
+  const animateSwitch = (direction: number) => {
+    triggerHaptic(Haptics.ImpactFeedbackStyle.Light);
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: direction * 30,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setIndex((prev) =>
+        direction === 1
+          ? (prev + 1) % BATCHIM_DATA.length
+          : (prev - 1 + BATCHIM_DATA.length) % BATCHIM_DATA.length,
+      );
+      slideAnim.setValue(direction * -30);
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
           toValue: 0,
-          duration: 4800,
-          easing: Easing.inOut(Easing.sin),
+          duration: 200,
+          easing: Easing.out(Easing.back(1)),
           useNativeDriver: true,
         }),
-      ]),
-    ).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.06,
-          duration: 3400,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 3400,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ]),
-    ).start();
-
-    return () => stopSpeech();
-  }, [fadeAnim, floatAnim, pulseAnim]);
-
-  const playVoice = async (item?: BatchimLesson) => {
-    const target = item ?? currentVoice;
-    setVoicePlaying(true);
-    Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle.Light);
-
-    await speakKorean(target.open, 0.82);
-    await wait(140);
-    await speakKorean(target.closed, 0.82);
-
-    setVoicePlaying(false);
+      ]).start();
+    });
   };
 
-  const goVoicePrev = async () => {
-    const next = voiceIndex === 0 ? BATCHIM_LESSONS.length - 1 : voiceIndex - 1;
-    setVoiceIndex(next);
-    Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle.Light);
-    await wait(90);
-    await playVoice(BATCHIM_LESSONS[next]);
-  };
-
-  const goVoiceNext = async () => {
-    const next = voiceIndex === BATCHIM_LESSONS.length - 1 ? 0 : voiceIndex + 1;
-    setVoiceIndex(next);
-    Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle.Light);
-    await wait(90);
-    await playVoice(BATCHIM_LESSONS[next]);
-  };
-
-  const playContrast = async () => {
-    setContrastPlaying(true);
-    Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle.Light);
-
-    await speakKorean(currentContrast.closed, 0.82);
-    await wait(140);
-    await speakKorean(currentContrast.linked, 0.82);
-
-    setContrastPlaying(false);
-  };
-
-  const goContrastPrev = () => {
-    setContrastIndex((prev) =>
-      prev === 0 ? BATCHIM_LESSONS.length - 1 : prev - 1,
+  const navigateContrast = (direction: number) => {
+    triggerHaptic(Haptics.ImpactFeedbackStyle.Light);
+    setContrastIdx((prev) =>
+      direction === 1
+        ? (prev + 1) % CONTRASTS.length
+        : (prev - 1 + CONTRASTS.length) % CONTRASTS.length,
     );
-    Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle.Light);
   };
-
-  const goContrastNext = () => {
-    setContrastIndex((prev) =>
-      prev === BATCHIM_LESSONS.length - 1 ? 0 : prev + 1,
-    );
-    Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle.Light);
-  };
-
-  const voicePanResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gesture) =>
-        Math.abs(gesture.dx) > 18 && Math.abs(gesture.dy) < 20,
-      onPanResponderRelease: (_, gesture) => {
-        if (gesture.dx < -40) {
-          goVoiceNext();
-        } else if (gesture.dx > 40) {
-          goVoicePrev();
-        }
-      },
-    }),
-  ).current;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-
-      <LinearGradient colors={[BG_DEEP, BG_TOP]} style={{ flex: 1 }}>
-        <View
-          style={[
-            styles.pageGlow,
-            {
-              top: -140,
-              left: -100,
-              backgroundColor: "rgba(168,85,247,0.07)",
-            },
-          ]}
-        />
-        <View
-          style={[
-            styles.pageGlow,
-            {
-              bottom: 100,
-              right: -90,
-              backgroundColor: "rgba(34,211,238,0.05)",
-            },
-          ]}
+      <ImageBackground
+        source={BACKGROUND_SOURCE}
+        style={StyleSheet.absoluteFill}
+        blurRadius={12}
+      >
+        <LinearGradient
+          colors={["rgba(5,5,15,0.9)", "rgba(10,13,30,0.98)"]}
+          style={StyleSheet.absoluteFill}
         />
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [{ translateY }],
-            }}
-          >
-            <View style={styles.heroContainer}>
-              <Text style={styles.heroEyebrow}>SÉOUL IMMERSION</Text>
-              <Text style={styles.heroTitle}>Batchim</Text>
+        <SafeAreaView style={{ flex: 1 }}>
+          {/* Header row */}
+          <View style={styles.headerRow}>
+            <Pressable onPress={() => router.back()} style={styles.backBtn}>
+              <Text style={styles.backIcon}>‹</Text>
+            </Pressable>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.navEyebrow}>SÉOUL IMMERSION</Text>
+              <Text style={styles.navTitle}>Consonnes Finales</Text>
             </View>
-          </Animated.View>
-
-          <View style={styles.contrastGuideWrap}>
-            <Text style={styles.contrastGuideText}>Fermeture du son</Text>
+            <PremiumSettingsBtn />
           </View>
 
-          <View {...voicePanResponder.panHandlers}>
-            <BlurView intensity={42} tint="dark" style={styles.heroCard}>
-              <GlassChrome radius={RADIUS_XL} tone={currentVoice.tone} />
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            <View style={styles.heroSection}>
+              <Text style={styles.heroTitle}>Batchim</Text>
+              <NeonHeaderLine color={CYAN} />
+            </View>
 
-              <View style={styles.cardTopRow}>
-                <View style={styles.liveRow}>
-                  <View style={styles.liveDot} />
-                  <Text style={styles.liveLabel}>LIVE VOICE</Text>
+            <Text style={styles.sectionLabel}>STRUCTURE SYLLABIQUE</Text>
+
+            {/* Main Interactive Card */}
+            <View style={styles.mainCardContainer}>
+              <BlurView intensity={80} tint="dark" style={styles.glassCard}>
+                <LinearGradient
+                  colors={["rgba(255,255,255,0.15)", "transparent"]}
+                  style={StyleSheet.absoluteFill}
+                />
+
+                <View style={styles.cardHeader}>
+                  <View style={styles.liveTag}>
+                    <View
+                      style={[
+                        styles.liveDot,
+                        isPlaying && {
+                          backgroundColor: PINK,
+                          shadowOpacity: 1,
+                        },
+                      ]}
+                    />
+                    <Text style={styles.liveText}>FINAL SOUND</Text>
+                  </View>
+                  <Text style={styles.counterText}>
+                    {index + 1} / {BATCHIM_DATA.length}
+                  </Text>
                 </View>
 
-                <Pressable
-                  style={styles.roundPlayShell}
-                  onPress={() => playVoice()}
-                >
-                  <BlurView
-                    intensity={18}
-                    tint="dark"
-                    style={styles.roundPlayButton}
-                  >
-                    <Text
-                      style={[
-                        styles.roundPlayText,
-                        voicePlaying && { color: CYAN },
-                      ]}
-                    >
-                      PLAY
-                    </Text>
-                  </BlurView>
-                </Pressable>
-              </View>
-
-              <View style={styles.heroMiddleRow}>
-                <Pressable onPress={goVoicePrev} style={styles.navShell}>
-                  <BlurView intensity={18} tint="dark" style={styles.navCircle}>
-                    <Text style={styles.navArrow}>‹</Text>
-                  </BlurView>
-                </Pressable>
-
-                <View style={styles.heroCenter}>
-                  <Animated.Text
+                <View style={styles.cardBody}>
+                  <Animated.View
                     style={[
-                      styles.heroChar,
+                      styles.wordContent,
                       {
-                        transform: [{ scale: pulseAnim }],
+                        opacity: fadeAnim,
+                        transform: [{ translateX: slideAnim }],
                       },
                     ]}
                   >
-                    {currentVoice.closed}
-                  </Animated.Text>
-
-                  <Text style={styles.heroSyllable}>
-                    {currentVoice.open} → {currentVoice.closed}
-                  </Text>
-
-                  {showRomanization && (
-                    <Text style={styles.heroRomanization}>
-                      {currentVoice.finalLabel}
-                    </Text>
-                  )}
+                    <Animated.Text
+                      style={[
+                        styles.krBig,
+                        {
+                          transform: [{ scale: pulseAnim }],
+                          textShadowColor: current.tone,
+                        },
+                      ]}
+                    >
+                      {current.ex}
+                    </Animated.Text>
+                    {showRoman && (
+                      <Text style={[styles.romanBig, { color: current.tone }]}>
+                        Fin : {current.char} [{current.roma.toUpperCase()}]
+                      </Text>
+                    )}
+                    <View style={styles.descBadge}>
+                      <Text style={styles.descText}>{current.desc}</Text>
+                    </View>
+                  </Animated.View>
                 </View>
 
-                <Pressable onPress={goVoiceNext} style={styles.navShell}>
-                  <BlurView intensity={18} tint="dark" style={styles.navCircle}>
-                    <Text style={styles.navArrow}>›</Text>
-                  </BlurView>
-                </Pressable>
-              </View>
+                {/* Action Controls */}
+                <View style={styles.actionRow}>
+                  <Pressable
+                    style={styles.navBtnSmall}
+                    onPress={() => animateSwitch(-1)}
+                  >
+                    <Text style={styles.navBtnIcon}>‹</Text>
+                  </Pressable>
 
-              <View style={styles.voiceBubbleWrap}>
-                <DialogueStyleBubble text={currentVoice.closureHint} />
-              </View>
-            </BlurView>
-          </View>
-
-          <View style={styles.contrastGuideWrap}>
-            <Text style={styles.contrastGuideText}>Liaison après voyelle</Text>
-          </View>
-
-          <BlurView intensity={40} tint="dark" style={styles.contrastCard}>
-            <GlassChrome radius={RADIUS_XL} tone={currentContrast.tone} />
-
-            <View style={styles.contrastHeaderRow}>
-              <View style={styles.liveRow}>
-                <View style={styles.liveDot} />
-                <Text style={styles.liveLabel}>LIVE CONTRAST</Text>
-              </View>
-
-              <Text style={styles.counterText}>
-                {contrastIndex + 1}/{BATCHIM_LESSONS.length}
-              </Text>
-            </View>
-
-            <View style={styles.contrastStage}>
-              <Pressable
-                onPress={goContrastPrev}
-                style={styles.stageArrowShell}
-              >
-                <Text style={styles.stageArrowText}>‹</Text>
-              </Pressable>
-
-              <View style={styles.contrastCore}>
-                <ContrastMiniCard
-                  topLabel="Fermé"
-                  mainText={currentContrast.closed}
-                  romanization={`${currentContrast.open} → ${currentContrast.closed}`}
-                  tone={currentContrast.tone}
-                  showRomanization={showRomanization}
-                />
-
-                <View style={styles.transitionWrap}>
-                  <LinearGradient
-                    colors={[
-                      "transparent",
-                      "rgba(255,255,255,0.10)",
-                      "rgba(255,255,255,0.18)",
-                      "rgba(255,255,255,0.10)",
-                      "transparent",
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.mainPlayBtn,
+                      pressed && { transform: [{ scale: 0.96 }] },
                     ]}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 1, y: 0.5 }}
-                    style={styles.transitionLine}
-                  />
-                  <Text style={styles.transitionArrow}>→</Text>
-                </View>
+                    onPress={() => {
+                      triggerHaptic(Haptics.ImpactFeedbackStyle.Heavy);
+                      speak(current.ex);
+                    }}
+                  >
+                    <LinearGradient
+                      colors={[current.tone, "#4F46E5"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.playGradient}
+                    >
+                      <AudioVisualizer active={isPlaying} />
+                      <Text style={styles.playBtnText}>ÉCOUTER</Text>
+                    </LinearGradient>
+                  </Pressable>
 
-                <ContrastMiniCard
-                  topLabel="Liaison"
-                  mainText={currentContrast.linked}
-                  romanization={currentContrast.finalLabel}
-                  tone={currentContrast.tone}
-                  showRomanization={showRomanization}
-                />
+                  <Pressable
+                    style={styles.navBtnSmall}
+                    onPress={() => animateSwitch(1)}
+                  >
+                    <Text style={styles.navBtnIcon}>›</Text>
+                  </Pressable>
+                </View>
+              </BlurView>
+            </View>
+
+            {/* Section Contrastes */}
+            <Text style={styles.sectionLabel}>COMPARATIF DES FINALES</Text>
+            <View style={styles.contrastContainer}>
+              <View style={styles.contrastRow}>
+                <Pressable
+                  style={[styles.sideContrastArrow, styles.sideContrastArrowLeft]}
+                  onPress={() => navigateContrast(-1)}
+                  hitSlop={12}
+                >
+                  <Text style={styles.sideContrastArrowText}>‹</Text>
+                </Pressable>
+
+                {[contrast.left, contrast.right].map((item, i) => (
+                  <Pressable
+                    key={item.roma}
+                    style={styles.halfCard}
+                    onPress={() => {
+                      triggerHaptic();
+                      speak(i === 0 ? contrastSpeech.left : contrastSpeech.right);
+                    }}
+                  >
+                    <BlurView
+                      intensity={50}
+                      tint="dark"
+                      style={styles.halfGlass}
+                    >
+                      <View
+                        style={[
+                          styles.cardGlow,
+                          { backgroundColor: item.tone },
+                        ]}
+                      />
+                      <Text style={styles.contrastKr}>{item.word}</Text>
+                      <Text style={[styles.contrastRo, { color: item.tone }]}>
+                        {item.roma}
+                      </Text>
+                      <Text style={styles.contrastFinal}>finale {item.final}</Text>
+                    </BlurView>
+                  </Pressable>
+                ))}
+
+                <Pressable
+                  style={[styles.sideContrastArrow, styles.sideContrastArrowRight]}
+                  onPress={() => navigateContrast(1)}
+                  hitSlop={12}
+                >
+                  <Text style={styles.sideContrastArrowText}>›</Text>
+                </Pressable>
+
+                <View style={styles.absoluteArrow}>
+                  <Text
+                    style={[
+                      styles.neonArrow,
+                      {
+                        color: contrast.accent,
+                        textShadowColor: contrast.accent,
+                      },
+                    ]}
+                  >
+                    →
+                  </Text>
+                </View>
               </View>
 
               <Pressable
-                onPress={goContrastNext}
-                style={styles.stageArrowShell}
-              >
-                <Text style={styles.stageArrowText}>›</Text>
-              </Pressable>
-            </View>
-
-            <Pressable onPress={playContrast} style={styles.compactPlayShell}>
-              <BlurView
-                intensity={20}
-                tint="dark"
-                style={styles.compactPlayButton}
+                style={styles.diffButton}
+                onPress={() => {
+                  triggerHaptic();
+                  speak(contrastSpeech.left);
+                  setTimeout(() => speak(contrastSpeech.right), 1000);
+                }}
               >
                 <LinearGradient
-                  colors={["rgba(255,255,255,0.05)", "rgba(255,255,255,0.02)"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFillObject}
-                />
-                <Text
-                  style={[
-                    styles.compactPlayText,
-                    contrastPlaying && { color: CYAN },
-                  ]}
+                  colors={["rgba(255,255,255,0.12)", "rgba(255,255,255,0.05)"]}
+                  style={styles.diffGradient}
                 >
-                  Écoute le mouvement
-                </Text>
-                <Text style={styles.compactPlayArrow}>›</Text>
-              </BlurView>
-            </Pressable>
-
-            <View style={styles.romanizationRow}>
-              <Capsule
-                label="Romanisation"
-                active={showRomanization}
-                onPress={() => setShowRomanization((v) => !v)}
-              />
+                  <Text style={styles.diffText}>ÉCOUTER LA DIFFÉRENCE</Text>
+                </LinearGradient>
+              </Pressable>
             </View>
-          </BlurView>
-        </ScrollView>
-      </LinearGradient>
-    </SafeAreaView>
+
+            {/* Toggle Romanisation */}
+            <View style={styles.footer}>
+              <Pressable
+                onPress={() => {
+                  triggerHaptic();
+                  setShowRoman(!showRoman);
+                }}
+                style={styles.toggleBtn}
+              >
+                <Text style={[styles.toggleText, showRoman && { color: CYAN }]}>
+                  ROMANISATION : {showRoman ? "ON" : "OFF"}
+                </Text>
+                {showRoman && <View style={styles.activeDot} />}
+              </Pressable>
+            </View>
+
+            <View style={styles.bottomSpace} />
+          </ScrollView>
+        </SafeAreaView>
+      </ImageBackground>
+    </View>
   );
 }
 
-// ──────────────────────────────────────────────
-// STYLES
-// ──────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BG_DEEP,
-  },
-
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 140,
-  },
-
-  pageGlow: {
-    position: "absolute",
-    width: 340,
-    height: 340,
-    borderRadius: 170,
-  },
-
-  heroContainer: {
+  container: { flex: 1, backgroundColor: "#050508" },
+  headerRow: {
+    flexDirection: "row",
     alignItems: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
   },
+  scrollContent: { paddingHorizontal: 24 },
 
-  heroEyebrow: {
+  settingsCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  settingsIconText: { color: MUTED, fontSize: 18 },
+  backBtn: { marginRight: 16 },
+  backIcon: { color: "#fff", fontSize: 32 },
+  navEyebrow: {
     color: PINK,
-    fontFamily: fonts.bold,
-    fontSize: 13.5,
-    letterSpacing: 3.2,
-    marginBottom: 8,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 2,
   },
+  navTitle: { color: TXT_SECONDARY, fontSize: 13 },
 
+  heroSection: { marginVertical: 20 },
   heroTitle: {
-    color: TXT,
-    fontSize: 46,
-    fontFamily: fonts.black,
-    letterSpacing: -1.4,
-    marginTop: 15,
-    marginBottom: 35,
+    color: "#fff",
+    fontSize: 52,
+    fontWeight: "900",
+    letterSpacing: -1.5,
+  },
+  neonBar: {
+    width: 45,
+    height: 4,
+    marginTop: 8,
+    borderRadius: 2,
+    shadowRadius: 15,
+    shadowOpacity: 0.8,
+    elevation: 10,
   },
 
-  heroCard: {
-    borderRadius: RADIUS_XL,
-    paddingTop: 22,
-    paddingHorizontal: 18,
-    paddingBottom: 20,
+  sectionLabel: {
+    color: MUTED,
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 2.5,
+    marginBottom: 15,
+  },
+  mainCardContainer: { marginBottom: 35 },
+  glassCard: {
+    borderRadius: 32,
+    padding: 24,
+    borderWidth: 1.2,
+    borderColor: GLASS_BORDER,
     overflow: "hidden",
-    marginBottom: 18,
-    borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.08)",
   },
-
-  contrastCard: {
-    borderRadius: RADIUS_XL,
-    paddingTop: 18,
-    paddingHorizontal: 18,
-    paddingBottom: 18,
-    overflow: "hidden",
-    borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.08)",
-    marginTop: 6,
-  },
-
-  specularWrap: {
-    position: "absolute",
-    top: 0,
-    left: 18,
-    right: 18,
-    height: 1,
-  },
-
-  specularLine: {
-    width: "100%",
-    height: 1,
-    opacity: 0.55,
-  },
-
-  contrastGuideWrap: {
-    marginTop: 30,
-    paddingHorizontal: 6,
-    marginBottom: 10,
-  },
-
-  contrastGuideText: {
-    color: "white",
-    fontSize: 22.5,
-    letterSpacing: 0.4,
-    fontFamily: fonts.medium,
-  },
-
-  diffusedOrb: {
-    position: "absolute",
-  },
-
-  leftSheen: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    width: 18,
-    opacity: 0.18,
-  },
-
-  cardTopRow: {
+  cardHeader: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 18,
+    marginBottom: 15,
   },
-
-  contrastHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 24,
-  },
-
-  liveRow: {
+  liveTag: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
-
   liveDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: GREEN,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    shadowRadius: 4,
   },
+  liveText: { color: "#fff", fontSize: 9, fontWeight: "900", letterSpacing: 1 },
+  counterText: { color: MUTED, fontSize: 12, fontWeight: "800" },
 
-  liveLabel: {
-    color: MUTED,
-    fontSize: 11.5,
-    fontFamily: fonts.bold,
-    letterSpacing: 1.6,
+  cardBody: { alignItems: "center", justifyContent: "center", minHeight: 220 },
+  wordContent: { alignItems: "center" },
+  krBig: {
+    color: "#fff",
+    fontSize: 100,
+    fontWeight: "800",
+    textShadowRadius: 30,
   },
-
-  counterText: {
-    color: "rgba(255,255,255,0.70)",
-    fontSize: 13,
-    fontFamily: fonts.bold,
-    letterSpacing: 0.5,
+  romanBig: { fontSize: 18, fontWeight: "900", marginTop: 5, letterSpacing: 2 },
+  descBadge: {
+    marginTop: 20,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
   },
+  descText: { color: TXT_SECONDARY, fontSize: 14, fontStyle: "italic" },
 
-  roundPlayShell: {
-    borderRadius: RADIUS_PILL,
-    overflow: "hidden",
-  },
-
-  roundPlayButton: {
-    width: 82,
-    height: 40,
-    borderRadius: RADIUS_PILL,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 0.5,
-    borderColor: HAIR_STRONG,
-    backgroundColor: "rgba(255,255,255,0.03)",
-    overflow: "hidden",
-  },
-
-  roundPlayText: {
-    color: TXT,
-    fontSize: 15,
-    fontFamily: fonts.bold,
-    letterSpacing: 1.8,
-  },
-
-  heroMiddleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  navShell: {
-    borderRadius: RADIUS_PILL,
-    overflow: "hidden",
-  },
-
-  navCircle: {
-    width: 74,
-    height: 74,
-    borderRadius: RADIUS_PILL,
+  actionRow: { flexDirection: "row", alignItems: "center", marginTop: 30 },
+  navBtnSmall: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: "rgba(255,255,255,0.08)",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: HAIR,
-    backgroundColor: "rgba(255,255,255,0.03)",
+    borderColor: "rgba(255,255,255,0.15)",
+  },
+  navBtnIcon: { color: "#fff", fontSize: 28, fontWeight: "300" },
+  mainPlayBtn: {
+    flex: 1,
+    height: 60,
+    marginHorizontal: 16,
+    borderRadius: 20,
     overflow: "hidden",
   },
-
-  navArrow: {
-    color: TXT_SOFT,
-    fontSize: 36,
-    lineHeight: 36,
-    textAlign: "center",
-    textAlignVertical: "center",
-    includeFontPadding: false,
-    fontWeight: "300",
-  },
-
-  heroCenter: {
+  playGradient: {
     flex: 1,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 8,
+    gap: 12,
   },
-
-  heroChar: {
-    color: TXT,
-    fontSize: 122,
-    lineHeight: 124,
-    fontFamily: fonts.kr,
-    letterSpacing: -4.8,
+  playBtnText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "900",
+    letterSpacing: 2,
   },
+  waveContainer: { flexDirection: "row", gap: 4, alignItems: "center" },
+  waveBar: { width: 3, backgroundColor: "#fff", borderRadius: 2, opacity: 0.9 },
 
-  heroSyllable: {
-    color: TXT,
-    fontSize: 30,
-    lineHeight: 34,
-    fontFamily: fonts.kr,
-    marginTop: 0,
-    textAlign: "center",
-  },
-
-  heroRomanization: {
-    color: TXT_SOFT,
-    fontSize: 18,
-    lineHeight: 22,
-    fontFamily: fonts.medium,
-    marginTop: 8,
-  },
-
-  voiceBubbleWrap: {
+  contrastContainer: { marginBottom: 35 },
+  contrastRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 15,
-    marginBottom: 4,
+  },
+  sideContrastArrow: {
+    position: "absolute",
+    top: "50%",
+    marginTop: -20,
+    width: 32,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 3,
+  },
+  sideContrastArrowLeft: { left: -18 },
+  sideContrastArrowRight: { right: -18 },
+  sideContrastArrowText: {
+    color: "rgba(255,255,255,0.38)",
+    fontSize: 36,
+    fontWeight: "200",
+  },
+  halfCard: {
+    width: "45%",
+    height: 170,
+    borderRadius: 28,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+  },
+  halfGlass: { flex: 1, alignItems: "center", justifyContent: "center" },
+  cardGlow: {
+    position: "absolute",
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    opacity: 0.15,
+    filter: "blur(25px)",
+  },
+  contrastKr: { color: "#fff", fontSize: 58, fontWeight: "700" },
+  contrastRo: { fontSize: 18, fontWeight: "900", marginTop: 6 },
+  contrastFinal: {
+    color: MUTED,
+    fontSize: 11,
+    fontWeight: "800",
+    marginTop: 6,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+  absoluteArrow: {
+    position: "absolute",
+    left: "45%",
+    right: "45%",
+    alignItems: "center",
+  },
+  neonArrow: {
+    fontSize: 28,
+    fontWeight: "bold",
+    shadowRadius: 12,
+    shadowOpacity: 1,
   },
 
-  speechBubble: {
-    backgroundColor: "rgba(0,0,0,0.48)",
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+  diffButton: {
+    marginTop: 20,
     borderRadius: 18,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+  },
+  diffGradient: { paddingVertical: 20, alignItems: "center" },
+  diffText: {
+    color: TXT_SECONDARY,
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 2.5,
+  },
+
+  footer: { alignItems: "center", marginTop: 15 },
+  toggleBtn: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    paddingVertical: 16,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.12)",
-    minWidth: width * 0.64,
-    alignItems: "center",
-    justifyContent: "center",
   },
-
-  bubbleText: {
-    color: MUTED,
-    fontSize: 14.5,
-    lineHeight: 21,
-    fontStyle: "italic",
-    fontFamily: fonts.medium,
-    textAlign: "center",
-  },
-
-  contrastStage: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-
-  stageArrowShell: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    minWidth: 32,
-  },
-
-  stageArrowText: {
-    color: "rgba(255,255,255,0.55)",
-    fontSize: 52,
-    lineHeight: 52,
-    textAlign: "center",
-    includeFontPadding: false,
-    fontWeight: "300",
-  },
-
-  contrastCore: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 4,
-  },
-
-  soundPanel: {
-    width: 110,
-    borderRadius: RADIUS_M,
-    overflow: "hidden",
-  },
-
-  soundPanelBlur: {
-    height: 196,
-    borderRadius: RADIUS_M,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 10,
-    overflow: "hidden",
-  },
-
-  soundPanelLabel: {
+  toggleText: {
     color: MUTED,
     fontSize: 12,
-    lineHeight: 14,
-    fontFamily: fonts.bold,
-    marginBottom: 10,
-    textAlign: "center",
-    letterSpacing: 0.4,
+    fontWeight: "900",
+    letterSpacing: 1.5,
   },
-
-  soundPanelMain: {
-    color: TXT,
-    fontSize: 44,
-    lineHeight: 48,
-    fontFamily: fonts.kr,
-    textAlign: "center",
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: CYAN,
+    shadowColor: CYAN,
+    shadowRadius: 8,
+    shadowOpacity: 1,
   },
-
-  soundPanelRoman: {
-    color: TXT_SOFT,
-    fontSize: 14,
-    lineHeight: 18,
-    fontFamily: fonts.medium,
-    marginTop: 10,
-    textAlign: "center",
-  },
-
-  transitionWrap: {
-    width: 32,
-    height: 196,
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-  },
-
-  transitionLine: {
-    position: "absolute",
-    width: 26,
-    height: 1,
-    opacity: 0.55,
-  },
-
-  transitionArrow: {
-    color: "rgba(255,255,255,0.52)",
-    fontSize: 34,
-    lineHeight: 34,
-    textAlign: "center",
-    includeFontPadding: false,
-    fontWeight: "300",
-  },
-
-  compactPlayShell: {
-    borderRadius: RADIUS_PILL,
-    overflow: "hidden",
-    marginBottom: 10,
-  },
-
-  compactPlayButton: {
-    height: 58,
-    borderRadius: RADIUS_PILL,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    backgroundColor: "rgba(255,255,255,0.025)",
-    overflow: "hidden",
-    paddingHorizontal: 22,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  compactPlayText: {
-    color: TXT,
-    fontSize: 17,
-    lineHeight: 20,
-    fontFamily: fonts.bold,
-    letterSpacing: -0.2,
-  },
-
-  compactPlayArrow: {
-    color: TXT_SOFT,
-    fontSize: 24,
-    lineHeight: 24,
-    textAlign: "center",
-    includeFontPadding: false,
-    fontWeight: "300",
-  },
-
-  romanizationRow: {
-    alignItems: "center",
-  },
-
-  capsuleShell: {
-    width: 172,
-    borderRadius: RADIUS_PILL,
-    overflow: "hidden",
-  },
-
-  capsuleBlur: {
-    minHeight: 46,
-    borderRadius: RADIUS_PILL,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: HAIR,
-    overflow: "hidden",
-  },
-
-  capsuleInnerBorder: {
-    borderRadius: RADIUS_PILL,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.03)",
-  },
-
-  capsuleText: {
-    color: "rgba(255,255,255,0.66)",
-    fontSize: 13,
-    lineHeight: 16,
-    fontFamily: fonts.bold,
-    textAlign: "center",
-  },
-
-  capsuleTextActive: {
-    color: TXT,
-  },
+  bottomSpace: { height: 120 },
 });

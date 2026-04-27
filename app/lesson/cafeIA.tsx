@@ -187,12 +187,13 @@ export default function CafeIaScreen() {
   const player = useVideoPlayer(displayedVideoSource, (playerInstance) => {
     playerInstance.loop = false;
   });
-  // 🔥 GARDE LA DERNIÈRE VIDÉO IA
+
   useEffect(() => {
     if (currentNode?.type === "ia" && currentVideoSource) {
       setDisplayedVideoSource(currentVideoSource);
     }
   }, [currentNode, currentVideoSource]);
+
   const videoHeight = Math.min(screenWidth * 0.9, screenHeight * 0.34);
 
   const goToNextNode = useCallback((node?: DialogueNodeWithVideo) => {
@@ -205,7 +206,6 @@ export default function CafeIaScreen() {
     }
   }, []);
 
-  // Reset scenario on mode change
   useEffect(() => {
     setCurrentNodeId(currentScenario.startNodeId);
     setSelectedChoiceId(null);
@@ -214,7 +214,6 @@ export default function CafeIaScreen() {
     hasAdvancedFromVideoRef.current = false;
   }, [currentScenario]);
 
-  // Track mount / cleanup
   useEffect(() => {
     mountedRef.current = true;
     return () => {
@@ -223,7 +222,6 @@ export default function CafeIaScreen() {
     };
   }, []);
 
-  // Reset per node
   useEffect(() => {
     hasAdvancedFromVideoRef.current = false;
 
@@ -233,7 +231,6 @@ export default function CafeIaScreen() {
     }
   }, [currentNodeId]);
 
-  // Start / replace video when node changes
   useEffect(() => {
     if (!currentNode) return;
     if (!displayedVideoSource) return;
@@ -241,11 +238,9 @@ export default function CafeIaScreen() {
     try {
       player.replace(displayedVideoSource);
 
-      // On ne relance la lecture que sur un vrai nœud IA avec vidéo.
       if (currentNode.type === "ia" && currentVideoSource) {
         player.play();
       } else {
-        // En user_choice, on garde simplement l’image affichée.
         player.pause();
       }
     } catch {
@@ -259,8 +254,6 @@ export default function CafeIaScreen() {
     player,
   ]);
 
-  // Advance on video end for IA nodes with video
-  // Advance on real video end for IA nodes with video
   useEffect(() => {
     if (!currentNode) return;
     if (currentNode.type !== "ia") return;
@@ -274,10 +267,8 @@ export default function CafeIaScreen() {
       const duration = player.duration ?? 0;
       const currentTime = player.currentTime ?? 0;
 
-      // attendre que la vidéo ait vraiment commencé
       if (duration <= 0) return;
 
-      // marge de sécurité pour éviter les problèmes de précision
       const isNearEnd = currentTime >= duration - 0.08;
 
       if (isNearEnd) {
@@ -296,7 +287,7 @@ export default function CafeIaScreen() {
     player,
     goToNextNode,
   ]);
-  // Auto-advance only for IA nodes without video
+
   useEffect(() => {
     if (!currentNode) return;
     if (currentNode.type !== "ia") return;
@@ -325,11 +316,10 @@ export default function CafeIaScreen() {
     goToNextNode,
   ]);
 
-  // Scroll lower content into view on node change
   useEffect(() => {
     const t = setTimeout(() => {
-      scrollRef.current?.scrollToEnd({ animated: true });
-    }, 180);
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
+    }, 80);
     return () => clearTimeout(t);
   }, [currentNodeId]);
 
@@ -413,191 +403,211 @@ export default function CafeIaScreen() {
           <View style={{ width: 42 }} />
         </View>
 
-        <ScrollView
-          ref={scrollRef}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
-        >
-          <View style={styles.stepsContainer}>
-            {steps.map((s, i) => {
-              const active = i === progressIndex;
-              const done = i <= progressIndex;
-              const accent = mode === "real" ? CYAN : PURPLE;
-
-              return (
-                <View key={s} style={styles.stepWrapper}>
-                  <View
-                    style={[
-                      styles.stepDot,
-                      done && {
-                        backgroundColor: accent,
-                        opacity: active ? 1 : 0.7,
-                      },
-                    ]}
-                  />
-                  <Text
-                    style={[
-                      styles.stepLabel,
-                      active && {
-                        color: TXT,
-                        fontFamily: fonts.bold,
-                      },
-                    ]}
-                  >
-                    {s}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
-
-          <View
-            style={[
-              styles.videoContainer,
-              {
-                height: videoHeight,
-                borderColor:
-                  mode === "real"
-                    ? "rgba(34,211,238,0.40)"
-                    : "rgba(168,85,247,0.42)",
-              },
-            ]}
-          >
-            {displayedVideoSource ? (
-              <VideoView
-                player={player}
-                style={styles.video}
-                contentFit="cover"
-                nativeControls={false}
-                allowsFullscreen={false}
-                allowsPictureInPicture={false}
-              />
-            ) : (
-              <View style={styles.videoFallback}>
-                <Text style={styles.videoFallbackEmoji}>👩‍🍳</Text>
-              </View>
-            )}
-
-            <LinearGradient
-              colors={["transparent", "rgba(0,0,0,0.62)"]}
-              style={styles.videoOverlay}
-            />
-          </View>
-
-          <View style={styles.aiCard}>
-            <Text style={styles.aiKr}>{currentNode?.korean || "..."}</Text>
-
-            {currentNode?.french ? (
-              <Text style={styles.aiFr}>{currentNode.french}</Text>
-            ) : null}
-          </View>
-
-          <View style={styles.interactionSection}>
-            <Text style={styles.sectionTitle}>Ta réponse</Text>
-
-            {isSceneEnded ? (
-              <View style={styles.endCard}>
-                <Text style={styles.endTitle}>Scène terminée</Text>
-                <Text style={styles.endSubtitle}>
-                  Tu peux rejouer cette scène ou revenir au menu.
-                </Text>
-
-                <View style={styles.endActions}>
-                  <Pressable
-                    onPress={handleRestart}
-                    style={({ pressed }) => [
-                      styles.endActionPrimary,
-                      { opacity: pressed ? 0.92 : 1 },
-                    ]}
-                  >
-                    <LinearGradient
-                      colors={
-                        mode === "real" ? [CYAN, "#56CCF2"] : [PURPLE, PINK]
-                      }
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.endActionPrimaryInner}
-                    >
-                      <Text style={styles.endActionPrimaryText}>Rejouer</Text>
-                    </LinearGradient>
-                  </Pressable>
-
-                  <Pressable
-                    onPress={() => router.back()}
-                    style={({ pressed }) => [
-                      styles.endActionSecondary,
-                      { opacity: pressed ? 0.9 : 1 },
-                    ]}
-                  >
-                    <Text style={styles.endActionSecondaryText}>Retour</Text>
-                  </Pressable>
-                </View>
-              </View>
-            ) : isUserChoice ? (
-              <View style={styles.choicesGrid}>
-                {currentNode?.choices?.map((choice) => {
-                  const isSelected = selectedChoiceId === choice.id;
+        <View style={styles.body}>
+          <View style={styles.topFixedSection}>
+            <View style={styles.topInner}>
+              <View style={styles.stepsContainer}>
+                {steps.map((s, i) => {
+                  const active = i === progressIndex;
+                  const done = i <= progressIndex;
                   const accent = mode === "real" ? CYAN : PURPLE;
 
                   return (
-                    <Pressable
-                      key={choice.id}
-                      onPress={() => handleChoice(choice)}
-                      style={({ pressed }) => [
-                        styles.choiceBtn,
-                        isSelected && {
-                          borderColor: accent,
-                          backgroundColor: "rgba(255,255,255,0.08)",
-                        },
-                        pressed && { opacity: 0.92 },
-                      ]}
-                    >
+                    <View key={s} style={styles.stepWrapper}>
                       <View
-                        pointerEvents="none"
                         style={[
-                          styles.choiceGlow,
-                          {
-                            backgroundColor:
-                              mode === "real"
-                                ? "rgba(34,211,238,0.08)"
-                                : "rgba(168,85,247,0.10)",
+                          styles.stepDot,
+                          done && {
+                            backgroundColor: accent,
+                            opacity: active ? 1 : 0.7,
                           },
                         ]}
                       />
-
-                      <Text style={styles.choiceKr}>{choice.korean}</Text>
-                      <Text style={styles.choiceFr}>{choice.label}</Text>
-                    </Pressable>
+                      <Text
+                        style={[
+                          styles.stepLabel,
+                          active && {
+                            color: TXT,
+                            fontFamily: fonts.bold,
+                          },
+                        ]}
+                      >
+                        {s}
+                      </Text>
+                    </View>
                   );
                 })}
               </View>
-            ) : (
-              <View style={styles.waitingCard}>
-                <View style={styles.waitingPulseRow}>
-                  <View style={styles.waitingDot} />
-                  <Text style={styles.waitingTxt}>
-                    Écoute de l’interlocuteur...
-                  </Text>
-                </View>
 
-                <Text style={styles.waitingSub}>
-                  La scène continue automatiquement.
-                </Text>
+              <View
+                style={[
+                  styles.videoContainer,
+                  {
+                    height: videoHeight,
+                    borderColor:
+                      mode === "real"
+                        ? "rgba(34,211,238,0.40)"
+                        : "rgba(168,85,247,0.42)",
+                  },
+                ]}
+              >
+                {displayedVideoSource ? (
+                  <VideoView
+                    player={player}
+                    style={styles.video}
+                    contentFit="cover"
+                    nativeControls={false}
+                    allowsFullscreen={false}
+                    allowsPictureInPicture={false}
+                  />
+                ) : (
+                  <View style={styles.videoFallback}>
+                    <Text style={styles.videoFallbackEmoji}>👩‍🍳</Text>
+                  </View>
+                )}
+
+                <LinearGradient
+                  colors={["transparent", "rgba(0,0,0,0.62)"]}
+                  style={styles.videoOverlay}
+                />
               </View>
-            )}
+
+              <View style={styles.aiCard}>
+                <Text style={styles.aiKr}>{currentNode?.korean || "..."}</Text>
+
+                {currentNode?.french ? (
+                  <Text style={styles.aiFr}>{currentNode.french}</Text>
+                ) : null}
+              </View>
+            </View>
           </View>
 
-          <View style={{ height: Math.max(22, insets.bottom + 8) }} />
-        </ScrollView>
+          <ScrollView
+            ref={scrollRef}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={[
+              styles.interactionScroll,
+              { paddingBottom: Math.max(22, insets.bottom + 8) },
+            ]}
+          >
+            <View style={styles.interactionSection}>
+              <Text style={styles.sectionTitle}>Ta réponse</Text>
+
+              {isSceneEnded ? (
+                <View style={styles.endCard}>
+                  <Text style={styles.endTitle}>Scène terminée</Text>
+                  <Text style={styles.endSubtitle}>
+                    Tu peux rejouer cette scène ou revenir au menu.
+                  </Text>
+
+                  <View style={styles.endActions}>
+                    <Pressable
+                      onPress={handleRestart}
+                      style={({ pressed }) => [
+                        styles.endActionPrimary,
+                        { opacity: pressed ? 0.92 : 1 },
+                      ]}
+                    >
+                      <LinearGradient
+                        colors={
+                          mode === "real" ? [CYAN, "#56CCF2"] : [PURPLE, PINK]
+                        }
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.endActionPrimaryInner}
+                      >
+                        <Text style={styles.endActionPrimaryText}>Rejouer</Text>
+                      </LinearGradient>
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => router.back()}
+                      style={({ pressed }) => [
+                        styles.endActionSecondary,
+                        { opacity: pressed ? 0.9 : 1 },
+                      ]}
+                    >
+                      <Text style={styles.endActionSecondaryText}>Retour</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ) : isUserChoice ? (
+                <View style={styles.choicesGrid}>
+                  {currentNode?.choices?.map((choice) => {
+                    const isSelected = selectedChoiceId === choice.id;
+                    const accent = mode === "real" ? CYAN : PURPLE;
+
+                    return (
+                      <Pressable
+                        key={choice.id}
+                        onPress={() => handleChoice(choice)}
+                        style={({ pressed }) => [
+                          styles.choiceBtn,
+                          isSelected && {
+                            borderColor: accent,
+                            backgroundColor: "rgba(255,255,255,0.08)",
+                          },
+                          pressed && { opacity: 0.92 },
+                        ]}
+                      >
+                        <View
+                          pointerEvents="none"
+                          style={[
+                            styles.choiceGlow,
+                            {
+                              backgroundColor:
+                                mode === "real"
+                                  ? "rgba(34,211,238,0.08)"
+                                  : "rgba(168,85,247,0.10)",
+                            },
+                          ]}
+                        />
+
+                        <Text style={styles.choiceKr}>{choice.korean}</Text>
+                        <Text style={styles.choiceFr}>{choice.label}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              ) : (
+                <View style={styles.waitingCard}>
+                  <View style={styles.waitingPulseRow}>
+                    <View style={styles.waitingDot} />
+                    <Text style={styles.waitingTxt}>
+                      Écoute de l’interlocuteur...
+                    </Text>
+                  </View>
+
+                  <Text style={styles.waitingSub}>
+                    La scène continue automatiquement.
+                  </Text>
+                </View>
+              )}
+            </View>
+          </ScrollView>
+        </View>
       </SafeAreaView>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: {
+  body: {
+    flex: 1,
+  },
+
+  topFixedSection: {
     paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingTop: 6,
+  },
+
+  topInner: {
+    flexShrink: 0,
+  },
+
+  interactionScroll: {
+    paddingHorizontal: 20,
+    paddingTop: 26,
   },
 
   glow: {
@@ -736,7 +746,6 @@ const styles = StyleSheet.create({
   },
 
   interactionSection: {
-    marginTop: 26,
     minHeight: 220,
   },
 
