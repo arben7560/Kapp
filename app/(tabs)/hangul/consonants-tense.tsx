@@ -1,665 +1,1033 @@
 import { BlurView } from "expo-blur";
-import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import * as Speech from "expo-speech";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Dimensions,
-  Easing,
   ImageBackground,
   Pressable,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
+  Vibration,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../../assets/images/seoul-hub-bg.jpg");
 
-// --- DESIGN SYSTEM HARMONISÉ ---
-const PINK = "#F472B6";
-const CYAN = "#22D3EE";
-const VIOLET = "#A78BFA";
-const TXT_PRIMARY = "#FFFFFF";
-const TXT_SECONDARY = "rgba(255,255,255,0.80)";
-const MUTED = "rgba(255,255,255,0.45)";
-const GLASS_BORDER = "rgba(255,255,255,0.18)";
+const COLORS = {
+  bg: "#020306",
+  pink: "#F472B6",
+  cyan: "#22D3EE",
+  violet: "#A78BFA",
+  premiumGold: "#FDE047",
+  successGreen: "#4ADE80",
+  errorRed: "#F87171",
+  pureWhite: "#F8FAFC",
+  txt: "rgba(255,255,255,0.98)",
+  muted: "rgba(255,255,255,0.75)",
+};
 
-// --- DATA & ASSETS ---
-const TENSE_DATA = [
+type Expression = {
+  id: string;
+  word: string;
+  rom: string;
+  mean: string;
+  context: string;
+  type: "tense" | "contrast" | "word";
+  speak: string;
+  symbolic?: string;
+  strokeSteps?: number;
+};
+
+type Scene = {
+  id: string;
+  title: string;
+  koreanTitle: string;
+  description: string;
+  accent: string;
+  curiosityHook: string;
+  instruction: string;
+  teaser: string;
+  expressions: Expression[];
+};
+
+type QuizQuestion = {
+  expression: Expression;
+  options: string[];
+  correctAnswer: string;
+  questionType: "meaning" | "sound";
+};
+
+const SCENES: Scene[] = [
   {
-    char: "ㄲ",
-    ex: "까",
-    roma: "kk",
-    desc: "Son sec et contracté",
-    tone: CYAN,
+    id: "tense-force",
+    title: "La Tension",
+    koreanTitle: "쌍자음",
+    description:
+      "Les consonnes doubles créent un son plus sec, plus contracté et sans souffle.",
+    accent: COLORS.pink,
+    curiosityHook:
+      "En coréen, doubler une consonne ne veut pas dire parler plus fort : cela signifie bloquer l’air et contracter le son.",
+    instruction: "Touche une consonne tendue pour entendre son attaque sèche.",
+    teaser:
+      "Très bien. Tu sens maintenant la tension. Passons aux contrastes avec les consonnes simples.",
+    expressions: [
+      {
+        id: "t-kk",
+        word: "ㄲ",
+        rom: "kk",
+        mean: "K tendu",
+        symbolic: "Version contractée de ㄱ : l’air reste bloqué.",
+        context: "Son sec, comme une attaque courte sans expiration.",
+        type: "tense",
+        speak: "까",
+        strokeSteps: 4,
+      },
+      {
+        id: "t-tt",
+        word: "ㄸ",
+        rom: "tt",
+        mean: "T tendu",
+        symbolic: "Version contractée de ㄷ : attaque nette et tendue.",
+        context: "Son fort mais sans souffle aspiré.",
+        type: "tense",
+        speak: "따",
+        strokeSteps: 6,
+      },
+      {
+        id: "t-pp",
+        word: "ㅃ",
+        rom: "pp",
+        mean: "P tendu",
+        symbolic:
+          "Version contractée de ㅂ : lèvres fermées puis relâchement sec.",
+        context: "Explosion labiale tendue.",
+        type: "tense",
+        speak: "빠",
+        strokeSteps: 8,
+      },
+      {
+        id: "t-ss",
+        word: "ㅆ",
+        rom: "ss",
+        mean: "S tendu",
+        symbolic: "Version intensifiée de ㅅ : friction plus serrée.",
+        context: "Sifflante intense et précise.",
+        type: "tense",
+        speak: "싸",
+        strokeSteps: 4,
+      },
+      {
+        id: "t-jj",
+        word: "ㅉ",
+        rom: "jj",
+        mean: "J tendu",
+        symbolic: "Version contractée de ㅈ : son très marqué.",
+        context: "Son proche de 'dj', mais plus sec.",
+        type: "tense",
+        speak: "짜",
+        strokeSteps: 8,
+      },
+    ],
   },
   {
-    char: "ㄸ",
-    ex: "따",
-    roma: "tt",
-    desc: "Attaque forte, sans souffle",
-    tone: PINK,
+    id: "contrast",
+    title: "Le Contraste",
+    koreanTitle: "소리 구별",
+    description:
+      "La vraie difficulté est de distinguer consonne simple, aspirée et tendue.",
+    accent: COLORS.cyan,
+    curiosityHook:
+      "Pour une oreille française, ㄱ et ㄲ peuvent sembler proches. Mais en coréen, ce contraste change complètement le mot.",
+    instruction:
+      "Écoute les paires : le deuxième son est plus fermé, plus sec, plus tendu.",
+    teaser:
+      "Parfait. Ton oreille commence à distinguer les nuances. Voyons ces sons dans des mots.",
+    expressions: [
+      {
+        id: "c-ga-kka",
+        word: "가 / 까",
+        rom: "ga / kka",
+        mean: "Simple / tendu",
+        symbolic: "ㄱ laisse le son sortir naturellement, ㄲ le contracte.",
+        context: "Compare une attaque douce avec une attaque tendue.",
+        type: "contrast",
+        speak: "가 까",
+      },
+      {
+        id: "c-da-tta",
+        word: "다 / 따",
+        rom: "da / tta",
+        mean: "Simple / tendu",
+        symbolic: "ㄷ est naturel, ㄸ est bloqué puis relâché.",
+        context: "La différence vient de la tension, pas du volume.",
+        type: "contrast",
+        speak: "다 따",
+      },
+      {
+        id: "c-ba-ppa",
+        word: "바 / 빠",
+        rom: "ba / ppa",
+        mean: "Simple / tendu",
+        symbolic: "ㅂ est plus doux, ㅃ est plus explosif.",
+        context: "Les lèvres gardent plus de pression avant le son.",
+        type: "contrast",
+        speak: "바 빠",
+      },
+      {
+        id: "c-sa-ssa",
+        word: "사 / 싸",
+        rom: "sa / ssa",
+        mean: "Simple / tendu",
+        symbolic: "ㅆ serre davantage le passage de l’air.",
+        context: "Le son devient plus intense et précis.",
+        type: "contrast",
+        speak: "사 싸",
+      },
+    ],
   },
   {
-    char: "ㅃ",
-    ex: "빠",
-    roma: "pp",
-    desc: "Explosion labiale tendue",
-    tone: VIOLET,
-  },
-  { char: "ㅆ", ex: "싸", roma: "ss", desc: "Sifflante intense", tone: CYAN },
-  {
-    char: "ㅉ",
-    ex: "짜",
-    roma: "jj",
-    desc: "Son 'dj' très marqué",
-    tone: PINK,
+    id: "tense-words",
+    title: "Mots Tendues",
+    koreanTitle: "된소리 단어",
+    description:
+      "Les consonnes tendues apparaissent dans beaucoup de mots très courants.",
+    accent: COLORS.violet,
+    curiosityHook:
+      "Quand tu reconnais les consonnes tendues, les mots coréens deviennent plus nets et moins flous à l’oreille.",
+    instruction:
+      "Touche chaque mot pour entendre la tension dans un vrai mot coréen.",
+    teaser:
+      "Victoire. Tu peux maintenant reconnaître les consonnes tendues dans les mots coréens.",
+    expressions: [
+      {
+        id: "w-kka",
+        word: "까다",
+        rom: "kka-da",
+        mean: "Éplucher / critiquer",
+        symbolic: "Le mot commence par ㄲ.",
+        context: "La première syllabe a une attaque sèche.",
+        type: "word",
+        speak: "까다",
+      },
+      {
+        id: "w-tta",
+        word: "따다",
+        rom: "tta-da",
+        mean: "Cueillir / obtenir",
+        symbolic: "Le mot commence par ㄸ.",
+        context: "Le T est tendu, sans souffle.",
+        type: "word",
+        speak: "따다",
+      },
+      {
+        id: "w-ppang",
+        word: "빵",
+        rom: "ppang",
+        mean: "Pain",
+        symbolic: "Le mot commence par ㅃ.",
+        context: "Mot très courant en Corée.",
+        type: "word",
+        speak: "빵",
+      },
+      {
+        id: "w-ssa",
+        word: "싸다",
+        rom: "ssa-da",
+        mean: "Être bon marché / emballer",
+        symbolic: "Le mot commence par ㅆ.",
+        context: "Le sens dépend du contexte.",
+        type: "word",
+        speak: "싸다",
+      },
+      {
+        id: "w-jjigae",
+        word: "찌개",
+        rom: "jji-gae",
+        mean: "Ragoût coréen",
+        symbolic: "Le mot commence par ㅉ.",
+        context: "Mot très fréquent dans les restaurants coréens.",
+        type: "word",
+        speak: "찌개",
+      },
+    ],
   },
 ];
 
-const CONTRASTS = [
-  {
-    id: "g-kk",
-    left: { char: "ㄱ", roma: "g", tone: VIOLET },
-    right: { char: "ㄲ", roma: "kk", tone: CYAN },
-    accent: CYAN,
-  },
-  {
-    id: "d-tt",
-    left: { char: "ㄷ", roma: "d", tone: CYAN },
-    right: { char: "ㄸ", roma: "tt", tone: PINK },
-    accent: PINK,
-  },
-];
+const generateQuiz = (scene: Scene): QuizQuestion[] => {
+  const allExpressions = SCENES.flatMap((s) => s.expressions);
 
-const CONTRAST_SPEECH_TEXTS = [
-  { left: "가", right: "까" },
-  { left: "다", right: "따" },
-];
+  return scene.expressions.map((exp) => {
+    const useSound = Math.random() > 0.5;
+    const correct = useSound ? exp.rom : exp.mean;
 
-const TENSE_SPEECH_TEXTS = ["까", "따", "빠", "싸", "짜"];
+    const distractors = allExpressions
+      .filter((e) => e.id !== exp.id)
+      .map((e) => (useSound ? e.rom : e.mean))
+      .filter((v, i, arr) => arr.indexOf(v) === i && v !== correct)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 2);
 
-// --- MINI COMPONENTS (SIGNATURES) ---
+    while (distractors.length < 2) {
+      distractors.push(useSound ? "..." : "Autre");
+    }
 
-const NeonHeaderLine = ({ color = PINK }) => (
-  <View
-    style={[styles.neonBar, { backgroundColor: color, shadowColor: color }]}
-  />
-);
+    const options = [correct, ...distractors].sort(() => Math.random() - 0.5);
 
-const AudioVisualizer = ({ active }: { active: boolean }) => (
-  <View style={styles.waveContainer}>
-    {[1, 2, 3, 4].map((i) => (
-      <View
-        key={i}
-        style={[
-          styles.waveBar,
-          { height: active ? 8 + Math.random() * 12 : 4 },
-        ]}
-      />
-    ))}
-  </View>
-);
+    return {
+      expression: exp,
+      options,
+      correctAnswer: correct,
+      questionType: useSound ? "sound" : "meaning",
+    };
+  });
+};
 
-const PremiumSettingsBtn = () => (
-  <Pressable
-    style={styles.settingsCircle}
-    onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-  >
-    <Text style={styles.settingsIconText}>⚙</Text>
-  </Pressable>
-);
+const getQuizResultMessage = (score: number, total: number) => {
+  if (total <= 0) return "RÉVISION EN COURS";
+  if (score === total) return "MAÎTRISE PARFAITE";
+
+  const ratio = score / total;
+
+  if (ratio >= 0.8) return "TRÈS BONNE MAÎTRISE";
+  if (ratio >= 0.6) return "BONNE PROGRESSION";
+  if (ratio >= 0.4) return "BASES EN CONSTRUCTION";
+  return "ON REPREND EN DOUCEUR";
+};
 
 export default function ConsonantsDoubleScreen() {
-  const [index, setIndex] = useState(0);
-  const [contrastIdx, setContrastIdx] = useState(0);
-  const [showRoman, setShowRoman] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [activeScene, setActiveScene] = useState<Scene>(SCENES[0]);
+  const [completedItems, setCompletedItems] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [ambientMode, setAmbientMode] = useState(false);
+  const [masteredScenes, setMasteredScenes] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [showTeaser, setShowTeaser] = useState<Record<string, boolean>>({});
+  const [quizActive, setQuizActive] = useState(false);
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [quizIndex, setQuizIndex] = useState(0);
+  const [quizScore, setQuizScore] = useState(0);
+  const [quizAnswered, setQuizAnswered] = useState<string | null>(null);
+  const [quizComplete, setQuizComplete] = useState(false);
 
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-
-  const current = TENSE_DATA[index];
-  const contrast = CONTRASTS[contrastIdx];
-  const contrastSpeech = CONTRAST_SPEECH_TEXTS[contrastIdx];
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const quizSlideAnim = useRef(new Animated.Value(600)).current;
 
   useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.05,
-          duration: 2500,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 2500,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ]),
-    ).start();
+    fadeAnim.setValue(0);
 
-    return () => stopSpeech();
-  }, []);
+    Animated.spring(fadeAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 40,
+      friction: 7,
+    }).start();
 
-  const triggerHaptic = (style = Haptics.ImpactFeedbackStyle.Medium) =>
-    Haptics.impactAsync(style);
+    Speech.stop();
+  }, [activeScene]);
 
-  const handlePlay = async () => {
-    triggerHaptic(Haptics.ImpactFeedbackStyle.Heavy);
-    setIsPlaying(true);
-    await speakKorean(TENSE_SPEECH_TEXTS[index]);
-    setIsPlaying(false);
-  };
+  const currentCompleted = Object.keys(completedItems).length;
+  const totalToComplete = SCENES.reduce(
+    (acc, s) => acc + s.expressions.length,
+    0,
+  );
 
-  const animateSwitch = (direction: number) => {
-    triggerHaptic(Haptics.ImpactFeedbackStyle.Light);
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: direction * 30,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      const nextIdx =
-        direction === 1
-          ? (index + 1) % TENSE_DATA.length
-          : (index - 1 + TENSE_DATA.length) % TENSE_DATA.length;
-      setIndex(nextIdx);
-
-      slideAnim.setValue(direction * -30);
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 200,
-          easing: Easing.out(Easing.back(1)),
-          useNativeDriver: true,
-        }),
-      ]).start();
+  const speak = (text: string) => {
+    Speech.stop();
+    Speech.speak(text, {
+      language: "ko-KR",
+      rate: 0.75,
+      pitch: 1,
     });
   };
 
+  const startQuiz = () => {
+    setQuizQuestions(generateQuiz(activeScene));
+    setQuizIndex(0);
+    setQuizScore(0);
+    setQuizAnswered(null);
+    setQuizComplete(false);
+    setQuizActive(true);
+
+    quizSlideAnim.setValue(600);
+
+    Animated.spring(quizSlideAnim, {
+      toValue: 0,
+      tension: 50,
+      friction: 9,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressItem = (exp: Expression) => {
+    const isFirstTime = !completedItems[exp.id];
+
+    speak(exp.speak);
+    Vibration.vibrate(isFirstTime ? [0, 20, 10, 20] : 8);
+
+    const newCompleted = { ...completedItems, [exp.id]: true };
+    setCompletedItems(newCompleted);
+
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 1.03,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    if (
+      isFirstTime &&
+      activeScene.expressions.every((e) => newCompleted[e.id]) &&
+      !masteredScenes[activeScene.id]
+    ) {
+      setTimeout(() => startQuiz(), 1000);
+    }
+  };
+
+  const handleQuizAnswer = (answer: string) => {
+    if (quizAnswered !== null) return;
+
+    const currentQuestion = quizQuestions[quizIndex];
+    if (!currentQuestion) return;
+
+    const isCorrect = answer === currentQuestion.correctAnswer;
+    setQuizAnswered(answer);
+
+    if (isCorrect) {
+      setQuizScore((s) => s + 1);
+      Vibration.vibrate(15);
+    } else {
+      Vibration.vibrate([0, 60]);
+      setTimeout(() => speak(currentQuestion.expression.speak), 400);
+    }
+
+    setTimeout(() => {
+      if (quizIndex + 1 < quizQuestions.length) {
+        setQuizIndex((i) => i + 1);
+        setQuizAnswered(null);
+      } else {
+        setQuizComplete(true);
+        setMasteredScenes((p) => ({ ...p, [activeScene.id]: true }));
+        setShowTeaser((p) => ({ ...p, [activeScene.id]: true }));
+      }
+    }, 900);
+  };
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView style={styles.container}>
       <ImageBackground
         source={BACKGROUND_SOURCE}
-        style={StyleSheet.absoluteFill}
-        blurRadius={12}
+        style={styles.bg}
+        blurRadius={8}
       >
         <LinearGradient
-          colors={["rgba(5,5,15,0.9)", "rgba(10,13,30,0.98)"]}
-          style={StyleSheet.absoluteFill}
+          colors={["rgba(2,3,6,0.68)", "rgba(2,3,6,0.86)", "rgba(2,3,6,0.96)"]}
+          style={StyleSheet.absoluteFillObject}
         />
 
-        <SafeAreaView style={{ flex: 1 }}>
-          {/* Header row */}
-          <View style={styles.headerRow}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scroll}
+        >
+          <View style={styles.header}>
             <Pressable onPress={() => router.back()} style={styles.backBtn}>
-              <Text style={styles.backIcon}>‹</Text>
+              <Text style={styles.backArrow}>‹</Text>
+              <Text style={styles.backText}>TENSION</Text>
             </Pressable>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.navEyebrow}>SÉOUL IMMERSION</Text>
-              <Text style={styles.navTitle}>Consonnes Tendues</Text>
-            </View>
-            <PremiumSettingsBtn />
+
+            <Pressable
+              onPress={() => {
+                setAmbientMode(!ambientMode);
+                Vibration.vibrate(5);
+              }}
+              style={[
+                styles.premiumToggle,
+                ambientMode && styles.premiumToggleActive,
+              ]}
+            >
+              <Text style={styles.premiumToggleText}>
+                {ambientMode ? "✨ SOUND ON" : "🔇 FOCUS"}
+              </Text>
+            </Pressable>
           </View>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-          >
-            {/* Signature Titre */}
-            <View style={styles.heroSection}>
-              <Text style={styles.heroTitle}>Doubles</Text>
-              <NeonHeaderLine color={PINK} />
-            </View>
-
-            <Text style={styles.sectionLabel}>FORCE ET TENSION</Text>
-
-            {/* Main Study Card */}
-            <View style={styles.mainCardContainer}>
-              <BlurView intensity={80} tint="dark" style={styles.glassCard}>
-                <LinearGradient
-                  colors={["rgba(255,255,255,0.15)", "transparent"]}
-                  style={StyleSheet.absoluteFill}
+          <View style={styles.heroIntro}>
+            <View style={styles.progressRow}>
+              <View style={styles.miniProgressBg}>
+                <View
+                  style={[
+                    styles.miniProgressFill,
+                    {
+                      width: `${(currentCompleted / totalToComplete) * 100}%`,
+                      backgroundColor: activeScene.accent,
+                    },
+                  ]}
                 />
-
-                <View style={styles.cardHeader}>
-                  <View style={styles.liveTag}>
-                    <View
-                      style={[
-                        styles.liveDot,
-                        isPlaying && {
-                          backgroundColor: CYAN,
-                          shadowOpacity: 1,
-                        },
-                      ]}
-                    />
-                    <Text style={styles.liveText}>TENSE VOICE</Text>
-                  </View>
-                  <Text style={styles.counterText}>
-                    {index + 1} / {TENSE_DATA.length}
-                  </Text>
-                </View>
-
-                <View style={styles.cardBody}>
-                  <Animated.View
-                    style={[
-                      styles.wordContent,
-                      {
-                        opacity: fadeAnim,
-                        transform: [{ translateX: slideAnim }],
-                      },
-                    ]}
-                  >
-                    <Animated.Text
-                      style={[
-                        styles.krBig,
-                        {
-                          transform: [{ scale: pulseAnim }],
-                          textShadowColor: current.tone,
-                        },
-                      ]}
-                    >
-                      {current.char}
-                    </Animated.Text>
-                    {showRoman && (
-                      <Text style={[styles.romanBig, { color: current.tone }]}>
-                        {current.roma.toUpperCase()}
-                      </Text>
-                    )}
-                    <View style={styles.descBadge}>
-                      <Text style={styles.descText}>{current.desc}</Text>
-                    </View>
-                  </Animated.View>
-                </View>
-
-                {/* Commandes d'action */}
-                <View style={styles.actionRow}>
-                  <Pressable
-                    style={styles.navBtnSmall}
-                    onPress={() => animateSwitch(-1)}
-                  >
-                    <Text style={styles.navBtnIcon}>‹</Text>
-                  </Pressable>
-
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.mainPlayBtn,
-                      pressed && { transform: [{ scale: 0.96 }] },
-                    ]}
-                    onPress={handlePlay}
-                  >
-                    <LinearGradient
-                      colors={[current.tone, "#4F46E5"]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.playGradient}
-                    >
-                      <AudioVisualizer active={isPlaying} />
-                      <Text style={styles.playBtnText}>ÉCOUTER</Text>
-                    </LinearGradient>
-                  </Pressable>
-
-                  <Pressable
-                    style={styles.navBtnSmall}
-                    onPress={() => animateSwitch(1)}
-                  >
-                    <Text style={styles.navBtnIcon}>›</Text>
-                  </Pressable>
-                </View>
-              </BlurView>
-            </View>
-
-            {/* Section Contrastes */}
-            <Text style={styles.sectionLabel}>DISTINCTION VISUELLE</Text>
-            <View style={styles.contrastContainer}>
-              <View style={styles.contrastRow}>
-                {[contrast.left, contrast.right].map((item, i) => (
-                  <Pressable
-                    key={i}
-                    style={styles.halfCard}
-                    onPress={() => {
-                      triggerHaptic();
-                      speakKorean(i === 0 ? contrastSpeech.left : contrastSpeech.right);
-                    }}
-                  >
-                    <BlurView
-                      intensity={50}
-                      tint="dark"
-                      style={styles.halfGlass}
-                    >
-                      <View
-                        style={[
-                          styles.cardGlow,
-                          { backgroundColor: item.tone },
-                        ]}
-                      />
-                      <Text style={styles.contrastKr}>{item.char}</Text>
-                      <Text style={[styles.contrastRo, { color: item.tone }]}>
-                        {item.roma}
-                      </Text>
-                    </BlurView>
-                  </Pressable>
-                ))}
-                <View style={styles.absoluteArrow}>
-                  <Text
-                    style={[
-                      styles.neonArrow,
-                      {
-                        color: contrast.accent,
-                        textShadowColor: contrast.accent,
-                      },
-                    ]}
-                  >
-                    →
-                  </Text>
-                </View>
               </View>
 
+              <Text style={styles.progressText}>
+                {currentCompleted}/{totalToComplete}
+              </Text>
+            </View>
+
+            <Text style={[styles.eyebrow, { color: activeScene.accent }]}>
+              SÉOUL IMMERSION
+            </Text>
+          </View>
+
+          <View style={styles.tabBar}>
+            {SCENES.map((scene) => (
               <Pressable
-                style={styles.diffButton}
-                onPress={() => {
-                  triggerHaptic();
-                  speakKorean(contrastSpeech.left);
-                  setTimeout(() => speakKorean(contrastSpeech.right), 1000);
-                }}
+                key={scene.id}
+                onPress={() => setActiveScene(scene)}
+                style={[
+                  styles.tab,
+                  activeScene.id === scene.id && {
+                    borderColor: scene.accent,
+                    backgroundColor: "rgba(255,255,255,0.12)",
+                  },
+                ]}
               >
-                <LinearGradient
-                  colors={["rgba(255,255,255,0.12)", "rgba(255,255,255,0.05)"]}
-                  style={styles.diffGradient}
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    activeScene.id === scene.id && { color: scene.accent },
+                  ]}
                 >
-                  <Text style={styles.diffText}>COMPARER LES SONS</Text>
-                </LinearGradient>
-              </Pressable>
-            </View>
-
-            {/* Footer de contrôle */}
-            <View style={styles.footer}>
-              <Pressable
-                onPress={() => {
-                  triggerHaptic();
-                  setShowRoman(!showRoman);
-                }}
-                style={styles.toggleBtn}
-              >
-                <Text style={[styles.toggleText, showRoman && { color: CYAN }]}>
-                  ROMANISATION : {showRoman ? "ON" : "OFF"}
+                  {scene.title}
                 </Text>
-                {showRoman && <View style={styles.activeDot} />}
               </Pressable>
+            ))}
+          </View>
+
+          <Animated.View
+            style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
+          >
+            <BlurView intensity={70} tint="dark" style={styles.mainCard}>
+              <Text style={styles.toolboxSceneTitle}>{activeScene.title}</Text>
+
+              <View
+                style={[
+                  styles.hookBanner,
+                  { borderColor: `${activeScene.accent}30` },
+                ]}
+              >
+                <Text style={styles.hookText}>
+                  💡 {activeScene.curiosityHook}
+                </Text>
+              </View>
+
+              <Text style={[styles.krTitle, { color: activeScene.accent }]}>
+                {activeScene.koreanTitle}
+              </Text>
+
+              <Text style={styles.sceneDesc}>{activeScene.description}</Text>
+
+              <View
+                style={[
+                  styles.instructionBox,
+                  { borderLeftColor: activeScene.accent },
+                ]}
+              >
+                <Text style={styles.instructionText}>
+                  {activeScene.instruction}
+                </Text>
+              </View>
+            </BlurView>
+          </Animated.View>
+
+          <View style={styles.grid}>
+            <View style={styles.toolboxHeader}>
+              <Text style={styles.sectionTitle}>TENSE TOOLBOX</Text>
             </View>
 
-            <View style={styles.bottomSpace} />
-          </ScrollView>
-        </SafeAreaView>
+            {activeScene.expressions.map((exp) => (
+              <Pressable
+                key={exp.id}
+                onPress={() => handlePressItem(exp)}
+                style={styles.cardWrapper}
+              >
+                <BlurView
+                  intensity={40}
+                  tint="dark"
+                  style={[
+                    styles.expCard,
+                    completedItems[exp.id] && {
+                      borderColor: activeScene.accent,
+                    },
+                  ]}
+                >
+                  <View style={styles.expCardMain}>
+                    <Text
+                      style={[
+                        styles.expWord,
+                        {
+                          color: completedItems[exp.id]
+                            ? activeScene.accent
+                            : COLORS.pureWhite,
+                        },
+                      ]}
+                    >
+                      {exp.word}
+                    </Text>
+
+                    <View style={styles.expCardRight}>
+                      {exp.strokeSteps && (
+                        <View style={styles.strokeBadge}>
+                          <Text style={styles.strokeText}>
+                            {exp.strokeSteps} TRAITS
+                          </Text>
+                        </View>
+                      )}
+
+                      <View
+                        style={[
+                          styles.romBox,
+                          { backgroundColor: `${activeScene.accent}20` },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.romText,
+                            { color: activeScene.accent },
+                          ]}
+                        >
+                          {exp.rom}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {completedItems[exp.id] && (
+                    <View style={styles.expDetail}>
+                      <Text
+                        style={[
+                          styles.expSymbolic,
+                          { color: activeScene.accent },
+                        ]}
+                      >
+                        {exp.symbolic || "Composition syllabique"}
+                      </Text>
+
+                      <Text style={styles.expMean}>{exp.mean}</Text>
+                      <Text style={styles.expCtx}>{exp.context}</Text>
+                    </View>
+                  )}
+                </BlurView>
+              </Pressable>
+            ))}
+          </View>
+
+          {showTeaser[activeScene.id] && (
+            <Pressable
+              onPress={() => {
+                const nextIdx =
+                  SCENES.findIndex((s) => s.id === activeScene.id) + 1;
+
+                if (nextIdx < SCENES.length) {
+                  setActiveScene(SCENES[nextIdx]);
+                }
+              }}
+              style={styles.teaserBox}
+            >
+              <Text style={styles.teaserText}>✨ {activeScene.teaser}</Text>
+
+              <Text style={[styles.teaserBtn, { color: activeScene.accent }]}>
+                DÉBLOQUER LA SUITE →
+              </Text>
+            </Pressable>
+          )}
+        </ScrollView>
+
+        {quizActive && (
+          <BlurView intensity={100} tint="dark" style={styles.quizOverlay}>
+            <Animated.View
+              style={[
+                styles.quizSheet,
+                { transform: [{ translateY: quizSlideAnim }] },
+              ]}
+            >
+              {!quizComplete ? (
+                <>
+                  <Text style={styles.quizTitle}>DÉFI DE MÉMORISATION</Text>
+
+                  <View style={styles.quizQBox}>
+                    <Text
+                      style={[styles.quizChar, { color: activeScene.accent }]}
+                    >
+                      {quizQuestions[quizIndex]?.expression.word}
+                    </Text>
+
+                    <Text style={styles.quizInstruction}>
+                      {quizQuestions[quizIndex]?.questionType === "sound"
+                        ? "Quel est le son correct ?"
+                        : "Quelle est la signification correcte ?"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.optionsGrid}>
+                    {quizQuestions[quizIndex]?.options.map((opt, i) => (
+                      <Pressable
+                        key={i}
+                        onPress={() => handleQuizAnswer(opt)}
+                        style={[
+                          styles.optBtn,
+                          quizAnswered === opt &&
+                            (opt === quizQuestions[quizIndex].correctAnswer
+                              ? styles.optCorrect
+                              : styles.optWrong),
+                        ]}
+                      >
+                        <Text style={styles.optText}>{opt}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </>
+              ) : (
+                <View style={styles.resultBox}>
+                  <Text style={styles.resultIcon}>🌟</Text>
+
+                  <Text style={styles.resultTitle}>
+                    {getQuizResultMessage(quizScore, quizQuestions.length)}
+                  </Text>
+
+                  <Text style={styles.resultScore}>
+                    {quizScore} / {quizQuestions.length} réponses correctes
+                  </Text>
+
+                  <Pressable
+                    onPress={() => setQuizActive(false)}
+                    style={[
+                      styles.closeBtn,
+                      { backgroundColor: activeScene.accent },
+                    ]}
+                  >
+                    <Text style={styles.closeBtnText}>
+                      CONTINUER L'IMMERSION
+                    </Text>
+                  </Pressable>
+                </View>
+              )}
+            </Animated.View>
+          </BlurView>
+        )}
       </ImageBackground>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#050508" },
-  headerRow: {
+  container: { flex: 1, backgroundColor: COLORS.bg },
+  bg: { flex: 1 },
+  scroll: { paddingHorizontal: 22, paddingBottom: 120 },
+
+  header: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    marginVertical: 20,
   },
-  scrollContent: { paddingHorizontal: 24 },
-
-  settingsCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  settingsIconText: { color: MUTED, fontSize: 18 },
-  backBtn: { marginRight: 16 },
-  backIcon: { color: "#fff", fontSize: 32 },
-  navEyebrow: {
-    color: PINK,
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 2,
-  },
-  navTitle: { color: TXT_SECONDARY, fontSize: 13 },
-
-  heroSection: { marginVertical: 20 },
-  heroTitle: {
-    color: "#fff",
-    fontSize: 52,
-    fontWeight: "900",
-    letterSpacing: -1.5,
-  },
-  neonBar: {
-    width: 45,
-    height: 4,
-    marginTop: 8,
-    borderRadius: 2,
-    shadowRadius: 15,
-    shadowOpacity: 0.8,
-  },
-
-  sectionLabel: {
-    color: MUTED,
+  backBtn: { flexDirection: "row", alignItems: "center" },
+  backArrow: { color: COLORS.txt, fontSize: 32, marginRight: 5 },
+  backText: {
+    color: COLORS.muted,
+    fontFamily: "Outfit_700Bold",
     fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 2.5,
-    marginBottom: 15,
-  },
-  mainCardContainer: { marginBottom: 35 },
-  glassCard: {
-    borderRadius: 32,
-    padding: 24,
-    borderWidth: 1.2,
-    borderColor: GLASS_BORDER,
-    overflow: "hidden",
-  },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 15,
-  },
-  liveTag: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    shadowRadius: 4,
-  },
-  liveText: { color: "#fff", fontSize: 9, fontWeight: "900", letterSpacing: 1 },
-  counterText: { color: MUTED, fontSize: 12, fontWeight: "800" },
-
-  cardBody: { alignItems: "center", justifyContent: "center", minHeight: 220 },
-  wordContent: { alignItems: "center" },
-  krBig: {
-    color: "#fff",
-    fontSize: 125,
-    fontWeight: "800",
-    textShadowRadius: 30,
-  },
-  romanBig: {
-    fontSize: 20,
-    fontWeight: "900",
-    marginTop: -5,
-    letterSpacing: 6,
-  },
-  descBadge: {
-    marginTop: 25,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-  },
-  descText: { color: TXT_SECONDARY, fontSize: 14, fontStyle: "italic" },
-
-  actionRow: { flexDirection: "row", alignItems: "center", marginTop: 30 },
-  navBtnSmall: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
-  },
-  navBtnIcon: { color: "#fff", fontSize: 28, fontWeight: "300" },
-  mainPlayBtn: {
-    flex: 1,
-    height: 60,
-    marginHorizontal: 16,
-    borderRadius: 20,
-    overflow: "hidden",
-  },
-  playGradient: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-  },
-  playBtnText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "900",
     letterSpacing: 2,
   },
-  waveContainer: { flexDirection: "row", gap: 4, alignItems: "center" },
-  waveBar: { width: 3, backgroundColor: "#fff", borderRadius: 2, opacity: 0.9 },
 
-  contrastContainer: { marginBottom: 35 },
-  contrastRow: {
+  premiumToggle: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+  },
+  premiumToggleActive: {
+    backgroundColor: COLORS.premiumGold,
+    borderColor: COLORS.premiumGold,
+  },
+  premiumToggleText: {
+    color: "#FFF",
+    fontSize: 10,
+    fontFamily: "Outfit_700Bold",
+  },
+
+  heroIntro: { marginBottom: 25 },
+  progressRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
+  miniProgressBg: {
+    flex: 1,
+    height: 4,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 2,
+    marginRight: 12,
+  },
+  miniProgressFill: { height: "100%", borderRadius: 2 },
+  progressText: {
+    color: COLORS.muted,
+    fontSize: 11,
+    fontFamily: "Outfit_700Bold",
+  },
+  eyebrow: {
+    fontSize: 10,
+    fontFamily: "Outfit_700Bold",
+    letterSpacing: 2.5,
+    marginBottom: 6,
+  },
+
+  tabBar: { flexDirection: "row", gap: 10, marginBottom: 28 },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.05)",
+  },
+  tabLabel: {
+    fontSize: 12,
+    fontFamily: "Outfit_700Bold",
+    color: COLORS.muted,
+  },
+
+  mainCard: {
+    padding: 25,
+    borderRadius: 32,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+    overflow: "hidden",
+  },
+  toolboxSceneTitle: {
+    color: COLORS.txt,
+    fontFamily: "Outfit_900Black",
+    fontSize: 34,
+    marginBottom: 14,
+  },
+  hookBanner: {
+    padding: 14,
+    borderRadius: 18,
+    borderWidth: 1,
+    marginBottom: 18,
+    backgroundColor: "rgba(255,255,255,0.04)",
+  },
+  hookText: {
+    color: COLORS.muted,
+    fontSize: 14,
+    lineHeight: 21,
+    fontFamily: "Outfit_500Medium",
+  },
+  krTitle: {
+    fontFamily: "NotoSansKR_700Bold",
+    fontSize: 13,
+    letterSpacing: 3,
+    marginBottom: 12,
+  },
+  sceneDesc: {
+    color: COLORS.muted,
+    fontSize: 14,
+    fontStyle: "italic",
+    marginBottom: 22,
+    lineHeight: 20,
+  },
+  instructionBox: { paddingLeft: 18, borderLeftWidth: 4 },
+  instructionText: {
+    color: COLORS.txt,
+    fontSize: 15,
+    fontFamily: "Outfit_500Medium",
+    fontStyle: "italic",
+    lineHeight: 21,
+  },
+
+  grid: { marginTop: 35, gap: 18 },
+  toolboxHeader: { marginBottom: 8 },
+  sectionTitle: {
+    color: "rgba(255,255,255,0.4)",
+    fontFamily: "Outfit_700Bold",
+    fontSize: 12,
+    letterSpacing: 3,
+  },
+  cardWrapper: { width: "100%" },
+  expCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    overflow: "hidden",
+  },
+  expCardMain: {
+    padding: 22,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  halfCard: {
-    width: "45%",
-    height: 170,
-    borderRadius: 28,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: GLASS_BORDER,
-  },
-  halfGlass: { flex: 1, alignItems: "center", justifyContent: "center" },
-  cardGlow: {
-    position: "absolute",
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    opacity: 0.15,
-    filter: "blur(25px)",
-  },
-  contrastKr: { color: "#fff", fontSize: 58, fontWeight: "700" },
-  contrastRo: { fontSize: 18, fontWeight: "900", marginTop: 6 },
-  absoluteArrow: {
-    position: "absolute",
-    left: "45%",
-    right: "45%",
-    alignItems: "center",
-  },
-  neonArrow: {
+  expWord: {
+    color: COLORS.txt,
+    fontFamily: "NotoSansKR_700Bold",
     fontSize: 28,
-    fontWeight: "bold",
-    shadowRadius: 12,
-    shadowOpacity: 1,
+    marginBottom: 2,
   },
-
-  diffButton: {
-    marginTop: 20,
-    borderRadius: 18,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
+  expCardRight: { flexDirection: "row", alignItems: "center", gap: 12 },
+  strokeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: "rgba(255,255,255,0.08)",
   },
-  diffGradient: { paddingVertical: 20, alignItems: "center" },
-  diffText: {
-    color: TXT_SECONDARY,
+  strokeText: {
+    color: "rgba(255,255,255,0.4)",
+    fontSize: 9,
+    fontFamily: "Outfit_700Bold",
+  },
+  romBox: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12 },
+  romText: {
+    fontFamily: "Outfit_700Bold",
     fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 2.5,
+    textTransform: "uppercase",
+  },
+  expDetail: {
+    padding: 22,
+    paddingTop: 0,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.05)",
+  },
+  expSymbolic: {
+    fontSize: 11,
+    fontFamily: "Outfit_700Bold",
+    marginTop: 18,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    lineHeight: 16,
+  },
+  expMean: {
+    color: COLORS.txt,
+    fontFamily: "Outfit_700Bold",
+    fontSize: 16,
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  expCtx: {
+    color: COLORS.muted,
+    fontSize: 12,
+    marginTop: 6,
+    lineHeight: 18,
   },
 
-  footer: { alignItems: "center", marginTop: 15 },
-  toggleBtn: {
-    flexDirection: "row",
+  teaserBox: {
+    marginTop: 30,
+    padding: 24,
+    borderRadius: 24,
+    backgroundColor: "rgba(255,255,255,0.04)",
     alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
+    borderColor: "rgba(255,255,255,0.1)",
+    borderStyle: "dashed",
   },
-  toggleText: {
-    color: MUTED,
-    fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 1.5,
+  teaserText: {
+    color: COLORS.muted,
+    fontSize: 15,
+    textAlign: "center",
+    marginBottom: 12,
+    fontFamily: "Outfit_500Medium",
+    lineHeight: 21,
   },
-  activeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: CYAN,
-    shadowColor: CYAN,
-    shadowRadius: 8,
-    shadowOpacity: 1,
+  teaserBtn: {
+    fontFamily: "Outfit_700Bold",
+    fontSize: 13,
+    letterSpacing: 1,
   },
-  bottomSpace: { height: 120 },
+
+  quizOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: "flex-end" },
+  quizSheet: {
+    backgroundColor: "#080A12",
+    borderTopLeftRadius: 45,
+    borderTopRightRadius: 45,
+    padding: 35,
+    paddingBottom: 60,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+  },
+  quizTitle: {
+    color: "rgba(255,255,255,0.3)",
+    fontSize: 11,
+    fontFamily: "Outfit_700Bold",
+    textAlign: "center",
+    letterSpacing: 4,
+    marginBottom: 25,
+  },
+  quizQBox: { alignItems: "center", marginBottom: 35 },
+  quizChar: {
+    color: COLORS.txt,
+    fontFamily: "NotoSansKR_700Bold",
+    fontSize: 48,
+    marginBottom: 2,
+  },
+  quizInstruction: {
+    color: COLORS.muted,
+    fontSize: 14,
+    fontStyle: "italic",
+    marginTop: 12,
+    textAlign: "center",
+  },
+  optionsGrid: { gap: 15 },
+  optBtn: {
+    padding: 22,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+    backgroundColor: "rgba(255,255,255,0.03)",
+  },
+  optText: {
+    color: COLORS.txt,
+    fontSize: 20,
+    fontFamily: "Outfit_700Bold",
+    textAlign: "center",
+  },
+  optCorrect: {
+    borderColor: COLORS.successGreen,
+    backgroundColor: "rgba(74,222,128,0.12)",
+  },
+  optWrong: {
+    borderColor: COLORS.errorRed,
+    backgroundColor: "rgba(248,113,113,0.12)",
+  },
+  resultBox: { alignItems: "center", paddingVertical: 30 },
+  resultIcon: { fontSize: 70, marginBottom: 20 },
+  resultTitle: {
+    color: COLORS.pureWhite,
+    fontSize: 28,
+    fontFamily: "Outfit_900Black",
+    letterSpacing: -0.5,
+    textAlign: "center",
+  },
+  resultScore: {
+    color: COLORS.muted,
+    fontSize: 17,
+    marginVertical: 12,
+    fontFamily: "Outfit_500Medium",
+  },
+  closeBtn: {
+    marginTop: 25,
+    paddingHorizontal: 40,
+    paddingVertical: 18,
+    borderRadius: 24,
+    elevation: 10,
+  },
+  closeBtnText: {
+    color: COLORS.bg,
+    fontFamily: "Outfit_700Bold",
+    fontSize: 15,
+  },
 });
-
-async function speakKorean(text: string) {
-  return new Promise<void>((resolve) => {
-    stopSpeech();
-    Speech.speak(text, {
-      language: "ko-KR",
-      rate: 0.85,
-      onDone: () => resolve(),
-      onStopped: () => resolve(),
-      onError: () => resolve(),
-    });
-  });
-}
-
-function stopSpeech() {
-  try {
-    Speech.stop();
-  } catch {}
-}

@@ -11,6 +11,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  Vibration,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -40,11 +41,25 @@ const SCENES = [
         char: "Patient",
         kr: "머리가 아프고 열이 나요.",
         fr: "J'ai mal à la tête et j'ai de la fièvre.",
+        side: "me",
+      },
+      {
+        char: "Pharmacien",
+        kr: "언제부터 아프셨어요?",
+        fr: "Depuis quand avez-vous mal ?",
+        side: "server",
+      },
+      {
+        char: "Patient",
+        kr: "오늘 아침부터 아팠어요.",
+        fr: "J'ai mal depuis ce matin.",
+        side: "me",
       },
       {
         char: "Pharmacien",
         kr: "이 약은 식후에 드세요.",
         fr: "Prenez ce médicament après le repas.",
+        side: "server",
       },
     ],
     expressions: [
@@ -81,11 +96,25 @@ const SCENES = [
         char: "Médecin",
         kr: "어디가 아프세요?",
         fr: "Où avez-vous mal ?",
+        side: "server",
       },
       {
         char: "Patient",
         kr: "어제부터 배가 너무 아파요.",
         fr: "J'ai très mal au ventre depuis hier.",
+        side: "me",
+      },
+      {
+        char: "Médecin",
+        kr: "열도 나세요?",
+        fr: "Vous avez aussi de la fièvre ?",
+        side: "server",
+      },
+      {
+        char: "Patient",
+        kr: "네, 조금 열이 나요.",
+        fr: "Oui, j'ai un peu de fièvre.",
+        side: "me",
       },
     ],
     expressions: [
@@ -122,11 +151,25 @@ const SCENES = [
         char: "Opérateur",
         kr: "119입니다. 위치가 어디입니까?",
         fr: "Ici le 119. Où êtes-vous ?",
+        side: "server",
       },
       {
         char: "Appelant",
         kr: "사고가 났어요! 구급차가 필요해요.",
         fr: "Il y a eu un accident ! J'ai besoin d'une ambulance.",
+        side: "me",
+      },
+      {
+        char: "Opérateur",
+        kr: "환자는 의식이 있습니까?",
+        fr: "La personne est-elle consciente ?",
+        side: "server",
+      },
+      {
+        char: "Appelant",
+        kr: "네, 하지만 많이 다쳤어요.",
+        fr: "Oui, mais elle est gravement blessée.",
+        side: "me",
       },
     ],
     expressions: [
@@ -154,10 +197,23 @@ const SCENES = [
 
 export default function HealthEmergency() {
   const [activeScene, setActiveScene] = useState(SCENES[0]);
+  const [visibleMessages, setVisibleMessages] = useState(1);
+  const [isTyping, setIsTyping] = useState(false);
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const tapHintPulse = useRef(new Animated.Value(0)).current;
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fadeAnim.setValue(0);
+    setVisibleMessages(1);
+    setIsTyping(false);
+
+    if (typingTimer.current) {
+      clearTimeout(typingTimer.current);
+      typingTimer.current = null;
+    }
+
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 500,
@@ -165,6 +221,72 @@ export default function HealthEmergency() {
       useNativeDriver: true,
     }).start();
   }, [activeScene]);
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(tapHintPulse, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(tapHintPulse, {
+          toValue: 0,
+          duration: 900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+
+      if (typingTimer.current) {
+        clearTimeout(typingTimer.current);
+      }
+    };
+  }, [tapHintPulse]);
+
+  const advanceDialogue = () => {
+    if (isTyping) return;
+
+    if (visibleMessages >= activeScene.dialogue.length) {
+      Vibration.vibrate(8);
+      setVisibleMessages(1);
+      setIsTyping(false);
+      return;
+    }
+
+    const nextMessage = activeScene.dialogue[visibleMessages];
+
+    Vibration.vibrate(8);
+
+    if (nextMessage.side === "server") {
+      setIsTyping(true);
+
+      const delay = 600 + Math.floor(Math.random() * 301);
+
+      typingTimer.current = setTimeout(() => {
+        setIsTyping(false);
+        setVisibleMessages((prev) =>
+          Math.min(prev + 1, activeScene.dialogue.length),
+        );
+      }, delay);
+
+      return;
+    }
+
+    setVisibleMessages((prev) =>
+      Math.min(prev + 1, activeScene.dialogue.length),
+    );
+  };
+
+  const shouldHighlightHint =
+    !isTyping && visibleMessages < activeScene.dialogue.length;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -246,9 +368,52 @@ export default function HealthEmergency() {
               <Text style={styles.sceneTitle}>{activeScene.title}</Text>
               <Text style={styles.sceneDesc}>{activeScene.description}</Text>
 
-              <View style={styles.dialogueArea}>
-                {activeScene.dialogue.map((item, idx) => (
-                  <View key={idx} style={styles.dialogueRow}>
+              <Pressable onPress={advanceDialogue} style={styles.dialogueArea}>
+                {activeScene.dialogue
+                  .slice(0, visibleMessages)
+                  .map((item, idx) => {
+                    const isMe = item.side === "me";
+
+                    return (
+                      <View
+                        key={`${activeScene.id}-dialogue-${idx}`}
+                        style={[
+                          styles.dialogueBubble,
+                          isMe
+                            ? styles.dialogueBubbleRight
+                            : styles.dialogueBubbleLeft,
+                        ]}
+                      >
+                        <View
+                          style={[
+                            styles.roleLabel,
+                            { backgroundColor: `${activeScene.accent}20` },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.roleText,
+                              { color: activeScene.accent },
+                            ]}
+                          >
+                            {item.char}
+                          </Text>
+                        </View>
+
+                        <Text style={styles.krDialogue}>{item.kr}</Text>
+                        <Text style={styles.frDialogue}>{item.fr}</Text>
+                      </View>
+                    );
+                  })}
+
+                {isTyping && (
+                  <View
+                    style={[
+                      styles.dialogueBubble,
+                      styles.dialogueBubbleLeft,
+                      styles.typingBubble,
+                    ]}
+                  >
                     <View
                       style={[
                         styles.roleLabel,
@@ -258,16 +423,60 @@ export default function HealthEmergency() {
                       <Text
                         style={[styles.roleText, { color: activeScene.accent }]}
                       >
-                        {item.char}
+                        {activeScene.dialogue[visibleMessages]?.char}
                       </Text>
                     </View>
-                    <View style={styles.textStack}>
-                      <Text style={styles.krDialogue}>{item.kr}</Text>
-                      <Text style={styles.frDialogue}>{item.fr}</Text>
+
+                    <View style={styles.typingDots}>
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
                     </View>
                   </View>
-                ))}
-              </View>
+                )}
+
+                <Animated.Text
+                  style={[
+                    styles.tapHint,
+                    shouldHighlightHint && {
+                      color: activeScene.accent,
+                      opacity: tapHintPulse.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.45, 1],
+                      }),
+                      transform: [
+                        {
+                          scale: tapHintPulse.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [1, 1.03],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  {visibleMessages >= activeScene.dialogue.length
+                    ? "Toucher pour recommencer"
+                    : isTyping
+                      ? "Réponse en cours..."
+                      : "Toucher pour continuer"}
+                </Animated.Text>
+              </Pressable>
             </BlurView>
           </Animated.View>
 
@@ -389,20 +598,36 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
 
-  dialogueArea: { gap: 28 },
-  dialogueRow: { flexDirection: "row", gap: 15 },
+  dialogueArea: { gap: 16 },
+  dialogueBubble: {
+    maxWidth: "88%",
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+  },
+  dialogueBubbleLeft: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderBottomLeftRadius: 3,
+  },
+  dialogueBubbleRight: {
+    alignSelf: "flex-end",
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderBottomRightRadius: 3,
+  },
   roleLabel: {
     alignSelf: "flex-start",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
+    marginBottom: 8,
   },
   roleText: {
     fontSize: 9,
     fontFamily: "Outfit_700Bold",
     textTransform: "uppercase",
   },
-  textStack: { flex: 1 },
   krDialogue: {
     color: COLORS.txt,
     fontFamily: "NotoSansKR_700Bold",
@@ -414,6 +639,31 @@ const styles = StyleSheet.create({
     color: COLORS.muted,
     fontSize: 13,
     fontFamily: "Outfit_500Medium",
+  },
+  typingBubble: {
+    minWidth: 108,
+    paddingVertical: 15,
+  },
+  typingDots: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingTop: 2,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 999,
+    opacity: 0.85,
+  },
+  tapHint: {
+    alignSelf: "center",
+    color: "rgba(255,255,255,0.42)",
+    fontFamily: "Outfit_700Bold",
+    fontSize: 10,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    marginTop: 4,
   },
 
   toolbox: { marginTop: 40 },

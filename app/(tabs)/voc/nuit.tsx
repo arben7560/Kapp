@@ -3,15 +3,16 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    Dimensions,
-    Easing,
-    ImageBackground,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Animated,
+  Dimensions,
+  Easing,
+  ImageBackground,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  Vibration,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -45,11 +46,25 @@ const SCENES = [
         char: "Ji-hun",
         kr: "한 잔 더 할까요? 제가 따를게요.",
         fr: "On en reprend un verre ? Je vous sers.",
+        side: "server",
       },
       {
         char: "Min-a",
-        kr: "좋아요! 건배할까요?",
-        fr: "D'accord ! On trinque ?",
+        kr: "좋아요! 안주도 더 시킬까요?",
+        fr: "D’accord ! On commande aussi plus d’anju ?",
+        side: "me",
+      },
+      {
+        char: "Ji-hun",
+        kr: "네, 떡볶이 하나 더 시켜요.",
+        fr: "Oui, commandons encore un tteokbokki.",
+        side: "server",
+      },
+      {
+        char: "Min-a",
+        kr: "좋아요. 그럼 건배할까요?",
+        fr: "Très bien. Alors on trinque ?",
+        side: "me",
       },
     ],
     expressions: [
@@ -87,11 +102,25 @@ const SCENES = [
         char: "Sora",
         kr: "이 노래 취향저격이에요! 탬버린 줘요.",
         fr: "Cette chanson est pile mon style ! Donne-moi le tambourin.",
+        side: "server",
+      },
+      {
+        char: "Kevin",
+        kr: "좋아요. 분위기 진짜 좋네요.",
+        fr: "D’accord. L’ambiance est vraiment bonne.",
+        side: "me",
+      },
+      {
+        char: "Sora",
+        kr: "다 같이 떼창해요!",
+        fr: "Chantons tous ensemble !",
+        side: "server",
       },
       {
         char: "Kevin",
         kr: "다음 곡은 제가 부를게요. 점수 대박!",
-        fr: "C'est moi qui chante la suivante. Score de dingue !",
+        fr: "C’est moi qui chante la suivante. Score de dingue !",
+        side: "me",
       },
     ],
     expressions: [
@@ -130,11 +159,25 @@ const SCENES = [
         char: "Jun",
         kr: "벌써 끝이에요? 2차 갑시다!",
         fr: "C'est déjà fini ? Allons au deuxième endroit !",
+        side: "server",
       },
       {
         char: "Yuna",
-        kr: "내일 해장국 먹어야겠어요.",
-        fr: "Demain, il va falloir manger du haejangguk.",
+        kr: "좋아요. 그런데 너무 멀면 안 돼요.",
+        fr: "D’accord. Mais il ne faut pas que ce soit trop loin.",
+        side: "me",
+      },
+      {
+        char: "Jun",
+        kr: "근처에 좋은 노래방 있어요.",
+        fr: "Il y a un bon noraebang juste à côté.",
+        side: "server",
+      },
+      {
+        char: "Yuna",
+        kr: "좋아요. 내일 해장국 먹어야겠어요.",
+        fr: "D’accord. Demain, il va falloir manger du haejangguk.",
+        side: "me",
       },
     ],
     expressions: [
@@ -162,10 +205,23 @@ const SCENES = [
 
 export default function NightlifeImmersion() {
   const [activeScene, setActiveScene] = useState(SCENES[0]);
+  const [visibleMessages, setVisibleMessages] = useState(1);
+  const [isTyping, setIsTyping] = useState(false);
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const tapHintPulse = useRef(new Animated.Value(0)).current;
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fadeAnim.setValue(0);
+    setVisibleMessages(1);
+    setIsTyping(false);
+
+    if (typingTimer.current) {
+      clearTimeout(typingTimer.current);
+      typingTimer.current = null;
+    }
+
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 600,
@@ -173,6 +229,72 @@ export default function NightlifeImmersion() {
       useNativeDriver: true,
     }).start();
   }, [activeScene]);
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(tapHintPulse, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(tapHintPulse, {
+          toValue: 0,
+          duration: 900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+
+      if (typingTimer.current) {
+        clearTimeout(typingTimer.current);
+      }
+    };
+  }, [tapHintPulse]);
+
+  const advanceDialogue = () => {
+    if (isTyping) return;
+
+    if (visibleMessages >= activeScene.dialogue.length) {
+      Vibration.vibrate(8);
+      setVisibleMessages(1);
+      setIsTyping(false);
+      return;
+    }
+
+    const nextMessage = activeScene.dialogue[visibleMessages];
+
+    Vibration.vibrate(8);
+
+    if (nextMessage.side === "server") {
+      setIsTyping(true);
+
+      const delay = 600 + Math.floor(Math.random() * 301);
+
+      typingTimer.current = setTimeout(() => {
+        setIsTyping(false);
+        setVisibleMessages((prev) =>
+          Math.min(prev + 1, activeScene.dialogue.length),
+        );
+      }, delay);
+
+      return;
+    }
+
+    setVisibleMessages((prev) =>
+      Math.min(prev + 1, activeScene.dialogue.length),
+    );
+  };
+
+  const shouldHighlightHint =
+    !isTyping && visibleMessages < activeScene.dialogue.length;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -246,25 +368,89 @@ export default function NightlifeImmersion() {
 
               <Text style={styles.sceneDesc}>{activeScene.description}</Text>
 
-              <View style={styles.dialogueWrap}>
-                {activeScene.dialogue.map((line, idx) => (
-                  <View
-                    key={idx}
-                    style={[
-                      styles.msg,
-                      idx % 2 === 0 ? styles.msgLeft : styles.msgRight,
-                    ]}
-                  >
+              <Pressable onPress={advanceDialogue} style={styles.dialogueWrap}>
+                {activeScene.dialogue
+                  .slice(0, visibleMessages)
+                  .map((line, idx) => {
+                    const isMe = line.side === "me";
+
+                    return (
+                      <View
+                        key={`${activeScene.id}-dialogue-${idx}`}
+                        style={[
+                          styles.msg,
+                          isMe ? styles.msgRight : styles.msgLeft,
+                        ]}
+                      >
+                        <Text
+                          style={[styles.sender, { color: activeScene.accent }]}
+                        >
+                          {line.char}
+                        </Text>
+                        <Text style={styles.krTxt}>{line.kr}</Text>
+                        <Text style={styles.frTxt}>{line.fr}</Text>
+                      </View>
+                    );
+                  })}
+
+                {isTyping && (
+                  <View style={[styles.msg, styles.msgLeft, styles.typingMsg]}>
                     <Text
                       style={[styles.sender, { color: activeScene.accent }]}
                     >
-                      {line.char}
+                      {activeScene.dialogue[visibleMessages]?.char}
                     </Text>
-                    <Text style={styles.krTxt}>{line.kr}</Text>
-                    <Text style={styles.frTxt}>{line.fr}</Text>
+
+                    <View style={styles.typingDots}>
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                    </View>
                   </View>
-                ))}
-              </View>
+                )}
+
+                <Animated.Text
+                  style={[
+                    styles.tapHint,
+                    shouldHighlightHint && {
+                      color: activeScene.accent,
+                      opacity: tapHintPulse.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.45, 1],
+                      }),
+                      transform: [
+                        {
+                          scale: tapHintPulse.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [1, 1.03],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  {visibleMessages >= activeScene.dialogue.length
+                    ? "Toucher pour recommencer"
+                    : isTyping
+                      ? "Réponse en cours..."
+                      : "Toucher pour continuer"}
+                </Animated.Text>
+              </Pressable>
 
               <View
                 style={[
@@ -404,8 +590,14 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
 
-  dialogueWrap: { gap: 25 },
-  msg: { maxWidth: "85%", padding: 16, borderRadius: 20 },
+  dialogueWrap: { gap: 16 },
+  msg: {
+    maxWidth: "85%",
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+  },
   msgLeft: {
     alignSelf: "flex-start",
     backgroundColor: "rgba(255,255,255,0.06)",
@@ -434,6 +626,31 @@ const styles = StyleSheet.create({
     color: COLORS.muted,
     fontSize: 13,
     fontFamily: "Outfit_500Medium",
+  },
+  typingMsg: {
+    minWidth: 92,
+    paddingVertical: 15,
+  },
+  typingDots: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingTop: 2,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 999,
+    opacity: 0.85,
+  },
+  tapHint: {
+    alignSelf: "center",
+    color: "rgba(255,255,255,0.42)",
+    fontFamily: "Outfit_700Bold",
+    fontSize: 10,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    marginTop: 4,
   },
 
   cultureHint: {

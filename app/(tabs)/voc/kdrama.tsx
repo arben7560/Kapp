@@ -3,15 +3,16 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    Dimensions,
-    Easing,
-    ImageBackground,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Animated,
+  Dimensions,
+  Easing,
+  ImageBackground,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  Vibration,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -48,11 +49,25 @@ const SCENES = [
         char: "Min-ho",
         kr: "사실... 너 좋아해.",
         fr: "En fait... je t'aime bien.",
+        side: "server",
       },
       {
         char: "Ji-soo",
-        kr: "진짜? 나도 꿈만 같아.",
-        fr: "Vraiment ? C'est comme un rêve pour moi aussi.",
+        kr: "진짜? 나도 조금 놀랐어.",
+        fr: "Vraiment ? Je suis un peu surprise aussi.",
+        side: "me",
+      },
+      {
+        char: "Min-ho",
+        kr: "부담 주고 싶진 않아. 그냥 말하고 싶었어.",
+        fr: "Je ne veux pas te mettre la pression. Je voulais juste te le dire.",
+        side: "server",
+      },
+      {
+        char: "Ji-soo",
+        kr: "고마워. 나도 꿈만 같아.",
+        fr: "Merci. Pour moi aussi, c'est comme un rêve.",
+        side: "me",
       },
     ],
     expressions: [
@@ -92,11 +107,25 @@ const SCENES = [
         char: "Directeur",
         kr: "정신 차려! 이게 최선입니까?",
         fr: "Reprends-toi ! C'est le mieux que tu puisses faire ?",
+        side: "server",
       },
       {
         char: "Employé",
         kr: "죄송합니다. 다시 하겠습니다.",
         fr: "Je suis désolé. Je vais recommencer.",
+        side: "me",
+      },
+      {
+        char: "Directeur",
+        kr: "이번엔 실망시키지 마세요.",
+        fr: "Cette fois, ne me décevez pas.",
+        side: "server",
+      },
+      {
+        char: "Employé",
+        kr: "네, 꼭 해내겠습니다.",
+        fr: "Oui, je vais absolument y arriver.",
+        side: "me",
       },
     ],
     expressions: [
@@ -137,11 +166,25 @@ const SCENES = [
         char: "Ami 1",
         kr: "짠! 오늘 진짜 수고했어.",
         fr: "Tchin ! Tu as vraiment bien travaillé aujourd'hui.",
+        side: "server",
       },
       {
         char: "Ami 2",
-        kr: "고마워. 내일도 화이팅!",
-        fr: "Merci. Demain aussi, Fighting !",
+        kr: "고마워. 오늘 좀 힘들었어.",
+        fr: "Merci. Aujourd'hui, c'était un peu difficile.",
+        side: "me",
+      },
+      {
+        char: "Ami 1",
+        kr: "그래도 잘 버텼어. 대박이야.",
+        fr: "Mais tu as bien tenu. C'est impressionnant.",
+        side: "server",
+      },
+      {
+        char: "Ami 2",
+        kr: "내일도 화이팅!",
+        fr: "Demain aussi, Fighting !",
+        side: "me",
       },
     ],
     expressions: [
@@ -170,10 +213,23 @@ const SCENES = [
 export default function KDramaCulture() {
   const [activeScene, setActiveScene] = useState(SCENES[0]);
   const [activeExpression, setActiveExpression] = useState(0);
+  const [visibleMessages, setVisibleMessages] = useState(1);
+  const [isTyping, setIsTyping] = useState(false);
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const tapHintPulse = useRef(new Animated.Value(0)).current;
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setActiveExpression(0);
+    setVisibleMessages(1);
+    setIsTyping(false);
+
+    if (typingTimer.current) {
+      clearTimeout(typingTimer.current);
+      typingTimer.current = null;
+    }
+
     fadeAnim.setValue(0);
 
     Animated.timing(fadeAnim, {
@@ -184,7 +240,72 @@ export default function KDramaCulture() {
     }).start();
   }, [activeScene]);
 
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(tapHintPulse, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(tapHintPulse, {
+          toValue: 0,
+          duration: 900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+
+      if (typingTimer.current) {
+        clearTimeout(typingTimer.current);
+      }
+    };
+  }, [tapHintPulse]);
+
   const selectedExpression = activeScene.expressions[activeExpression];
+  const shouldHighlightHint =
+    !isTyping && visibleMessages < activeScene.dialogue.length;
+
+  const advanceDialogue = () => {
+    if (isTyping) return;
+
+    if (visibleMessages >= activeScene.dialogue.length) {
+      Vibration.vibrate(8);
+      setVisibleMessages(1);
+      setIsTyping(false);
+      return;
+    }
+
+    const nextMessage = activeScene.dialogue[visibleMessages];
+
+    Vibration.vibrate(8);
+
+    if (nextMessage.side === "server") {
+      setIsTyping(true);
+
+      const delay = 600 + Math.floor(Math.random() * 301);
+
+      typingTimer.current = setTimeout(() => {
+        setIsTyping(false);
+        setVisibleMessages((prev) =>
+          Math.min(prev + 1, activeScene.dialogue.length),
+        );
+      }, delay);
+
+      return;
+    }
+
+    setVisibleMessages((prev) =>
+      Math.min(prev + 1, activeScene.dialogue.length),
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -276,44 +397,100 @@ export default function KDramaCulture() {
               </View>
 
               {/* DIALOGUE BUBBLES */}
-              <View style={styles.dialogueBox}>
-                {activeScene.dialogue.map((d, index) => (
+              <Pressable onPress={advanceDialogue} style={styles.dialogueBox}>
+                {activeScene.dialogue
+                  .slice(0, visibleMessages)
+                  .map((d, index) => {
+                    const isMe = d.side === "me";
+
+                    return (
+                      <View
+                        key={`${activeScene.id}-dialogue-${index}`}
+                        style={[
+                          styles.bubble,
+                          isMe ? styles.bubbleRight : styles.bubbleLeft,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.charName,
+                            { color: activeScene.accent },
+                          ]}
+                        >
+                          {d.char}
+                        </Text>
+                        <Text style={styles.krText}>{d.kr}</Text>
+                        <Text style={styles.frText}>{d.fr}</Text>
+                      </View>
+                    );
+                  })}
+
+                {isTyping && (
                   <View
-                    key={index}
                     style={[
                       styles.bubble,
-                      index % 2 !== 0 ? styles.bubbleRight : styles.bubbleLeft,
+                      styles.bubbleLeft,
+                      styles.typingBubble,
                     ]}
                   >
                     <Text
                       style={[styles.charName, { color: activeScene.accent }]}
                     >
-                      {d.char}
+                      {activeScene.dialogue[visibleMessages]?.char}
                     </Text>
-                    <Text style={styles.krText}>{d.kr}</Text>
-                    <Text style={styles.frText}>{d.fr}</Text>
+
+                    <View style={styles.typingDots}>
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                    </View>
                   </View>
-                ))}
-              </View>
+                )}
+
+                <Animated.Text
+                  style={[
+                    styles.tapHint,
+                    shouldHighlightHint && {
+                      color: activeScene.accent,
+                      opacity: tapHintPulse.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.45, 1],
+                      }),
+                      transform: [
+                        {
+                          scale: tapHintPulse.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [1, 1.03],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  {visibleMessages >= activeScene.dialogue.length
+                    ? "Toucher pour recommencer"
+                    : isTyping
+                      ? "Réponse en cours..."
+                      : "Toucher pour continuer"}
+                </Animated.Text>
+              </Pressable>
             </BlurView>
           </Animated.View>
-
-          {/* IMMERSION NOTE */}
-          <BlurView intensity={18} tint="dark" style={styles.immersionCard}>
-            <View
-              style={[
-                styles.immersionAccent,
-                { backgroundColor: activeScene.accent },
-              ]}
-            />
-            <Text
-              style={[styles.immersionLabel, { color: activeScene.accent }]}
-            >
-              MISSION D’IMMERSION
-            </Text>
-            <Text style={styles.immersionText}>{activeScene.mission}</Text>
-            <Text style={styles.realLifeText}>{activeScene.realLife}</Text>
-          </BlurView>
 
           {/* TOOLBOX - EXPRESSIONS */}
           <View style={styles.toolboxHeader}>
@@ -490,8 +667,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 
-  dialogueBox: { gap: 20 },
-  bubble: { maxWidth: "85%", padding: 15, borderRadius: 20 },
+  dialogueBox: { gap: 16 },
+  bubble: {
+    maxWidth: "85%",
+    padding: 15,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+  },
   bubbleLeft: {
     alignSelf: "flex-start",
     backgroundColor: "rgba(255,255,255,0.05)",
@@ -507,17 +690,44 @@ const styles = StyleSheet.create({
     fontFamily: "Outfit_700Bold",
     marginBottom: 4,
     letterSpacing: 1,
+    textTransform: "uppercase",
   },
   krText: {
     color: COLORS.txt,
     fontFamily: "NotoSansKR_700Bold",
     fontSize: 18,
+    lineHeight: 25,
     marginBottom: 4,
   },
   frText: {
     color: COLORS.muted,
     fontSize: 13,
     fontFamily: "Outfit_500Medium",
+  },
+  typingBubble: {
+    minWidth: 92,
+    paddingVertical: 15,
+  },
+  typingDots: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingTop: 2,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 999,
+    opacity: 0.85,
+  },
+  tapHint: {
+    alignSelf: "center",
+    color: "rgba(255,255,255,0.42)",
+    fontFamily: "Outfit_700Bold",
+    fontSize: 10,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    marginTop: 4,
   },
 
   immersionCard: {

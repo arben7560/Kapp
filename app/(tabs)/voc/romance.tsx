@@ -3,15 +3,16 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    Dimensions,
-    Easing,
-    ImageBackground,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Animated,
+  Dimensions,
+  Easing,
+  ImageBackground,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  Vibration,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -22,7 +23,7 @@ const { width } = Dimensions.get("window");
 // ──────────────────────────────────────────────
 const COLORS = {
   bg: "#020306",
-  romance: "#F472B6", // Rose Drama
+  romance: "#F472B6",
   lavender: "#A78BFA",
   heart: "#FB7185",
   gold: "#FDE047",
@@ -44,11 +45,25 @@ const SCENES = [
         char: "Jun-su",
         kr: "사진보다 실물이 더 예쁘시네요.",
         fr: "Vous êtes encore plus jolie qu'en photo.",
+        side: "server",
       },
       {
         char: "So-hee",
         kr: "아니에요. 준수 씨도 인상이 참 좋으세요.",
         fr: "Ce n'est rien. Vous avez une très bonne impression aussi, Jun-su.",
+        side: "me",
+      },
+      {
+        char: "Jun-su",
+        kr: "혹시 이상형이 어떻게 되세요?",
+        fr: "Quel est votre type idéal ?",
+        side: "server",
+      },
+      {
+        char: "So-hee",
+        kr: "대화가 잘 통하는 사람이 좋아요.",
+        fr: "J'aime les personnes avec qui la conversation passe bien.",
+        side: "me",
       },
     ],
     expressions: [
@@ -84,12 +99,26 @@ const SCENES = [
       {
         char: "Do-yun",
         kr: "밤공기가 차네요. 제 옷 입을래요?",
-        fr: "L'air de la nuit est froid. Vous voulez porter mes vêtements ?",
+        fr: "L'air de la nuit est froid. Vous voulez porter ma veste ?",
+        side: "server",
       },
       {
         char: "Hae-in",
+        kr: "괜찮아요. 그래도 고마워요.",
+        fr: "Ça va. Mais merci quand même.",
+        side: "me",
+      },
+      {
+        char: "Do-yun",
         kr: "우리 지금... 무슨 사이예요?",
         fr: "Nous... c'est quoi notre relation actuellement ?",
+        side: "server",
+      },
+      {
+        char: "Hae-in",
+        kr: "나도 잘 모르겠어요. 그런데 보고 싶었어요.",
+        fr: "Je ne sais pas vraiment. Mais tu m'as manqué.",
+        side: "me",
       },
     ],
     expressions: [
@@ -124,13 +153,27 @@ const SCENES = [
     dialogue: [
       {
         char: "Tae-yang",
-        kr: "나랑 사귈래? 평생 지켜줄게.",
-        fr: "Veux-tu sortir avec moi ? Je te protégerai toute ma vie.",
+        kr: "나랑 사귈래?",
+        fr: "Tu veux sortir avec moi ?",
+        side: "server",
       },
       {
         char: "Eun-ji",
-        kr: "응! 우리 절대 헤어지지 말자.",
-        fr: "Oui ! Ne nous séparons jamais.",
+        kr: "응... 나도 같은 마음이야.",
+        fr: "Oui... je ressens la même chose.",
+        side: "me",
+      },
+      {
+        char: "Tae-yang",
+        kr: "평생 지켜줄게.",
+        fr: "Je te protégerai toute ma vie.",
+        side: "server",
+      },
+      {
+        char: "Eun-ji",
+        kr: "우리 절대 헤어지지 말자.",
+        fr: "Ne nous séparons jamais.",
+        side: "me",
       },
     ],
     expressions: [
@@ -158,10 +201,23 @@ const SCENES = [
 
 export default function RomanceDating() {
   const [activeScene, setActiveScene] = useState(SCENES[0]);
+  const [visibleMessages, setVisibleMessages] = useState(1);
+  const [isTyping, setIsTyping] = useState(false);
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const tapHintPulse = useRef(new Animated.Value(0)).current;
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fadeAnim.setValue(0);
+    setVisibleMessages(1);
+    setIsTyping(false);
+
+    if (typingTimer.current) {
+      clearTimeout(typingTimer.current);
+      typingTimer.current = null;
+    }
+
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 600,
@@ -169,6 +225,72 @@ export default function RomanceDating() {
       useNativeDriver: true,
     }).start();
   }, [activeScene]);
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(tapHintPulse, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(tapHintPulse, {
+          toValue: 0,
+          duration: 900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+
+      if (typingTimer.current) {
+        clearTimeout(typingTimer.current);
+      }
+    };
+  }, [tapHintPulse]);
+
+  const advanceDialogue = () => {
+    if (isTyping) return;
+
+    if (visibleMessages >= activeScene.dialogue.length) {
+      Vibration.vibrate(8);
+      setVisibleMessages(1);
+      setIsTyping(false);
+      return;
+    }
+
+    const nextMessage = activeScene.dialogue[visibleMessages];
+
+    Vibration.vibrate(8);
+
+    if (nextMessage.side === "server") {
+      setIsTyping(true);
+
+      const delay = 600 + Math.floor(Math.random() * 301);
+
+      typingTimer.current = setTimeout(() => {
+        setIsTyping(false);
+        setVisibleMessages((prev) =>
+          Math.min(prev + 1, activeScene.dialogue.length),
+        );
+      }, delay);
+
+      return;
+    }
+
+    setVisibleMessages((prev) =>
+      Math.min(prev + 1, activeScene.dialogue.length),
+    );
+  };
+
+  const shouldHighlightHint =
+    !isTyping && visibleMessages < activeScene.dialogue.length;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -248,25 +370,98 @@ export default function RomanceDating() {
               <Text style={styles.sceneTitle}>{activeScene.title}</Text>
               <Text style={styles.sceneDesc}>{activeScene.description}</Text>
 
-              <View style={styles.chatContainer}>
-                {activeScene.dialogue.map((chat, idx) => (
+              <Pressable onPress={advanceDialogue} style={styles.chatContainer}>
+                {activeScene.dialogue
+                  .slice(0, visibleMessages)
+                  .map((chat, idx) => {
+                    const isMe = chat.side === "me";
+
+                    return (
+                      <View
+                        key={`${activeScene.id}-dialogue-${idx}`}
+                        style={[
+                          styles.bubble,
+                          isMe ? styles.bubbleRight : styles.bubbleLeft,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.charLabel,
+                            { color: activeScene.accent },
+                          ]}
+                        >
+                          {chat.char}
+                        </Text>
+                        <Text style={styles.krText}>{chat.kr}</Text>
+                        <Text style={styles.frText}>{chat.fr}</Text>
+                      </View>
+                    );
+                  })}
+
+                {isTyping && (
                   <View
-                    key={idx}
                     style={[
                       styles.bubble,
-                      idx % 2 === 0 ? styles.bubbleLeft : styles.bubbleRight,
+                      styles.bubbleLeft,
+                      styles.typingBubble,
                     ]}
                   >
                     <Text
                       style={[styles.charLabel, { color: activeScene.accent }]}
                     >
-                      {chat.char}
+                      {activeScene.dialogue[visibleMessages]?.char}
                     </Text>
-                    <Text style={styles.krText}>{chat.kr}</Text>
-                    <Text style={styles.frText}>{chat.fr}</Text>
+
+                    <View style={styles.typingDots}>
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                    </View>
                   </View>
-                ))}
-              </View>
+                )}
+
+                <Animated.Text
+                  style={[
+                    styles.tapHint,
+                    shouldHighlightHint && {
+                      color: activeScene.accent,
+                      opacity: tapHintPulse.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.45, 1],
+                      }),
+                      transform: [
+                        {
+                          scale: tapHintPulse.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [1, 1.03],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  {visibleMessages >= activeScene.dialogue.length
+                    ? "Toucher pour recommencer"
+                    : isTyping
+                      ? "Réponse en cours..."
+                      : "Toucher pour continuer"}
+                </Animated.Text>
+              </Pressable>
             </BlurView>
           </Animated.View>
 
@@ -380,8 +575,14 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
 
-  chatContainer: { gap: 24 },
-  bubble: { maxWidth: "88%", padding: 16, borderRadius: 20 },
+  chatContainer: { gap: 16 },
+  bubble: {
+    maxWidth: "88%",
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+  },
   bubbleLeft: {
     alignSelf: "flex-start",
     backgroundColor: "rgba(255,255,255,0.06)",
@@ -397,6 +598,7 @@ const styles = StyleSheet.create({
     fontFamily: "Outfit_700Bold",
     marginBottom: 6,
     letterSpacing: 0.5,
+    textTransform: "uppercase",
   },
   krText: {
     color: COLORS.txt,
@@ -406,6 +608,32 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   frText: { color: COLORS.muted, fontSize: 12, fontFamily: "Outfit_500Medium" },
+
+  typingBubble: {
+    minWidth: 92,
+    paddingVertical: 15,
+  },
+  typingDots: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingTop: 2,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 999,
+    opacity: 0.85,
+  },
+  tapHint: {
+    alignSelf: "center",
+    color: "rgba(255,255,255,0.42)",
+    fontFamily: "Outfit_700Bold",
+    fontSize: 10,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    marginTop: 4,
+  },
 
   toolboxSection: { marginTop: 35 },
   toolboxHeader: {

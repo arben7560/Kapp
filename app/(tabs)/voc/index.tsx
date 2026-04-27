@@ -6,13 +6,12 @@ import {
   Animated,
   Dimensions,
   Easing,
-  Image,
   ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -154,7 +153,7 @@ export default function VocabHub() {
 
           <UnifiedHeroHeader
             korean="어휘"
-            title="Vocabulaire"
+            title="Scènes Guidées"
             subtitle={`"Le lexique, l’essence de la ville."`}
             accent={AMBER}
           />

@@ -51,13 +51,13 @@ const SEQUENCES: any[] = [
     type: "pedagogical",
   },
   {
-    title: "Vocabulaire Essentiel",
+    title: "Scènes Guidées",
     label: "Restaurant",
     color: AMBER,
     route: "/voc",
     trackKey: "vocab",
     place: "ITAEWON • DINER",
-    narrative: "Commence à exister dans la conversation.",
+    narrative: "Apprends le vocabulaire selon le contexte",
     type: "pedagogical",
   },
   {
@@ -139,10 +139,18 @@ export default function Home() {
 
           <View style={styles.heroBlock}>
             <View style={styles.heroVisualWrap}>
-              <View style={[styles.heroCirclePink, { backgroundColor: PINK }]} />
-              <View style={[styles.heroCircleCyan, { backgroundColor: CYAN }]} />
+              <View
+                style={[styles.heroCirclePink, { backgroundColor: PINK }]}
+              />
+              <View
+                style={[styles.heroCircleCyan, { backgroundColor: CYAN }]}
+              />
 
-              <BlurView intensity={22} tint="dark" style={styles.heroCircleGlass}>
+              <BlurView
+                intensity={22}
+                tint="dark"
+                style={styles.heroCircleGlass}
+              >
                 <LinearGradient
                   colors={[
                     "rgba(255,255,255,0.06)",
@@ -165,7 +173,9 @@ export default function Home() {
               <Text style={styles.krMain}>서울</Text>
               <Text style={styles.heroSub}>
                 L'expérience est ouverte.{"\n"}
-                <Text style={{ color: TXT }}>Où souhaites-tu te projeter ?</Text>
+                <Text style={{ color: TXT }}>
+                  Où souhaites-tu te projeter ?
+                </Text>
               </Text>
             </View>
           </View>
@@ -345,28 +355,24 @@ function MainActionCard({ sequence, progress, onPress }: any) {
 function SequenceCard({ item, isActive, onPress }: any) {
   return (
     <Pressable onPress={onPress} style={styles.seqCard}>
-      <BlurView
-        intensity={30}
-        tint="dark"
-        style={styles.seqBlur}
-      >
+      <BlurView intensity={30} tint="dark" style={styles.seqBlur}>
         <LinearGradient
           colors={[`${item.color}18`, "transparent"]}
           style={StyleSheet.absoluteFill}
         />
-        <View
-          style={[
-            styles.seqAccent,
-            { backgroundColor: item.color },
-          ]}
-        />
+        <View style={[styles.seqAccent, { backgroundColor: item.color }]} />
 
         <View style={styles.seqText}>
           <Text style={styles.seqTitle}>{item.title}</Text>
           <Text style={styles.seqSub}>{item.narrative}</Text>
         </View>
 
-        <Text style={[styles.seqArrow, isActive && { color: item.color, opacity: 0.8 }]}>
+        <Text
+          style={[
+            styles.seqArrow,
+            isActive && { color: item.color, opacity: 0.8 },
+          ]}
+        >
           ›
         </Text>
       </BlurView>
