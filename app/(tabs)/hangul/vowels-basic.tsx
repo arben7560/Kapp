@@ -19,7 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const { width } = Dimensions.get("window");
 
 // Image de fond typée "Séoul de nuit / Cyber"
-const BACKGROUND_SOURCE = require("../../../assets/images/hangul-bg.png");
+const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.png");
 
 const COLORS = {
   bg: "#020306",
@@ -339,6 +339,18 @@ export default function HybridHangulExperience() {
     0,
   );
 
+  const resetSceneToolbox = () => {
+    setCompletedItems((prev) => {
+      const next = { ...prev };
+
+      activeScene.expressions.forEach((exp) => {
+        delete next[exp.id];
+      });
+
+      return next;
+    });
+  };
+
   const speak = (text: string) => {
     Speech.stop();
     Speech.speak(text, { language: "ko-KR", rate: 0.75, pitch: 1 });
@@ -381,8 +393,7 @@ export default function HybridHangulExperience() {
 
     if (
       isFirstTime &&
-      activeScene.expressions.every((e) => newCompleted[e.id]) &&
-      !masteredScenes[activeScene.id]
+      activeScene.expressions.every((e) => newCompleted[e.id])
     ) {
       setTimeout(() => startQuiz(), 1000);
     }
@@ -406,18 +417,26 @@ export default function HybridHangulExperience() {
         setQuizIndex((i) => i + 1);
         setQuizAnswered(null);
       } else {
+        const finalScore = quizScore + (isCorrect ? 1 : 0);
         setQuizComplete(true);
         setMasteredScenes((p) => ({ ...p, [activeScene.id]: true }));
-        setShowTeaser((p) => ({ ...p, [activeScene.id]: true }));
+        setShowTeaser((p) => ({
+          ...p,
+          [activeScene.id]: finalScore === quizQuestions.length,
+        }));
       }
     }, 900);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground source={BACKGROUND_SOURCE} style={styles.bg}>
+      <ImageBackground
+        source={BACKGROUND_SOURCE}
+        style={styles.bg}
+        resizeMode="contain"
+      >
         <LinearGradient
-          colors={["rgba(2,3,6,0.62)", "rgba(2,3,6,0.82)", "rgba(2,3,6,0.92)"]}
+          colors={["rgba(2,3,6,0.52)", "rgba(2,3,6,0.72)", "rgba(2,3,6,0.84)"]}
           style={StyleSheet.absoluteFillObject}
         />
 
@@ -672,7 +691,10 @@ export default function HybridHangulExperience() {
                     {quizScore} / {quizQuestions.length} réponses correctes
                   </Text>
                   <Pressable
-                    onPress={() => setQuizActive(false)}
+                    onPress={() => {
+                      setQuizActive(false);
+                      resetSceneToolbox();
+                    }}
                     style={[
                       styles.closeBtn,
                       { backgroundColor: activeScene.accent },

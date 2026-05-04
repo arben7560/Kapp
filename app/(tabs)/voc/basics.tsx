@@ -36,8 +36,7 @@ const SCENES = [
     koreanTitle: "첫 만남 (Cheot Mannam)",
     description: "Saluer poliment et se présenter pour la première fois.",
     accent: COLORS.calmBlue,
-    image:
-      "https://images.unsplash.com/photo-1517154421773-0529f29ea451?auto=format&fit=crop&w=800&q=80",
+    image: require("../../../assets/images/meet.png"),
     dialogue: [
       {
         char: "Moi",
@@ -122,8 +121,7 @@ const SCENES = [
     koreanTitle: "예의 (Yei)",
     description: "Interagir avec respect dans les lieux publics.",
     accent: COLORS.softTeal,
-    image:
-      "https://images.unsplash.com/photo-1526318896980-cf78c088247c?auto=format&fit=crop&w=800&q=80",
+    image: require("../../../assets/images/meet.png"),
     dialogue: [
       {
         char: "Moi",
@@ -208,8 +206,7 @@ const SCENES = [
     koreanTitle: "사과 (Sagwa)",
     description: "Exprimer des regrets de manière appropriée.",
     accent: COLORS.accentOrange,
-    image:
-      "https://images.unsplash.com/photo-1542044896530-05d85be9b11a?auto=format&fit=crop&w=800&q=80",
+    image: require("../../../assets/images/meet.png"),
     dialogue: [
       {
         char: "Moi",
@@ -305,8 +302,8 @@ export default function FirstStepsImmersion() {
 
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 700,
-      easing: Easing.out(Easing.poly(4)),
+      duration: 600,
+      easing: Easing.out(Easing.back(1)),
       useNativeDriver: true,
     }).start();
 
@@ -406,7 +403,11 @@ export default function FirstStepsImmersion() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground source={{ uri: activeScene.image }} style={styles.bg}>
+      <ImageBackground
+        source={activeScene.image}
+        style={styles.bg}
+        resizeMode="cover"
+      >
         <View style={styles.overlay} />
 
         <ScrollView
@@ -456,9 +457,9 @@ export default function FirstStepsImmersion() {
               opacity: fadeAnim,
               transform: [
                 {
-                  translateY: fadeAnim.interpolate({
+                  scale: fadeAnim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [10, 0],
+                    outputRange: [0.95, 1],
                   }),
                 },
               ],

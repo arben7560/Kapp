@@ -1,6 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import * as Speech from "expo-speech";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -34,8 +35,7 @@ const SCENES = [
     koreanTitle: "약국 (Yak-guk)",
     description: "Demander conseil pour des symptômes courants.",
     accent: COLORS.safetyGreen,
-    image:
-      "https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=800&q=80",
+    image: require("../../../assets/images/safety.png"),
     dialogue: [
       {
         char: "Patient",
@@ -89,8 +89,7 @@ const SCENES = [
     koreanTitle: "병원 (Byeong-won)",
     description: "Expliquer une douleur pendant une consultation.",
     accent: COLORS.medicalBlue,
-    image:
-      "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80",
+    image: require("../../../assets/images/safety.png"),
     dialogue: [
       {
         char: "Médecin",
@@ -144,8 +143,7 @@ const SCENES = [
     koreanTitle: "응급 상황",
     description: "Appeler les secours et signaler une urgence.",
     accent: COLORS.emergencyRed,
-    image:
-      "https://images.unsplash.com/photo-1583946099379-f9c9cb8bc030?auto=format&fit=crop&w=800&q=80",
+    image: require("../../../assets/images/safety.png"),
     dialogue: [
       {
         char: "Opérateur",
@@ -197,6 +195,7 @@ const SCENES = [
 
 export default function HealthEmergency() {
   const [activeScene, setActiveScene] = useState(SCENES[0]);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
 
@@ -208,6 +207,7 @@ export default function HealthEmergency() {
     fadeAnim.setValue(0);
     setVisibleMessages(1);
     setIsTyping(false);
+    setSelectedWord(null);
 
     if (typingTimer.current) {
       clearTimeout(typingTimer.current);
@@ -216,8 +216,8 @@ export default function HealthEmergency() {
 
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 500,
-      easing: Easing.out(Easing.circle),
+      duration: 600,
+      easing: Easing.out(Easing.back(1)),
       useNativeDriver: true,
     }).start();
   }, [activeScene]);
@@ -248,8 +248,25 @@ export default function HealthEmergency() {
       if (typingTimer.current) {
         clearTimeout(typingTimer.current);
       }
+
+      Speech.stop();
     };
   }, [tapHintPulse]);
+
+  const speak = (text: string, id: string) => {
+    Speech.stop();
+    setSelectedWord(id);
+    Vibration.vibrate(8);
+
+    Speech.speak(text, {
+      language: "ko-KR",
+      rate: 0.78,
+      pitch: 1,
+      onDone: () => setSelectedWord(null),
+      onStopped: () => setSelectedWord(null),
+      onError: () => setSelectedWord(null),
+    });
+  };
 
   const advanceDialogue = () => {
     if (isTyping) return;
@@ -290,7 +307,7 @@ export default function HealthEmergency() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground source={{ uri: activeScene.image }} style={styles.bg}>
+      <ImageBackground source={activeScene.image} style={styles.bg}>
         <View style={styles.overlay} />
 
         <ScrollView
@@ -341,7 +358,7 @@ export default function HealthEmergency() {
                 {
                   scale: fadeAnim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [0.98, 1],
+                    outputRange: [0.95, 1],
                   }),
                 },
               ],
@@ -484,36 +501,78 @@ export default function HealthEmergency() {
             <View style={styles.toolboxTitleBox}>
               <Text style={styles.toolboxTitle}>MEDICAL TOOLBOX</Text>
               <View
-                style={[styles.hLine, { backgroundColor: activeScene.accent }]}
+                style={[
+                  styles.toolboxLine,
+                  { backgroundColor: activeScene.accent },
+                ]}
               />
             </View>
 
             <View style={styles.expGrid}>
-              {activeScene.expressions.map((exp, i) => (
-                <BlurView
-                  key={i}
-                  intensity={20}
-                  tint="dark"
-                  style={styles.expCard}
-                >
-                  <View
-                    style={[
-                      styles.expIconBox,
-                      { borderColor: activeScene.accent },
+              {activeScene.expressions.map((exp, i) => {
+                const cardId = `${activeScene.id}-${i}`;
+                const isActive = selectedWord === cardId;
+
+                return (
+                  <Pressable
+                    key={cardId}
+                    onPress={() => speak(exp.word, cardId)}
+                    style={({ pressed }) => [
+                      styles.expPressable,
+                      pressed && { transform: [{ scale: 0.985 }] },
                     ]}
                   >
-                    <Text style={{ color: activeScene.accent, fontSize: 10 }}>
-                      +
-                    </Text>
-                  </View>
-                  <View style={styles.expInfo}>
-                    <Text style={styles.expKr}>{exp.word}</Text>
-                    <Text style={styles.expRom}>{exp.rom}</Text>
-                    <Text style={styles.expMean}>{exp.mean}</Text>
-                    <Text style={styles.expCtx}>{exp.context}</Text>
-                  </View>
-                </BlurView>
-              ))}
+                    <BlurView
+                      intensity={25}
+                      tint="dark"
+                      style={[
+                        styles.expCard,
+                        isActive && { borderColor: activeScene.accent },
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.expAccent,
+                          {
+                            backgroundColor: activeScene.accent,
+                            opacity: isActive ? 1 : 0.8,
+                          },
+                        ]}
+                      />
+                      <View style={styles.expContent}>
+                        <View style={styles.expTopRow}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.expKr}>{exp.word}</Text>
+                            <Text
+                              style={[styles.expRom, { color: activeScene.accent }]}
+                            >
+                              {exp.rom}
+                            </Text>
+                          </View>
+                          <View
+                            style={[
+                              styles.listenPill,
+                              {
+                                backgroundColor: `${activeScene.accent}20`,
+                                borderColor: `${activeScene.accent}55`,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[styles.listenIcon, { color: activeScene.accent }]}
+                            >
+                              {isActive ? "●" : "▶"}
+                            </Text>
+                            <Text style={styles.listenText}>ÉCOUTER</Text>
+                          </View>
+                        </View>
+                        <Text style={styles.expMean}>{exp.mean}</Text>
+                        <Text style={styles.expCtx}>{exp.context}</Text>
+                      </View>
+                    </BlurView>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
         </ScrollView>
@@ -679,39 +738,39 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 3,
   },
-  hLine: { flex: 1, height: 1, opacity: 0.2 },
+  toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
 
-  expGrid: { gap: 12 },
+  expGrid: { gap: 14 },
+  expPressable: { width: "100%" },
   expCard: {
-    flexDirection: "row",
-    padding: 20,
     borderRadius: 24,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.05)",
-    gap: 15,
   },
-  expIconBox: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 5,
+  expAccent: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
   },
-  expInfo: { flex: 1 },
+  expContent: { padding: 20 },
+  expTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 14,
+    marginBottom: 10,
+  },
   expKr: {
     color: COLORS.txt,
     fontFamily: "NotoSansKR_700Bold",
-    fontSize: 22,
+    fontSize: 24,
     marginBottom: 2,
   },
   expRom: {
-    color: COLORS.muted,
     fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-    marginBottom: 6,
+    fontSize: 12,
     textTransform: "uppercase",
   },
   expMean: {
@@ -721,4 +780,23 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   expCtx: { color: COLORS.muted, fontSize: 12, lineHeight: 18 },
+  listenPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  listenIcon: {
+    fontSize: 9,
+    fontFamily: "Outfit_700Bold",
+  },
+  listenText: {
+    color: "rgba(255,255,255,0.78)",
+    fontFamily: "Outfit_700Bold",
+    fontSize: 9,
+    letterSpacing: 1,
+  },
 });

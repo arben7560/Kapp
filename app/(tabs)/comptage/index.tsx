@@ -16,12 +16,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
-const BACKGROUND_SOURCE = require("../../../assets/images/seoul-hub-bg.jpg");
+const BACKGROUND_SOURCE = require("../../../assets/images/comptage.png");
 const HERO_CIRCLE = width * 0.76;
 
-// ──────────────────────────────────────────────
+// ----------------------------------------------
 // DESIGN TOKENS
-// ──────────────────────────────────────────────
+// ----------------------------------------------
 const BG_DEEP = "#020306";
 const TXT = "rgba(255,255,255,0.96)";
 const MUTED = "rgba(255,255,255,0.60)";
@@ -37,9 +37,9 @@ const fonts = {
   krBold: "NotoSansKR_700Bold",
 };
 
-// ──────────────────────────────────────────────
+// ----------------------------------------------
 // MODULES (STRATÉGIE PRODUIT OPTIMISÉE)
-// ──────────────────────────────────────────────
+// ----------------------------------------------
 const MODULES = [
   {
     title: "Nombres de base",
@@ -99,19 +99,21 @@ const MODULES = [
   },
 ];
 
-// ──────────────────────────────────────────────
+// ----------------------------------------------
 // SCREEN
-// ──────────────────────────────────────────────
+// ----------------------------------------------
 export default function ComptageHub() {
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground source={BACKGROUND_SOURCE} style={styles.bgImage}>
+      <ImageBackground
+        source={BACKGROUND_SOURCE}
+        style={styles.bgImage}
+        resizeMode="cover"
+      >
+        <BlurView intensity={30} tint="dark" style={styles.bgBlur} />
         <View style={styles.vignetteOverlay} />
         <View style={styles.topFade} />
         <View style={styles.bottomFade} />
-
-        <View style={[styles.globalGlowLeft, { backgroundColor: PINK }]} />
-        <View style={[styles.globalGlowRight, { backgroundColor: CYAN }]} />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -128,31 +130,13 @@ export default function ComptageHub() {
 
           {/* HERO */}
           <View style={styles.heroBlock}>
+            <Text style={styles.heroEyebrow}>SÉOUL IMMERSION</Text>
             <View style={styles.heroVisualWrap}>
-              <View style={[styles.heroCirclePink, { backgroundColor: PINK }]} />
-              <View style={[styles.heroCircleCyan, { backgroundColor: CYAN }]} />
-
-              <BlurView intensity={22} tint="dark" style={styles.heroCircleGlass}>
-                <LinearGradient
-                  colors={[
-                    "rgba(255,255,255,0.06)",
-                    "rgba(255,255,255,0.02)",
-                    "rgba(255,255,255,0.01)",
-                  ]}
-                  start={{ x: 0.12, y: 0.08 }}
-                  end={{ x: 0.88, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-              </BlurView>
-
-              <View
-                style={[
-                  styles.heroLine,
-                  { backgroundColor: "rgba(34,211,238,0.34)" },
-                ]}
-              />
-
-              <Text style={styles.kr}>숫자</Text>
+              <View style={styles.krWrap}>
+                <Text style={[styles.kr, styles.krGlowOuter]}>숫자</Text>
+                <Text style={[styles.kr, styles.krGlowInner]}>숫자</Text>
+                <Text style={styles.kr}>숫자</Text>
+              </View>
               <Text style={styles.title}>Comptage</Text>
 
               <BlurView intensity={18} tint="dark" style={styles.badge}>
@@ -180,7 +164,7 @@ export default function ComptageHub() {
                   onPress={() => router.push(m.route)}
                 >
                   <BlurView
-                    intensity={30}
+                    intensity={40}
                     tint="dark"
                     style={[
                       styles.card,
@@ -188,20 +172,88 @@ export default function ComptageHub() {
                     ]}
                   >
                     <LinearGradient
-                      colors={
-                        m.isLocked
-                          ? ["rgba(253,224,71,0.12)", "transparent"]
-                          : [`${m.color}18`, "transparent"]
-                      }
+                      colors={[
+                        m.isLocked ? "rgba(253,224,71,0.18)" : `${m.color}18`,
+                        "rgba(2,3,6,0.48)",
+                        "rgba(255,255,255,0.035)",
+                      ]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
                       style={StyleSheet.absoluteFill}
+                    />
+
+                    <LinearGradient
+                      colors={[
+                        "rgba(255,255,255,0.13)",
+                        "rgba(255,255,255,0.025)",
+                        "transparent",
+                      ]}
+                      locations={[0, 0.35, 1]}
+                      style={styles.cardTopReflect}
+                    />
+
+                    <View style={styles.cardRainA} />
+                    <View
+                      style={[
+                        styles.cardRainB,
+                        { backgroundColor: `${m.isLocked ? GOLD : m.color}14` },
+                      ]}
+                    />
+                    <View style={styles.cardRainC} />
+                    <View
+                      style={[
+                        styles.cardRainDrop,
+                        { backgroundColor: m.isLocked ? GOLD : m.color },
+                      ]}
                     />
 
                     <View
                       style={[
                         styles.accent,
-                        { backgroundColor: m.isLocked ? GOLD : m.color },
+                        {
+                          backgroundColor: m.isLocked ? GOLD : m.color,
+                          shadowColor: m.isLocked ? GOLD : m.color,
+                        },
                       ]}
                     />
+
+                    <View style={styles.cardIconZone}>
+                      <View
+                        style={[
+                          styles.cardIconBox,
+                          {
+                            borderColor: `${m.isLocked ? GOLD : m.color}55`,
+                            backgroundColor: `${m.isLocked ? GOLD : m.color}12`,
+                            shadowColor: m.isLocked ? GOLD : m.color,
+                            shadowOpacity: m.isLocked ? 0.28 : 0.22,
+                          },
+                        ]}
+                      >
+                        <LinearGradient
+                          colors={[
+                            "rgba(255,255,255,0.24)",
+                            "rgba(255,255,255,0.05)",
+                            "transparent",
+                          ]}
+                          locations={[0, 0.45, 1]}
+                          style={styles.cardIconLight}
+                        />
+
+                        <Text
+                          style={[
+                            styles.cardIcon,
+                            {
+                              color: m.isLocked ? GOLD : m.color,
+                              textShadowColor: m.isLocked ? GOLD : m.color,
+                            },
+                          ]}
+                        >
+                          {m.title.charAt(0)}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.cardDividerLine} />
 
                     {m.isLocked && (
                       <View style={styles.premiumBadge}>
@@ -210,6 +262,14 @@ export default function ComptageHub() {
                     )}
 
                     <View style={styles.cardText}>
+                      <Text
+                        style={[
+                          styles.cardMeta,
+                          m.isLocked && styles.cardMetaPremium,
+                        ]}
+                      >
+                        {m.isLocked ? "MODULE PREMIUM" : "FONDATION NUMÉRIQUE"}
+                      </Text>
                       <Text style={styles.cardTitle}>{m.title}</Text>
                       <Text style={styles.cardSub}>
                         {m.isLocked ? "Débloquer ce module exclusif" : m.sub}
@@ -235,9 +295,9 @@ export default function ComptageHub() {
   );
 }
 
-// ──────────────────────────────────────────────
+// ----------------------------------------------
 // ANIMATION
-// ──────────────────────────────────────────────
+// ----------------------------------------------
 function AnimatedItem({ children, index }: any) {
   const fade = useRef(new Animated.Value(0)).current;
   const translate = useRef(new Animated.Value(20)).current;
@@ -272,21 +332,24 @@ function AnimatedItem({ children, index }: any) {
   );
 }
 
-// ──────────────────────────────────────────────
+// ----------------------------------------------
 // STYLES
-// ──────────────────────────────────────────────
+// ----------------------------------------------
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG_DEEP },
   bgImage: { flex: 1 },
+  bgBlur: {
+    ...StyleSheet.absoluteFillObject,
+  },
 
   vignetteOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.80)",
+    backgroundColor: "rgba(2,3,6,0.46)",
   },
 
   topFade: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.10)",
+    backgroundColor: "rgba(0,0,0,0.04)",
   },
 
   bottomFade: {
@@ -294,28 +357,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: 180,
-    backgroundColor: "rgba(2,3,6,0.24)",
-  },
-
-  globalGlowLeft: {
-    position: "absolute",
-    top: 140,
-    left: -90,
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    opacity: 0.08,
-  },
-
-  globalGlowRight: {
-    position: "absolute",
-    top: 300,
-    right: -120,
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    opacity: 0.08,
+    height: 240,
+    backgroundColor: "rgba(2,3,6,0.30)",
   },
 
   scroll: {
@@ -355,113 +398,116 @@ const styles = StyleSheet.create({
   },
 
   heroBlock: {
-    marginTop: 8,
-    marginBottom: 18,
+    marginTop: 34,
+    alignItems: "center",
+  },
+
+  heroEyebrow: {
+    color: PINK,
+    fontFamily: fonts.bold,
+    fontSize: 12,
+    letterSpacing: 5.5,
+    textAlign: "center",
+    marginBottom: 28,
+    opacity: 0.9,
   },
 
   heroVisualWrap: {
+    width: "100%",
     alignItems: "center",
-    justifyContent: "center",
-    minHeight: 330,
-    marginBottom: 8,
-  },
-
-  heroCirclePink: {
-    position: "absolute",
-    width: HERO_CIRCLE,
-    height: HERO_CIRCLE,
-    borderRadius: HERO_CIRCLE / 2,
-    left: -20,
-    top: 2,
-    opacity: 0.12,
-  },
-
-  heroCircleCyan: {
-    position: "absolute",
-    width: HERO_CIRCLE,
-    height: HERO_CIRCLE,
-    borderRadius: HERO_CIRCLE / 2,
-    right: -20,
-    top: 2,
-    opacity: 0.1,
-  },
-
-  heroCircleGlass: {
-    position: "absolute",
-    width: HERO_CIRCLE,
-    height: HERO_CIRCLE,
-    borderRadius: HERO_CIRCLE / 2,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
-  },
-
-  heroLine: {
-    position: "absolute",
-    top: 84,
-    left: 56,
-    right: 56,
-    height: 1,
+    justifyContent: "flex-start",
+    minHeight: 360,
+    position: "relative",
   },
 
   kr: {
     fontSize: 74,
     fontFamily: fonts.krBold,
     color: "rgba(245,252,255,0.98)",
+    textShadowColor: "rgba(56,189,248,0.92)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 22,
     marginBottom: 2,
   },
 
+  krWrap: {
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  krGlowOuter: {
+    position: "absolute",
+    color: "rgba(56,189,248,0.18)",
+    textShadowColor: "rgba(56,189,248,1)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 42,
+  },
+
+  krGlowInner: {
+    position: "absolute",
+    color: "rgba(180,238,255,0.36)",
+    textShadowColor: "rgba(103,232,249,0.95)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 18,
+  },
+
   title: {
-    marginTop: 6,
+    marginTop: 4,
     fontSize: 34,
-    lineHeight: 38,
-    fontFamily: fonts.black,
-    color: TXT,
-    letterSpacing: -0.8,
+    lineHeight: 40,
+    fontFamily: fonts.medium,
+    color: "rgba(255,255,255,0.96)",
+    letterSpacing: -0.7,
+    textAlign: "center",
   },
 
   badge: {
-    marginTop: 14,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
+    marginTop: 18,
+    paddingHorizontal: 28,
+    paddingVertical: 10,
+    borderRadius: 999,
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
+    borderColor: "rgba(255,255,255,0.16)",
   },
 
   badgeText: {
-    color: SOFT,
+    color: "rgba(255,255,255,0.66)",
     fontSize: 11,
     fontFamily: fonts.bold,
-    letterSpacing: 1,
+    letterSpacing: 3,
   },
 
   subtitle: {
-    marginTop: 20,
-    fontSize: 14,
+    marginTop: 30,
+    maxWidth: "82%",
+    fontSize: 15,
+    lineHeight: 23,
     fontFamily: fonts.medium,
-    color: MUTED,
+    color: "rgba(255,255,255,0.72)",
     textAlign: "center",
+    fontStyle: "italic",
   },
 
   divider: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 15,
-    marginBottom: 20,
+    gap: 14,
+    marginBottom: 18,
   },
 
   sectionTitle: {
     fontSize: 11,
     fontFamily: fonts.bold,
     color: SOFT,
-    letterSpacing: 2,
+    letterSpacing: 3,
   },
 
   line: {
     flex: 1,
     height: 1,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: "rgba(255,255,255,0.07)",
   },
 
   grid: {
@@ -469,21 +515,39 @@ const styles = StyleSheet.create({
   },
 
   cardWrap: {
-    borderRadius: 20,
+    borderRadius: 22,
     overflow: "hidden",
+    backgroundColor: "rgba(2,3,6,0.26)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.09)",
+    shadowColor: "#000",
+    shadowOpacity: 0.28,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
   },
 
   card: {
+    minHeight: 78,
     flexDirection: "row",
     alignItems: "center",
-    padding: 18,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-    minHeight: 90,
+    borderColor: "rgba(255,255,255,0.11)",
+    position: "relative",
+  },
+
+  cardTopReflect: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "50%",
+    opacity: 0.55,
   },
 
   premiumCardBorder: {
-    borderColor: "rgba(253,224,71,0.25)",
+    borderColor: "rgba(253,224,71,0.28)",
   },
 
   premiumBadge: {
@@ -508,14 +572,110 @@ const styles = StyleSheet.create({
     left: 0,
     top: 14,
     bottom: 14,
-    width: 3,
-    borderTopRightRadius: 4,
-    borderBottomRightRadius: 4,
+    width: 4,
+    borderTopRightRadius: 6,
+    borderBottomRightRadius: 6,
+    shadowOpacity: 0.75,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
+  },
+
+  cardRainA: {
+    position: "absolute",
+    top: 0,
+    left: "18%",
+    width: 1,
+    height: "100%",
+    backgroundColor: "rgba(255,255,255,0.04)",
+  },
+
+  cardRainB: {
+    position: "absolute",
+    top: 0,
+    left: "54%",
+    width: 1,
+    height: "100%",
+  },
+
+  cardRainC: {
+    position: "absolute",
+    top: 0,
+    right: "18%",
+    width: 1,
+    height: "100%",
+    backgroundColor: "rgba(255,255,255,0.03)",
+  },
+
+  cardRainDrop: {
+    position: "absolute",
+    top: 14,
+    right: 18,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    opacity: 0.65,
+  },
+
+  cardIconZone: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 6,
+    marginRight: 10,
+    position: "relative",
+  },
+
+  cardIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    overflow: "hidden",
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 0 },
+  },
+
+  cardIconLight: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "58%",
+    borderRadius: 22,
+  },
+
+  cardIcon: {
+    fontSize: 21,
+    fontFamily: fonts.bold,
+    letterSpacing: -0.8,
+    textShadowRadius: 10,
+    textShadowOffset: { width: 0, height: 0 },
+  },
+
+  cardDividerLine: {
+    width: 1,
+    height: 42,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    marginRight: 12,
   },
 
   cardText: {
     flex: 1,
-    marginLeft: 10,
+  },
+
+  cardMeta: {
+    fontSize: 7.8,
+    fontFamily: fonts.bold,
+    color: "rgba(255,255,255,0.44)",
+    letterSpacing: 2.1,
+    marginBottom: 4,
+  },
+
+  cardMetaPremium: {
+    color: "rgba(253,224,71,0.78)",
   },
 
   cardTitle: {

@@ -7,6 +7,7 @@ import {
   Animated,
   Dimensions,
   Easing,
+  ImageSourcePropType,
   ImageBackground,
   Pressable,
   ScrollView,
@@ -37,8 +38,7 @@ const SCENES = [
     description:
       "L'art de griller la viande et de partager les accompagnements.",
     accent: COLORS.chiliRed,
-    image:
-      "https://images.unsplash.com/photo-1590301157890-4810ed352733?auto=format&fit=crop&w=800&q=80",
+    image: require("../../../assets/images/bbq.png"),
     dialogue: [
       {
         char: "Moi",
@@ -137,8 +137,7 @@ const SCENES = [
     koreanTitle: "길거리 음식",
     description: "Explorer les saveurs rapides et épicées de Myeongdong.",
     accent: COLORS.sunsetOrange,
-    image:
-      "https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?auto=format&fit=crop&w=800&q=80",
+    image: require("../../../assets/images/streetfood.png"),
     dialogue: [
       {
         char: "Moi",
@@ -237,8 +236,7 @@ const SCENES = [
     koreanTitle: "카페 투어 (Cafe Tour)",
     description: "Détente dans un café esthétique de Yeonnam-dong.",
     accent: COLORS.matchaGreen,
-    image:
-      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80",
+    image: require("../../../assets/images/culturecafe.png"),
     dialogue: [
       {
         char: "Moi",
@@ -335,11 +333,14 @@ const SCENES = [
 
 export default function GastronomyImmersion() {
   const [activeScene, setActiveScene] = useState(SCENES[0]);
+  const [previousBackground, setPreviousBackground] =
+    useState<ImageSourcePropType | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const bgFadeAnim = useRef(new Animated.Value(0)).current;
   const tapHintPulse = useRef(new Animated.Value(0)).current;
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -410,6 +411,24 @@ export default function GastronomyImmersion() {
     });
   };
 
+  const handleSceneChange = (scene: (typeof SCENES)[number]) => {
+    if (scene.id === activeScene.id) return;
+
+    setPreviousBackground(activeScene.image);
+    bgFadeAnim.setValue(1);
+    setActiveScene(scene);
+
+    Animated.timing(bgFadeAnim, {
+      toValue: 0,
+      duration: 420,
+      easing: Easing.inOut(Easing.quad),
+      useNativeDriver: true,
+    }).start(() => {
+      setPreviousBackground(null);
+      bgFadeAnim.setValue(0);
+    });
+  };
+
   const advanceDialogue = () => {
     if (isTyping) return;
 
@@ -449,7 +468,26 @@ export default function GastronomyImmersion() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground source={{ uri: activeScene.image }} style={styles.bg}>
+      <View style={styles.bg}>
+        <ImageBackground
+          source={activeScene.image}
+          style={styles.bgLayer}
+          fadeDuration={0}
+          resizeMode="contain"
+        />
+        {previousBackground ? (
+          <Animated.View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFillObject, { opacity: bgFadeAnim }]}
+          >
+            <ImageBackground
+              source={previousBackground}
+              style={styles.bgLayer}
+              fadeDuration={0}
+              resizeMode="contain"
+            />
+          </Animated.View>
+        ) : null}
         <View style={styles.overlay} />
 
         <ScrollView
@@ -471,7 +509,7 @@ export default function GastronomyImmersion() {
             {SCENES.map((scene) => (
               <Pressable
                 key={scene.id}
-                onPress={() => setActiveScene(scene)}
+                onPress={() => handleSceneChange(scene)}
                 style={[
                   styles.tab,
                   activeScene.id === scene.id && {
@@ -707,14 +745,17 @@ export default function GastronomyImmersion() {
             </View>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
-  bg: { flex: 1 },
+  bg: { flex: 1, position: "relative" },
+  bgLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(2,3,6,0.84)",

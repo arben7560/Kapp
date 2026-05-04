@@ -17,25 +17,22 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 
 const { width } = Dimensions.get("window");
-const BACKGROUND_SOURCE = require("../../assets/images/seoul-hub-bg.jpg");
-const HERO_CIRCLE = width * 0.76;
+const BACKGROUND_SOURCE = require("../../assets/images/seoulbg1.jpg");
 
 // ──────────────────────────────────────────────
 // DESIGN TOKENS
 // ──────────────────────────────────────────────
 const BG_DEEP = "#020306";
-const TXT = "rgba(255,255,255,0.96)";
-const MUTED = "rgba(255,255,255,0.60)";
-const SOFT = "rgba(255,255,255,0.45)";
-const VIOLET = "#8B5CF6";
+const TXT = "#F1F5F9";
+const MUTED = "rgba(241, 245, 249, 0.62)";
+const SOFT = "rgba(241, 245, 249, 0.45)";
+
+const CYAN = "#67E8F9";
 const PINK = "#F472B6";
-const CYAN = "#22D3EE";
-const AMBER = "#F59E0B";
 
 const fonts = {
   medium: "Outfit_500Medium",
   bold: "Outfit_700Bold",
-  black: "Outfit_900Black",
   krBold: "NotoSansKR_700Bold",
 };
 
@@ -53,7 +50,7 @@ const SEQUENCES: any[] = [
   {
     title: "Scènes Guidées",
     label: "Restaurant",
-    color: AMBER,
+    color: "#F59E0B",
     route: "/voc",
     trackKey: "vocab",
     place: "ITAEWON • DINER",
@@ -93,7 +90,7 @@ const SEQUENCES: any[] = [
   {
     title: "Développe ton écoute",
     label: "Listen",
-    color: VIOLET,
+    color: "#8B5CF6",
     route: "/listen",
     trackKey: "listen",
     place: "LIGNE 2 • ÉCOUTER",
@@ -101,6 +98,7 @@ const SEQUENCES: any[] = [
     type: "immersion",
   },
 ];
+
 export default function Home() {
   const { progress, setTrack } = useStore();
   const currentTrack = progress.learningTrack;
@@ -110,77 +108,97 @@ export default function Home() {
   const pedagogicalSequences = SEQUENCES.filter(
     (s) => s.type === "pedagogical",
   );
-
   const immersionSequences = SEQUENCES.filter((s) => s.type === "immersion");
+
+  const pulseAnim = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0.4,
+          duration: 1800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, []);
 
   return (
     <SafeAreaView style={styles.safe}>
       <ImageBackground source={BACKGROUND_SOURCE} style={styles.bgImage}>
+        <BlurView intensity={18} tint="dark" style={styles.bgBlur} />
         <View style={styles.vignetteOverlay} />
         <View style={styles.topFade} />
         <View style={styles.bottomFade} />
-
-        <View style={[styles.globalGlowLeft, { backgroundColor: PINK }]} />
-        <View style={[styles.globalGlowRight, { backgroundColor: CYAN }]} />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
+          {/* TOP HEADER */}
           <View style={styles.header}>
-            <BlurView intensity={20} tint="dark" style={styles.statusBadge}>
-              <View style={styles.liveDot} />
-              <Text style={styles.statusText}>SÉOUL IMMERSION</Text>
-            </BlurView>
-            <Pressable style={styles.settingsBtn}>
-              <View style={styles.settingsIconCircle} />
+            <View style={styles.headerIdentity}>
+              <View style={styles.brandGroup}>
+                <Text style={styles.headerCityKr}>서울</Text>
+                <Text style={styles.headerCityEn}>SEOUL</Text>
+              </View>
+
+              <View style={styles.headerDivider} />
+
+              <View style={styles.statusGroup}>
+                <View style={styles.liveIndicatorRow}>
+                  <Animated.View
+                    style={[styles.liveDot, { opacity: pulseAnim }]}
+                  />
+                  <Text style={styles.statusText}>IMMERSION ACTIVE</Text>
+                </View>
+                <Text style={styles.locationText}>KOREA STANDARD TIME</Text>
+              </View>
+            </View>
+
+            <Pressable style={styles.settingsTrigger}>
+              <BlurView intensity={80} tint="dark" style={styles.settingsBlur}>
+                <View style={styles.settingsInner} />
+              </BlurView>
             </Pressable>
           </View>
 
+          {/* HERO - SEOUL IMMERSION */}
           <View style={styles.heroBlock}>
-            <View style={styles.heroVisualWrap}>
-              <View
-                style={[styles.heroCirclePink, { backgroundColor: PINK }]}
-              />
-              <View
-                style={[styles.heroCircleCyan, { backgroundColor: CYAN }]}
-              />
+            <View style={styles.heroWrap}>
+              <View style={styles.heroContent}>
+                <Text style={styles.heroLabel}>SÉOUL IMMERSION</Text>
 
-              <BlurView
-                intensity={22}
-                tint="dark"
-                style={styles.heroCircleGlass}
-              >
-                <LinearGradient
-                  colors={[
-                    "rgba(255,255,255,0.06)",
-                    "rgba(255,255,255,0.02)",
-                    "rgba(255,255,255,0.01)",
-                  ]}
-                  start={{ x: 0.12, y: 0.08 }}
-                  end={{ x: 0.88, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-              </BlurView>
+                <View style={styles.heroSeoulTitleWrap}>
+                  <Text style={styles.heroSeoulShadow}>서울</Text>
+                  <Text style={styles.heroSeoulTitle}>서울</Text>
+                </View>
 
-              <View
-                style={[
-                  styles.heroLine,
-                  { backgroundColor: "rgba(34,211,238,0.34)" },
-                ]}
-              />
+                <Text style={styles.heroTitle}>Entre dans la ville.</Text>
 
-              <Text style={styles.krMain}>서울</Text>
-              <Text style={styles.heroSub}>
-                L'expérience est ouverte.{"\n"}
-                <Text style={{ color: TXT }}>
-                  Où souhaites-tu te projeter ?
+                <Text style={styles.heroSubtitle}>
+                  Apprends le coréen comme si tu y étais déjà.
                 </Text>
-              </Text>
+
+                <LinearGradient
+                  colors={[CYAN, PINK]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.heroLine}
+                />
+              </View>
             </View>
           </View>
 
-          {/* Animation Index 0 pour la carte principale */}
+          {/* LIST CONTENT */}
           <AnimatedFragment index={0}>
             <MainActionCard
               sequence={activeSeq}
@@ -194,7 +212,15 @@ export default function Home() {
 
           <View style={styles.sectionDivider}>
             <Text style={styles.sectionTitle}>POINTS D'ENTRÉE</Text>
-            <View style={styles.titleLine} />
+            <View style={styles.titleLineWrap}>
+              <View style={styles.titleLine} />
+              <LinearGradient
+                colors={["transparent", CYAN, PINK]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.titleLineGlow}
+              />
+            </View>
           </View>
 
           <View style={styles.grid}>
@@ -214,7 +240,15 @@ export default function Home() {
 
           <View style={styles.sectionDivider}>
             <Text style={styles.sectionTitle}>IMMERSION</Text>
-            <View style={styles.titleLine} />
+            <View style={styles.titleLineWrap}>
+              <View style={styles.titleLine} />
+              <LinearGradient
+                colors={["transparent", "#8B5CF6", PINK]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.titleLineGlow}
+              />
+            </View>
           </View>
 
           <View style={styles.grid}>
@@ -241,7 +275,7 @@ export default function Home() {
 }
 
 // ──────────────────────────────────────────────
-// WRAPPER D'ANIMATION (L'âme de la fluidité)
+// COMPONENTS
 // ──────────────────────────────────────────────
 function AnimatedFragment({
   children,
@@ -255,12 +289,11 @@ function AnimatedFragment({
   const floatAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // 1. Entrée en cascade
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 800,
-        delay: index * 180, // Décalage temporel entre chaque fragment
+        delay: index * 180,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
@@ -268,13 +301,10 @@ function AnimatedFragment({
         toValue: 0,
         duration: 1000,
         delay: index * 180,
-        easing: Easing.out(Easing.back(1.2)), // Léger effet de rebond premium
+        easing: Easing.out(Easing.back(1.2)),
         useNativeDriver: true,
       }),
-    ]).start(() => {
-      // 2. Lancement du flottement après l'entrée
-      startFloating();
-    });
+    ]).start(() => startFloating());
   }, []);
 
   const startFloating = () => {
@@ -282,13 +312,13 @@ function AnimatedFragment({
       Animated.sequence([
         Animated.timing(floatAnim, {
           toValue: 1,
-          duration: 3000 + index * 400, // Rythme désynchronisé pour un aspect naturel
+          duration: 3400 + index * 300,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
         Animated.timing(floatAnim, {
           toValue: 0,
-          duration: 3000 + index * 400,
+          duration: 3400 + index * 300,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
@@ -298,10 +328,7 @@ function AnimatedFragment({
 
   const translateY = Animated.add(
     slideAnim,
-    floatAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, -6], // Amplitude du flottement
-    }),
+    floatAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -5] }),
   );
 
   return (
@@ -311,25 +338,14 @@ function AnimatedFragment({
   );
 }
 
-// ──────────────────────────────────────────────
-// COMPONENTS (Inchangés mais stylisés)
-// ──────────────────────────────────────────────
-
 function MainActionCard({ sequence, progress, onPress }: any) {
   return (
     <Pressable onPress={onPress} style={styles.mainCardWrap}>
       <BlurView intensity={60} tint="dark" style={styles.mainCard}>
-        <LinearGradient
-          colors={[`${sequence.color}30`, "transparent"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
         <View style={styles.cardContent}>
           <Text style={styles.cardKicker}>REPRENDRE LA SÉQUENCE</Text>
           <Text style={styles.cardTitle}>{sequence.label}</Text>
           <Text style={styles.cardNarrative}>{sequence.narrative}</Text>
-
           <View style={styles.progressContainer}>
             <View style={styles.progressTrack}>
               <View
@@ -352,17 +368,129 @@ function MainActionCard({ sequence, progress, onPress }: any) {
   );
 }
 
+function getSequenceIcon(trackKey: string) {
+  switch (trackKey) {
+    case "hangul":
+      return "가";
+    case "vocab":
+      return "말";
+    case "numbers":
+      return "123";
+    case "classifier":
+      return "○";
+    case "dialogs":
+      return "2";
+    case "listen":
+      return "음";
+    default:
+      return "•";
+  }
+}
+
 function SequenceCard({ item, isActive, onPress }: any) {
+  const icon = getSequenceIcon(item.trackKey);
+
   return (
-    <Pressable onPress={onPress} style={styles.seqCard}>
-      <BlurView intensity={30} tint="dark" style={styles.seqBlur}>
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.seqCard,
+        isActive && {
+          borderColor: `${item.color}66`,
+          shadowColor: item.color,
+          shadowOpacity: 0.22,
+        },
+      ]}
+    >
+      <BlurView
+        intensity={isActive ? 52 : 40}
+        tint="dark"
+        style={[
+          styles.seqBlur,
+          isActive && {
+            borderColor: `${item.color}55`,
+          },
+        ]}
+      >
         <LinearGradient
-          colors={[`${item.color}18`, "transparent"]}
+          colors={[
+            `${item.color}18`,
+            "rgba(2,3,6,0.48)",
+            "rgba(255,255,255,0.035)",
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
-        <View style={[styles.seqAccent, { backgroundColor: item.color }]} />
+
+        <LinearGradient
+          colors={[
+            "rgba(255,255,255,0.13)",
+            "rgba(255,255,255,0.025)",
+            "transparent",
+          ]}
+          locations={[0, 0.35, 1]}
+          style={styles.seqTopReflect}
+        />
+
+        <View style={styles.seqRainA} />
+        <View
+          style={[styles.seqRainB, { backgroundColor: `${item.color}14` }]}
+        />
+        <View style={styles.seqRainC} />
+        <View style={[styles.seqRainDrop, { backgroundColor: item.color }]} />
+
+        <View
+          style={[
+            styles.seqAccent,
+            {
+              backgroundColor: item.color,
+              shadowColor: item.color,
+              opacity: isActive ? 1 : 0.9,
+            },
+          ]}
+        />
+
+        <View style={styles.seqIconZone}>
+          <View
+            style={[
+              styles.seqIconBox,
+              {
+                borderColor: `${item.color}55`,
+                backgroundColor: `${item.color}12`,
+                shadowColor: item.color,
+                shadowOpacity: isActive ? 0.34 : 0.22,
+              },
+            ]}
+          >
+            <LinearGradient
+              colors={[
+                "rgba(255,255,255,0.24)",
+                "rgba(255,255,255,0.05)",
+                "transparent",
+              ]}
+              locations={[0, 0.45, 1]}
+              style={styles.seqIconLight}
+            />
+
+            <Text
+              style={[
+                styles.seqIcon,
+                {
+                  color: item.color,
+                  textShadowColor: item.color,
+                },
+              ]}
+            >
+              {icon}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.seqDividerLine} />
 
         <View style={styles.seqText}>
+          <Text style={styles.seqPlace}>{item.place}</Text>
           <Text style={styles.seqTitle}>{item.title}</Text>
           <Text style={styles.seqSub}>{item.narrative}</Text>
         </View>
@@ -370,7 +498,12 @@ function SequenceCard({ item, isActive, onPress }: any) {
         <Text
           style={[
             styles.seqArrow,
-            isActive && { color: item.color, opacity: 0.8 },
+            isActive && {
+              color: item.color,
+              opacity: 0.9,
+              textShadowColor: item.color,
+              textShadowRadius: 8,
+            },
           ]}
         >
           ›
@@ -386,145 +519,204 @@ function SequenceCard({ item, isActive, onPress }: any) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG_DEEP },
   bgImage: { flex: 1 },
+  bgBlur: {
+    ...StyleSheet.absoluteFillObject,
+  },
+
   vignetteOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.80)",
+    backgroundColor: "rgba(2,3,6,0.56)",
   },
-
   topFade: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.10)",
+    backgroundColor: "rgba(0,0,0,0.07)",
   },
-
   bottomFade: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
-    height: 180,
-    backgroundColor: "rgba(2,3,6,0.24)",
+    height: 240,
+    backgroundColor: "rgba(2,3,6,0.40)",
   },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 100 },
 
-  globalGlowLeft: {
-    position: "absolute",
-    top: 140,
-    left: -90,
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    opacity: 0.08,
-  },
-
-  globalGlowRight: {
-    position: "absolute",
-    top: 300,
-    right: -120,
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    opacity: 0.08,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 100,
-  },
+  // HEADER
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
+    marginTop: 8,
     marginBottom: 40,
+    paddingHorizontal: 4,
+    position: "relative",
   },
-  statusBadge: {
+  headerIdentity: { flexDirection: "row", alignItems: "center" },
+  brandGroup: { alignItems: "flex-start" },
+  headerCityKr: {
+    fontSize: 17.5,
+    fontFamily: fonts.krBold,
+    color: TXT,
+    letterSpacing: -0.5,
+  },
+  headerCityEn: {
+    fontSize: 9.8,
+    fontFamily: fonts.bold,
+    color: "rgba(255,255,255,0.65)",
+    letterSpacing: 4,
+    marginTop: -3,
+  },
+  headerDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    marginHorizontal: 18,
+  },
+  statusGroup: { justifyContent: "center" },
+  liveIndicatorRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 99,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    marginBottom: 3,
   },
   liveDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: PINK,
-    marginRight: 8,
+    backgroundColor: CYAN,
+    marginRight: 7,
   },
   statusText: {
-    color: TXT,
+    color: "#E0F2FE",
     fontFamily: fonts.bold,
-    fontSize: 11,
-    letterSpacing: 2,
+    fontSize: 9.5,
+    letterSpacing: 1.6,
   },
-  heroBlock: {
-    marginTop: 8,
-    marginBottom: 18,
+  locationText: {
+    color: "rgba(224, 242, 254, 0.55)",
+    fontFamily: fonts.medium,
+    fontSize: 8.2,
+    letterSpacing: 0.6,
   },
-  heroVisualWrap: {
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 330,
-    marginBottom: 8,
-  },
-  heroCirclePink: {
+  settingsTrigger: {
     position: "absolute",
-    width: HERO_CIRCLE,
-    height: HERO_CIRCLE,
-    borderRadius: HERO_CIRCLE / 2,
-    left: -20,
-    top: 2,
-    opacity: 0.12,
-  },
-  heroCircleCyan: {
-    position: "absolute",
-    width: HERO_CIRCLE,
-    height: HERO_CIRCLE,
-    borderRadius: HERO_CIRCLE / 2,
-    right: -20,
-    top: 2,
-    opacity: 0.1,
-  },
-  heroCircleGlass: {
-    position: "absolute",
-    width: HERO_CIRCLE,
-    height: HERO_CIRCLE,
-    borderRadius: HERO_CIRCLE / 2,
+    right: 4,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
+    borderColor: "rgba(255,255,255,0.12)",
+  },
+  settingsBlur: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  settingsInner: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#F1F5F9",
+    opacity: 0.85,
+  },
+
+  // HERO - SEOUL IMMERSION
+  heroBlock: {
+    marginBottom: 40,
+  },
+  heroWrap: {
+    height: 300,
+    justifyContent: "center",
+    position: "relative",
+  },
+  heroContent: {
+    paddingHorizontal: 4,
+    alignItems: "flex-start",
+    position: "relative",
+  },
+  heroLabel: {
+    fontSize: 9,
+    fontFamily: fonts.medium,
+    color: "rgba(255,255,255,0.70)",
+    letterSpacing: 3,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+
+  heroSeoulTitleWrap: {
+    position: "absolute",
+    top: 32,
+    left: -4,
+    width: width - 48,
+    height: 115,
+    justifyContent: "center",
+    alignItems: "flex-start",
+  },
+  heroSeoulShadow: {
+    position: "absolute",
+    left: 2,
+    top: 4,
+    fontSize: 86,
+    lineHeight: 108,
+    fontFamily: fonts.krBold,
+    letterSpacing: -8,
+    color: "rgba(103,232,249,0.16)",
+    textShadowColor: "rgba(199,184,255,0.30)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 26,
+  },
+  heroSeoulTitle: {
+    fontSize: 86,
+    lineHeight: 108,
+    fontFamily: fonts.krBold,
+    letterSpacing: -8,
+    color: "rgba(215,247,255,0.84)",
+    textShadowColor: "rgba(103,232,249,0.38)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 18,
+  },
+
+  heroTitle: {
+    fontSize: 21,
+    fontFamily: fonts.bold,
+    color: "#FFFFFF",
+    opacity: 0.9,
+    marginTop: 120,
+    marginBottom: 6,
+    letterSpacing: -0.4,
+    textAlign: "center",
+  },
+  heroSubtitle: {
+    fontSize: 13,
+    fontFamily: fonts.medium,
+    color: "rgba(255,255,255,0.65)",
+    lineHeight: 22,
+    marginBottom: 18,
+    maxWidth: width - 96,
+    textAlign: "center",
   },
   heroLine: {
+    width: 60,
+    height: 2,
+    borderRadius: 2,
+  },
+  rainLine: {
     position: "absolute",
-    top: 84,
-    left: 56,
-    right: 56,
-    height: 1,
+    top: 0,
+    width: 1,
+    height: 200,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    zIndex: 20,
   },
-  krMain: {
-    fontSize: 74,
-    fontFamily: fonts.krBold,
-    color: "rgba(245,252,255,0.98)",
-    marginBottom: 8,
-  },
-  heroSub: {
-    fontSize: 18,
-    fontFamily: fonts.medium,
-    color: MUTED,
-    textAlign: "center",
-    lineHeight: 26,
-    maxWidth: 300,
-  },
+
   mainCardWrap: {
-    marginBottom: 32, // Réduit légèrement pour aérer la liste
+    marginBottom: 32,
     borderRadius: 32,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
   },
-  mainCard: {
-    padding: 24,
-  },
+  mainCard: { padding: 20 },
   cardContent: {},
   cardKicker: {
     fontSize: 10,
@@ -546,23 +738,16 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 24,
   },
-  progressContainer: {
-    gap: 10,
-  },
+  progressContainer: { gap: 10 },
   progressTrack: {
     height: 3,
     backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: 2,
   },
-  progressFill: {
-    height: "100%",
-    borderRadius: 2,
-  },
-  progressText: {
-    fontSize: 12,
-    fontFamily: fonts.medium,
-    color: SOFT,
-  },
+  progressFill: { height: "100%", borderRadius: 2 },
+  progressText: { fontSize: 12, fontFamily: fonts.medium, color: SOFT },
+
+  // SECTION DIVIDERS
   sectionDivider: {
     flexDirection: "row",
     alignItems: "center",
@@ -573,70 +758,173 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontFamily: fonts.bold,
-    color: SOFT,
-    letterSpacing: 2,
+    color: "rgba(241,245,249,0.48)",
+    letterSpacing: 3,
+  },
+  titleLineWrap: {
+    flex: 1,
+    height: 8,
+    justifyContent: "center",
+    position: "relative",
   },
   titleLine: {
-    flex: 1,
     height: 1,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: "rgba(255,255,255,0.055)",
   },
-  grid: {
-    gap: 12,
+  titleLineGlow: {
+    position: "absolute",
+    right: 0,
+    width: 70,
+    height: 2,
+    borderRadius: 2,
+    opacity: 0.85,
   },
+
+  grid: { gap: 10 },
+
+  // SEQUENCE CARDS
   seqCard: {
-    borderRadius: 20,
+    borderRadius: 22,
     overflow: "hidden",
+    backgroundColor: "rgba(2,3,6,0.26)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.09)",
+    shadowColor: "#000",
+    shadowOpacity: 0.28,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
   },
   seqBlur: {
+    minHeight: 78,
     flexDirection: "row",
     alignItems: "center",
-    padding: 18,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-    minHeight: 90,
+    borderColor: "rgba(255,255,255,0.11)",
+    position: "relative",
+  },
+  seqTopReflect: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "50%",
+    opacity: 0.55,
   },
   seqAccent: {
     position: "absolute",
     left: 0,
     top: 14,
     bottom: 14,
-    width: 3,
-    borderTopRightRadius: 4,
-    borderBottomRightRadius: 4,
+    width: 4,
+    borderTopRightRadius: 6,
+    borderBottomRightRadius: 6,
+    shadowOpacity: 0.75,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  seqIconZone: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 6,
+    marginRight: 10,
+    position: "relative",
+  },
+  seqIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    overflow: "hidden",
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  seqIconLight: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "58%",
+    borderRadius: 22,
+  },
+  seqIcon: {
+    fontSize: 21,
+    fontFamily: fonts.bold,
+    letterSpacing: -0.8,
+    textShadowRadius: 10,
+    textShadowOffset: { width: 0, height: 0 },
+  },
+  seqDividerLine: {
+    width: 1,
+    height: 42,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    marginRight: 12,
   },
   seqText: {
     flex: 1,
-    marginLeft: 10,
+  },
+  seqPlace: {
+    fontSize: 7.8,
+    fontFamily: fonts.bold,
+    color: "rgba(241,245,249,0.34)",
+    letterSpacing: 1.45,
+    marginBottom: 4,
+    textTransform: "uppercase",
   },
   seqTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontFamily: fonts.bold,
     color: TXT,
+    letterSpacing: -0.25,
   },
   seqSub: {
-    fontSize: 13,
+    fontSize: 12.2,
     fontFamily: fonts.medium,
-    color: MUTED,
-    marginTop: 2,
+    color: "rgba(241,245,249,0.62)",
+    marginTop: 3,
+    lineHeight: 16.5,
   },
   seqArrow: {
-    color: SOFT,
-    fontSize: 22,
-    opacity: 0.3,
+    color: "rgba(255,255,255,0.36)",
+    fontSize: 28,
+    opacity: 0.52,
+    marginLeft: 8,
   },
-  settingsBtn: {
-    width: 40,
-    height: 40,
-    alignItems: "flex-end",
-    justifyContent: "center",
+  seqRainA: {
+    position: "absolute",
+    top: 6,
+    bottom: 8,
+    left: "34%",
+    width: 1,
+    backgroundColor: "rgba(255,255,255,0.045)",
   },
-  settingsIconCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: MUTED,
-    opacity: 0.5,
+  seqRainB: {
+    position: "absolute",
+    top: 10,
+    bottom: 16,
+    left: "66%",
+    width: 1,
+  },
+  seqRainC: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    right: 40,
+    width: 1,
+    backgroundColor: "rgba(244,114,182,0.035)",
+  },
+  seqRainDrop: {
+    position: "absolute",
+    top: 16,
+    left: "72%",
+    width: 3,
+    height: 15,
+    borderRadius: 2,
+    opacity: 0.065,
   },
 });

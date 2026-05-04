@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const BACKGROUND_SOURCE = require("../../../assets/images/seoul-hub-bg.jpg");
+const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.png");
 
 const COLORS = {
   bg: "#020306",
@@ -338,6 +338,18 @@ export default function ConsonantsDoubleScreen() {
     0,
   );
 
+  const resetSceneToolbox = () => {
+    setCompletedItems((prev) => {
+      const next = { ...prev };
+
+      activeScene.expressions.forEach((exp) => {
+        delete next[exp.id];
+      });
+
+      return next;
+    });
+  };
+
   const speak = (text: string) => {
     Speech.stop();
     Speech.speak(text, {
@@ -389,8 +401,7 @@ export default function ConsonantsDoubleScreen() {
 
     if (
       isFirstTime &&
-      activeScene.expressions.every((e) => newCompleted[e.id]) &&
-      !masteredScenes[activeScene.id]
+      activeScene.expressions.every((e) => newCompleted[e.id])
     ) {
       setTimeout(() => startQuiz(), 1000);
     }
@@ -418,9 +429,13 @@ export default function ConsonantsDoubleScreen() {
         setQuizIndex((i) => i + 1);
         setQuizAnswered(null);
       } else {
+        const finalScore = quizScore + (isCorrect ? 1 : 0);
         setQuizComplete(true);
         setMasteredScenes((p) => ({ ...p, [activeScene.id]: true }));
-        setShowTeaser((p) => ({ ...p, [activeScene.id]: true }));
+        setShowTeaser((p) => ({
+          ...p,
+          [activeScene.id]: finalScore === quizQuestions.length,
+        }));
       }
     }, 900);
   };
@@ -430,10 +445,10 @@ export default function ConsonantsDoubleScreen() {
       <ImageBackground
         source={BACKGROUND_SOURCE}
         style={styles.bg}
-        blurRadius={8}
+        resizeMode="contain"
       >
         <LinearGradient
-          colors={["rgba(2,3,6,0.68)", "rgba(2,3,6,0.86)", "rgba(2,3,6,0.96)"]}
+          colors={["rgba(2,3,6,0.52)", "rgba(2,3,6,0.72)", "rgba(2,3,6,0.84)"]}
           style={StyleSheet.absoluteFillObject}
         />
 
@@ -708,7 +723,10 @@ export default function ConsonantsDoubleScreen() {
                   </Text>
 
                   <Pressable
-                    onPress={() => setQuizActive(false)}
+                    onPress={() => {
+                      setQuizActive(false);
+                      resetSceneToolbox();
+                    }}
                     style={[
                       styles.closeBtn,
                       { backgroundColor: activeScene.accent },

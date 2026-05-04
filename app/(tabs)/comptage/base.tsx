@@ -16,10 +16,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
+const BACKGROUND_SOURCE = require("../../../assets/images/comptage.png");
 
-// ──────────────────────────────────────────────
+// ----------------------------------------------
 // DESIGN SYSTEM — NATIVE ROOTS EDITION
-// ──────────────────────────────────────────────
+// ----------------------------------------------
 const COLORS = {
   bg: "#020306",
   nativeCyan: "#22D3EE",
@@ -171,7 +172,11 @@ export default function NativeNumbersImmersion() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground source={{ uri: activeScene.image }} style={styles.bg}>
+      <ImageBackground
+        source={BACKGROUND_SOURCE}
+        style={styles.bg}
+        resizeMode="cover"
+      >
         <View style={styles.overlay} />
 
         <ScrollView

@@ -1,12 +1,14 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import * as Speech from "expo-speech";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
   Easing,
   ImageBackground,
+  ImageSourcePropType,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -44,6 +46,7 @@ const SCENES = [
     realLife:
       "À utiliser quand tu veux exprimer un sentiment sans être trop direct.",
     accent: COLORS.pink,
+    image: require("../../../assets/images/love.png"),
     dialogue: [
       {
         char: "Min-ho",
@@ -102,6 +105,7 @@ const SCENES = [
     realLife:
       "Utile dans les situations sérieuses, au travail ou face à une critique.",
     accent: COLORS.cyan,
+    image: require("../../../assets/images/office.png"),
     dialogue: [
       {
         char: "Directeur",
@@ -161,6 +165,7 @@ const SCENES = [
     realLife:
       "Très naturel pour encourager quelqu’un ou célébrer un petit moment.",
     accent: COLORS.gold,
+    image: require("../../../assets/images/pocha.png"),
     dialogue: [
       {
         char: "Ami 1",
@@ -212,30 +217,34 @@ const SCENES = [
 
 export default function KDramaCulture() {
   const [activeScene, setActiveScene] = useState(SCENES[0]);
-  const [activeExpression, setActiveExpression] = useState(0);
+  const [previousBackground, setPreviousBackground] =
+    useState<ImageSourcePropType | null>(null);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const bgFadeAnim = useRef(new Animated.Value(0)).current;
   const tapHintPulse = useRef(new Animated.Value(0)).current;
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    setActiveExpression(0);
     setVisibleMessages(1);
     setIsTyping(false);
+    setSelectedWord(null);
 
     if (typingTimer.current) {
       clearTimeout(typingTimer.current);
       typingTimer.current = null;
     }
 
+    Speech.stop();
     fadeAnim.setValue(0);
 
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 500,
-      easing: Easing.out(Easing.cubic),
+      duration: 600,
+      easing: Easing.out(Easing.back(1)),
       useNativeDriver: true,
     }).start();
   }, [activeScene]);
@@ -266,12 +275,27 @@ export default function KDramaCulture() {
       if (typingTimer.current) {
         clearTimeout(typingTimer.current);
       }
+
+      Speech.stop();
     };
   }, [tapHintPulse]);
-
-  const selectedExpression = activeScene.expressions[activeExpression];
   const shouldHighlightHint =
     !isTyping && visibleMessages < activeScene.dialogue.length;
+
+  const speak = (text: string, id: string) => {
+    Speech.stop();
+    setSelectedWord(id);
+    Vibration.vibrate(8);
+
+    Speech.speak(text, {
+      language: "ko-KR",
+      rate: 0.78,
+      pitch: 1,
+      onDone: () => setSelectedWord(null),
+      onStopped: () => setSelectedWord(null),
+      onError: () => setSelectedWord(null),
+    });
+  };
 
   const advanceDialogue = () => {
     if (isTyping) return;
@@ -307,14 +331,46 @@ export default function KDramaCulture() {
     );
   };
 
+  const handleSceneChange = (scene: (typeof SCENES)[number]) => {
+    if (scene.id === activeScene.id) return;
+
+    setPreviousBackground(activeScene.image);
+    bgFadeAnim.setValue(1);
+    setActiveScene(scene);
+
+    Animated.timing(bgFadeAnim, {
+      toValue: 0,
+      duration: 420,
+      easing: Easing.inOut(Easing.quad),
+      useNativeDriver: true,
+    }).start(() => {
+      setPreviousBackground(null);
+      bgFadeAnim.setValue(0);
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground
-        source={{
-          uri: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=800&q=80",
-        }}
-        style={styles.bg}
-      >
+      <View style={styles.bg}>
+        <ImageBackground
+          source={activeScene.image}
+          style={styles.bgLayer}
+          fadeDuration={0}
+          resizeMode="contain"
+        />
+        {previousBackground ? (
+          <Animated.View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFillObject, { opacity: bgFadeAnim }]}
+          >
+            <ImageBackground
+              source={previousBackground}
+              style={styles.bgLayer}
+              fadeDuration={0}
+              resizeMode="contain"
+            />
+          </Animated.View>
+        ) : null}
         <View style={styles.overlay} />
 
         <ScrollView contentContainerStyle={styles.scroll}>
@@ -333,7 +389,7 @@ export default function KDramaCulture() {
             {SCENES.map((scene) => (
               <Pressable
                 key={scene.id}
-                onPress={() => setActiveScene(scene)}
+                onPress={() => handleSceneChange(scene)}
                 style={[
                   styles.selectorItem,
                   activeScene.id === scene.id && {
@@ -355,7 +411,22 @@ export default function KDramaCulture() {
           </View>
 
           {/* MAIN STAGE */}
-          <Animated.View style={[styles.stage, { opacity: fadeAnim }]}>
+          <Animated.View
+            style={[
+              styles.stage,
+              {
+                opacity: fadeAnim,
+                transform: [
+                  {
+                    scale: fadeAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.95, 1],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
             <BlurView intensity={40} tint="dark" style={styles.glassCard}>
               <LinearGradient
                 colors={[`${activeScene.accent}20`, "transparent"]}
@@ -366,35 +437,10 @@ export default function KDramaCulture() {
                 <Text style={[styles.sceneSub, { color: activeScene.accent }]}>
                   {activeScene.koreanTitle}
                 </Text>
-
-                <View
-                  style={[
-                    styles.livePill,
-                    { borderColor: `${activeScene.accent}55` },
-                  ]}
-                >
-                  <Text
-                    style={[styles.livePillText, { color: activeScene.accent }]}
-                  >
-                    SCÈNE
-                  </Text>
-                </View>
               </View>
 
               <Text style={styles.sceneTitle}>{activeScene.title}</Text>
               <Text style={styles.sceneDesc}>{activeScene.description}</Text>
-
-              <View
-                style={[
-                  styles.moodCard,
-                  { borderColor: `${activeScene.accent}35` },
-                ]}
-              >
-                <Text style={[styles.moodLabel, { color: activeScene.accent }]}>
-                  AMBIANCE
-                </Text>
-                <Text style={styles.moodText}>{activeScene.mood}</Text>
-              </View>
 
               {/* DIALOGUE BUBBLES */}
               <Pressable onPress={advanceDialogue} style={styles.dialogueBox}>
@@ -493,69 +539,106 @@ export default function KDramaCulture() {
           </Animated.View>
 
           {/* TOOLBOX - EXPRESSIONS */}
-          <View style={styles.toolboxHeader}>
-            <Text style={styles.toolboxTitle}>DRAMA TOOLBOX</Text>
-            <View
-              style={[
-                styles.titleLine,
-                { backgroundColor: activeScene.accent },
-              ]}
-            />
-          </View>
+          <View style={styles.toolbox}>
+            <View style={styles.toolboxHeader}>
+              <Text style={styles.toolboxTitle}>DRAMA TOOLBOX</Text>
+              <View
+                style={[
+                  styles.toolboxLine,
+                  { backgroundColor: activeScene.accent },
+                ]}
+              />
+            </View>
 
-          <BlurView intensity={22} tint="dark" style={styles.focusCard}>
-            <Text style={[styles.focusLabel, { color: activeScene.accent }]}>
-              EXPRESSION À RETENIR
-            </Text>
-            <Text style={styles.focusWord}>{selectedExpression.word}</Text>
-            <Text style={styles.focusRom}>{selectedExpression.rom}</Text>
-            <Text style={styles.focusMean}>{selectedExpression.mean}</Text>
-          </BlurView>
+            <View style={styles.expressionGrid}>
+              {activeScene.expressions.map((exp, i) => {
+                const cardId = `${activeScene.id}-${i}`;
+                const isActive = selectedWord === cardId;
 
-          <View style={styles.expressionGrid}>
-            {activeScene.expressions.map((exp, i) => {
-              const isActive = i === activeExpression;
-
-              return (
-                <Pressable key={i} onPress={() => setActiveExpression(i)}>
-                  <BlurView
-                    intensity={isActive ? 30 : 20}
-                    tint="dark"
-                    style={[
-                      styles.expCard,
-                      isActive && {
-                        borderColor: `${activeScene.accent}55`,
-                      },
+                return (
+                  <Pressable
+                    key={cardId}
+                    onPress={() => speak(exp.word, cardId)}
+                    style={({ pressed }) => [
+                      styles.expPressable,
+                      pressed && { transform: [{ scale: 0.985 }] },
                     ]}
                   >
-                    <View
+                    <BlurView
+                      intensity={25}
+                      tint="dark"
                       style={[
-                        styles.expAccent,
-                        { backgroundColor: activeScene.accent },
+                        styles.expCard,
+                        isActive && {
+                          borderColor: activeScene.accent,
+                        },
                       ]}
-                    />
-                    <Text style={styles.expWord}>{exp.word}</Text>
-                    <Text
-                      style={[styles.expRom, { color: activeScene.accent }]}
                     >
-                      {exp.rom}
-                    </Text>
-                    <Text style={styles.expMean}>{exp.mean}</Text>
-                    <Text style={styles.expContext}>{exp.context}</Text>
-                  </BlurView>
-                </Pressable>
-              );
-            })}
+                      <View
+                        style={[
+                          styles.expAccent,
+                          {
+                            backgroundColor: activeScene.accent,
+                            opacity: isActive ? 1 : 0.75,
+                          },
+                        ]}
+                      />
+                      <View style={styles.expContent}>
+                        <View style={styles.expTopRow}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.expWord}>{exp.word}</Text>
+                            <Text
+                              style={[
+                                styles.expRom,
+                                { color: activeScene.accent },
+                              ]}
+                            >
+                              {exp.rom}
+                            </Text>
+                          </View>
+
+                          <View
+                            style={[
+                              styles.listenPill,
+                              {
+                                backgroundColor: `${activeScene.accent}20`,
+                                borderColor: `${activeScene.accent}55`,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.listenIcon,
+                                { color: activeScene.accent },
+                              ]}
+                            >
+                              {isActive ? "●" : "▶"}
+                            </Text>
+                            <Text style={styles.listenText}>ÉCOUTER</Text>
+                          </View>
+                        </View>
+
+                        <Text style={styles.expMean}>{exp.mean}</Text>
+                        <Text style={styles.expContext}>{exp.context}</Text>
+                      </View>
+                    </BlurView>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
-  bg: { flex: 1 },
+  bg: { flex: 1, position: "relative" },
+  bgLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(2,3,6,0.85)",
@@ -605,22 +688,23 @@ const styles = StyleSheet.create({
 
   stage: { marginBottom: 18 },
   glassCard: {
-    borderRadius: 30,
-    padding: 24,
+    borderRadius: 32,
+    padding: 25,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: "rgba(255,255,255,0.12)",
   },
 
   sceneMetaRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 5,
+    marginBottom: 2,
   },
   sceneSub: {
     fontFamily: "NotoSansKR_700Bold",
-    fontSize: 16,
+    fontSize: 14,
+    letterSpacing: 1,
   },
   livePill: {
     paddingHorizontal: 10,
@@ -638,14 +722,15 @@ const styles = StyleSheet.create({
   sceneTitle: {
     color: COLORS.txt,
     fontFamily: "Outfit_900Black",
-    fontSize: 28,
+    fontSize: 34,
     marginBottom: 8,
   },
   sceneDesc: {
     color: COLORS.muted,
     fontSize: 14,
     fontStyle: "italic",
-    marginBottom: 18,
+    marginBottom: 30,
+    lineHeight: 20,
   },
 
   moodCard: {
@@ -669,26 +754,26 @@ const styles = StyleSheet.create({
 
   dialogueBox: { gap: 16 },
   bubble: {
-    maxWidth: "85%",
-    padding: 15,
-    borderRadius: 20,
+    maxWidth: "88%",
+    padding: 18,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.06)",
   },
   bubbleLeft: {
     alignSelf: "flex-start",
     backgroundColor: "rgba(255,255,255,0.05)",
-    borderBottomLeftRadius: 2,
+    borderBottomLeftRadius: 4,
   },
   bubbleRight: {
     alignSelf: "flex-end",
     backgroundColor: "rgba(255,255,255,0.1)",
-    borderBottomRightRadius: 2,
+    borderBottomRightRadius: 4,
   },
   charName: {
     fontSize: 10,
     fontFamily: "Outfit_700Bold",
-    marginBottom: 4,
+    marginBottom: 6,
     letterSpacing: 1,
     textTransform: "uppercase",
   },
@@ -696,7 +781,7 @@ const styles = StyleSheet.create({
     color: COLORS.txt,
     fontFamily: "NotoSansKR_700Bold",
     fontSize: 18,
-    lineHeight: 25,
+    lineHeight: 26,
     marginBottom: 4,
   },
   frText: {
@@ -777,44 +862,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 3,
   },
-  titleLine: { flex: 1, height: 1, opacity: 0.3 },
+  toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
 
-  focusCard: {
-    padding: 18,
-    borderRadius: 22,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
-    marginBottom: 12,
-  },
-  focusLabel: {
-    fontFamily: "Outfit_700Bold",
-    fontSize: 10,
-    letterSpacing: 2,
-    marginBottom: 8,
-  },
-  focusWord: {
-    color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 24,
-    marginBottom: 2,
-  },
-  focusRom: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 12,
-    marginBottom: 8,
-  },
-  focusMean: {
-    color: COLORS.txt,
-    fontFamily: "Outfit_900Black",
-    fontSize: 18,
-  },
-
-  expressionGrid: { gap: 12 },
+  expressionGrid: { gap: 14 },
+  expPressable: { width: "100%" },
   expCard: {
-    padding: 18,
-    borderRadius: 20,
+    borderRadius: 24,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.05)",
@@ -826,15 +879,22 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: 4,
   },
+  expContent: { padding: 20 },
+  expTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 14,
+    marginBottom: 10,
+  },
   expWord: {
     color: COLORS.txt,
     fontFamily: "NotoSansKR_700Bold",
-    fontSize: 22,
+    fontSize: 24,
+    marginBottom: 2,
   },
   expRom: {
     fontFamily: "Outfit_700Bold",
     fontSize: 12,
-    marginBottom: 8,
   },
   expMean: {
     color: COLORS.txt,
@@ -845,6 +905,25 @@ const styles = StyleSheet.create({
   expContext: {
     color: COLORS.muted,
     fontSize: 12,
-    lineHeight: 16,
+    lineHeight: 18,
+  },
+  listenPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  listenIcon: {
+    fontSize: 9,
+    fontFamily: "Outfit_700Bold",
+  },
+  listenText: {
+    color: "rgba(255,255,255,0.78)",
+    fontFamily: "Outfit_700Bold",
+    fontSize: 9,
+    letterSpacing: 1,
   },
 });

@@ -1,11 +1,13 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import * as Speech from "expo-speech";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
   Easing,
+  ImageSourcePropType,
   ImageBackground,
   Pressable,
   ScrollView,
@@ -38,8 +40,7 @@ const SCENES = [
     koreanTitle: "소개팅",
     description: "Le premier rendez-vous arrangé dans un café chic de Gangnam.",
     accent: COLORS.romance,
-    image:
-      "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=800&q=80",
+    image: require("../../../assets/images/sogeting.png"),
     dialogue: [
       {
         char: "Jun-su",
@@ -93,8 +94,7 @@ const SCENES = [
     koreanTitle: "썸 타는 중",
     description: "Flirt et tension au bord du fleuve Han à minuit.",
     accent: COLORS.lavender,
-    image:
-      "https://images.unsplash.com/photo-1621360841013-c7683c659ec6?auto=format&fit=crop&w=800&q=80",
+    image: require("../../../assets/images/han.png"),
     dialogue: [
       {
         char: "Do-yun",
@@ -148,8 +148,7 @@ const SCENES = [
     koreanTitle: "연인",
     description: "Promesse d'éternité à la N Seoul Tower.",
     accent: COLORS.heart,
-    image:
-      "https://images.unsplash.com/photo-1549923746-c502d488b3ea?auto=format&fit=crop&w=800&q=80",
+    image: require("../../../assets/images/tower.png"),
     dialogue: [
       {
         char: "Tae-yang",
@@ -201,15 +200,20 @@ const SCENES = [
 
 export default function RomanceDating() {
   const [activeScene, setActiveScene] = useState(SCENES[0]);
+  const [previousBackground, setPreviousBackground] =
+    useState<ImageSourcePropType | null>(null);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const bgFadeAnim = useRef(new Animated.Value(0)).current;
   const tapHintPulse = useRef(new Animated.Value(0)).current;
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fadeAnim.setValue(0);
+    setSelectedWord(null);
     setVisibleMessages(1);
     setIsTyping(false);
 
@@ -218,10 +222,12 @@ export default function RomanceDating() {
       typingTimer.current = null;
     }
 
+    Speech.stop();
+
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 600,
-      easing: Easing.out(Easing.quad),
+      easing: Easing.out(Easing.back(1)),
       useNativeDriver: true,
     }).start();
   }, [activeScene]);
@@ -252,8 +258,25 @@ export default function RomanceDating() {
       if (typingTimer.current) {
         clearTimeout(typingTimer.current);
       }
+
+      Speech.stop();
     };
   }, [tapHintPulse]);
+
+  const speak = (text: string, id: string) => {
+    Speech.stop();
+    setSelectedWord(id);
+    Vibration.vibrate(8);
+
+    Speech.speak(text, {
+      language: "ko-KR",
+      rate: 0.78,
+      pitch: 1,
+      onDone: () => setSelectedWord(null),
+      onStopped: () => setSelectedWord(null),
+      onError: () => setSelectedWord(null),
+    });
+  };
 
   const advanceDialogue = () => {
     if (isTyping) return;
@@ -289,12 +312,49 @@ export default function RomanceDating() {
     );
   };
 
+  const handleSceneChange = (scene: (typeof SCENES)[number]) => {
+    if (scene.id === activeScene.id) return;
+
+    setPreviousBackground(activeScene.image);
+    bgFadeAnim.setValue(1);
+    setActiveScene(scene);
+
+    Animated.timing(bgFadeAnim, {
+      toValue: 0,
+      duration: 420,
+      easing: Easing.inOut(Easing.quad),
+      useNativeDriver: true,
+    }).start(() => {
+      setPreviousBackground(null);
+      bgFadeAnim.setValue(0);
+    });
+  };
+
   const shouldHighlightHint =
     !isTyping && visibleMessages < activeScene.dialogue.length;
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground source={{ uri: activeScene.image }} style={styles.bg}>
+      <View style={styles.bg}>
+        <ImageBackground
+          source={activeScene.image}
+          style={styles.bgLayer}
+          fadeDuration={0}
+          resizeMode="contain"
+        />
+        {previousBackground ? (
+          <Animated.View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFillObject, { opacity: bgFadeAnim }]}
+          >
+            <ImageBackground
+              source={previousBackground}
+              style={styles.bgLayer}
+              fadeDuration={0}
+              resizeMode="contain"
+            />
+          </Animated.View>
+        ) : null}
         <View style={styles.overlay} />
 
         <ScrollView
@@ -322,7 +382,7 @@ export default function RomanceDating() {
             {SCENES.map((scene) => (
               <Pressable
                 key={scene.id}
-                onPress={() => setActiveScene(scene)}
+                onPress={() => handleSceneChange(scene)}
                 style={[
                   styles.tab,
                   activeScene.id === scene.id && {
@@ -349,9 +409,9 @@ export default function RomanceDating() {
               opacity: fadeAnim,
               transform: [
                 {
-                  translateY: fadeAnim.interpolate({
+                  scale: fadeAnim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [20, 0],
+                    outputRange: [0.95, 1],
                   }),
                 },
               ],
@@ -466,51 +526,106 @@ export default function RomanceDating() {
           </Animated.View>
 
           {/* ROMANCE TOOLBOX */}
-          <View style={styles.toolboxSection}>
-            <View style={styles.toolboxHeader}>
-              <Text style={styles.toolboxIcon}>💖</Text>
+          <View style={styles.toolbox}>
+            <View style={styles.toolboxTitleRow}>
               <Text style={styles.toolboxTitle}>DATING TOOLBOX</Text>
+              <View
+                style={[
+                  styles.toolboxLine,
+                  { backgroundColor: activeScene.accent },
+                ]}
+              />
             </View>
 
-            <View style={styles.expList}>
-              {activeScene.expressions.map((exp, i) => (
-                <BlurView
-                  key={i}
-                  intensity={20}
-                  tint="dark"
-                  style={styles.expCard}
-                >
-                  <View
-                    style={[
-                      styles.expLeftBorder,
-                      { backgroundColor: activeScene.accent },
+            <View style={styles.vocabGrid}>
+              {activeScene.expressions.map((exp, i) => {
+                const cardId = `${activeScene.id}-${i}`;
+                const isActive = selectedWord === cardId;
+
+                return (
+                  <Pressable
+                    key={cardId}
+                    onPress={() => speak(exp.word, cardId)}
+                    style={({ pressed }) => [
+                      styles.vocabPressable,
+                      pressed && { transform: [{ scale: 0.985 }] },
                     ]}
-                  />
-                  <View style={styles.expContent}>
-                    <View style={styles.expRow}>
-                      <Text style={styles.expKr}>{exp.word}</Text>
-                      <Text
-                        style={[styles.expRom, { color: activeScene.accent }]}
-                      >
-                        [{exp.rom}]
-                      </Text>
-                    </View>
-                    <Text style={styles.expMean}>{exp.mean}</Text>
-                    <Text style={styles.expContext}>{exp.context}</Text>
-                  </View>
-                </BlurView>
-              ))}
+                  >
+                    <BlurView
+                      intensity={25}
+                      tint="dark"
+                      style={[
+                        styles.vocabCard,
+                        isActive && {
+                          borderColor: activeScene.accent,
+                        },
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.vocabAccent,
+                          {
+                            backgroundColor: activeScene.accent,
+                            opacity: isActive ? 1 : 0.75,
+                          },
+                        ]}
+                      />
+                      <View style={styles.vocabContent}>
+                        <View style={styles.vocabTopRow}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.vocabKr}>{exp.word}</Text>
+                            <Text
+                              style={[
+                                styles.vocabRom,
+                                { color: activeScene.accent },
+                              ]}
+                            >
+                              {exp.rom}
+                            </Text>
+                          </View>
+
+                          <View
+                            style={[
+                              styles.listenPill,
+                              {
+                                backgroundColor: `${activeScene.accent}20`,
+                                borderColor: `${activeScene.accent}55`,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.listenIcon,
+                                { color: activeScene.accent },
+                              ]}
+                            >
+                              {isActive ? "●" : "▶"}
+                            </Text>
+                            <Text style={styles.listenText}>ÉCOUTER</Text>
+                          </View>
+                        </View>
+
+                        <Text style={styles.vocabMean}>{exp.mean}</Text>
+                        <Text style={styles.vocabCtx}>{exp.context}</Text>
+                      </View>
+                    </BlurView>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
-  bg: { flex: 1 },
+  bg: { flex: 1, position: "relative" },
+  bgLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(2,3,6,0.75)",
@@ -635,43 +750,79 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  toolboxSection: { marginTop: 35 },
-  toolboxHeader: {
+  toolbox: { marginTop: 40 },
+  toolboxTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 15,
     marginBottom: 20,
   },
-  toolboxIcon: { fontSize: 18 },
   toolboxTitle: {
-    color: COLORS.txt,
+    color: COLORS.muted,
     fontFamily: "Outfit_700Bold",
-    fontSize: 13,
-    letterSpacing: 2,
+    fontSize: 11,
+    letterSpacing: 3,
   },
+  toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
 
-  expList: { gap: 12 },
-  expCard: {
-    borderRadius: 20,
+  vocabGrid: { gap: 14 },
+  vocabPressable: { width: "100%" },
+  vocabCard: {
+    borderRadius: 24,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
+    borderColor: "rgba(255,255,255,0.05)",
   },
-  expLeftBorder: { position: "absolute", left: 0, top: 0, bottom: 0, width: 4 },
-  expContent: { padding: 18 },
-  expRow: {
+  vocabAccent: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+  },
+  vocabContent: { padding: 20 },
+  vocabTopRow: {
     flexDirection: "row",
-    alignItems: "baseline",
-    gap: 8,
-    marginBottom: 6,
+    alignItems: "flex-start",
+    gap: 14,
+    marginBottom: 10,
   },
-  expKr: { color: COLORS.txt, fontFamily: "NotoSansKR_700Bold", fontSize: 20 },
-  expRom: { fontSize: 11, fontFamily: "Outfit_700Bold" },
-  expMean: {
+  vocabKr: {
+    color: COLORS.txt,
+    fontFamily: "NotoSansKR_700Bold",
+    fontSize: 24,
+    marginBottom: 2,
+  },
+  vocabRom: {
+    fontSize: 12,
+    fontFamily: "Outfit_700Bold",
+    textTransform: "uppercase",
+  },
+  vocabMean: {
     color: COLORS.txt,
     fontFamily: "Outfit_700Bold",
-    fontSize: 15,
+    fontSize: 16,
     marginBottom: 4,
   },
-  expContext: { color: COLORS.muted, fontSize: 12, lineHeight: 17 },
+  vocabCtx: { color: COLORS.muted, fontSize: 12, lineHeight: 18 },
+  listenPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  listenIcon: {
+    fontSize: 9,
+    fontFamily: "Outfit_700Bold",
+  },
+  listenText: {
+    color: "rgba(255,255,255,0.78)",
+    fontFamily: "Outfit_700Bold",
+    fontSize: 9,
+    letterSpacing: 1,
+  },
 });
+

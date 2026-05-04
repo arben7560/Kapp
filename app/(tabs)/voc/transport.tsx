@@ -348,7 +348,7 @@ export default function TransportCity() {
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 600,
-      easing: Easing.out(Easing.cubic),
+      easing: Easing.out(Easing.back(1)),
       useNativeDriver: true,
     }).start();
 
@@ -506,9 +506,9 @@ export default function TransportCity() {
               opacity: fadeAnim,
               transform: [
                 {
-                  translateY: fadeAnim.interpolate({
+                  scale: fadeAnim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [15, 0],
+                    outputRange: [0.95, 1],
                   }),
                 },
               ],

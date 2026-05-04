@@ -1,11 +1,13 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import * as Speech from "expo-speech";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
   Easing,
+  ImageSourcePropType,
   ImageBackground,
   Pressable,
   ScrollView,
@@ -39,8 +41,7 @@ const SCENES = [
     description: "Sous la tente orange, entre soju et anju.",
     cultureHint: "On sert souvent le verre des autres avant le sien.",
     accent: COLORS.sojuGreen,
-    image:
-      "https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=900&q=85",
+    image: require("../../../assets/images/pocha2.png"),
     dialogue: [
       {
         char: "Ji-hun",
@@ -95,8 +96,7 @@ const SCENES = [
     description: "Libérer le stress dans une salle de karaoké privée.",
     cultureHint: "Le tambourin fait presque partie du rituel.",
     accent: COLORS.neonPurple,
-    image:
-      "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=900&q=85",
+    image: require("../../../assets/images/noraebang.png"),
     dialogue: [
       {
         char: "Sora",
@@ -152,8 +152,7 @@ const SCENES = [
     cultureHint:
       "2차 signifie passer à un autre endroit après le premier lieu.",
     accent: COLORS.warningOrange,
-    image:
-      "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=900&q=85",
+    image: require("../../../assets/images/2cha.png"),
     dialogue: [
       {
         char: "Jun",
@@ -205,15 +204,20 @@ const SCENES = [
 
 export default function NightlifeImmersion() {
   const [activeScene, setActiveScene] = useState(SCENES[0]);
+  const [previousBackground, setPreviousBackground] =
+    useState<ImageSourcePropType | null>(null);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const bgFadeAnim = useRef(new Animated.Value(0)).current;
   const tapHintPulse = useRef(new Animated.Value(0)).current;
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fadeAnim.setValue(0);
+    setSelectedWord(null);
     setVisibleMessages(1);
     setIsTyping(false);
 
@@ -222,10 +226,12 @@ export default function NightlifeImmersion() {
       typingTimer.current = null;
     }
 
+    Speech.stop();
+
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 600,
-      easing: Easing.out(Easing.exp),
+      easing: Easing.out(Easing.back(1)),
       useNativeDriver: true,
     }).start();
   }, [activeScene]);
@@ -256,8 +262,25 @@ export default function NightlifeImmersion() {
       if (typingTimer.current) {
         clearTimeout(typingTimer.current);
       }
+
+      Speech.stop();
     };
   }, [tapHintPulse]);
+
+  const speak = (text: string, id: string) => {
+    Speech.stop();
+    setSelectedWord(id);
+    Vibration.vibrate(8);
+
+    Speech.speak(text, {
+      language: "ko-KR",
+      rate: 0.78,
+      pitch: 1,
+      onDone: () => setSelectedWord(null),
+      onStopped: () => setSelectedWord(null),
+      onError: () => setSelectedWord(null),
+    });
+  };
 
   const advanceDialogue = () => {
     if (isTyping) return;
@@ -293,12 +316,49 @@ export default function NightlifeImmersion() {
     );
   };
 
+  const handleSceneChange = (scene: (typeof SCENES)[number]) => {
+    if (scene.id === activeScene.id) return;
+
+    setPreviousBackground(activeScene.image);
+    bgFadeAnim.setValue(1);
+    setActiveScene(scene);
+
+    Animated.timing(bgFadeAnim, {
+      toValue: 0,
+      duration: 420,
+      easing: Easing.inOut(Easing.quad),
+      useNativeDriver: true,
+    }).start(() => {
+      setPreviousBackground(null);
+      bgFadeAnim.setValue(0);
+    });
+  };
+
   const shouldHighlightHint =
     !isTyping && visibleMessages < activeScene.dialogue.length;
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground source={{ uri: activeScene.image }} style={styles.bg}>
+      <View style={styles.bg}>
+        <ImageBackground
+          source={activeScene.image}
+          style={styles.bgLayer}
+          fadeDuration={0}
+          resizeMode="contain"
+        />
+        {previousBackground ? (
+          <Animated.View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFillObject, { opacity: bgFadeAnim }]}
+          >
+            <ImageBackground
+              source={previousBackground}
+              style={styles.bgLayer}
+              fadeDuration={0}
+              resizeMode="contain"
+            />
+          </Animated.View>
+        ) : null}
         <View style={styles.overlay} />
 
         <ScrollView
@@ -326,7 +386,7 @@ export default function NightlifeImmersion() {
             {SCENES.map((scene) => (
               <Pressable
                 key={scene.id}
-                onPress={() => setActiveScene(scene)}
+                onPress={() => handleSceneChange(scene)}
                 style={[
                   styles.tab,
                   activeScene.id === scene.id && {
@@ -350,7 +410,19 @@ export default function NightlifeImmersion() {
           </View>
 
           {/* CONTENT STAGE */}
-          <Animated.View style={{ opacity: fadeAnim }}>
+          <Animated.View
+            style={{
+              opacity: fadeAnim,
+              transform: [
+                {
+                  scale: fadeAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.95, 1],
+                  }),
+                },
+              ],
+            }}
+          >
             <BlurView intensity={60} tint="dark" style={styles.glassCard}>
               <LinearGradient
                 colors={[`${activeScene.accent}25`, "transparent"]}
@@ -483,42 +555,94 @@ export default function NightlifeImmersion() {
             </View>
 
             <View style={styles.expGrid}>
-              {activeScene.expressions.map((exp, i) => (
-                <BlurView
-                  key={i}
-                  intensity={25}
-                  tint="dark"
-                  style={styles.expBox}
-                >
-                  <View
-                    style={[
-                      styles.expGlow,
-                      { backgroundColor: activeScene.accent },
+              {activeScene.expressions.map((exp, i) => {
+                const cardId = `${activeScene.id}-${i}`;
+                const isActive = selectedWord === cardId;
+
+                return (
+                  <Pressable
+                    key={cardId}
+                    onPress={() => speak(exp.word, cardId)}
+                    style={({ pressed }) => [
+                      styles.expPressable,
+                      pressed && { transform: [{ scale: 0.985 }] },
                     ]}
-                  />
-                  <View style={styles.expContent}>
-                    <Text style={styles.expWord}>{exp.word}</Text>
-                    <Text
-                      style={[styles.expRom, { color: activeScene.accent }]}
+                  >
+                    <BlurView
+                      intensity={25}
+                      tint="dark"
+                      style={[
+                        styles.expBox,
+                        isActive && {
+                          borderColor: activeScene.accent,
+                        },
+                      ]}
                     >
-                      {exp.rom}
-                    </Text>
-                    <Text style={styles.expMean}>{exp.mean}</Text>
-                    <Text style={styles.expCtx}>{exp.context}</Text>
-                  </View>
-                </BlurView>
-              ))}
+                      <View
+                        style={[
+                          styles.expGlow,
+                          {
+                            backgroundColor: activeScene.accent,
+                            opacity: isActive ? 1 : 0.75,
+                          },
+                        ]}
+                      />
+                      <View style={styles.expContent}>
+                        <View style={styles.expTopRow}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.expWord}>{exp.word}</Text>
+                            <Text
+                              style={[
+                                styles.expRom,
+                                { color: activeScene.accent },
+                              ]}
+                            >
+                              {exp.rom}
+                            </Text>
+                          </View>
+
+                          <View
+                            style={[
+                              styles.listenPill,
+                              {
+                                backgroundColor: `${activeScene.accent}20`,
+                                borderColor: `${activeScene.accent}55`,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.listenIcon,
+                                { color: activeScene.accent },
+                              ]}
+                            >
+                              {isActive ? "●" : "▶"}
+                            </Text>
+                            <Text style={styles.listenText}>ÉCOUTER</Text>
+                          </View>
+                        </View>
+
+                        <Text style={styles.expMean}>{exp.mean}</Text>
+                        <Text style={styles.expCtx}>{exp.context}</Text>
+                      </View>
+                    </BlurView>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
-  bg: { flex: 1 },
+  bg: { flex: 1, position: "relative" },
+  bgLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(2,3,6,0.80)",
@@ -683,6 +807,7 @@ const styles = StyleSheet.create({
   toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
 
   expGrid: { gap: 14 },
+  expPressable: { width: "100%" },
   expBox: {
     borderRadius: 24,
     overflow: "hidden",
@@ -691,6 +816,12 @@ const styles = StyleSheet.create({
   },
   expGlow: { position: "absolute", left: 0, top: 0, bottom: 0, width: 5 },
   expContent: { padding: 20 },
+  expTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 14,
+    marginBottom: 10,
+  },
   expWord: {
     color: COLORS.txt,
     fontFamily: "NotoSansKR_700Bold",
@@ -700,7 +831,6 @@ const styles = StyleSheet.create({
   expRom: {
     fontFamily: "Outfit_700Bold",
     fontSize: 12,
-    marginBottom: 8,
     textTransform: "uppercase",
   },
   expMean: {
@@ -710,4 +840,23 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   expCtx: { color: COLORS.muted, fontSize: 12, lineHeight: 18 },
+  listenPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  listenIcon: {
+    fontSize: 9,
+    fontFamily: "Outfit_700Bold",
+  },
+  listenText: {
+    color: "rgba(255,255,255,0.78)",
+    fontFamily: "Outfit_700Bold",
+    fontSize: 9,
+    letterSpacing: 1,
+  },
 });

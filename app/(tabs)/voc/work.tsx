@@ -5,7 +5,10 @@ import * as Speech from "expo-speech";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
+  Dimensions,
   Easing,
+  ImageBackground,
+  ImageSourcePropType,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,148 +18,354 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const { width } = Dimensions.get("window");
+
 const COLORS = {
   bg: "#020306",
-  cyan: "#22D3EE",
-  pink: "#F472B6",
-  purple: "#A78BFA",
+  corporateBlue: "#38BDF8",
+  executiveViolet: "#8B5CF6",
+  premiumGold: "#F59E0B",
+  graphite: "#64748B",
   txt: "rgba(255,255,255,0.96)",
   muted: "rgba(255,255,255,0.60)",
 };
 
-const BUSINESS_DIALOGUE = [
+const SCENES = [
   {
-    char: "Moi",
-    kr: "안녕하세요. 일정 확인 부탁드립니다.",
-    fr: "Bonjour. Merci de vérifier le planning.",
-    side: "me",
+    id: "meeting",
+    title: "La Réunion",
+    koreanTitle: "회의 (Hoeui)",
+    description:
+      "Donner son avis, demander une explication et participer avec respect.",
+    accent: COLORS.corporateBlue,
+    image: require("../../../assets/images/businessmeeting.png"),
+    dialogue: [
+      {
+        char: "Moi",
+        kr: "회의 시작할까요?",
+        fr: "On commence la réunion ?",
+        side: "me",
+      },
+      {
+        char: "Manager",
+        kr: "네, 시작하겠습니다. 먼저 의견을 말씀해 주세요.",
+        fr: "Oui, nous allons commencer. Donnez d'abord votre avis.",
+        side: "server",
+      },
+      {
+        char: "Moi",
+        kr: "제 의견은 조금 다릅니다. 다시 설명해 주시겠어요?",
+        fr: "Mon avis est un peu différent. Pouvez-vous réexpliquer ?",
+        side: "me",
+      },
+      {
+        char: "Manager",
+        kr: "네, 좋은 질문입니다. 자료를 보면서 설명드리겠습니다.",
+        fr: "Oui, bonne question. Je vais expliquer avec les documents.",
+        side: "server",
+      },
+    ],
+    expressions: [
+      {
+        word: "회의",
+        rom: "Hoeui",
+        mean: "Réunion",
+        context: "Mot de base pour parler d'une réunion professionnelle.",
+        speak: "회의",
+      },
+      {
+        word: "회의 시작할까요?",
+        rom: "Hoeui sijak-halkkayo?",
+        mean: "On commence la réunion ?",
+        context: "Phrase naturelle pour ouvrir une réunion.",
+        speak: "회의 시작할까요?",
+      },
+      {
+        word: "제 의견은...",
+        rom: "Je uigyeoneun...",
+        mean: "Mon avis est...",
+        context: "Structure utile pour donner son point de vue.",
+        speak: "제 의견은",
+      },
+      {
+        word: "좋은 생각입니다",
+        rom: "Joeun saenggagimnida",
+        mean: "C'est une bonne idée",
+        context: "Réaction polie et positive en réunion.",
+        speak: "좋은 생각입니다",
+      },
+      {
+        word: "다시 설명해 주세요",
+        rom: "Dasi seolmyeong-hae juseyo",
+        mean: "Expliquez à nouveau, s'il vous plaît",
+        context: "Très utile quand tu n'as pas bien compris.",
+        speak: "다시 설명해 주세요",
+      },
+      {
+        word: "자료",
+        rom: "Jaryo",
+        mean: "Document / support",
+        context: "Documents utilisés en réunion ou présentation.",
+        speak: "자료",
+      },
+      {
+        word: "공유하겠습니다",
+        rom: "Gongyu-hagetseumnida",
+        mean: "Je vais partager",
+        context: "Pour parler d'un document ou d'une information.",
+        speak: "공유하겠습니다",
+      },
+      {
+        word: "질문 있습니다",
+        rom: "Jilmun itseumnida",
+        mean: "J'ai une question",
+        context: "Formule professionnelle pour intervenir.",
+        speak: "질문 있습니다",
+      },
+      {
+        word: "확인해 보겠습니다",
+        rom: "Hwagin-hae bogetseumnida",
+        mean: "Je vais vérifier",
+        context: "Très fréquent dans les échanges professionnels.",
+        speak: "확인해 보겠습니다",
+      },
+    ],
   },
   {
-    char: "Collègue",
-    kr: "네, 확인했습니다. 내일 가능합니다.",
-    fr: "Oui, j’ai vérifié. C’est possible demain.",
-    side: "server",
+    id: "message",
+    title: "Le Message Pro",
+    koreanTitle: "업무 메일",
+    description:
+      "Demander, confirmer et répondre avec une formule professionnelle.",
+    accent: COLORS.executiveViolet,
+    image: require("../../../assets/images/businessmail.png"),
+    dialogue: [
+      {
+        char: "Moi",
+        kr: "안녕하세요. 첨부 파일 확인 부탁드립니다.",
+        fr: "Bonjour. Merci de vérifier la pièce jointe.",
+        side: "me",
+      },
+      {
+        char: "Collègue",
+        kr: "네, 확인 후 답변드리겠습니다.",
+        fr: "Oui, je vérifierai puis je vous répondrai.",
+        side: "server",
+      },
+      {
+        char: "Moi",
+        kr: "감사합니다. 오늘 중으로 가능할까요?",
+        fr: "Merci. Est-ce possible dans la journée ?",
+        side: "me",
+      },
+      {
+        char: "Collègue",
+        kr: "네, 가능합니다. 답변 기다려 주세요.",
+        fr: "Oui, c'est possible. Merci d'attendre ma réponse.",
+        side: "server",
+      },
+    ],
+    expressions: [
+      {
+        word: "업무 메일",
+        rom: "Eommu meil",
+        mean: "Mail professionnel",
+        context: "Expression générale pour parler d'un email de travail.",
+        speak: "업무 메일",
+      },
+      {
+        word: "확인 부탁드립니다",
+        rom: "Hwagin butakdeurimnida",
+        mean: "Merci de vérifier",
+        context: "Formule extrêmement fréquente dans les mails coréens.",
+        speak: "확인 부탁드립니다",
+      },
+      {
+        word: "첨부 파일",
+        rom: "Cheombu pail",
+        mean: "Pièce jointe",
+        context: "Indispensable pour les échanges par email.",
+        speak: "첨부 파일",
+      },
+      {
+        word: "답변드리겠습니다",
+        rom: "Dapbyeon-deurigetseumnida",
+        mean: "Je vous répondrai",
+        context: "Formule polie et professionnelle.",
+        speak: "답변드리겠습니다",
+      },
+      {
+        word: "오늘 중으로",
+        rom: "Oneul jungeuro",
+        mean: "Dans la journée",
+        context: "Pour donner ou demander un délai court.",
+        speak: "오늘 중으로",
+      },
+      {
+        word: "가능할까요?",
+        rom: "Ganeung-halkkayo?",
+        mean: "Est-ce possible ?",
+        context: "Formule douce pour demander quelque chose.",
+        speak: "가능할까요?",
+      },
+      {
+        word: "늦게 연락드려 죄송합니다",
+        rom: "Neutge yeollakdeuryeo joesonghamnida",
+        mean: "Désolé de vous contacter tard",
+        context: "Formule utile en contexte professionnel sensible.",
+        speak: "늦게 연락드려 죄송합니다",
+      },
+      {
+        word: "감사합니다",
+        rom: "Gamsahamnida",
+        mean: "Merci / Cordialement",
+        context: "Très utilisé pour terminer un mail professionnel.",
+        speak: "감사합니다",
+      },
+      {
+        word: "회신 부탁드립니다",
+        rom: "Hoesin butakdeurimnida",
+        mean: "Merci de répondre",
+        context: "Formule pour demander une réponse par mail.",
+        speak: "회신 부탁드립니다",
+      },
+    ],
   },
   {
-    char: "Moi",
-    kr: "감사합니다. 가능한 시간 알려 주세요.",
-    fr: "Merci. Indiquez-moi vos disponibilités.",
-    side: "me",
-  },
-  {
-    char: "Collègue",
-    kr: "오후 두 시가 괜찮습니다. 잘 부탁드립니다.",
-    fr: "14 h me convient. Merci d’avance.",
-    side: "server",
+    id: "interview",
+    title: "L’Entretien",
+    koreanTitle: "면접 (Myeonjeop)",
+    description:
+      "Se présenter, répondre avec confiance et laisser une bonne impression.",
+    accent: COLORS.premiumGold,
+    image: require("../../../assets/images/businessinterview.png"),
+    dialogue: [
+      {
+        char: "Recruteur",
+        kr: "자기소개 부탁드립니다.",
+        fr: "Présentez-vous, s'il vous plaît.",
+        side: "server",
+      },
+      {
+        char: "Moi",
+        kr: "안녕하세요. 저는 프랑스에서 온 마크입니다.",
+        fr: "Bonjour. Je suis Marc, je viens de France.",
+        side: "me",
+      },
+      {
+        char: "Recruteur",
+        kr: "이 분야에 관심이 많은 이유가 있나요?",
+        fr: "Pourquoi vous intéressez-vous beaucoup à ce domaine ?",
+        side: "server",
+      },
+      {
+        char: "Moi",
+        kr: "경험이 있고, 한국어와 비즈니스에 관심이 많습니다.",
+        fr: "J'ai de l'expérience et je m'intéresse beaucoup au coréen et au business.",
+        side: "me",
+      },
+    ],
+    expressions: [
+      {
+        word: "면접",
+        rom: "Myeonjeop",
+        mean: "Entretien",
+        context: "Mot clé pour un entretien d'embauche.",
+        speak: "면접",
+      },
+      {
+        word: "자기소개",
+        rom: "Jagi-sogae",
+        mean: "Présentation de soi",
+        context: "Moment classique au début d'un entretien.",
+        speak: "자기소개",
+      },
+      {
+        word: "자기소개 부탁드립니다",
+        rom: "Jagi-sogae butakdeurimnida",
+        mean: "Présentez-vous, s'il vous plaît",
+        context: "Phrase très fréquente en entretien.",
+        speak: "자기소개 부탁드립니다",
+      },
+      {
+        word: "저는 프랑스에서 왔습니다",
+        rom: "Jeoneun Peurangseu-eseo watseumnida",
+        mean: "Je viens de France",
+        context: "Formule simple pour présenter son origine.",
+        speak: "저는 프랑스에서 왔습니다",
+      },
+      {
+        word: "이 분야",
+        rom: "I bunya",
+        mean: "Ce domaine",
+        context: "Très utile pour parler d'un secteur professionnel.",
+        speak: "이 분야",
+      },
+      {
+        word: "관심이 많습니다",
+        rom: "Gwansimi manseumnida",
+        mean: "Je m'y intéresse beaucoup",
+        context: "Expression professionnelle pour parler de motivation.",
+        speak: "관심이 많습니다",
+      },
+      {
+        word: "경험이 있습니다",
+        rom: "Gyeongheomi itseumnida",
+        mean: "J'ai de l'expérience",
+        context: "Phrase clé pour valoriser son profil.",
+        speak: "경험이 있습니다",
+      },
+      {
+        word: "장점",
+        rom: "Jangjeom",
+        mean: "Point fort",
+        context: "Utile pour parler de ses qualités.",
+        speak: "장점",
+      },
+      {
+        word: "잘 부탁드립니다",
+        rom: "Jal butakdeurimnida",
+        mean: "Je compte sur vous",
+        context: "Expression culturelle très importante en contexte pro.",
+        speak: "잘 부탁드립니다",
+      },
+    ],
   },
 ];
 
-const SECTIONS = [
-  {
-    items: [
-      {
-        kr: "확인했습니다.",
-        fr: "J’ai bien vérifié / confirmé.",
-        note: "Ultra utile pour répondre sobrement à un message.",
-      },
-      {
-        kr: "알겠습니다.",
-        fr: "D’accord / j’ai compris.",
-        note: "Très fréquent dans un contexte pro.",
-      },
-      {
-        kr: "감사합니다.",
-        fr: "Merci.",
-        note: "Base incontournable, très neutre et professionnelle.",
-      },
-      {
-        kr: "잘 부탁드립니다.",
-        fr: "Je compte sur votre bienveillance / merci d’avance.",
-        note: "Formule très coréenne, utile en message ou mail.",
-      },
-    ],
-  },
-  {
-    title: "🗓️ Disponibilité / organisation",
-    items: [
-      {
-        kr: "가능한 시간 알려 주세요.",
-        fr: "Merci de m’indiquer vos disponibilités.",
-      },
-      {
-        kr: "내일 가능합니다.",
-        fr: "C’est possible demain.",
-      },
-      {
-        kr: "조금 늦을 것 같습니다.",
-        fr: "Je risque d’être un peu en retard.",
-      },
-      {
-        kr: "일정 확인 후 다시 연락드리겠습니다.",
-        fr: "Je vous recontacte après vérification de mon planning.",
-      },
-    ],
-  },
-  {
-    title: "✉️ Mini formules d’email",
-    items: [
-      {
-        kr: "안녕하세요.",
-        fr: "Bonjour.",
-      },
-      {
-        kr: "문의드립니다.",
-        fr: "Je vous contacte pour une demande / une question.",
-      },
-      {
-        kr: "확인 부탁드립니다.",
-        fr: "Merci de vérifier.",
-      },
-      {
-        kr: "답변 기다리겠습니다.",
-        fr: "J’attends votre réponse.",
-      },
-      {
-        kr: "감사합니다. 좋은 하루 되세요.",
-        fr: "Merci. Passez une bonne journée.",
-      },
-    ],
-  },
-  {
-    title: "💬 Exemples courts",
-    items: [
-      {
-        kr: "안녕하세요. 확인했습니다. 감사합니다.",
-        fr: "Bonjour. J’ai bien vérifié. Merci.",
-      },
-      {
-        kr: "내일 가능합니다. 잘 부탁드립니다.",
-        fr: "C’est possible demain. Merci d’avance.",
-      },
-      {
-        kr: "일정 확인 후 다시 연락드리겠습니다.",
-        fr: "Je vous recontacte après vérification du planning.",
-      },
-    ],
-  },
-];
-
-function speakKR(text: string) {
-  Speech.stop();
-  Speech.speak(text, {
-    language: "ko-KR",
-    rate: 0.92,
-    pitch: 1,
-  });
-}
-
-export default function WorkEmailPage() {
+export default function BusinessImmersion() {
+  const [activeScene, setActiveScene] = useState(SCENES[0]);
+  const [previousBackground, setPreviousBackground] =
+    useState<ImageSourcePropType | null>(null);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
-  const [selectedWord, setSelectedWord] = useState<string | null>(null);
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const bgFadeAnim = useRef(new Animated.Value(0)).current;
   const tapHintPulse = useRef(new Animated.Value(0)).current;
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    fadeAnim.setValue(0);
+
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 600,
+      easing: Easing.out(Easing.back(1)),
+      useNativeDriver: true,
+    }).start();
+
+    Speech.stop();
+    setSelectedWord(null);
+    setVisibleMessages(1);
+    setIsTyping(false);
+
+    if (typingTimer.current) {
+      clearTimeout(typingTimer.current);
+      typingTimer.current = null;
+    }
+  }, [activeScene]);
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -180,7 +389,11 @@ export default function WorkEmailPage() {
 
     return () => {
       animation.stop();
-      if (typingTimer.current) clearTimeout(typingTimer.current);
+
+      if (typingTimer.current) {
+        clearTimeout(typingTimer.current);
+      }
+
       Speech.stop();
     };
   }, [tapHintPulse]);
@@ -192,7 +405,7 @@ export default function WorkEmailPage() {
 
     Speech.speak(text, {
       language: "ko-KR",
-      rate: 0.92,
+      rate: 0.78,
       pitch: 1,
       onDone: () => setSelectedWord(null),
       onStopped: () => setSelectedWord(null),
@@ -200,17 +413,35 @@ export default function WorkEmailPage() {
     });
   };
 
+  const handleSceneChange = (scene: (typeof SCENES)[number]) => {
+    if (scene.id === activeScene.id) return;
+
+    setPreviousBackground(activeScene.image);
+    bgFadeAnim.setValue(1);
+    setActiveScene(scene);
+
+    Animated.timing(bgFadeAnim, {
+      toValue: 0,
+      duration: 420,
+      easing: Easing.inOut(Easing.quad),
+      useNativeDriver: true,
+    }).start(() => {
+      setPreviousBackground(null);
+      bgFadeAnim.setValue(0);
+    });
+  };
+
   const advanceDialogue = () => {
     if (isTyping) return;
 
-    if (visibleMessages >= BUSINESS_DIALOGUE.length) {
+    if (visibleMessages >= activeScene.dialogue.length) {
       Vibration.vibrate(8);
       setVisibleMessages(1);
       setIsTyping(false);
       return;
     }
 
-    const nextMessage = BUSINESS_DIALOGUE[visibleMessages];
+    const nextMessage = activeScene.dialogue[visibleMessages];
 
     Vibration.vibrate(8);
 
@@ -222,27 +453,44 @@ export default function WorkEmailPage() {
       typingTimer.current = setTimeout(() => {
         setIsTyping(false);
         setVisibleMessages((prev) =>
-          Math.min(prev + 1, BUSINESS_DIALOGUE.length),
+          Math.min(prev + 1, activeScene.dialogue.length),
         );
       }, delay);
 
       return;
     }
 
-    setVisibleMessages((prev) => Math.min(prev + 1, BUSINESS_DIALOGUE.length));
+    setVisibleMessages((prev) =>
+      Math.min(prev + 1, activeScene.dialogue.length),
+    );
   };
 
   const shouldHighlightHint =
-    !isTyping && visibleMessages < BUSINESS_DIALOGUE.length;
+    !isTyping && visibleMessages < activeScene.dialogue.length;
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={["#020306", "#090A18", "#060B18"]}
-        style={styles.bg}
-      >
-        <View style={styles.orbPurple} />
-        <View style={styles.orbCyan} />
+      <View style={styles.bg}>
+        <ImageBackground
+          source={activeScene.image}
+          style={styles.bgLayer}
+          fadeDuration={0}
+          resizeMode="contain"
+        />
+        {previousBackground ? (
+          <Animated.View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFillObject, { opacity: bgFadeAnim }]}
+          >
+            <ImageBackground
+              source={previousBackground}
+              style={styles.bgLayer}
+              fadeDuration={0}
+              resizeMode="contain"
+            />
+          </Animated.View>
+        ) : null}
+        <View style={styles.overlay} />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -254,244 +502,267 @@ export default function WorkEmailPage() {
               <Text style={styles.backText}>SÉOUL BUSINESS</Text>
             </Pressable>
 
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>PREMIUM</Text>
+            <View style={styles.badgeChef}>
+              <Text style={styles.badgeText}>OFFICE MODE</Text>
             </View>
           </View>
 
           <View style={styles.tabContainer}>
-            <View style={[styles.tab, styles.tabActive]}>
-              <Text style={[styles.tabText, { color: COLORS.cyan }]}>
-                Pro simple
-              </Text>
-            </View>
-            <View style={styles.tab}>
-              <Text style={styles.tabText}>Messages utiles</Text>
-            </View>
-            <View style={styles.tab}>
-              <Text style={styles.tabText}>Emails courts</Text>
-            </View>
-          </View>
-
-          <BlurView intensity={42} tint="dark" style={styles.glassCard}>
-            <LinearGradient
-              colors={[`${COLORS.cyan}20`, "transparent"]}
-              style={StyleSheet.absoluteFill}
-            />
-
-            <View style={styles.cardHeader}>
-              <Text style={[styles.krLabel, { color: COLORS.cyan }]}>
-                업무 메시지
-              </Text>
-              <Text style={styles.sceneMainTitle}>Travail & emails courts</Text>
-            </View>
-
-            <Text style={styles.sceneDesc}>
-              Formules courtes et utiles pour le travail, les messages
-              professionnels et les réponses simples.
-            </Text>
-
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>
-                MINI ÉCHANGE PROFESSIONNEL
-              </Text>
-              <View
-                style={[styles.sectionLine, { backgroundColor: COLORS.cyan }]}
-              />
-            </View>
-
-            <Pressable onPress={advanceDialogue} style={styles.dialogueList}>
-              {BUSINESS_DIALOGUE.slice(0, visibleMessages).map((line, idx) => {
-                const isMe = line.side === "me";
-                const dialogueId = `business-dialogue-${idx}`;
-
-                return (
-                  <Pressable
-                    key={dialogueId}
-                    onPress={() => speak(line.kr, dialogueId)}
-                    style={[
-                      styles.bubble,
-                      isMe ? styles.bubbleRight : styles.bubbleLeft,
-                      selectedWord === dialogueId && {
-                        borderColor: COLORS.cyan,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.bubbleChar,
-                        { color: isMe ? COLORS.cyan : COLORS.purple },
-                      ]}
-                    >
-                      {line.char}
-                    </Text>
-                    <Text style={styles.bubbleKr}>{line.kr}</Text>
-                    <Text style={styles.bubbleFr}>{line.fr}</Text>
-                  </Pressable>
-                );
-              })}
-
-              {isTyping && (
-                <View
-                  style={[
-                    styles.bubble,
-                    styles.bubbleLeft,
-                    styles.typingBubble,
-                  ]}
-                >
-                  <Text style={[styles.bubbleChar, { color: COLORS.purple }]}>
-                    {BUSINESS_DIALOGUE[visibleMessages]?.char}
-                  </Text>
-
-                  <View style={styles.typingDots}>
-                    <View style={styles.dot} />
-                    <View style={styles.dot} />
-                    <View style={styles.dot} />
-                  </View>
-                </View>
-              )}
-
-              <Animated.Text
+            {SCENES.map((scene) => (
+              <Pressable
+                key={scene.id}
+                onPress={() => handleSceneChange(scene)}
                 style={[
-                  styles.tapHint,
-                  shouldHighlightHint && {
-                    color: COLORS.cyan,
-                    opacity: tapHintPulse.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.45, 1],
-                    }),
-                    transform: [
-                      {
-                        scale: tapHintPulse.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [1, 1.03],
-                        }),
-                      },
-                    ],
+                  styles.tab,
+                  activeScene.id === scene.id && {
+                    backgroundColor: `${activeScene.accent}25`,
+                    borderColor: activeScene.accent,
                   },
                 ]}
               >
-                {visibleMessages >= BUSINESS_DIALOGUE.length
-                  ? "Toucher pour recommencer"
-                  : isTyping
-                    ? "Réponse en cours..."
-                    : "Toucher pour continuer"}
-              </Animated.Text>
-            </Pressable>
-          </BlurView>
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeScene.id === scene.id && {
+                      color: activeScene.accent,
+                    },
+                  ]}
+                >
+                  {scene.title}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <Animated.View
+            style={{
+              opacity: fadeAnim,
+              transform: [
+                {
+                  scale: fadeAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.95, 1],
+                  }),
+                },
+              ],
+            }}
+          >
+            <BlurView intensity={40} tint="dark" style={styles.glassCard}>
+              <LinearGradient
+                colors={[`${activeScene.accent}20`, "transparent"]}
+                style={StyleSheet.absoluteFill}
+              />
+
+              <View style={styles.cardHeader}>
+                <Text style={[styles.krLabel, { color: activeScene.accent }]}>
+                  {activeScene.koreanTitle}
+                </Text>
+                <Text style={styles.sceneMainTitle}>{activeScene.title}</Text>
+              </View>
+
+              <Text style={styles.sceneDesc}>{activeScene.description}</Text>
+
+              <Pressable onPress={advanceDialogue} style={styles.dialogueList}>
+                {activeScene.dialogue
+                  .slice(0, visibleMessages)
+                  .map((chat, idx) => {
+                    const isMe = chat.side === "me";
+
+                    return (
+                      <Animated.View
+                        key={`${activeScene.id}-dialogue-${idx}`}
+                        style={[
+                          styles.bubble,
+                          isMe ? styles.bubbleRight : styles.bubbleLeft,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.bubbleChar,
+                            { color: activeScene.accent },
+                          ]}
+                        >
+                          {chat.char}
+                        </Text>
+                        <Text style={styles.bubbleKr}>{chat.kr}</Text>
+                        <Text style={styles.bubbleFr}>{chat.fr}</Text>
+                      </Animated.View>
+                    );
+                  })}
+
+                {isTyping && (
+                  <View
+                    style={[
+                      styles.bubble,
+                      styles.bubbleLeft,
+                      styles.typingBubble,
+                    ]}
+                  >
+                    <Text
+                      style={[styles.bubbleChar, { color: activeScene.accent }]}
+                    >
+                      {activeScene.dialogue[visibleMessages]?.char}
+                    </Text>
+
+                    <View style={styles.typingDots}>
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                    </View>
+                  </View>
+                )}
+
+                <Animated.Text
+                  style={[
+                    styles.tapHint,
+                    shouldHighlightHint && {
+                      color: activeScene.accent,
+                      opacity: tapHintPulse.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.45, 1],
+                      }),
+                      transform: [
+                        {
+                          scale: tapHintPulse.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [1, 1.03],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  {visibleMessages >= activeScene.dialogue.length
+                    ? "Toucher pour recommencer"
+                    : isTyping
+                      ? "Réponse en cours..."
+                      : "Toucher pour continuer"}
+                </Animated.Text>
+              </Pressable>
+            </BlurView>
+          </Animated.View>
 
           <View style={styles.toolbox}>
-            <View style={styles.toolboxHeader}>
+            <View style={styles.toolboxTitleRow}>
               <Text style={styles.toolboxTitle}>BUSINESS TOOLBOX</Text>
               <View
-                style={[styles.toolboxLine, { backgroundColor: COLORS.cyan }]}
+                style={[
+                  styles.toolboxLine,
+                  { backgroundColor: activeScene.accent },
+                ]}
               />
             </View>
 
-            <View style={styles.expGrid}>
-              {SECTIONS.map((section, sectionIndex) => (
-                <View key={section.title} style={styles.sectionGroup}>
-                  <Text style={styles.sectionCardTitle}>{section.title}</Text>
+            <View style={styles.vocabGrid}>
+              {activeScene.expressions.map((exp, i) => {
+                const cardId = `${activeScene.id}-${i}`;
+                const isActive = selectedWord === cardId;
 
-                  <View style={styles.phraseList}>
-                    {section.items.map((item, i) => {
-                      const cardId = `section-${sectionIndex}-${i}`;
-                      const isActive = selectedWord === cardId;
+                return (
+                  <Pressable
+                    key={cardId}
+                    onPress={() => speak(exp.speak, cardId)}
+                    style={({ pressed }) => [
+                      styles.vocabPressable,
+                      pressed && { transform: [{ scale: 0.985 }] },
+                    ]}
+                  >
+                    <BlurView
+                      intensity={25}
+                      tint="dark"
+                      style={[
+                        styles.vocabCard,
+                        isActive && {
+                          borderColor: activeScene.accent,
+                        },
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.vocabAccent,
+                          {
+                            backgroundColor: activeScene.accent,
+                            opacity: isActive ? 1 : 0.75,
+                          },
+                        ]}
+                      />
 
-                      return (
-                        <Pressable
-                          key={cardId}
-                          onPress={() => speak(item.kr, cardId)}
-                          style={({ pressed }) => [
-                            styles.phraseCard,
-                            isActive && { borderColor: COLORS.cyan },
-                            pressed && { transform: [{ scale: 0.985 }] },
-                          ]}
-                        >
+                      <View style={styles.vocabContent}>
+                        <View style={styles.vocabTopRow}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.vocabKr}>{exp.word}</Text>
+                            <Text
+                              style={[
+                                styles.vocabRom,
+                                { color: activeScene.accent },
+                              ]}
+                            >
+                              {exp.rom}
+                            </Text>
+                          </View>
+
                           <View
                             style={[
-                              styles.vocabAccent,
+                              styles.listenPill,
                               {
-                                backgroundColor: COLORS.cyan,
-                                opacity: isActive ? 1 : 0.75,
+                                backgroundColor: `${activeScene.accent}20`,
+                                borderColor: `${activeScene.accent}55`,
                               },
                             ]}
-                          />
-
-                          <View style={styles.phraseContent}>
-                            <View style={styles.vocabTopRow}>
-                              <View style={{ flex: 1 }}>
-                                <Text style={styles.vocabKr}>{item.kr}</Text>
-                                <Text
-                                  style={[
-                                    styles.vocabRom,
-                                    { color: COLORS.cyan },
-                                  ]}
-                                >
-                                  FORMULE PRO
-                                </Text>
-                              </View>
-
-                              <View
-                                style={[
-                                  styles.listenPill,
-                                  {
-                                    backgroundColor: `${COLORS.cyan}20`,
-                                    borderColor: `${COLORS.cyan}55`,
-                                  },
-                                ]}
-                              >
-                                <Text
-                                  style={[
-                                    styles.listenIcon,
-                                    { color: COLORS.cyan },
-                                  ]}
-                                >
-                                  {isActive ? "●" : "▶"}
-                                </Text>
-                                <Text style={styles.listenText}>ÉCOUTER</Text>
-                              </View>
-                            </View>
-
-                            <Text style={styles.vocabMean}>{item.fr}</Text>
+                          >
+                            <Text
+                              style={[
+                                styles.listenIcon,
+                                { color: activeScene.accent },
+                              ]}
+                            >
+                              {isActive ? "●" : "▶"}
+                            </Text>
+                            <Text style={styles.listenText}>ÉCOUTER</Text>
                           </View>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                </View>
-              ))}
+                        </View>
+
+                        <Text style={styles.vocabMean}>{exp.mean}</Text>
+                        <Text style={styles.vocabCtx}>{exp.context}</Text>
+                      </View>
+                    </BlurView>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
         </ScrollView>
-      </LinearGradient>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
-  bg: { flex: 1 },
+  bg: { flex: 1, position: "relative" },
+  bgLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(2,3,6,0.84)",
+  },
   scroll: { paddingHorizontal: 22, paddingBottom: 90 },
-
-  orbPurple: {
-    position: "absolute",
-    top: -120,
-    left: -90,
-    width: 260,
-    height: 260,
-    borderRadius: 999,
-    backgroundColor: "rgba(124,58,237,0.16)",
-  },
-  orbCyan: {
-    position: "absolute",
-    bottom: -150,
-    right: -110,
-    width: 320,
-    height: 320,
-    borderRadius: 999,
-    backgroundColor: "rgba(34,211,238,0.12)",
-  },
 
   header: {
     flexDirection: "row",
@@ -507,7 +778,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 2,
   },
-  badge: {
+  badgeChef: {
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 10,
@@ -530,10 +801,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.05)",
     alignItems: "center",
-  },
-  tabActive: {
-    backgroundColor: `${COLORS.cyan}25`,
-    borderColor: COLORS.cyan,
   },
   tabText: {
     color: COLORS.muted,
@@ -558,57 +825,15 @@ const styles = StyleSheet.create({
   sceneMainTitle: {
     color: COLORS.txt,
     fontFamily: "Outfit_900Black",
-    fontSize: 32,
+    fontSize: 34,
   },
   sceneDesc: {
     color: COLORS.muted,
     fontSize: 14,
     fontStyle: "italic",
-    marginBottom: 22,
+    marginBottom: 30,
     lineHeight: 20,
   },
-
-  premiumNote: {
-    borderRadius: 22,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
-    padding: 18,
-    marginBottom: 26,
-  },
-  noteAccent: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-  },
-  noteTitle: {
-    color: COLORS.txt,
-    fontFamily: "Outfit_900Black",
-    fontSize: 18,
-    marginBottom: 8,
-  },
-  noteText: {
-    color: COLORS.muted,
-    fontSize: 13,
-    lineHeight: 19,
-    fontFamily: "Outfit_500Medium",
-  },
-
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 15,
-    marginBottom: 18,
-  },
-  sectionTitle: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-    letterSpacing: 2.4,
-  },
-  sectionLine: { flex: 1, height: 1, opacity: 0.25 },
 
   dialogueList: { gap: 16 },
   bubble: {
@@ -662,7 +887,6 @@ const styles = StyleSheet.create({
     height: 7,
     borderRadius: 999,
     opacity: 0.85,
-    backgroundColor: COLORS.purple,
   },
   tapHint: {
     alignSelf: "center",
@@ -675,7 +899,7 @@ const styles = StyleSheet.create({
   },
 
   toolbox: { marginTop: 40 },
-  toolboxHeader: {
+  toolboxTitleRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 15,
@@ -689,20 +913,13 @@ const styles = StyleSheet.create({
   },
   toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
 
-  expGrid: { gap: 14 },
-  sectionGroup: { gap: 12 },
-  sectionCardTitle: {
-    color: COLORS.txt,
-    fontFamily: "Outfit_900Black",
-    fontSize: 18,
-  },
-  phraseList: { gap: 12 },
-  phraseCard: {
+  vocabGrid: { gap: 14 },
+  vocabPressable: { width: "100%" },
+  vocabCard: {
     borderRadius: 24,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.05)",
-    backgroundColor: "rgba(255,255,255,0.03)",
   },
   vocabAccent: {
     position: "absolute",
@@ -711,7 +928,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: 4,
   },
-  phraseContent: { padding: 18 },
+  vocabContent: { padding: 20 },
   vocabTopRow: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -721,21 +938,19 @@ const styles = StyleSheet.create({
   vocabKr: {
     color: COLORS.txt,
     fontFamily: "NotoSansKR_700Bold",
-    fontSize: 22,
-    lineHeight: 28,
+    fontSize: 24,
     marginBottom: 2,
   },
   vocabRom: {
     fontFamily: "Outfit_700Bold",
-    fontSize: 11,
+    fontSize: 12,
     textTransform: "uppercase",
   },
   vocabMean: {
     color: COLORS.txt,
     fontFamily: "Outfit_700Bold",
-    fontSize: 15,
+    fontSize: 16,
     marginBottom: 4,
-    lineHeight: 20,
   },
   vocabCtx: {
     color: COLORS.muted,

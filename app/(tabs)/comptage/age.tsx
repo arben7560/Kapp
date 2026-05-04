@@ -1,6 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import CountingImmersionScreen from "../../../components/comptage/CountingImmersionScreen";
 import React, { useEffect, useRef, useState } from "react";
 import {
     Animated,
@@ -157,166 +158,15 @@ const SCENES = [
 ];
 
 export default function AgeLifeImmersion() {
-  const [activeScene, setActiveScene] = useState(SCENES[0]);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    fadeAnim.setValue(0);
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 600,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: true,
-    }).start();
-  }, [activeScene]);
-
   return (
-    <SafeAreaView style={styles.container}>
-      <ImageBackground source={{ uri: activeScene.image }} style={styles.bg}>
-        <View style={styles.overlay} />
-
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
-        >
-          {/* HEADER AGE */}
-          <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.backBtn}>
-              <Text style={styles.backArrow}>‹</Text>
-              <Text style={styles.backText}>CYCLE DE VIE</Text>
-            </Pressable>
-            <View
-              style={[styles.ageBadge, { borderColor: activeScene.accent }]}
-            >
-              <Text
-                style={[styles.ageBadgeText, { color: activeScene.accent }]}
-              >
-                SOCIO-KOREAN
-              </Text>
-            </View>
-          </View>
-
-          {/* SCENE SELECTOR */}
-          <View style={styles.tabRow}>
-            {SCENES.map((scene) => (
-              <Pressable
-                key={scene.id}
-                onPress={() => setActiveScene(scene)}
-                style={[
-                  styles.tab,
-                  activeScene.id === scene.id && {
-                    backgroundColor: "rgba(255,255,255,0.08)",
-                    borderColor: activeScene.accent,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    activeScene.id === scene.id && {
-                      color: activeScene.accent,
-                    },
-                  ]}
-                >
-                  {scene.title}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          {/* INTERACTIVE STAGE */}
-          <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [
-                {
-                  translateY: fadeAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [15, 0],
-                  }),
-                },
-              ],
-            }}
-          >
-            <BlurView intensity={45} tint="dark" style={styles.stageCard}>
-              <LinearGradient
-                colors={[`${activeScene.accent}15`, "transparent"]}
-                style={StyleSheet.absoluteFill}
-              />
-
-              <View style={styles.stageInfo}>
-                <Text style={[styles.krTitle, { color: activeScene.accent }]}>
-                  {activeScene.koreanTitle}
-                </Text>
-                <Text style={styles.mainTitle}>{activeScene.title}</Text>
-                <Text style={styles.mainSub}>{activeScene.description}</Text>
-              </View>
-
-              <View style={styles.scriptBox}>
-                {activeScene.dialogue.map((script, i) => (
-                  <View
-                    key={i}
-                    style={[
-                      styles.bubble,
-                      i % 2 === 0 ? styles.bubbleL : styles.bubbleR,
-                    ]}
-                  >
-                    <Text
-                      style={[styles.charTag, { color: activeScene.accent }]}
-                    >
-                      {script.char}
-                    </Text>
-                    <Text style={styles.krScript}>{script.kr}</Text>
-                    <Text style={styles.frScript}>{script.fr}</Text>
-                  </View>
-                ))}
-              </View>
-            </BlurView>
-          </Animated.View>
-
-          {/* LIFE TOOLBOX */}
-          <View style={styles.toolbox}>
-            <View style={styles.toolboxHeader}>
-              <Text style={styles.toolboxLabel}>LIFE TOOLBOX</Text>
-              <View
-                style={[styles.line, { backgroundColor: activeScene.accent }]}
-              />
-            </View>
-
-            <View style={styles.grid}>
-              {activeScene.expressions.map((exp, i) => (
-                <BlurView
-                  key={i}
-                  intensity={20}
-                  tint="dark"
-                  style={styles.vocabCard}
-                >
-                  <View
-                    style={[
-                      styles.vocabAccent,
-                      { backgroundColor: activeScene.accent },
-                    ]}
-                  />
-                  <View style={styles.vocabInner}>
-                    <Text style={styles.vocabWord}>{exp.word}</Text>
-                    <Text
-                      style={[styles.vocabRom, { color: activeScene.accent }]}
-                    >
-                      {exp.rom}
-                    </Text>
-                    <Text style={styles.vocabMean}>{exp.mean}</Text>
-                    <Text style={styles.vocabCtx}>{exp.context}</Text>
-                  </View>
-                </BlurView>
-              ))}
-            </View>
-          </View>
-        </ScrollView>
-      </ImageBackground>
-    </SafeAreaView>
+    <CountingImmersionScreen
+      scenes={SCENES}
+      backLabel="CYCLE DE VIE"
+      badgeLabel="SOCIO-KOREAN"
+      toolboxTitle="LIFE TOOLBOX"
+    />
   );
 }
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   bg: { flex: 1 },

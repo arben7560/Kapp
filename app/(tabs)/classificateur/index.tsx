@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
-const BACKGROUND_SOURCE = require("../../../assets/images/seoul-hub-bg.jpg");
+const BACKGROUND_SOURCE = require("../../../assets/images/classificateur.png");
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — SEOUL MIDNIGHT GLASS
@@ -98,12 +98,10 @@ export default function ClassifiersHub() {
   return (
     <SafeAreaView style={styles.safe}>
       <ImageBackground source={BACKGROUND_SOURCE} style={styles.bgImage}>
+        <BlurView intensity={70} tint="dark" style={styles.bgBlur} />
         <View style={styles.vignetteOverlay} />
         <View style={styles.topFade} />
         <View style={styles.bottomFade} />
-
-        <View style={[styles.globalGlowLeft, { backgroundColor: PINK }]} />
-        <View style={[styles.globalGlowRight, { backgroundColor: CYAN }]} />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -160,33 +158,19 @@ function UnifiedNavHeader() {
 function UnifiedHeroHeader({ korean, title, subtitle, accent }: any) {
   return (
     <View style={styles.heroBlock}>
-      <View style={styles.heroTopLineRow}>
-        <Text style={styles.heroEyebrow}>GRAMMAIRE VISUELLE</Text>
-      </View>
+      <Text style={styles.heroEyebrow}>GRAMMAIRE VISUELLE</Text>
       <View style={styles.heroVisualWrap}>
-        <View style={[styles.heroCirclePink, { backgroundColor: PINK }]} />
-        <View style={[styles.heroCircleCyan, { backgroundColor: CYAN }]} />
-        <BlurView intensity={22} tint="dark" style={styles.heroCircleGlass}>
-          <LinearGradient
-            colors={[
-              "rgba(255,255,255,0.06)",
-              "rgba(255,255,255,0.02)",
-              "rgba(255,255,255,0.01)",
-            ]}
-            start={{ x: 0.12, y: 0.08 }}
-            end={{ x: 0.88, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-        </BlurView>
-        <View
-          style={[
-            styles.heroLine,
-            { backgroundColor: "rgba(34,211,238,0.34)" },
-          ]}
-        />
-        <Text style={[styles.heroKorean, { textShadowColor: accent }]}>
-          {korean}
-        </Text>
+        <View style={styles.heroKoreanWrap}>
+          <Text style={[styles.heroKorean, styles.heroKoreanGlowOuter]}>
+            {korean}
+          </Text>
+          <Text style={[styles.heroKorean, styles.heroKoreanGlowInner]}>
+            {korean}
+          </Text>
+          <Text style={[styles.heroKorean, { textShadowColor: accent }]}>
+            {korean}
+          </Text>
+        </View>
         <Text style={styles.heroTitle}>{title}</Text>
         <BlurView intensity={18} tint="dark" style={styles.heroBadge}>
           <Text style={styles.heroBadgeText}>IMMERSION NIVEAU 1</Text>
@@ -238,28 +222,98 @@ function AnimatedFragment({ children, index }: any) {
 }
 
 function ClassifierCard({ title, subtitle, color, route, isLocked }: any) {
+  const icon = title.charAt(0);
+
   return (
     <Pressable style={styles.cardPressable} onPress={() => router.push(route)}>
       <BlurView
-        intensity={30}
+        intensity={40}
         tint="dark"
         style={[styles.themeCard, isLocked && styles.premiumCardBorder]}
       >
         <LinearGradient
-          colors={
-            isLocked
-              ? ["rgba(253,224,71,0.12)", "transparent"]
-              : [`${color}18`, "transparent"]
-          }
+          colors={[
+            isLocked ? "rgba(253,224,71,0.18)" : `${color}18`,
+            "rgba(2,3,6,0.48)",
+            "rgba(255,255,255,0.035)",
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
+        />
+
+        <LinearGradient
+          colors={[
+            "rgba(255,255,255,0.13)",
+            "rgba(255,255,255,0.025)",
+            "transparent",
+          ]}
+          locations={[0, 0.35, 1]}
+          style={styles.cardTopReflect}
+        />
+
+        <View style={styles.cardRainA} />
+        <View
+          style={[
+            styles.cardRainB,
+            { backgroundColor: `${isLocked ? GOLD : color}14` },
+          ]}
+        />
+        <View style={styles.cardRainC} />
+        <View
+          style={[
+            styles.cardRainDrop,
+            { backgroundColor: isLocked ? GOLD : color },
+          ]}
         />
 
         <View
           style={[
             styles.cardAccent,
-            { backgroundColor: isLocked ? GOLD : color },
+            {
+              backgroundColor: isLocked ? GOLD : color,
+              shadowColor: isLocked ? GOLD : color,
+            },
           ]}
         />
+
+        <View style={styles.cardIconZone}>
+          <View
+            style={[
+              styles.cardIconBox,
+              {
+                borderColor: `${isLocked ? GOLD : color}55`,
+                backgroundColor: `${isLocked ? GOLD : color}12`,
+                shadowColor: isLocked ? GOLD : color,
+                shadowOpacity: isLocked ? 0.28 : 0.22,
+              },
+            ]}
+          >
+            <LinearGradient
+              colors={[
+                "rgba(255,255,255,0.24)",
+                "rgba(255,255,255,0.05)",
+                "transparent",
+              ]}
+              locations={[0, 0.45, 1]}
+              style={styles.cardIconLight}
+            />
+
+            <Text
+              style={[
+                styles.cardIcon,
+                {
+                  color: isLocked ? GOLD : color,
+                  textShadowColor: isLocked ? GOLD : color,
+                },
+              ]}
+            >
+              {icon}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.cardDividerLine} />
 
         {isLocked && (
           <View style={styles.premiumBadge}>
@@ -268,6 +322,9 @@ function ClassifierCard({ title, subtitle, color, route, isLocked }: any) {
         )}
 
         <View style={styles.cardTextContent}>
+          <Text style={[styles.cardMeta, isLocked && styles.cardMetaPremium]}>
+            {isLocked ? "MODULE PREMIUM" : "UNITÉ DE MESURE"}
+          </Text>
           <Text style={styles.cardTitle}>{title}</Text>
           <Text style={styles.cardSub}>
             {isLocked ? "Débloquer ce module exclusif" : subtitle}
@@ -290,39 +347,22 @@ function ClassifierCard({ title, subtitle, color, route, isLocked }: any) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG_DEEP },
   bgImage: { flex: 1 },
+  bgBlur: {
+    ...StyleSheet.absoluteFillObject,
+  },
   vignetteOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.80)",
   },
   topFade: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.1)",
   },
   bottomFade: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    height: 180,
+    height: 240,
     backgroundColor: "rgba(2,3,6,0.24)",
-  },
-  globalGlowLeft: {
-    position: "absolute",
-    top: 140,
-    left: -90,
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    opacity: 0.08,
-  },
-  globalGlowRight: {
-    position: "absolute",
-    top: 300,
-    right: -120,
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    opacity: 0.08,
   },
   scrollContent: { paddingHorizontal: 24, paddingTop: 10, paddingBottom: 120 },
   navHeader: {
@@ -357,90 +397,81 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.3)",
     opacity: 0.7,
   },
-  heroBlock: { marginTop: 8, marginBottom: 18 },
-  heroTopLineRow: { alignItems: "center", marginBottom: 14 },
+  heroBlock: { marginTop: 34, alignItems: "center" },
   heroEyebrow: {
     color: PINK,
     fontFamily: fonts.bold,
     fontSize: 12,
-    letterSpacing: 4,
+    letterSpacing: 5.5,
+    textAlign: "center",
+    marginBottom: 28,
+    opacity: 0.9,
   },
   heroVisualWrap: {
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    minHeight: 360,
+    position: "relative",
+  },
+  heroKoreanWrap: {
+    position: "relative",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 330,
-    marginBottom: 8,
-  },
-  heroCirclePink: {
-    position: "absolute",
-    width: HERO_CIRCLE,
-    height: HERO_CIRCLE,
-    borderRadius: HERO_CIRCLE / 2,
-    left: -20,
-    top: 2,
-    opacity: 0.12,
-  },
-  heroCircleCyan: {
-    position: "absolute",
-    width: HERO_CIRCLE,
-    height: HERO_CIRCLE,
-    borderRadius: HERO_CIRCLE / 2,
-    right: -20,
-    top: 2,
-    opacity: 0.1,
-  },
-  heroCircleGlass: {
-    position: "absolute",
-    width: HERO_CIRCLE,
-    height: HERO_CIRCLE,
-    borderRadius: HERO_CIRCLE / 2,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
-  },
-  heroLine: {
-    position: "absolute",
-    top: 84,
-    left: 56,
-    right: 56,
-    height: 1,
   },
   heroKorean: {
     fontSize: 74,
     fontFamily: fonts.kr,
     color: "rgba(245,252,255,0.98)",
-    textShadowRadius: 15,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 22,
     marginBottom: 2,
   },
+  heroKoreanGlowOuter: {
+    position: "absolute",
+    color: "rgba(56,189,248,0.18)",
+    textShadowColor: "rgba(56,189,248,1)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 42,
+  },
+  heroKoreanGlowInner: {
+    position: "absolute",
+    color: "rgba(180,238,255,0.36)",
+    textShadowColor: "rgba(103,232,249,0.95)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 18,
+  },
   heroTitle: {
-    marginTop: 6,
+    marginTop: 4,
     fontSize: 34,
-    lineHeight: 38,
-    fontFamily: fonts.black,
-    color: TXT,
-    letterSpacing: -0.8,
+    lineHeight: 40,
+    fontFamily: fonts.medium,
+    color: "rgba(255,255,255,0.96)",
+    letterSpacing: -0.7,
+    textAlign: "center",
   },
   heroBadge: {
-    marginTop: 16,
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    borderRadius: 16,
+    marginTop: 18,
+    paddingHorizontal: 28,
+    paddingVertical: 10,
+    borderRadius: 999,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: "rgba(255,255,255,0.16)",
   },
   heroBadgeText: {
-    color: SOFT,
+    color: "rgba(255,255,255,0.66)",
     fontFamily: fonts.bold,
     fontSize: 11,
-    letterSpacing: 2,
+    letterSpacing: 3,
   },
   heroQuote: {
-    marginTop: 20,
-    maxWidth: "75%",
+    marginTop: 30,
+    maxWidth: "82%",
     textAlign: "center",
-    fontSize: 14,
-    color: MUTED,
+    fontSize: 15,
+    lineHeight: 23,
+    color: "rgba(255,255,255,0.72)",
     fontFamily: fonts.medium,
     fontStyle: "italic",
   },
@@ -448,7 +479,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
-    marginVertical: 20,
+    marginBottom: 18,
   },
   sectionTitle: {
     fontSize: 11,
@@ -459,30 +490,132 @@ const styles = StyleSheet.create({
   titleLine: { flex: 1, height: 1, backgroundColor: LINE_SOFT },
   grid: { gap: 12 },
   cardPressable: {
-    borderRadius: 20,
+    borderRadius: 22,
     overflow: "hidden",
+    backgroundColor: "rgba(2,3,6,0.26)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.09)",
+    shadowColor: "#000",
+    shadowOpacity: 0.28,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
   },
   themeCard: {
+    minHeight: 78,
     flexDirection: "row",
     alignItems: "center",
-    padding: 18,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-    minHeight: 90,
+    borderColor: "rgba(255,255,255,0.11)",
+    position: "relative",
   },
-  premiumCardBorder: { borderColor: "rgba(253,224,71,0.25)" },
+  cardTopReflect: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "50%",
+    opacity: 0.55,
+  },
+  premiumCardBorder: { borderColor: "rgba(253,224,71,0.28)" },
+  cardRainA: {
+    position: "absolute",
+    top: 0,
+    left: "18%",
+    width: 1,
+    height: "100%",
+    backgroundColor: "rgba(255,255,255,0.04)",
+  },
+  cardRainB: {
+    position: "absolute",
+    top: 0,
+    left: "54%",
+    width: 1,
+    height: "100%",
+  },
+  cardRainC: {
+    position: "absolute",
+    top: 0,
+    right: "18%",
+    width: 1,
+    height: "100%",
+    backgroundColor: "rgba(255,255,255,0.03)",
+  },
+  cardRainDrop: {
+    position: "absolute",
+    top: 14,
+    right: 18,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    opacity: 0.65,
+  },
   cardAccent: {
     position: "absolute",
     left: 0,
     top: 14,
     bottom: 14,
-    width: 3,
-    borderTopRightRadius: 4,
-    borderBottomRightRadius: 4,
+    width: 4,
+    borderTopRightRadius: 6,
+    borderBottomRightRadius: 6,
+    shadowOpacity: 0.75,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  cardIconZone: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 6,
+    marginRight: 10,
+    position: "relative",
+  },
+  cardIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    overflow: "hidden",
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  cardIconLight: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "58%",
+    borderRadius: 22,
+  },
+  cardIcon: {
+    fontSize: 21,
+    fontFamily: fonts.bold,
+    letterSpacing: -0.8,
+    textShadowRadius: 10,
+    textShadowOffset: { width: 0, height: 0 },
+  },
+  cardDividerLine: {
+    width: 1,
+    height: 42,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    marginRight: 12,
   },
   cardTextContent: {
     flex: 1,
-    marginLeft: 10,
+  },
+  cardMeta: {
+    fontSize: 7.8,
+    fontFamily: fonts.bold,
+    color: "rgba(255,255,255,0.44)",
+    letterSpacing: 2.1,
+    marginBottom: 4,
+  },
+  cardMetaPremium: {
+    color: "rgba(253,224,71,0.78)",
   },
   cardTitle: { color: TXT, fontSize: 18, fontFamily: fonts.bold },
   cardSub: {
