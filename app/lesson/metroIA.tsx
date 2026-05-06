@@ -1,1270 +1,1077 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
-import * as Speech from "expo-speech";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Pressable, ScrollView, Text, View } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { useVideoPlayer, VideoView } from "expo-video";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
-import ChoiceChips from "../../components/ai/ChoiceChips";
-import {
-  createInitialMetroState,
-  getMetroLessonById,
-  getMetroStepById,
-  getNextMetroState,
-  metroLessons,
-  type MetroChoice,
-  type MetroLesson,
-  type MetroPhase,
-  type MetroState,
-  type MetroStep,
-} from "./data/metro/index";
+import hongikToGangnamLesson from "./data/metro/hongikToGangnam";
 
-const BG0 = "#070812";
-const BG1 = "#0D1322";
-const BG2 = "#151122";
-
-const TXT = "rgba(255,255,255,0.96)";
+// ==================== DESIGN SYSTEM ====================
+const BG_DEEP = "#050508";
+const BG_NAVY = "#0A0D1A";
+const TXT = "rgba(255,255,255,0.98)";
 const MUTED = "rgba(255,255,255,0.64)";
-const SOFT = "rgba(255,255,255,0.80)";
-const LINE = "rgba(255,255,255,0.10)";
-const CARD = "rgba(255,255,255,0.06)";
-const CARD_SOFT = "rgba(255,255,255,0.04)";
-const BUBBLE = "rgba(15,18,35,0.78)";
-const USER_BUBBLE = "rgba(255,255,255,0.05)";
+const SOFT = "rgba(255,255,255,0.48)";
+const LINE = "rgba(255,255,255,0.08)";
 
-const CYAN_SOFT = "rgba(34,211,238,0.16)";
-const CYAN_LINE = "rgba(34,211,238,0.34)";
-const CYAN_TEXT = "#8BE9F9";
-const CYAN_ACTIVE_BG = "rgba(34,211,238,0.22)";
-const CYAN_ACTIVE_BORDER = "rgba(34,211,238,0.72)";
+const PINK = "#F472B6";
+const CYAN = "#22D3EE";
+const PURPLE = "#A855F7";
 
-const PURPLE_TEXT = "#D8B4FE";
-const AMBER_TEXT = "#FCD34D";
-
-const PROGRESS_LABELS = ["Accueil", "Ligne", "Direction", "Trajet", "Sortie"];
-
-type ChatMessage =
-  | {
-      id: string;
-      role: "ai";
-      korean?: string;
-      romanization?: string;
-      french?: string;
-      phase?: MetroPhase;
-    }
-  | {
-      id: string;
-      role: "user";
-      label: string;
-      korean?: string;
-      romanization?: string;
-    };
-
-type ScenarioMeta = {
-  subtitle: string;
-  badge: string | null;
-  badgeBg: string;
-  badgeBorder: string;
-  badgeText: string;
+const fonts = {
+  bold: "Outfit_700Bold",
+  black: "Outfit_900Black",
+  medium: "Outfit_500Medium",
+  kr: "NotoSansKR_700Bold",
 };
 
-function SmallAction({
-  label,
-  onPress,
-}: {
+// ==================== VIDEOS ====================
+const iaIntroRoute = require("../../assets/ai/metro/ia_intro_route.mp4");
+const iaRepeatIntroRoute = require("../../assets/ai/metro/ia_repeat_intro_route.mp4");
+const iaRepeatIntroRouteSlow = require("../../assets/ai/metro/ia_repeat_intro_route_slow.mp4");
+
+const iaPlatformDirection = require("../../assets/ai/metro/ia_platform_direction.mp4");
+const iaRepeatPlatformDirection = require("../../assets/ai/metro/ia_repeat_platform_direction.mp4");
+const iaRepeatPlatformDirectionShort = require("../../assets/ai/metro/ia_repeat_platform_direction_short.mp4");
+
+const iaTripTime = require("../../assets/ai/metro/ia_trip_time.mp4");
+const iaRepeatTripTime = require("../../assets/ai/metro/ia_repeat_trip_time.mp4");
+const iaRepeatTripTimeShort = require("../../assets/ai/metro/ia_repeat_trip_time_short.mp4");
+
+const iaTransferInfo = require("../../assets/ai/metro/ia_transfer_info.mp4");
+const iaRepeatTransferInfo = require("../../assets/ai/metro/ia_repeat_transfer_info.mp4");
+const iaRepeatTransferInfoShort = require("../../assets/ai/metro/ia_repeat_transfer_info_short.mp4");
+
+const iaExitInfo = require("../../assets/ai/metro/ia_exit_info.mp4");
+const iaRepeatExitInfo = require("../../assets/ai/metro/ia_repeat_exit_info.mp4");
+const iaRepeatExitInfoShort = require("../../assets/ai/metro/ia_repeat_exit_info_short.mp4");
+
+const iaExitLandmarkInfo = require("../../assets/ai/metro/ia_exit_landmark_info.mp4");
+const iaRepeatExitLandmarkInfo = require("../../assets/ai/metro/ia_repeat_exit_landmark_info.mp4");
+const iaRepeatExitLandmarkInfoShort = require("../../assets/ai/metro/ia_repeat_exit_landmark_info_short.mp4");
+
+const iaEndSummary = require("../../assets/ai/metro/ia_end_summary.mp4");
+const iaEndSummaryShort = require("../../assets/ai/metro/ia_end_summary_short.mp4");
+const iaEnd = require("../../assets/ai/metro/ia_end.mp4");
+
+// ==================== TYPES ====================
+type ModeType = "guided" | "real";
+
+type MetroChoice = {
+  id: string;
   label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
-        flex: 1,
-        borderRadius: 14,
-        paddingVertical: 13,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: CARD_SOFT,
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.08)",
-        opacity: pressed ? 0.94 : 1,
-      })}
-    >
-      <Text style={{ color: TXT, fontSize: 13, fontWeight: "900" }}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
+  korean: string;
+  romanization?: string;
+  nextId: string;
+};
 
-function ProgressPill({ label, active }: { label: string; active: boolean }) {
-  return (
-    <View
-      style={{
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 999,
-        backgroundColor: active ? CYAN_SOFT : "rgba(255,255,255,0.04)",
-        borderWidth: 1,
-        borderColor: active ? CYAN_LINE : "rgba(255,255,255,0.08)",
-      }}
-    >
-      <Text
-        style={{
-          color: active ? "#fff" : MUTED,
-          fontSize: 11,
-          fontWeight: "800",
-        }}
-      >
-        {label}
-      </Text>
-    </View>
-  );
-}
+type MetroStep = {
+  id: string;
+  speaker: "ai" | "user";
+  phase?: string;
+  narrator?: string;
+  text?: string;
+  korean?: string;
+  french?: string;
+  romanization?: string;
+  choices?: MetroChoice[];
+};
 
-function HintCard({ text }: { text: string }) {
-  return (
-    <View
-      style={{
-        marginTop: 10,
-        borderRadius: 14,
-        paddingHorizontal: 11,
-        paddingVertical: 10,
-        backgroundColor: CARD_SOFT,
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.08)",
-      }}
-    >
-      <Text
-        style={{
-          color: SOFT,
-          fontSize: 12,
-          lineHeight: 17,
-          fontWeight: "600",
-        }}
-      >
-        {text}
-      </Text>
-    </View>
-  );
-}
-
-function SectionTitle({
-  title,
-  subtitle,
-}: {
+type MetroLesson = {
+  id: string;
   title: string;
-  subtitle?: string;
-}) {
-  return (
-    <View style={{ marginBottom: 12 }}>
-      <Text
-        style={{
-          color: TXT,
-          fontSize: 22,
-          lineHeight: 27,
-          fontWeight: "900",
-          marginBottom: subtitle ? 6 : 0,
-        }}
-      >
-        {title}
-      </Text>
+  shortTitle: string;
+  situation: string;
+  objective: string;
+  steps: MetroStep[];
+};
 
-      {!!subtitle && (
-        <Text
-          style={{
-            color: SOFT,
-            fontSize: 14,
-            lineHeight: 20,
-          }}
-        >
-          {subtitle}
-        </Text>
-      )}
-    </View>
-  );
+type DialogueChoice = {
+  id: string;
+  label: string;
+  korean: string;
+  nextNodeId: string;
+};
+
+type DialogueNode = {
+  id: string;
+  type: "ia" | "user_choice";
+  korean?: string;
+  french?: string;
+  nextNodeId?: string;
+  choices?: DialogueChoice[];
+  videoSource?: number;
+  videoSources?: number[];
+};
+
+type DialogueScenario = {
+  id: string;
+  startNodeId: string;
+  nodes: Record<string, DialogueNode>;
+};
+
+// ==================== HELPERS ====================
+function normalizeMode(rawMode: string | string[] | undefined): ModeType {
+  const value = Array.isArray(rawMode) ? rawMode[0] : rawMode;
+  return value === "real" ? "real" : "guided";
 }
 
-function getLessonMeta(lessonId: string): ScenarioMeta {
-  switch (lessonId) {
-    case "hongik_to_gangnam":
-      return {
-        subtitle: "Direct • facile",
-        badge: "Recommandé",
-        badgeBg: "rgba(34,211,238,0.16)",
-        badgeBorder: "rgba(34,211,238,0.38)",
-        badgeText: CYAN_TEXT,
-      };
-    case "myeongdong_to_itaewon":
-      return {
-        subtitle: "1 correspondance • moyen",
-        badge: "Populaire",
-        badgeBg: "rgba(168,85,247,0.16)",
-        badgeBorder: "rgba(168,85,247,0.34)",
-        badgeText: PURPLE_TEXT,
-      };
-    case "seoul_station_to_jamsil":
-      return {
-        subtitle: "Plus long • intermédiaire",
-        badge: "Challenge",
-        badgeBg: "rgba(245,158,11,0.16)",
-        badgeBorder: "rgba(245,158,11,0.34)",
-        badgeText: AMBER_TEXT,
-      };
-    default:
-      return {
-        subtitle: "Cas pratique",
-        badge: null,
-        badgeBg: "rgba(255,255,255,0.06)",
-        badgeBorder: "rgba(255,255,255,0.10)",
-        badgeText: "#fff",
-      };
-  }
+function getProgressIndex(nodeId: string): number {
+  const id = nodeId.toLowerCase();
+
+  if (/start|intro|welcome|accueil|route/.test(id)) return 0;
+
+  if (/platform|direction|ligne|quai/.test(id)) return 1;
+
+  if (/trip|transfer|time|trajet|환승|시간/.test(id)) return 2;
+
+  if (/exit|landmark|summary|end|sortie|fin|coex|teheran/.test(id)) return 3;
+
+  return 0;
 }
 
-function ScenarioCard({
-  lesson,
-  selectedLessonId,
-  onPress,
-  disabled,
-}: {
-  lesson: MetroLesson;
-  selectedLessonId: string;
-  onPress: () => void;
-  disabled?: boolean;
-}) {
-  const meta = getLessonMeta(lesson.id);
-  const isActive = lesson.id === selectedLessonId;
+function getAutoAdvanceDelay(node: DialogueNode, mode: ModeType) {
+  const textLength = (node.korean?.length || 0) + (node.french?.length || 0);
+  const base = mode === "real" ? 2600 : 2200;
+  const byLength = Math.min(textLength * 20, 1800);
 
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      style={({ pressed }) => ({
-        borderRadius: 20,
-        padding: 16,
-        backgroundColor: isActive ? CYAN_ACTIVE_BG : "rgba(255,255,255,0.05)",
-        borderWidth: isActive ? 2 : 1,
-        borderColor: isActive ? CYAN_ACTIVE_BORDER : "rgba(255,255,255,0.08)",
-        opacity: pressed ? 0.95 : 1,
-      })}
-    >
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
-      >
-        <View style={{ flex: 1 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 7,
-            }}
-          >
-            <View
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 999,
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: isActive
-                  ? "rgba(255,255,255,0.16)"
-                  : "rgba(255,255,255,0.06)",
-                borderWidth: 1,
-                borderColor: isActive
-                  ? "rgba(255,255,255,0.20)"
-                  : "rgba(255,255,255,0.08)",
-              }}
-            >
-              <Text style={{ color: "#fff", fontSize: 13 }}>🚇</Text>
-            </View>
-
-            <Text
-              style={{
-                color: "#fff",
-                fontSize: 16,
-                lineHeight: 20,
-                fontWeight: "900",
-                flexShrink: 1,
-              }}
-            >
-              {lesson.shortTitle}
-            </Text>
-          </View>
-
-          <Text
-            style={{
-              color: isActive ? "rgba(255,255,255,0.90)" : MUTED,
-              fontSize: 13,
-              fontWeight: "700",
-            }}
-          >
-            {meta.subtitle}
-          </Text>
-        </View>
-
-        {!!meta.badge && (
-          <View
-            style={{
-              paddingHorizontal: 10,
-              paddingVertical: 6,
-              borderRadius: 999,
-              backgroundColor: meta.badgeBg,
-              borderWidth: 1,
-              borderColor: meta.badgeBorder,
-              alignSelf: "center",
-            }}
-          >
-            <Text
-              style={{
-                color: meta.badgeText,
-                fontSize: 11,
-                fontWeight: "900",
-              }}
-            >
-              {meta.badge}
-            </Text>
-          </View>
-        )}
-      </View>
-    </Pressable>
-  );
+  return base + byLength;
 }
 
-function getProgressIndexFromPhase(phase?: MetroPhase): number {
-  switch (phase) {
-    case "Ligne":
-      return 1;
-    case "Direction":
-      return 2;
-    case "Trajet":
-      return 3;
-    case "Sortie":
-      return 4;
-    case "Fin":
-      return 4;
-    default:
-      return 0;
-  }
-}
+function attachMetroVideosToNode(nodeId: string): number[] | undefined {
+  const videos: Record<string, number> = {
+    ia_intro_route: iaIntroRoute,
+    ia_repeat_intro_route: iaRepeatIntroRoute,
+    ia_repeat_intro_route_slow: iaRepeatIntroRouteSlow,
 
-function buildChoiceHint(label: string): string {
-  const lowered = label.toLowerCase();
+    ia_platform_direction: iaPlatformDirection,
+    ia_repeat_platform_direction: iaRepeatPlatformDirection,
+    ia_repeat_platform_direction_short: iaRepeatPlatformDirectionShort,
 
-  if (lowered.includes("répéter")) {
-    return "Vous demandez à l'agent de reformuler l'information.";
-  }
-  if (
-    lowered.includes("quai") ||
-    lowered.includes("direction") ||
-    lowered.includes("sens")
-  ) {
-    return "Vous vérifiez le bon quai ou la bonne direction.";
-  }
-  if (
-    lowered.includes("temps") ||
-    lowered.includes("trajet") ||
-    lowered.includes("arrêts")
-  ) {
-    return "Vous demandez une précision sur le trajet.";
-  }
-  if (
-    lowered.includes("transfert") ||
-    lowered.includes("correspondance") ||
-    lowered.includes("changer")
-  ) {
-    return "Vous demandez une précision sur la correspondance.";
-  }
-  if (
-    lowered.includes("sortie") ||
-    lowered.includes("restaurant") ||
-    lowered.includes("coex")
-  ) {
-    return "Vous demandez comment sortir ou rejoindre la zone voulue.";
-  }
-  if (lowered.includes("merci")) {
-    return "Vous terminez naturellement la conversation.";
-  }
+    ia_trip_time: iaTripTime,
+    ia_repeat_trip_time: iaRepeatTripTime,
+    ia_repeat_trip_time_short: iaRepeatTripTimeShort,
 
-  return "Vous poursuivez la conversation.";
-}
+    ia_transfer_info: iaTransferInfo,
+    ia_repeat_transfer_info: iaRepeatTransferInfo,
+    ia_repeat_transfer_info_short: iaRepeatTransferInfoShort,
 
-export default function MetroIaScreen() {
-  const insets = useSafeAreaInsets();
+    ia_exit_info: iaExitInfo,
+    ia_repeat_exit_info: iaRepeatExitInfo,
+    ia_repeat_exit_info_short: iaRepeatExitInfoShort,
 
-  const goBackSafely = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
+    ia_exit_landmark_info: iaExitLandmarkInfo,
+    ia_repeat_exit_landmark_info: iaRepeatExitLandmarkInfo,
+    ia_repeat_exit_landmark_info_short: iaRepeatExitLandmarkInfoShort,
 
-    router.replace("/onboarding");
+    ia_end_summary: iaEndSummary,
+    ia_end_summary_short: iaEndSummaryShort,
+    ia_end: iaEnd,
   };
 
-  const pulseAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const translateAnim = useRef(new Animated.Value(0)).current;
-  const speechTokenRef = useRef(0);
+  return videos[nodeId] ? [videos[nodeId]] : undefined;
+}
 
-  const safeLessons = Array.isArray(metroLessons) ? metroLessons : [];
-  const firstLesson = safeLessons.length > 0 ? safeLessons[0] : undefined;
+function buildMetroScenario(lesson: MetroLesson): DialogueScenario {
+  const nodes: Record<string, DialogueNode> = {};
 
-  const [selectedLessonId, setSelectedLessonId] = useState<string>(
-    firstLesson?.id ?? "",
-  );
-  const [hasEnteredScene, setHasEnteredScene] = useState(false);
+  for (const step of lesson.steps) {
+    const hasChoices = !!step.choices?.length;
+
+    /**
+     * Cas spécial :
+     * Le début de la scène doit afficher directement les choix utilisateur.
+     * L'utilisateur commence la discussion, donc on ne crée pas de node IA
+     * avec délai automatique avant les réponses.
+     */
+    if (step.id === "start" && hasChoices && step.choices) {
+      nodes[step.id] = {
+        id: step.id,
+        type: "user_choice",
+        korean: step.korean || step.text || "...",
+        french: step.french || step.text,
+        choices: step.choices.map((choice) => ({
+          id: choice.id,
+          label: choice.label,
+          korean: choice.korean,
+          nextNodeId: choice.nextId,
+        })),
+      };
+
+      continue;
+    }
+
+    const choiceNodeId = `${step.id}_choices`;
+
+    nodes[step.id] = {
+      id: step.id,
+      type: "ia",
+      korean: step.korean || step.text || "...",
+      french: step.french || step.text,
+      nextNodeId: hasChoices ? choiceNodeId : undefined,
+      videoSources: attachMetroVideosToNode(step.id),
+    };
+
+    if (hasChoices && step.choices) {
+      nodes[choiceNodeId] = {
+        id: choiceNodeId,
+        type: "user_choice",
+        korean: step.korean || step.text || "...",
+        french: step.french || step.text,
+        choices: step.choices.map((choice) => ({
+          id: choice.id,
+          label: choice.label,
+          korean: choice.korean,
+          nextNodeId: choice.nextId,
+        })),
+      };
+    }
+  }
+
+  return {
+    id: lesson.id,
+    startNodeId: lesson.steps[0]?.id || "start",
+    nodes,
+  };
+}
+
+// ==================== MAIN ====================
+export default function MetroIaScreen() {
+  /**
+   * Important :
+   * On initialise directement avec iaIntroRoute.
+   * Comme le node "start" n'a pas de vidéo propre, cela permet d'afficher
+   * l'avatar immédiatement au lieu d'afficher une icône fallback.
+   */
+  const [displayedVideoSource, setDisplayedVideoSource] = useState<
+    number | null
+  >(iaIntroRoute);
+
+  const insets = useSafeAreaInsets();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const params = useLocalSearchParams();
+  const mode = normalizeMode(params.mode as string | string[] | undefined);
+
+  const scrollRef = useRef<ScrollView>(null);
+  const mountedRef = useRef(true);
+  const iaAutoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasAdvancedFromVideoRef = useRef(false);
+
+  const metroScenario = useMemo(() => {
+    return buildMetroScenario(hongikToGangnamLesson as MetroLesson);
+  }, []);
+
+  const [currentNodeId, setCurrentNodeId] = useState(metroScenario.startNodeId);
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
-  const [selectedChoiceHint, setSelectedChoiceHint] = useState("");
-  const [speaking, setSpeaking] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [chatLog, setChatLog] = useState<ChatMessage[]>([]);
+  const [isSceneEnded, setIsSceneEnded] = useState(false);
+  const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
 
-  const currentLesson = useMemo(() => {
-    if (!firstLesson) return undefined;
-    return getMetroLessonById(selectedLessonId) ?? firstLesson;
-  }, [selectedLessonId, firstLesson]);
+  const currentScenario = useMemo(() => {
+    return metroScenario;
+  }, [metroScenario]);
 
-  const [metroState, setMetroState] = useState<MetroState>({
-    lessonId: firstLesson?.id ?? "",
-    currentStepId: "start",
-    history: [],
-    finished: false,
+  const currentNode = currentScenario.nodes[currentNodeId];
+
+  const progressIndex = getProgressIndex(currentNodeId);
+  const steps = ["Accueil", "Ligne", "Trajet", "Sortie"];
+
+  const videoSources =
+    currentNode?.videoSources ||
+    (currentNode?.videoSource ? [currentNode.videoSource] : []);
+
+  const currentVideoSource = videoSources.length > 0 ? videoSources[0] : null;
+
+  const player = useVideoPlayer(displayedVideoSource, (playerInstance) => {
+    playerInstance.loop = false;
   });
 
-  const [currentStep, setCurrentStep] = useState<MetroStep | undefined>(
-    firstLesson ? getMetroStepById(firstLesson, "start") : undefined,
-  );
-
-  const [displayedStep, setDisplayedStep] = useState<MetroStep | undefined>(
-    firstLesson ? getMetroStepById(firstLesson, "start") : undefined,
-  );
-
-  const progressIndex = useMemo(() => {
-    return hasEnteredScene ? getProgressIndexFromPhase(currentStep?.phase) : 0;
-  }, [currentStep?.phase, hasEnteredScene]);
-
-  const lastUserMessage = useMemo(() => {
-    for (let i = chatLog.length - 1; i >= 0; i -= 1) {
-      const item = chatLog[i];
-      if (item?.role === "user") {
-        return item as Extract<ChatMessage, { role: "user" }>;
-      }
+  useEffect(() => {
+    if (currentNode?.type === "ia" && currentVideoSource) {
+      setDisplayedVideoSource(currentVideoSource);
     }
-    return null;
-  }, [chatLog]);
+  }, [currentNode, currentVideoSource]);
+
+  const videoHeight = Math.min(screenWidth * 0.9, screenHeight * 0.34);
+
+  const goToNextNode = useCallback((node?: DialogueNode) => {
+    if (!node || !mountedRef.current) return;
+
+    if (node.nextNodeId) {
+      setCurrentNodeId(node.nextNodeId);
+    } else {
+      setIsSceneEnded(true);
+    }
+  }, []);
 
   useEffect(() => {
+    setCurrentNodeId(currentScenario.startNodeId);
+    setDisplayedVideoSource(iaIntroRoute);
+    setSelectedChoiceId(null);
+    setIsTransitioning(false);
+    setIsSceneEnded(false);
+    hasAdvancedFromVideoRef.current = false;
+  }, [currentScenario]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+
     return () => {
-      Speech.stop();
-      speechTokenRef.current += 1;
+      mountedRef.current = false;
+
+      if (iaAutoTimerRef.current) {
+        clearTimeout(iaAutoTimerRef.current);
+      }
     };
   }, []);
 
   useEffect(() => {
-    if (speaking) {
-      const loop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 420,
-            useNativeDriver: false,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 0,
-            duration: 420,
-            useNativeDriver: false,
-          }),
-        ]),
-      );
-      loop.start();
-      return () => loop.stop();
+    hasAdvancedFromVideoRef.current = false;
+    setIsTranscriptOpen(false);
+
+    if (iaAutoTimerRef.current) {
+      clearTimeout(iaAutoTimerRef.current);
+      iaAutoTimerRef.current = null;
     }
+  }, [currentNodeId]);
 
-    pulseAnim.stopAnimation();
-    pulseAnim.setValue(0);
-  }, [speaking, pulseAnim]);
+  useEffect(() => {
+    if (!currentNode) return;
+    if (!displayedVideoSource) return;
 
-  const stopSpeech = () => {
-    Speech.stop();
-    speechTokenRef.current += 1;
-    setSpeaking(false);
-  };
+    try {
+      player.replace(displayedVideoSource);
 
-  const speakAi = (text: string) => {
-    if (!text) return;
-
-    const token = speechTokenRef.current + 1;
-    speechTokenRef.current = token;
-
-    Speech.stop();
-    setSpeaking(true);
-
-    Speech.speak(text, {
-      language: "ko-KR",
-      rate: 0.92,
-      pitch: 1,
-      onDone: () => {
-        if (speechTokenRef.current !== token) return;
-        setSpeaking(false);
-      },
-      onStopped: () => {
-        if (speechTokenRef.current !== token) return;
-        setSpeaking(false);
-      },
-      onError: () => {
-        if (speechTokenRef.current !== token) return;
-        setSpeaking(false);
-      },
-    });
-  };
-
-  const animateSceneChange = (update: () => void) => {
-    setIsTransitioning(true);
-    stopSpeech();
-
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateAnim, {
-        toValue: 10,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      update();
-
-      fadeAnim.setValue(0);
-      translateAnim.setValue(10);
-
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 190,
-          useNativeDriver: true,
-        }),
-        Animated.timing(translateAnim, {
-          toValue: 0,
-          duration: 190,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setIsTransitioning(false);
-      });
-    });
-  };
-
-  const initializeLesson = (lesson: MetroLesson, enterScene: boolean) => {
-    const initialState = createInitialMetroState(lesson);
-    const firstStepInLesson = getMetroStepById(
-      lesson,
-      initialState.currentStepId,
-    );
-
-    setMetroState(initialState);
-    setCurrentStep(firstStepInLesson);
-    setDisplayedStep(firstStepInLesson);
-    setSelectedChoiceId(null);
-    setSelectedChoiceHint("");
-    setChatLog([]);
-    fadeAnim.setValue(1);
-    translateAnim.setValue(0);
-
-    if (enterScene && firstStepInLesson?.korean) {
-      setTimeout(() => {
-        speakAi(firstStepInLesson.korean ?? "");
-      }, 120);
+      if (currentNode.type === "ia" && currentVideoSource) {
+        player.play();
+      } else {
+        /**
+         * Sur le node "start", il n'y a pas encore de vidéo de node,
+         * mais on garde iaIntroRoute affichée comme avatar visuel de départ.
+         */
+        player.pause();
+      }
+    } catch {
+      // ignore
     }
-  };
+  }, [
+    currentNode,
+    currentNodeId,
+    currentVideoSource,
+    displayedVideoSource,
+    player,
+  ]);
 
-  const startSelectedLesson = () => {
-    if (isTransitioning || !currentLesson) return;
+  useEffect(() => {
+    if (!currentNode) return;
+    if (currentNode.type !== "ia") return;
+    if (!currentVideoSource) return;
+    if (isTransitioning || isSceneEnded) return;
 
-    stopSpeech();
-    setHasEnteredScene(true);
-    initializeLesson(currentLesson, true);
-  };
+    const interval = setInterval(() => {
+      if (!mountedRef.current) return;
+      if (hasAdvancedFromVideoRef.current) return;
 
-  const returnToLessonPicker = () => {
-    stopSpeech();
-    setHasEnteredScene(false);
-    setSelectedChoiceId(null);
-    setSelectedChoiceHint("");
-    setChatLog([]);
-    fadeAnim.setValue(1);
-    translateAnim.setValue(0);
-  };
+      const duration = player.duration ?? 0;
+      const currentTime = player.currentTime ?? 0;
 
-  const handleChoice = (choice: MetroChoice) => {
-    if (isTransitioning || !currentLesson) return;
+      if (duration <= 0) return;
 
-    setSelectedChoiceId(choice.id);
-    setSelectedChoiceHint(buildChoiceHint(choice.label));
+      const isNearEnd = currentTime >= duration - 0.08;
 
-    const userMessage: ChatMessage = {
-      id: `${choice.id}-user-${Date.now()}`,
-      role: "user",
-      label: choice.label,
-      korean: choice.korean,
-      romanization: choice.romanization,
+      if (isNearEnd) {
+        hasAdvancedFromVideoRef.current = true;
+        clearInterval(interval);
+        goToNextNode(currentNode);
+      }
+    }, 120);
+
+    return () => clearInterval(interval);
+  }, [
+    currentNode,
+    currentVideoSource,
+    isTransitioning,
+    isSceneEnded,
+    player,
+    goToNextNode,
+  ]);
+
+  useEffect(() => {
+    if (!currentNode) return;
+    if (currentNode.type !== "ia") return;
+    if (currentVideoSource) return;
+    if (isTransitioning || isSceneEnded) return;
+
+    const delay = getAutoAdvanceDelay(currentNode, mode);
+
+    iaAutoTimerRef.current = setTimeout(() => {
+      if (!mountedRef.current) return;
+      goToNextNode(currentNode);
+    }, delay);
+
+    return () => {
+      if (iaAutoTimerRef.current) {
+        clearTimeout(iaAutoTimerRef.current);
+        iaAutoTimerRef.current = null;
+      }
     };
+  }, [
+    currentNode,
+    currentVideoSource,
+    mode,
+    isTransitioning,
+    isSceneEnded,
+    goToNextNode,
+  ]);
 
-    const nextState = getNextMetroState(
-      currentLesson,
-      metroState,
-      choice.nextId,
-    );
+  useEffect(() => {
+    const t = setTimeout(() => {
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
+    }, 80);
 
-    const nextStep = getMetroStepById(currentLesson, nextState.currentStepId);
+    return () => clearTimeout(t);
+  }, [currentNodeId]);
 
-    const nextMessages: ChatMessage[] = [userMessage];
-    if (nextStep) {
-      nextMessages.push({
-        id: `${nextStep.id}-ai-${Date.now()}`,
-        role: "ai",
-        korean: nextStep.korean,
-        romanization: nextStep.romanization,
-        french: nextStep.french ?? nextStep.text,
-        phase: nextStep.phase,
-      });
-    }
+  const handleChoice = (choice: DialogueChoice) => {
+    if (isTransitioning || isSceneEnded) return;
+
+    setIsTransitioning(true);
+    setSelectedChoiceId(choice.id);
 
     setTimeout(() => {
-      animateSceneChange(() => {
-        setMetroState(nextState);
-        setCurrentStep(nextStep);
-        setDisplayedStep(nextStep);
-        setChatLog((prev) => [...prev, ...nextMessages]);
+      if (!mountedRef.current) return;
 
-        if (nextStep?.korean) {
-          setTimeout(() => {
-            speakAi(nextStep.korean ?? "");
-          }, 80);
-        }
-      });
-    }, 220);
+      setCurrentNodeId(choice.nextNodeId);
+      setSelectedChoiceId(null);
+      setIsTransitioning(false);
+    }, 320);
   };
 
-  const replayAi = () => {
-    if (!displayedStep?.korean) return;
-    speakAi(displayedStep.korean);
+  const handleRestart = () => {
+    setCurrentNodeId(currentScenario.startNodeId);
+    setDisplayedVideoSource(iaIntroRoute);
+    setSelectedChoiceId(null);
+    setIsTransitioning(false);
+    setIsSceneEnded(false);
+    hasAdvancedFromVideoRef.current = false;
   };
 
-  const restartScene = () => {
-    if (!currentLesson) return;
-    stopSpeech();
-    initializeLesson(currentLesson, true);
-  };
+  const isStartChoiceNode = currentNodeId === "start";
 
-  const speakingBorderColor = pulseAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["rgba(255,255,255,0.10)", CYAN_LINE],
-  });
+  const isReviewableTranscript =
+    currentNode?.type === "user_choice" && !isStartChoiceNode;
 
-  const currentChoices =
-    hasEnteredScene && currentStep?.choices
-      ? currentStep.choices.map((choice) => ({
-          id: choice.id,
-          label: choice.label,
-        }))
-      : [];
+  const shouldCollapseTranscript = isReviewableTranscript && !isTranscriptOpen;
 
-  if (!firstLesson || !currentLesson) {
-    return (
-      <LinearGradient colors={[BG0, BG1, BG2]} style={{ flex: 1 }}>
-        <SafeAreaView
-          style={{ flex: 1, justifyContent: "center", padding: 20 }}
-        >
-          <Text
-            style={{
-              color: TXT,
-              fontSize: 20,
-              fontWeight: "900",
-              marginBottom: 10,
-            }}
-          >
-            Aucune leçon métro disponible
-          </Text>
-          <Text style={{ color: SOFT, fontSize: 14, lineHeight: 20 }}>
-            Vérifie les exports dans le dossier data/metro.
-          </Text>
-        </SafeAreaView>
-      </LinearGradient>
-    );
-  }
+  const displayedKoreanText = shouldCollapseTranscript
+    ? "..."
+    : currentNode?.korean || "...";
+
+  const shouldShowFrench =
+    !shouldCollapseTranscript && !isStartChoiceNode && !!currentNode?.french;
+  const isUserChoice = currentNode?.type === "user_choice";
 
   return (
-    <LinearGradient colors={[BG0, BG1, BG2]} style={{ flex: 1 }}>
+    <LinearGradient colors={[BG_DEEP, BG_NAVY]} style={{ flex: 1 }}>
+      <View
+        style={[
+          styles.glow,
+          {
+            top: -70,
+            right: -60,
+            backgroundColor:
+              mode === "real"
+                ? "rgba(34,211,238,0.08)"
+                : "rgba(168,85,247,0.10)",
+          },
+        ]}
+      />
+
+      <View
+        style={[
+          styles.glow,
+          {
+            top: 120,
+            left: -90,
+            backgroundColor: "rgba(244,114,182,0.06)",
+          },
+        ]}
+      />
+
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: 16,
-            paddingTop: 8,
-            paddingBottom: Math.max(24, insets.bottom + 24),
-          }}
+        <View
+          style={[
+            styles.header,
+            { paddingTop: Math.max(6, insets.top * 0.15) },
+          ]}
         >
-          <View style={{ paddingBottom: 10 }}>
-            <Pressable onPress={goBackSafely} hitSlop={10}>
-              <Text style={{ color: MUTED, fontWeight: "800", fontSize: 15 }}>
-                ← Retour
-              </Text>
-            </Pressable>
+          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+            <Text style={styles.backTxt}>✕</Text>
+          </Pressable>
 
-            <View
-              style={{
-                marginTop: 10,
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 10,
-              }}
+          <View
+            style={[
+              styles.modeBadge,
+              { borderColor: mode === "real" ? CYAN : PURPLE },
+            ]}
+          >
+            <Text
+              style={[
+                styles.modeTxt,
+                { color: mode === "real" ? CYAN : PURPLE },
+              ]}
             >
-              <View
-                style={{
-                  paddingHorizontal: 12,
-                  paddingVertical: 7,
-                  borderRadius: 999,
-                  backgroundColor: CYAN_SOFT,
-                  borderWidth: 1,
-                  borderColor: CYAN_LINE,
-                }}
-              >
-                <Text
-                  style={{ color: "#fff", fontSize: 12, fontWeight: "900" }}
-                >
-                  Metro Seoul
-                </Text>
-              </View>
-
-              <Text style={{ color: MUTED, fontSize: 12, fontWeight: "700" }}>
-                Conversation guidée
-              </Text>
-            </View>
-
-            {!hasEnteredScene && (
-              <View
-                style={{
-                  flexDirection: "row",
-                  gap: 8,
-                  flexWrap: "wrap",
-                  marginTop: 12,
-                }}
-              >
-                {PROGRESS_LABELS.map((label, index) => (
-                  <ProgressPill
-                    key={`${label}-${index}`}
-                    label={label}
-                    active={index <= progressIndex}
-                  />
-                ))}
-              </View>
-            )}
+              {mode === "real" ? "MODE RÉEL" : "MODE GUIDÉ"}
+            </Text>
           </View>
 
-          {!hasEnteredScene ? (
-            <>
-              <View
-                style={{
-                  borderRadius: 24,
-                  borderWidth: 1,
-                  borderColor: LINE,
-                  backgroundColor: CARD_SOFT,
-                  overflow: "hidden",
-                  marginBottom: 20,
-                }}
-              >
-                <LinearGradient
-                  colors={[
-                    "rgba(34,211,238,0.08)",
-                    "rgba(59,130,246,0.05)",
-                    "rgba(168,85,247,0.04)",
-                    "rgba(255,255,255,0.02)",
-                  ]}
-                  style={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 16,
-                  }}
-                >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 16,
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: 124,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                      }}
-                    >
+          <View style={{ width: 42 }} />
+        </View>
+
+        <View style={styles.body}>
+          <View style={styles.topFixedSection}>
+            <View style={styles.topInner}>
+              <View style={styles.stepsContainer}>
+                {steps.map((s, i) => {
+                  const active = i === progressIndex;
+                  const done = i <= progressIndex;
+                  const accent = mode === "real" ? CYAN : PURPLE;
+
+                  return (
+                    <View key={s} style={styles.stepWrapper}>
                       <View
-                        style={{
-                          width: 112,
-                          height: 136,
-                          borderRadius: 22,
-                          overflow: "hidden",
-                          borderWidth: 1,
-                          borderColor: "rgba(255,255,255,0.12)",
-                          backgroundColor: "rgba(255,255,255,0.03)",
-                        }}
-                      >
-                        <View
-                          style={{
-                            position: "absolute",
-                            top: 10,
-                            right: 10,
-                            zIndex: 2,
-                            paddingHorizontal: 9,
-                            paddingVertical: 5,
-                            borderRadius: 999,
-                            backgroundColor: "rgba(8,10,18,0.70)",
-                            borderWidth: 1,
-                            borderColor: "rgba(255,255,255,0.12)",
-                          }}
-                        >
-                          <Text
-                            style={{
-                              color: "#fff",
-                              fontSize: 10,
-                              fontWeight: "900",
-                            }}
-                          >
-                            AI
-                          </Text>
-                        </View>
-
-                        <View
-                          style={{
-                            flex: 1,
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        ></View>
-                      </View>
-                    </View>
-
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={{
-                          color: TXT,
-                          fontSize: 18,
-                          lineHeight: 24,
-                          fontWeight: "900",
-                          marginBottom: 8,
-                        }}
-                      >
-                        Demande ton chemin dans le métro
-                      </Text>
+                        style={[
+                          styles.stepDot,
+                          done && {
+                            backgroundColor: accent,
+                            opacity: active ? 1 : 0.7,
+                          },
+                        ]}
+                      />
 
                       <Text
-                        style={{
-                          color: SOFT,
-                          fontSize: 13,
-                          lineHeight: 19,
-                          marginBottom: 12,
-                        }}
+                        style={[
+                          styles.stepLabel,
+                          active && {
+                            color: TXT,
+                            fontFamily: fonts.bold,
+                          },
+                        ]}
                       >
-                        Choisis un trajet puis lance une scène guidée avec des
-                        réponses prêtes à l'emploi.
+                        {s}
                       </Text>
-
-                      <View
-                        style={{
-                          alignSelf: "flex-start",
-                          paddingHorizontal: 10,
-                          paddingVertical: 6,
-                          borderRadius: 999,
-                          backgroundColor: "rgba(255,255,255,0.05)",
-                          borderWidth: 1,
-                          borderColor: "rgba(255,255,255,0.08)",
-                        }}
-                      >
-                        <Text
-                          style={{
-                            color: "rgba(255,255,255,0.82)",
-                            fontSize: 11,
-                            fontWeight: "800",
-                          }}
-                        >
-                          3 trajets • aide FR
-                        </Text>
-                      </View>
                     </View>
-                  </View>
-                </LinearGradient>
+                  );
+                })}
               </View>
 
-              <View style={{ marginBottom: 20 }}>
-                <SectionTitle
-                  title="Choisissez votre scénario"
-                  subtitle="Sélectionnez un trajet pour commencer un dialogue simple et guidé."
+              <View
+                style={[
+                  styles.videoContainer,
+                  {
+                    height: videoHeight,
+                    borderColor:
+                      mode === "real"
+                        ? "rgba(34,211,238,0.40)"
+                        : "rgba(168,85,247,0.42)",
+                  },
+                ]}
+              >
+                <VideoView
+                  player={player}
+                  style={styles.video}
+                  contentFit="contain"
+                  nativeControls={false}
+                  allowsFullscreen={false}
+                  allowsPictureInPicture={false}
                 />
 
-                <View style={{ gap: 12 }}>
-                  {safeLessons.map((lesson) => (
-                    <ScenarioCard
-                      key={lesson.id}
-                      lesson={lesson}
-                      selectedLessonId={selectedLessonId}
-                      onPress={() => setSelectedLessonId(lesson.id)}
-                      disabled={isTransitioning}
-                    />
-                  ))}
-                </View>
-
-                <Pressable
-                  onPress={startSelectedLesson}
-                  disabled={isTransitioning}
-                  style={({ pressed }) => ({
-                    marginTop: 16,
-                    marginBottom: 8,
-                    borderRadius: 18,
-                    overflow: "hidden",
-                    opacity: pressed ? 0.94 : 1,
-                  })}
-                >
-                  <LinearGradient
-                    colors={["rgba(124,58,237,0.95)", "rgba(34,211,238,0.92)"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{
-                      minHeight: 58,
-                      borderRadius: 18,
-                      borderWidth: 1,
-                      borderColor: "rgba(255,255,255,0.12)",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      paddingHorizontal: 16,
-                    }}
-                  >
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 8,
-                      }}
-                    >
-                      <Text style={{ color: "#fff", fontSize: 15 }}>▶</Text>
-                      <Text
-                        style={{
-                          color: "#fff",
-                          fontSize: 16,
-                          fontWeight: "900",
-                          letterSpacing: 0.2,
-                        }}
-                      >
-                        Démarrer la conversation
-                      </Text>
-                    </View>
-                  </LinearGradient>
-                </Pressable>
-              </View>
-            </>
-          ) : (
-            <>
-              <View
-                style={{
-                  borderRadius: 24,
-                  borderWidth: 1,
-                  borderColor: LINE,
-                  backgroundColor: CARD_SOFT,
-                  overflow: "hidden",
-                  marginBottom: 14,
-                }}
-              >
                 <LinearGradient
-                  colors={[
-                    "rgba(34,211,238,0.08)",
-                    "rgba(59,130,246,0.05)",
-                    "rgba(168,85,247,0.04)",
-                    "rgba(255,255,255,0.02)",
-                  ]}
-                  style={{
-                    paddingHorizontal: 16,
-                    paddingTop: 12,
-                    paddingBottom: 12,
-                  }}
-                >
-                  <View style={{ alignItems: "center" }}>
-                    <View
-                      style={{
-                        width: 138,
-                        height: 164,
-                        borderRadius: 26,
-                        overflow: "hidden",
-                        borderWidth: 1,
-                        borderColor: "rgba(255,255,255,0.12)",
-                        backgroundColor: "rgba(255,255,255,0.03)",
-                        marginBottom: 8,
-                      }}
-                    >
-                      <View
-                        style={{
-                          position: "absolute",
-                          top: 10,
-                          right: 10,
-                          zIndex: 2,
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 6,
-                          paddingHorizontal: 9,
-                          paddingVertical: 5,
-                          borderRadius: 999,
-                          backgroundColor: "rgba(8,10,18,0.70)",
-                          borderWidth: 1,
-                          borderColor: "rgba(255,255,255,0.12)",
-                        }}
-                      >
-                        <Text style={{ color: "#fff", fontSize: 11 }}>🎙️</Text>
-                        <Text
-                          style={{
-                            color: "#fff",
-                            fontSize: 10,
-                            fontWeight: "900",
-                          }}
-                        >
-                          AI
-                        </Text>
-                      </View>
-                    </View>
-
-                    {!!lastUserMessage && (
-                      <View
-                        style={{
-                          width: "92%",
-                          alignSelf: "center",
-                          borderRadius: 16,
-                          paddingHorizontal: 12,
-                          paddingVertical: 10,
-                          backgroundColor: USER_BUBBLE,
-                          borderWidth: 1,
-                          borderColor: "rgba(255,255,255,0.08)",
-                          marginBottom: 8,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            color: "#fff",
-                            fontSize: 14,
-                            lineHeight: 19,
-                            fontWeight: "900",
-                          }}
-                        >
-                          {lastUserMessage.label}
-                        </Text>
-                      </View>
-                    )}
-
-                    <Animated.View
-                      style={{
-                        width: "94%",
-                        alignSelf: "center",
-                        opacity: fadeAnim,
-                        transform: [{ translateY: translateAnim }],
-                      }}
-                    >
-                      <Animated.View
-                        style={{
-                          borderRadius: 16,
-                          paddingHorizontal: 12,
-                          paddingVertical: 11,
-                          backgroundColor: BUBBLE,
-                          borderWidth: 1,
-                          borderColor: speaking
-                            ? speakingBorderColor
-                            : "rgba(255,255,255,0.08)",
-                        }}
-                      >
-                        <Text
-                          style={{
-                            color: TXT,
-                            fontSize: 15,
-                            lineHeight: 20,
-                            fontWeight: "900",
-                          }}
-                        >
-                          {displayedStep?.korean ?? ""}
-                        </Text>
-
-                        {!!displayedStep?.romanization && (
-                          <Text
-                            style={{
-                              color: "rgba(255,255,255,0.58)",
-                              fontSize: 11,
-                              lineHeight: 16,
-                              marginTop: 5,
-                              fontStyle: "italic",
-                            }}
-                          >
-                            {displayedStep.romanization}
-                          </Text>
-                        )}
-
-                        {!!displayedStep?.french && (
-                          <Text
-                            style={{
-                              color: "rgba(255,255,255,0.72)",
-                              fontSize: 12,
-                              lineHeight: 17,
-                              marginTop: 5,
-                            }}
-                          >
-                            {displayedStep.french}
-                          </Text>
-                        )}
-                      </Animated.View>
-                    </Animated.View>
-
-                    <View
-                      style={{
-                        width: "100%",
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginTop: 8,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: SOFT,
-                          fontSize: 12,
-                          fontWeight: "800",
-                        }}
-                      >
-                        {currentLesson.shortTitle}
-                      </Text>
-
-                      <Pressable
-                        onPress={returnToLessonPicker}
-                        style={{
-                          paddingHorizontal: 10,
-                          paddingVertical: 7,
-                          borderRadius: 999,
-                          backgroundColor: CARD,
-                          borderWidth: 1,
-                          borderColor: "rgba(255,255,255,0.08)",
-                        }}
-                      >
-                        <Text
-                          style={{
-                            color: "#fff",
-                            fontSize: 12,
-                            fontWeight: "900",
-                          }}
-                        >
-                          Changer
-                        </Text>
-                      </Pressable>
-                    </View>
-                  </View>
-                </LinearGradient>
+                  colors={["transparent", "rgba(0,0,0,0.62)"]}
+                  style={styles.videoOverlay}
+                />
               </View>
 
-              <View
-                style={{
-                  borderRadius: 22,
-                  padding: 14,
-                  backgroundColor: "rgba(10,12,22,0.96)",
-                  borderWidth: 1,
-                  borderColor: LINE,
-                  marginBottom: 8,
+              <Pressable
+                disabled={!isReviewableTranscript}
+                onPress={() => {
+                  if (!isReviewableTranscript) return;
+                  setIsTranscriptOpen((prev) => !prev);
                 }}
+                style={[
+                  styles.aiCard,
+                  isStartChoiceNode && styles.aiCardCompact,
+                  shouldCollapseTranscript && styles.aiCardCollapsed,
+                ]}
               >
-                {metroState.finished ? (
-                  <>
-                    <Text
-                      style={{
-                        color: TXT,
-                        fontSize: 16,
-                        fontWeight: "900",
-                        marginBottom: 8,
-                      }}
-                    >
-                      Scène terminée
-                    </Text>
+                <Text
+                  style={[
+                    styles.aiKr,
+                    isStartChoiceNode && styles.aiIntroText,
+                    shouldCollapseTranscript && styles.aiDotsText,
+                  ]}
+                >
+                  {displayedKoreanText}
+                </Text>
 
-                    <Text
-                      style={{
-                        color: SOFT,
-                        fontSize: 13,
-                        lineHeight: 18,
-                        marginBottom: 12,
-                      }}
-                    >
-                      Vous pouvez réécouter, recommencer ou changer de trajet.
-                    </Text>
+                {shouldShowFrench ? (
+                  <Text style={styles.aiFr}>{currentNode?.french}</Text>
+                ) : null}
 
-                    <View style={{ flexDirection: "row", gap: 8 }}>
-                      <SmallAction label="🔊 Réécouter" onPress={replayAi} />
-                      <SmallAction
-                        label="↺ Recommencer"
-                        onPress={restartScene}
-                      />
-                    </View>
-                  </>
-                ) : (
-                  <>
-                    <Text
-                      style={{
-                        color: TXT,
-                        fontSize: 16,
-                        fontWeight: "900",
-                        marginBottom: 10,
-                      }}
-                    >
-                      Ta réponse
-                    </Text>
+                {isReviewableTranscript ? (
+                  <Text style={styles.transcriptHint}>
+                    {isTranscriptOpen
+                      ? "Appuyer pour refermer"
+                      : "Appuyer pour revoir"}
+                  </Text>
+                ) : null}
+              </Pressable>
+            </View>
+          </View>
 
-                    <ChoiceChips
-                      choices={currentChoices}
-                      disabled={isTransitioning}
-                      selectedId={selectedChoiceId}
-                      onSelect={(choice) => {
-                        const fullChoice = currentStep?.choices?.find(
-                          (item) => item.id === choice.id,
-                        );
-                        if (fullChoice) {
-                          handleChoice(fullChoice);
+          <ScrollView
+            ref={scrollRef}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={[
+              styles.interactionScroll,
+              { paddingBottom: Math.max(22, insets.bottom + 8) },
+            ]}
+          >
+            <View style={styles.interactionSection}>
+              <Text style={styles.sectionTitle}>Ta réponse</Text>
+
+              {isSceneEnded ? (
+                <View style={styles.endCard}>
+                  <Text style={styles.endTitle}>Scène terminée</Text>
+
+                  <Text style={styles.endSubtitle}>
+                    Tu peux rejouer cette scène ou revenir au menu.
+                  </Text>
+
+                  <View style={styles.endActions}>
+                    <Pressable
+                      onPress={handleRestart}
+                      style={({ pressed }) => [
+                        styles.endActionPrimary,
+                        { opacity: pressed ? 0.92 : 1 },
+                      ]}
+                    >
+                      <LinearGradient
+                        colors={
+                          mode === "real" ? [CYAN, "#56CCF2"] : [PURPLE, PINK]
                         }
-                      }}
-                    />
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.endActionPrimaryInner}
+                      >
+                        <Text style={styles.endActionPrimaryText}>Rejouer</Text>
+                      </LinearGradient>
+                    </Pressable>
 
-                    {!!selectedChoiceHint && (
-                      <HintCard text={selectedChoiceHint} />
-                    )}
-
-                    <View
-                      style={{ flexDirection: "row", gap: 8, marginTop: 12 }}
+                    <Pressable
+                      onPress={() => router.back()}
+                      style={({ pressed }) => [
+                        styles.endActionSecondary,
+                        { opacity: pressed ? 0.9 : 1 },
+                      ]}
                     >
-                      <SmallAction label="🔊 Réécouter" onPress={replayAi} />
-                      <SmallAction
-                        label="↺ Recommencer"
-                        onPress={restartScene}
-                      />
-                    </View>
-                  </>
-                )}
-              </View>
-            </>
-          )}
-        </ScrollView>
+                      <Text style={styles.endActionSecondaryText}>Retour</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ) : isUserChoice ? (
+                <View style={styles.choicesGrid}>
+                  {currentNode?.choices?.map((choice) => {
+                    const isSelected = selectedChoiceId === choice.id;
+                    const accent = mode === "real" ? CYAN : PURPLE;
+
+                    return (
+                      <Pressable
+                        key={choice.id}
+                        onPress={() => handleChoice(choice)}
+                        style={({ pressed }) => [
+                          styles.choiceBtn,
+                          isSelected && {
+                            borderColor: accent,
+                            backgroundColor: "rgba(255,255,255,0.08)",
+                          },
+                          pressed && { opacity: 0.92 },
+                        ]}
+                      >
+                        <View
+                          pointerEvents="none"
+                          style={[
+                            styles.choiceGlow,
+                            {
+                              backgroundColor:
+                                mode === "real"
+                                  ? "rgba(34,211,238,0.08)"
+                                  : "rgba(168,85,247,0.10)",
+                            },
+                          ]}
+                        />
+
+                        <Text style={styles.choiceKr}>{choice.korean}</Text>
+                        <Text style={styles.choiceFr}>{choice.label}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              ) : (
+                <View style={styles.waitingCard}>
+                  <View style={styles.waitingPulseRow}>
+                    <View style={styles.waitingDot} />
+
+                    <Text style={styles.waitingTxt}>
+                      Écoute de l’interlocuteur...
+                    </Text>
+                  </View>
+
+                  <Text style={styles.waitingSub}>
+                    La scène continue automatiquement.
+                  </Text>
+                </View>
+              )}
+            </View>
+          </ScrollView>
+        </View>
       </SafeAreaView>
     </LinearGradient>
   );
 }
+
+// ==================== STYLES ====================
+const styles = StyleSheet.create({
+  body: {
+    flex: 1,
+  },
+
+  topFixedSection: {
+    paddingHorizontal: 20,
+    paddingTop: 6,
+  },
+
+  topInner: {
+    flexShrink: 0,
+  },
+
+  interactionScroll: {
+    paddingHorizontal: 20,
+    paddingTop: 26,
+  },
+
+  glow: {
+    position: "absolute",
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+  },
+
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+  },
+
+  backBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+  },
+
+  backTxt: {
+    color: TXT,
+    fontSize: 18,
+  },
+
+  modeBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    borderRadius: 99,
+    borderWidth: 1,
+    backgroundColor: "rgba(255,255,255,0.03)",
+  },
+
+  modeTxt: {
+    fontSize: 10,
+    fontFamily: fonts.bold,
+    letterSpacing: 1.4,
+  },
+
+  stepsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 22,
+    marginTop: 6,
+  },
+
+  stepWrapper: {
+    alignItems: "center",
+    flex: 1,
+  },
+
+  stepDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "rgba(255,255,255,0.16)",
+    marginBottom: 8,
+  },
+
+  aiIntroText: {
+    fontSize: 15,
+    lineHeight: 21,
+    fontFamily: fonts.medium,
+    marginBottom: 0,
+  },
+
+  stepLabel: {
+    color: MUTED,
+    fontSize: 12,
+    fontFamily: fonts.medium,
+  },
+
+  videoContainer: {
+    width: "88%",
+    alignSelf: "center",
+    borderRadius: 32,
+    overflow: "hidden",
+    backgroundColor: "#050508",
+    borderWidth: 1,
+  },
+  video: {
+    flex: 1,
+    transform: [{ scale: 1.58 }, { translateY: 40 }],
+  },
+
+  videoOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 88,
+  },
+
+  aiCardCollapsed: {
+    paddingVertical: 12,
+  },
+
+  aiDotsText: {
+    fontSize: 24,
+    lineHeight: 28,
+    marginBottom: 4,
+    letterSpacing: 2,
+  },
+
+  transcriptHint: {
+    color: SOFT,
+    fontSize: 12,
+    lineHeight: 17,
+    textAlign: "center",
+    fontFamily: fonts.medium,
+    marginTop: 2,
+  },
+
+  aiCardCompact: {
+    marginTop: -20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 22,
+  },
+
+  aiCard: {
+    marginTop: -20,
+    marginHorizontal: 18,
+    backgroundColor: "rgba(10,13,26,0.96)",
+    borderRadius: 26,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    shadowColor: "#000",
+    shadowOpacity: 0.32,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 7,
+  },
+
+  aiKr: {
+    color: TXT,
+    fontSize: 19,
+    lineHeight: 31,
+    fontFamily: fonts.kr,
+    textAlign: "center",
+    marginBottom: 10,
+  },
+
+  aiFr: {
+    color: MUTED,
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: "center",
+    fontStyle: "italic",
+  },
+
+  interactionSection: {
+    minHeight: 220,
+  },
+
+  sectionTitle: {
+    color: TXT,
+    fontSize: 18,
+    fontFamily: fonts.black,
+    marginBottom: 14,
+    marginLeft: 4,
+  },
+
+  choicesGrid: {
+    gap: 12,
+  },
+
+  choiceBtn: {
+    backgroundColor: "rgba(255,255,255,0.03)",
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: LINE,
+    overflow: "hidden",
+  },
+
+  choiceGlow: {
+    position: "absolute",
+    top: -20,
+    right: -12,
+    width: 86,
+    height: 86,
+    borderRadius: 43,
+  },
+
+  choiceKr: {
+    color: TXT,
+    fontSize: 16,
+    lineHeight: 22,
+    fontFamily: fonts.bold,
+    marginBottom: 6,
+  },
+
+  choiceFr: {
+    color: MUTED,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+
+  waitingCard: {
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(255,255,255,0.025)",
+    paddingVertical: 26,
+    paddingHorizontal: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 132,
+  },
+
+  waitingPulseRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+
+  waitingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "rgba(255,255,255,0.50)",
+    marginRight: 10,
+  },
+
+  waitingTxt: {
+    color: TXT,
+    fontSize: 15,
+    fontFamily: fonts.medium,
+  },
+
+  waitingSub: {
+    color: SOFT,
+    fontSize: 13,
+    textAlign: "center",
+  },
+
+  endCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    backgroundColor: "rgba(255,255,255,0.03)",
+    padding: 18,
+  },
+
+  endTitle: {
+    color: TXT,
+    fontSize: 18,
+    fontFamily: fonts.black,
+    marginBottom: 6,
+  },
+
+  endSubtitle: {
+    color: MUTED,
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+
+  endActions: {
+    gap: 10,
+  },
+
+  endActionPrimary: {
+    borderRadius: 18,
+    overflow: "hidden",
+  },
+
+  endActionPrimaryInner: {
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  endActionPrimaryText: {
+    color: "white",
+    fontSize: 14,
+    fontFamily: fonts.bold,
+  },
+
+  endActionSecondary: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    backgroundColor: "rgba(255,255,255,0.04)",
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  endActionSecondaryText: {
+    color: TXT,
+    fontSize: 14,
+    fontFamily: fonts.bold,
+  },
+});

@@ -8,6 +8,7 @@ import {
   Easing,
   Image,
   ImageBackground,
+  ImageSourcePropType,
   Modal,
   Pressable,
   ScrollView,
@@ -41,11 +42,9 @@ const fonts = {
 };
 
 const ASSETS = {
-  cafe: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=600&auto=format&fit=crop",
-  metro:
-    "https://images.unsplash.com/photo-1538332576228-eb5b4c4de6f5?q=80&w=600&auto=format&fit=crop",
-  restaurant:
-    "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=600&auto=format&fit=crop",
+  cafe: require("../../assets/images/cafeIA.png"),
+  metro: require("../../assets/images/metroIA.png"),
+  restaurant: require("../../assets/images/restaurantIA.png"),
 };
 
 type ThemeKey = "cafe" | "metro" | "restaurant";
@@ -53,7 +52,7 @@ type ThemeKey = "cafe" | "metro" | "restaurant";
 type ThemeConfig = {
   title: string;
   sub: string;
-  image: string;
+  image: ImageSourcePropType;
   accent: string;
   textRoute: string;
   guidedRoute: string;
@@ -297,7 +296,12 @@ function ThemeCard({
       ]}
     >
       <View style={styles.cinemaVignette}>
-        <Image source={{ uri: config.image }} style={styles.vignetteImage} />
+        <Image
+          source={config.image}
+          style={styles.vignetteImage}
+          resizeMode="contain"
+        />
+
         <LinearGradient
           colors={["transparent", "rgba(0,0,0,0.8)"]}
           style={StyleSheet.absoluteFill}
@@ -374,7 +378,11 @@ function ThemeModeSheet({
           <View style={styles.sheetHandle} />
 
           <View style={styles.sheetHeader}>
-            <Image source={{ uri: config.image }} style={styles.sheetHeroImg} />
+            <Image
+              source={config.image}
+              style={styles.sheetHeroImg}
+              resizeMode="contain"
+            />{" "}
             <View style={styles.sheetHeaderInfo}>
               <Text style={styles.sheetTitle}>{config.title}</Text>
               <Text style={styles.sheetSub}>{config.sub}</Text>
@@ -639,9 +647,14 @@ const styles = StyleSheet.create({
     aspectRatio: 16 / 9,
     borderRadius: 28,
     overflow: "hidden",
-    backgroundColor: "#111",
+    backgroundColor: "#050508",
   },
-  vignetteImage: { ...StyleSheet.absoluteFillObject, opacity: 0.8 },
+  vignetteImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: "100%",
+    height: "100%",
+    opacity: 0.9,
+  },
   vignetteContent: {
     position: "absolute",
     bottom: 18,

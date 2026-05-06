@@ -164,7 +164,12 @@ export default function CafeIaScreen() {
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isSceneEnded, setIsSceneEnded] = useState(false);
+  const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
 
+  const [lastIaTranscript, setLastIaTranscript] = useState<{
+    korean: string;
+    french?: string;
+  } | null>(null);
   const currentScenario = useMemo(() => {
     return mode === "real"
       ? attachRealVideosToScenario(cafeDialogueData.real)
@@ -199,6 +204,13 @@ export default function CafeIaScreen() {
   const goToNextNode = useCallback((node?: DialogueNodeWithVideo) => {
     if (!node || !mountedRef.current) return;
 
+    if (node.type === "ia") {
+      setLastIaTranscript({
+        korean: node.korean || "...",
+        french: node.french,
+      });
+    }
+
     if (node.nextNodeId) {
       setCurrentNodeId(node.nextNodeId);
     } else {
@@ -211,6 +223,8 @@ export default function CafeIaScreen() {
     setSelectedChoiceId(null);
     setIsTransitioning(false);
     setIsSceneEnded(false);
+    setIsTranscriptOpen(false);
+    setLastIaTranscript(null);
     hasAdvancedFromVideoRef.current = false;
   }, [currentScenario]);
 
@@ -224,6 +238,7 @@ export default function CafeIaScreen() {
 
   useEffect(() => {
     hasAdvancedFromVideoRef.current = false;
+    setIsTranscriptOpen(false);
 
     if (iaAutoTimerRef.current) {
       clearTimeout(iaAutoTimerRef.current);
@@ -342,10 +357,33 @@ export default function CafeIaScreen() {
     setSelectedChoiceId(null);
     setIsTransitioning(false);
     setIsSceneEnded(false);
+    setIsTranscriptOpen(false);
+    setLastIaTranscript(null);
     hasAdvancedFromVideoRef.current = false;
   };
-
   const isUserChoice = currentNode?.type === "user_choice";
+
+  const isReviewableTranscript =
+    currentNode?.type === "user_choice" && !!lastIaTranscript;
+
+  const shouldCollapseTranscript = isReviewableTranscript && !isTranscriptOpen;
+
+  const transcriptKorean = isReviewableTranscript
+    ? lastIaTranscript?.korean
+    : currentNode?.korean;
+
+  const transcriptFrench = isReviewableTranscript
+    ? lastIaTranscript?.french
+    : currentNode?.french;
+
+  const displayedKoreanText = shouldCollapseTranscript
+    ? "..."
+    : transcriptKorean || "...";
+
+  const shouldShowFrench =
+    !shouldCollapseTranscript &&
+    typeof transcriptFrench === "string" &&
+    transcriptFrench.trim().length > 0;
 
   return (
     <LinearGradient colors={[BG_DEEP, BG_NAVY]} style={{ flex: 1 }}>
@@ -455,7 +493,7 @@ export default function CafeIaScreen() {
                   <VideoView
                     player={player}
                     style={styles.video}
-                    contentFit="cover"
+                    contentFit="contain"
                     nativeControls={false}
                     allowsFullscreen={false}
                     allowsPictureInPicture={false}
@@ -472,13 +510,38 @@ export default function CafeIaScreen() {
                 />
               </View>
 
-              <View style={styles.aiCard}>
-                <Text style={styles.aiKr}>{currentNode?.korean || "..."}</Text>
+              <Pressable
+                disabled={!isReviewableTranscript}
+                onPress={() => {
+                  if (!isReviewableTranscript) return;
+                  setIsTranscriptOpen((prev) => !prev);
+                }}
+                style={[
+                  styles.aiCard,
+                  shouldCollapseTranscript && styles.aiCardCollapsed,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.aiKr,
+                    shouldCollapseTranscript && styles.aiDotsText,
+                  ]}
+                >
+                  {displayedKoreanText}
+                </Text>
 
-                {currentNode?.french ? (
-                  <Text style={styles.aiFr}>{currentNode.french}</Text>
+                {shouldShowFrench ? (
+                  <Text style={styles.aiFr}>{transcriptFrench}</Text>
                 ) : null}
-              </View>
+
+                {isReviewableTranscript ? (
+                  <Text style={styles.transcriptHint}>
+                    {isTranscriptOpen
+                      ? "Appuyer pour refermer"
+                      : "Appuyer pour revoir"}
+                  </Text>
+                ) : null}
+              </Pressable>
             </View>
           </View>
 
@@ -682,7 +745,8 @@ const styles = StyleSheet.create({
   },
 
   videoContainer: {
-    width: "100%",
+    width: "88%",
+    alignSelf: "center",
     borderRadius: 32,
     overflow: "hidden",
     backgroundColor: "#000",
@@ -691,6 +755,7 @@ const styles = StyleSheet.create({
 
   video: {
     flex: 1,
+    transform: [{ scale: 1.4 }, { translateY: 10 }],
   },
 
   videoFallback: {
@@ -711,9 +776,28 @@ const styles = StyleSheet.create({
     right: 0,
     height: 88,
   },
+  aiCardCollapsed: {
+    paddingVertical: 12,
+  },
+
+  aiDotsText: {
+    fontSize: 24,
+    lineHeight: 28,
+    marginBottom: 4,
+    letterSpacing: 2,
+  },
+
+  transcriptHint: {
+    color: SOFT,
+    fontSize: 12,
+    lineHeight: 17,
+    textAlign: "center",
+    fontFamily: fonts.medium,
+    marginTop: 2,
+  },
 
   aiCard: {
-    marginTop: -28,
+    marginTop: -20,
     marginHorizontal: 18,
     backgroundColor: "rgba(10,13,26,0.96)",
     borderRadius: 26,
@@ -726,6 +810,20 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
     elevation: 7,
+  },
+
+  aiCardCompact: {
+    marginTop: -20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 22,
+  },
+
+  aiIntroText: {
+    fontSize: 15,
+    lineHeight: 21,
+    fontFamily: fonts.medium,
+    marginBottom: 0,
   },
 
   aiKr: {
