@@ -1,1025 +1,783 @@
+import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useLocalSearchParams } from "expo-router";
-import React, { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { router } from "expo-router";
+import * as Speech from "expo-speech";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Animated,
+  Easing,
+  ImageBackground,
+  ImageSourcePropType,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  Vibration,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const BG0 = "#070812";
-const TXT = "rgba(255,255,255,0.92)";
-const MUTED = "rgba(255,255,255,0.65)";
-const LINE = "rgba(255,255,255,0.12)";
-const CARD = "rgba(255,255,255,0.06)";
-const CARD2 = "rgba(255,255,255,0.09)";
-const NEON = "rgba(34,211,238,0.55)";
-const NEON_BG = "rgba(34,211,238,0.14)";
-const PINK = "rgba(251,113,133,0.45)";
-const PINK_BG = "rgba(251,113,133,0.12)";
+import metroLesson from "./data/metro/myeongdongToItaewon";
 
-// (Optionnel) TTS : npx expo install expo-speech
-let Speech: any = null;
-try {
-  Speech = require("expo-speech");
-} catch {}
-
-type TabKey = "Essentiels" | "Itinéraire" | "Sorties" | "Dialogues" | "Quiz";
-
-function Card({ children }: { children: React.ReactNode }) {
-  return (
-    <View
-      style={{
-        backgroundColor: CARD,
-        borderColor: LINE,
-        borderWidth: 1,
-        borderRadius: 22,
-        padding: 14,
-        marginBottom: 14,
-      }}
-    >
-      {children}
-    </View>
-  );
-}
-
-function Badge({
-  text,
-  tone = "neon",
-}: {
-  text: string;
-  tone?: "neon" | "pink" | "ghost";
-}) {
-  const bg =
-    tone === "neon"
-      ? "rgba(34,211,238,0.10)"
-      : tone === "pink"
-        ? "rgba(251,113,133,0.10)"
-        : "rgba(255,255,255,0.06)";
-  const border =
-    tone === "neon"
-      ? "rgba(34,211,238,0.35)"
-      : tone === "pink"
-        ? "rgba(251,113,133,0.28)"
-        : LINE;
-
-  return (
-    <View
-      style={{
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: border,
-        backgroundColor: bg,
-      }}
-    >
-      <Text style={{ color: TXT, fontWeight: "900", fontSize: 12 }}>
-        {text}
-      </Text>
-    </View>
-  );
-}
-
-function Button({
-  label,
-  onPress,
-  tone = "neon",
-  disabled,
-}: {
-  label: string;
-  onPress?: () => void;
-  tone?: "neon" | "ghost" | "danger";
-  disabled?: boolean;
-}) {
-  const style =
-    tone === "neon"
-      ? { backgroundColor: NEON_BG, borderColor: NEON }
-      : tone === "danger"
-        ? { backgroundColor: PINK_BG, borderColor: PINK }
-        : { backgroundColor: "rgba(255,255,255,0.06)", borderColor: LINE };
-
-  return (
-    <Pressable
-      disabled={disabled}
-      onPress={onPress}
-      hitSlop={10}
-      style={({ pressed }) => ({
-        opacity: disabled ? 0.5 : pressed ? 0.9 : 1,
-        borderWidth: 1,
-        paddingVertical: 12,
-        paddingHorizontal: 12,
-        borderRadius: 16,
-        alignItems: "center",
-        ...style,
-      })}
-    >
-      <Text style={{ color: TXT, fontWeight: "900" }}>{label}</Text>
-    </Pressable>
-  );
-}
-
-function Tab({
-  label,
-  active,
-  onPress,
-}: {
-  label: TabKey;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      hitSlop={10}
-      style={({ pressed }) => ({
-        opacity: pressed ? 0.9 : 1,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: active ? "rgba(34,211,238,0.65)" : LINE,
-        backgroundColor: active
-          ? "rgba(34,211,238,0.12)"
-          : "rgba(255,255,255,0.05)",
-      })}
-    >
-      <Text style={{ color: TXT, fontWeight: "900", fontSize: 12 }}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
-function RowItem({
-  left,
-  right,
-  sub,
-  onPress,
-}: {
-  left: string;
-  right: string;
-  sub?: string;
-  onPress?: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
-        opacity: pressed ? 0.9 : 1,
-        paddingVertical: 12,
-        paddingHorizontal: 12,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: LINE,
-        backgroundColor: "rgba(255,255,255,0.04)",
-        marginTop: 10,
-      })}
-    >
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
-      >
-        <Text style={{ color: TXT, fontWeight: "900", fontSize: 16 }}>
-          {left}
-        </Text>
-        <Text style={{ color: MUTED, fontWeight: "900", fontSize: 14 }}>
-          {right}
-        </Text>
-      </View>
-      {!!sub && (
-        <Text style={{ color: MUTED, marginTop: 6, lineHeight: 18 }}>
-          {sub}
-        </Text>
-      )}
-    </Pressable>
-  );
-}
-
-function speakKo(text: string, rate = 0.9) {
-  if (!Speech) return;
-  Speech.stop();
-  Speech.speak(text, { language: "ko-KR", rate, pitch: 1.0 });
-}
-
-type Vocab = {
-  kr: string;
-  fr: string;
-  roman?: string;
-  note?: string;
-  say?: string;
-  tags?: ("débutant" | "intermédiaire" | "annonce" | "signalétique")[];
+const COLORS = {
+  bg: "#020306",
+  pink: "#F472B6",
+  cyan: "#22D3EE",
+  gold: "#FDE047",
+  txt: "rgba(255,255,255,0.96)",
+  muted: "rgba(255,255,255,0.60)",
+  glass: "rgba(255,255,255,0.05)",
 };
+
+const METRO_IMAGE = require("../../assets/images/bg-metro-station.png");
 
 type DialogueLine = {
-  who: "Toi" | "Agent" | "Passant" | "Annonce";
+  char: string;
   kr: string;
   fr: string;
-  roman?: string;
-  say?: string;
-  tip?: string;
+  side: "server" | "me";
 };
 
-type QuizQ = {
-  id: string;
-  prompt: string;
-  say: string; // TTS
-  choices: string[];
-  correctIndex: number;
-  explain: string;
+type Expression = {
+  word: string;
+  rom: string;
+  mean: string;
+  context: string;
+};
+
+type Scene = {
+  id: "ai" | "user";
+  tab: string;
+  title: string;
+  koreanTitle: string;
+  description: string;
+  accent: string;
+  image: ImageSourcePropType;
+  dialogue: DialogueLine[];
+  expressions: Expression[];
+};
+
+const uniqueByWord = (items: Expression[]) => {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.word)) return false;
+    seen.add(item.word);
+    return true;
+  });
+};
+
+const buildScenes = (): Scene[] => {
+  const aiSteps = metroLesson.steps.filter(
+    (step) => step.speaker === "ai" && step.korean,
+  );
+
+  const userChoices = metroLesson.steps.flatMap((step) =>
+    (step.choices ?? [])
+      .filter((choice) => choice.korean)
+      .map((choice) => ({
+        ...choice,
+        phase: step.phase,
+      })),
+  );
+
+  const aiExpressions = uniqueByWord(
+    aiSteps.map((step) => ({
+      word: step.korean ?? "",
+      rom: step.romanization ?? "",
+      mean: step.french ?? step.text,
+      context: step.phase
+        ? `Réplique IA du script métro - ${step.phase}.`
+        : "Réplique IA du script métro.",
+    })),
+  );
+
+  const userExpressions = uniqueByWord(
+    userChoices.map((choice) => ({
+      word: choice.korean ?? "",
+      rom: choice.romanization ?? "",
+      mean: choice.label,
+      context: choice.phase
+        ? `Choix utilisateur du script métro - ${choice.phase}.`
+        : "Choix utilisateur du script métro.",
+    })),
+  );
+
+  return [
+    {
+      id: "ai",
+      tab: "IA",
+      title: "Script IA",
+      koreanTitle: "길 안내",
+      description: metroLesson.situation,
+      accent: COLORS.cyan,
+      image: METRO_IMAGE,
+      dialogue: aiSteps.map((step) => ({
+        char: step.phase ?? "IA",
+        kr: step.korean ?? "",
+        fr: step.french ?? step.text,
+        side: "server",
+      })),
+      expressions: aiExpressions,
+    },
+    {
+      id: "user",
+      tab: "User",
+      title: "Réponses User",
+      koreanTitle: "사용자 선택",
+      description: metroLesson.objective,
+      accent: COLORS.pink,
+      image: METRO_IMAGE,
+      dialogue: userChoices.map((choice) => ({
+        char: "User",
+        kr: choice.korean ?? "",
+        fr: choice.label,
+        side: "me",
+      })),
+      expressions: userExpressions,
+    },
+  ];
 };
 
 export default function MetroLesson() {
-  const params = useLocalSearchParams();
-  const lessonId = String(params?.lessonId ?? params?.id ?? "metro_line2");
+  const scenes = useMemo(() => buildScenes(), []);
+  const [activeScene, setActiveScene] = useState<Scene>(scenes[0]);
+  const [previousBackground, setPreviousBackground] =
+    useState<ImageSourcePropType | null>(null);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [visibleMessages, setVisibleMessages] = useState(1);
+  const [isTyping, setIsTyping] = useState(false);
 
-  const [tab, setTab] = useState<TabKey>("Essentiels");
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const bgFadeAnim = useRef(new Animated.Value(0)).current;
+  const tapHintPulse = useRef(new Animated.Value(0)).current;
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // --- “Skin” selon ligne (très simple, juste du texte / badges)
-  const lessonMeta = useMemo(() => {
-    const map: Record<
-      string,
-      { title: string; subtitle: string; lineLabel: string; vibe: string }
-    > = {
-      metro_line2: {
-        title: "Métro — Line 2 (cercle)",
-        subtitle:
-          "Directions, correspondances, sorties (출구), et dialogues utiles.",
-        lineLabel: "Line 2",
-        vibe: "Trajets fréquents (Hongdae ↔ City Hall ↔ Gangnam).",
-      },
-      metro_generic: {
-        title: "Métro — Essentials",
-        subtitle: "Les phrases qui te sauvent partout dans Séoul.",
-        lineLabel: "Métro",
-        vibe: "Mode universel.",
-      },
+  useEffect(() => {
+    setVisibleMessages(1);
+    setIsTyping(false);
+    setSelectedWord(null);
+
+    if (typingTimer.current) {
+      clearTimeout(typingTimer.current);
+      typingTimer.current = null;
+    }
+
+    Speech.stop();
+    fadeAnim.setValue(0);
+
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 600,
+      easing: Easing.out(Easing.back(1)),
+      useNativeDriver: true,
+    }).start();
+  }, [activeScene, fadeAnim]);
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(tapHintPulse, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(tapHintPulse, {
+          toValue: 0,
+          duration: 900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+
+      if (typingTimer.current) {
+        clearTimeout(typingTimer.current);
+      }
+
+      Speech.stop();
     };
-    return map[lessonId] ?? map.metro_generic;
-  }, [lessonId]);
+  }, [tapHintPulse]);
 
-  const essentials = useMemo<Vocab[]>(
-    () => [
-      {
-        kr: "지하철",
-        fr: "métro",
-        roman: "jihacheol",
-        tags: ["débutant"],
-        say: "지하철",
-      },
-      {
-        kr: "노선",
-        fr: "ligne",
-        roman: "noseon",
-        tags: ["débutant"],
-        say: "노선",
-      },
-      {
-        kr: "2호선",
-        fr: "ligne 2",
-        roman: "i-ho-seon",
-        tags: ["débutant"],
-        say: "이호선",
-      },
-      {
-        kr: "환승",
-        fr: "correspondance",
-        roman: "hwanseung",
-        tags: ["débutant"],
-        say: "환승",
-      },
-      {
-        kr: "방향",
-        fr: "direction",
-        roman: "banghyang",
-        tags: ["débutant"],
-        say: "방향",
-      },
-      {
-        kr: "출구",
-        fr: "sortie (numéro)",
-        roman: "chulgu",
-        tags: ["débutant"],
-        say: "출구",
-      },
-      {
-        kr: "몇 번 출구예요?",
-        fr: "C’est la sortie numéro combien ?",
-        roman: "myeot beon chulguyeyo?",
-        tags: ["débutant"],
-        say: "몇 번 출구예요?",
-      },
-      {
-        kr: "여기서 갈아타요",
-        fr: "On change ici (correspondance).",
-        roman: "yeogiseo garatayo",
-        tags: ["débutant"],
-        say: "여기서 갈아타요",
-      },
-      {
-        kr: "반대 방향",
-        fr: "direction opposée",
-        roman: "bandae banghyang",
-        tags: ["intermédiaire"],
-        say: "반대 방향",
-      },
-      {
-        kr: "급행",
-        fr: "express",
-        roman: "geuphaeng",
-        tags: ["intermédiaire"],
-        say: "급행",
-      },
-      {
-        kr: "종착역",
-        fr: "terminus",
-        roman: "jongchag-yeok",
-        tags: ["intermédiaire", "annonce"],
-        say: "종착역",
-      },
-      {
-        kr: "다음 역",
-        fr: "prochaine station",
-        roman: "daeum yeok",
-        tags: ["débutant", "annonce"],
-        say: "다음 역",
-      },
-      {
-        kr: "내리실 문은 오른쪽입니다",
-        fr: "Les portes s’ouvrent à droite.",
-        roman: "naerisil muneun oreunjjog-imnida",
-        tags: ["intermédiaire", "annonce"],
-        say: "내리실 문은 오른쪽입니다",
-      },
-    ],
-    [],
-  );
+  const shouldHighlightHint =
+    !isTyping && visibleMessages < activeScene.dialogue.length;
 
-  // Itinéraire = “mini-plan” de décisions (débutant → intermédiaire)
-  const routeSteps = useMemo(
-    () => [
-      {
-        title: "1) Trouver la bonne ligne",
-        kr: "2호선(초록색) 타세요",
-        fr: "Prenez la ligne 2 (verte).",
-        tip: "Dans Séoul, les lignes ont une couleur. 2호선 est souvent verte.",
-        say: "이호선 타세요",
-      },
-      {
-        title: "2) Vérifier la direction (terminus)",
-        kr: "○○행(방향) 맞아요?",
-        fr: "C’est bien en direction de ○○ ?",
-        tip: "La direction est souvent indiquée par le terminus (…행).",
-        say: "강남행 맞아요?",
-      },
-      {
-        title: "3) Faire une correspondance",
-        kr: "환승은 어디예요?",
-        fr: "La correspondance, c’est où ?",
-        tip: "환승 = correspondance. Ajoute la ligne: ‘9호선 환승…’",
-        say: "환승은 어디예요?",
-      },
-      {
-        title: "4) Sorties (출구) : choisir la bonne",
-        kr: "몇 번 출구로 나가요?",
-        fr: "Je sors par quelle sortie ?",
-        tip: "En Corée, les sorties numérotées sont cruciales. On te répond ‘2번/3번…’",
-        say: "몇 번 출구로 나가요?",
-      },
-    ],
-    [],
-  );
+  const speak = (text: string, id: string) => {
+    Speech.stop();
+    setSelectedWord(id);
+    Vibration.vibrate(8);
 
-  const exitTrainer = useMemo(
-    () => [
-      {
-        area: "Station (exemple)",
-        exits: [
-          {
-            out: "2번 출구",
-            fr: "sortie 2",
-            hint: "vers café / bus stop",
-            say: "이번 출구",
-          },
-          {
-            out: "8번 출구",
-            fr: "sortie 8",
-            hint: "vers shopping street",
-            say: "팔번 출구",
-          },
-          {
-            out: "11번 출구",
-            fr: "sortie 11",
-            hint: "vers parc / office",
-            say: "십일번 출구",
-          },
-        ],
-      },
-      {
-        area: "Directions rapides",
-        exits: [
-          { out: "왼쪽", fr: "à gauche", hint: "왼쪽으로 가세요", say: "왼쪽" },
-          {
-            out: "오른쪽",
-            fr: "à droite",
-            hint: "오른쪽으로 가세요",
-            say: "오른쪽",
-          },
-          { out: "직진", fr: "tout droit", hint: "쭉 가세요", say: "직진" },
-        ],
-      },
-    ],
-    [],
-  );
+    Speech.speak(text, {
+      language: "ko-KR",
+      rate: 0.78,
+      pitch: 1,
+      onDone: () => setSelectedWord(null),
+      onStopped: () => setSelectedWord(null),
+      onError: () => setSelectedWord(null),
+    });
+  };
 
-  const dialogues = useMemo<DialogueLine[]>(
-    () => [
-      {
-        who: "Toi",
-        kr: "저기요, 2호선 어디에서 타요?",
-        fr: "Excusez-moi, où est-ce que je prends la ligne 2 ?",
-        roman: "jeogiyo, i-hoseon eodieseo tayo?",
-        say: "저기요, 이호선 어디에서 타요?",
-      },
-      {
-        who: "Passant",
-        kr: "저쪽으로 가서 내려가면 돼요.",
-        fr: "Allez par là-bas et descendez (les escaliers).",
-        roman: "jeojjogeuro gaseo naeryeogamyeon dwaeyo",
-        say: "저쪽으로 가서 내려가면 돼요.",
-        tip: "‘~면 돼요’ = ‘il suffit de…’ (super utile).",
-      },
-      {
-        who: "Toi",
-        kr: "강남 방향 맞아요?",
-        fr: "C’est bien direction Gangnam ?",
-        roman: "gangnam banghyang majayo?",
-        say: "강남 방향 맞아요?",
-      },
-      {
-        who: "Agent",
-        kr: "네, 이쪽 플랫폼이에요. 반대는 저쪽이에요.",
-        fr: "Oui, c’est ce quai-ci. L’autre direction est là-bas.",
-        roman: "ne, ijjok peullaetpomieyo. bandaeneun jeojjogieyo.",
-        say: "네, 이쪽 플랫폼이에요. 반대는 저쪽이에요.",
-      },
-      {
-        who: "Annonce",
-        kr: "다음 역은 시청, 시청역입니다.",
-        fr: "Prochaine station : City Hall (Si-cheong).",
-        roman: "daeum yeogeun sichyeong, sichyeong-yeog-imnida",
-        say: "다음 역은 시청, 시청역입니다.",
-        tip: "Pattern d’annonce très courant : ‘다음 역은 …입니다’.",
-      },
-      {
-        who: "Toi",
-        kr: "몇 번 출구로 나가야 해요?",
-        fr: "Je dois sortir par quelle sortie ?",
-        roman: "myeot beon chulguro nagaya haeyo?",
-        say: "몇 번 출구로 나가야 해요?",
-      },
-      {
-        who: "Passant",
-        kr: "2번 출구로 나가세요.",
-        fr: "Sortez par la sortie 2.",
-        roman: "i-beon chulguro nagaseyo",
-        say: "이번 출구로 나가세요.",
-      },
-    ],
-    [],
-  );
+  const advanceDialogue = () => {
+    if (isTyping) return;
 
-  // Quiz “sans spoiler” : on joue le son, l’utilisateur choisit la phrase/meaning
-  const quiz = useMemo<QuizQ[]>(
-    () => [
-      {
-        id: "q1",
-        prompt: "Écoute : quelle phrase veut dire “correspondance” ?",
-        say: "환승",
-        choices: ["환승", "출구", "방향"],
-        correctIndex: 0,
-        explain: "환승 = correspondance / changer de ligne.",
-      },
-      {
-        id: "q2",
-        prompt: "Écoute : quelle phrase veut dire “sortie numéro combien ?”",
-        say: "몇 번 출구예요?",
-        choices: ["몇 번 출구예요?", "어디에서 타요?", "반대 방향이에요?"],
-        correctIndex: 0,
-        explain: "몇 번 = quel numéro ; 출구 = sortie.",
-      },
-      {
-        id: "q3",
-        prompt: "Écoute : l’annonce dit quoi ?",
-        say: "다음 역은 시청, 시청역입니다",
-        choices: [
-          "Les portes s’ouvrent à gauche",
-          "Prochaine station : City Hall",
-          "Terminus",
-        ],
-        correctIndex: 1,
-        explain: "다음 역은 …입니다 = prochaine station : …",
-      },
-    ],
-    [],
-  );
+    if (visibleMessages >= activeScene.dialogue.length) {
+      Vibration.vibrate(8);
+      setVisibleMessages(1);
+      setIsTyping(false);
+      return;
+    }
 
-  const [qIndex, setQIndex] = useState(0);
-  const [qSelected, setQSelected] = useState<number | null>(null);
-  const [qShow, setQShow] = useState(false);
-  const q = quiz[qIndex];
+    const nextMessage = activeScene.dialogue[visibleMessages];
 
-  const nextQ = () => {
-    setQSelected(null);
-    setQShow(false);
-    setQIndex((i) => (i + 1) % quiz.length);
+    Vibration.vibrate(8);
+
+    if (nextMessage.side === "server") {
+      setIsTyping(true);
+
+      const delay = 600 + Math.floor(Math.random() * 301);
+
+      typingTimer.current = setTimeout(() => {
+        setIsTyping(false);
+        setVisibleMessages((prev) =>
+          Math.min(prev + 1, activeScene.dialogue.length),
+        );
+      }, delay);
+
+      return;
+    }
+
+    setVisibleMessages((prev) =>
+      Math.min(prev + 1, activeScene.dialogue.length),
+    );
+  };
+
+  const handleSceneChange = (scene: Scene) => {
+    if (scene.id === activeScene.id) return;
+
+    setPreviousBackground(activeScene.image);
+    bgFadeAnim.setValue(1);
+    setActiveScene(scene);
+
+    Animated.timing(bgFadeAnim, {
+      toValue: 0,
+      duration: 420,
+      easing: Easing.inOut(Easing.quad),
+      useNativeDriver: true,
+    }).start(() => {
+      setPreviousBackground(null);
+      bgFadeAnim.setValue(0);
+    });
   };
 
   return (
-    <LinearGradient colors={[BG0, "#0b0b1d", "#0b0f22"]} style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 140 }}>
-        {/* Header */}
-        <Pressable
-          onPress={() => router.back()}
-          style={{ paddingVertical: 8 }}
-          hitSlop={10}
-        >
-          <Text style={{ color: MUTED, fontWeight: "800" }}>← Retour</Text>
-        </Pressable>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.bg}>
+        <ImageBackground
+          source={activeScene.image}
+          style={styles.bgLayer}
+          fadeDuration={0}
+          resizeMode="contain"
+        />
+        {previousBackground ? (
+          <Animated.View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFillObject, { opacity: bgFadeAnim }]}
+          >
+            <ImageBackground
+              source={previousBackground}
+              style={styles.bgLayer}
+              fadeDuration={0}
+              resizeMode="contain"
+            />
+          </Animated.View>
+        ) : null}
+        <View style={styles.overlay} />
 
-        <Text style={{ color: TXT, fontSize: 22, fontWeight: "900" }}>
-          {lessonMeta.title}
-        </Text>
-        <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-          {lessonMeta.subtitle}
-        </Text>
+        <ScrollView contentContainerStyle={styles.scroll}>
+          <View style={styles.header}>
+            <Pressable onPress={() => router.back()} style={styles.backBtn}>
+              <Text style={styles.backArrow}>‹</Text>
+              <Text style={styles.backText}>RETOUR</Text>
+            </Pressable>
 
-        <View style={{ height: 10 }} />
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-          <Badge text={lessonMeta.lineLabel} tone="neon" />
-          <Badge text="Seoul Subway" tone="ghost" />
-          <Badge text={lessonMeta.vibe} tone="pink" />
-        </View>
+            <Text style={styles.headerTitle}>METRO IMMERSION</Text>
+          </View>
 
-        <View style={{ height: 14 }} />
-
-        {/* Tabs */}
-        <Card>
-          <Text style={{ color: TXT, fontWeight: "900" }}>
-            🗺️ Mode immersif
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-            Apprends comme si tu étais à Séoul : signes → choix → phrases →
-            écoute → mini-quiz.
-          </Text>
-
-          <View style={{ height: 12 }} />
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-            {(
-              [
-                "Essentiels",
-                "Itinéraire",
-                "Sorties",
-                "Dialogues",
-                "Quiz",
-              ] as TabKey[]
-            ).map((t) => (
-              <Tab
-                key={t}
-                label={t}
-                active={tab === t}
-                onPress={() => setTab(t)}
-              />
+          <View style={styles.selectorRow}>
+            {scenes.map((scene) => (
+              <Pressable
+                key={scene.id}
+                onPress={() => handleSceneChange(scene)}
+                style={[
+                  styles.selectorItem,
+                  activeScene.id === scene.id && {
+                    borderColor: scene.accent,
+                    backgroundColor: "rgba(255,255,255,0.1)",
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.selectorText,
+                    activeScene.id === scene.id && { color: scene.accent },
+                  ]}
+                >
+                  {scene.tab}
+                </Text>
+              </Pressable>
             ))}
           </View>
-        </Card>
 
-        {/* TAB: Essentiels */}
-        {tab === "Essentiels" && (
-          <Card>
-            <Text style={{ color: TXT, fontSize: 18, fontWeight: "900" }}>
-              📌 Vocab essentiel
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-              Tap sur une ligne → tu vois le sens + romanisation + tu peux
-              écouter.
-            </Text>
+          <Animated.View
+            style={[
+              styles.stage,
+              {
+                opacity: fadeAnim,
+                transform: [
+                  {
+                    scale: fadeAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.95, 1],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <BlurView intensity={40} tint="dark" style={styles.glassCard}>
+              <LinearGradient
+                colors={[`${activeScene.accent}20`, "transparent"]}
+                style={StyleSheet.absoluteFill}
+              />
 
-            {essentials.map((v, idx) => (
-              <View key={`${v.kr}_${idx}`}>
-                <RowItem
-                  left={v.kr}
-                  right={v.fr}
-                  sub={[
-                    v.roman ? `• ${v.roman}` : "",
-                    v.tags?.length ? `• ${v.tags.join(" • ")}` : "",
-                    v.note ? `• ${v.note}` : "",
-                  ]
-                    .filter(Boolean)
-                    .join("\n")}
-                  onPress={() => speakKo(v.say ?? v.kr, 0.9)}
-                />
-              </View>
-            ))}
-
-            <View style={{ height: 12 }} />
-            <Button
-              label="🔊 Écouter pack (rapide)"
-              onPress={() =>
-                speakKo("지하철 노선 환승 방향 출구 몇 번 출구예요", 0.9)
-              }
-            />
-            <View style={{ height: 10 }} />
-            <Button
-              tone="danger"
-              label="⏹ Stop audio"
-              onPress={() => Speech?.stop?.()}
-            />
-          </Card>
-        )}
-
-        {/* TAB: Itinéraire */}
-        {tab === "Itinéraire" && (
-          <Card>
-            <Text style={{ color: TXT, fontSize: 18, fontWeight: "900" }}>
-              🧭 Itinéraire guidé
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-              4 étapes “comme en vrai”. Lis → écoute → répète.
-            </Text>
-
-            {routeSteps.map((s, idx) => (
-              <View
-                key={idx}
-                style={{
-                  marginTop: 10,
-                  borderRadius: 18,
-                  borderWidth: 1,
-                  borderColor: LINE,
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  padding: 12,
-                }}
-              >
-                <Text style={{ color: TXT, fontWeight: "900" }}>{s.title}</Text>
-                <Text
-                  style={{
-                    color: TXT,
-                    marginTop: 8,
-                    fontWeight: "900",
-                    fontSize: 16,
-                  }}
-                >
-                  {s.kr}
+              <View style={styles.sceneMetaRow}>
+                <Text style={[styles.sceneSub, { color: activeScene.accent }]}>
+                  {activeScene.koreanTitle}
                 </Text>
-                <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-                  {s.fr}
-                </Text>
-                <Text style={{ color: MUTED, marginTop: 8, lineHeight: 20 }}>
-                  💡 {s.tip}
-                </Text>
-
-                <View style={{ height: 10 }} />
-                <View
-                  style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}
-                >
-                  <Button
-                    label="🔊 Écouter"
-                    onPress={() => speakKo(s.say ?? s.kr, 0.9)}
-                  />
-                  <Button
-                    tone="ghost"
-                    label="🗣️ Répéter x2"
-                    onPress={() =>
-                      speakKo(`${s.say ?? s.kr}… ${s.say ?? s.kr}`, 0.85)
-                    }
-                  />
-                </View>
               </View>
-            ))}
-            <View style={{ height: 10 }} />
-            <Button
-              tone="danger"
-              label="⏹ Stop audio"
-              onPress={() => Speech?.stop?.()}
-            />
-          </Card>
-        )}
 
-        {/* TAB: Sorties */}
-        {tab === "Sorties" && (
-          <Card>
-            <Text style={{ color: TXT, fontSize: 18, fontWeight: "900" }}>
-              🚪 Sorties & directions
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-              En Corée, la sortie (출구) est la clé. Entraîne-toi avec des
-              sorties + directions.
-            </Text>
+              <Text style={styles.sceneTitle}>{activeScene.title}</Text>
+              <Text style={styles.sceneDesc}>{activeScene.description}</Text>
 
-            {exitTrainer.map((block, idx) => (
-              <View
-                key={idx}
-                style={{
-                  marginTop: 12,
-                  borderRadius: 18,
-                  borderWidth: 1,
-                  borderColor: LINE,
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  padding: 12,
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text style={{ color: TXT, fontWeight: "900" }}>
-                    {block.area}
-                  </Text>
-                  <Badge text="train like IRL" tone="neon" />
-                </View>
+              <Pressable onPress={advanceDialogue} style={styles.dialogueBox}>
+                {activeScene.dialogue
+                  .slice(0, visibleMessages)
+                  .map((d, index) => {
+                    const isMe = d.side === "me";
 
-                {block.exits.map((e, j) => (
-                  <RowItem
-                    key={j}
-                    left={e.out}
-                    right={e.fr}
-                    sub={e.hint ? `💡 ${e.hint}` : undefined}
-                    onPress={() => speakKo(e.say ?? e.out, 0.9)}
-                  />
-                ))}
-              </View>
-            ))}
+                    return (
+                      <View
+                        key={`${activeScene.id}-dialogue-${index}`}
+                        style={[
+                          styles.bubble,
+                          isMe ? styles.bubbleRight : styles.bubbleLeft,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.charName,
+                            { color: activeScene.accent },
+                          ]}
+                        >
+                          {d.char}
+                        </Text>
+                        <Text style={styles.krText}>{d.kr}</Text>
+                        <Text style={styles.frText}>{d.fr}</Text>
+                      </View>
+                    );
+                  })}
 
-            <View style={{ height: 12 }} />
-            <Button
-              label="🔊 Drill : sorties"
-              onPress={() =>
-                speakKo("몇 번 출구예요? 이번 출구 팔번 출구 십일번 출구", 0.85)
-              }
-            />
-            <View style={{ height: 10 }} />
-            <Button
-              tone="danger"
-              label="⏹ Stop audio"
-              onPress={() => Speech?.stop?.()}
-            />
-          </Card>
-        )}
-
-        {/* TAB: Dialogues */}
-        {tab === "Dialogues" && (
-          <Card>
-            <Text style={{ color: TXT, fontSize: 18, fontWeight: "900" }}>
-              💬 Dialogues immersifs
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-              Mode “roleplay” : lis la ligne, écoute, puis répète. (Très
-              efficace pour parler vite en vrai.)
-            </Text>
-
-            {dialogues.map((d, idx) => {
-              const tone =
-                d.who === "Toi"
-                  ? "rgba(34,211,238,0.08)"
-                  : "rgba(255,255,255,0.04)";
-              const border = d.who === "Toi" ? "rgba(34,211,238,0.25)" : LINE;
-
-              return (
-                <View
-                  key={idx}
-                  style={{
-                    marginTop: 10,
-                    borderRadius: 18,
-                    borderWidth: 1,
-                    borderColor: border,
-                    backgroundColor: tone,
-                    padding: 12,
-                  }}
-                >
+                {isTyping && (
                   <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
+                    style={[
+                      styles.bubble,
+                      styles.bubbleLeft,
+                      styles.typingBubble,
+                    ]}
                   >
-                    <Text style={{ color: TXT, fontWeight: "900" }}>
-                      {d.who}
-                    </Text>
-                    <Badge
-                      text={
-                        d.who === "Annonce"
-                          ? "announcement"
-                          : d.who === "Toi"
-                            ? "you"
-                            : "npc"
-                      }
-                      tone="ghost"
-                    />
-                  </View>
-
-                  <Text
-                    style={{
-                      color: TXT,
-                      marginTop: 8,
-                      fontWeight: "900",
-                      fontSize: 16,
-                    }}
-                  >
-                    {d.kr}
-                  </Text>
-                  <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-                    {d.fr}
-                  </Text>
-                  {d.roman && (
-                    <Text style={{ color: MUTED, marginTop: 6 }}>
-                      {d.roman}
-                    </Text>
-                  )}
-                  {d.tip && (
                     <Text
-                      style={{ color: MUTED, marginTop: 8, lineHeight: 20 }}
+                      style={[styles.charName, { color: activeScene.accent }]}
                     >
-                      💡 {d.tip}
+                      {activeScene.dialogue[visibleMessages]?.char}
                     </Text>
-                  )}
 
-                  <View style={{ height: 10 }} />
-                  <View
-                    style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}
-                  >
-                    <Button
-                      label="🔊 Écouter"
-                      onPress={() => speakKo(d.say ?? d.kr, 0.9)}
-                    />
-                    <Button
-                      tone="ghost"
-                      label="🗣️ Shadow x2"
-                      onPress={() =>
-                        speakKo(`${d.say ?? d.kr}… ${d.say ?? d.kr}`, 0.85)
-                      }
-                    />
+                    <View style={styles.typingDots}>
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                    </View>
                   </View>
-                </View>
-              );
-            })}
+                )}
 
-            <View style={{ height: 10 }} />
-            <Button
-              tone="danger"
-              label="⏹ Stop audio"
-              onPress={() => Speech?.stop?.()}
-            />
-          </Card>
-        )}
+                <Animated.Text
+                  style={[
+                    styles.tapHint,
+                    shouldHighlightHint && {
+                      color: activeScene.accent,
+                      opacity: tapHintPulse.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.45, 1],
+                      }),
+                      transform: [
+                        {
+                          scale: tapHintPulse.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [1, 1.03],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  {visibleMessages >= activeScene.dialogue.length
+                    ? "Toucher pour recommencer"
+                    : isTyping
+                      ? "Réponse en cours..."
+                      : "Toucher pour continuer"}
+                </Animated.Text>
+              </Pressable>
+            </BlurView>
+          </Animated.View>
 
-        {/* TAB: Quiz */}
-        {tab === "Quiz" && (
-          <Card>
-            <Text style={{ color: TXT, fontSize: 18, fontWeight: "900" }}>
-              🎯 Mini-quiz (sans spoil)
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-              Appuie sur “Écouter”, puis répond. Pas de highlight automatique.
-            </Text>
+          <View style={styles.toolbox}>
+            <View style={styles.toolboxHeader}>
+              <Text style={styles.toolboxTitle}>METRO TOOLBOX</Text>
+              <View
+                style={[
+                  styles.toolboxLine,
+                  { backgroundColor: activeScene.accent },
+                ]}
+              />
+            </View>
 
-            <View style={{ height: 12 }} />
-            <View
-              style={{
-                borderRadius: 18,
-                borderWidth: 1,
-                borderColor: LINE,
-                backgroundColor: "rgba(255,255,255,0.05)",
-                padding: 12,
-              }}
-            >
-              <Text style={{ color: TXT, fontWeight: "900" }}>
-                Question {qIndex + 1}/{quiz.length}
-              </Text>
-              <Text style={{ color: MUTED, marginTop: 8, lineHeight: 20 }}>
-                {q.prompt}
-              </Text>
-
-              <View style={{ height: 12 }} />
-              <Button label="🔊 Écouter" onPress={() => speakKo(q.say, 0.9)} />
-              <View style={{ height: 12 }} />
-
-              {q.choices.map((c, i) => {
-                const isSel = qSelected === i;
-                const isCorrect = i === q.correctIndex;
-
-                const borderColor =
-                  qShow && isCorrect
-                    ? NEON
-                    : qShow && isSel && !isCorrect
-                      ? PINK
-                      : isSel
-                        ? "rgba(255,255,255,0.35)"
-                        : LINE;
-
-                const backgroundColor =
-                  qShow && isCorrect
-                    ? "rgba(34,211,238,0.10)"
-                    : qShow && isSel && !isCorrect
-                      ? "rgba(251,113,133,0.10)"
-                      : "rgba(255,255,255,0.04)";
+            <View style={styles.expressionGrid}>
+              {activeScene.expressions.map((exp, i) => {
+                const cardId = `${activeScene.id}-${i}`;
+                const isActive = selectedWord === cardId;
 
                 return (
                   <Pressable
-                    key={`${q.id}_${i}`}
-                    disabled={qShow}
-                    onPress={() => setQSelected(i)}
-                    style={({ pressed }) => ({
-                      opacity: pressed ? 0.9 : 1,
-                      borderRadius: 16,
-                      borderWidth: 1,
-                      borderColor,
-                      backgroundColor,
-                      paddingVertical: 12,
-                      paddingHorizontal: 12,
-                      marginTop: 10,
-                    })}
+                    key={cardId}
+                    onPress={() => speak(exp.word, cardId)}
+                    style={({ pressed }) => [
+                      styles.expPressable,
+                      pressed && { transform: [{ scale: 0.985 }] },
+                    ]}
                   >
-                    <Text
-                      style={{ color: TXT, fontWeight: "900", fontSize: 16 }}
+                    <BlurView
+                      intensity={25}
+                      tint="dark"
+                      style={[
+                        styles.expCard,
+                        isActive && {
+                          borderColor: activeScene.accent,
+                        },
+                      ]}
                     >
-                      {c}
-                    </Text>
+                      <View
+                        style={[
+                          styles.expAccent,
+                          {
+                            backgroundColor: activeScene.accent,
+                            opacity: isActive ? 1 : 0.75,
+                          },
+                        ]}
+                      />
+                      <View style={styles.expContent}>
+                        <View style={styles.expTopRow}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.expWord}>{exp.word}</Text>
+                            <Text
+                              style={[
+                                styles.expRom,
+                                { color: activeScene.accent },
+                              ]}
+                            >
+                              {exp.rom}
+                            </Text>
+                          </View>
+
+                          <View
+                            style={[
+                              styles.listenPill,
+                              {
+                                backgroundColor: `${activeScene.accent}20`,
+                                borderColor: `${activeScene.accent}55`,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.listenIcon,
+                                { color: activeScene.accent },
+                              ]}
+                            >
+                              {isActive ? "●" : "▶"}
+                            </Text>
+                            <Text style={styles.listenText}>ÉCOUTER</Text>
+                          </View>
+                        </View>
+
+                        <Text style={styles.expMean}>{exp.mean}</Text>
+                        <Text style={styles.expContext}>{exp.context}</Text>
+                      </View>
+                    </BlurView>
                   </Pressable>
                 );
               })}
-
-              <View style={{ height: 12 }} />
-              <Button
-                tone="ghost"
-                label={qShow ? "Réponse affichée" : "✅ Vérifier"}
-                disabled={qSelected === null || qShow}
-                onPress={() => setQShow(true)}
-              />
-
-              {qShow && (
-                <>
-                  <View style={{ height: 12 }} />
-                  <View
-                    style={{
-                      borderRadius: 16,
-                      borderWidth: 1,
-                      borderColor: LINE,
-                      backgroundColor: "rgba(255,255,255,0.05)",
-                      padding: 12,
-                    }}
-                  >
-                    <Text style={{ color: TXT, fontWeight: "900" }}>
-                      Réponse : {q.choices[q.correctIndex]}
-                    </Text>
-                    <Text
-                      style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}
-                    >
-                      {q.explain}
-                    </Text>
-                  </View>
-
-                  <View style={{ height: 12 }} />
-                  <Button label="➡️ Suivant" onPress={nextQ} />
-                </>
-              )}
-
-              <View style={{ height: 10 }} />
-              <Button
-                tone="danger"
-                label="⏹ Stop audio"
-                onPress={() => Speech?.stop?.()}
-              />
             </View>
-          </Card>
-        )}
-
-        {/* Footer */}
-        <Card>
-          <View
-            style={{
-              borderRadius: 18,
-              borderWidth: 1,
-              borderColor: LINE,
-              backgroundColor: CARD2,
-              padding: 12,
-            }}
-          >
-            <Text style={{ color: TXT, fontWeight: "900" }}>
-              ✅ Prochain upgrade recommandé
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
-              Ajoute une “mini-carte métro” (2–3 stations) où l’utilisateur
-              choisit : direction → correspondance → sortie, puis un dialogue
-              final.
-            </Text>
-            <View style={{ height: 10 }} />
-            <Button label="Retour" onPress={() => router.back()} tone="ghost" />
           </View>
-        </Card>
-      </ScrollView>
-    </LinearGradient>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: COLORS.bg },
+  bg: { flex: 1, position: "relative" },
+  bgLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(2,3,6,0.85)",
+  },
+  scroll: { paddingHorizontal: 20, paddingBottom: 50 },
+
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 10,
+    marginBottom: 25,
+  },
+  backBtn: { flexDirection: "row", alignItems: "center" },
+  backArrow: { color: COLORS.txt, fontSize: 32, marginRight: 5 },
+  backText: {
+    color: COLORS.muted,
+    fontFamily: "Outfit_700Bold",
+    fontSize: 12,
+    letterSpacing: 1,
+  },
+  headerTitle: {
+    color: COLORS.pink,
+    fontFamily: "Outfit_900Black",
+    fontSize: 14,
+    letterSpacing: 2,
+  },
+
+  selectorRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 10,
+    marginBottom: 20,
+  },
+  selectorItem: {
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  selectorText: {
+    color: COLORS.muted,
+    fontFamily: "Outfit_700Bold",
+    fontSize: 13,
+  },
+
+  stage: { marginBottom: 18 },
+  glassCard: {
+    borderRadius: 32,
+    padding: 25,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+  },
+
+  sceneMetaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 2,
+  },
+  sceneSub: {
+    fontFamily: "NotoSansKR_700Bold",
+    fontSize: 14,
+    letterSpacing: 1,
+  },
+
+  sceneTitle: {
+    color: COLORS.txt,
+    fontFamily: "Outfit_900Black",
+    fontSize: 34,
+    marginBottom: 8,
+  },
+  sceneDesc: {
+    color: COLORS.muted,
+    fontSize: 14,
+    fontStyle: "italic",
+    marginBottom: 30,
+    lineHeight: 20,
+  },
+
+  dialogueBox: { gap: 16 },
+  bubble: {
+    maxWidth: "88%",
+    padding: 18,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+  },
+  bubbleLeft: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderBottomLeftRadius: 4,
+  },
+  bubbleRight: {
+    alignSelf: "flex-end",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderBottomRightRadius: 4,
+  },
+  charName: {
+    fontSize: 10,
+    fontFamily: "Outfit_700Bold",
+    marginBottom: 6,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+  krText: {
+    color: COLORS.txt,
+    fontFamily: "NotoSansKR_700Bold",
+    fontSize: 18,
+    lineHeight: 26,
+    marginBottom: 4,
+  },
+  frText: {
+    color: COLORS.muted,
+    fontSize: 13,
+    fontFamily: "Outfit_500Medium",
+  },
+  typingBubble: {
+    minWidth: 92,
+    paddingVertical: 15,
+  },
+  typingDots: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingTop: 2,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 999,
+    opacity: 0.85,
+  },
+  tapHint: {
+    alignSelf: "center",
+    color: "rgba(255,255,255,0.42)",
+    fontFamily: "Outfit_700Bold",
+    fontSize: 10,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    marginTop: 4,
+  },
+
+  toolboxHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 15,
+    marginBottom: 20,
+  },
+  toolboxTitle: {
+    color: COLORS.muted,
+    fontFamily: "Outfit_700Bold",
+    fontSize: 12,
+    letterSpacing: 3,
+  },
+  toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
+
+  expressionGrid: { gap: 14 },
+  expPressable: { width: "100%" },
+  expCard: {
+    borderRadius: 24,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.05)",
+  },
+  expAccent: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+  },
+  expContent: { padding: 20 },
+  expTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 14,
+    marginBottom: 10,
+  },
+  expWord: {
+    color: COLORS.txt,
+    fontFamily: "NotoSansKR_700Bold",
+    fontSize: 24,
+    marginBottom: 2,
+  },
+  expRom: {
+    fontFamily: "Outfit_700Bold",
+    fontSize: 12,
+  },
+  expMean: {
+    color: COLORS.txt,
+    fontFamily: "Outfit_700Bold",
+    fontSize: 16,
+    marginBottom: 4,
+  },
+  expContext: {
+    color: COLORS.muted,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  listenPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  listenIcon: {
+    fontSize: 9,
+    fontFamily: "Outfit_700Bold",
+  },
+  listenText: {
+    color: "rgba(255,255,255,0.78)",
+    fontFamily: "Outfit_700Bold",
+    fontSize: 9,
+    letterSpacing: 1,
+  },
+});

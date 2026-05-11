@@ -51,6 +51,16 @@ const SCENES = [
         kr: "이십오만 팔천 원입니다. 할부로 하시겠어요?",
         fr: "C'est 258 000 won (I-sip-oh-man pal-cheon). Voulez-vous payer en plusieurs fois ?",
       },
+      {
+        char: "Client",
+        kr: "삼 개월 할부도 가능해요?",
+        fr: "Un paiement en trois mois est possible aussi ?",
+      },
+      {
+        char: "Vendeur",
+        kr: "네, 삼 개월 할부로 결제해 드릴게요.",
+        fr: "Oui, je vais vous faire le paiement en trois fois.",
+      },
     ],
     expressions: [
       {
@@ -70,6 +80,24 @@ const SCENES = [
         rom: "Myeon-se",
         mean: "Détaxé / Duty Free",
         context: "Mot clé pour récupérer la TVA à l'aéroport.",
+      },
+      {
+        word: "이십오만 팔천 원",
+        rom: "I-sip-oh-man pal-cheon won",
+        mean: "258 000 won",
+        context: "Exemple complet de prix avec dizaines de mille et milliers.",
+      },
+      {
+        word: "삼 개월 할부",
+        rom: "Sam gaewol halbu",
+        mean: "Paiement en 3 mois",
+        context: "Très fréquent aux caisses des grands magasins.",
+      },
+      {
+        word: "결제하다",
+        rom: "Gyeoljehada",
+        mean: "Payer / régler",
+        context: "Verbe standard pour finaliser un paiement.",
       },
     ],
   },
@@ -92,6 +120,16 @@ const SCENES = [
         kr: "그래요, 만 원만 내요. 서비스로 양말도 줄게요!",
         fr: "D'accord, payez juste 10 000 won. Je vous offre des chaussettes en bonus !",
       },
+      {
+        char: "Moi",
+        kr: "좋아요, 현금으로 만 원 드릴게요.",
+        fr: "D'accord, je vous donne 10 000 won en espèces.",
+      },
+      {
+        char: "Vendeuse",
+        kr: "두 켤레 가져가세요. 서비스예요.",
+        fr: "Prenez deux paires. C'est offert.",
+      },
     ],
     expressions: [
       {
@@ -112,6 +150,24 @@ const SCENES = [
         mean: "Espèces",
         context:
           "Préférable dans les petits marchés pour obtenir de meilleurs prix.",
+      },
+      {
+        word: "만 원만",
+        rom: "Man won-man",
+        mean: "Seulement 10 000 won",
+        context: "Le suffixe -man insiste sur 'juste / seulement'.",
+      },
+      {
+        word: "두 켤레",
+        rom: "Du kyeolle",
+        mean: "Deux paires",
+        context: "Kyeolle compte les chaussures, chaussettes et gants.",
+      },
+      {
+        word: "사장님",
+        rom: "Sajangnim",
+        mean: "Patron / Madame-Monsieur",
+        context: "Adresse conviviale très courante dans les marchés.",
       },
     ],
   },
@@ -134,6 +190,16 @@ const SCENES = [
         kr: "네, 맞아요. 영수증 필요하세요?",
         fr: "Oui, c'est ça. Avez-vous besoin du reçu ?",
       },
+      {
+        char: "Moi",
+        kr: "네, 그리고 봉투 하나 주세요.",
+        fr: "Oui, et donnez-moi un sac, s'il vous plaît.",
+      },
+      {
+        char: "Caissier",
+        kr: "봉투는 백 원 추가됩니다.",
+        fr: "Le sac coûte 100 won en plus.",
+      },
     ],
     expressions: [
       {
@@ -153,6 +219,24 @@ const SCENES = [
         rom: "Bong-tu",
         mean: "Sac",
         context: "Souvent facturé 100-200 Won séparément.",
+      },
+      {
+        word: "백 원",
+        rom: "Baek won",
+        mean: "100 won",
+        context: "Petit supplément typique pour un sac plastique.",
+      },
+      {
+        word: "추가됩니다",
+        rom: "Chugadoemnida",
+        mean: "C'est ajouté",
+        context: "Formule de caisse pour annoncer un coût supplémentaire.",
+      },
+      {
+        word: "맞죠?",
+        rom: "Matjyo?",
+        mean: "C'est bien ça ?",
+        context: "Demande de confirmation naturelle avant de payer.",
       },
     ],
   },

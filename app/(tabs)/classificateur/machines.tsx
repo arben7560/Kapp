@@ -1,21 +1,4 @@
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import {
-    Animated,
-    Dimensions,
-    Easing,
-    ImageBackground,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-const { width } = Dimensions.get("window");
+import ClassifierImmersionScreen from "../../../components/classificateur/ClassifierImmersionScreen";
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — TECH & PRECISION EDITION
@@ -50,6 +33,16 @@ const SCENES = [
         kr: "네, 노트북 두 대 맞으시죠? 이쪽으로 오세요.",
         fr: "Oui, deux ordinateurs (du-dae), c'est bien ça ? Venez par ici.",
       },
+      {
+        char: "Client",
+        kr: "태블릿도 한 대 보여주세요.",
+        fr: "Montrez-moi aussi une tablette.",
+      },
+      {
+        char: "Vendeur",
+        kr: "네, 총 네 대 비교해 보실 수 있어요.",
+        fr: "Oui, vous pouvez comparer quatre appareils au total.",
+      },
     ],
     expressions: [
       {
@@ -70,6 +63,24 @@ const SCENES = [
         rom: "Du dae",
         mean: "2 machines",
         context: "Dul devient 'Du' devant le classificateur.",
+      },
+      {
+        word: "한 대",
+        rom: "Han dae",
+        mean: "Une machine",
+        context: "Hana devient Han devant le classificateur.",
+      },
+      {
+        word: "태블릿",
+        rom: "Taebeullit",
+        mean: "Tablette",
+        context: "Appareil moderne naturellement compté avec Dae.",
+      },
+      {
+        word: "총 네 대",
+        rom: "Chong ne dae",
+        mean: "Quatre machines au total",
+        context: "Net devient Ne devant Dae.",
       },
     ],
   },
@@ -92,6 +103,16 @@ const SCENES = [
         kr: "세 대밖에 없어요. 주차 자리가 많네요.",
         fr: "Il n'y en a que trois (se-dae). Il y a beaucoup de places.",
       },
+      {
+        char: "Moi",
+        kr: "오토바이는 몇 대 있어요?",
+        fr: "Combien y a-t-il de motos ?",
+      },
+      {
+        char: "Ami",
+        kr: "오토바이는 두 대 있어요.",
+        fr: "Il y a deux motos.",
+      },
     ],
     expressions: [
       {
@@ -111,6 +132,24 @@ const SCENES = [
         rom: "Se dae",
         mean: "3 voitures/machines",
         context: "Set devient 'Se' devant le compteur.",
+      },
+      {
+        word: "오토바이",
+        rom: "Otobai",
+        mean: "Moto",
+        context: "Les motos se comptent aussi avec Dae.",
+      },
+      {
+        word: "주차 자리",
+        rom: "Jucha jari",
+        mean: "Place de parking",
+        context: "Expression utile en ville.",
+      },
+      {
+        word: "두 대 있어요",
+        rom: "Du dae isseoyo",
+        mean: "Il y en a deux",
+        context: "Réponse simple à 'myeot dae?'.",
       },
     ],
   },
@@ -133,6 +172,16 @@ const SCENES = [
         kr: "네, 거실에 한 대 설치하겠습니다.",
         fr: "D'accord, je vais en installer un (han-dae) dans le salon.",
       },
+      {
+        char: "Moi",
+        kr: "침실에도 선풍기 한 대 필요해요.",
+        fr: "J'ai aussi besoin d'un ventilateur dans la chambre.",
+      },
+      {
+        char: "Technicien",
+        kr: "그럼 가전제품 두 대 설치하겠습니다.",
+        fr: "Alors j'installerai deux appareils électroménagers.",
+      },
     ],
     expressions: [
       {
@@ -153,315 +202,35 @@ const SCENES = [
         mean: "Installer",
         context: "Verbe souvent associé aux machines lourdes.",
       },
+      {
+        word: "선풍기",
+        rom: "Seonpunggi",
+        mean: "Ventilateur",
+        context: "Petit appareil domestique compté avec Dae.",
+      },
+      {
+        word: "가전제품",
+        rom: "Gajeon-jepum",
+        mean: "Électroménager",
+        context: "Catégorie générale des machines domestiques.",
+      },
+      {
+        word: "두 대 설치",
+        rom: "Du dae seolchi",
+        mean: "Installation de deux machines",
+        context: "Structure utile pour une demande de technicien.",
+      },
     ],
   },
 ];
 
 export default function MachinesClassifierImmersion() {
-  const [activeScene, setActiveScene] = useState(SCENES[0]);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    fadeAnim.setValue(0);
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 600,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: true,
-    }).start();
-  }, [activeScene]);
-
   return (
-    <SafeAreaView style={styles.container}>
-      <ImageBackground source={{ uri: activeScene.image }} style={styles.bg}>
-        <View style={styles.overlay} />
-
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
-        >
-          {/* HEADER TECH */}
-          <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.backBtn}>
-              <Text style={styles.backArrow}>‹</Text>
-              <Text style={styles.backText}>SÉOUL MODERNE</Text>
-            </Pressable>
-            <View
-              style={[styles.typeBadge, { borderColor: activeScene.accent }]}
-            >
-              <Text
-                style={[styles.typeBadgeText, { color: activeScene.accent }]}
-              >
-                TECH COUNTER
-              </Text>
-            </View>
-          </View>
-
-          {/* SCENE SELECTOR */}
-          <View style={styles.tabContainer}>
-            {SCENES.map((scene) => (
-              <Pressable
-                key={scene.id}
-                onPress={() => setActiveScene(scene)}
-                style={[
-                  styles.tab,
-                  activeScene.id === scene.id && {
-                    backgroundColor: "rgba(255,255,255,0.08)",
-                    borderColor: activeScene.accent,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    activeScene.id === scene.id && {
-                      color: activeScene.accent,
-                    },
-                  ]}
-                >
-                  {scene.title}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          {/* INTERACTIVE LOGIC CARD */}
-          <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [
-                {
-                  translateY: fadeAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [15, 0],
-                  }),
-                },
-              ],
-            }}
-          >
-            <BlurView intensity={40} tint="dark" style={styles.mainCard}>
-              <LinearGradient
-                colors={[`${activeScene.accent}15`, "transparent"]}
-                style={StyleSheet.absoluteFill}
-              />
-
-              <View style={styles.cardInfo}>
-                <Text style={[styles.krBadge, { color: activeScene.accent }]}>
-                  {activeScene.koreanTitle}
-                </Text>
-                <Text style={styles.sceneTitle}>{activeScene.title}</Text>
-                <Text style={styles.sceneDesc}>{activeScene.description}</Text>
-              </View>
-
-              <View style={styles.chatSection}>
-                {activeScene.dialogue.map((line, idx) => (
-                  <View
-                    key={idx}
-                    style={[
-                      styles.bubble,
-                      idx % 2 === 0 ? styles.bubbleL : styles.bubbleR,
-                    ]}
-                  >
-                    <Text
-                      style={[styles.charName, { color: activeScene.accent }]}
-                    >
-                      {line.char}
-                    </Text>
-                    <Text style={styles.krText}>{line.kr}</Text>
-                    <Text style={styles.frText}>{line.fr}</Text>
-                  </View>
-                ))}
-              </View>
-            </BlurView>
-          </Animated.View>
-
-          {/* TOOLBOX - TECH COUNTERS */}
-          <View style={styles.toolbox}>
-            <View style={styles.toolboxHeader}>
-              <Text style={styles.toolboxTitle}>TECH TOOLBOX</Text>
-              <View
-                style={[
-                  styles.toolboxLine,
-                  { backgroundColor: activeScene.accent },
-                ]}
-              />
-            </View>
-
-            <View style={styles.grid}>
-              {activeScene.expressions.map((exp, i) => (
-                <BlurView
-                  key={i}
-                  intensity={25}
-                  tint="dark"
-                  style={styles.expCard}
-                >
-                  <View
-                    style={[
-                      styles.expAccent,
-                      { backgroundColor: activeScene.accent },
-                    ]}
-                  />
-                  <View style={styles.expContent}>
-                    <Text style={styles.expKr}>{exp.word}</Text>
-                    <Text
-                      style={[styles.expRom, { color: activeScene.accent }]}
-                    >
-                      {exp.rom}
-                    </Text>
-                    <Text style={styles.expMean}>{exp.mean}</Text>
-                    <Text style={styles.expCtx}>{exp.context}</Text>
-                  </View>
-                </BlurView>
-              ))}
-            </View>
-          </View>
-        </ScrollView>
-      </ImageBackground>
-    </SafeAreaView>
+    <ClassifierImmersionScreen
+      scenes={SCENES}
+      backLabel="SÉOUL MODERNE"
+      badgeLabel="TECH COUNTER"
+      toolboxTitle="TECH TOOLBOX"
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  bg: { flex: 1 },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.88)",
-  },
-  scroll: { paddingHorizontal: 22, paddingBottom: 80 },
-
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginVertical: 15,
-  },
-  backBtn: { flexDirection: "row", alignItems: "center" },
-  backArrow: { color: COLORS.txt, fontSize: 32, marginRight: 5 },
-  backText: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-    letterSpacing: 2,
-  },
-  typeBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-  },
-  typeBadgeText: {
-    fontSize: 9,
-    fontFamily: "Outfit_700Bold",
-    letterSpacing: 1,
-  },
-
-  tabContainer: { flexDirection: "row", gap: 10, marginBottom: 25 },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
-    alignItems: "center",
-  },
-  tabLabel: { color: COLORS.muted, fontFamily: "Outfit_700Bold", fontSize: 11 },
-
-  mainCard: {
-    borderRadius: 32,
-    padding: 25,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-  },
-  cardInfo: { marginBottom: 30 },
-  krBadge: {
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 14,
-    letterSpacing: 1.5,
-    marginBottom: 4,
-  },
-  sceneTitle: {
-    color: COLORS.txt,
-    fontFamily: "Outfit_900Black",
-    fontSize: 34,
-  },
-  sceneDesc: {
-    color: COLORS.muted,
-    fontSize: 14,
-    fontStyle: "italic",
-    marginTop: 5,
-  },
-
-  chatSection: { gap: 28 },
-  bubble: { maxWidth: "88%", padding: 18, borderRadius: 24 },
-  bubbleL: {
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderBottomLeftRadius: 4,
-  },
-  bubbleR: {
-    alignSelf: "flex-end",
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderBottomRightRadius: 4,
-  },
-  charName: {
-    fontSize: 10,
-    fontFamily: "Outfit_700Bold",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 6,
-  },
-  krText: {
-    color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 18,
-    lineHeight: 26,
-    marginBottom: 4,
-  },
-  frText: { color: COLORS.muted, fontSize: 13, fontFamily: "Outfit_500Medium" },
-
-  toolbox: { marginTop: 40 },
-  toolboxHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 15,
-    marginBottom: 20,
-  },
-  toolboxTitle: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-    letterSpacing: 3,
-  },
-  toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
-
-  grid: { gap: 14 },
-  expCard: {
-    borderRadius: 24,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
-  },
-  expAccent: { position: "absolute", left: 0, top: 0, bottom: 0, width: 4 },
-  expContent: { padding: 20 },
-  expKr: {
-    color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 24,
-    marginBottom: 2,
-  },
-  expRom: {
-    fontFamily: "Outfit_700Bold",
-    fontSize: 12,
-    marginBottom: 10,
-    textTransform: "uppercase",
-  },
-  expMean: {
-    color: COLORS.txt,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  expCtx: { color: COLORS.muted, fontSize: 12, lineHeight: 18 },
-});

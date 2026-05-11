@@ -1,14 +1,17 @@
+import {
+  createAudioPlayer,
+  setAudioModeAsync,
+  type AudioPlayer,
+} from "expo-audio";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Dimensions,
   Easing,
-  ImageSourcePropType,
   ImageBackground,
+  ImageSourcePropType,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,7 +21,34 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const { width } = Dimensions.get("window");
+type AudioAsset = number;
+
+type DialogueMessage = {
+  char: string;
+  kr: string;
+  fr: string;
+  side: "me" | "server";
+  audio?: AudioAsset;
+};
+
+type ExpressionItem = {
+  word: string;
+  rom: string;
+  mean: string;
+  context: string;
+  audio?: AudioAsset;
+};
+
+type Scene = {
+  id: string;
+  title: string;
+  koreanTitle: string;
+  description: string;
+  accent: string;
+  image: ImageSourcePropType;
+  dialogue: DialogueMessage[];
+  expressions: ExpressionItem[];
+};
 
 const COLORS = {
   bg: "#020306",
@@ -30,7 +60,24 @@ const COLORS = {
   muted: "rgba(255,255,255,0.60)",
 };
 
-const SCENES = [
+const BBQ_AUDIO = {
+  message1: require("../../../assets/audio/voc/Gastronomie/bbq-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/Gastronomie/bbq-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/Gastronomie/bbq-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/Gastronomie/bbq-bulle-4.mp3"),
+
+  bonAppetit: require("../../../assets/audio/voc/Gastronomie/Toolbox/bon-appetit.mp3"),
+  changerPlaque: require("../../../assets/audio/voc/Gastronomie/Toolbox/changer-plaque.mp3"),
+  deuxPortions: require("../../../assets/audio/voc/Gastronomie/Toolbox/deux-portions.mp3"),
+  echinePorc: require("../../../assets/audio/voc/Gastronomie/Toolbox/echine-porc.mp3"),
+  laitue: require("../../../assets/audio/voc/Gastronomie/Toolbox/laitue.mp3"),
+  poitrinePorc: require("../../../assets/audio/voc/Gastronomie/Toolbox/poitrine-porc.mp3"),
+  sauceWrap: require("../../../assets/audio/voc/Gastronomie/Toolbox/sauce-wrap.mp3"),
+  unePortion: require("../../../assets/audio/voc/Gastronomie/Toolbox/une-portion.mp3"),
+  wrapLaitue: require("../../../assets/audio/voc/Gastronomie/Toolbox/wrap-laitue.mp3"),
+};
+
+const SCENES: Scene[] = [
   {
     id: "bbq",
     title: "Le K-BBQ",
@@ -45,24 +92,28 @@ const SCENES = [
         kr: "삼겹살 2인분 주세요.",
         fr: "Deux portions de Samgyeopsal s'il vous plaît.",
         side: "me",
+        audio: BBQ_AUDIO.message1,
       },
       {
         char: "Serveur",
         kr: "네, 알겠습니다. 상추도 같이 드릴게요.",
         fr: "Oui, bien compris. Je vais aussi vous apporter de la laitue.",
         side: "server",
+        audio: BBQ_AUDIO.message2,
       },
       {
         char: "Moi",
         kr: "감사합니다. 불판도 갈아 주실 수 있나요?",
         fr: "Merci. Vous pouvez aussi changer la plaque ?",
         side: "me",
+        audio: BBQ_AUDIO.message3,
       },
       {
         char: "Serveur",
         kr: "네, 바로 갈아드릴게요. 맛있게 드세요!",
         fr: "Oui, je vous la change tout de suite. Bon appétit !",
         side: "server",
+        audio: BBQ_AUDIO.message4,
       },
     ],
     expressions: [
@@ -71,63 +122,63 @@ const SCENES = [
         rom: "Masitge deuseyo",
         mean: "Bon appétit",
         context: "Utilisé par les serveurs ou l'hôte.",
-        speak: "맛있게 드세요",
+        audio: BBQ_AUDIO.bonAppetit,
       },
       {
         word: "1인분",
         rom: "Il-inbun",
         mean: "Une portion",
         context: "Indispensable pour commander la viande.",
-        speak: "일 인분",
+        audio: BBQ_AUDIO.unePortion,
       },
       {
         word: "2인분 주세요",
         rom: "I-inbun juseyo",
         mean: "Deux portions s'il vous plaît",
         context: "Phrase pratique dans un restaurant BBQ.",
-        speak: "이 인분 주세요",
+        audio: BBQ_AUDIO.deuxPortions,
       },
       {
         word: "삼겹살",
         rom: "Samgyeopsal",
         mean: "Poitrine de porc grillée",
         context: "Un classique absolu du barbecue coréen.",
-        speak: "삼겹살",
+        audio: BBQ_AUDIO.poitrinePorc,
       },
       {
         word: "목살",
         rom: "Moksal",
         mean: "Échine de porc",
         context: "Autre viande populaire au barbecue.",
-        speak: "목살",
+        audio: BBQ_AUDIO.echinePorc,
       },
       {
         word: "상추",
         rom: "Sangchu",
         mean: "Laitue",
         context: "Utilisée pour envelopper la viande.",
-        speak: "상추",
+        audio: BBQ_AUDIO.laitue,
       },
       {
         word: "쌈",
         rom: "Ssam",
         mean: "Wrap de laitue",
         context: "Bouchée avec viande, légumes et sauce.",
-        speak: "쌈",
+        audio: BBQ_AUDIO.wrapLaitue,
       },
       {
         word: "쌈장",
         rom: "Ssamjang",
         mean: "Sauce pour wrap",
         context: "Sauce épaisse souvent servie avec le BBQ.",
-        speak: "쌈장",
+        audio: BBQ_AUDIO.sauceWrap,
       },
       {
         word: "불판 갈아 주세요",
         rom: "Bulp’an gara juseyo",
         mean: "Changez la plaque, s'il vous plaît",
         context: "Utile quand la plaque devient trop brûlée.",
-        speak: "불판 갈아 주세요",
+        audio: BBQ_AUDIO.changerPlaque,
       },
     ],
   },
@@ -170,63 +221,54 @@ const SCENES = [
         rom: "Maewoyo",
         mean: "C'est épicé",
         context: "Mot clé avant de goûter un plat rouge-orange.",
-        speak: "매워요",
       },
       {
         word: "안 매워요?",
         rom: "An maewoyo?",
         mean: "Ce n'est pas épicé ?",
         context: "Très utile si tu crains le piment.",
-        speak: "안 매워요?",
       },
       {
         word: "얼마예요?",
         rom: "Eolmayeyo?",
         mean: "C'est combien ?",
         context: "Pour demander le prix sur un stand.",
-        speak: "얼마예요?",
       },
       {
         word: "하나 주세요",
         rom: "Hana juseyo",
         mean: "Donnez-m'en un",
         context: "Phrase simple et naturelle pour commander.",
-        speak: "하나 주세요",
       },
       {
         word: "떡볶이",
         rom: "Tteokbokki",
         mean: "Gâteaux de riz épicés",
         context: "Street food coréenne emblématique.",
-        speak: "떡볶이",
       },
       {
         word: "어묵",
         rom: "Eomuk",
         mean: "Fish cake",
         context: "Souvent servi sur brochette avec du bouillon.",
-        speak: "어묵",
       },
       {
         word: "호떡",
         rom: "Hotteok",
         mean: "Pancake sucré coréen",
         context: "Snack chaud, sucré, souvent hivernal.",
-        speak: "호떡",
       },
       {
         word: "포장해 주세요",
         rom: "Pojang-hae juseyo",
         mean: "À emporter s'il vous plaît",
         context: "Pour prendre ton snack avec toi.",
-        speak: "포장해 주세요",
       },
       {
         word: "물 주세요",
         rom: "Mul juseyo",
         mean: "De l'eau s'il vous plaît",
         context: "Très utile si c'est trop épicé.",
-        speak: "물 주세요",
       },
     ],
   },
@@ -269,70 +311,61 @@ const SCENES = [
         rom: "Ah-Ah",
         mean: "Ice Americano",
         context: "Abréviation ultra-populaire en Corée.",
-        speak: "아아",
       },
       {
         word: "아이스 아메리카노",
         rom: "Aiseu Amerikano",
         mean: "Americano glacé",
         context: "Commande très fréquente dans les cafés coréens.",
-        speak: "아이스 아메리카노",
       },
       {
         word: "한 잔 주세요",
         rom: "Han jan juseyo",
         mean: "Un verre s'il vous plaît",
         context: "Structure de base pour commander une boisson.",
-        speak: "한 잔 주세요",
       },
       {
         word: "드시고 가세요?",
         rom: "Deusigo gaseyo?",
         mean: "C'est sur place ?",
         context: "Question fréquente au comptoir.",
-        speak: "드시고 가세요?",
       },
       {
         word: "테이크아웃",
         rom: "Teikeu-aut",
         mean: "À emporter",
         context: "Mot emprunté à l'anglais, très utilisé.",
-        speak: "테이크아웃",
       },
       {
         word: "진동벨",
         rom: "Jindong-bel",
         mean: "Bipeur / vibreur",
         context: "Objet remis en attendant la commande.",
-        speak: "진동벨",
       },
       {
         word: "분위기 좋다",
         rom: "Bunwigi jota",
         mean: "L'ambiance est superbe",
         context: "Compliment typique pour un café esthétique.",
-        speak: "분위기 좋다",
       },
       {
         word: "사진 찍어도 돼요?",
         rom: "Sajin jjigeodo dwaeyo?",
         mean: "Je peux prendre une photo ?",
         context: "Très utile dans un café esthétique.",
-        speak: "사진 찍어도 돼요?",
       },
       {
         word: "조용한 자리 있어요?",
         rom: "Joyonghan jari isseoyo?",
         mean: "Vous avez une place calme ?",
         context: "Pratique pour travailler ou étudier.",
-        speak: "조용한 자리 있어요?",
       },
     ],
   },
 ];
 
 export default function GastronomyImmersion() {
-  const [activeScene, setActiveScene] = useState(SCENES[0]);
+  const [activeScene, setActiveScene] = useState<Scene>(SCENES[0]);
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
@@ -343,6 +376,114 @@ export default function GastronomyImmersion() {
   const bgFadeAnim = useRef(new Animated.Value(0)).current;
   const tapHintPulse = useRef(new Animated.Value(0)).current;
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const shouldAutoPlayNextMessageRef = useRef(false);
+
+  const playerRef = useRef<AudioPlayer | null>(null);
+  const activeAudioIdRef = useRef<string | null>(null);
+  const playbackListenerRef = useRef<{ remove: () => void } | null>(null);
+
+  const cleanupAudioListener = useCallback(() => {
+    if (playbackListenerRef.current) {
+      playbackListenerRef.current.remove();
+      playbackListenerRef.current = null;
+    }
+  }, []);
+
+  const stopAudio = useCallback(() => {
+    try {
+      cleanupAudioListener();
+
+      if (playerRef.current) {
+        playerRef.current.pause();
+        playerRef.current.remove();
+        playerRef.current = null;
+      }
+
+      activeAudioIdRef.current = null;
+    } catch {
+      playerRef.current = null;
+      activeAudioIdRef.current = null;
+    }
+  }, [cleanupAudioListener]);
+
+  const playAudio = useCallback(
+    (audioSource?: AudioAsset, id?: string) => {
+      if (!audioSource) return;
+
+      try {
+        stopAudio();
+
+        if (id) {
+          activeAudioIdRef.current = id;
+          setSelectedWord(id);
+        }
+
+        Vibration.vibrate(8);
+
+        const player = createAudioPlayer(audioSource, {
+          updateInterval: 250,
+        });
+
+        playerRef.current = player;
+
+        playbackListenerRef.current = player.addListener(
+          "playbackStatusUpdate",
+          (status) => {
+            const currentId = activeAudioIdRef.current;
+            const statusAny = status as any;
+
+            const didFinish =
+              statusAny.didJustFinish === true ||
+              statusAny.playbackState === "ended" ||
+              statusAny.playbackState === "finished" ||
+              statusAny.timeControlStatus === "ended" ||
+              (typeof statusAny.currentTime === "number" &&
+                typeof statusAny.duration === "number" &&
+                statusAny.duration > 0 &&
+                statusAny.currentTime >= statusAny.duration - 0.05 &&
+                statusAny.playing === false);
+
+            if (!didFinish) return;
+
+            if (currentId) {
+              setSelectedWord((current) =>
+                current === currentId ? null : current,
+              );
+            }
+
+            cleanupAudioListener();
+
+            try {
+              player.remove();
+            } catch {
+              // silence volontaire : évite un crash si le player est déjà libéré
+            }
+
+            if (playerRef.current === player) {
+              playerRef.current = null;
+            }
+
+            activeAudioIdRef.current = null;
+          },
+        );
+
+        player.seekTo(0);
+        player.play();
+      } catch {
+        setSelectedWord(null);
+        activeAudioIdRef.current = null;
+      }
+    },
+    [cleanupAudioListener, stopAudio],
+  );
+
+  useEffect(() => {
+    setAudioModeAsync({
+      playsInSilentMode: true,
+      allowsRecording: false,
+      shouldPlayInBackground: false,
+    }).catch(() => null);
+  }, []);
 
   useEffect(() => {
     fadeAnim.setValue(0);
@@ -354,7 +495,8 @@ export default function GastronomyImmersion() {
       useNativeDriver: true,
     }).start();
 
-    Speech.stop();
+    stopAudio();
+    shouldAutoPlayNextMessageRef.current = false;
     setSelectedWord(null);
     setVisibleMessages(1);
     setIsTyping(false);
@@ -363,7 +505,23 @@ export default function GastronomyImmersion() {
       clearTimeout(typingTimer.current);
       typingTimer.current = null;
     }
-  }, [activeScene]);
+  }, [activeScene, fadeAnim, stopAudio]);
+
+  useEffect(() => {
+    if (!shouldAutoPlayNextMessageRef.current || isTyping) return;
+
+    shouldAutoPlayNextMessageRef.current = false;
+
+    const currentMessageIndex = visibleMessages - 1;
+    const currentMessage = activeScene.dialogue[currentMessageIndex];
+
+    if (!currentMessage) return;
+
+    playAudio(
+      currentMessage.audio,
+      `${activeScene.id}-dialogue-${currentMessageIndex}`,
+    );
+  }, [activeScene, visibleMessages, isTyping, playAudio]);
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -392,27 +550,23 @@ export default function GastronomyImmersion() {
         clearTimeout(typingTimer.current);
       }
 
-      Speech.stop();
+      stopAudio();
     };
-  }, [tapHintPulse]);
+  }, [tapHintPulse, stopAudio]);
 
-  const speak = (text: string, id: string) => {
-    Speech.stop();
-    setSelectedWord(id);
-    Vibration.vibrate(8);
-
-    Speech.speak(text, {
-      language: "ko-KR",
-      rate: 0.78,
-      pitch: 1,
-      onDone: () => setSelectedWord(null),
-      onStopped: () => setSelectedWord(null),
-      onError: () => setSelectedWord(null),
-    });
-  };
-
-  const handleSceneChange = (scene: (typeof SCENES)[number]) => {
+  const handleSceneChange = (scene: Scene) => {
     if (scene.id === activeScene.id) return;
+
+    stopAudio();
+    shouldAutoPlayNextMessageRef.current = false;
+    setSelectedWord(null);
+    setVisibleMessages(1);
+    setIsTyping(false);
+
+    if (typingTimer.current) {
+      clearTimeout(typingTimer.current);
+      typingTimer.current = null;
+    }
 
     setPreviousBackground(activeScene.image);
     bgFadeAnim.setValue(1);
@@ -434,6 +588,9 @@ export default function GastronomyImmersion() {
 
     if (visibleMessages >= activeScene.dialogue.length) {
       Vibration.vibrate(8);
+      stopAudio();
+      shouldAutoPlayNextMessageRef.current = false;
+      setSelectedWord(null);
       setVisibleMessages(1);
       setIsTyping(false);
       return;
@@ -442,6 +599,7 @@ export default function GastronomyImmersion() {
     const nextMessage = activeScene.dialogue[visibleMessages];
 
     Vibration.vibrate(8);
+    shouldAutoPlayNextMessageRef.current = true;
 
     if (nextMessage.side === "server") {
       setIsTyping(true);
@@ -475,6 +633,7 @@ export default function GastronomyImmersion() {
           fadeDuration={0}
           resizeMode="contain"
         />
+
         {previousBackground ? (
           <Animated.View
             pointerEvents="none"
@@ -488,6 +647,7 @@ export default function GastronomyImmersion() {
             />
           </Animated.View>
         ) : null}
+
         <View style={styles.overlay} />
 
         <ScrollView
@@ -560,18 +720,30 @@ export default function GastronomyImmersion() {
 
               <Text style={styles.sceneDesc}>{activeScene.description}</Text>
 
-              <Pressable onPress={advanceDialogue} style={styles.dialogueList}>
+              <View style={styles.dialogueList}>
                 {activeScene.dialogue
                   .slice(0, visibleMessages)
                   .map((chat, idx) => {
                     const isMe = chat.side === "me";
+                    const isActive =
+                      selectedWord === `${activeScene.id}-dialogue-${idx}`;
 
                     return (
-                      <Animated.View
+                      <Pressable
                         key={`${activeScene.id}-dialogue-${idx}`}
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          playAudio(
+                            chat.audio,
+                            `${activeScene.id}-dialogue-${idx}`,
+                          );
+                        }}
                         style={[
                           styles.bubble,
                           isMe ? styles.bubbleRight : styles.bubbleLeft,
+                          isActive && {
+                            borderColor: activeScene.accent,
+                          },
                         ]}
                       >
                         <Text
@@ -584,7 +756,7 @@ export default function GastronomyImmersion() {
                         </Text>
                         <Text style={styles.bubbleKr}>{chat.kr}</Text>
                         <Text style={styles.bubbleFr}>{chat.fr}</Text>
-                      </Animated.View>
+                      </Pressable>
                     );
                   })}
 
@@ -625,33 +797,35 @@ export default function GastronomyImmersion() {
                   </View>
                 )}
 
-                <Animated.Text
-                  style={[
-                    styles.tapHint,
-                    shouldHighlightHint && {
-                      color: activeScene.accent,
-                      opacity: tapHintPulse.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.45, 1],
-                      }),
-                      transform: [
-                        {
-                          scale: tapHintPulse.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [1, 1.03],
-                          }),
-                        },
-                      ],
-                    },
-                  ]}
-                >
-                  {visibleMessages >= activeScene.dialogue.length
-                    ? "Toucher pour recommencer"
-                    : isTyping
-                      ? "Réponse en cours..."
-                      : "Toucher pour continuer"}
-                </Animated.Text>
-              </Pressable>
+                <Pressable onPress={advanceDialogue} disabled={isTyping}>
+                  <Animated.Text
+                    style={[
+                      styles.tapHint,
+                      shouldHighlightHint && {
+                        color: activeScene.accent,
+                        opacity: tapHintPulse.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.45, 1],
+                        }),
+                        transform: [
+                          {
+                            scale: tapHintPulse.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [1, 1.03],
+                            }),
+                          },
+                        ],
+                      },
+                    ]}
+                  >
+                    {visibleMessages >= activeScene.dialogue.length
+                      ? "Toucher pour recommencer"
+                      : isTyping
+                        ? "Réponse en cours..."
+                        : "Toucher pour continuer"}
+                  </Animated.Text>
+                </Pressable>
+              </View>
             </BlurView>
           </Animated.View>
 
@@ -674,7 +848,7 @@ export default function GastronomyImmersion() {
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() => speak(exp.speak, cardId)}
+                    onPress={() => playAudio(exp.audio, cardId)}
                     style={({ pressed }) => [
                       styles.vocabPressable,
                       pressed && { transform: [{ scale: 0.985 }] },

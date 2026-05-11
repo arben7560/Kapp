@@ -1,21 +1,4 @@
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import {
-    Animated,
-    Dimensions,
-    Easing,
-    ImageBackground,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-const { width } = Dimensions.get("window");
+import ClassifierImmersionScreen from "../../../components/classificateur/ClassifierImmersionScreen";
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — NATURAL OASIS EDITION
@@ -50,6 +33,16 @@ const SCENES = [
         kr: "음... 하나, 둘, 셋... 열 마리나 있어요!",
         fr: "Mmh... 1, 2, 3... il y en a carrément dix (yeol-mari) !",
       },
+      {
+        char: "Ami",
+        kr: "강아지는 몇 마리 있어요?",
+        fr: "Et combien y a-t-il de chiens ?",
+      },
+      {
+        char: "Moi",
+        kr: "강아지는 두 마리밖에 없어요.",
+        fr: "Il n'y a que deux chiens.",
+      },
     ],
     expressions: [
       {
@@ -69,6 +62,24 @@ const SCENES = [
         rom: "Gang-aji / Goyangi",
         mean: "Chien / Chat",
         context: "Les deux animaux domestiques les plus populaires en Corée.",
+      },
+      {
+        word: "열 마리",
+        rom: "Yeol mari",
+        mean: "Dix animaux",
+        context: "Nombre courant dans un café à thème.",
+      },
+      {
+        word: "두 마리밖에",
+        rom: "Du mari-bakke",
+        mean: "Seulement deux animaux",
+        context: "Bakke souligne que la quantité est faible.",
+      },
+      {
+        word: "몇 마리예요?",
+        rom: "Myeot mari-yeyo?",
+        mean: "Combien d'animaux ?",
+        context: "Question standard avec le classificateur Mari.",
       },
     ],
   },
@@ -91,6 +102,16 @@ const SCENES = [
         kr: "정말 용맹해 보여요. 한국의 상징이죠?",
         fr: "Ils ont l'air vraiment vaillants. C'est le symbole de la Corée, non ?",
       },
+      {
+        char: "Guide",
+        kr: "맞아요. 새끼 호랑이 한 마리도 있어요.",
+        fr: "Exact. Il y a aussi un bébé tigre.",
+      },
+      {
+        char: "Moi",
+        kr: "그럼 모두 세 마리네요.",
+        fr: "Alors cela fait trois au total.",
+      },
     ],
     expressions: [
       {
@@ -110,6 +131,24 @@ const SCENES = [
         rom: "Sang-jing",
         mean: "Symbole",
         context: "Pour parler de l'importance culturelle d'un animal.",
+      },
+      {
+        word: "새끼 호랑이",
+        rom: "Saekki horangi",
+        mean: "Bébé tigre",
+        context: "Saekki indique le petit d'un animal.",
+      },
+      {
+        word: "한 마리",
+        rom: "Han mari",
+        mean: "Un animal",
+        context: "Hana devient Han devant le classificateur.",
+      },
+      {
+        word: "모두 세 마리",
+        rom: "Modu se mari",
+        mean: "Trois animaux au total",
+        context: "Modu permet de donner un total.",
       },
     ],
   },
@@ -132,6 +171,16 @@ const SCENES = [
         kr: "와, 닭도 여러 마리 있네요!",
         fr: "Waouh, il y a aussi plusieurs poulets (yeoreo-mari) !",
       },
+      {
+        char: "Grand-père",
+        kr: "돼지도 네 마리 있단다.",
+        fr: "Il y a aussi quatre cochons.",
+      },
+      {
+        char: "Moi",
+        kr: "농장에 동물이 정말 많네요.",
+        fr: "Il y a vraiment beaucoup d'animaux à la ferme.",
+      },
     ],
     expressions: [
       {
@@ -152,315 +201,35 @@ const SCENES = [
         mean: "Plusieurs animaux",
         context: "Utile quand on ne veut pas compter précisément.",
       },
+      {
+        word: "네 마리",
+        rom: "Ne mari",
+        mean: "Quatre animaux",
+        context: "Net devient Ne devant un classificateur.",
+      },
+      {
+        word: "농장",
+        rom: "Nongjang",
+        mean: "Ferme",
+        context: "Lieu naturel pour pratiquer les animaux et les quantités.",
+      },
+      {
+        word: "정말 많네요",
+        rom: "Jeongmal manneyo",
+        mean: "Il y en a vraiment beaucoup",
+        context: "Réaction naturelle devant une grande quantité.",
+      },
     ],
   },
 ];
 
 export default function AnimalClassifierImmersion() {
-  const [activeScene, setActiveScene] = useState(SCENES[0]);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    fadeAnim.setValue(0);
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 600,
-      easing: Easing.out(Easing.back(1)),
-      useNativeDriver: true,
-    }).start();
-  }, [activeScene]);
-
   return (
-    <SafeAreaView style={styles.container}>
-      <ImageBackground source={{ uri: activeScene.image }} style={styles.bg}>
-        <View style={styles.overlay} />
-
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
-        >
-          {/* HEADER ANIMALS */}
-          <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.backBtn}>
-              <Text style={styles.backArrow}>‹</Text>
-              <Text style={styles.backText}>VIE SAUVAGE</Text>
-            </Pressable>
-            <View
-              style={[styles.typeBadge, { borderColor: activeScene.accent }]}
-            >
-              <Text
-                style={[styles.typeBadgeText, { color: activeScene.accent }]}
-              >
-                LIVING BEINGS
-              </Text>
-            </View>
-          </View>
-
-          {/* SCENE SELECTOR */}
-          <View style={styles.tabContainer}>
-            {SCENES.map((scene) => (
-              <Pressable
-                key={scene.id}
-                onPress={() => setActiveScene(scene)}
-                style={[
-                  styles.tab,
-                  activeScene.id === scene.id && {
-                    backgroundColor: "rgba(255,255,255,0.1)",
-                    borderColor: activeScene.accent,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    activeScene.id === scene.id && {
-                      color: activeScene.accent,
-                    },
-                  ]}
-                >
-                  {scene.title}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          {/* INTERACTIVE STAGE */}
-          <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [
-                {
-                  translateY: fadeAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [15, 0],
-                  }),
-                },
-              ],
-            }}
-          >
-            <BlurView intensity={45} tint="dark" style={styles.mainCard}>
-              <LinearGradient
-                colors={[`${activeScene.accent}20`, "transparent"]}
-                style={StyleSheet.absoluteFill}
-              />
-
-              <View style={styles.cardInfo}>
-                <Text style={[styles.krBadge, { color: activeScene.accent }]}>
-                  {activeScene.koreanTitle}
-                </Text>
-                <Text style={styles.sceneTitle}>{activeScene.title}</Text>
-                <Text style={styles.sceneDesc}>{activeScene.description}</Text>
-              </View>
-
-              <View style={styles.chatSection}>
-                {activeScene.dialogue.map((line, idx) => (
-                  <View
-                    key={idx}
-                    style={[
-                      styles.bubble,
-                      idx % 2 === 0 ? styles.bubbleL : styles.bubbleR,
-                    ]}
-                  >
-                    <Text
-                      style={[styles.charName, { color: activeScene.accent }]}
-                    >
-                      {line.char}
-                    </Text>
-                    <Text style={styles.krText}>{line.kr}</Text>
-                    <Text style={styles.frText}>{line.fr}</Text>
-                  </View>
-                ))}
-              </View>
-            </BlurView>
-          </Animated.View>
-
-          {/* TOOLBOX - ANIMAL COUNTERS */}
-          <View style={styles.toolbox}>
-            <View style={styles.toolboxHeader}>
-              <Text style={styles.toolboxTitle}>ANIMAL TOOLBOX</Text>
-              <View
-                style={[
-                  styles.toolboxLine,
-                  { backgroundColor: activeScene.accent },
-                ]}
-              />
-            </View>
-
-            <View style={styles.grid}>
-              {activeScene.expressions.map((exp, i) => (
-                <BlurView
-                  key={i}
-                  intensity={25}
-                  tint="dark"
-                  style={styles.expCard}
-                >
-                  <View
-                    style={[
-                      styles.expAccent,
-                      { backgroundColor: activeScene.accent },
-                    ]}
-                  />
-                  <View style={styles.expContent}>
-                    <Text style={styles.expKr}>{exp.word}</Text>
-                    <Text
-                      style={[styles.expRom, { color: activeScene.accent }]}
-                    >
-                      {exp.rom}
-                    </Text>
-                    <Text style={styles.expMean}>{exp.mean}</Text>
-                    <Text style={styles.expCtx}>{exp.context}</Text>
-                  </View>
-                </BlurView>
-              ))}
-            </View>
-          </View>
-        </ScrollView>
-      </ImageBackground>
-    </SafeAreaView>
+    <ClassifierImmersionScreen
+      scenes={SCENES}
+      backLabel="VIE SAUVAGE"
+      badgeLabel="LIVING BEINGS"
+      toolboxTitle="ANIMAL TOOLBOX"
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  bg: { flex: 1 },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.82)",
-  },
-  scroll: { paddingHorizontal: 22, paddingBottom: 80 },
-
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginVertical: 15,
-  },
-  backBtn: { flexDirection: "row", alignItems: "center" },
-  backArrow: { color: COLORS.txt, fontSize: 32, marginRight: 5 },
-  backText: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-    letterSpacing: 2,
-  },
-  typeBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-  },
-  typeBadgeText: {
-    fontSize: 9,
-    fontFamily: "Outfit_700Bold",
-    letterSpacing: 1,
-  },
-
-  tabContainer: { flexDirection: "row", gap: 10, marginBottom: 25 },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
-    alignItems: "center",
-  },
-  tabLabel: { color: COLORS.muted, fontFamily: "Outfit_700Bold", fontSize: 11 },
-
-  mainCard: {
-    borderRadius: 32,
-    padding: 25,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-  },
-  cardInfo: { marginBottom: 30 },
-  krBadge: {
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 14,
-    letterSpacing: 1.5,
-    marginBottom: 4,
-  },
-  sceneTitle: {
-    color: COLORS.txt,
-    fontFamily: "Outfit_900Black",
-    fontSize: 34,
-  },
-  sceneDesc: {
-    color: COLORS.muted,
-    fontSize: 14,
-    fontStyle: "italic",
-    marginTop: 5,
-  },
-
-  chatSection: { gap: 28 },
-  bubble: { maxWidth: "88%", padding: 18, borderRadius: 24 },
-  bubbleL: {
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderBottomLeftRadius: 4,
-  },
-  bubbleR: {
-    alignSelf: "flex-end",
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderBottomRightRadius: 4,
-  },
-  charName: {
-    fontSize: 10,
-    fontFamily: "Outfit_700Bold",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 6,
-  },
-  krText: {
-    color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 18,
-    lineHeight: 26,
-    marginBottom: 4,
-  },
-  frText: { color: COLORS.muted, fontSize: 13, fontFamily: "Outfit_500Medium" },
-
-  toolbox: { marginTop: 40 },
-  toolboxHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 15,
-    marginBottom: 20,
-  },
-  toolboxTitle: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-    letterSpacing: 3,
-  },
-  toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
-
-  grid: { gap: 14 },
-  expCard: {
-    borderRadius: 24,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
-  },
-  expAccent: { position: "absolute", left: 0, top: 0, bottom: 0, width: 4 },
-  expContent: { padding: 20 },
-  expKr: {
-    color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 24,
-    marginBottom: 2,
-  },
-  expRom: {
-    fontFamily: "Outfit_700Bold",
-    fontSize: 12,
-    marginBottom: 10,
-    textTransform: "uppercase",
-  },
-  expMean: {
-    color: COLORS.txt,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  expCtx: { color: COLORS.muted, fontSize: 12, lineHeight: 18 },
-});

@@ -178,8 +178,8 @@ export default function Home() {
                 <Text style={styles.heroLabel}>SÉOUL IMMERSION</Text>
 
                 <View style={styles.heroSeoulTitleWrap}>
-                  <Text style={styles.heroSeoulShadow}>서울</Text>
-                  <Text style={styles.heroSeoulTitle}>서울</Text>
+                  <Text style={styles.heroSeoulShadow}>어서 오세요.</Text>
+                  <Text style={styles.heroSeoulTitle}>어서 오세요.</Text>
                 </View>
 
                 <Text style={styles.heroTitle}>Entre dans la ville.</Text>
@@ -656,20 +656,18 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 2,
     top: 4,
-    fontSize: 86,
+    fontSize: 60,
     lineHeight: 108,
     fontFamily: fonts.krBold,
-    letterSpacing: -8,
     color: "rgba(103,232,249,0.16)",
     textShadowColor: "rgba(199,184,255,0.30)",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 26,
   },
   heroSeoulTitle: {
-    fontSize: 86,
+    fontSize: 60,
     lineHeight: 108,
     fontFamily: fonts.krBold,
-    letterSpacing: -8,
     color: "rgba(215,247,255,0.84)",
     textShadowColor: "rgba(103,232,249,0.38)",
     textShadowOffset: { width: 0, height: 0 },

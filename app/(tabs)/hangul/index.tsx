@@ -63,7 +63,7 @@ const HANGUL_MODULES: HangulModule[] = [
     isLocked: false,
   },
   {
-    title: "Consonnes de base",
+    title: "Les consonnes",
     sub: "14 signes fondamentaux",
     href: "/(tabs)/hangul/consonants-basic",
     icon: "ㄱ",

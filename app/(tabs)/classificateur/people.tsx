@@ -1,21 +1,4 @@
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import {
-    Animated,
-    Dimensions,
-    Easing,
-    ImageBackground,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-const { width } = Dimensions.get("window");
+import ClassifierImmersionScreen from "../../../components/classificateur/ClassifierImmersionScreen";
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — ROYAL AMETHYST EDITION
@@ -50,6 +33,16 @@ const SCENES = [
         kr: "세 명이에요. 창가 자리 있을까요?",
         fr: "Nous sommes trois (se-myeong). Y a-t-il une place près de la fenêtre ?",
       },
+      {
+        char: "Serveur",
+        kr: "네, 세 명 자리 준비해 드릴게요.",
+        fr: "Oui, je vais préparer une table pour trois personnes.",
+      },
+      {
+        char: "Moi",
+        kr: "잠시 후 한 명 더 올 거예요.",
+        fr: "Une personne de plus va arriver dans un instant.",
+      },
     ],
     expressions: [
       {
@@ -70,6 +63,24 @@ const SCENES = [
         rom: "Se myeong",
         mean: "3 personnes",
         context: "Set devient 'Se' devant le compteur.",
+      },
+      {
+        word: "한 명 더",
+        rom: "Han myeong deo",
+        mean: "Une personne de plus",
+        context: "Utile quand le groupe n'est pas encore complet.",
+      },
+      {
+        word: "자리",
+        rom: "Jari",
+        mean: "Place / table",
+        context: "Mot essentiel au restaurant.",
+      },
+      {
+        word: "창가 자리",
+        rom: "Changga jari",
+        mean: "Place près de la fenêtre",
+        context: "Demande fréquente à l'arrivée.",
       },
     ],
   },
@@ -93,6 +104,16 @@ const SCENES = [
         kr: "네, 저랑 친구 한 분 더 오실 거예요.",
         fr: "Oui, moi et un ami (honorable) de plus allons venir.",
       },
+      {
+        char: "Réception",
+        kr: "그럼 총 세 분으로 예약해 드릴게요.",
+        fr: "Alors je vais enregistrer la réservation pour trois personnes.",
+      },
+      {
+        char: "Client",
+        kr: "네, 세 분으로 부탁드립니다.",
+        fr: "Oui, pour trois personnes, s'il vous plaît.",
+      },
     ],
     expressions: [
       {
@@ -114,6 +135,24 @@ const SCENES = [
         mean: "Combien de personnes ? (poli)",
         context: "La question polie posée par les hôtes.",
       },
+      {
+        word: "한 분 더",
+        rom: "Han bun deo",
+        mean: "Une personne de plus (poli)",
+        context: "Forme honorifique adaptée aux clients ou aînés.",
+      },
+      {
+        word: "총 세 분",
+        rom: "Chong se bun",
+        mean: "Trois personnes au total (poli)",
+        context: "Phrase parfaite pour confirmer une réservation.",
+      },
+      {
+        word: "예약하다",
+        rom: "Yeyakhada",
+        mean: "Réserver",
+        context: "Verbe courant avec les restaurants et hôtels.",
+      },
     ],
   },
   {
@@ -130,6 +169,16 @@ const SCENES = [
         char: "Moi",
         kr: "아니요, 혼자 왔어요. 한 명이에요.",
         fr: "Non, je suis venu seul (honja). Je suis une seule personne.",
+      },
+      {
+        char: "Hôte",
+        kr: "그럼 한 분 자리로 안내해 드릴게요.",
+        fr: "Alors je vais vous installer à une place pour une personne.",
+      },
+      {
+        char: "Moi",
+        kr: "네, 조용한 자리면 좋아요.",
+        fr: "Oui, une place calme serait bien.",
       },
     ],
     expressions: [
@@ -151,315 +200,35 @@ const SCENES = [
         mean: "Groupe / Compagnie",
         context: "Désigne les personnes qui vous accompagnent.",
       },
+      {
+        word: "한 분 자리",
+        rom: "Han bun jari",
+        mean: "Place pour une personne",
+        context: "Forme polie utilisée par le personnel.",
+      },
+      {
+        word: "안내해 드리다",
+        rom: "Annaehae deurida",
+        mean: "Accompagner / guider",
+        context: "Formule honorifique de service.",
+      },
+      {
+        word: "조용한 자리",
+        rom: "Joyonghan jari",
+        mean: "Place calme",
+        context: "Demande naturelle quand on mange seul.",
+      },
     ],
   },
 ];
 
 export default function PeopleClassifierImmersion() {
-  const [activeScene, setActiveScene] = useState(SCENES[0]);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    fadeAnim.setValue(0);
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 600,
-      easing: Easing.out(Easing.back(1)),
-      useNativeDriver: true,
-    }).start();
-  }, [activeScene]);
-
   return (
-    <SafeAreaView style={styles.container}>
-      <ImageBackground source={{ uri: activeScene.image }} style={styles.bg}>
-        <View style={styles.overlay} />
-
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
-        >
-          {/* HEADER PEOPLE */}
-          <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.backBtn}>
-              <Text style={styles.backArrow}>‹</Text>
-              <Text style={styles.backText}>ÉTICKETTES SOCIALES</Text>
-            </Pressable>
-            <View
-              style={[styles.typeBadge, { borderColor: activeScene.accent }]}
-            >
-              <Text
-                style={[styles.typeBadgeText, { color: activeScene.accent }]}
-              >
-                HUMAN COUNT
-              </Text>
-            </View>
-          </View>
-
-          {/* SCENE NAVIGATOR */}
-          <View style={styles.tabContainer}>
-            {SCENES.map((scene) => (
-              <Pressable
-                key={scene.id}
-                onPress={() => setActiveScene(scene)}
-                style={[
-                  styles.tab,
-                  activeScene.id === scene.id && {
-                    backgroundColor: "rgba(255,255,255,0.1)",
-                    borderColor: activeScene.accent,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    activeScene.id === scene.id && {
-                      color: activeScene.accent,
-                    },
-                  ]}
-                >
-                  {scene.title}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          {/* INTERACTIVE STAGE */}
-          <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [
-                {
-                  translateY: fadeAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [15, 0],
-                  }),
-                },
-              ],
-            }}
-          >
-            <BlurView intensity={45} tint="dark" style={styles.mainCard}>
-              <LinearGradient
-                colors={[`${activeScene.accent}20`, "transparent"]}
-                style={StyleSheet.absoluteFill}
-              />
-
-              <View style={styles.cardInfo}>
-                <Text style={[styles.krBadge, { color: activeScene.accent }]}>
-                  {activeScene.koreanTitle}
-                </Text>
-                <Text style={styles.sceneTitle}>{activeScene.title}</Text>
-                <Text style={styles.sceneDesc}>{activeScene.description}</Text>
-              </View>
-
-              <View style={styles.chatSection}>
-                {activeScene.dialogue.map((line, idx) => (
-                  <View
-                    key={idx}
-                    style={[
-                      styles.bubble,
-                      idx % 2 === 0 ? styles.bubbleL : styles.bubbleR,
-                    ]}
-                  >
-                    <Text
-                      style={[styles.charName, { color: activeScene.accent }]}
-                    >
-                      {line.char}
-                    </Text>
-                    <Text style={styles.krText}>{line.kr}</Text>
-                    <Text style={styles.frText}>{line.fr}</Text>
-                  </View>
-                ))}
-              </View>
-            </BlurView>
-          </Animated.View>
-
-          {/* TOOLBOX - HUMAN COUNTERS */}
-          <View style={styles.toolbox}>
-            <View style={styles.toolboxHeader}>
-              <Text style={styles.toolboxTitle}>HUMAN TOOLBOX</Text>
-              <View
-                style={[
-                  styles.toolboxLine,
-                  { backgroundColor: activeScene.accent },
-                ]}
-              />
-            </View>
-
-            <View style={styles.grid}>
-              {activeScene.expressions.map((exp, i) => (
-                <BlurView
-                  key={i}
-                  intensity={25}
-                  tint="dark"
-                  style={styles.expCard}
-                >
-                  <View
-                    style={[
-                      styles.expAccent,
-                      { backgroundColor: activeScene.accent },
-                    ]}
-                  />
-                  <View style={styles.expContent}>
-                    <Text style={styles.expKr}>{exp.word}</Text>
-                    <Text
-                      style={[styles.expRom, { color: activeScene.accent }]}
-                    >
-                      {exp.rom}
-                    </Text>
-                    <Text style={styles.expMean}>{exp.mean}</Text>
-                    <Text style={styles.expCtx}>{exp.context}</Text>
-                  </View>
-                </BlurView>
-              ))}
-            </View>
-          </View>
-        </ScrollView>
-      </ImageBackground>
-    </SafeAreaView>
+    <ClassifierImmersionScreen
+      scenes={SCENES}
+      backLabel="ÉTICKETTES SOCIALES"
+      badgeLabel="HUMAN COUNT"
+      toolboxTitle="HUMAN TOOLBOX"
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  bg: { flex: 1 },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.85)",
-  },
-  scroll: { paddingHorizontal: 22, paddingBottom: 80 },
-
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginVertical: 15,
-  },
-  backBtn: { flexDirection: "row", alignItems: "center" },
-  backArrow: { color: COLORS.txt, fontSize: 32, marginRight: 5 },
-  backText: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-    letterSpacing: 2,
-  },
-  typeBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-  },
-  typeBadgeText: {
-    fontSize: 9,
-    fontFamily: "Outfit_700Bold",
-    letterSpacing: 1,
-  },
-
-  tabContainer: { flexDirection: "row", gap: 10, marginBottom: 25 },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
-    alignItems: "center",
-  },
-  tabLabel: { color: COLORS.muted, fontFamily: "Outfit_700Bold", fontSize: 11 },
-
-  mainCard: {
-    borderRadius: 32,
-    padding: 25,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-  },
-  cardInfo: { marginBottom: 30 },
-  krBadge: {
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 14,
-    letterSpacing: 1.5,
-    marginBottom: 4,
-  },
-  sceneTitle: {
-    color: COLORS.txt,
-    fontFamily: "Outfit_900Black",
-    fontSize: 34,
-  },
-  sceneDesc: {
-    color: COLORS.muted,
-    fontSize: 14,
-    fontStyle: "italic",
-    marginTop: 5,
-  },
-
-  chatSection: { gap: 28 },
-  bubble: { maxWidth: "88%", padding: 18, borderRadius: 24 },
-  bubbleL: {
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderBottomLeftRadius: 4,
-  },
-  bubbleR: {
-    alignSelf: "flex-end",
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderBottomRightRadius: 4,
-  },
-  charName: {
-    fontSize: 10,
-    fontFamily: "Outfit_700Bold",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 6,
-  },
-  krText: {
-    color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 18,
-    lineHeight: 26,
-    marginBottom: 4,
-  },
-  frText: { color: COLORS.muted, fontSize: 13, fontFamily: "Outfit_500Medium" },
-
-  toolbox: { marginTop: 40 },
-  toolboxHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 15,
-    marginBottom: 20,
-  },
-  toolboxTitle: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-    letterSpacing: 3,
-  },
-  toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
-
-  grid: { gap: 14 },
-  expCard: {
-    borderRadius: 24,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
-  },
-  expAccent: { position: "absolute", left: 0, top: 0, bottom: 0, width: 4 },
-  expContent: { padding: 20 },
-  expKr: {
-    color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 24,
-    marginBottom: 2,
-  },
-  expRom: {
-    fontFamily: "Outfit_700Bold",
-    fontSize: 12,
-    marginBottom: 10,
-    textTransform: "uppercase",
-  },
-  expMean: {
-    color: COLORS.txt,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  expCtx: { color: COLORS.muted, fontSize: 12, lineHeight: 18 },
-});

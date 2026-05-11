@@ -50,6 +50,16 @@ const SCENES = [
         kr: "일곱 시 삼십분에 봐요.",
         fr: "Voyons-nous à 7h30 (Ilgop-si Sam-sip-bun).",
       },
+      {
+        char: "Ami",
+        kr: "그럼 강남역 몇 번 출구예요?",
+        fr: "Alors, quelle sortie de la station Gangnam ?",
+      },
+      {
+        char: "Moi",
+        kr: "이 번 출구에서 일곱 시 반에 만나요.",
+        fr: "Rendez-vous à 7h30 à la sortie 2.",
+      },
     ],
     expressions: [
       {
@@ -69,6 +79,24 @@ const SCENES = [
         rom: "Sam-sip-bun / Ban",
         mean: "30 minutes / Demi",
         context: "Utilise le système sino (Il, I, Sam...).",
+      },
+      {
+        word: "일곱 시 반",
+        rom: "Ilgop si ban",
+        mean: "7h30",
+        context: "Forme orale plus naturelle que 'sam-sip-bun'.",
+      },
+      {
+        word: "몇 번 출구",
+        rom: "Myeot beon chulgu",
+        mean: "Quelle sortie",
+        context: "Indispensable pour se retrouver dans le métro.",
+      },
+      {
+        word: "이 번 출구",
+        rom: "I beon chulgu",
+        mean: "Sortie 2",
+        context: "Les numéros de sortie utilisent le sino-coréen.",
       },
     ],
   },
@@ -91,6 +119,16 @@ const SCENES = [
         kr: "밤 열두 시 십오 분에 끊겨요.",
         fr: "Il s'arrête à minuit 15 (Yeol-du-si Sip-oh-bun).",
       },
+      {
+        char: "Moi",
+        kr: "그럼 열한 시 오십 분까지 타야겠네요.",
+        fr: "Alors je devrais le prendre avant 23h50.",
+      },
+      {
+        char: "Agent",
+        kr: "네, 십 분 전에 오시면 안전해요.",
+        fr: "Oui, si vous arrivez dix minutes avant, c'est plus sûr.",
+      },
     ],
     expressions: [
       {
@@ -110,6 +148,24 @@ const SCENES = [
         rom: "Ojeon / Ohu",
         mean: "AM / PM",
         context: "Placé avant l'heure pour préciser le moment de la journée.",
+      },
+      {
+        word: "막차",
+        rom: "Makcha",
+        mean: "Dernier train",
+        context: "Mot vital pour rentrer tard à Séoul.",
+      },
+      {
+        word: "열한 시 오십 분",
+        rom: "Yeolhan si o-sip bun",
+        mean: "23h50",
+        context: "Heure native + minutes sino-coréennes.",
+      },
+      {
+        word: "십 분 전",
+        rom: "Sip bun jeon",
+        mean: "Dix minutes avant",
+        context: "Jeon indique 'avant' dans une expression temporelle.",
       },
     ],
   },
@@ -132,6 +188,16 @@ const SCENES = [
         kr: "새벽 다섯 시 사십오 분이에요.",
         fr: "Il est 5h45 (Daseot-si Sa-sip-oh-bun) du matin.",
       },
+      {
+        char: "Moi",
+        kr: "여섯 시 전에 한강에 도착할 수 있어요?",
+        fr: "On peut arriver au fleuve Han avant 6h ?",
+      },
+      {
+        char: "Ji-soo",
+        kr: "네, 지금 출발하면 다섯 시 오십오 분쯤 도착해요.",
+        fr: "Oui, si on part maintenant, on arrive vers 5h55.",
+      },
     ],
     expressions: [
       {
@@ -151,6 +217,24 @@ const SCENES = [
         rom: "Saebyeok",
         mean: "Aube / Petit matin",
         context: "Désigne la période entre minuit et le lever du soleil.",
+      },
+      {
+        word: "여섯 시 전",
+        rom: "Yeoseot si jeon",
+        mean: "Avant 6h",
+        context: "Forme utile pour parler d'une limite horaire.",
+      },
+      {
+        word: "다섯 시 오십오 분",
+        rom: "Daseot si o-sip-o bun",
+        mean: "5h55",
+        context: "Exemple complet avec heure native et minutes sino.",
+      },
+      {
+        word: "도착하다",
+        rom: "Dochakhada",
+        mean: "Arriver",
+        context: "Verbe de base pour parler d'horaires de trajet.",
       },
     ],
   },

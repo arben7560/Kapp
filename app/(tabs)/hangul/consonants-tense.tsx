@@ -55,10 +55,12 @@ type Scene = {
 };
 
 type QuizQuestion = {
+  id: string;
   expression: Expression;
+  prompt: string;
   options: string[];
   correctAnswer: string;
-  questionType: "meaning" | "sound";
+  questionType: "meaning" | "contrast" | "tense";
 };
 
 const SCENES: Scene[] = [
@@ -67,10 +69,10 @@ const SCENES: Scene[] = [
     title: "La Tension",
     koreanTitle: "쌍자음",
     description:
-      "Les consonnes doubles créent un son plus sec, plus contracté et sans souffle.",
+      "Les consonnes doubles créent un son plus sec, contracté et sans souffle.",
     accent: COLORS.pink,
     curiosityHook:
-      "En coréen, doubler une consonne ne veut pas dire parler plus fort : cela signifie bloquer l’air et contracter le son.",
+      "Doubler une consonne ne veut pas dire parler plus fort : l’air se bloque et le son devient tendu.",
     instruction: "Touche une consonne tendue pour entendre son attaque sèche.",
     teaser:
       "Très bien. Tu sens maintenant la tension. Passons aux contrastes avec les consonnes simples.",
@@ -141,51 +143,59 @@ const SCENES: Scene[] = [
       "La vraie difficulté est de distinguer consonne simple, aspirée et tendue.",
     accent: COLORS.cyan,
     curiosityHook:
-      "Pour une oreille française, ㄱ et ㄲ peuvent sembler proches. Mais en coréen, ce contraste change complètement le mot.",
+      "Pour une oreille française, ㄱ et ㄲ semblent proches. En coréen, ce contraste peut changer le mot.",
     instruction:
-      "Écoute les paires : le deuxième son est plus fermé, plus sec, plus tendu.",
+      "Écoute les trios : simple, tendu, puis aspiré avec plus de souffle.",
     teaser:
       "Parfait. Ton oreille commence à distinguer les nuances. Voyons ces sons dans des mots.",
     expressions: [
       {
-        id: "c-ga-kka",
-        word: "가 / 까",
-        rom: "ga / kka",
-        mean: "Simple / tendu",
-        symbolic: "ㄱ laisse le son sortir naturellement, ㄲ le contracte.",
-        context: "Compare une attaque douce avec une attaque tendue.",
+        id: "c-ga-kka-ka",
+        word: "가 / 까 / 카",
+        rom: "ga / kka / ka",
+        mean: "Simple / tendu / aspiré",
+        symbolic:
+          "ㄱ laisse le son sortir naturellement, ㄲ le contracte, ㅋ ajoute du souffle.",
+        context:
+          "Compare une attaque douce, une attaque tendue, puis une attaque aspirée.",
         type: "contrast",
-        speak: "가 까",
+        speak: "가|까|카",
       },
       {
-        id: "c-da-tta",
-        word: "다 / 따",
-        rom: "da / tta",
-        mean: "Simple / tendu",
-        symbolic: "ㄷ est naturel, ㄸ est bloqué puis relâché.",
-        context: "La différence vient de la tension, pas du volume.",
+        id: "c-da-tta-ta",
+        word: "다 / 따 / 타",
+        rom: "da / tta / ta",
+        mean: "Simple / tendu / aspiré",
+        symbolic:
+          "ㄷ est naturel, ㄸ est bloqué puis relâché, ㅌ ajoute une poussée d'air.",
+        context:
+          "La différence vient de la tension et du souffle, pas seulement du volume.",
         type: "contrast",
-        speak: "다 따",
+        speak: "다|따|타",
       },
       {
-        id: "c-ba-ppa",
-        word: "바 / 빠",
-        rom: "ba / ppa",
-        mean: "Simple / tendu",
-        symbolic: "ㅂ est plus doux, ㅃ est plus explosif.",
-        context: "Les lèvres gardent plus de pression avant le son.",
+        id: "c-ba-ppa-pa",
+        word: "바 / 빠 / 파",
+        rom: "ba / ppa / pa",
+        mean: "Simple / tendu / aspiré",
+        symbolic:
+          "ㅂ est plus doux, ㅃ est plus explosif, ㅍ relâche l'air plus fort.",
+        context:
+          "Les lèvres passent d'une attaque douce à une tension sèche, puis à un souffle clair.",
         type: "contrast",
-        speak: "바 빠",
+        speak: "바|빠|파",
       },
       {
-        id: "c-sa-ssa",
-        word: "사 / 싸",
-        rom: "sa / ssa",
-        mean: "Simple / tendu",
-        symbolic: "ㅆ serre davantage le passage de l’air.",
-        context: "Le son devient plus intense et précis.",
+        id: "c-ja-jja-cha",
+        word: "자 / 짜 / 차",
+        rom: "ja / jja / cha",
+        mean: "Simple / tendu / aspiré",
+        symbolic:
+          "ㅈ est naturel, ㅉ contracte le son, ㅊ ajoute une aspiration nette.",
+        context:
+          "Le son passe d'une attaque douce à une attaque tendue, puis soufflée.",
         type: "contrast",
-        speak: "사 싸",
+        speak: "자|짜|차",
       },
     ],
   },
@@ -197,7 +207,7 @@ const SCENES: Scene[] = [
       "Les consonnes tendues apparaissent dans beaucoup de mots très courants.",
     accent: COLORS.violet,
     curiosityHook:
-      "Quand tu reconnais les consonnes tendues, les mots coréens deviennent plus nets et moins flous à l’oreille.",
+      "Quand tu reconnais les consonnes tendues, les mots deviennent plus nets à l’oreille.",
     instruction:
       "Touche chaque mot pour entendre la tension dans un vrai mot coréen.",
     teaser:
@@ -205,13 +215,13 @@ const SCENES: Scene[] = [
     expressions: [
       {
         id: "w-kka",
-        word: "까다",
-        rom: "kka-da",
-        mean: "Éplucher / critiquer",
+        word: "꼬리",
+        rom: "kko-ri",
+        mean: "Queue",
         symbolic: "Le mot commence par ㄲ.",
-        context: "La première syllabe a une attaque sèche.",
+        context: "La première syllabe contient une attaque tendue très nette.",
         type: "word",
-        speak: "까다",
+        speak: "꼬리",
       },
       {
         id: "w-tta",
@@ -257,33 +267,104 @@ const SCENES: Scene[] = [
   },
 ];
 
+const shuffle = <T,>(items: T[]) => {
+  return [...items].sort(() => Math.random() - 0.5);
+};
+
+const buildTenseQuestion = (
+  exp: Expression,
+  sceneExpressions: Expression[],
+): QuizQuestion => {
+  const correct = exp.mean;
+
+  const distractors = sceneExpressions
+    .filter((item) => item.id !== exp.id)
+    .map((item) => item.mean)
+    .filter(
+      (value, index, arr) => arr.indexOf(value) === index && value !== correct,
+    )
+    .slice(0, 3);
+
+  return {
+    id: `tense-${exp.id}`,
+    expression: exp,
+    prompt: "Quelle consonne tendue correspond à ce son ?",
+    options: shuffle([correct, ...distractors]).slice(0, 4),
+    correctAnswer: correct,
+    questionType: "tense",
+  };
+};
+
+const buildContrastQuestion = (
+  exp: Expression,
+  sceneExpressions: Expression[],
+): QuizQuestion => {
+  const correct = exp.rom;
+
+  const distractors = sceneExpressions
+    .filter((item) => item.id !== exp.id)
+    .map((item) => item.rom)
+    .filter(
+      (value, index, arr) => arr.indexOf(value) === index && value !== correct,
+    )
+    .slice(0, 3);
+
+  return {
+    id: `contrast-${exp.id}`,
+    expression: exp,
+    prompt: "Quel trio simple / tendu / aspiré correspond à ces sons ?",
+    options: shuffle([correct, ...distractors]).slice(0, 4),
+    correctAnswer: correct,
+    questionType: "contrast",
+  };
+};
+
+const buildMeaningQuestion = (
+  exp: Expression,
+  sceneExpressions: Expression[],
+): QuizQuestion => {
+  const correct = exp.mean;
+
+  const distractors = sceneExpressions
+    .filter((item) => item.id !== exp.id)
+    .map((item) => item.mean)
+    .filter(
+      (value, index, arr) => arr.indexOf(value) === index && value !== correct,
+    )
+    .slice(0, 3);
+
+  return {
+    id: `meaning-${exp.id}`,
+    expression: exp,
+    prompt: "Quelle est la signification correcte ?",
+    options: shuffle([correct, ...distractors]).slice(0, 4),
+    correctAnswer: correct,
+    questionType: "meaning",
+  };
+};
+
 const generateQuiz = (scene: Scene): QuizQuestion[] => {
-  const allExpressions = SCENES.flatMap((s) => s.expressions);
+  if (scene.id === "tense-force") {
+    return scene.expressions.map((exp) =>
+      buildTenseQuestion(exp, scene.expressions),
+    );
+  }
 
-  return scene.expressions.map((exp) => {
-    const useSound = Math.random() > 0.5;
-    const correct = useSound ? exp.rom : exp.mean;
+  if (scene.id === "contrast") {
+    return scene.expressions.map((exp) =>
+      buildContrastQuestion(exp, scene.expressions),
+    );
+  }
 
-    const distractors = allExpressions
-      .filter((e) => e.id !== exp.id)
-      .map((e) => (useSound ? e.rom : e.mean))
-      .filter((v, i, arr) => arr.indexOf(v) === i && v !== correct)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 2);
+  if (scene.id === "tense-words") {
+    return scene.expressions.map((exp) =>
+      buildMeaningQuestion(exp, scene.expressions),
+    );
+  }
 
-    while (distractors.length < 2) {
-      distractors.push(useSound ? "..." : "Autre");
-    }
-
-    const options = [correct, ...distractors].sort(() => Math.random() - 0.5);
-
-    return {
-      expression: exp,
-      options,
-      correctAnswer: correct,
-      questionType: useSound ? "sound" : "meaning",
-    };
-  });
+  return scene.expressions.map((exp) =>
+    buildMeaningQuestion(exp, scene.expressions),
+  );
 };
 
 const getQuizResultMessage = (score: number, total: number) => {
@@ -292,10 +373,45 @@ const getQuizResultMessage = (score: number, total: number) => {
 
   const ratio = score / total;
 
-  if (ratio >= 0.8) return "TRÈS BONNE MAÎTRISE";
+  if (ratio >= 0.8) return "SÉQUENCE VALIDÉE";
   if (ratio >= 0.6) return "BONNE PROGRESSION";
   if (ratio >= 0.4) return "BASES EN CONSTRUCTION";
   return "ON REPREND EN DOUCEUR";
+};
+
+const getQuizResultSubtitle = (score: number, total: number) => {
+  if (total <= 0) {
+    return "Reprends calmement la séquence pour consolider tes repères.";
+  }
+
+  const ratio = score / total;
+
+  if (score === total) {
+    return "Tu as parfaitement reconnu les tensions, les contrastes ou le sens. Tu peux continuer vers la suite !";
+  }
+
+  if (ratio >= 0.8) {
+    return "Très solide. La séquence est validée, mais tu peux la refaire pour viser la maîtrise parfaite.";
+  }
+
+  if (ratio >= 0.6) {
+    return "Résultat encourageant. Revois encore quelques cartes pour stabiliser ton oreille.";
+  }
+
+  if (ratio >= 0.4) {
+    return "Quelques bases sont là, mais il faut reprendre calmement la séquence.";
+  }
+
+  return "Ce n'est pas encore maîtrisé. Revois le cours, écoute les sons et prends ton temps.";
+};
+
+const getQuizTitle = (question?: QuizQuestion) => {
+  if (!question) return "DÉFI DE MÉMORISATION";
+
+  if (question.questionType === "tense") return "DÉFI DE TENSION";
+  if (question.questionType === "contrast") return "DÉFI DE CONTRASTE";
+
+  return "DÉFI DE COMPRÉHENSION";
 };
 
 export default function ConsonantsDoubleScreen() {
@@ -308,16 +424,22 @@ export default function ConsonantsDoubleScreen() {
     {},
   );
   const [showTeaser, setShowTeaser] = useState<Record<string, boolean>>({});
+  const [readyForQuiz, setReadyForQuiz] = useState<Record<string, boolean>>({});
   const [quizActive, setQuizActive] = useState(false);
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [quizIndex, setQuizIndex] = useState(0);
   const [quizScore, setQuizScore] = useState(0);
   const [quizAnswered, setQuizAnswered] = useState<string | null>(null);
   const [quizComplete, setQuizComplete] = useState(false);
+  const [activeSpeechSegment, setActiveSpeechSegment] = useState<{
+    expressionId: string;
+    index: number;
+  } | null>(null);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const quizSlideAnim = useRef(new Animated.Value(600)).current;
+  const speechTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
     fadeAnim.setValue(0);
@@ -330,11 +452,25 @@ export default function ConsonantsDoubleScreen() {
     }).start();
 
     Speech.stop();
-  }, [activeScene]);
+
+    speechTimers.current.forEach((timer) => clearTimeout(timer));
+    speechTimers.current = [];
+    setActiveSpeechSegment(null);
+  }, [activeScene, fadeAnim]);
+
+  useEffect(() => {
+    return () => {
+      speechTimers.current.forEach((timer) => clearTimeout(timer));
+      speechTimers.current = [];
+      setActiveSpeechSegment(null);
+      Speech.stop();
+    };
+  }, []);
 
   const currentCompleted = Object.keys(completedItems).length;
+
   const totalToComplete = SCENES.reduce(
-    (acc, s) => acc + s.expressions.length,
+    (acc, scene) => acc + scene.expressions.length,
     0,
   );
 
@@ -348,26 +484,70 @@ export default function ConsonantsDoubleScreen() {
 
       return next;
     });
+
+    setReadyForQuiz((prev) => ({
+      ...prev,
+      [activeScene.id]: false,
+    }));
   };
 
-  const speak = (text: string) => {
+  const speak = (text: string, expressionId?: string) => {
+    speechTimers.current.forEach((timer) => clearTimeout(timer));
+    speechTimers.current = [];
+    setActiveSpeechSegment(null);
+
     Speech.stop();
-    Speech.speak(text, {
-      language: "ko-KR",
-      rate: 0.75,
-      pitch: 1,
+
+    const segments = text
+      .split("|")
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+
+    if (segments.length <= 1) {
+      Speech.speak(text, {
+        language: "ko-KR",
+        rate: 0.75,
+        pitch: 1,
+        onDone: () => setActiveSpeechSegment(null),
+        onStopped: () => setActiveSpeechSegment(null),
+        onError: () => setActiveSpeechSegment(null),
+      });
+      return;
+    }
+
+    segments.forEach((segment, index) => {
+      const timer = setTimeout(() => {
+        if (expressionId) {
+          setActiveSpeechSegment({ expressionId, index });
+        }
+
+        Speech.stop();
+        Speech.speak(segment, {
+          language: "ko-KR",
+          rate: 0.75,
+          pitch: 1,
+        });
+      }, index * 850);
+
+      speechTimers.current.push(timer);
     });
+
+    const clearHighlightTimer = setTimeout(() => {
+      setActiveSpeechSegment(null);
+    }, segments.length * 850);
+
+    speechTimers.current.push(clearHighlightTimer);
   };
 
   const startQuiz = () => {
+    quizSlideAnim.setValue(600);
+
     setQuizQuestions(generateQuiz(activeScene));
     setQuizIndex(0);
     setQuizScore(0);
     setQuizAnswered(null);
     setQuizComplete(false);
     setQuizActive(true);
-
-    quizSlideAnim.setValue(600);
 
     Animated.spring(quizSlideAnim, {
       toValue: 0,
@@ -380,7 +560,7 @@ export default function ConsonantsDoubleScreen() {
   const handlePressItem = (exp: Expression) => {
     const isFirstTime = !completedItems[exp.id];
 
-    speak(exp.speak);
+    speak(exp.speak, exp.id);
     Vibration.vibrate(isFirstTime ? [0, 20, 10, 20] : 8);
 
     const newCompleted = { ...completedItems, [exp.id]: true };
@@ -401,9 +581,12 @@ export default function ConsonantsDoubleScreen() {
 
     if (
       isFirstTime &&
-      activeScene.expressions.every((e) => newCompleted[e.id])
+      activeScene.expressions.every((item) => newCompleted[item.id])
     ) {
-      setTimeout(() => startQuiz(), 1000);
+      setReadyForQuiz((prev) => ({
+        ...prev,
+        [activeScene.id]: true,
+      }));
     }
   };
 
@@ -414,31 +597,46 @@ export default function ConsonantsDoubleScreen() {
     if (!currentQuestion) return;
 
     const isCorrect = answer === currentQuestion.correctAnswer;
+
     setQuizAnswered(answer);
 
     if (isCorrect) {
-      setQuizScore((s) => s + 1);
+      setQuizScore((score) => score + 1);
       Vibration.vibrate(15);
     } else {
       Vibration.vibrate([0, 60]);
-      setTimeout(() => speak(currentQuestion.expression.speak), 400);
+
+      setTimeout(() => {
+        speak(currentQuestion.expression.speak);
+      }, 400);
     }
 
     setTimeout(() => {
       if (quizIndex + 1 < quizQuestions.length) {
-        setQuizIndex((i) => i + 1);
+        setQuizIndex((index) => index + 1);
         setQuizAnswered(null);
-      } else {
-        const finalScore = quizScore + (isCorrect ? 1 : 0);
-        setQuizComplete(true);
-        setMasteredScenes((p) => ({ ...p, [activeScene.id]: true }));
-        setShowTeaser((p) => ({
-          ...p,
-          [activeScene.id]: finalScore === quizQuestions.length,
-        }));
+        return;
       }
+
+      const finalScore = quizScore + (isCorrect ? 1 : 0);
+      const total = quizQuestions.length;
+      const passed = total > 0 && finalScore / total >= 0.8;
+
+      setQuizComplete(true);
+
+      setMasteredScenes((prev) => ({
+        ...prev,
+        [activeScene.id]: passed,
+      }));
+
+      setShowTeaser((prev) => ({
+        ...prev,
+        [activeScene.id]: passed,
+      }));
     }, 900);
   };
+
+  const currentQuestion = quizQuestions[quizIndex];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -473,7 +671,7 @@ export default function ConsonantsDoubleScreen() {
               ]}
             >
               <Text style={styles.premiumToggleText}>
-                {ambientMode ? "✨ SOUND ON" : "🔇 FOCUS"}
+                {ambientMode ? "✨ MODE CALME" : "🔇 FOCUS"}
               </Text>
             </Pressable>
           </View>
@@ -528,7 +726,10 @@ export default function ConsonantsDoubleScreen() {
           </View>
 
           <Animated.View
-            style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
+            style={{
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
+            }}
           >
             <BlurView intensity={70} tint="dark" style={styles.mainCard}>
               <Text style={styles.toolboxSceneTitle}>{activeScene.title}</Text>
@@ -568,35 +769,83 @@ export default function ConsonantsDoubleScreen() {
               <Text style={styles.sectionTitle}>TENSE TOOLBOX</Text>
             </View>
 
-            {activeScene.expressions.map((exp) => (
-              <Pressable
-                key={exp.id}
-                onPress={() => handlePressItem(exp)}
-                style={styles.cardWrapper}
-              >
-                <BlurView
-                  intensity={40}
-                  tint="dark"
-                  style={[
-                    styles.expCard,
-                    completedItems[exp.id] && {
-                      borderColor: activeScene.accent,
-                    },
-                  ]}
+            {activeScene.expressions.map((exp) => {
+              const contrastParts =
+                exp.type === "contrast"
+                  ? exp.word.split("/").map((part) => part.trim())
+                  : [];
+              const activeSegmentIndex =
+                activeSpeechSegment?.expressionId === exp.id
+                  ? activeSpeechSegment.index
+                  : -1;
+
+              return (
+                <Pressable
+                  key={exp.id}
+                  onPress={() => handlePressItem(exp)}
+                  style={styles.cardWrapper}
                 >
-                  <View style={styles.expCardMain}>
-                    <Text
-                      style={[
-                        styles.expWord,
-                        {
-                          color: completedItems[exp.id]
-                            ? activeScene.accent
-                            : COLORS.pureWhite,
-                        },
-                      ]}
-                    >
-                      {exp.word}
-                    </Text>
+                  <BlurView
+                    intensity={40}
+                    tint="dark"
+                    style={[
+                      styles.expCard,
+                      completedItems[exp.id] && {
+                        borderColor: activeScene.accent,
+                      },
+                    ]}
+                  >
+                    <View style={styles.expCardMain}>
+                      {contrastParts.length > 0 ? (
+                        <View style={styles.contrastWordRow}>
+                          {contrastParts.map((part, index) => {
+                            const isListening = activeSegmentIndex === index;
+
+                            return (
+                              <React.Fragment key={`${exp.id}-${part}`}>
+                                <Text
+                                  style={[
+                                    styles.expWord,
+                                    styles.contrastWord,
+                                    {
+                                      color: isListening
+                                        ? COLORS.bg
+                                        : completedItems[exp.id]
+                                          ? activeScene.accent
+                                          : COLORS.pureWhite,
+                                      backgroundColor: isListening
+                                        ? activeScene.accent
+                                        : "transparent",
+                                      borderColor: isListening
+                                        ? activeScene.accent
+                                        : "rgba(255,255,255,0.08)",
+                                    },
+                                  ]}
+                                >
+                                  {part}
+                                </Text>
+
+                                {index < contrastParts.length - 1 && (
+                                  <Text style={styles.contrastSlash}>/</Text>
+                                )}
+                              </React.Fragment>
+                            );
+                          })}
+                        </View>
+                      ) : (
+                        <Text
+                          style={[
+                            styles.expWord,
+                            {
+                              color: completedItems[exp.id]
+                                ? activeScene.accent
+                                : COLORS.pureWhite,
+                            },
+                          ]}
+                        >
+                          {exp.word}
+                        </Text>
+                      )}
 
                     <View style={styles.expCardRight}>
                       {exp.strokeSteps && (
@@ -642,14 +891,30 @@ export default function ConsonantsDoubleScreen() {
                   )}
                 </BlurView>
               </Pressable>
-            ))}
+              );
+            })}
           </View>
+
+          {readyForQuiz[activeScene.id] &&
+            !showTeaser[activeScene.id] &&
+            !masteredScenes[activeScene.id] && (
+              <Pressable onPress={startQuiz} style={styles.teaserBox}>
+                <Text style={styles.teaserText}>
+                  ✨ Tous les éléments sont découverts. Teste maintenant ta
+                  reconnaissance.
+                </Text>
+
+                <Text style={[styles.teaserBtn, { color: activeScene.accent }]}>
+                  DÉMARRER LE DÉFI →
+                </Text>
+              </Pressable>
+            )}
 
           {showTeaser[activeScene.id] && (
             <Pressable
               onPress={() => {
                 const nextIdx =
-                  SCENES.findIndex((s) => s.id === activeScene.id) + 1;
+                  SCENES.findIndex((scene) => scene.id === activeScene.id) + 1;
 
                 if (nextIdx < SCENES.length) {
                   setActiveScene(SCENES[nextIdx]);
@@ -676,31 +941,31 @@ export default function ConsonantsDoubleScreen() {
             >
               {!quizComplete ? (
                 <>
-                  <Text style={styles.quizTitle}>DÉFI DE MÉMORISATION</Text>
+                  <Text style={styles.quizTitle}>
+                    {getQuizTitle(currentQuestion)}
+                  </Text>
 
                   <View style={styles.quizQBox}>
                     <Text
                       style={[styles.quizChar, { color: activeScene.accent }]}
                     >
-                      {quizQuestions[quizIndex]?.expression.word}
+                      {currentQuestion?.expression.word}
                     </Text>
 
                     <Text style={styles.quizInstruction}>
-                      {quizQuestions[quizIndex]?.questionType === "sound"
-                        ? "Quel est le son correct ?"
-                        : "Quelle est la signification correcte ?"}
+                      {currentQuestion?.prompt}
                     </Text>
                   </View>
 
                   <View style={styles.optionsGrid}>
-                    {quizQuestions[quizIndex]?.options.map((opt, i) => (
+                    {currentQuestion?.options.map((opt, index) => (
                       <Pressable
-                        key={i}
+                        key={`${currentQuestion.id}-${index}`}
                         onPress={() => handleQuizAnswer(opt)}
                         style={[
                           styles.optBtn,
                           quizAnswered === opt &&
-                            (opt === quizQuestions[quizIndex].correctAnswer
+                            (opt === currentQuestion.correctAnswer
                               ? styles.optCorrect
                               : styles.optWrong),
                         ]}
@@ -712,11 +977,84 @@ export default function ConsonantsDoubleScreen() {
                 </>
               ) : (
                 <View style={styles.resultBox}>
-                  <Text style={styles.resultIcon}>🌟</Text>
+                  <View
+                    style={[
+                      styles.resultAmbientGlow,
+                      { backgroundColor: `${activeScene.accent}1A` },
+                    ]}
+                  />
 
-                  <Text style={styles.resultTitle}>
+                  <View style={styles.resultTopLabel}>
+                    <View
+                      style={[
+                        styles.resultLabelDot,
+                        { backgroundColor: activeScene.accent },
+                      ]}
+                    />
+
+                    <Text style={styles.resultLabelText}>
+                      {quizScore / quizQuestions.length >= 0.8
+                        ? "SÉQUENCE VALIDÉE"
+                        : "SÉQUENCE À REVOIR"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.resultMedalWrap}>
+                    <LinearGradient
+                      colors={[
+                        `${activeScene.accent}55`,
+                        "rgba(255,255,255,0.08)",
+                        "rgba(255,255,255,0.02)",
+                      ]}
+                      style={styles.resultMedalAura}
+                    />
+
+                    <LinearGradient
+                      colors={[
+                        "rgba(255,255,255,0.22)",
+                        "rgba(255,255,255,0.05)",
+                        "rgba(255,255,255,0.02)",
+                      ]}
+                      style={styles.resultMedal}
+                    >
+                      <View
+                        style={[
+                          styles.resultMedalInner,
+                          { borderColor: `${activeScene.accent}66` },
+                        ]}
+                      >
+                        <Text style={styles.resultScoreBig}>{quizScore}</Text>
+                        <Text style={styles.resultScoreTotal}>
+                          /{quizQuestions.length}
+                        </Text>
+                      </View>
+                    </LinearGradient>
+                  </View>
+
+                  <Text
+                    style={[
+                      styles.resultTitle,
+                      quizScore <= 1 && styles.resultTitleSmall,
+                    ]}
+                  >
                     {getQuizResultMessage(quizScore, quizQuestions.length)}
                   </Text>
+
+                  <Text style={styles.resultSubtitle}>
+                    {getQuizResultSubtitle(quizScore, quizQuestions.length)}
+                  </Text>
+
+                  <View style={styles.resultProgressTrack}>
+                    <View
+                      style={[
+                        styles.resultProgressFill,
+                        {
+                          width: `${(quizScore / quizQuestions.length) * 100}%`,
+                          backgroundColor: activeScene.accent,
+                        },
+                      ]}
+                    />
+                  </View>
 
                   <Text style={styles.resultScore}>
                     {quizScore} / {quizQuestions.length} réponses correctes
@@ -727,14 +1065,22 @@ export default function ConsonantsDoubleScreen() {
                       setQuizActive(false);
                       resetSceneToolbox();
                     }}
-                    style={[
-                      styles.closeBtn,
-                      { backgroundColor: activeScene.accent },
-                    ]}
+                    style={styles.closeBtn}
                   >
-                    <Text style={styles.closeBtnText}>
-                      CONTINUER L'IMMERSION
-                    </Text>
+                    <LinearGradient
+                      colors={[
+                        activeScene.accent,
+                        "rgba(96,165,250,0.92)",
+                        "rgba(186,230,253,0.95)",
+                      ]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.closeBtnGradient}
+                    >
+                      <Text style={styles.closeBtnText}>
+                        {"CONTINUER L'IMMERSION"}
+                      </Text>
+                    </LinearGradient>
                   </Pressable>
                 </View>
               )}
@@ -895,6 +1241,26 @@ const styles = StyleSheet.create({
     fontSize: 28,
     marginBottom: 2,
   },
+  contrastWordRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    flexShrink: 1,
+    gap: 7,
+    maxWidth: "62%",
+  },
+  contrastWord: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  contrastSlash: {
+    color: "rgba(255,255,255,0.38)",
+    fontFamily: "Outfit_700Bold",
+    fontSize: 18,
+  },
   expCardRight: { flexDirection: "row", alignItems: "center", gap: 12 },
   strokeBadge: {
     paddingHorizontal: 8,
@@ -967,15 +1333,21 @@ const styles = StyleSheet.create({
 
   quizOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: "flex-end" },
   quizSheet: {
-    backgroundColor: "#080A12",
-    borderTopLeftRadius: 45,
-    borderTopRightRadius: 45,
-    padding: 35,
-    paddingBottom: 60,
+    backgroundColor: "rgba(4,7,14,0.96)",
+    borderTopLeftRadius: 42,
+    borderTopRightRadius: 42,
+    paddingHorizontal: 26,
+    paddingTop: 28,
+    paddingBottom: 54,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: -10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
+    shadowOffset: { width: 0, height: -14 },
+    shadowOpacity: 0.55,
+    shadowRadius: 28,
+    overflow: "hidden",
   },
   quizTitle: {
     color: "rgba(255,255,255,0.3)",
@@ -1021,31 +1393,150 @@ const styles = StyleSheet.create({
     borderColor: COLORS.errorRed,
     backgroundColor: "rgba(248,113,113,0.12)",
   },
-  resultBox: { alignItems: "center", paddingVertical: 30 },
-  resultIcon: { fontSize: 70, marginBottom: 20 },
+  resultBox: {
+    alignItems: "center",
+    paddingTop: 14,
+    paddingBottom: 4,
+    position: "relative",
+  },
+  resultAmbientGlow: {
+    position: "absolute",
+    top: 66,
+    width: 130,
+    height: 130,
+    borderRadius: 999,
+    opacity: 0.55,
+  },
+  resultTopLabel: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    marginBottom: 20,
+  },
+  resultLabelDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 999,
+  },
+  resultLabelText: {
+    color: "rgba(255,255,255,0.58)",
+    fontFamily: "Outfit_700Bold",
+    fontSize: 10,
+    letterSpacing: 2,
+  },
+  resultMedalWrap: {
+    width: 118,
+    height: 118,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 22,
+  },
+  resultMedalAura: {
+    position: "absolute",
+    width: 118,
+    height: 118,
+    borderRadius: 999,
+    opacity: 0.65,
+  },
+  resultMedal: {
+    width: 96,
+    height: 96,
+    borderRadius: 999,
+    padding: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+  },
+  resultMedalInner: {
+    width: 80,
+    height: 80,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(2,3,6,0.78)",
+    borderWidth: 1,
+    flexDirection: "row",
+  },
+  resultScoreBig: {
+    color: COLORS.pureWhite,
+    fontFamily: "Outfit_900Black",
+    fontSize: 42,
+    letterSpacing: -1,
+  },
+  resultScoreTotal: {
+    color: "rgba(255,255,255,0.45)",
+    fontFamily: "Outfit_700Bold",
+    fontSize: 18,
+    marginTop: 14,
+  },
   resultTitle: {
     color: COLORS.pureWhite,
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: "Outfit_900Black",
-    letterSpacing: -0.5,
+    letterSpacing: -0.6,
     textAlign: "center",
+    marginBottom: 10,
+    textTransform: "uppercase",
+  },
+  resultTitleSmall: {
+    fontSize: 20,
+  },
+  resultSubtitle: {
+    color: "rgba(255,255,255,0.62)",
+    fontSize: 14,
+    lineHeight: 21,
+    fontFamily: "Outfit_500Medium",
+    textAlign: "center",
+    maxWidth: 310,
+    marginBottom: 22,
+  },
+  resultProgressTrack: {
+    width: "82%",
+    height: 6,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    overflow: "hidden",
+    marginBottom: 12,
+  },
+  resultProgressFill: {
+    height: "100%",
+    borderRadius: 999,
   },
   resultScore: {
-    color: COLORS.muted,
-    fontSize: 17,
-    marginVertical: 12,
-    fontFamily: "Outfit_500Medium",
+    color: "rgba(255,255,255,0.50)",
+    fontSize: 13,
+    marginBottom: 28,
+    fontFamily: "Outfit_700Bold",
+    letterSpacing: 0.5,
   },
   closeBtn: {
-    marginTop: 25,
-    paddingHorizontal: 40,
-    paddingVertical: 18,
-    borderRadius: 24,
+    width: "88%",
+    borderRadius: 999,
+    overflow: "hidden",
+    shadowColor: "#60A5FA",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
     elevation: 10,
   },
+  closeBtnGradient: {
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 999,
+  },
   closeBtnText: {
-    color: COLORS.bg,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 15,
+    color: "#020306",
+    fontFamily: "Outfit_900Black",
+    fontSize: 12,
+    letterSpacing: 1.8,
   },
 });

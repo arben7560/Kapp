@@ -1,6 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import CountingImmersionScreen from "../../../components/comptage/CountingImmersionScreen";
 import React, { useEffect, useRef, useState } from "react";
 import {
     Animated,
@@ -50,6 +51,16 @@ const SCENES = [
         kr: "네, 세 잔 확인했습니다.",
         fr: "D'accord, trois (set) verres confirmés.",
       },
+      {
+        char: "Moi",
+        kr: "그리고 케이크 두 조각도 주세요.",
+        fr: "Et deux parts de gâteau aussi, s'il vous plaît.",
+      },
+      {
+        char: "Barista",
+        kr: "네, 음료 세 잔이랑 케이크 두 조각 맞죠?",
+        fr: "Très bien, trois boissons et deux parts de gâteau, c'est bien ça ?",
+      },
     ],
     expressions: [
       {
@@ -69,6 +80,24 @@ const SCENES = [
         rom: "Myeot gae-yeyo?",
         mean: "Combien y en a-t-il ?",
         context: "Question essentielle pour demander une quantité.",
+      },
+      {
+        word: "두 조각",
+        rom: "Du jogak",
+        mean: "Deux parts",
+        context: "Classificateur naturel pour les parts de gâteau ou de pizza.",
+      },
+      {
+        word: "네 잔",
+        rom: "Ne jan",
+        mean: "Quatre verres",
+        context: "Net devient Ne devant un classificateur comme 'jan'.",
+      },
+      {
+        word: "다섯 개",
+        rom: "Daseot gae",
+        mean: "Cinq unités",
+        context: "Gae est le classificateur passe-partout pour les objets.",
       },
     ],
   },
@@ -91,6 +120,16 @@ const SCENES = [
         kr: "하나... 둘... 너무 힘들어요!",
         fr: "Un... deux... c'est trop dur !",
       },
+      {
+        char: "Coach",
+        kr: "셋만 더 할게요. 셋, 넷, 다섯!",
+        fr: "On en fait seulement trois de plus. Trois, quatre, cinq !",
+      },
+      {
+        char: "Moi",
+        kr: "좋아요, 마지막 하나 더 할게요.",
+        fr: "D'accord, j'en fais un dernier de plus.",
+      },
     ],
     expressions: [
       {
@@ -110,6 +149,24 @@ const SCENES = [
         rom: "Daseot, Yeoseot, Ilgob",
         mean: "5, 6, 7",
         context: "Le milieu de la progression numérique.",
+      },
+      {
+        word: "셋만 더",
+        rom: "Set-man deo",
+        mean: "Seulement trois de plus",
+        context: "Très utile pour motiver ou négocier un dernier effort.",
+      },
+      {
+        word: "열 번",
+        rom: "Yeol beon",
+        mean: "Dix fois",
+        context: "Beon compte les répétitions d'un exercice ou d'une action.",
+      },
+      {
+        word: "마지막",
+        rom: "Majimak",
+        mean: "Dernier",
+        context: "Annonce la fin d'une série ou d'un entraînement.",
       },
     ],
   },
@@ -132,6 +189,16 @@ const SCENES = [
         kr: "스무 살이 됐어요. 아직 어려요!",
         fr: "J'ai eu vingt (seumu) ans. Je suis encore jeune !",
       },
+      {
+        char: "Ami",
+        kr: "케이크에 초 스무 개 꽂을까요?",
+        fr: "On met vingt bougies sur le gâteau ?",
+      },
+      {
+        char: "Moi",
+        kr: "네, 스무 개면 충분해요!",
+        fr: "Oui, vingt, c'est largement suffisant !",
+      },
     ],
     expressions: [
       {
@@ -152,171 +219,36 @@ const SCENES = [
         mean: "Quel âge ?",
         context: "Toujours utiliser le système natif pour l'âge.",
       },
+      {
+        word: "초 스무 개",
+        rom: "Cho seumu gae",
+        mean: "Vingt bougies",
+        context: "Pour parler du nombre de bougies sur un gâteau.",
+      },
+      {
+        word: "어려요",
+        rom: "Eoryeoyo",
+        mean: "Être jeune",
+        context: "Réponse légère quand on parle de son âge.",
+      },
+      {
+        word: "됐어요",
+        rom: "Dwaesseoyo",
+        mean: "Avoir atteint / devenir",
+        context: "Se combine avec l'âge pour dire 'j'ai eu ... ans'.",
+      },
     ],
   },
 ];
 
 export default function NativeNumbersImmersion() {
-  const [activeScene, setActiveScene] = useState(SCENES[0]);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    fadeAnim.setValue(0);
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 600,
-      easing: Easing.out(Easing.back(1.2)),
-      useNativeDriver: true,
-    }).start();
-  }, [activeScene]);
-
   return (
-    <SafeAreaView style={styles.container}>
-      <ImageBackground
-        source={BACKGROUND_SOURCE}
-        style={styles.bg}
-        resizeMode="cover"
-      >
-        <View style={styles.overlay} />
-
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
-        >
-          {/* NAV HEADER */}
-          <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.backBtn}>
-              <Text style={styles.backArrow}>‹</Text>
-              <Text style={styles.backText}>SYSTÈME NATIF</Text>
-            </Pressable>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>PURE KOREAN</Text>
-            </View>
-          </View>
-
-          {/* SCENE SELECTOR */}
-          <View style={styles.tabContainer}>
-            {SCENES.map((scene) => (
-              <Pressable
-                key={scene.id}
-                onPress={() => setActiveScene(scene)}
-                style={[
-                  styles.tab,
-                  activeScene.id === scene.id && {
-                    backgroundColor: `${activeScene.accent}20`,
-                    borderColor: activeScene.accent,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    activeScene.id === scene.id && {
-                      color: activeScene.accent,
-                    },
-                  ]}
-                >
-                  {scene.title}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          {/* INTERACTIVE CARD */}
-          <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [
-                {
-                  translateY: fadeAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [20, 0],
-                  }),
-                },
-              ],
-            }}
-          >
-            <BlurView intensity={45} tint="dark" style={styles.glassCard}>
-              <LinearGradient
-                colors={[`${activeScene.accent}15`, "transparent"]}
-                style={StyleSheet.absoluteFill}
-              />
-
-              <View style={styles.cardInfo}>
-                <Text
-                  style={[styles.krCategory, { color: activeScene.accent }]}
-                >
-                  {activeScene.koreanTitle}
-                </Text>
-                <Text style={styles.mainTitle}>{activeScene.title}</Text>
-                <Text style={styles.mainDesc}>{activeScene.description}</Text>
-              </View>
-
-              <View style={styles.chatSection}>
-                {activeScene.dialogue.map((line, idx) => (
-                  <View
-                    key={idx}
-                    style={[
-                      styles.bubble,
-                      idx % 2 === 0 ? styles.bubbleL : styles.bubbleR,
-                    ]}
-                  >
-                    <Text
-                      style={[styles.bubbleName, { color: activeScene.accent }]}
-                    >
-                      {line.char}
-                    </Text>
-                    <Text style={styles.bubbleKr}>{line.kr}</Text>
-                    <Text style={styles.bubbleFr}>{line.fr}</Text>
-                  </View>
-                ))}
-              </View>
-            </BlurView>
-          </Animated.View>
-
-          {/* NUMERIC TOOLBOX */}
-          <View style={styles.toolbox}>
-            <View style={styles.toolboxHeader}>
-              <Text style={styles.toolboxTitle}>NUMERIC TOOLBOX</Text>
-              <View
-                style={[
-                  styles.toolboxLine,
-                  { backgroundColor: activeScene.accent },
-                ]}
-              />
-            </View>
-
-            <View style={styles.expGrid}>
-              {activeScene.expressions.map((exp, i) => (
-                <BlurView
-                  key={i}
-                  intensity={20}
-                  tint="dark"
-                  style={styles.expCard}
-                >
-                  <View
-                    style={[
-                      styles.expAccent,
-                      { backgroundColor: activeScene.accent },
-                    ]}
-                  />
-                  <View style={styles.expBody}>
-                    <Text style={styles.expWord}>{exp.word}</Text>
-                    <Text
-                      style={[styles.expRom, { color: activeScene.accent }]}
-                    >
-                      {exp.rom}
-                    </Text>
-                    <Text style={styles.expMean}>{exp.mean}</Text>
-                    <Text style={styles.expCtx}>{exp.context}</Text>
-                  </View>
-                </BlurView>
-              ))}
-            </View>
-          </View>
-        </ScrollView>
-      </ImageBackground>
-    </SafeAreaView>
+    <CountingImmersionScreen
+      scenes={SCENES}
+      backLabel="SYSTÈME NATIF"
+      badgeLabel="PURE KOREAN"
+      toolboxTitle="NUMERIC TOOLBOX"
+    />
   );
 }
 

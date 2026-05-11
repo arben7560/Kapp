@@ -46,9 +46,8 @@ type Props = {
   backLabel: string;
   badgeLabel: string;
   toolboxTitle: string;
+  badgeVariant?: "solid" | "outline";
 };
-
-const BACKGROUND_SOURCE = require("../../assets/images/comptage.png");
 
 const COLORS = {
   bg: "#020306",
@@ -56,11 +55,12 @@ const COLORS = {
   muted: "rgba(255,255,255,0.60)",
 };
 
-export default function CountingImmersionScreen({
+export default function ClassifierImmersionScreen({
   scenes,
   backLabel,
   badgeLabel,
   toolboxTitle,
+  badgeVariant = "outline",
 }: Props) {
   const [activeScene, setActiveScene] = useState(scenes[0]);
   const [visibleMessages, setVisibleMessages] = useState(1);
@@ -86,7 +86,7 @@ export default function CountingImmersionScreen({
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 600,
-      easing: Easing.out(Easing.back(1.2)),
+      easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
   }, [activeScene, fadeAnim]);
@@ -116,7 +116,6 @@ export default function CountingImmersionScreen({
       if (typingTimer.current) {
         clearTimeout(typingTimer.current);
       }
-
       Speech.stop();
     };
   }, [tapHintPulse]);
@@ -153,8 +152,8 @@ export default function CountingImmersionScreen({
 
     if (shouldType) {
       setIsTyping(true);
-
       const delay = 600 + Math.floor(Math.random() * 301);
+
       typingTimer.current = setTimeout(() => {
         setIsTyping(false);
         setVisibleMessages((prev) =>
@@ -175,11 +174,7 @@ export default function CountingImmersionScreen({
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground
-        source={BACKGROUND_SOURCE}
-        style={styles.bg}
-        resizeMode="cover"
-      >
+      <ImageBackground source={{ uri: activeScene.image }} style={styles.bg}>
         <View style={styles.overlay} />
 
         <ScrollView
@@ -193,9 +188,21 @@ export default function CountingImmersionScreen({
             </Pressable>
 
             <View
-              style={[styles.badge, { borderColor: activeScene.accent }]}
+              style={[
+                styles.typeBadge,
+                badgeVariant === "solid"
+                  ? { backgroundColor: activeScene.accent }
+                  : { borderColor: activeScene.accent },
+              ]}
             >
-              <Text style={[styles.badgeText, { color: activeScene.accent }]}>
+              <Text
+                style={[
+                  styles.typeBadgeText,
+                  badgeVariant === "solid"
+                    ? styles.solidBadgeText
+                    : { color: activeScene.accent },
+                ]}
+              >
                 {badgeLabel}
               </Text>
             </View>
@@ -209,7 +216,7 @@ export default function CountingImmersionScreen({
                 style={[
                   styles.tab,
                   activeScene.id === scene.id && {
-                    backgroundColor: "rgba(255,255,255,0.08)",
+                    backgroundColor: "rgba(255,255,255,0.1)",
                     borderColor: activeScene.accent,
                   },
                 ]}
@@ -241,21 +248,21 @@ export default function CountingImmersionScreen({
               ],
             }}
           >
-            <BlurView intensity={45} tint="dark" style={styles.stageCard}>
+            <BlurView intensity={45} tint="dark" style={styles.mainCard}>
               <LinearGradient
-                colors={[`${activeScene.accent}15`, "transparent"]}
+                colors={[`${activeScene.accent}20`, "transparent"]}
                 style={StyleSheet.absoluteFill}
               />
 
-              <View style={styles.stageInfo}>
-                <Text style={[styles.krTitle, { color: activeScene.accent }]}>
+              <View style={styles.cardInfo}>
+                <Text style={[styles.krBadge, { color: activeScene.accent }]}>
                   {activeScene.koreanTitle}
                 </Text>
-                <Text style={styles.mainTitle}>{activeScene.title}</Text>
-                <Text style={styles.mainSub}>{activeScene.description}</Text>
+                <Text style={styles.sceneTitle}>{activeScene.title}</Text>
+                <Text style={styles.sceneDesc}>{activeScene.description}</Text>
               </View>
 
-              <Pressable onPress={advanceDialogue} style={styles.scriptBox}>
+              <Pressable onPress={advanceDialogue} style={styles.chatSection}>
                 {activeScene.dialogue.slice(0, visibleMessages).map((line, idx) => {
                   const dialogueId = `${activeScene.id}-dialogue-${idx}`;
                   const isActive = selectedWord === dialogueId;
@@ -271,32 +278,25 @@ export default function CountingImmersionScreen({
                       ]}
                     >
                       <Text
-                        style={[styles.charTag, { color: activeScene.accent }]}
+                        style={[styles.charName, { color: activeScene.accent }]}
                       >
                         {line.char}
                       </Text>
-                      <Text style={styles.krScript}>{line.kr}</Text>
-                      <Text style={styles.frScript}>{line.fr}</Text>
+                      <Text style={styles.krText}>{line.kr}</Text>
+                      <Text style={styles.frText}>{line.fr}</Text>
                     </Pressable>
                   );
                 })}
 
                 {isTyping && (
                   <View style={[styles.bubble, styles.bubbleL, styles.typingBubble]}>
-                    <Text style={[styles.charTag, { color: activeScene.accent }]}>
+                    <Text style={[styles.charName, { color: activeScene.accent }]}>
                       {activeScene.dialogue[visibleMessages]?.char}
                     </Text>
-
                     <View style={styles.typingDots}>
-                      <View
-                        style={[styles.dot, { backgroundColor: activeScene.accent }]}
-                      />
-                      <View
-                        style={[styles.dot, { backgroundColor: activeScene.accent }]}
-                      />
-                      <View
-                        style={[styles.dot, { backgroundColor: activeScene.accent }]}
-                      />
+                      <View style={[styles.dot, { backgroundColor: activeScene.accent }]} />
+                      <View style={[styles.dot, { backgroundColor: activeScene.accent }]} />
+                      <View style={[styles.dot, { backgroundColor: activeScene.accent }]} />
                     </View>
                   </View>
                 )}
@@ -354,50 +354,23 @@ export default function CountingImmersionScreen({
                     ]}
                   >
                     <BlurView
-                      intensity={18}
+                      intensity={25}
                       tint="dark"
-                      style={[styles.vocabCard, isActive && { borderColor: activeScene.accent }]}
+                      style={[styles.expCard, isActive && { borderColor: activeScene.accent }]}
                     >
                       <View
                         style={[
-                          styles.vocabAccent,
-                          {
-                            backgroundColor: activeScene.accent,
-                            opacity: isActive ? 1 : 0.8,
-                          },
+                          styles.expAccent,
+                          { backgroundColor: activeScene.accent },
                         ]}
                       />
-                      <View style={styles.vocabInner}>
-                        <View style={styles.vocabTopRow}>
-                          <View style={{ flex: 1 }}>
-                            <Text style={styles.vocabWord}>{exp.word}</Text>
-                            <Text
-                              style={[styles.vocabRom, { color: activeScene.accent }]}
-                            >
-                              {exp.rom}
-                            </Text>
-                          </View>
-
-                          <View
-                            style={[
-                              styles.listenPill,
-                              {
-                                backgroundColor: `${activeScene.accent}20`,
-                                borderColor: `${activeScene.accent}55`,
-                              },
-                            ]}
-                          >
-                            <Text
-                              style={[styles.listenIcon, { color: activeScene.accent }]}
-                            >
-                              {isActive ? "●" : "▶"}
-                            </Text>
-                            <Text style={styles.listenText}>ÉCOUTER</Text>
-                          </View>
-                        </View>
-
-                        <Text style={styles.vocabMean}>{exp.mean}</Text>
-                        <Text style={styles.vocabCtx}>{exp.context}</Text>
+                      <View style={styles.expContent}>
+                        <Text style={styles.expKr}>{exp.word}</Text>
+                        <Text style={[styles.expRom, { color: activeScene.accent }]}>
+                          {exp.rom}
+                        </Text>
+                        <Text style={styles.expMean}>{exp.mean}</Text>
+                        <Text style={styles.expCtx}>{exp.context}</Text>
                       </View>
                     </BlurView>
                   </Pressable>
@@ -418,8 +391,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(2,3,6,0.85)",
   },
-  scroll: { paddingHorizontal: 22, paddingBottom: 60 },
-
+  scroll: { paddingHorizontal: 22, paddingBottom: 80 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -434,18 +406,21 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 2,
   },
-  badge: {
-    paddingHorizontal: 10,
+  typeBadge: {
+    paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 6,
     borderWidth: 1,
   },
-  badgeText: {
+  typeBadgeText: {
     fontSize: 9,
     fontFamily: "Outfit_700Bold",
     letterSpacing: 1,
   },
-
+  solidBadgeText: {
+    color: "#000",
+    fontFamily: "Outfit_900Black",
+  },
   tabContainer: { flexDirection: "row", gap: 10, marginBottom: 25 },
   tab: {
     flex: 1,
@@ -460,34 +435,32 @@ const styles = StyleSheet.create({
     fontFamily: "Outfit_700Bold",
     fontSize: 11,
   },
-
-  stageCard: {
+  mainCard: {
     borderRadius: 32,
     padding: 25,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: "rgba(255,255,255,0.12)",
   },
-  stageInfo: { marginBottom: 30 },
-  krTitle: {
+  cardInfo: { marginBottom: 30 },
+  krBadge: {
     fontFamily: "NotoSansKR_700Bold",
     fontSize: 14,
-    letterSpacing: 1,
+    letterSpacing: 1.5,
     marginBottom: 4,
   },
-  mainTitle: {
+  sceneTitle: {
     color: COLORS.txt,
     fontFamily: "Outfit_900Black",
     fontSize: 34,
   },
-  mainSub: {
+  sceneDesc: {
     color: COLORS.muted,
-    fontSize: 13,
+    fontSize: 14,
     fontStyle: "italic",
-    marginTop: 8,
+    marginTop: 5,
   },
-
-  scriptBox: { gap: 28 },
+  chatSection: { gap: 28 },
   bubble: {
     maxWidth: "88%",
     padding: 18,
@@ -497,31 +470,31 @@ const styles = StyleSheet.create({
   },
   bubbleL: {
     alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.04)",
+    backgroundColor: "rgba(255,255,255,0.05)",
     borderBottomLeftRadius: 4,
   },
   bubbleR: {
     alignSelf: "flex-end",
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: "rgba(255,255,255,0.12)",
     borderBottomRightRadius: 4,
   },
-  charTag: {
-    fontSize: 9,
+  charName: {
+    fontSize: 10,
     fontFamily: "Outfit_700Bold",
     textTransform: "uppercase",
-    letterSpacing: 1.5,
+    letterSpacing: 1,
     marginBottom: 6,
   },
-  krScript: {
+  krText: {
     color: COLORS.txt,
     fontFamily: "NotoSansKR_700Bold",
     fontSize: 18,
-    lineHeight: 25,
+    lineHeight: 26,
     marginBottom: 4,
   },
-  frScript: {
+  frText: {
     color: COLORS.muted,
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: "Outfit_500Medium",
   },
   typingBubble: {
@@ -548,7 +521,6 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     marginTop: 4,
   },
-
   toolbox: { marginTop: 40 },
   toolboxHeader: {
     flexDirection: "row",
@@ -563,68 +535,33 @@ const styles = StyleSheet.create({
     letterSpacing: 3,
   },
   toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
-
   grid: { gap: 14 },
   cardPressable: { width: "100%" },
-  vocabCard: {
+  expCard: {
     borderRadius: 24,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.05)",
   },
-  vocabAccent: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-  },
-  vocabInner: { padding: 20 },
-  vocabTopRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 14,
-    marginBottom: 10,
-  },
-  vocabWord: {
+  expAccent: { position: "absolute", left: 0, top: 0, bottom: 0, width: 4 },
+  expContent: { padding: 20 },
+  expKr: {
     color: COLORS.txt,
     fontFamily: "NotoSansKR_700Bold",
     fontSize: 24,
     marginBottom: 2,
   },
-  vocabRom: {
+  expRom: {
     fontFamily: "Outfit_700Bold",
     fontSize: 12,
+    marginBottom: 10,
     textTransform: "uppercase",
   },
-  vocabMean: {
+  expMean: {
     color: COLORS.txt,
     fontFamily: "Outfit_700Bold",
     fontSize: 16,
     marginBottom: 4,
   },
-  vocabCtx: {
-    color: COLORS.muted,
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  listenPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  listenIcon: {
-    fontSize: 9,
-    fontFamily: "Outfit_700Bold",
-  },
-  listenText: {
-    color: "rgba(255,255,255,0.78)",
-    fontFamily: "Outfit_700Bold",
-    fontSize: 9,
-    letterSpacing: 1,
-  },
+  expCtx: { color: COLORS.muted, fontSize: 12, lineHeight: 18 },
 });

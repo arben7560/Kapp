@@ -7,8 +7,8 @@ import {
   Animated,
   Dimensions,
   Easing,
-  ImageSourcePropType,
   ImageBackground,
+  ImageSourcePropType,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -37,7 +37,7 @@ const SCENES = [
   {
     id: "sogeting",
     title: "Le Sogeting",
-    koreanTitle: "소개팅",
+    koreanTitle: "Le rendez-vous",
     description: "Le premier rendez-vous arrangé dans un café chic de Gangnam.",
     accent: COLORS.romance,
     image: require("../../../assets/images/sogeting.png"),
@@ -83,7 +83,7 @@ const SCENES = [
       {
         word: "첫눈에 반하다",
         rom: "Cheonnune banhada",
-        mean: "Coup de foudre",
+        mean: "Avoir le coup de foudre",
         context: "Tomber amoureux au premier regard.",
       },
     ],
@@ -91,7 +91,7 @@ const SCENES = [
   {
     id: "sseom",
     title: "Le 'Some'",
-    koreanTitle: "썸 타는 중",
+    koreanTitle: "Premiers flirts",
     description: "Flirt et tension au bord du fleuve Han à minuit.",
     accent: COLORS.lavender,
     image: require("../../../assets/images/han.png"),
@@ -104,7 +104,7 @@ const SCENES = [
       },
       {
         char: "Hae-in",
-        kr: "괜찮아요. 그래도 고마워요.",
+        kr: "괜찮아요. 고마워요.",
         fr: "Ça va. Mais merci quand même.",
         side: "me",
       },
@@ -145,7 +145,7 @@ const SCENES = [
   {
     id: "couple",
     title: "Le Couple",
-    koreanTitle: "연인",
+    koreanTitle: "Le couple",
     description: "Promesse d'éternité à la N Seoul Tower.",
     accent: COLORS.heart,
     image: require("../../../assets/images/tower.png"),
@@ -825,4 +825,3 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 });
-

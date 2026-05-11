@@ -7,8 +7,8 @@ import {
   Animated,
   Dimensions,
   Easing,
-  ImageSourcePropType,
   ImageBackground,
+  ImageSourcePropType,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -162,8 +162,8 @@ const SCENES = [
       },
       {
         char: "Yuna",
-        kr: "좋아요. 그런데 너무 멀면 안 돼요.",
-        fr: "D’accord. Mais il ne faut pas que ce soit trop loin.",
+        kr: "좋아요. 근처로 가요.",
+        fr: "D’accord. Allons dans les environs.",
         side: "me",
       },
       {

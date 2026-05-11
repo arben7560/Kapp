@@ -50,6 +50,16 @@ const SCENES = [
         kr: "삼만 오천 원입니다.",
         fr: "C'est trente-cinq mille (Sam-man Oh-cheon) won.",
       },
+      {
+        char: "Moi",
+        kr: "두 장 사면 칠만 원이에요?",
+        fr: "Si j'en achète deux, ça fait 70 000 won ?",
+      },
+      {
+        char: "Vendeur",
+        kr: "네, 두 장이면 칠만 원입니다.",
+        fr: "Oui, pour deux pièces, cela fait 70 000 won.",
+      },
     ],
     expressions: [
       {
@@ -70,6 +80,24 @@ const SCENES = [
         mean: "C'est cher",
         context: "Réaction utile quand le nombre est trop élevé !",
       },
+      {
+        word: "칠만 원",
+        rom: "Chil-man won",
+        mean: "70 000 won",
+        context: "Deux articles à 35 000 won donnent naturellement 70 000 won.",
+      },
+      {
+        word: "두 장",
+        rom: "Du jang",
+        mean: "Deux pièces",
+        context: "Jang sert pour les vêtements plats, billets ou feuilles.",
+      },
+      {
+        word: "얼마예요?",
+        rom: "Eolma-yeyo?",
+        mean: "Combien ça coûte ?",
+        context: "Question indispensable pour tout achat.",
+      },
     ],
   },
   {
@@ -86,6 +114,16 @@ const SCENES = [
         char: "Moi",
         kr: "오월 사일, 두 시 삼십분에 봐요.",
         fr: "Voyons-nous le 4 mai (Sa-il) à 2h30 (Sam-sip-bun).",
+      },
+      {
+        char: "Ami",
+        kr: "삼십분 늦으면 연락할게요.",
+        fr: "Si j'ai trente minutes de retard, je te contacte.",
+      },
+      {
+        char: "Moi",
+        kr: "괜찮아요, 사일 오후에 시간 있어요.",
+        fr: "Pas de souci, je suis disponible l'après-midi du 4.",
       },
     ],
     expressions: [
@@ -106,6 +144,24 @@ const SCENES = [
         rom: "Il-ju-il",
         mean: "Une semaine",
         context: "Compter la durée des jours/semaines.",
+      },
+      {
+        word: "오후",
+        rom: "Ohu",
+        mean: "Après-midi / PM",
+        context: "Se place avant l'heure pour préciser le moment.",
+      },
+      {
+        word: "삼십 분 늦다",
+        rom: "Sam-sip bun neutda",
+        mean: "Avoir 30 minutes de retard",
+        context: "Les minutes utilisent le système sino-coréen.",
+      },
+      {
+        word: "연락할게요",
+        rom: "Yeollakhalgeyo",
+        mean: "Je te contacterai",
+        context: "Phrase pratique quand l'horaire change.",
       },
     ],
   },
@@ -128,6 +184,16 @@ const SCENES = [
         kr: "사무실은 구 층에 있나요?",
         fr: "Le bureau est-il au 9e (Gu) étage ?",
       },
+      {
+        char: "Manager",
+        kr: "네, 구 층 구백일 호예요.",
+        fr: "Oui, c'est au 9e étage, bureau 901.",
+      },
+      {
+        char: "Moi",
+        kr: "알겠습니다. 공일공 번호로 연락드릴게요.",
+        fr: "Compris. Je vous contacterai au numéro en 010.",
+      },
     ],
     expressions: [
       {
@@ -148,6 +214,24 @@ const SCENES = [
         rom: "Gong / Yeong",
         mean: "Zéro",
         context: "Gong est préféré pour les numéros de téléphone.",
+      },
+      {
+        word: "구백일 호",
+        rom: "Gu-baek-il ho",
+        mean: "Bureau 901",
+        context: "Les numéros de chambre se lisent en sino-coréen.",
+      },
+      {
+        word: "구 층",
+        rom: "Gu cheung",
+        mean: "9e étage",
+        context: "Cheung indique l'étage d'un bâtiment.",
+      },
+      {
+        word: "연락처",
+        rom: "Yeollak-cheo",
+        mean: "Coordonnées",
+        context: "Mot général pour un contact ou un numéro.",
       },
     ],
   },

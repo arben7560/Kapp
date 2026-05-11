@@ -52,7 +52,7 @@ const SCENES = [
       },
       {
         char: "Moi",
-        kr: "제 이름은 마크입니다. 저는 프랑스 사람이에요.",
+        kr: "제 이름은 마크예요. 저는 프랑스 사람이에요.",
         fr: "Je m'appelle Marc. Je suis français.",
         side: "me",
       },
@@ -93,11 +93,11 @@ const SCENES = [
         speak: "만나서 반가워요",
       },
       {
-        word: "제 이름은 ~입니다",
-        rom: "Je ireumeun ~imnida",
-        mean: "Mon nom est...",
+        word: "제 이름은 마크예요",
+        rom: "Je ireumeun makeu ieyo",
+        mean: "Mon nom est Marc",
         context: "Structure formelle pour se présenter.",
-        speak: "제 이름은 마크입니다",
+        speak: "제 이름은 마크예요",
       },
       {
         word: "저는 프랑스 사람이에요",
@@ -131,7 +131,7 @@ const SCENES = [
       },
       {
         char: "Vendeur",
-        kr: "네, 괜찮습니다. 천천히 오세요.",
+        kr: "네, 괜찮습니다. 천천히 하세요.",
         fr: "Oui, ce n'est pas grave. Allez-y doucement.",
         side: "server",
       },
@@ -164,11 +164,11 @@ const SCENES = [
         speak: "고마워요",
       },
       {
-        word: "실례합니다",
-        rom: "Sillye-hamnida",
+        word: "최송헤요",
+        rom: "Choesongheyo",
         mean: "Excusez-moi",
         context: "Pour interpeller ou passer dans la foule.",
-        speak: "실례합니다",
+        speak: "최송헤요",
       },
       {
         word: "잠시만요",

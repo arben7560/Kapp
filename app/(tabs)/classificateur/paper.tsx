@@ -1,21 +1,4 @@
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import {
-    Animated,
-    Dimensions,
-    Easing,
-    ImageBackground,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-const { width } = Dimensions.get("window");
+import ClassifierImmersionScreen from "../../../components/classificateur/ClassifierImmersionScreen";
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — LITERARY EDITION
@@ -50,6 +33,16 @@ const SCENES = [
         kr: "네, 총 세 권 맞으시죠? 여기 있습니다.",
         fr: "Oui, c'est bien trois volumes (se-gwon) au total ? Voici.",
       },
+      {
+        char: "Moi",
+        kr: "네, 그리고 한국어 교재 한 권도 주세요.",
+        fr: "Oui, et donnez-moi aussi un manuel de coréen.",
+      },
+      {
+        char: "Vendeur",
+        kr: "그럼 모두 네 권입니다.",
+        fr: "Alors cela fait quatre livres au total.",
+      },
     ],
     expressions: [
       {
@@ -70,6 +63,24 @@ const SCENES = [
         rom: "Jap-ji / Soseol",
         mean: "Magazine / Roman",
         context: "Les deux types d'ouvrages les plus courants.",
+      },
+      {
+        word: "세 권",
+        rom: "Se gwon",
+        mean: "Trois livres",
+        context: "Set devient Se devant Gwon.",
+      },
+      {
+        word: "교재 한 권",
+        rom: "Gyojae han gwon",
+        mean: "Un manuel",
+        context: "Gwon s'emploie aussi pour les manuels d'étude.",
+      },
+      {
+        word: "모두 네 권",
+        rom: "Modu ne gwon",
+        mean: "Quatre livres au total",
+        context: "Net devient Ne devant le classificateur.",
       },
     ],
   },
@@ -92,6 +103,16 @@ const SCENES = [
         kr: "네, 네 장 여기 있습니다. 즐거운 관람 되세요!",
         fr: "Oui, voici les quatre feuilles (ne-jang). Bon film !",
       },
+      {
+        char: "Moi",
+        kr: "영수증도 한 장 부탁드려요.",
+        fr: "Je voudrais aussi un reçu, s'il vous plaît.",
+      },
+      {
+        char: "Agent",
+        kr: "네, 영수증 한 장 같이 드릴게요.",
+        fr: "Oui, je vous donne aussi un reçu.",
+      },
     ],
     expressions: [
       {
@@ -112,6 +133,24 @@ const SCENES = [
         rom: "Chul-lyeok-hada",
         mean: "Imprimer",
         context: "Verbe indispensable pour les documents papier.",
+      },
+      {
+        word: "티켓 네 장",
+        rom: "Tiket ne jang",
+        mean: "Quatre billets",
+        context: "Jang compte les billets plats.",
+      },
+      {
+        word: "영수증 한 장",
+        rom: "Yeongsujeung han jang",
+        mean: "Un reçu",
+        context: "Le reçu est aussi compté comme une feuille.",
+      },
+      {
+        word: "즐거운 관람",
+        rom: "Jeulgeoun gwallam",
+        mean: "Bon visionnage",
+        context: "Formule polie au cinéma ou au spectacle.",
       },
     ],
   },
@@ -134,6 +173,16 @@ const SCENES = [
         kr: "제일 잘 나온 거 열 장 주세요.",
         fr: "Donnez-moi dix photos (yeol-jang) de la meilleure.",
       },
+      {
+        char: "Photographe",
+        kr: "여권 사진은 두 장 더 필요하세요?",
+        fr: "Avez-vous besoin de deux photos d'identité en plus ?",
+      },
+      {
+        char: "Moi",
+        kr: "네, 여권 사진 두 장도 주세요.",
+        fr: "Oui, donnez-moi aussi deux photos d'identité.",
+      },
     ],
     expressions: [
       {
@@ -154,305 +203,36 @@ const SCENES = [
         mean: "Photo souvenir",
         context: "Le but de tout passage dans un studio photo coréen.",
       },
+      {
+        word: "몇 장",
+        rom: "Myeot jang",
+        mean: "Combien de feuilles/photos",
+        context: "Question standard pour les objets plats.",
+      },
+      {
+        word: "여권 사진",
+        rom: "Yeogwon sajin",
+        mean: "Photo d'identité",
+        context: "Objet plat compté avec Jang.",
+      },
+      {
+        word: "두 장 더",
+        rom: "Du jang deo",
+        mean: "Deux de plus",
+        context: "Formule utile pour commander des tirages supplémentaires.",
+      },
     ],
   },
 ];
 
 export default function PaperClassifierImmersion() {
-  const [activeScene, setActiveScene] = useState(SCENES[0]);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    fadeAnim.setValue(0);
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 600,
-      easing: Easing.out(Easing.poly(4)),
-      useNativeDriver: true,
-    }).start();
-  }, [activeScene]);
-
   return (
-    <SafeAreaView style={styles.container}>
-      <ImageBackground source={{ uri: activeScene.image }} style={styles.bg}>
-        <View style={styles.overlay} />
-
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
-        >
-          {/* HEADER PAPER */}
-          <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.backBtn}>
-              <Text style={styles.backArrow}>‹</Text>
-              <Text style={styles.backText}>SAVOIR-FAIRE</Text>
-            </Pressable>
-            <View
-              style={[
-                styles.typeBadge,
-                { backgroundColor: activeScene.accent },
-              ]}
-            >
-              <Text style={styles.typeBadgeText}>BOUND & FLAT</Text>
-            </View>
-          </View>
-
-          {/* SCENE SELECTOR */}
-          <View style={styles.tabContainer}>
-            {SCENES.map((scene) => (
-              <Pressable
-                key={scene.id}
-                onPress={() => setActiveScene(scene)}
-                style={[
-                  styles.tab,
-                  activeScene.id === scene.id && {
-                    backgroundColor: "rgba(255,255,255,0.1)",
-                    borderColor: activeScene.accent,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    activeScene.id === scene.id && {
-                      color: activeScene.accent,
-                    },
-                  ]}
-                >
-                  {scene.title}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          {/* INTERACTIVE STAGE */}
-          <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [
-                {
-                  translateY: fadeAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [15, 0],
-                  }),
-                },
-              ],
-            }}
-          >
-            <BlurView intensity={45} tint="dark" style={styles.mainCard}>
-              <LinearGradient
-                colors={[`${activeScene.accent}20`, "transparent"]}
-                style={StyleSheet.absoluteFill}
-              />
-
-              <View style={styles.cardInfo}>
-                <Text style={[styles.krBadge, { color: activeScene.accent }]}>
-                  {activeScene.koreanTitle}
-                </Text>
-                <Text style={styles.sceneTitle}>{activeScene.title}</Text>
-                <Text style={styles.sceneDesc}>{activeScene.description}</Text>
-              </View>
-
-              <View style={styles.chatSection}>
-                {activeScene.dialogue.map((line, idx) => (
-                  <View
-                    key={idx}
-                    style={[
-                      styles.bubble,
-                      idx % 2 === 0 ? styles.bubbleL : styles.bubbleR,
-                    ]}
-                  >
-                    <Text
-                      style={[styles.charName, { color: activeScene.accent }]}
-                    >
-                      {line.char}
-                    </Text>
-                    <Text style={styles.krText}>{line.kr}</Text>
-                    <Text style={styles.frText}>{line.fr}</Text>
-                  </View>
-                ))}
-              </View>
-            </BlurView>
-          </Animated.View>
-
-          {/* TOOLBOX - PAPER COUNTERS */}
-          <View style={styles.toolbox}>
-            <View style={styles.toolboxHeader}>
-              <Text style={styles.toolboxTitle}>LITERARY TOOLBOX</Text>
-              <View
-                style={[
-                  styles.toolboxLine,
-                  { backgroundColor: activeScene.accent },
-                ]}
-              />
-            </View>
-
-            <View style={styles.grid}>
-              {activeScene.expressions.map((exp, i) => (
-                <BlurView
-                  key={i}
-                  intensity={25}
-                  tint="dark"
-                  style={styles.expCard}
-                >
-                  <View
-                    style={[
-                      styles.expAccent,
-                      { backgroundColor: activeScene.accent },
-                    ]}
-                  />
-                  <View style={styles.expContent}>
-                    <Text style={styles.expKr}>{exp.word}</Text>
-                    <Text
-                      style={[styles.expRom, { color: activeScene.accent }]}
-                    >
-                      {exp.rom}
-                    </Text>
-                    <Text style={styles.expMean}>{exp.mean}</Text>
-                    <Text style={styles.expCtx}>{exp.context}</Text>
-                  </View>
-                </BlurView>
-              ))}
-            </View>
-          </View>
-        </ScrollView>
-      </ImageBackground>
-    </SafeAreaView>
+    <ClassifierImmersionScreen
+      scenes={SCENES}
+      backLabel="SAVOIR-FAIRE"
+      badgeLabel="BOUND & FLAT"
+      toolboxTitle="LITERARY TOOLBOX"
+      badgeVariant="solid"
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  bg: { flex: 1 },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.85)",
-  },
-  scroll: { paddingHorizontal: 22, paddingBottom: 80 },
-
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginVertical: 15,
-  },
-  backBtn: { flexDirection: "row", alignItems: "center" },
-  backArrow: { color: COLORS.txt, fontSize: 32, marginRight: 5 },
-  backText: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-    letterSpacing: 2,
-  },
-  typeBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 6 },
-  typeBadgeText: { color: "#000", fontSize: 9, fontFamily: "Outfit_900Black" },
-
-  tabContainer: { flexDirection: "row", gap: 10, marginBottom: 25 },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
-    alignItems: "center",
-  },
-  tabLabel: { color: COLORS.muted, fontFamily: "Outfit_700Bold", fontSize: 11 },
-
-  mainCard: {
-    borderRadius: 32,
-    padding: 25,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-  },
-  cardInfo: { marginBottom: 30 },
-  krBadge: {
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 14,
-    letterSpacing: 1.5,
-    marginBottom: 4,
-  },
-  sceneTitle: {
-    color: COLORS.txt,
-    fontFamily: "Outfit_900Black",
-    fontSize: 34,
-  },
-  sceneDesc: {
-    color: COLORS.muted,
-    fontSize: 14,
-    fontStyle: "italic",
-    marginTop: 5,
-  },
-
-  chatSection: { gap: 28 },
-  bubble: { maxWidth: "88%", padding: 18, borderRadius: 24 },
-  bubbleL: {
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderBottomLeftRadius: 4,
-  },
-  bubbleR: {
-    alignSelf: "flex-end",
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderBottomRightRadius: 4,
-  },
-  charName: {
-    fontSize: 10,
-    fontFamily: "Outfit_700Bold",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 6,
-  },
-  krText: {
-    color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 18,
-    lineHeight: 26,
-    marginBottom: 4,
-  },
-  frText: { color: COLORS.muted, fontSize: 13, fontFamily: "Outfit_500Medium" },
-
-  toolbox: { marginTop: 40 },
-  toolboxHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 15,
-    marginBottom: 20,
-  },
-  toolboxTitle: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-    letterSpacing: 3,
-  },
-  toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
-
-  grid: { gap: 14 },
-  expCard: {
-    borderRadius: 24,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
-  },
-  expAccent: { position: "absolute", left: 0, top: 0, bottom: 0, width: 4 },
-  expContent: { padding: 20 },
-  expKr: {
-    color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 24,
-    marginBottom: 2,
-  },
-  expRom: {
-    fontFamily: "Outfit_700Bold",
-    fontSize: 12,
-    marginBottom: 10,
-    textTransform: "uppercase",
-  },
-  expMean: {
-    color: COLORS.txt,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  expCtx: { color: COLORS.muted, fontSize: 12, lineHeight: 18 },
-});

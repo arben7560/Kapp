@@ -51,6 +51,16 @@ const SCENES = [
         kr: "제가 첫 번째예요! 정말 기뻐요.",
         fr: "Je suis le premier (cheot-beon-jjae) ! Je suis vraiment heureux.",
       },
+      {
+        char: "Juge",
+        kr: "두 번째 참가자도 곧 발표하겠습니다.",
+        fr: "Nous allons aussi annoncer le deuxième participant.",
+      },
+      {
+        char: "Moi",
+        kr: "마지막까지 긴장했어요.",
+        fr: "J'étais nerveux jusqu'au dernier moment.",
+      },
     ],
     expressions: [
       {
@@ -70,6 +80,24 @@ const SCENES = [
         rom: "Ma-ji-mak",
         mean: "Le dernier",
         context: "Indispensable pour clore une liste ou un rang.",
+      },
+      {
+        word: "우승자",
+        rom: "Useungja",
+        mean: "Vainqueur",
+        context: "Mot utile pour annoncer un gagnant.",
+      },
+      {
+        word: "참가자",
+        rom: "Chamgaja",
+        mean: "Participant",
+        context: "Se combine naturellement avec premier, deuxième, etc.",
+      },
+      {
+        word: "발표하다",
+        rom: "Balpyohada",
+        mean: "Annoncer",
+        context: "Verbe fréquent pour les résultats ou classements.",
       },
     ],
   },
@@ -91,6 +119,16 @@ const SCENES = [
         char: "Moi",
         kr: "저는 첫째 아들이고, 둘째는 여동생이에요.",
         fr: "Je suis le premier fils (cheot-jjae), et la deuxième est ma sœur cadette.",
+      },
+      {
+        char: "Ami",
+        kr: "그럼 막내는 누구예요?",
+        fr: "Alors, qui est le petit dernier ?",
+      },
+      {
+        char: "Moi",
+        kr: "셋째 남동생이 막내예요.",
+        fr: "Mon troisième petit frère est le benjamin.",
       },
     ],
     expressions: [
@@ -114,6 +152,24 @@ const SCENES = [
         mean: "3ème / 4ème",
         context: "L'ordre continue en suivant les nombres natifs.",
       },
+      {
+        word: "첫째 아들",
+        rom: "Cheot-jjae adeul",
+        mean: "Fils aîné",
+        context: "Forme précise pour situer un garçon dans la fratrie.",
+      },
+      {
+        word: "여동생",
+        rom: "Yeodongsaeng",
+        mean: "Petite sœur",
+        context: "Permet d'expliquer qui est deuxième ou troisième.",
+      },
+      {
+        word: "남동생",
+        rom: "Namdongsaeng",
+        mean: "Petit frère",
+        context: "Mot de famille très utile avec les ordres de naissance.",
+      },
     ],
   },
   {
@@ -135,6 +191,16 @@ const SCENES = [
         kr: "두 번째 방문 때는 경주에 꼭 가보세요.",
         fr: "Lors de votre deuxième (du-beon-jjae) visite, allez absolument à Gyeongju.",
       },
+      {
+        char: "Moi",
+        kr: "좋아요, 다음 여행은 경주가 첫 번째예요.",
+        fr: "D'accord, pour le prochain voyage, Gyeongju sera le premier arrêt.",
+      },
+      {
+        char: "Guide",
+        kr: "마지막 날에는 한옥 마을도 좋아요.",
+        fr: "Le dernier jour, le village hanok est aussi très bien.",
+      },
     ],
     expressions: [
       {
@@ -154,6 +220,24 @@ const SCENES = [
         rom: "Da-eum",
         mean: "La prochaine fois",
         context: "Désigne l'occurrence suivante.",
+      },
+      {
+        word: "첫 번째 여행",
+        rom: "Cheot-beon-jjae yeohaeng",
+        mean: "Premier voyage",
+        context: "Ordre appliqué à une expérience ou une étape.",
+      },
+      {
+        word: "두 번째 방문",
+        rom: "Du-beon-jjae bangmun",
+        mean: "Deuxième visite",
+        context: "Expression naturelle pour parler d'un retour en Corée.",
+      },
+      {
+        word: "마지막 날",
+        rom: "Majimak nal",
+        mean: "Dernier jour",
+        context: "Utile pour organiser une fin de séjour.",
       },
     ],
   },

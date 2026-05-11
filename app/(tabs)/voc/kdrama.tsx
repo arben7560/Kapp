@@ -56,8 +56,8 @@ const SCENES = [
       },
       {
         char: "Ji-soo",
-        kr: "진짜? 나도 조금 놀랐어.",
-        fr: "Vraiment ? Je suis un peu surprise aussi.",
+        kr: "진짜? 전혀 몰랐어.",
+        fr: "Vraiment ? J'en avais aucune idée.",
         side: "me",
       },
       {
@@ -109,7 +109,7 @@ const SCENES = [
     dialogue: [
       {
         char: "Directeur",
-        kr: "정신 차려! 이게 최선입니까?",
+        kr: "정신 차리세요! 이게 최선입니까?",
         fr: "Reprends-toi ! C'est le mieux que tu puisses faire ?",
         side: "server",
       },
@@ -134,8 +134,8 @@ const SCENES = [
     ],
     expressions: [
       {
-        word: "정신 차려",
-        rom: "Jeongsin charyeo",
+        word: "정신 차리세요",
+        rom: "Jeongsin chariseyo",
         mean: "Reprends-toi / Réveille-toi",
         context: "Indispensable pour les scènes de bureau.",
       },

@@ -50,6 +50,16 @@ const SCENES = [
         kr: "저는 서른 살이에요. 오빠라고 불러도 돼요?",
         fr: "J'ai 30 ans (Seoreun-sal). Puis-je vous appeler Oppa ?",
       },
+      {
+        char: "In-ho",
+        kr: "네, 저도 서른 살이에요. 우리 동갑이네요.",
+        fr: "Oui, j'ai aussi trente ans. Nous avons le même âge.",
+      },
+      {
+        char: "Moi",
+        kr: "그럼 편하게 말해도 돼요?",
+        fr: "Alors, on peut parler plus naturellement ?",
+      },
     ],
     expressions: [
       {
@@ -69,6 +79,24 @@ const SCENES = [
         rom: "Dong-gap",
         mean: "Même âge",
         context: "Mot magique pour briser la glace et parler plus librement.",
+      },
+      {
+        word: "서른 살",
+        rom: "Seoreun sal",
+        mean: "30 ans",
+        context: "Dizaine native utilisée avec le classificateur 'sal'.",
+      },
+      {
+        word: "편하게 말하다",
+        rom: "Pyeonhage malhada",
+        mean: "Parler plus librement",
+        context: "Souvent proposé quand l'âge ou la relation le permet.",
+      },
+      {
+        word: "불러도 돼요?",
+        rom: "Bulleodo dwaeyo?",
+        mean: "Je peux vous appeler... ?",
+        context: "Forme pratique pour demander un titre relationnel.",
       },
     ],
   },
@@ -91,6 +119,16 @@ const SCENES = [
         kr: "네, 하지만 생일이 지나야 한 살 줄어들어요.",
         fr: "Oui, mais il faut attendre son anniversaire pour 'perdre' un an.",
       },
+      {
+        char: "Moi",
+        kr: "그럼 생일 전에는 아직 스물아홉 살이에요?",
+        fr: "Donc avant l'anniversaire, j'ai encore vingt-neuf ans ?",
+      },
+      {
+        char: "Min-ji",
+        kr: "맞아요, 생일이 지나면 서른 살이에요.",
+        fr: "Exactement, après l'anniversaire, vous avez trente ans.",
+      },
     ],
     expressions: [
       {
@@ -111,6 +149,24 @@ const SCENES = [
         rom: "Yeon-do",
         mean: "Année de naissance",
         context: "C'est le chiffre le plus important pour la hiérarchie.",
+      },
+      {
+        word: "생일 전",
+        rom: "Saengil jeon",
+        mean: "Avant l'anniversaire",
+        context: "Repère important avec l'âge international.",
+      },
+      {
+        word: "생일이 지나다",
+        rom: "Saengili jinada",
+        mean: "L'anniversaire est passé",
+        context: "Condition qui fait changer l'âge officiel.",
+      },
+      {
+        word: "스물아홉 살",
+        rom: "Seumul-ahop sal",
+        mean: "29 ans",
+        context: "Exemple natif juste avant la trentaine.",
       },
     ],
   },
@@ -133,6 +189,16 @@ const SCENES = [
         kr: "고마워! 이제 술 마실 수 있어!",
         fr: "Merci ! Maintenant je peux boire de l'alcool !",
       },
+      {
+        char: "Ami",
+        kr: "그래도 천천히 마셔. 오늘은 특별한 날이야.",
+        fr: "Bois quand même doucement. Aujourd'hui est un jour spécial.",
+      },
+      {
+        char: "Moi",
+        kr: "알겠어, 스무 살 첫날이니까 조심할게.",
+        fr: "Compris, c'est mon premier jour à vingt ans, je ferai attention.",
+      },
     ],
     expressions: [
       {
@@ -152,6 +218,24 @@ const SCENES = [
         rom: "Mi-seong-nyeon-ja",
         mean: "Mineur",
         context: "Interdit de tabac et d'alcool.",
+      },
+      {
+        word: "첫날",
+        rom: "Cheonnal",
+        mean: "Premier jour",
+        context: "Utile pour marquer une nouvelle étape de vie.",
+      },
+      {
+        word: "천천히 마시다",
+        rom: "Cheoncheonhi masida",
+        mean: "Boire lentement",
+        context: "Conseil naturel dans une conversation sur la majorité.",
+      },
+      {
+        word: "특별한 날",
+        rom: "Teukbyeolhan nal",
+        mean: "Jour spécial",
+        context: "Expression simple pour célébrer un anniversaire important.",
       },
     ],
   },

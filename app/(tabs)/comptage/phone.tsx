@@ -51,6 +51,16 @@ const SCENES = [
         kr: "네, 제 번호는 공일공-이삼사-오육칠팔이에요.",
         fr: "Oui, mon numéro est le 010-234-5678.",
       },
+      {
+        char: "Moi",
+        kr: "다시 한번 천천히 말씀해 주시겠어요?",
+        fr: "Pourriez-vous le redire lentement une fois ?",
+      },
+      {
+        char: "Min-ho",
+        kr: "공일공, 이삼사, 오육칠팔이에요.",
+        fr: "C'est 010, 234, 5678.",
+      },
     ],
     expressions: [
       {
@@ -71,6 +81,24 @@ const SCENES = [
         rom: "Al-lyeo-juda",
         mean: "Faire savoir / Donner",
         context: "Forme polie pour demander une information.",
+      },
+      {
+        word: "다시 한번",
+        rom: "Dasi hanbeon",
+        mean: "Encore une fois",
+        context: "À utiliser quand un numéro a été dit trop vite.",
+      },
+      {
+        word: "천천히",
+        rom: "Cheoncheonhi",
+        mean: "Lentement",
+        context: "Indispensable pour demander une répétition plus claire.",
+      },
+      {
+        word: "오육칠팔",
+        rom: "O-yuk-chil-pal",
+        mean: "5678",
+        context: "Les numéros se prononcent chiffre par chiffre.",
       },
     ],
   },
@@ -93,6 +121,16 @@ const SCENES = [
         kr: "네, 제가 김수현입니다. 누구세요?",
         fr: "Oui, c'est moi Kim Su-hyeon. Qui est à l'appareil ?",
       },
+      {
+        char: "Manager",
+        kr: "회의 시간이 삼 시에서 네 시로 바뀌었어요.",
+        fr: "L'heure de la réunion est passée de 3h à 4h.",
+      },
+      {
+        char: "Moi",
+        kr: "네, 네 시에 다시 전화드릴게요.",
+        fr: "D'accord, je vous rappellerai à quatre heures.",
+      },
     ],
     expressions: [
       {
@@ -113,6 +151,24 @@ const SCENES = [
         rom: "Tong-hwa jung",
         mean: "En ligne / Occupé",
         context: "Quand la personne est déjà en communication.",
+      },
+      {
+        word: "누구세요?",
+        rom: "Nuguseyo?",
+        mean: "Qui est-ce ?",
+        context: "Forme directe mais polie au téléphone.",
+      },
+      {
+        word: "다시 전화드릴게요",
+        rom: "Dasi jeonhwa-deurilgeyo",
+        mean: "Je vous rappellerai",
+        context: "Forme honorifique utile dans un appel professionnel.",
+      },
+      {
+        word: "바뀌었어요",
+        rom: "Bakkwieosseoyo",
+        mean: "Ça a changé",
+        context: "Pour signaler un changement d'horaire ou de plan.",
       },
     ],
   },
@@ -135,6 +191,16 @@ const SCENES = [
         kr: "답장이 늦어서 미안! 이따가 봐.",
         fr: "Désolé pour la réponse tardive ! On se voit tout à l'heure.",
       },
+      {
+        char: "Ami",
+        kr: "괜찮아, 여덟 시 전에 답장만 해줘.",
+        fr: "Pas grave, réponds-moi juste avant 8h.",
+      },
+      {
+        char: "Moi",
+        kr: "응, 일곱 시 반쯤 보낼게.",
+        fr: "Oui, je l'enverrai vers 7h30.",
+      },
     ],
     expressions: [
       {
@@ -154,6 +220,24 @@ const SCENES = [
         rom: "Ik-ssip",
         mean: "Lu et ignoré",
         context: "Argot pour 'Vu' mais pas de réponse (très mal vu !).",
+      },
+      {
+        word: "확인해봐",
+        rom: "Hwagin-haebwa",
+        mean: "Va vérifier",
+        context: "Expression familière pour demander de regarder une appli.",
+      },
+      {
+        word: "이따가",
+        rom: "Ittaga",
+        mean: "Tout à l'heure",
+        context: "Très naturel pour parler d'un futur proche.",
+      },
+      {
+        word: "일곱 시 반",
+        rom: "Ilgop si ban",
+        mean: "7h30",
+        context: "Ban remplace souvent '30 minutes' à l'oral.",
       },
     ],
   },

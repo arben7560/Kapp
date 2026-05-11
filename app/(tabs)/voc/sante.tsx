@@ -70,6 +70,12 @@ const SCENES = [
         context: "Utile pour demander un traitement simple.",
       },
       {
+        word: "소화제",
+        rom: "Sohwa-jae",
+        mean: "Médicament pour la digestion",
+        context: "Utile pour demander un traitement simple.",
+      },
+      {
         word: "진통제",
         rom: "Jintong-je",
         mean: "Antidouleur",
@@ -544,7 +550,10 @@ export default function HealthEmergency() {
                           <View style={{ flex: 1 }}>
                             <Text style={styles.expKr}>{exp.word}</Text>
                             <Text
-                              style={[styles.expRom, { color: activeScene.accent }]}
+                              style={[
+                                styles.expRom,
+                                { color: activeScene.accent },
+                              ]}
                             >
                               {exp.rom}
                             </Text>
@@ -559,7 +568,10 @@ export default function HealthEmergency() {
                             ]}
                           >
                             <Text
-                              style={[styles.listenIcon, { color: activeScene.accent }]}
+                              style={[
+                                styles.listenIcon,
+                                { color: activeScene.accent },
+                              ]}
                             >
                               {isActive ? "●" : "▶"}
                             </Text>

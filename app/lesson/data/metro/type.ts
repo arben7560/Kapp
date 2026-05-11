@@ -2,6 +2,7 @@ export type MetroPhase =
   | "Accueil"
   | "Ligne"
   | "Direction"
+  | "Correspondance"
   | "Trajet"
   | "Sortie"
   | "Fin";

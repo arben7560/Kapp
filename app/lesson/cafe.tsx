@@ -1,595 +1,858 @@
+import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import * as Speech from "expo-speech";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  Easing,
+  ImageBackground,
+  ImageSourcePropType,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  Vibration,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const BG0 = "#070812";
-const TXT = "rgba(255,255,255,0.92)";
-const MUTED = "rgba(255,255,255,0.65)";
-const LINE = "rgba(255,255,255,0.12)";
-const CARD = "rgba(255,255,255,0.06)";
-const CYAN = "rgba(34,211,238,0.50)";
-const CYAN_BG = "rgba(34,211,238,0.12)";
-const PURPLE = "rgba(124,58,237,0.50)";
-const PURPLE_BG = "rgba(124,58,237,0.12)";
+const COLORS = {
+  bg: "#020306",
+  pink: "#F472B6",
+  cyan: "#22D3EE",
+  gold: "#FDE047",
+  txt: "rgba(255,255,255,0.96)",
+  muted: "rgba(255,255,255,0.60)",
+  glass: "rgba(255,255,255,0.05)",
+};
 
-type CafeTab = "serveur" | "client" | "connecteurs" | "dialogues" | "quiz";
+const CAFE_IMAGE = require("../../assets/images/culturecafe.png");
 
-function Pill({
-  label,
-  active = false,
-  onPress,
-}: {
-  label: string;
-  active?: boolean;
-  onPress?: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
-        opacity: pressed ? 0.92 : 1,
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: active ? CYAN : LINE,
-        backgroundColor: active ? CYAN_BG : "rgba(255,255,255,0.04)",
-      })}
-    >
-      <Text style={{ color: TXT, fontWeight: "900", fontSize: 13 }}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
-function Card({ children }: { children: React.ReactNode }) {
-  return (
-    <View
-      style={{
-        backgroundColor: CARD,
-        borderColor: LINE,
-        borderWidth: 1,
-        borderRadius: 22,
-        padding: 14,
-      }}
-    >
-      {children}
-    </View>
-  );
-}
-
-function VocabRow({
-  kr,
-  roman,
-  fr,
-  level = "débutant",
-}: {
-  kr: string;
-  roman: string;
-  fr: string;
-  level?: string;
-}) {
-  return (
-    <View
-      style={{
-        backgroundColor: "rgba(255,255,255,0.035)",
-        borderColor: LINE,
-        borderWidth: 1,
-        borderRadius: 18,
-        padding: 14,
-        marginBottom: 10,
-      }}
-    >
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 12,
-        }}
-      >
-        <View style={{ flex: 1 }}>
-          <Text style={{ color: TXT, fontSize: 22, fontWeight: "900" }}>
-            {kr}
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 4 }}>{roman}</Text>
-          <Text style={{ color: MUTED, marginTop: 4 }}>• {level}</Text>
-        </View>
-
-        <Text
-          style={{
-            color: "rgba(255,255,255,0.75)",
-            fontWeight: "800",
-            marginTop: 4,
-          }}
-        >
-          {fr}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-function LineBlock({
-  speaker,
-  kr,
-  fr,
-}: {
-  speaker: string;
-  kr: string;
-  fr: string;
-}) {
-  return (
-    <View
-      style={{
-        backgroundColor: "rgba(255,255,255,0.035)",
-        borderColor: LINE,
-        borderWidth: 1,
-        borderRadius: 18,
-        padding: 14,
-        marginBottom: 10,
-      }}
-    >
-      <Text
-        style={{
-          color: "rgba(34,211,238,0.9)",
-          fontWeight: "900",
-          marginBottom: 8,
-        }}
-      >
-        {speaker}
-      </Text>
-      <Text style={{ color: TXT, fontSize: 18, fontWeight: "900" }}>{kr}</Text>
-      <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>{fr}</Text>
-    </View>
-  );
-}
+const SCENES = [
+  {
+    id: "server",
+    tab: "Serveur",
+    title: "Script IA",
+    koreanTitle: "AI 바리스타",
+    description: "Les répliques exactes que l'IA peut dire dans le café.",
+    accent: COLORS.gold,
+    image: CAFE_IMAGE,
+    dialogue: [
+      {
+        char: "IA",
+        kr: "어서 오세요. 주문 도와드릴게요. 무엇으로 드시겠어요?",
+        fr: "Bienvenue. Je vais vous aider pour la commande. Que souhaitez-vous prendre ?",
+        side: "server",
+      },
+      {
+        char: "IA",
+        kr: "네, 확인해 드릴게요. 아이스 아메리카노 두 잔이랑 오렌지 주스 한 잔 맞으시죠?",
+        fr: "Très bien, je vérifie. Deux américanos glacés et un jus d'orange, c'est bien ça ?",
+        side: "server",
+      },
+      {
+        char: "IA",
+        kr: "드시고 가세요, 아니면 포장하세요?",
+        fr: "Vous consommez sur place ou à emporter ?",
+        side: "server",
+      },
+      {
+        char: "IA",
+        kr: "총 9,500원입니다. 카드로 결제하시겠어요, 아니면 현금으로 하시겠어요?",
+        fr: "Cela fait 9 500 wons au total. Vous souhaitez payer par carte ou en espèces ?",
+        side: "server",
+      },
+      {
+        char: "IA",
+        kr: "네, 카드 결제 도와드릴게요. 영수증 필요하세요?",
+        fr: "Très bien, je lance le paiement par carte. Avez-vous besoin du reçu ?",
+        side: "server",
+      },
+      {
+        char: "IA",
+        kr: "진동벨 드릴게요. 편하신 자리에 앉아 계시면 됩니다.",
+        fr: "Voici le buzzer. Vous pouvez vous asseoir où vous voulez.",
+        side: "server",
+      },
+    ],
+    expressions: [
+      {
+        word: "어서 오세요",
+        rom: "Eoseo oseyo",
+        mean: "Bienvenue",
+        context: "Ouverture du script IA au début de la scène café.",
+      },
+      {
+        word: "주문 도와드릴게요",
+        rom: "Jumun dowadeurilgeyo",
+        mean: "Je vais vous aider pour la commande",
+        context: "Phrase polie utilisée par l'IA pour lancer l'échange.",
+      },
+      {
+        word: "무엇으로 드시겠어요?",
+        rom: "Mueoseuro deusigesseoyo?",
+        mean: "Que souhaitez-vous prendre ?",
+        context: "Question serveur centrale du dialogue IA.",
+      },
+      {
+        word: "확인해 드릴게요",
+        rom: "Hwaginhae deurilgeyo",
+        mean: "Je vais vérifier pour vous",
+        context: "L'IA confirme la commande avant la suite.",
+      },
+      {
+        word: "드시고 가세요, 아니면 포장하세요?",
+        rom: "Deusigo gaseyo, animyeon pojanghaseyo?",
+        mean: "Sur place ou à emporter ?",
+        context: "Choix clé du script après la confirmation.",
+      },
+      {
+        word: "영수증 필요하세요?",
+        rom: "Yeongsujeung piryohaseyo?",
+        mean: "Avez-vous besoin du reçu ?",
+        context: "Question de fin après le paiement.",
+      },
+    ],
+  },
+  {
+    id: "client",
+    tab: "Clients",
+    title: "Réponses User",
+    koreanTitle: "사용자 선택",
+    description: "Les réponses exactes que l'utilisateur peut choisir dans le dialogue IA.",
+    accent: COLORS.pink,
+    image: CAFE_IMAGE,
+    dialogue: [
+      {
+        char: "User",
+        kr: "아이스 아메리카노 두 잔이랑 오렌지 주스 한 잔 주세요.",
+        fr: "Je voudrais deux américanos glacés et un jus d'orange, s'il vous plaît.",
+        side: "me",
+      },
+      {
+        char: "User",
+        kr: "아이스 라떼 한 잔이랑 치즈케이크 한 조각 주세요.",
+        fr: "Un latte glacé et un cheesecake, s'il vous plaît.",
+        side: "me",
+      },
+      {
+        char: "User",
+        kr: "다시 한번 말씀해 주시겠어요?",
+        fr: "Pouvez-vous répéter ?",
+        side: "me",
+      },
+      {
+        char: "User",
+        kr: "네, 먹고 갈게요.",
+        fr: "Sur place.",
+        side: "me",
+      },
+      {
+        char: "User",
+        kr: "포장해 주세요.",
+        fr: "À emporter.",
+        side: "me",
+      },
+      {
+        char: "User",
+        kr: "카드로 할게요.",
+        fr: "Par carte.",
+        side: "me",
+      },
+      {
+        char: "User",
+        kr: "아니요, 괜찮아요.",
+        fr: "Non, merci.",
+        side: "me",
+      },
+    ],
+    expressions: [
+      {
+        word: "아이스 아메리카노 두 잔이랑 오렌지 주스 한 잔 주세요.",
+        rom: "Aiseu amerikano du janirang orenji juseu han jan juseyo.",
+        mean: "Deux américanos glacés et un jus d'orange, s'il vous plaît",
+        context: "Choix utilisateur principal dans le script pédagogique.",
+      },
+      {
+        word: "아이스 라떼 한 잔이랑 치즈케이크 한 조각 주세요.",
+        rom: "Aiseu ratte han janirang chijeu keikeu han jogak juseyo.",
+        mean: "Un latte glacé et une part de cheesecake, s'il vous plaît",
+        context: "Deuxième commande possible dans le dialogue IA.",
+      },
+      {
+        word: "다시 한번 말씀해 주시겠어요?",
+        rom: "Dasi hanbeon malsseumhae jusigesseoyo?",
+        mean: "Pouvez-vous répéter ?",
+        context: "Réponse de réparation prévue dans le script.",
+      },
+      {
+        word: "네, 먹고 갈게요.",
+        rom: "Ne, meokgo galgeyo.",
+        mean: "Oui, je consomme sur place",
+        context: "Choix utilisateur pour rester au café.",
+      },
+      {
+        word: "포장해 주세요.",
+        rom: "Pojanghae juseyo.",
+        mean: "À emporter, s'il vous plaît",
+        context: "Choix utilisateur pour l'option takeout.",
+      },
+      {
+        word: "카드로 할게요.",
+        rom: "Kadeuro halgeyo.",
+        mean: "Je vais payer par carte",
+        context: "Réponse attendue au moment du paiement.",
+      },
+      {
+        word: "아니요, 괜찮아요.",
+        rom: "Aniyo, gwaenchanayo.",
+        mean: "Non, merci / ça va",
+        context: "Réponse utilisateur quand le reçu n'est pas nécessaire.",
+      },
+    ],
+  },
+];
 
 export default function CafeLesson() {
-  const [tab, setTab] = useState<CafeTab>("serveur");
+  const [activeScene, setActiveScene] = useState(SCENES[0]);
+  const [previousBackground, setPreviousBackground] =
+    useState<ImageSourcePropType | null>(null);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [visibleMessages, setVisibleMessages] = useState(1);
+  const [isTyping, setIsTyping] = useState(false);
 
-  const content = useMemo(() => {
-    if (tab === "serveur") {
-      return (
-        <>
-          <Card>
-            <Text style={{ color: TXT, fontSize: 20, fontWeight: "900" }}>
-              ☕ Ce que dit souvent le serveur
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 8, lineHeight: 20 }}>
-              Les phrases les plus fréquentes quand tu commandes dans un café à
-              Séoul.
-            </Text>
-          </Card>
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const bgFadeAnim = useRef(new Animated.Value(0)).current;
+  const tapHintPulse = useRef(new Animated.Value(0)).current;
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-          <View style={{ height: 14 }} />
+  useEffect(() => {
+    setVisibleMessages(1);
+    setIsTyping(false);
+    setSelectedWord(null);
 
-          <LineBlock speaker="Serveur" kr="어서 오세요!" fr="Bienvenue !" />
-          <LineBlock
-            speaker="Serveur"
-            kr="무엇을 드릴까요?"
-            fr="Que puis-je vous servir ?"
-          />
-          <LineBlock
-            speaker="Serveur"
-            kr="주문하시겠어요?"
-            fr="Voulez-vous commander ?"
-          />
-          <LineBlock
-            speaker="Serveur"
-            kr="매장에서 드세요, 가져가세요?"
-            fr="Sur place ou à emporter ?"
-          />
-          <LineBlock
-            speaker="Serveur"
-            kr="카드예요, 현금이에요?"
-            fr="Carte ou espèces ?"
-          />
-          <LineBlock
-            speaker="Serveur"
-            kr="주문하신 음료 나왔습니다."
-            fr="Votre boisson est prête."
-          />
-        </>
-      );
+    if (typingTimer.current) {
+      clearTimeout(typingTimer.current);
+      typingTimer.current = null;
     }
 
-    if (tab === "client") {
-      return (
-        <>
-          <Card>
-            <Text style={{ color: TXT, fontSize: 20, fontWeight: "900" }}>
-              🙋 Ce que dit souvent le client
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 8, lineHeight: 20 }}>
-              Les phrases les plus utiles pour commander naturellement.
-            </Text>
-          </Card>
+    Speech.stop();
+    fadeAnim.setValue(0);
 
-          <View style={{ height: 14 }} />
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 600,
+      easing: Easing.out(Easing.back(1)),
+      useNativeDriver: true,
+    }).start();
+  }, [activeScene, fadeAnim]);
 
-          <LineBlock
-            speaker="Client"
-            kr="아메리카노 하나 주세요."
-            fr="Un americano, s'il vous plaît."
-          />
-          <LineBlock
-            speaker="Client"
-            kr="라떼 하나 주세요."
-            fr="Un latte, s'il vous plaît."
-          />
-          <LineBlock
-            speaker="Client"
-            kr="아이스로 주세요."
-            fr="En version glacée, s'il vous plaît."
-          />
-          <LineBlock
-            speaker="Client"
-            kr="매장에서 마실게요."
-            fr="Je vais le boire sur place."
-          />
-          <LineBlock
-            speaker="Client"
-            kr="포장해 주세요."
-            fr="À emporter, s'il vous plaît."
-          />
-          <LineBlock
-            speaker="Client"
-            kr="카드로 할게요."
-            fr="Je vais payer par carte."
-          />
-        </>
-      );
-    }
-
-    if (tab === "connecteurs") {
-      return (
-        <>
-          <Card>
-            <Text style={{ color: TXT, fontSize: 20, fontWeight: "900" }}>
-              🔗 Connecteurs naturels
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 8, lineHeight: 20 }}>
-              Pour lier plusieurs éléments dans une commande et parler plus
-              naturellement.
-            </Text>
-          </Card>
-
-          <View style={{ height: 14 }} />
-
-          <VocabRow kr="하고" roman="hago" fr="et / avec" level="débutant" />
-          <VocabRow
-            kr="이랑 / 랑"
-            roman="irang / rang"
-            fr="et / avec (plus oral)"
-            level="débutant"
-          />
-          <VocabRow
-            kr="그리고"
-            roman="geurigo"
-            fr="et puis / et"
-            level="débutant"
-          />
-          <VocabRow
-            kr="그럼"
-            roman="geureom"
-            fr="alors / dans ce cas"
-            level="débutant"
-          />
-          <VocabRow
-            kr="혹시"
-            roman="hoksi"
-            fr="par hasard / est-ce que par hasard"
-            level="intermédiaire"
-          />
-
-          <View style={{ height: 10 }} />
-
-          <Card>
-            <Text style={{ color: TXT, fontWeight: "900", fontSize: 18 }}>
-              Exemples utiles
-            </Text>
-
-            <Text style={{ color: MUTED, marginTop: 10, lineHeight: 20 }}>
-              아메리카노하고 쿠키 하나 주세요.
-            </Text>
-            <Text style={{ color: "rgba(255,255,255,0.82)", marginTop: 4 }}>
-              Un americano et un cookie, s'il vous plaît.
-            </Text>
-
-            <Text style={{ color: MUTED, marginTop: 12, lineHeight: 20 }}>
-              라떼랑 케이크 주세요.
-            </Text>
-            <Text style={{ color: "rgba(255,255,255,0.82)", marginTop: 4 }}>
-              Un latte et un gâteau, s'il vous plaît.
-            </Text>
-
-            <Text style={{ color: MUTED, marginTop: 12, lineHeight: 20 }}>
-              그럼 아이스로 주세요.
-            </Text>
-            <Text style={{ color: "rgba(255,255,255,0.82)", marginTop: 4 }}>
-              Alors en glacé, s'il vous plaît.
-            </Text>
-
-            <Text style={{ color: MUTED, marginTop: 12, lineHeight: 20 }}>
-              혹시 덜 달게 가능해요?
-            </Text>
-            <Text style={{ color: "rgba(255,255,255,0.82)", marginTop: 4 }}>
-              Est-ce possible un peu moins sucré ?
-            </Text>
-          </Card>
-        </>
-      );
-    }
-
-    if (tab === "dialogues") {
-      return (
-        <>
-          <Card>
-            <Text style={{ color: TXT, fontSize: 20, fontWeight: "900" }}>
-              💬 Mini-dialogues immersifs
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 8, lineHeight: 20 }}>
-              De petites scènes réalistes pour sentir le rythme naturel d’un
-              café coréen.
-            </Text>
-          </Card>
-
-          <View style={{ height: 14 }} />
-
-          <Card>
-            <Text style={{ color: "rgba(34,211,238,0.9)", fontWeight: "900" }}>
-              Dialogue 1 — commande simple
-            </Text>
-
-            <Text style={{ color: TXT, marginTop: 10, fontWeight: "900" }}>
-              Serveur
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 4 }}>무엇을 드릴까요?</Text>
-            <Text style={{ color: "rgba(255,255,255,0.82)", marginTop: 2 }}>
-              Que puis-je vous servir ?
-            </Text>
-
-            <Text style={{ color: TXT, marginTop: 12, fontWeight: "900" }}>
-              Client
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 4 }}>
-              아메리카노 하나 주세요.
-            </Text>
-            <Text style={{ color: "rgba(255,255,255,0.82)", marginTop: 2 }}>
-              Un americano, s'il vous plaît.
-            </Text>
-
-            <Text style={{ color: TXT, marginTop: 12, fontWeight: "900" }}>
-              Serveur
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 4 }}>
-              매장에서 드세요, 가져가세요?
-            </Text>
-            <Text style={{ color: "rgba(255,255,255,0.82)", marginTop: 2 }}>
-              Sur place ou à emporter ?
-            </Text>
-
-            <Text style={{ color: TXT, marginTop: 12, fontWeight: "900" }}>
-              Client
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 4 }}>포장해 주세요.</Text>
-            <Text style={{ color: "rgba(255,255,255,0.82)", marginTop: 2 }}>
-              À emporter, s'il vous plaît.
-            </Text>
-          </Card>
-
-          <View style={{ height: 12 }} />
-
-          <Card>
-            <Text style={{ color: "rgba(34,211,238,0.9)", fontWeight: "900" }}>
-              Dialogue 2 — deux éléments
-            </Text>
-
-            <Text style={{ color: TXT, marginTop: 10, fontWeight: "900" }}>
-              Serveur
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 4 }}>주문하시겠어요?</Text>
-            <Text style={{ color: "rgba(255,255,255,0.82)", marginTop: 2 }}>
-              Voulez-vous commander ?
-            </Text>
-
-            <Text style={{ color: TXT, marginTop: 12, fontWeight: "900" }}>
-              Client
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 4 }}>
-              라떼랑 쿠키 하나 주세요.
-            </Text>
-            <Text style={{ color: "rgba(255,255,255,0.82)", marginTop: 2 }}>
-              Un latte et un cookie, s'il vous plaît.
-            </Text>
-
-            <Text style={{ color: TXT, marginTop: 12, fontWeight: "900" }}>
-              Serveur
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 4 }}>
-              카드예요, 현금이에요?
-            </Text>
-            <Text style={{ color: "rgba(255,255,255,0.82)", marginTop: 2 }}>
-              Carte ou espèces ?
-            </Text>
-
-            <Text style={{ color: TXT, marginTop: 12, fontWeight: "900" }}>
-              Client
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 4 }}>카드로 할게요.</Text>
-            <Text style={{ color: "rgba(255,255,255,0.82)", marginTop: 2 }}>
-              Je vais payer par carte.
-            </Text>
-          </Card>
-        </>
-      );
-    }
-
-    return (
-      <>
-        <Card>
-          <Text style={{ color: TXT, fontSize: 20, fontWeight: "900" }}>
-            🧠 Mini-quiz
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 8, lineHeight: 20 }}>
-            Quelques vérifications rapides pour ancrer le contenu.
-          </Text>
-        </Card>
-
-        <View style={{ height: 14 }} />
-
-        <Card>
-          <Text style={{ color: TXT, fontWeight: "900", fontSize: 18 }}>
-            1) “Sur place ou à emporter ?” se dit…
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 10 }}>
-            매장에서 드세요, 가져가세요?
-          </Text>
-        </Card>
-
-        <View style={{ height: 10 }} />
-
-        <Card>
-          <Text style={{ color: TXT, fontWeight: "900", fontSize: 18 }}>
-            2) “Je vais payer par carte” se dit…
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 10 }}>카드로 할게요.</Text>
-        </Card>
-
-        <View style={{ height: 10 }} />
-
-        <Card>
-          <Text style={{ color: TXT, fontWeight: "900", fontSize: 18 }}>
-            3) “Un americano et un cookie, s'il vous plaît” se dit…
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 10 }}>
-            아메리카노하고 쿠키 하나 주세요.
-          </Text>
-        </Card>
-      </>
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(tapHintPulse, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(tapHintPulse, {
+          toValue: 0,
+          duration: 900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
     );
-  }, [tab]);
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+
+      if (typingTimer.current) {
+        clearTimeout(typingTimer.current);
+      }
+
+      Speech.stop();
+    };
+  }, [tapHintPulse]);
+
+  const shouldHighlightHint =
+    !isTyping && visibleMessages < activeScene.dialogue.length;
+
+  const speak = (text: string, id: string) => {
+    Speech.stop();
+    setSelectedWord(id);
+    Vibration.vibrate(8);
+
+    Speech.speak(text, {
+      language: "ko-KR",
+      rate: 0.78,
+      pitch: 1,
+      onDone: () => setSelectedWord(null),
+      onStopped: () => setSelectedWord(null),
+      onError: () => setSelectedWord(null),
+    });
+  };
+
+  const advanceDialogue = () => {
+    if (isTyping) return;
+
+    if (visibleMessages >= activeScene.dialogue.length) {
+      Vibration.vibrate(8);
+      setVisibleMessages(1);
+      setIsTyping(false);
+      return;
+    }
+
+    const nextMessage = activeScene.dialogue[visibleMessages];
+
+    Vibration.vibrate(8);
+
+    if (nextMessage.side === "server") {
+      setIsTyping(true);
+
+      const delay = 600 + Math.floor(Math.random() * 301);
+
+      typingTimer.current = setTimeout(() => {
+        setIsTyping(false);
+        setVisibleMessages((prev) =>
+          Math.min(prev + 1, activeScene.dialogue.length),
+        );
+      }, delay);
+
+      return;
+    }
+
+    setVisibleMessages((prev) =>
+      Math.min(prev + 1, activeScene.dialogue.length),
+    );
+  };
+
+  const handleSceneChange = (scene: (typeof SCENES)[number]) => {
+    if (scene.id === activeScene.id) return;
+
+    setPreviousBackground(activeScene.image);
+    bgFadeAnim.setValue(1);
+    setActiveScene(scene);
+
+    Animated.timing(bgFadeAnim, {
+      toValue: 0,
+      duration: 420,
+      easing: Easing.inOut(Easing.quad),
+      useNativeDriver: true,
+    }).start(() => {
+      setPreviousBackground(null);
+      bgFadeAnim.setValue(0);
+    });
+  };
 
   return (
-    <LinearGradient colors={[BG0, "#0b0b1d", "#0b0f22"]} style={{ flex: 1 }}>
-      {/* glows */}
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          top: -120,
-          left: -90,
-          width: 260,
-          height: 260,
-          borderRadius: 999,
-          backgroundColor: "rgba(124,58,237,0.18)",
-        }}
-      />
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          bottom: -150,
-          right: -110,
-          width: 320,
-          height: 320,
-          borderRadius: 999,
-          backgroundColor: "rgba(34,211,238,0.14)",
-        }}
-      />
-
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
-        <Pressable onPress={() => router.back()}>
-          <Text style={{ color: MUTED, fontWeight: "800" }}>← Retour</Text>
-        </Pressable>
-
-        <View style={{ height: 14 }} />
-
-        <Text style={{ color: TXT, fontSize: 32, fontWeight: "900" }}>
-          Café — commande réelle
-        </Text>
-
-        <Text style={{ color: MUTED, marginTop: 8, lineHeight: 22 }}>
-          Serveur, client, connecteurs naturels, mini-dialogues et petit quiz
-          pour commander plus naturellement dans un café coréen.
-        </Text>
-
-        <View style={{ height: 14 }} />
-
-        <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
-          <Pill label="Café" active />
-          <Pill label="Commande" />
-          <Pill label="Séoul réel" />
-        </View>
-
-        <View style={{ height: 12 }} />
-
-        <View
-          style={{
-            paddingHorizontal: 14,
-            paddingVertical: 10,
-            borderRadius: 999,
-            borderWidth: 1,
-            borderColor: "rgba(255,99,132,0.28)",
-            backgroundColor: "rgba(255,99,132,0.08)",
-            alignSelf: "flex-start",
-          }}
-        >
-          <Text style={{ color: TXT, fontWeight: "800" }}>
-            Situations fréquentes : 주문 • 매장/포장 • 결제 • 연결어
-          </Text>
-        </View>
-
-        <View style={{ height: 18 }} />
-
-        <Card>
-          <Text style={{ color: TXT, fontSize: 22, fontWeight: "900" }}>
-            ☕ Mode immersif
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 8, lineHeight: 20 }}>
-            Apprends comme si tu étais dans un café à Séoul : phrases du serveur
-            → réponses client → connecteurs naturels → mini-dialogues →
-            mini-quiz.
-          </Text>
-
-          <View style={{ height: 14 }} />
-
-          <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
-            <Pill
-              label="Serveur"
-              active={tab === "serveur"}
-              onPress={() => setTab("serveur")}
+    <SafeAreaView style={styles.container}>
+      <View style={styles.bg}>
+        <ImageBackground
+          source={activeScene.image}
+          style={styles.bgLayer}
+          fadeDuration={0}
+          resizeMode="contain"
+        />
+        {previousBackground ? (
+          <Animated.View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFillObject, { opacity: bgFadeAnim }]}
+          >
+            <ImageBackground
+              source={previousBackground}
+              style={styles.bgLayer}
+              fadeDuration={0}
+              resizeMode="contain"
             />
-            <Pill
-              label="Client"
-              active={tab === "client"}
-              onPress={() => setTab("client")}
-            />
-            <Pill
-              label="Connecteurs"
-              active={tab === "connecteurs"}
-              onPress={() => setTab("connecteurs")}
-            />
-            <Pill
-              label="Dialogues"
-              active={tab === "dialogues"}
-              onPress={() => setTab("dialogues")}
-            />
-            <Pill
-              label="Quiz"
-              active={tab === "quiz"}
-              onPress={() => setTab("quiz")}
-            />
+          </Animated.View>
+        ) : null}
+        <View style={styles.overlay} />
+
+        <ScrollView contentContainerStyle={styles.scroll}>
+          <View style={styles.header}>
+            <Pressable onPress={() => router.back()} style={styles.backBtn}>
+              <Text style={styles.backArrow}>‹</Text>
+              <Text style={styles.backText}>RETOUR</Text>
+            </Pressable>
+
+            <Text style={styles.headerTitle}>CAFE IMMERSION</Text>
           </View>
-        </Card>
 
-        <View style={{ height: 16 }} />
+          <View style={styles.selectorRow}>
+            {SCENES.map((scene) => (
+              <Pressable
+                key={scene.id}
+                onPress={() => handleSceneChange(scene)}
+                style={[
+                  styles.selectorItem,
+                  activeScene.id === scene.id && {
+                    borderColor: scene.accent,
+                    backgroundColor: "rgba(255,255,255,0.1)",
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.selectorText,
+                    activeScene.id === scene.id && { color: scene.accent },
+                  ]}
+                >
+                  {scene.tab}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
 
-        {content}
-      </ScrollView>
-    </LinearGradient>
+          <Animated.View
+            style={[
+              styles.stage,
+              {
+                opacity: fadeAnim,
+                transform: [
+                  {
+                    scale: fadeAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.95, 1],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <BlurView intensity={40} tint="dark" style={styles.glassCard}>
+              <LinearGradient
+                colors={[`${activeScene.accent}20`, "transparent"]}
+                style={StyleSheet.absoluteFill}
+              />
+
+              <View style={styles.sceneMetaRow}>
+                <Text style={[styles.sceneSub, { color: activeScene.accent }]}>
+                  {activeScene.koreanTitle}
+                </Text>
+              </View>
+
+              <Text style={styles.sceneTitle}>{activeScene.title}</Text>
+              <Text style={styles.sceneDesc}>{activeScene.description}</Text>
+
+              <Pressable onPress={advanceDialogue} style={styles.dialogueBox}>
+                {activeScene.dialogue
+                  .slice(0, visibleMessages)
+                  .map((d, index) => {
+                    const isMe = d.side === "me";
+
+                    return (
+                      <View
+                        key={`${activeScene.id}-dialogue-${index}`}
+                        style={[
+                          styles.bubble,
+                          isMe ? styles.bubbleRight : styles.bubbleLeft,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.charName,
+                            { color: activeScene.accent },
+                          ]}
+                        >
+                          {d.char}
+                        </Text>
+                        <Text style={styles.krText}>{d.kr}</Text>
+                        <Text style={styles.frText}>{d.fr}</Text>
+                      </View>
+                    );
+                  })}
+
+                {isTyping && (
+                  <View
+                    style={[
+                      styles.bubble,
+                      styles.bubbleLeft,
+                      styles.typingBubble,
+                    ]}
+                  >
+                    <Text
+                      style={[styles.charName, { color: activeScene.accent }]}
+                    >
+                      {activeScene.dialogue[visibleMessages]?.char}
+                    </Text>
+
+                    <View style={styles.typingDots}>
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.dot,
+                          { backgroundColor: activeScene.accent },
+                        ]}
+                      />
+                    </View>
+                  </View>
+                )}
+
+                <Animated.Text
+                  style={[
+                    styles.tapHint,
+                    shouldHighlightHint && {
+                      color: activeScene.accent,
+                      opacity: tapHintPulse.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.45, 1],
+                      }),
+                      transform: [
+                        {
+                          scale: tapHintPulse.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [1, 1.03],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  {visibleMessages >= activeScene.dialogue.length
+                    ? "Toucher pour recommencer"
+                    : isTyping
+                      ? "Réponse en cours..."
+                      : "Toucher pour continuer"}
+                </Animated.Text>
+              </Pressable>
+            </BlurView>
+          </Animated.View>
+
+          <View style={styles.toolbox}>
+            <View style={styles.toolboxHeader}>
+              <Text style={styles.toolboxTitle}>CAFE TOOLBOX</Text>
+              <View
+                style={[
+                  styles.toolboxLine,
+                  { backgroundColor: activeScene.accent },
+                ]}
+              />
+            </View>
+
+            <View style={styles.expressionGrid}>
+              {activeScene.expressions.map((exp, i) => {
+                const cardId = `${activeScene.id}-${i}`;
+                const isActive = selectedWord === cardId;
+
+                return (
+                  <Pressable
+                    key={cardId}
+                    onPress={() => speak(exp.word, cardId)}
+                    style={({ pressed }) => [
+                      styles.expPressable,
+                      pressed && { transform: [{ scale: 0.985 }] },
+                    ]}
+                  >
+                    <BlurView
+                      intensity={25}
+                      tint="dark"
+                      style={[
+                        styles.expCard,
+                        isActive && {
+                          borderColor: activeScene.accent,
+                        },
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.expAccent,
+                          {
+                            backgroundColor: activeScene.accent,
+                            opacity: isActive ? 1 : 0.75,
+                          },
+                        ]}
+                      />
+                      <View style={styles.expContent}>
+                        <View style={styles.expTopRow}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.expWord}>{exp.word}</Text>
+                            <Text
+                              style={[
+                                styles.expRom,
+                                { color: activeScene.accent },
+                              ]}
+                            >
+                              {exp.rom}
+                            </Text>
+                          </View>
+
+                          <View
+                            style={[
+                              styles.listenPill,
+                              {
+                                backgroundColor: `${activeScene.accent}20`,
+                                borderColor: `${activeScene.accent}55`,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.listenIcon,
+                                { color: activeScene.accent },
+                              ]}
+                            >
+                              {isActive ? "●" : "▶"}
+                            </Text>
+                            <Text style={styles.listenText}>ÉCOUTER</Text>
+                          </View>
+                        </View>
+
+                        <Text style={styles.expMean}>{exp.mean}</Text>
+                        <Text style={styles.expContext}>{exp.context}</Text>
+                      </View>
+                    </BlurView>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: COLORS.bg },
+  bg: { flex: 1, position: "relative" },
+  bgLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(2,3,6,0.85)",
+  },
+  scroll: { paddingHorizontal: 20, paddingBottom: 50 },
+
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 10,
+    marginBottom: 25,
+  },
+  backBtn: { flexDirection: "row", alignItems: "center" },
+  backArrow: { color: COLORS.txt, fontSize: 32, marginRight: 5 },
+  backText: {
+    color: COLORS.muted,
+    fontFamily: "Outfit_700Bold",
+    fontSize: 12,
+    letterSpacing: 1,
+  },
+  headerTitle: {
+    color: COLORS.pink,
+    fontFamily: "Outfit_900Black",
+    fontSize: 14,
+    letterSpacing: 2,
+  },
+
+  selectorRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 10,
+    marginBottom: 20,
+  },
+  selectorItem: {
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  selectorText: {
+    color: COLORS.muted,
+    fontFamily: "Outfit_700Bold",
+    fontSize: 13,
+  },
+
+  stage: { marginBottom: 18 },
+  glassCard: {
+    borderRadius: 32,
+    padding: 25,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+  },
+
+  sceneMetaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 2,
+  },
+  sceneSub: {
+    fontFamily: "NotoSansKR_700Bold",
+    fontSize: 14,
+    letterSpacing: 1,
+  },
+
+  sceneTitle: {
+    color: COLORS.txt,
+    fontFamily: "Outfit_900Black",
+    fontSize: 34,
+    marginBottom: 8,
+  },
+  sceneDesc: {
+    color: COLORS.muted,
+    fontSize: 14,
+    fontStyle: "italic",
+    marginBottom: 30,
+    lineHeight: 20,
+  },
+
+  dialogueBox: { gap: 16 },
+  bubble: {
+    maxWidth: "88%",
+    padding: 18,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+  },
+  bubbleLeft: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderBottomLeftRadius: 4,
+  },
+  bubbleRight: {
+    alignSelf: "flex-end",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderBottomRightRadius: 4,
+  },
+  charName: {
+    fontSize: 10,
+    fontFamily: "Outfit_700Bold",
+    marginBottom: 6,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+  krText: {
+    color: COLORS.txt,
+    fontFamily: "NotoSansKR_700Bold",
+    fontSize: 18,
+    lineHeight: 26,
+    marginBottom: 4,
+  },
+  frText: {
+    color: COLORS.muted,
+    fontSize: 13,
+    fontFamily: "Outfit_500Medium",
+  },
+  typingBubble: {
+    minWidth: 92,
+    paddingVertical: 15,
+  },
+  typingDots: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingTop: 2,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 999,
+    opacity: 0.85,
+  },
+  tapHint: {
+    alignSelf: "center",
+    color: "rgba(255,255,255,0.42)",
+    fontFamily: "Outfit_700Bold",
+    fontSize: 10,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    marginTop: 4,
+  },
+
+  toolboxHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 15,
+    marginBottom: 20,
+  },
+  toolboxTitle: {
+    color: COLORS.muted,
+    fontFamily: "Outfit_700Bold",
+    fontSize: 12,
+    letterSpacing: 3,
+  },
+  toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
+
+  expressionGrid: { gap: 14 },
+  expPressable: { width: "100%" },
+  expCard: {
+    borderRadius: 24,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.05)",
+  },
+  expAccent: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+  },
+  expContent: { padding: 20 },
+  expTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 14,
+    marginBottom: 10,
+  },
+  expWord: {
+    color: COLORS.txt,
+    fontFamily: "NotoSansKR_700Bold",
+    fontSize: 24,
+    marginBottom: 2,
+  },
+  expRom: {
+    fontFamily: "Outfit_700Bold",
+    fontSize: 12,
+  },
+  expMean: {
+    color: COLORS.txt,
+    fontFamily: "Outfit_700Bold",
+    fontSize: 16,
+    marginBottom: 4,
+  },
+  expContext: {
+    color: COLORS.muted,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  listenPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  listenIcon: {
+    fontSize: 9,
+    fontFamily: "Outfit_700Bold",
+  },
+  listenText: {
+    color: "rgba(255,255,255,0.78)",
+    fontFamily: "Outfit_700Bold",
+    fontSize: 9,
+    letterSpacing: 1,
+  },
+});

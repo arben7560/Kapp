@@ -233,7 +233,7 @@ const SCENES = [
   {
     id: "street",
     title: "Dans la Rue",
-    koreanTitle: "길 찾기 (Gil Chat-gi)",
+    koreanTitle: "길 찾고 있어요 (Gil-eul Chat-go isseoyo)",
     description:
       "S'orienter et demander son chemin dans les ruelles de Bukchon.",
     accent: COLORS.mapPink,
@@ -266,11 +266,11 @@ const SCENES = [
     ],
     expressions: [
       {
-        word: "길 찾기",
-        rom: "Gil chat-gi",
-        mean: "Recherche d’itinéraire",
+        word: "길을 찾고 있어요",
+        rom: "Gil-eul Chat-go isseoyo",
+        mean: "Je suis en train de chercher une rue",
         context: "Expression liée à l’orientation.",
-        speak: "길 찾기",
+        speak: "길을 찾고 있어요",
       },
       {
         word: "길을 잃었어요",
@@ -280,18 +280,18 @@ const SCENES = [
         speak: "길을 잃었어요",
       },
       {
-        word: "어디에 있어요?",
-        rom: "Eodie isseoyo?",
+        word: "어디예요?",
+        rom: "Eodi yeyo?",
         mean: "Où est-ce ?",
         context: "Question simple pour localiser un lieu.",
-        speak: "어디에 있어요?",
+        speak: "어디예요?",
       },
       {
-        word: "경복궁이 어디에 있어요?",
-        rom: "Gyeongbokgung-i eodie isseoyo?",
+        word: "경복궁이 어디예요?",
+        rom: "Gyeongbokgung-i eodi yeyo?",
         mean: "Où est Gyeongbokgung ?",
         context: "Phrase complète pour demander ton chemin.",
-        speak: "경복궁이 어디에 있어요?",
+        speak: "경복궁이 어디예요?",
       },
       {
         word: "쭉 가세요",

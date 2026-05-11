@@ -51,6 +51,16 @@ const SCENES = [
         kr: "제 생일은 이천육년 사월 이십사일이에요.",
         fr: "Mon anniversaire est le 24 avril 2026 (I-cheon-yuk-nyeon Sa-wol I-sip-sa-il).",
       },
+      {
+        char: "Ami",
+        kr: "그럼 금요일에 파티해요?",
+        fr: "Alors, on fait la fête vendredi ?",
+      },
+      {
+        char: "Moi",
+        kr: "네, 사월 이십사일 금요일에 만나요.",
+        fr: "Oui, retrouvons-nous le vendredi 24 avril.",
+      },
     ],
     expressions: [
       {
@@ -71,6 +81,24 @@ const SCENES = [
         mean: "Avril",
         context:
           "Les mois sont simplement le chiffre + 'Wol'. (Janvier = Il-wol, etc.).",
+      },
+      {
+        word: "이십사일",
+        rom: "I-sip-sa-il",
+        mean: "Le 24",
+        context: "Les jours du mois utilisent le système sino-coréen.",
+      },
+      {
+        word: "금요일",
+        rom: "Geum-yo-il",
+        mean: "Vendredi",
+        context: "Jour de la semaine associé à l'élément métal/or.",
+      },
+      {
+        word: "만나요",
+        rom: "Mannayo",
+        mean: "Retrouvons-nous",
+        context: "Forme douce pour fixer un rendez-vous.",
       },
     ],
   },
@@ -93,6 +121,16 @@ const SCENES = [
         kr: "다음 주 수요일부터 금요일까지요.",
         fr: "Du mercredi au vendredi de la semaine prochaine.",
       },
+      {
+        char: "Hôtel",
+        kr: "체크아웃은 금요일 오전 열한 시 맞으세요?",
+        fr: "Le check-out est bien vendredi à 11h du matin ?",
+      },
+      {
+        char: "Moi",
+        kr: "네, 수요일 체크인, 금요일 체크아웃이에요.",
+        fr: "Oui, check-in mercredi, check-out vendredi.",
+      },
     ],
     expressions: [
       {
@@ -112,6 +150,24 @@ const SCENES = [
         rom: "Pyeong-il / Ju-mal",
         mean: "Semaine / Week-end",
         context: "Pour distinguer les jours travaillés du repos.",
+      },
+      {
+        word: "체크인",
+        rom: "Chekeu-in",
+        mean: "Check-in",
+        context: "Mot anglais coréanisé très courant à l'hôtel.",
+      },
+      {
+        word: "체크아웃",
+        rom: "Chekeu-aut",
+        mean: "Check-out",
+        context: "S'utilise avec une date et une heure de départ.",
+      },
+      {
+        word: "오전 열한 시",
+        rom: "Ojeon yeolhan si",
+        mean: "11h du matin",
+        context: "Ojeon précise le matin avant l'heure native.",
       },
     ],
   },
@@ -134,6 +190,16 @@ const SCENES = [
         kr: "오늘은 월요일이에요. 회의가 있어요.",
         fr: "Aujourd'hui on est lundi. Il y a une réunion.",
       },
+      {
+        char: "Manager",
+        kr: "그럼 금요일까지 자료를 보내 주세요.",
+        fr: "Alors envoyez les documents d'ici vendredi.",
+      },
+      {
+        char: "Moi",
+        kr: "네, 목요일 저녁까지 준비할게요.",
+        fr: "Oui, je préparerai tout d'ici jeudi soir.",
+      },
     ],
     expressions: [
       {
@@ -153,6 +219,24 @@ const SCENES = [
         rom: "Mu-seun yo-il?",
         mean: "Quel jour (semaine) ?",
         context: "À ne pas confondre avec 'Myeot il' (Quel jour du mois).",
+      },
+      {
+        word: "목요일",
+        rom: "Mog-yo-il",
+        mean: "Jeudi",
+        context: "Jour associé au bois, souvent raccourci à l'oral.",
+      },
+      {
+        word: "금요일까지",
+        rom: "Geum-yo-il-kkaji",
+        mean: "Jusqu'à vendredi",
+        context: "Kkaji marque une limite temporelle.",
+      },
+      {
+        word: "자료",
+        rom: "Jaryo",
+        mean: "Documents / données",
+        context: "Mot pratique pour parler de fichiers à envoyer.",
       },
     ],
   },
