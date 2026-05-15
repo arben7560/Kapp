@@ -17,6 +17,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useVocAudio } from "../../../hooks/useVocAudio";
 
 const { width } = Dimensions.get("window");
 
@@ -33,6 +34,27 @@ const COLORS = {
   muted: "rgba(255,255,255,0.60)",
 };
 
+const SOGETING_AUDIO = {
+  message1: require("../../../assets/audio/voc/sogaeting/sogaeting-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/sogaeting/sogaeting-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/sogaeting/sogaeting-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/sogaeting/sogaeting-bulle-4.mp3"),
+};
+
+const SOME_AUDIO = {
+  message1: require("../../../assets/audio/voc/le-some/flirt-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/le-some/flirt-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/le-some/flirt-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/le-some/flirt-bulle-4.mp3"),
+};
+
+const COUPLE_AUDIO = {
+  message1: require("../../../assets/audio/voc/couple/couple-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/couple/couple-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/couple/couple-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/couple/couple-bulle-4.mp3"),
+};
+
 const SCENES = [
   {
     id: "sogeting",
@@ -47,24 +69,28 @@ const SCENES = [
         kr: "사진보다 실물이 더 예쁘시네요.",
         fr: "Vous êtes encore plus jolie qu'en photo.",
         side: "server",
+        audio: SOGETING_AUDIO.message1,
       },
       {
         char: "So-hee",
         kr: "아니에요. 준수 씨도 인상이 참 좋으세요.",
         fr: "Ce n'est rien. Vous avez une très bonne impression aussi, Jun-su.",
         side: "me",
+        audio: SOGETING_AUDIO.message2,
       },
       {
         char: "Jun-su",
         kr: "혹시 이상형이 어떻게 되세요?",
         fr: "Quel est votre type idéal ?",
         side: "server",
+        audio: SOGETING_AUDIO.message3,
       },
       {
         char: "So-hee",
         kr: "대화가 잘 통하는 사람이 좋아요.",
         fr: "J'aime les personnes avec qui la conversation passe bien.",
         side: "me",
+        audio: SOGETING_AUDIO.message4,
       },
     ],
     expressions: [
@@ -101,24 +127,28 @@ const SCENES = [
         kr: "밤공기가 차네요. 제 옷 입을래요?",
         fr: "L'air de la nuit est froid. Vous voulez porter ma veste ?",
         side: "server",
+        audio: SOME_AUDIO.message1,
       },
       {
         char: "Hae-in",
         kr: "괜찮아요. 고마워요.",
         fr: "Ça va. Mais merci quand même.",
         side: "me",
+        audio: SOME_AUDIO.message2,
       },
       {
         char: "Do-yun",
         kr: "우리 지금... 무슨 사이예요?",
         fr: "Nous... c'est quoi notre relation actuellement ?",
         side: "server",
+        audio: SOME_AUDIO.message3,
       },
       {
         char: "Hae-in",
         kr: "나도 잘 모르겠어요. 그런데 보고 싶었어요.",
         fr: "Je ne sais pas vraiment. Mais tu m'as manqué.",
         side: "me",
+        audio: SOME_AUDIO.message4,
       },
     ],
     expressions: [
@@ -155,24 +185,28 @@ const SCENES = [
         kr: "나랑 사귈래?",
         fr: "Tu veux sortir avec moi ?",
         side: "server",
+        audio: COUPLE_AUDIO.message1,
       },
       {
         char: "Eun-ji",
         kr: "응... 나도 같은 마음이야.",
         fr: "Oui... je ressens la même chose.",
         side: "me",
+        audio: COUPLE_AUDIO.message2,
       },
       {
         char: "Tae-yang",
         kr: "평생 지켜줄게.",
         fr: "Je te protégerai toute ma vie.",
         side: "server",
+        audio: COUPLE_AUDIO.message3,
       },
       {
         char: "Eun-ji",
         kr: "우리 절대 헤어지지 말자.",
         fr: "Ne nous séparons jamais.",
         side: "me",
+        audio: COUPLE_AUDIO.message4,
       },
     ],
     expressions: [
@@ -203,6 +237,7 @@ export default function RomanceDating() {
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
 
@@ -260,11 +295,13 @@ export default function RomanceDating() {
       }
 
       Speech.stop();
+      stopAudio();
     };
-  }, [tapHintPulse]);
+  }, [tapHintPulse, stopAudio]);
 
   const speak = (text: string, id: string) => {
     Speech.stop();
+    stopAudio();
     setSelectedWord(id);
     Vibration.vibrate(8);
 
@@ -434,14 +471,21 @@ export default function RomanceDating() {
                 {activeScene.dialogue
                   .slice(0, visibleMessages)
                   .map((chat, idx) => {
+                    const dialogueId = `${activeScene.id}-dialogue-${idx}`;
                     const isMe = chat.side === "me";
+                    const isActive = selectedWord === dialogueId;
 
                     return (
-                      <View
-                        key={`${activeScene.id}-dialogue-${idx}`}
+                      <Pressable
+                        key={dialogueId}
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          playAudio(chat.audio, dialogueId);
+                        }}
                         style={[
                           styles.bubble,
                           isMe ? styles.bubbleRight : styles.bubbleLeft,
+                          isActive && { borderColor: activeScene.accent },
                         ]}
                       >
                         <Text
@@ -454,7 +498,7 @@ export default function RomanceDating() {
                         </Text>
                         <Text style={styles.krText}>{chat.kr}</Text>
                         <Text style={styles.frText}>{chat.fr}</Text>
-                      </View>
+                      </Pressable>
                     );
                   })}
 

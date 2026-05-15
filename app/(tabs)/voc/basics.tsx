@@ -1,8 +1,12 @@
+import {
+  createAudioPlayer,
+  setAudioModeAsync,
+  type AudioPlayer,
+} from "expo-audio";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -19,6 +23,35 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
+type AudioAsset = number;
+
+type DialogueMessage = {
+  char: string;
+  kr: string;
+  fr: string;
+  side: "me" | "server";
+  audio?: AudioAsset;
+};
+
+type ExpressionItem = {
+  word: string;
+  rom: string;
+  mean: string;
+  context: string;
+  audio?: AudioAsset;
+};
+
+type Scene = {
+  id: string;
+  title: string;
+  koreanTitle: string;
+  description: string;
+  accent: string;
+  image: number;
+  dialogue: DialogueMessage[];
+  expressions: ExpressionItem[];
+};
+
 const COLORS = {
   bg: "#020306",
   calmBlue: "#7DD3FC",
@@ -29,7 +62,50 @@ const COLORS = {
   muted: "rgba(255,255,255,0.60)",
 };
 
-const SCENES = [
+const RENCONTRE_AUDIO = {
+  message1: require("../../../assets/audio/voc/Rencontre/rencontre-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/Rencontre/rencontre-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/Rencontre/rencontre-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/Rencontre/rencontre-bulle-4.mp3"),
+
+  bonjour: require("../../../assets/audio/voc/Rencontre/toolbox/bonjour.mp3"),
+  enchanteRencontre: require("../../../assets/audio/voc/Rencontre/toolbox/enchante-rencontre.mp3"),
+  jeMappelle: require("../../../assets/audio/voc/Rencontre/toolbox/je-mappelle.mp3"),
+  jeSuisFrancais: require("../../../assets/audio/voc/Rencontre/toolbox/je-suis-francais.mp3"),
+  raviDeTeRencontrer: require("../../../assets/audio/voc/Rencontre/toolbox/ravi-de-te-rencontrer.mp3"),
+  raviDeVousRencontrer: require("../../../assets/audio/voc/Rencontre/toolbox/ravi-de-vous-rencontrer.mp3"),
+  jeCompteSurVous: require("../../../assets/audio/voc/Rencontre/toolbox/je-compte-sur-vous.mp3"),
+};
+
+const POLITESSE_AUDIO = {
+  message1: require("../../../assets/audio/voc/Politesse/politesse-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/Politesse/politesse-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/Politesse/politesse-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/Politesse/politesse-bulle-4.mp3"),
+
+  excusezMoi: require("../../../assets/audio/voc/Politesse/toolbox/excusez-moi.mp3"),
+  gomawoyo: require("../../../assets/audio/voc/Politesse/toolbox/gomawoyo.mp3"),
+  jeogiyo: require("../../../assets/audio/voc/Politesse/toolbox/jeogiyo.mp3"),
+  merci: require("../../../assets/audio/voc/Politesse/toolbox/merci.mp3"),
+  unInstant: require("../../../assets/audio/voc/Politesse/toolbox/un-instant.mp3"),
+  voici: require("../../../assets/audio/voc/Politesse/toolbox/voici.mp3"),
+  pasGrave: require("../../../assets/audio/voc/Politesse/toolbox/pas-grave.mp3"),
+};
+const EXCUSER_AUDIO = {
+  message1: require("../../../assets/audio/voc/Excuser/excuser-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/Excuser/excuser-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/Excuser/excuser-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/Excuser/excuser-bulle-4.mp3"),
+
+  anieyo: require("../../../assets/audio/voc/Excuser/toolbox/anieyo.mp3"),
+  desole: require("../../../assets/audio/voc/Excuser/toolbox/desole.mp3"),
+  mianhae: require("../../../assets/audio/voc/Excuser/toolbox/mianhae.mp3"),
+  mianhaeyo: require("../../../assets/audio/voc/Excuser/toolbox/mianhaeyo.mp3"),
+  retardDesole: require("../../../assets/audio/voc/Excuser/toolbox/retard-desole.mp3"),
+  vraimentDesole: require("../../../assets/audio/voc/Excuser/toolbox/vraiment-desole.mp3"),
+  caVa: require("../../../assets/audio/voc/Excuser/toolbox/ca-va.mp3"),
+};
+const SCENES: Scene[] = [
   {
     id: "greeting",
     title: "La Rencontre",
@@ -43,24 +119,28 @@ const SCENES = [
         kr: "안녕하세요! 처음 뵙겠습니다.",
         fr: "Bonjour ! Enchanté de vous rencontrer.",
         side: "me",
+        audio: RENCONTRE_AUDIO.message1,
       },
       {
         char: "Ji-won",
         kr: "네, 안녕하세요. 만나서 반가워요.",
         fr: "Oui, bonjour. Ravi de vous rencontrer.",
         side: "server",
+        audio: RENCONTRE_AUDIO.message2,
       },
       {
         char: "Moi",
         kr: "제 이름은 마크예요. 저는 프랑스 사람이에요.",
         fr: "Je m'appelle Marc. Je suis français.",
         side: "me",
+        audio: RENCONTRE_AUDIO.message3,
       },
       {
         char: "Ji-won",
         kr: "반갑습니다. 잘 부탁드립니다.",
         fr: "Enchantée. Je compte sur vous.",
         side: "server",
+        audio: RENCONTRE_AUDIO.message4,
       },
     ],
     expressions: [
@@ -69,49 +149,49 @@ const SCENES = [
         rom: "Annyeong-haseyo",
         mean: "Bonjour",
         context: "La salutation universelle et polie.",
-        speak: "안녕하세요",
+        audio: RENCONTRE_AUDIO.bonjour,
       },
       {
         word: "처음 뵙겠습니다",
         rom: "Cheoeum boepgetseumnida",
         mean: "Enchanté de vous rencontrer",
         context: "Forme très polie lors d'une première rencontre.",
-        speak: "처음 뵙겠습니다",
+        audio: RENCONTRE_AUDIO.enchanteRencontre,
       },
       {
         word: "반갑습니다",
         rom: "Bangapseumnida",
         mean: "Ravi de vous rencontrer",
         context: "Très respectueux, utile en contexte formel.",
-        speak: "반갑습니다",
+        audio: RENCONTRE_AUDIO.raviDeVousRencontrer,
       },
       {
         word: "만나서 반가워요",
         rom: "Mannaseo bangawoyo",
         mean: "Ravi de te/vous rencontrer",
         context: "Forme polie mais plus naturelle au quotidien.",
-        speak: "만나서 반가워요",
+        audio: RENCONTRE_AUDIO.raviDeTeRencontrer,
       },
       {
         word: "제 이름은 마크예요",
         rom: "Je ireumeun makeu ieyo",
         mean: "Mon nom est Marc",
         context: "Structure formelle pour se présenter.",
-        speak: "제 이름은 마크예요",
+        audio: RENCONTRE_AUDIO.jeMappelle,
       },
       {
         word: "저는 프랑스 사람이에요",
         rom: "Jeoneun Peurangseu saram-ieyo",
         mean: "Je suis français",
         context: "Phrase simple pour dire sa nationalité.",
-        speak: "저는 프랑스 사람이에요",
+        audio: RENCONTRE_AUDIO.jeSuisFrancais,
       },
       {
         word: "잘 부탁드립니다",
         rom: "Jal butakdeurimnida",
         mean: "Je compte sur vous",
         context: "Expression culturelle après une présentation.",
-        speak: "잘 부탁드립니다",
+        audio: RENCONTRE_AUDIO.jeCompteSurVous,
       },
     ],
   },
@@ -128,24 +208,28 @@ const SCENES = [
         kr: "실례합니다. 잠시만요.",
         fr: "Excusez-moi. Un instant s'il vous plaît.",
         side: "me",
+        audio: POLITESSE_AUDIO.message1,
       },
       {
         char: "Vendeur",
         kr: "네, 괜찮습니다. 천천히 하세요.",
         fr: "Oui, ce n'est pas grave. Allez-y doucement.",
         side: "server",
+        audio: POLITESSE_AUDIO.message2,
       },
       {
         char: "Moi",
         kr: "감사합니다. 저기요, 이거 얼마예요?",
         fr: "Merci. Excusez-moi, c'est combien ?",
         side: "me",
+        audio: POLITESSE_AUDIO.message3,
       },
       {
         char: "Vendeur",
         kr: "여기 있습니다. 만 원입니다.",
         fr: "Voici. C'est 10 000 wons.",
         side: "server",
+        audio: POLITESSE_AUDIO.message4,
       },
     ],
     expressions: [
@@ -154,49 +238,49 @@ const SCENES = [
         rom: "Gamsahamnida",
         mean: "Merci",
         context: "Forme très polie et standard.",
-        speak: "감사합니다",
+        audio: POLITESSE_AUDIO.merci,
       },
       {
         word: "고마워요",
         rom: "Gomawoyo",
         mean: "Merci",
         context: "Poli, plus doux et quotidien.",
-        speak: "고마워요",
+        audio: POLITESSE_AUDIO.gomawoyo,
       },
       {
-        word: "최송헤요",
-        rom: "Choesongheyo",
+        word: "죄송해요",
+        rom: "Joesonghaeyo",
         mean: "Excusez-moi",
         context: "Pour interpeller ou passer dans la foule.",
-        speak: "최송헤요",
+        audio: POLITESSE_AUDIO.excusezMoi,
       },
       {
         word: "잠시만요",
         rom: "Jamsimanyo",
         mean: "Un instant / laissez-moi passer",
         context: "Très fréquent dans les transports ou magasins.",
-        speak: "잠시만요",
+        audio: POLITESSE_AUDIO.unInstant,
       },
       {
         word: "저기요",
         rom: "Jeogiyo",
         mean: "S'il vous plaît / excusez-moi",
         context: "Pour appeler un serveur ou attirer l'attention.",
-        speak: "저기요",
+        audio: POLITESSE_AUDIO.jeogiyo,
       },
       {
         word: "여기 있습니다",
         rom: "Yeogi itseumnida",
         mean: "Voici",
         context: "Quand on donne quelque chose poliment.",
-        speak: "여기 있습니다",
+        audio: POLITESSE_AUDIO.voici,
       },
       {
         word: "괜찮습니다",
         rom: "Gwaenchansseumnida",
         mean: "Ça va / ce n'est pas grave",
         context: "Forme polie pour rassurer.",
-        speak: "괜찮습니다",
+        audio: POLITESSE_AUDIO.pasGrave,
       },
     ],
   },
@@ -213,24 +297,28 @@ const SCENES = [
         kr: "늦어서 정말 죄송합니다.",
         fr: "Je suis vraiment désolé d'être en retard.",
         side: "me",
+        audio: EXCUSER_AUDIO.message1,
       },
       {
         char: "Ji-ho",
         kr: "아니에요, 괜찮아요.",
         fr: "Ce n'est rien, ce n'est pas grave.",
         side: "server",
+        audio: EXCUSER_AUDIO.message2,
       },
       {
         char: "Moi",
         kr: "기다리게 해서 미안해요.",
         fr: "Désolé de t'avoir fait attendre.",
         side: "me",
+        audio: EXCUSER_AUDIO.message3,
       },
       {
         char: "Ji-ho",
         kr: "정말 괜찮아요. 이제 같이 가요.",
         fr: "Vraiment, ça va. Allons-y ensemble maintenant.",
         side: "server",
+        audio: EXCUSER_AUDIO.message4,
       },
     ],
     expressions: [
@@ -239,56 +327,56 @@ const SCENES = [
         rom: "Joesong-hamnida",
         mean: "Je suis désolé",
         context: "Forme polie et standard d'excuse.",
-        speak: "죄송합니다",
+        audio: EXCUSER_AUDIO.desole,
       },
       {
         word: "정말 죄송합니다",
         rom: "Jeongmal joesong-hamnida",
         mean: "Je suis vraiment désolé",
         context: "Plus intense, pour une vraie faute.",
-        speak: "정말 죄송합니다",
+        audio: EXCUSER_AUDIO.vraimentDesole,
       },
       {
         word: "늦어서 죄송합니다",
         rom: "Neujeoseo joesong-hamnida",
         mean: "Désolé d'être en retard",
         context: "Très utile dans un rendez-vous.",
-        speak: "늦어서 죄송합니다",
+        audio: EXCUSER_AUDIO.retardDesole,
       },
       {
         word: "미안해요",
         rom: "Mianhaeyo",
         mean: "Désolé",
         context: "Poli, plus doux et personnel.",
-        speak: "미안해요",
+        audio: EXCUSER_AUDIO.mianhaeyo,
       },
       {
         word: "미안해",
         rom: "Mianhae",
         mean: "Désolé",
         context: "Familier, avec des amis proches.",
-        speak: "미안해",
+        audio: EXCUSER_AUDIO.mianhae,
       },
       {
         word: "아니에요",
         rom: "Anieyo",
         mean: "Ce n'est rien",
         context: "Réponse naturelle à des excuses.",
-        speak: "아니에요",
+        audio: EXCUSER_AUDIO.anieyo,
       },
       {
         word: "괜찮아요",
         rom: "Gwaenchanayo",
         mean: "Ça va / ce n'est pas grave",
         context: "Pour rassurer quelqu'un.",
-        speak: "괜찮아요",
+        audio: EXCUSER_AUDIO.caVa,
       },
     ],
   },
 ];
 
 export default function FirstStepsImmersion() {
-  const [activeScene, setActiveScene] = useState(SCENES[0]);
+  const [activeScene, setActiveScene] = useState<Scene>(SCENES[0]);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
@@ -296,6 +384,114 @@ export default function FirstStepsImmersion() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const tapHintPulse = useRef(new Animated.Value(0)).current;
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const shouldAutoPlayNextMessageRef = useRef(false);
+
+  const playerRef = useRef<AudioPlayer | null>(null);
+  const activeAudioIdRef = useRef<string | null>(null);
+  const playbackListenerRef = useRef<{ remove: () => void } | null>(null);
+
+  const cleanupAudioListener = useCallback(() => {
+    if (playbackListenerRef.current) {
+      playbackListenerRef.current.remove();
+      playbackListenerRef.current = null;
+    }
+  }, []);
+
+  const stopAudio = useCallback(() => {
+    try {
+      cleanupAudioListener();
+
+      if (playerRef.current) {
+        playerRef.current.pause();
+        playerRef.current.remove();
+        playerRef.current = null;
+      }
+
+      activeAudioIdRef.current = null;
+    } catch {
+      playerRef.current = null;
+      activeAudioIdRef.current = null;
+    }
+  }, [cleanupAudioListener]);
+
+  const playAudio = useCallback(
+    (audioSource?: AudioAsset, id?: string) => {
+      if (!audioSource) return;
+
+      try {
+        stopAudio();
+
+        if (id) {
+          activeAudioIdRef.current = id;
+          setSelectedWord(id);
+        }
+
+        Vibration.vibrate(8);
+
+        const player = createAudioPlayer(audioSource, {
+          updateInterval: 250,
+        });
+
+        playerRef.current = player;
+
+        playbackListenerRef.current = player.addListener(
+          "playbackStatusUpdate",
+          (status) => {
+            const currentId = activeAudioIdRef.current;
+            const statusAny = status as any;
+
+            const didFinish =
+              statusAny.didJustFinish === true ||
+              statusAny.playbackState === "ended" ||
+              statusAny.playbackState === "finished" ||
+              statusAny.timeControlStatus === "ended" ||
+              (typeof statusAny.currentTime === "number" &&
+                typeof statusAny.duration === "number" &&
+                statusAny.duration > 0 &&
+                statusAny.currentTime >= statusAny.duration - 0.05 &&
+                statusAny.playing === false);
+
+            if (!didFinish) return;
+
+            if (currentId) {
+              setSelectedWord((current) =>
+                current === currentId ? null : current,
+              );
+            }
+
+            cleanupAudioListener();
+
+            try {
+              player.remove();
+            } catch {
+              // évite un crash si le player est déjà libéré
+            }
+
+            if (playerRef.current === player) {
+              playerRef.current = null;
+            }
+
+            activeAudioIdRef.current = null;
+          },
+        );
+
+        player.seekTo(0);
+        player.play();
+      } catch {
+        setSelectedWord(null);
+        activeAudioIdRef.current = null;
+      }
+    },
+    [cleanupAudioListener, stopAudio],
+  );
+
+  useEffect(() => {
+    setAudioModeAsync({
+      playsInSilentMode: true,
+      allowsRecording: false,
+      shouldPlayInBackground: false,
+    }).catch(() => null);
+  }, []);
 
   useEffect(() => {
     fadeAnim.setValue(0);
@@ -307,7 +503,8 @@ export default function FirstStepsImmersion() {
       useNativeDriver: true,
     }).start();
 
-    Speech.stop();
+    stopAudio();
+    shouldAutoPlayNextMessageRef.current = false;
     setSelectedWord(null);
     setVisibleMessages(1);
     setIsTyping(false);
@@ -316,7 +513,23 @@ export default function FirstStepsImmersion() {
       clearTimeout(typingTimer.current);
       typingTimer.current = null;
     }
-  }, [activeScene]);
+  }, [activeScene, fadeAnim, stopAudio]);
+
+  useEffect(() => {
+    if (!shouldAutoPlayNextMessageRef.current || isTyping) return;
+
+    shouldAutoPlayNextMessageRef.current = false;
+
+    const currentMessageIndex = visibleMessages - 1;
+    const currentMessage = activeScene.dialogue[currentMessageIndex];
+
+    if (!currentMessage) return;
+
+    playAudio(
+      currentMessage.audio,
+      `${activeScene.id}-dialogue-${currentMessageIndex}`,
+    );
+  }, [activeScene, visibleMessages, isTyping, playAudio]);
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -345,23 +558,25 @@ export default function FirstStepsImmersion() {
         clearTimeout(typingTimer.current);
       }
 
-      Speech.stop();
+      stopAudio();
     };
-  }, [tapHintPulse]);
+  }, [tapHintPulse, stopAudio]);
 
-  const speak = (text: string, id: string) => {
-    Speech.stop();
-    setSelectedWord(id);
-    Vibration.vibrate(8);
+  const handleSceneChange = (scene: Scene) => {
+    if (scene.id === activeScene.id) return;
 
-    Speech.speak(text, {
-      language: "ko-KR",
-      rate: 0.78,
-      pitch: 1,
-      onDone: () => setSelectedWord(null),
-      onStopped: () => setSelectedWord(null),
-      onError: () => setSelectedWord(null),
-    });
+    stopAudio();
+    shouldAutoPlayNextMessageRef.current = false;
+    setSelectedWord(null);
+    setVisibleMessages(1);
+    setIsTyping(false);
+
+    if (typingTimer.current) {
+      clearTimeout(typingTimer.current);
+      typingTimer.current = null;
+    }
+
+    setActiveScene(scene);
   };
 
   const advanceDialogue = () => {
@@ -369,6 +584,9 @@ export default function FirstStepsImmersion() {
 
     if (visibleMessages >= activeScene.dialogue.length) {
       Vibration.vibrate(8);
+      stopAudio();
+      shouldAutoPlayNextMessageRef.current = false;
+      setSelectedWord(null);
       setVisibleMessages(1);
       setIsTyping(false);
       return;
@@ -377,6 +595,7 @@ export default function FirstStepsImmersion() {
     const nextMessage = activeScene.dialogue[visibleMessages];
 
     Vibration.vibrate(8);
+    shouldAutoPlayNextMessageRef.current = true;
 
     if (nextMessage.side === "server") {
       setIsTyping(true);
@@ -429,7 +648,7 @@ export default function FirstStepsImmersion() {
             {SCENES.map((scene) => (
               <Pressable
                 key={scene.id}
-                onPress={() => setActiveScene(scene)}
+                onPress={() => handleSceneChange(scene)}
                 style={[
                   styles.tab,
                   activeScene.id === scene.id && {
@@ -483,21 +702,25 @@ export default function FirstStepsImmersion() {
                 </Text>
               </View>
 
-              <Pressable onPress={advanceDialogue} style={styles.chatArea}>
+              <View style={styles.chatArea}>
                 {activeScene.dialogue
                   .slice(0, visibleMessages)
                   .map((line, idx) => {
                     const dialogueId = `${activeScene.id}-dialogue-${idx}`;
                     const isMe = line.side === "me";
+                    const isActive = selectedWord === dialogueId;
 
                     return (
                       <Pressable
                         key={dialogueId}
-                        onPress={() => speak(line.kr, dialogueId)}
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          playAudio(line.audio, dialogueId);
+                        }}
                         style={[
                           styles.msgBox,
                           isMe ? styles.msgRight : styles.msgLeft,
-                          selectedWord === dialogueId && {
+                          isActive && {
                             borderColor: activeScene.accent,
                           },
                         ]}
@@ -549,33 +772,35 @@ export default function FirstStepsImmersion() {
                   </View>
                 )}
 
-                <Animated.Text
-                  style={[
-                    styles.tapHint,
-                    shouldHighlightHint && {
-                      color: activeScene.accent,
-                      opacity: tapHintPulse.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.45, 1],
-                      }),
-                      transform: [
-                        {
-                          scale: tapHintPulse.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [1, 1.03],
-                          }),
-                        },
-                      ],
-                    },
-                  ]}
-                >
-                  {visibleMessages >= activeScene.dialogue.length
-                    ? "Toucher pour recommencer"
-                    : isTyping
-                      ? "Réponse en cours..."
-                      : "Toucher pour continuer"}
-                </Animated.Text>
-              </Pressable>
+                <Pressable onPress={advanceDialogue} disabled={isTyping}>
+                  <Animated.Text
+                    style={[
+                      styles.tapHint,
+                      shouldHighlightHint && {
+                        color: activeScene.accent,
+                        opacity: tapHintPulse.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.45, 1],
+                        }),
+                        transform: [
+                          {
+                            scale: tapHintPulse.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [1, 1.03],
+                            }),
+                          },
+                        ],
+                      },
+                    ]}
+                  >
+                    {visibleMessages >= activeScene.dialogue.length
+                      ? "Toucher pour recommencer"
+                      : isTyping
+                        ? "Réponse en cours..."
+                        : "Toucher pour continuer"}
+                  </Animated.Text>
+                </Pressable>
+              </View>
             </BlurView>
           </Animated.View>
 
@@ -598,7 +823,7 @@ export default function FirstStepsImmersion() {
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() => speak(exp.speak, cardId)}
+                    onPress={() => playAudio(exp.audio, cardId)}
                     style={({ pressed }) => [
                       styles.expPressable,
                       pressed && { transform: [{ scale: 0.985 }] },
@@ -886,7 +1111,7 @@ const styles = StyleSheet.create({
     fontFamily: "Outfit_700Bold",
   },
   listenText: {
-    color: "rgba(255,255,255,0.78)",
+    color: "rgba(255, 255, 255, 0.78)",
     fontFamily: "Outfit_700Bold",
     fontSize: 9,
     letterSpacing: 1,

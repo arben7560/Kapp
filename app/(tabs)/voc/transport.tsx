@@ -1,12 +1,17 @@
+import {
+  createAudioPlayer,
+  setAudioModeAsync,
+  type AudioPlayer,
+} from "expo-audio";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
   ImageBackground,
+  ImageSourcePropType,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,6 +20,35 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+type AudioAsset = number;
+
+type DialogueMessage = {
+  char: string;
+  kr: string;
+  fr: string;
+  side: "me" | "server";
+  audio?: AudioAsset;
+};
+
+type ExpressionItem = {
+  word: string;
+  rom: string;
+  mean: string;
+  context: string;
+  audio?: AudioAsset;
+};
+
+type Scene = {
+  id: string;
+  title: string;
+  koreanTitle: string;
+  description: string;
+  accent: string;
+  image: ImageSourcePropType;
+  dialogue: DialogueMessage[];
+  expressions: ExpressionItem[];
+};
 
 const COLORS = {
   bg: "#020306",
@@ -30,7 +64,37 @@ const METRO_BG = require("../../../assets/images/bg-metro-station.png");
 const TAXI_BG = require("../../../assets/images/bg-taxi-night.png");
 const BUKCHON_BG = require("../../../assets/images/bg-bukchon-alley.png");
 
-const SCENES = [
+const METRO_AUDIO = {
+  message1: require("../../../assets/audio/voc/Metro/metro-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/Metro/metro-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/Metro/metro-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/Metro/metro-bulle-4.mp3"),
+
+  carteTransport: require("../../../assets/audio/voc/Metro/toolbox/carte-transport.mp3"),
+  correspondance: require("../../../assets/audio/voc/Metro/toolbox/correspondance.mp3"),
+  hongdaeipguyeok: require("../../../assets/audio/voc/Metro/toolbox/hongdaeibguyeok.mp3"),
+  hwangseug: require("../../../assets/audio/voc/Metro/toolbox/hwangseug.mp3"),
+  ligne2: require("../../../assets/audio/voc/Metro/toolbox/ligne2.mp3"),
+  stationMetro: require("../../../assets/audio/voc/Metro/toolbox/station-metro.mp3"),
+  taeumyeok: require("../../../assets/audio/voc/Metro/toolbox/taeumyeok.mp3"),
+  metro: require("../../../assets/audio/voc/Metro/toolbox/metro.mp3"),
+};
+
+const TAXI_AUDIO = {
+  message1: require("../../../assets/audio/voc/Taxi/taxi-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/Taxi/taxi-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/Taxi/taxi-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/Taxi/taxi-bulle-4.mp3"),
+};
+
+const STREET_AUDIO = {
+  message1: require("../../../assets/audio/voc/Street/street-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/Street/street-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/Street/street-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/Street/street-bulle-4.mp3"),
+};
+
+const SCENES: Scene[] = [
   {
     id: "subway",
     title: "Le Métro",
@@ -44,24 +108,28 @@ const SCENES = [
         kr: "홍대입구역으로 가려면 어디서 갈아타요?",
         fr: "Où dois-je changer pour aller à Hongdae ?",
         side: "me",
+        audio: METRO_AUDIO.message1,
       },
       {
         char: "Agent",
         kr: "다음 역에서 2호선으로 환승하세요.",
         fr: "Changez pour la ligne 2 à la prochaine station.",
         side: "server",
+        audio: METRO_AUDIO.message2,
       },
       {
         char: "Moi",
         kr: "2호선은 어느 방향으로 타야 해요?",
         fr: "Dans quelle direction dois-je prendre la ligne 2 ?",
         side: "me",
+        audio: METRO_AUDIO.message3,
       },
       {
         char: "Agent",
         kr: "신촌 방향으로 타시면 돼요.",
         fr: "Prenez en direction de Sinchon.",
         side: "server",
+        audio: METRO_AUDIO.message4,
       },
     ],
     expressions: [
@@ -70,63 +138,62 @@ const SCENES = [
         rom: "Ji-ha-cheol",
         mean: "Métro",
         context: "Mot général pour parler du métro.",
-        speak: "지하철",
+        audio: METRO_AUDIO.metro,
       },
       {
         word: "지하철역",
         rom: "Ji-ha-cheol-yeok",
         mean: "Station de métro",
         context: "Très utile pour demander une station.",
-        speak: "지하철역",
+        audio: METRO_AUDIO.stationMetro,
       },
       {
         word: "홍대입구역",
         rom: "Hongdae-ipgu-yeok",
         mean: "Station Hongdae-ipgu",
         context: "Station très connue de la ligne 2.",
-        speak: "홍대입구역",
+        audio: METRO_AUDIO.hongdaeipguyeok,
       },
       {
         word: "환승",
         rom: "Hwan-seung",
         mean: "Correspondance",
         context: "Mot vital pour changer de ligne.",
-        speak: "환승",
+        audio: METRO_AUDIO.hwangseug,
       },
       {
         word: "갈아타요",
         rom: "Gara-tayo",
         mean: "Changer de transport",
         context: "Utilisé pour demander où changer.",
-        speak: "갈아타요",
+        audio: METRO_AUDIO.correspondance,
       },
       {
         word: "2호선",
         rom: "I-ho-seon",
         mean: "Ligne 2",
         context: "La ligne circulaire verte de Séoul.",
-        speak: "이 호선",
+        audio: METRO_AUDIO.ligne2,
       },
       {
         word: "다음 역",
         rom: "Daeum yeok",
         mean: "Prochaine station",
         context: "Entendu dans les annonces du métro.",
-        speak: "다음 역",
+        audio: METRO_AUDIO.taeumyeok,
       },
       {
         word: "이번 역",
         rom: "Ibeon yeok",
         mean: "Cette station",
         context: "Annonce fréquente dans le métro.",
-        speak: "이번 역",
       },
       {
         word: "교통카드",
         rom: "Gyo-tong-ka-deu",
         mean: "Carte de transport",
         context: "Carte type T-Money.",
-        speak: "교통카드",
+        audio: METRO_AUDIO.carteTransport,
       },
     ],
   },
@@ -144,24 +211,28 @@ const SCENES = [
         kr: "기사님, 강남역으로 가주세요.",
         fr: "Monsieur le chauffeur, allez à la station Gangnam s’il vous plaît.",
         side: "me",
+        audio: TAXI_AUDIO.message1,
       },
       {
         char: "Chauffeur",
         kr: "네, 알겠습니다. 강남역까지 가겠습니다.",
         fr: "Oui, bien compris. Je vais jusqu’à Gangnam Station.",
         side: "server",
+        audio: TAXI_AUDIO.message2,
       },
       {
         char: "Moi",
         kr: "좀 서둘러 주실 수 있나요?",
         fr: "Pouvez-vous vous dépêcher un peu ?",
         side: "me",
+        audio: TAXI_AUDIO.message3,
       },
       {
         char: "Chauffeur",
         kr: "네, 최대한 빨리 가겠습니다.",
         fr: "Oui, je vais y aller aussi vite que possible.",
         side: "server",
+        audio: TAXI_AUDIO.message4,
       },
     ],
     expressions: [
@@ -170,63 +241,54 @@ const SCENES = [
         rom: "Taek-si",
         mean: "Taxi",
         context: "Mot directement emprunté à l’anglais.",
-        speak: "택시",
       },
       {
         word: "~로 가주세요",
         rom: "~ro ga-juseyo",
         mean: "Allez à...",
         context: "Structure de base pour donner une destination.",
-        speak: "강남역으로 가주세요",
       },
       {
         word: "강남역으로 가주세요",
         rom: "Gangnam-yeogeuro ga-juseyo",
         mean: "Allez à Gangnam Station",
         context: "Phrase modèle pour prendre un taxi.",
-        speak: "강남역으로 가주세요",
       },
       {
         word: "여기서 세워주세요",
         rom: "Yeogiseo sewo-juseyo",
         mean: "Arrêtez-vous ici",
         context: "Pour demander au chauffeur de s’arrêter.",
-        speak: "여기서 세워주세요",
       },
       {
         word: "좀 서둘러 주세요",
         rom: "Jom seodulleo juseyo",
         mean: "Dépêchez-vous un peu",
         context: "À utiliser avec prudence et politesse.",
-        speak: "좀 서둘러 주세요",
       },
       {
         word: "얼마예요?",
         rom: "Eolmayeyo?",
         mean: "C’est combien ?",
         context: "Utile si tu veux confirmer le prix.",
-        speak: "얼마예요?",
       },
       {
         word: "카드 돼요?",
         rom: "Kadeu dwaeyo?",
         mean: "La carte est acceptée ?",
         context: "Très pratique pour payer.",
-        speak: "카드 돼요?",
       },
       {
         word: "영수증 주세요",
         rom: "Yeongsujeung juseyo",
         mean: "Un reçu, s’il vous plaît",
         context: "Pour demander un justificatif.",
-        speak: "영수증 주세요",
       },
       {
         word: "기사님",
         rom: "Gisa-nim",
         mean: "Chauffeur",
         context: "Forme respectueuse pour s’adresser au conducteur.",
-        speak: "기사님",
       },
     ],
   },
@@ -244,24 +306,28 @@ const SCENES = [
         kr: "실례합니다, 경복궁이 어디에 있어요?",
         fr: "Excusez-moi, où se trouve le palais Gyeongbokgung ?",
         side: "me",
+        audio: STREET_AUDIO.message1,
       },
       {
         char: "Passant",
         kr: "쭉 가서 오른쪽으로 도세요.",
         fr: "Allez tout droit, puis tournez à droite.",
         side: "server",
+        audio: STREET_AUDIO.message2,
       },
       {
         char: "Moi",
         kr: "걸어서 얼마나 걸려요?",
         fr: "Combien de temps ça prend à pied ?",
         side: "me",
+        audio: STREET_AUDIO.message3,
       },
       {
         char: "Passant",
         kr: "걸어서 십 분 정도 걸려요. 바로 보여요.",
         fr: "Ça prend environ dix minutes à pied. Vous le verrez tout de suite.",
         side: "server",
+        audio: STREET_AUDIO.message4,
       },
     ],
     expressions: [
@@ -270,70 +336,61 @@ const SCENES = [
         rom: "Gil-eul Chat-go isseoyo",
         mean: "Je suis en train de chercher une rue",
         context: "Expression liée à l’orientation.",
-        speak: "길을 찾고 있어요",
       },
       {
         word: "길을 잃었어요",
         rom: "Gil-eul ireosseoyo",
         mean: "Je suis perdu",
         context: "À utiliser pour demander de l’aide.",
-        speak: "길을 잃었어요",
       },
       {
         word: "어디예요?",
         rom: "Eodi yeyo?",
         mean: "Où est-ce ?",
         context: "Question simple pour localiser un lieu.",
-        speak: "어디예요?",
       },
       {
         word: "경복궁이 어디예요?",
         rom: "Gyeongbokgung-i eodi yeyo?",
         mean: "Où est Gyeongbokgung ?",
         context: "Phrase complète pour demander ton chemin.",
-        speak: "경복궁이 어디예요?",
       },
       {
         word: "쭉 가세요",
         rom: "Jjuk gaseyo",
         mean: "Allez tout droit",
         context: "Indication très fréquente.",
-        speak: "쭉 가세요",
       },
       {
         word: "오른쪽",
         rom: "Oreun-jjok",
         mean: "Droite",
         context: "Base de l’orientation.",
-        speak: "오른쪽",
       },
       {
         word: "왼쪽",
         rom: "Oen-jjok",
         mean: "Gauche",
         context: "Base de l’orientation.",
-        speak: "왼쪽",
       },
       {
         word: "돌면 보여요",
         rom: "Dolmyeon boyeoyo",
         mean: "Vous verrez en tournant",
         context: "Formule naturelle pour donner une direction.",
-        speak: "돌면 보여요",
       },
       {
         word: "바로 보여요",
         rom: "Baro boyeoyo",
         mean: "Vous le verrez tout de suite",
         context: "Très naturel pour rassurer quelqu’un.",
-        speak: "바로 보여요",
       },
     ],
   },
 ];
 
 export default function TransportCity() {
-  const [activeScene, setActiveScene] = useState(SCENES[0]);
+  const [activeScene, setActiveScene] = useState<Scene>(SCENES[0]);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
@@ -341,6 +398,114 @@ export default function TransportCity() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const tapHintPulse = useRef(new Animated.Value(0)).current;
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const shouldAutoPlayNextMessageRef = useRef(false);
+
+  const playerRef = useRef<AudioPlayer | null>(null);
+  const activeAudioIdRef = useRef<string | null>(null);
+  const playbackListenerRef = useRef<{ remove: () => void } | null>(null);
+
+  const cleanupAudioListener = useCallback(() => {
+    if (playbackListenerRef.current) {
+      playbackListenerRef.current.remove();
+      playbackListenerRef.current = null;
+    }
+  }, []);
+
+  const stopAudio = useCallback(() => {
+    try {
+      cleanupAudioListener();
+
+      if (playerRef.current) {
+        playerRef.current.pause();
+        playerRef.current.remove();
+        playerRef.current = null;
+      }
+
+      activeAudioIdRef.current = null;
+    } catch {
+      playerRef.current = null;
+      activeAudioIdRef.current = null;
+    }
+  }, [cleanupAudioListener]);
+
+  const playAudio = useCallback(
+    (audioSource?: AudioAsset, id?: string) => {
+      if (!audioSource) return;
+
+      try {
+        stopAudio();
+
+        if (id) {
+          activeAudioIdRef.current = id;
+          setSelectedWord(id);
+        }
+
+        Vibration.vibrate(8);
+
+        const player = createAudioPlayer(audioSource, {
+          updateInterval: 250,
+        });
+
+        playerRef.current = player;
+
+        playbackListenerRef.current = player.addListener(
+          "playbackStatusUpdate",
+          (status) => {
+            const currentId = activeAudioIdRef.current;
+            const statusAny = status as any;
+
+            const didFinish =
+              statusAny.didJustFinish === true ||
+              statusAny.playbackState === "ended" ||
+              statusAny.playbackState === "finished" ||
+              statusAny.timeControlStatus === "ended" ||
+              (typeof statusAny.currentTime === "number" &&
+                typeof statusAny.duration === "number" &&
+                statusAny.duration > 0 &&
+                statusAny.currentTime >= statusAny.duration - 0.05 &&
+                statusAny.playing === false);
+
+            if (!didFinish) return;
+
+            if (currentId) {
+              setSelectedWord((current) =>
+                current === currentId ? null : current,
+              );
+            }
+
+            cleanupAudioListener();
+
+            try {
+              player.remove();
+            } catch {
+              // évite un crash si le player est déjà libéré
+            }
+
+            if (playerRef.current === player) {
+              playerRef.current = null;
+            }
+
+            activeAudioIdRef.current = null;
+          },
+        );
+
+        player.seekTo(0);
+        player.play();
+      } catch {
+        setSelectedWord(null);
+        activeAudioIdRef.current = null;
+      }
+    },
+    [cleanupAudioListener, stopAudio],
+  );
+
+  useEffect(() => {
+    setAudioModeAsync({
+      playsInSilentMode: true,
+      allowsRecording: false,
+      shouldPlayInBackground: false,
+    }).catch(() => null);
+  }, []);
 
   useEffect(() => {
     fadeAnim.setValue(0);
@@ -352,7 +517,8 @@ export default function TransportCity() {
       useNativeDriver: true,
     }).start();
 
-    Speech.stop();
+    stopAudio();
+    shouldAutoPlayNextMessageRef.current = false;
     setSelectedWord(null);
     setVisibleMessages(1);
     setIsTyping(false);
@@ -361,7 +527,23 @@ export default function TransportCity() {
       clearTimeout(typingTimer.current);
       typingTimer.current = null;
     }
-  }, [activeScene, fadeAnim]);
+  }, [activeScene, fadeAnim, stopAudio]);
+
+  useEffect(() => {
+    if (!shouldAutoPlayNextMessageRef.current || isTyping) return;
+
+    shouldAutoPlayNextMessageRef.current = false;
+
+    const currentMessageIndex = visibleMessages - 1;
+    const currentMessage = activeScene.dialogue[currentMessageIndex];
+
+    if (!currentMessage) return;
+
+    playAudio(
+      currentMessage.audio,
+      `${activeScene.id}-dialogue-${currentMessageIndex}`,
+    );
+  }, [activeScene, visibleMessages, isTyping, playAudio]);
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -390,23 +572,25 @@ export default function TransportCity() {
         clearTimeout(typingTimer.current);
       }
 
-      Speech.stop();
+      stopAudio();
     };
-  }, [tapHintPulse]);
+  }, [tapHintPulse, stopAudio]);
 
-  const speak = (text: string, id: string) => {
-    Speech.stop();
-    setSelectedWord(id);
-    Vibration.vibrate(8);
+  const handleSceneChange = (scene: Scene) => {
+    if (scene.id === activeScene.id) return;
 
-    Speech.speak(text, {
-      language: "ko-KR",
-      rate: 0.78,
-      pitch: 1,
-      onDone: () => setSelectedWord(null),
-      onStopped: () => setSelectedWord(null),
-      onError: () => setSelectedWord(null),
-    });
+    stopAudio();
+    shouldAutoPlayNextMessageRef.current = false;
+    setSelectedWord(null);
+    setVisibleMessages(1);
+    setIsTyping(false);
+
+    if (typingTimer.current) {
+      clearTimeout(typingTimer.current);
+      typingTimer.current = null;
+    }
+
+    setActiveScene(scene);
   };
 
   const advanceDialogue = () => {
@@ -414,6 +598,9 @@ export default function TransportCity() {
 
     if (visibleMessages >= activeScene.dialogue.length) {
       Vibration.vibrate(8);
+      stopAudio();
+      shouldAutoPlayNextMessageRef.current = false;
+      setSelectedWord(null);
       setVisibleMessages(1);
       setIsTyping(false);
       return;
@@ -422,6 +609,7 @@ export default function TransportCity() {
     const nextMessage = activeScene.dialogue[visibleMessages];
 
     Vibration.vibrate(8);
+    shouldAutoPlayNextMessageRef.current = true;
 
     if (nextMessage.side === "server") {
       setIsTyping(true);
@@ -477,7 +665,7 @@ export default function TransportCity() {
               return (
                 <Pressable
                   key={scene.id}
-                  onPress={() => setActiveScene(scene)}
+                  onPress={() => handleSceneChange(scene)}
                   style={[
                     styles.tab,
                     isActive && {
@@ -529,7 +717,7 @@ export default function TransportCity() {
                 <Text style={styles.sceneSub}>{activeScene.description}</Text>
               </View>
 
-              <Pressable onPress={advanceDialogue} style={styles.dialogueList}>
+              <View style={styles.dialogueList}>
                 {activeScene.dialogue
                   .slice(0, visibleMessages)
                   .map((line, idx) => {
@@ -540,7 +728,10 @@ export default function TransportCity() {
                     return (
                       <Pressable
                         key={dialogueId}
-                        onPress={() => speak(line.kr, dialogueId)}
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          playAudio(line.audio, dialogueId);
+                        }}
                         style={[
                           styles.bubble,
                           isMe ? styles.bubbleRight : styles.bubbleLeft,
@@ -599,33 +790,35 @@ export default function TransportCity() {
                   </View>
                 )}
 
-                <Animated.Text
-                  style={[
-                    styles.tapHint,
-                    shouldHighlightHint && {
-                      color: activeScene.accent,
-                      opacity: tapHintPulse.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.45, 1],
-                      }),
-                      transform: [
-                        {
-                          scale: tapHintPulse.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [1, 1.03],
-                          }),
-                        },
-                      ],
-                    },
-                  ]}
-                >
-                  {visibleMessages >= activeScene.dialogue.length
-                    ? "Toucher pour recommencer"
-                    : isTyping
-                      ? "Réponse en cours..."
-                      : "Toucher pour continuer"}
-                </Animated.Text>
-              </Pressable>
+                <Pressable onPress={advanceDialogue} disabled={isTyping}>
+                  <Animated.Text
+                    style={[
+                      styles.tapHint,
+                      shouldHighlightHint && {
+                        color: activeScene.accent,
+                        opacity: tapHintPulse.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.45, 1],
+                        }),
+                        transform: [
+                          {
+                            scale: tapHintPulse.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [1, 1.03],
+                            }),
+                          },
+                        ],
+                      },
+                    ]}
+                  >
+                    {visibleMessages >= activeScene.dialogue.length
+                      ? "Toucher pour recommencer"
+                      : isTyping
+                        ? "Réponse en cours..."
+                        : "Toucher pour continuer"}
+                  </Animated.Text>
+                </Pressable>
+              </View>
             </BlurView>
           </Animated.View>
 
@@ -649,7 +842,7 @@ export default function TransportCity() {
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() => speak(exp.speak, cardId)}
+                    onPress={() => playAudio(exp.audio, cardId)}
                     style={({ pressed }) => [
                       styles.vocabPressable,
                       pressed && { transform: [{ scale: 0.985 }] },

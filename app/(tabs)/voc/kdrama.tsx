@@ -17,6 +17,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useVocAudio } from "../../../hooks/useVocAudio";
 
 const { width } = Dimensions.get("window");
 
@@ -31,6 +32,27 @@ const COLORS = {
   txt: "rgba(255,255,255,0.96)",
   muted: "rgba(255,255,255,0.60)",
   glass: "rgba(255,255,255,0.05)",
+};
+
+const ROMANCE_AUDIO = {
+  message1: require("../../../assets/audio/voc/romance/romance-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/romance/romance-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/romance/romance-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/romance/romance-bulle-4.mp3"),
+};
+
+const TENSION_AUDIO = {
+  message1: require("../../../assets/audio/voc/Tension/tension-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/Tension/tension-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/Tension/tension-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/Tension/tension-bulle-4.mp3"),
+};
+
+const POCHA_AUDIO = {
+  message1: require("../../../assets/audio/voc/pocha/pocha-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/pocha/pocha-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/pocha/pocha-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/pocha/pocha-bulle-4.mp3"),
 };
 
 const SCENES = [
@@ -53,24 +75,28 @@ const SCENES = [
         kr: "사실... 너 좋아해.",
         fr: "En fait... je t'aime bien.",
         side: "server",
+        audio: ROMANCE_AUDIO.message1,
       },
       {
         char: "Ji-soo",
         kr: "진짜? 전혀 몰랐어.",
         fr: "Vraiment ? J'en avais aucune idée.",
         side: "me",
+        audio: ROMANCE_AUDIO.message2,
       },
       {
         char: "Min-ho",
         kr: "부담 주고 싶진 않아. 그냥 말하고 싶었어.",
         fr: "Je ne veux pas te mettre la pression. Je voulais juste te le dire.",
         side: "server",
+        audio: ROMANCE_AUDIO.message3,
       },
       {
         char: "Ji-soo",
         kr: "고마워. 나도 꿈만 같아.",
         fr: "Merci. Pour moi aussi, c'est comme un rêve.",
         side: "me",
+        audio: ROMANCE_AUDIO.message4,
       },
     ],
     expressions: [
@@ -112,24 +138,28 @@ const SCENES = [
         kr: "정신 차리세요! 이게 최선입니까?",
         fr: "Reprends-toi ! C'est le mieux que tu puisses faire ?",
         side: "server",
+        audio: TENSION_AUDIO.message1,
       },
       {
         char: "Employé",
         kr: "죄송합니다. 다시 하겠습니다.",
         fr: "Je suis désolé. Je vais recommencer.",
         side: "me",
+        audio: TENSION_AUDIO.message2,
       },
       {
         char: "Directeur",
         kr: "이번엔 실망시키지 마세요.",
         fr: "Cette fois, ne me décevez pas.",
         side: "server",
+        audio: TENSION_AUDIO.message3,
       },
       {
         char: "Employé",
         kr: "네, 꼭 해내겠습니다.",
         fr: "Oui, je vais absolument y arriver.",
         side: "me",
+        audio: TENSION_AUDIO.message4,
       },
     ],
     expressions: [
@@ -172,24 +202,28 @@ const SCENES = [
         kr: "짠! 오늘 진짜 수고했어.",
         fr: "Tchin ! Tu as vraiment bien travaillé aujourd'hui.",
         side: "server",
+        audio: POCHA_AUDIO.message1,
       },
       {
         char: "Ami 2",
         kr: "고마워. 오늘 좀 힘들었어.",
         fr: "Merci. Aujourd'hui, c'était un peu difficile.",
         side: "me",
+        audio: POCHA_AUDIO.message2,
       },
       {
         char: "Ami 1",
         kr: "그래도 잘 버텼어. 대박이야.",
         fr: "Mais tu as bien tenu. C'est impressionnant.",
         side: "server",
+        audio: POCHA_AUDIO.message3,
       },
       {
         char: "Ami 2",
         kr: "내일도 화이팅!",
         fr: "Demain aussi, Fighting !",
         side: "me",
+        audio: POCHA_AUDIO.message4,
       },
     ],
     expressions: [
@@ -220,6 +254,7 @@ export default function KDramaCulture() {
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
 
@@ -277,13 +312,15 @@ export default function KDramaCulture() {
       }
 
       Speech.stop();
+      stopAudio();
     };
-  }, [tapHintPulse]);
+  }, [tapHintPulse, stopAudio]);
   const shouldHighlightHint =
     !isTyping && visibleMessages < activeScene.dialogue.length;
 
   const speak = (text: string, id: string) => {
     Speech.stop();
+    stopAudio();
     setSelectedWord(id);
     Vibration.vibrate(8);
 
@@ -447,14 +484,21 @@ export default function KDramaCulture() {
                 {activeScene.dialogue
                   .slice(0, visibleMessages)
                   .map((d, index) => {
+                    const dialogueId = `${activeScene.id}-dialogue-${index}`;
                     const isMe = d.side === "me";
+                    const isActive = selectedWord === dialogueId;
 
                     return (
-                      <View
-                        key={`${activeScene.id}-dialogue-${index}`}
+                      <Pressable
+                        key={dialogueId}
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          playAudio(d.audio, dialogueId);
+                        }}
                         style={[
                           styles.bubble,
                           isMe ? styles.bubbleRight : styles.bubbleLeft,
+                          isActive && { borderColor: activeScene.accent },
                         ]}
                       >
                         <Text
@@ -467,7 +511,7 @@ export default function KDramaCulture() {
                         </Text>
                         <Text style={styles.krText}>{d.kr}</Text>
                         <Text style={styles.frText}>{d.fr}</Text>
-                      </View>
+                      </Pressable>
                     );
                   })}
 
@@ -850,6 +894,7 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
 
+  toolbox: { marginTop: 4, paddingBottom: 20 },
   toolboxHeader: {
     flexDirection: "row",
     alignItems: "center",

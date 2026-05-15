@@ -16,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useVocAudio } from "../../../hooks/useVocAudio";
 
 const { width } = Dimensions.get("window");
 
@@ -26,6 +27,27 @@ const COLORS = {
   emergencyRed: "#FB7185",
   txt: "rgba(255,255,255,0.96)",
   muted: "rgba(255,255,255,0.60)",
+};
+
+const PHARMACIE_AUDIO = {
+  message1: require("../../../assets/audio/voc/pharmacie/pharmacie-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/pharmacie/pharmacie-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/pharmacie/pharmacie-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/pharmacie/pharmacie-bulle-4.mp3"),
+};
+
+const HOPITAL_AUDIO = {
+  message1: require("../../../assets/audio/voc/hopital/hopital-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/hopital/hopital-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/hopital/hopital-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/hopital/hopital-bulle-4.mp3"),
+};
+
+const URGENCE_AUDIO = {
+  message1: require("../../../assets/audio/voc/urgence/urgence-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/urgence/urgence-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/urgence/urgence-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/urgence/urgence-bulle-4.mp3"),
 };
 
 const SCENES = [
@@ -42,24 +64,28 @@ const SCENES = [
         kr: "머리가 아프고 열이 나요.",
         fr: "J'ai mal à la tête et j'ai de la fièvre.",
         side: "me",
+        audio: PHARMACIE_AUDIO.message1,
       },
       {
         char: "Pharmacien",
         kr: "언제부터 아프셨어요?",
         fr: "Depuis quand avez-vous mal ?",
         side: "server",
+        audio: PHARMACIE_AUDIO.message2,
       },
       {
         char: "Patient",
         kr: "오늘 아침부터 아팠어요.",
         fr: "J'ai mal depuis ce matin.",
         side: "me",
+        audio: PHARMACIE_AUDIO.message3,
       },
       {
         char: "Pharmacien",
         kr: "이 약은 식후에 드세요.",
         fr: "Prenez ce médicament après le repas.",
         side: "server",
+        audio: PHARMACIE_AUDIO.message4,
       },
     ],
     expressions: [
@@ -102,24 +128,28 @@ const SCENES = [
         kr: "어디가 아프세요?",
         fr: "Où avez-vous mal ?",
         side: "server",
+        audio: HOPITAL_AUDIO.message1,
       },
       {
         char: "Patient",
         kr: "어제부터 배가 너무 아파요.",
         fr: "J'ai très mal au ventre depuis hier.",
         side: "me",
+        audio: HOPITAL_AUDIO.message2,
       },
       {
         char: "Médecin",
         kr: "열도 나세요?",
         fr: "Vous avez aussi de la fièvre ?",
         side: "server",
+        audio: HOPITAL_AUDIO.message3,
       },
       {
         char: "Patient",
         kr: "네, 조금 열이 나요.",
         fr: "Oui, j'ai un peu de fièvre.",
         side: "me",
+        audio: HOPITAL_AUDIO.message4,
       },
     ],
     expressions: [
@@ -156,24 +186,28 @@ const SCENES = [
         kr: "119입니다. 위치가 어디입니까?",
         fr: "Ici le 119. Où êtes-vous ?",
         side: "server",
+        audio: URGENCE_AUDIO.message1,
       },
       {
         char: "Appelant",
         kr: "사고가 났어요! 구급차가 필요해요.",
         fr: "Il y a eu un accident ! J'ai besoin d'une ambulance.",
         side: "me",
+        audio: URGENCE_AUDIO.message2,
       },
       {
         char: "Opérateur",
         kr: "환자는 의식이 있습니까?",
         fr: "La personne est-elle consciente ?",
         side: "server",
+        audio: URGENCE_AUDIO.message3,
       },
       {
         char: "Appelant",
         kr: "네, 하지만 많이 다쳤어요.",
         fr: "Oui, mais elle est gravement blessée.",
         side: "me",
+        audio: URGENCE_AUDIO.message4,
       },
     ],
     expressions: [
@@ -202,6 +236,7 @@ const SCENES = [
 export default function HealthEmergency() {
   const [activeScene, setActiveScene] = useState(SCENES[0]);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
 
@@ -210,6 +245,7 @@ export default function HealthEmergency() {
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    stopAudio();
     fadeAnim.setValue(0);
     setVisibleMessages(1);
     setIsTyping(false);
@@ -226,7 +262,7 @@ export default function HealthEmergency() {
       easing: Easing.out(Easing.back(1)),
       useNativeDriver: true,
     }).start();
-  }, [activeScene]);
+  }, [activeScene, stopAudio]);
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -256,11 +292,13 @@ export default function HealthEmergency() {
       }
 
       Speech.stop();
+      stopAudio();
     };
-  }, [tapHintPulse]);
+  }, [tapHintPulse, stopAudio]);
 
   const speak = (text: string, id: string) => {
     Speech.stop();
+    stopAudio();
     setSelectedWord(id);
     Vibration.vibrate(8);
 
@@ -395,16 +433,23 @@ export default function HealthEmergency() {
                 {activeScene.dialogue
                   .slice(0, visibleMessages)
                   .map((item, idx) => {
+                    const dialogueId = `${activeScene.id}-dialogue-${idx}`;
                     const isMe = item.side === "me";
+                    const isActive = selectedWord === dialogueId;
 
                     return (
-                      <View
-                        key={`${activeScene.id}-dialogue-${idx}`}
+                      <Pressable
+                        key={dialogueId}
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          playAudio(item.audio, dialogueId);
+                        }}
                         style={[
                           styles.dialogueBubble,
                           isMe
                             ? styles.dialogueBubbleRight
                             : styles.dialogueBubbleLeft,
+                          isActive && { borderColor: activeScene.accent },
                         ]}
                       >
                         <View
@@ -425,7 +470,7 @@ export default function HealthEmergency() {
 
                         <Text style={styles.krDialogue}>{item.kr}</Text>
                         <Text style={styles.frDialogue}>{item.fr}</Text>
-                      </View>
+                      </Pressable>
                     );
                   })}
 

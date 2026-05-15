@@ -17,6 +17,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useVocAudio } from "../../../hooks/useVocAudio";
 
 const { width } = Dimensions.get("window");
 
@@ -28,6 +29,27 @@ const COLORS = {
   graphite: "#64748B",
   txt: "rgba(255,255,255,0.96)",
   muted: "rgba(255,255,255,0.60)",
+};
+
+const REUNION_AUDIO = {
+  message1: require("../../../assets/audio/voc/reunion/reunion-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/reunion/reunion-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/reunion/reunion-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/reunion/reunion-bulle-4.mp3"),
+};
+
+const MAIL_AUDIO = {
+  message1: require("../../../assets/audio/voc/mail/mail-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/mail/mail-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/mail/mail-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/mail/mail-bulle-4.mp3"),
+};
+
+const INTERVIEW_AUDIO = {
+  message1: require("../../../assets/audio/voc/interview/interview-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/interview/interview-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/interview/interview-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/interview/interview-bulle-4.mp3"),
 };
 
 const SCENES = [
@@ -45,24 +67,28 @@ const SCENES = [
         kr: "회의 시작할까요?",
         fr: "On commence la réunion ?",
         side: "me",
+        audio: REUNION_AUDIO.message1,
       },
       {
         char: "Manager",
         kr: "네, 시작하겠습니다. 먼저 의견을 말씀해 주세요.",
         fr: "Oui, nous allons commencer. Donnez d'abord votre avis.",
         side: "server",
+        audio: REUNION_AUDIO.message2,
       },
       {
         char: "Moi",
         kr: "제 의견은 조금 다릅니다. 다시 설명해 주시겠어요?",
         fr: "Mon avis est un peu différent. Pouvez-vous réexpliquer ?",
         side: "me",
+        audio: REUNION_AUDIO.message3,
       },
       {
         char: "Manager",
         kr: "네, 좋은 질문입니다. 자료를 보면서 설명드리겠습니다.",
         fr: "Oui, bonne question. Je vais expliquer avec les documents.",
         side: "server",
+        audio: REUNION_AUDIO.message4,
       },
     ],
     expressions: [
@@ -145,24 +171,28 @@ const SCENES = [
         kr: "안녕하세요. 첨부 파일 확인 부탁드립니다.",
         fr: "Bonjour. Merci de vérifier la pièce jointe.",
         side: "me",
+        audio: MAIL_AUDIO.message1,
       },
       {
         char: "Collègue",
         kr: "네, 확인 후 답변드리겠습니다.",
         fr: "Oui, je vérifierai puis je vous répondrai.",
         side: "server",
+        audio: MAIL_AUDIO.message2,
       },
       {
         char: "Moi",
         kr: "감사합니다. 오늘 중으로 가능할까요?",
         fr: "Merci. Est-ce possible dans la journée ?",
         side: "me",
+        audio: MAIL_AUDIO.message3,
       },
       {
         char: "Collègue",
         kr: "네, 가능합니다. 답변 기다려 주세요.",
         fr: "Oui, c'est possible. Merci d'attendre ma réponse.",
         side: "server",
+        audio: MAIL_AUDIO.message4,
       },
     ],
     expressions: [
@@ -245,24 +275,28 @@ const SCENES = [
         kr: "자기소개 부탁드립니다.",
         fr: "Présentez-vous, s'il vous plaît.",
         side: "server",
+        audio: INTERVIEW_AUDIO.message1,
       },
       {
         char: "Moi",
         kr: "안녕하세요. 저는 프랑스에서 온 마크입니다.",
         fr: "Bonjour. Je suis Marc, je viens de France.",
         side: "me",
+        audio: INTERVIEW_AUDIO.message2,
       },
       {
         char: "Recruteur",
         kr: "이 분야에 관심이 많은 이유가 있나요?",
         fr: "Pourquoi vous intéressez-vous beaucoup à ce domaine ?",
         side: "server",
+        audio: INTERVIEW_AUDIO.message3,
       },
       {
         char: "Moi",
         kr: "경험이 있고, 한국어와 비즈니스에 관심이 많습니다.",
         fr: "J'ai de l'expérience et je m'intéresse beaucoup au coréen et au business.",
         side: "me",
+        audio: INTERVIEW_AUDIO.message4,
       },
     ],
     expressions: [
@@ -338,6 +372,7 @@ export default function BusinessImmersion() {
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
 
@@ -395,11 +430,13 @@ export default function BusinessImmersion() {
       }
 
       Speech.stop();
+      stopAudio();
     };
-  }, [tapHintPulse]);
+  }, [tapHintPulse, stopAudio]);
 
   const speak = (text: string, id: string) => {
     Speech.stop();
+    stopAudio();
     setSelectedWord(id);
     Vibration.vibrate(8);
 
@@ -566,14 +603,21 @@ export default function BusinessImmersion() {
                 {activeScene.dialogue
                   .slice(0, visibleMessages)
                   .map((chat, idx) => {
+                    const dialogueId = `${activeScene.id}-dialogue-${idx}`;
                     const isMe = chat.side === "me";
+                    const isActive = selectedWord === dialogueId;
 
                     return (
-                      <Animated.View
-                        key={`${activeScene.id}-dialogue-${idx}`}
+                      <Pressable
+                        key={dialogueId}
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          playAudio(chat.audio, dialogueId);
+                        }}
                         style={[
                           styles.bubble,
                           isMe ? styles.bubbleRight : styles.bubbleLeft,
+                          isActive && { borderColor: activeScene.accent },
                         ]}
                       >
                         <Text
@@ -586,7 +630,7 @@ export default function BusinessImmersion() {
                         </Text>
                         <Text style={styles.bubbleKr}>{chat.kr}</Text>
                         <Text style={styles.bubbleFr}>{chat.fr}</Text>
-                      </Animated.View>
+                      </Pressable>
                     );
                   })}
 

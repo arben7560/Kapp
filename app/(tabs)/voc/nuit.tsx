@@ -17,6 +17,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useVocAudio } from "../../../hooks/useVocAudio";
 
 const { width } = Dimensions.get("window");
 
@@ -31,6 +32,27 @@ const COLORS = {
   warningOrange: "#FB923C",
   txt: "rgba(255,255,255,0.96)",
   muted: "rgba(255,255,255,0.60)",
+};
+
+const POCHA_AUDIO = {
+  message1: require("../../../assets/audio/voc/nuit/pocha-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/nuit/pocha-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/nuit/pocha-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/nuit/pocha-bulle-4.mp3"),
+};
+
+const NORAEBANG_AUDIO = {
+  message1: require("../../../assets/audio/voc/noraebang/noraebang-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/noraebang/noraebang-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/noraebang/noraebang-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/noraebang/noraebang-bulle-4.mp3"),
+};
+
+const NUIT_AUDIO = {
+  message1: require("../../../assets/audio/voc/after/after-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/after/after-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/after/after-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/after/after-bulle-4.mp3"),
 };
 
 const SCENES = [
@@ -48,24 +70,28 @@ const SCENES = [
         kr: "한 잔 더 할까요? 제가 따를게요.",
         fr: "On en reprend un verre ? Je vous sers.",
         side: "server",
+        audio: POCHA_AUDIO.message1,
       },
       {
         char: "Min-a",
         kr: "좋아요! 안주도 더 시킬까요?",
         fr: "D’accord ! On commande aussi plus d’anju ?",
         side: "me",
+        audio: POCHA_AUDIO.message2,
       },
       {
         char: "Ji-hun",
         kr: "네, 떡볶이 하나 더 시켜요.",
         fr: "Oui, commandons encore un tteokbokki.",
         side: "server",
+        audio: POCHA_AUDIO.message3,
       },
       {
         char: "Min-a",
         kr: "좋아요. 그럼 건배할까요?",
         fr: "Très bien. Alors on trinque ?",
         side: "me",
+        audio: POCHA_AUDIO.message4,
       },
     ],
     expressions: [
@@ -103,24 +129,28 @@ const SCENES = [
         kr: "이 노래 취향저격이에요! 탬버린 줘요.",
         fr: "Cette chanson est pile mon style ! Donne-moi le tambourin.",
         side: "server",
+        audio: NORAEBANG_AUDIO.message1,
       },
       {
         char: "Kevin",
         kr: "좋아요. 분위기 진짜 좋네요.",
         fr: "D’accord. L’ambiance est vraiment bonne.",
         side: "me",
+        audio: NORAEBANG_AUDIO.message2,
       },
       {
         char: "Sora",
         kr: "다 같이 떼창해요!",
         fr: "Chantons tous ensemble !",
         side: "server",
+        audio: NORAEBANG_AUDIO.message3,
       },
       {
         char: "Kevin",
         kr: "다음 곡은 제가 부를게요. 점수 대박!",
         fr: "C’est moi qui chante la suivante. Score de dingue !",
         side: "me",
+        audio: NORAEBANG_AUDIO.message4,
       },
     ],
     expressions: [
@@ -159,24 +189,28 @@ const SCENES = [
         kr: "벌써 끝이에요? 2차 갑시다!",
         fr: "C'est déjà fini ? Allons au deuxième endroit !",
         side: "server",
+        audio: NUIT_AUDIO.message1,
       },
       {
         char: "Yuna",
         kr: "좋아요. 근처로 가요.",
         fr: "D’accord. Allons dans les environs.",
         side: "me",
+        audio: NUIT_AUDIO.message2,
       },
       {
         char: "Jun",
         kr: "근처에 좋은 노래방 있어요.",
         fr: "Il y a un bon noraebang juste à côté.",
         side: "server",
+        audio: NUIT_AUDIO.message3,
       },
       {
         char: "Yuna",
         kr: "좋아요. 내일 해장국 먹어야겠어요.",
         fr: "D’accord. Demain, il va falloir manger du haejangguk.",
         side: "me",
+        audio: NUIT_AUDIO.message4,
       },
     ],
     expressions: [
@@ -207,6 +241,7 @@ export default function NightlifeImmersion() {
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
 
@@ -264,11 +299,13 @@ export default function NightlifeImmersion() {
       }
 
       Speech.stop();
+      stopAudio();
     };
-  }, [tapHintPulse]);
+  }, [tapHintPulse, stopAudio]);
 
   const speak = (text: string, id: string) => {
     Speech.stop();
+    stopAudio();
     setSelectedWord(id);
     Vibration.vibrate(8);
 
@@ -444,14 +481,21 @@ export default function NightlifeImmersion() {
                 {activeScene.dialogue
                   .slice(0, visibleMessages)
                   .map((line, idx) => {
+                    const dialogueId = `${activeScene.id}-dialogue-${idx}`;
                     const isMe = line.side === "me";
+                    const isActive = selectedWord === dialogueId;
 
                     return (
-                      <View
-                        key={`${activeScene.id}-dialogue-${idx}`}
+                      <Pressable
+                        key={dialogueId}
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          playAudio((line as any).audio, dialogueId);
+                        }}
                         style={[
                           styles.msg,
                           isMe ? styles.msgRight : styles.msgLeft,
+                          isActive && { borderColor: activeScene.accent },
                         ]}
                       >
                         <Text
@@ -461,7 +505,7 @@ export default function NightlifeImmersion() {
                         </Text>
                         <Text style={styles.krTxt}>{line.kr}</Text>
                         <Text style={styles.frTxt}>{line.fr}</Text>
-                      </View>
+                      </Pressable>
                     );
                   })}
 
