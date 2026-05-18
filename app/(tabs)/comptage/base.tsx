@@ -70,6 +70,18 @@ const SCENES = [
         context: "Les bases du système natif pour les petits objets.",
       },
       {
+        word: "넷, 다섯, 여섯",
+        rom: "Net, Tasot, Yosot",
+        mean: "4, 5, 6",
+        context: "Suite des nombres natifs utiles pour compter au café.",
+      },
+      {
+        word: "한 잔, 두 잔",
+        rom: "Han jan, Tu jan",
+        mean: "Un verre, deux verres",
+        context: "Formes naturelles avec le classificateur des boissons.",
+      },
+      {
         word: "세 잔",
         rom: "Se-jan",
         mean: "Trois verres",
@@ -122,8 +134,8 @@ const SCENES = [
       },
       {
         char: "Coach",
-        kr: "셋만 더 할게요. 셋, 넷, 다섯!",
-        fr: "On en fait seulement trois de plus. Trois, quatre, cinq !",
+        kr: "세 번만 더 할게요. 셋, 넷, 다섯!",
+        fr: "On en fait seulement trois fois de plus. Trois, quatre, cinq !",
       },
       {
         char: "Moi",

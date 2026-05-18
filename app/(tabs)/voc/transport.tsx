@@ -73,11 +73,12 @@ const METRO_AUDIO = {
   carteTransport: require("../../../assets/audio/voc/Metro/toolbox/carte-transport.mp3"),
   correspondance: require("../../../assets/audio/voc/Metro/toolbox/correspondance.mp3"),
   hongdaeipguyeok: require("../../../assets/audio/voc/Metro/toolbox/hongdaeibguyeok.mp3"),
-  hwangseug: require("../../../assets/audio/voc/Metro/toolbox/hwangseug.mp3"),
+  hwangseug: require("../../../assets/audio/voc/Metro/toolbox/hwanseung.mp3"),
   ligne2: require("../../../assets/audio/voc/Metro/toolbox/ligne2.mp3"),
   stationMetro: require("../../../assets/audio/voc/Metro/toolbox/station-metro.mp3"),
   taeumyeok: require("../../../assets/audio/voc/Metro/toolbox/taeumyeok.mp3"),
   metro: require("../../../assets/audio/voc/Metro/toolbox/metro.mp3"),
+  cetteStation: require("../../../assets/audio/voc/Metro/toolbox/cette-station.mp3"),
 };
 
 const TAXI_AUDIO = {
@@ -105,8 +106,8 @@ const SCENES: Scene[] = [
     dialogue: [
       {
         char: "Moi",
-        kr: "홍대입구역으로 가려면 어디서 갈아타요?",
-        fr: "Où dois-je changer pour aller à Hongdae ?",
+        kr: "저기요, 홍대입구역으로 가려면 어디서 갈아타요?",
+        fr: "Excusez-moi, où dois-je changer pour aller à Hongdae ?",
         side: "me",
         audio: METRO_AUDIO.message1,
       },
@@ -119,7 +120,7 @@ const SCENES: Scene[] = [
       },
       {
         char: "Moi",
-        kr: "2호선은 어느 방향으로 타야 해요?",
+        kr: "이호선은 어느 방향으로 타야 해요?",
         fr: "Dans quelle direction dois-je prendre la ligne 2 ?",
         side: "me",
         audio: METRO_AUDIO.message3,
@@ -187,6 +188,7 @@ const SCENES: Scene[] = [
         rom: "Ibeon yeok",
         mean: "Cette station",
         context: "Annonce fréquente dans le métro.",
+        audio: METRO_AUDIO.cetteStation,
       },
       {
         word: "교통카드",

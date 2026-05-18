@@ -1,7 +1,6 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -34,6 +33,10 @@ const PHARMACIE_AUDIO = {
   message2: require("../../../assets/audio/voc/pharmacie/pharmacie-bulle-2.mp3"),
   message3: require("../../../assets/audio/voc/pharmacie/pharmacie-bulle-3.mp3"),
   message4: require("../../../assets/audio/voc/pharmacie/pharmacie-bulle-4.mp3"),
+  toolbox1: require("../../../assets/audio/voc/pharmacie/toolbox/pharmacie-toolbox-1.mp3"),
+  toolbox2: require("../../../assets/audio/voc/pharmacie/toolbox/pharmacie-toolbox-2.mp3"),
+  toolbox3: require("../../../assets/audio/voc/pharmacie/toolbox/pharmacie-toolbox-3.mp3"),
+  toolbox4: require("../../../assets/audio/voc/pharmacie/toolbox/pharmacie-toolbox-4.mp3"),
 };
 
 const HOPITAL_AUDIO = {
@@ -41,6 +44,9 @@ const HOPITAL_AUDIO = {
   message2: require("../../../assets/audio/voc/hopital/hopital-bulle-2.mp3"),
   message3: require("../../../assets/audio/voc/hopital/hopital-bulle-3.mp3"),
   message4: require("../../../assets/audio/voc/hopital/hopital-bulle-4.mp3"),
+  toolbox1: require("../../../assets/audio/voc/hopital/toolbox/hopital-toolbox-1.mp3"),
+  toolbox2: require("../../../assets/audio/voc/hopital/toolbox/hopital-toolbox-2.mp3"),
+  toolbox3: require("../../../assets/audio/voc/hopital/toolbox/hopital-toolbox-3.mp3"),
 };
 
 const URGENCE_AUDIO = {
@@ -48,6 +54,9 @@ const URGENCE_AUDIO = {
   message2: require("../../../assets/audio/voc/urgence/urgence-bulle-2.mp3"),
   message3: require("../../../assets/audio/voc/urgence/urgence-bulle-3.mp3"),
   message4: require("../../../assets/audio/voc/urgence/urgence-bulle-4.mp3"),
+  toolbox1: require("../../../assets/audio/voc/urgence/toolbox/urgence-toolbox-1.mp3"),
+  toolbox2: require("../../../assets/audio/voc/urgence/toolbox/urgence-toolbox-2.mp3"),
+  toolbox3: require("../../../assets/audio/voc/urgence/toolbox/urgence-toolbox-3.mp3"),
 };
 
 const SCENES = [
@@ -94,24 +103,28 @@ const SCENES = [
         rom: "Gamgi-yak",
         mean: "Médicament contre le rhume",
         context: "Utile pour demander un traitement simple.",
+        audio: PHARMACIE_AUDIO.toolbox1,
       },
       {
         word: "소화제",
         rom: "Sohwa-jae",
         mean: "Médicament pour la digestion",
         context: "Utile pour demander un traitement simple.",
+        audio: PHARMACIE_AUDIO.toolbox2,
       },
       {
         word: "진통제",
         rom: "Jintong-je",
         mean: "Antidouleur",
         context: "Pour les maux de tête ou de dents.",
+        audio: PHARMACIE_AUDIO.toolbox3,
       },
       {
         word: "식후",
         rom: "Sik-hu",
         mean: "Après le repas",
         context: "Instruction fréquente pour prendre un médicament.",
+        audio: PHARMACIE_AUDIO.toolbox4,
       },
     ],
   },
@@ -158,18 +171,21 @@ const SCENES = [
         rom: "Jinchal",
         mean: "Consultation médicale",
         context: "Quand le médecin vous examine.",
+        audio: HOPITAL_AUDIO.toolbox1,
       },
       {
         word: "처방전",
         rom: "Cheobang-jeon",
         mean: "Ordonnance",
         context: "À présenter à la pharmacie après la visite.",
+        audio: HOPITAL_AUDIO.toolbox2,
       },
       {
         word: "보험",
         rom: "Boheom",
         mean: "Assurance",
         context: "Souvent demandé à l'accueil.",
+        audio: HOPITAL_AUDIO.toolbox3,
       },
     ],
   },
@@ -216,18 +232,21 @@ const SCENES = [
         rom: "Dowajuseyo!",
         mean: "Aidez-moi !",
         context: "La phrase essentielle en cas de danger.",
+        audio: URGENCE_AUDIO.toolbox1,
       },
       {
         word: "구급차",
         rom: "Gugeup-cha",
         mean: "Ambulance",
         context: "À demander en cas d'urgence médicale.",
+        audio: URGENCE_AUDIO.toolbox2,
       },
       {
         word: "조심하세요",
         rom: "Josim-haseyo",
         mean: "Faites attention",
         context: "Pour prévenir quelqu'un d'un danger.",
+        audio: URGENCE_AUDIO.toolbox3,
       },
     ],
   },
@@ -262,7 +281,7 @@ export default function HealthEmergency() {
       easing: Easing.out(Easing.back(1)),
       useNativeDriver: true,
     }).start();
-  }, [activeScene, stopAudio]);
+  }, [activeScene, fadeAnim, stopAudio]);
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -291,26 +310,9 @@ export default function HealthEmergency() {
         clearTimeout(typingTimer.current);
       }
 
-      Speech.stop();
       stopAudio();
     };
   }, [tapHintPulse, stopAudio]);
-
-  const speak = (text: string, id: string) => {
-    Speech.stop();
-    stopAudio();
-    setSelectedWord(id);
-    Vibration.vibrate(8);
-
-    Speech.speak(text, {
-      language: "ko-KR",
-      rate: 0.78,
-      pitch: 1,
-      onDone: () => setSelectedWord(null),
-      onStopped: () => setSelectedWord(null),
-      onError: () => setSelectedWord(null),
-    });
-  };
 
   const advanceDialogue = () => {
     if (isTyping) return;
@@ -567,7 +569,7 @@ export default function HealthEmergency() {
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() => speak(exp.word, cardId)}
+                    onPress={() => playAudio(exp.audio, cardId)}
                     style={({ pressed }) => [
                       styles.expPressable,
                       pressed && { transform: [{ scale: 0.985 }] },

@@ -1,7 +1,6 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -35,10 +34,13 @@ const COLORS = {
 };
 
 const ROMANCE_AUDIO = {
-  message1: require("../../../assets/audio/voc/romance/romance-bulle-1.mp3"),
-  message2: require("../../../assets/audio/voc/romance/romance-bulle-2.mp3"),
-  message3: require("../../../assets/audio/voc/romance/romance-bulle-3.mp3"),
-  message4: require("../../../assets/audio/voc/romance/romance-bulle-4.mp3"),
+  message1: require("../../../assets/audio/voc/romance/confession-bulle-1.mp3"),
+  message2: require("../../../assets/audio/voc/romance/confession-bulle-2.mp3"),
+  message3: require("../../../assets/audio/voc/romance/confession-bulle-3.mp3"),
+  message4: require("../../../assets/audio/voc/romance/confession-bulle-4.mp3"),
+  toolbox1: require("../../../assets/audio/voc/romance/toolbox/confession-toolbox-1.mp3"),
+  toolbox2: require("../../../assets/audio/voc/romance/toolbox/confession-toolbox-2.mp3"),
+  toolbox3: require("../../../assets/audio/voc/romance/toolbox/confession-toolbox-3.mp3"),
 };
 
 const TENSION_AUDIO = {
@@ -46,6 +48,9 @@ const TENSION_AUDIO = {
   message2: require("../../../assets/audio/voc/Tension/tension-bulle-2.mp3"),
   message3: require("../../../assets/audio/voc/Tension/tension-bulle-3.mp3"),
   message4: require("../../../assets/audio/voc/Tension/tension-bulle-4.mp3"),
+  toolbox1: require("../../../assets/audio/voc/Tension/toolbox/tension-toolbox-1.mp3"),
+  toolbox2: require("../../../assets/audio/voc/Tension/toolbox/tension-toolbox-2.mp3"),
+  toolbox3: require("../../../assets/audio/voc/Tension/toolbox/tension-toolbox-3.mp3"),
 };
 
 const POCHA_AUDIO = {
@@ -53,6 +58,9 @@ const POCHA_AUDIO = {
   message2: require("../../../assets/audio/voc/pocha/pocha-bulle-2.mp3"),
   message3: require("../../../assets/audio/voc/pocha/pocha-bulle-3.mp3"),
   message4: require("../../../assets/audio/voc/pocha/pocha-bulle-4.mp3"),
+  toolbox1: require("../../../assets/audio/voc/pocha/toolbox/pocha-toolbox-1.mp3"),
+  toolbox2: require("../../../assets/audio/voc/pocha/toolbox/pocha-toolbox-2.mp3"),
+  toolbox3: require("../../../assets/audio/voc/pocha/toolbox/pocha-toolbox-3.mp3"),
 };
 
 const SCENES = [
@@ -71,28 +79,28 @@ const SCENES = [
     image: require("../../../assets/images/love.png"),
     dialogue: [
       {
-        char: "Min-ho",
+        char: "Ji-soo",
         kr: "사실... 너 좋아해.",
         fr: "En fait... je t'aime bien.",
         side: "server",
         audio: ROMANCE_AUDIO.message1,
       },
       {
-        char: "Ji-soo",
+        char: "Min-ho",
         kr: "진짜? 전혀 몰랐어.",
         fr: "Vraiment ? J'en avais aucune idée.",
         side: "me",
         audio: ROMANCE_AUDIO.message2,
       },
       {
-        char: "Min-ho",
+        char: "Ji-soo",
         kr: "부담 주고 싶진 않아. 그냥 말하고 싶었어.",
         fr: "Je ne veux pas te mettre la pression. Je voulais juste te le dire.",
         side: "server",
         audio: ROMANCE_AUDIO.message3,
       },
       {
-        char: "Ji-soo",
+        char: "Min-ho",
         kr: "고마워. 나도 꿈만 같아.",
         fr: "Merci. Pour moi aussi, c'est comme un rêve.",
         side: "me",
@@ -105,18 +113,21 @@ const SCENES = [
         rom: "Joahae",
         mean: "Je t'aime bien",
         context: "Utilisé pour les confessions romantiques.",
+        audio: ROMANCE_AUDIO.toolbox1,
       },
       {
         word: "꿈만 같아",
         rom: "Kkum-man gata",
         mean: "C'est comme un rêve",
         context: "Quand on ne croit pas à son bonheur.",
+        audio: ROMANCE_AUDIO.toolbox2,
       },
       {
         word: "심쿵",
         rom: "Simkung",
         mean: "Coup de foudre / Cœur qui bat",
         context: "Argot Drama. Littéralement : coup au cœur.",
+        audio: ROMANCE_AUDIO.toolbox3,
       },
     ],
   },
@@ -168,18 +179,21 @@ const SCENES = [
         rom: "Jeongsin chariseyo",
         mean: "Reprends-toi / Réveille-toi",
         context: "Indispensable pour les scènes de bureau.",
+        audio: TENSION_AUDIO.toolbox1,
       },
       {
         word: "대박",
         rom: "Daebak",
         mean: "Incroyable / Choquant",
         context: "Utilisé partout, pour le bon ou le mauvais.",
+        audio: TENSION_AUDIO.toolbox2,
       },
       {
         word: "실망이야",
         rom: "Silmang-iya",
         mean: "Je suis déçu",
         context: "Phrase fatale pour briser l'ambiance.",
+        audio: TENSION_AUDIO.toolbox3,
       },
     ],
   },
@@ -198,28 +212,28 @@ const SCENES = [
     image: require("../../../assets/images/pocha.png"),
     dialogue: [
       {
-        char: "Ami 1",
+        char: "Pil-Seung",
         kr: "짠! 오늘 진짜 수고했어.",
         fr: "Tchin ! Tu as vraiment bien travaillé aujourd'hui.",
         side: "server",
         audio: POCHA_AUDIO.message1,
       },
       {
-        char: "Ami 2",
+        char: "Dora",
         kr: "고마워. 오늘 좀 힘들었어.",
         fr: "Merci. Aujourd'hui, c'était un peu difficile.",
         side: "me",
         audio: POCHA_AUDIO.message2,
       },
       {
-        char: "Ami 1",
+        char: "Pil-Seung",
         kr: "그래도 잘 버텼어. 대박이야.",
         fr: "Mais tu as bien tenu. C'est impressionnant.",
         side: "server",
         audio: POCHA_AUDIO.message3,
       },
       {
-        char: "Ami 2",
+        char: "Dora",
         kr: "내일도 화이팅!",
         fr: "Demain aussi, Fighting !",
         side: "me",
@@ -232,18 +246,21 @@ const SCENES = [
         rom: "Jjan!",
         mean: "Tchin ! / Santé !",
         context: "Le son des verres qui s'entrechoquent.",
+        audio: POCHA_AUDIO.toolbox1,
       },
       {
         word: "수고했어",
         rom: "Sugo-haesseo",
         mean: "Bravo pour tes efforts",
         context: "Se dit après le travail ou une épreuve.",
+        audio: POCHA_AUDIO.toolbox2,
       },
       {
         word: "화이팅",
         rom: "Hwaiting",
         mean: "Bon courage / Allez !",
         context: "L'expression de soutien universelle.",
+        audio: POCHA_AUDIO.toolbox3,
       },
     ],
   },
@@ -273,7 +290,7 @@ export default function KDramaCulture() {
       typingTimer.current = null;
     }
 
-    Speech.stop();
+    stopAudio();
     fadeAnim.setValue(0);
 
     Animated.timing(fadeAnim, {
@@ -282,7 +299,7 @@ export default function KDramaCulture() {
       easing: Easing.out(Easing.back(1)),
       useNativeDriver: true,
     }).start();
-  }, [activeScene]);
+  }, [activeScene, fadeAnim, stopAudio]);
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -311,28 +328,11 @@ export default function KDramaCulture() {
         clearTimeout(typingTimer.current);
       }
 
-      Speech.stop();
       stopAudio();
     };
   }, [tapHintPulse, stopAudio]);
   const shouldHighlightHint =
     !isTyping && visibleMessages < activeScene.dialogue.length;
-
-  const speak = (text: string, id: string) => {
-    Speech.stop();
-    stopAudio();
-    setSelectedWord(id);
-    Vibration.vibrate(8);
-
-    Speech.speak(text, {
-      language: "ko-KR",
-      rate: 0.78,
-      pitch: 1,
-      onDone: () => setSelectedWord(null),
-      onStopped: () => setSelectedWord(null),
-      onError: () => setSelectedWord(null),
-    });
-  };
 
   const advanceDialogue = () => {
     if (isTyping) return;
@@ -602,7 +602,7 @@ export default function KDramaCulture() {
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() => speak(exp.word, cardId)}
+                    onPress={() => playAudio(exp.audio, cardId)}
                     style={({ pressed }) => [
                       styles.expPressable,
                       pressed && { transform: [{ scale: 0.985 }] },

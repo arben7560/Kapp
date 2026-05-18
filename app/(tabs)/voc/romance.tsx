@@ -1,7 +1,6 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -39,6 +38,9 @@ const SOGETING_AUDIO = {
   message2: require("../../../assets/audio/voc/sogaeting/sogaeting-bulle-2.mp3"),
   message3: require("../../../assets/audio/voc/sogaeting/sogaeting-bulle-3.mp3"),
   message4: require("../../../assets/audio/voc/sogaeting/sogaeting-bulle-4.mp3"),
+  toolbox1: require("../../../assets/audio/voc/sogaeting/toolbox/sogaeting-toolbox-1.mp3"),
+  toolbox2: require("../../../assets/audio/voc/sogaeting/toolbox/sogaeting-toolbox-2.mp3"),
+  toolbox3: require("../../../assets/audio/voc/sogaeting/toolbox/sogaeting-toolbox-3.mp3"),
 };
 
 const SOME_AUDIO = {
@@ -46,6 +48,9 @@ const SOME_AUDIO = {
   message2: require("../../../assets/audio/voc/le-some/flirt-bulle-2.mp3"),
   message3: require("../../../assets/audio/voc/le-some/flirt-bulle-3.mp3"),
   message4: require("../../../assets/audio/voc/le-some/flirt-bulle-4.mp3"),
+  toolbox1: require("../../../assets/audio/voc/le-some/toolbox/some-toolbox-1.mp3"),
+  toolbox2: require("../../../assets/audio/voc/le-some/toolbox/some-toolbox-2.mp3"),
+  toolbox3: require("../../../assets/audio/voc/le-some/toolbox/some-toolbox-3.mp3"),
 };
 
 const COUPLE_AUDIO = {
@@ -53,6 +58,9 @@ const COUPLE_AUDIO = {
   message2: require("../../../assets/audio/voc/couple/couple-bulle-2.mp3"),
   message3: require("../../../assets/audio/voc/couple/couple-bulle-3.mp3"),
   message4: require("../../../assets/audio/voc/couple/couple-bulle-4.mp3"),
+  toolbox1: require("../../../assets/audio/voc/couple/toolbox/couple-toolbox-1.mp3"),
+  toolbox2: require("../../../assets/audio/voc/couple/toolbox/couple-toolbox-2.mp3"),
+  toolbox3: require("../../../assets/audio/voc/couple/toolbox/couple-toolbox-3.mp3"),
 };
 
 const SCENES = [
@@ -65,28 +73,28 @@ const SCENES = [
     image: require("../../../assets/images/sogeting.png"),
     dialogue: [
       {
-        char: "Jun-su",
+        char: "Mirae",
         kr: "사진보다 실물이 더 예쁘시네요.",
         fr: "Vous êtes encore plus jolie qu'en photo.",
         side: "server",
         audio: SOGETING_AUDIO.message1,
       },
       {
-        char: "So-hee",
+        char: "Kyung Seok",
         kr: "아니에요. 준수 씨도 인상이 참 좋으세요.",
         fr: "Ce n'est rien. Vous avez une très bonne impression aussi, Jun-su.",
         side: "me",
         audio: SOGETING_AUDIO.message2,
       },
       {
-        char: "Jun-su",
+        char: "Mirae",
         kr: "혹시 이상형이 어떻게 되세요?",
         fr: "Quel est votre type idéal ?",
         side: "server",
         audio: SOGETING_AUDIO.message3,
       },
       {
-        char: "So-hee",
+        char: "Kyung Seok",
         kr: "대화가 잘 통하는 사람이 좋아요.",
         fr: "J'aime les personnes avec qui la conversation passe bien.",
         side: "me",
@@ -99,18 +107,21 @@ const SCENES = [
         rom: "Sogeting",
         mean: "Blind Date",
         context: "Rendez-vous arrangé par des amis communs.",
+        audio: SOGETING_AUDIO.toolbox1,
       },
       {
         word: "이상형",
         rom: "Isang-hyeong",
         mean: "Type idéal",
         context: "La question incontournable du premier RDV.",
+        audio: SOGETING_AUDIO.toolbox2,
       },
       {
         word: "첫눈에 반하다",
         rom: "Cheonnune banhada",
         mean: "Avoir le coup de foudre",
         context: "Tomber amoureux au premier regard.",
+        audio: SOGETING_AUDIO.toolbox3,
       },
     ],
   },
@@ -157,18 +168,21 @@ const SCENES = [
         rom: "Sseom",
         mean: "Le 'Some'",
         context: "La phase d'ambiguïté avant d'être en couple.",
+        audio: SOME_AUDIO.toolbox1,
       },
       {
         word: "밀당",
         rom: "Mildang",
         mean: "Suis-moi je te fuis",
         context: "Le jeu de 'pousse-tire' émotionnel.",
+        audio: SOME_AUDIO.toolbox2,
       },
       {
         word: "보고 싶어",
         rom: "Bogo sipeo",
         mean: "Tu me manques",
         context: "Expression de manque et d'affection.",
+        audio: SOME_AUDIO.toolbox3,
       },
     ],
   },
@@ -215,18 +229,21 @@ const SCENES = [
         rom: "Sagwija",
         mean: "Sortons ensemble",
         context: "La phrase officielle pour devenir un couple.",
+        audio: COUPLE_AUDIO.toolbox1,
       },
       {
         word: "고무신",
         rom: "Gomusin",
         mean: "Attendre son militaire",
         context: "Expression pour une fille dont le copain est à l'armée.",
+        audio: COUPLE_AUDIO.toolbox2,
       },
       {
         word: "영원히",
         rom: "Yeongwonhi",
         mean: "Pour toujours",
         context: "Le serment romantique ultime.",
+        audio: COUPLE_AUDIO.toolbox3,
       },
     ],
   },
@@ -257,7 +274,7 @@ export default function RomanceDating() {
       typingTimer.current = null;
     }
 
-    Speech.stop();
+    stopAudio();
 
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -265,7 +282,7 @@ export default function RomanceDating() {
       easing: Easing.out(Easing.back(1)),
       useNativeDriver: true,
     }).start();
-  }, [activeScene]);
+  }, [activeScene, fadeAnim, stopAudio]);
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -294,26 +311,9 @@ export default function RomanceDating() {
         clearTimeout(typingTimer.current);
       }
 
-      Speech.stop();
       stopAudio();
     };
   }, [tapHintPulse, stopAudio]);
-
-  const speak = (text: string, id: string) => {
-    Speech.stop();
-    stopAudio();
-    setSelectedWord(id);
-    Vibration.vibrate(8);
-
-    Speech.speak(text, {
-      language: "ko-KR",
-      rate: 0.78,
-      pitch: 1,
-      onDone: () => setSelectedWord(null),
-      onStopped: () => setSelectedWord(null),
-      onError: () => setSelectedWord(null),
-    });
-  };
 
   const advanceDialogue = () => {
     if (isTyping) return;
@@ -589,7 +589,7 @@ export default function RomanceDating() {
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() => speak(exp.word, cardId)}
+                    onPress={() => playAudio(exp.audio, cardId)}
                     style={({ pressed }) => [
                       styles.vocabPressable,
                       pressed && { transform: [{ scale: 0.985 }] },

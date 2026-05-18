@@ -1,7 +1,6 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -36,6 +35,15 @@ const REUNION_AUDIO = {
   message2: require("../../../assets/audio/voc/reunion/reunion-bulle-2.mp3"),
   message3: require("../../../assets/audio/voc/reunion/reunion-bulle-3.mp3"),
   message4: require("../../../assets/audio/voc/reunion/reunion-bulle-4.mp3"),
+  toolbox1: require("../../../assets/audio/voc/reunion/toolbox/reunion-toolbox-1.mp3"),
+  toolbox2: require("../../../assets/audio/voc/reunion/toolbox/reunion-toolbox-2.mp3"),
+  toolbox3: require("../../../assets/audio/voc/reunion/toolbox/reunion-toolbox-3.mp3"),
+  toolbox4: require("../../../assets/audio/voc/reunion/toolbox/reunion-toolbox-4.mp3"),
+  toolbox5: require("../../../assets/audio/voc/reunion/toolbox/reunion-toolbox-5.mp3"),
+  toolbox6: require("../../../assets/audio/voc/reunion/toolbox/reunion-toolbox-6.mp3"),
+  toolbox7: require("../../../assets/audio/voc/reunion/toolbox/reunion-toolbox-7.mp3"),
+  toolbox8: require("../../../assets/audio/voc/reunion/toolbox/reunion-toolbox-8.mp3"),
+  toolbox9: require("../../../assets/audio/voc/reunion/toolbox/reunion-toolbox-9.mp3"),
 };
 
 const MAIL_AUDIO = {
@@ -43,6 +51,15 @@ const MAIL_AUDIO = {
   message2: require("../../../assets/audio/voc/mail/mail-bulle-2.mp3"),
   message3: require("../../../assets/audio/voc/mail/mail-bulle-3.mp3"),
   message4: require("../../../assets/audio/voc/mail/mail-bulle-4.mp3"),
+  toolbox1: require("../../../assets/audio/voc/mail/toolbox/message-toolbox-1.mp3"),
+  toolbox2: require("../../../assets/audio/voc/mail/toolbox/message-toolbox-2.mp3"),
+  toolbox3: require("../../../assets/audio/voc/mail/toolbox/message-toolbox-3.mp3"),
+  toolbox4: require("../../../assets/audio/voc/mail/toolbox/message-toolbox-4.mp3"),
+  toolbox5: require("../../../assets/audio/voc/mail/toolbox/message-toolbox-5.mp3"),
+  toolbox6: require("../../../assets/audio/voc/mail/toolbox/message-toolbox-6.mp3"),
+  toolbox7: require("../../../assets/audio/voc/mail/toolbox/message-toolbox-7.mp3"),
+  toolbox8: require("../../../assets/audio/voc/mail/toolbox/message-toolbox-8.mp3"),
+  toolbox9: require("../../../assets/audio/voc/mail/toolbox/message-toolbox-9.mp3"),
 };
 
 const INTERVIEW_AUDIO = {
@@ -50,6 +67,15 @@ const INTERVIEW_AUDIO = {
   message2: require("../../../assets/audio/voc/interview/interview-bulle-2.mp3"),
   message3: require("../../../assets/audio/voc/interview/interview-bulle-3.mp3"),
   message4: require("../../../assets/audio/voc/interview/interview-bulle-4.mp3"),
+  toolbox1: require("../../../assets/audio/voc/interview/toolbox/interview-toolbox-1.mp3"),
+  toolbox2: require("../../../assets/audio/voc/interview/toolbox/interview-toolbox-2.mp3"),
+  toolbox3: require("../../../assets/audio/voc/interview/toolbox/interview-toolbox-3.mp3"),
+  toolbox4: require("../../../assets/audio/voc/interview/toolbox/interview-toolbox-4.mp3"),
+  toolbox5: require("../../../assets/audio/voc/interview/toolbox/interview-toolbox-5.mp3"),
+  toolbox6: require("../../../assets/audio/voc/interview/toolbox/interview-toolbox-6.mp3"),
+  toolbox7: require("../../../assets/audio/voc/interview/toolbox/interview-toolbox-7.mp3"),
+  toolbox8: require("../../../assets/audio/voc/interview/toolbox/interview-toolbox-8.mp3"),
+  toolbox9: require("../../../assets/audio/voc/interview/toolbox/interview-toolbox-9.mp3"),
 };
 
 const SCENES = [
@@ -71,8 +97,8 @@ const SCENES = [
       },
       {
         char: "Manager",
-        kr: "네, 시작하겠습니다. 먼저 의견을 말씀해 주세요.",
-        fr: "Oui, nous allons commencer. Donnez d'abord votre avis.",
+        kr: "네, 시작하겠습니다. 먼저 보고드리겠습니다.",
+        fr: "Oui, nous allons commencer. Je vais d'abord vous faire le rapport.",
         side: "server",
         audio: REUNION_AUDIO.message2,
       },
@@ -98,6 +124,7 @@ const SCENES = [
         mean: "Réunion",
         context: "Mot de base pour parler d'une réunion professionnelle.",
         speak: "회의",
+        audio: REUNION_AUDIO.toolbox1,
       },
       {
         word: "회의 시작할까요?",
@@ -105,6 +132,7 @@ const SCENES = [
         mean: "On commence la réunion ?",
         context: "Phrase naturelle pour ouvrir une réunion.",
         speak: "회의 시작할까요?",
+        audio: REUNION_AUDIO.toolbox2,
       },
       {
         word: "제 의견은...",
@@ -112,6 +140,7 @@ const SCENES = [
         mean: "Mon avis est...",
         context: "Structure utile pour donner son point de vue.",
         speak: "제 의견은",
+        audio: REUNION_AUDIO.toolbox3,
       },
       {
         word: "좋은 생각입니다",
@@ -119,6 +148,7 @@ const SCENES = [
         mean: "C'est une bonne idée",
         context: "Réaction polie et positive en réunion.",
         speak: "좋은 생각입니다",
+        audio: REUNION_AUDIO.toolbox4,
       },
       {
         word: "다시 설명해 주세요",
@@ -126,6 +156,7 @@ const SCENES = [
         mean: "Expliquez à nouveau, s'il vous plaît",
         context: "Très utile quand tu n'as pas bien compris.",
         speak: "다시 설명해 주세요",
+        audio: REUNION_AUDIO.toolbox5,
       },
       {
         word: "자료",
@@ -133,6 +164,7 @@ const SCENES = [
         mean: "Document / support",
         context: "Documents utilisés en réunion ou présentation.",
         speak: "자료",
+        audio: REUNION_AUDIO.toolbox6,
       },
       {
         word: "공유하겠습니다",
@@ -140,6 +172,7 @@ const SCENES = [
         mean: "Je vais partager",
         context: "Pour parler d'un document ou d'une information.",
         speak: "공유하겠습니다",
+        audio: REUNION_AUDIO.toolbox7,
       },
       {
         word: "질문 있습니다",
@@ -147,6 +180,7 @@ const SCENES = [
         mean: "J'ai une question",
         context: "Formule professionnelle pour intervenir.",
         speak: "질문 있습니다",
+        audio: REUNION_AUDIO.toolbox8,
       },
       {
         word: "확인해 보겠습니다",
@@ -154,6 +188,7 @@ const SCENES = [
         mean: "Je vais vérifier",
         context: "Très fréquent dans les échanges professionnels.",
         speak: "확인해 보겠습니다",
+        audio: REUNION_AUDIO.toolbox9,
       },
     ],
   },
@@ -189,8 +224,8 @@ const SCENES = [
       },
       {
         char: "Collègue",
-        kr: "네, 가능합니다. 답변 기다려 주세요.",
-        fr: "Oui, c'est possible. Merci d'attendre ma réponse.",
+        kr: "네, 가능합니다. 곧 답변드리겠습니다.",
+        fr: "Oui, c'est possible. Je vous répondrai bientôt.",
         side: "server",
         audio: MAIL_AUDIO.message4,
       },
@@ -202,6 +237,7 @@ const SCENES = [
         mean: "Mail professionnel",
         context: "Expression générale pour parler d'un email de travail.",
         speak: "업무 메일",
+        audio: MAIL_AUDIO.toolbox1,
       },
       {
         word: "확인 부탁드립니다",
@@ -209,6 +245,7 @@ const SCENES = [
         mean: "Merci de vérifier",
         context: "Formule extrêmement fréquente dans les mails coréens.",
         speak: "확인 부탁드립니다",
+        audio: MAIL_AUDIO.toolbox2,
       },
       {
         word: "첨부 파일",
@@ -216,6 +253,7 @@ const SCENES = [
         mean: "Pièce jointe",
         context: "Indispensable pour les échanges par email.",
         speak: "첨부 파일",
+        audio: MAIL_AUDIO.toolbox3,
       },
       {
         word: "답변드리겠습니다",
@@ -223,6 +261,7 @@ const SCENES = [
         mean: "Je vous répondrai",
         context: "Formule polie et professionnelle.",
         speak: "답변드리겠습니다",
+        audio: MAIL_AUDIO.toolbox4,
       },
       {
         word: "오늘 중으로",
@@ -230,6 +269,7 @@ const SCENES = [
         mean: "Dans la journée",
         context: "Pour donner ou demander un délai court.",
         speak: "오늘 중으로",
+        audio: MAIL_AUDIO.toolbox5,
       },
       {
         word: "가능할까요?",
@@ -237,6 +277,7 @@ const SCENES = [
         mean: "Est-ce possible ?",
         context: "Formule douce pour demander quelque chose.",
         speak: "가능할까요?",
+        audio: MAIL_AUDIO.toolbox6,
       },
       {
         word: "늦게 연락드려 죄송합니다",
@@ -244,6 +285,7 @@ const SCENES = [
         mean: "Désolé de vous contacter tard",
         context: "Formule utile en contexte professionnel sensible.",
         speak: "늦게 연락드려 죄송합니다",
+        audio: MAIL_AUDIO.toolbox7,
       },
       {
         word: "감사합니다",
@@ -251,6 +293,15 @@ const SCENES = [
         mean: "Merci / Cordialement",
         context: "Très utilisé pour terminer un mail professionnel.",
         speak: "감사합니다",
+        audio: MAIL_AUDIO.toolbox8,
+      },
+      {
+        word: "좋은 하루 보내고 계시길 바랍니다",
+        rom: "Joeun haru bonego gyesigil barabnida",
+        mean: "J'espère que vous passez une bonne journée",
+        context: "Formule polie et chaleureuse dans un message professionnel.",
+        speak: "좋은 하루 보내고 계시길 바랍니다",
+        audio: undefined,
       },
       {
         word: "회신 부탁드립니다",
@@ -258,6 +309,7 @@ const SCENES = [
         mean: "Merci de répondre",
         context: "Formule pour demander une réponse par mail.",
         speak: "회신 부탁드립니다",
+        audio: MAIL_AUDIO.toolbox9,
       },
     ],
   },
@@ -293,8 +345,8 @@ const SCENES = [
       },
       {
         char: "Moi",
-        kr: "경험이 있고, 한국어와 비즈니스에 관심이 많습니다.",
-        fr: "J'ai de l'expérience et je m'intéresse beaucoup au coréen et au business.",
+        kr: "경력이 있고, 한국어와 비즈니스에 관심이 많습니다.",
+        fr: "J'ai de l'expérience professionnelle et je m'intéresse beaucoup au coréen et au business.",
         side: "me",
         audio: INTERVIEW_AUDIO.message4,
       },
@@ -306,6 +358,7 @@ const SCENES = [
         mean: "Entretien",
         context: "Mot clé pour un entretien d'embauche.",
         speak: "면접",
+        audio: INTERVIEW_AUDIO.toolbox1,
       },
       {
         word: "자기소개",
@@ -313,6 +366,7 @@ const SCENES = [
         mean: "Présentation de soi",
         context: "Moment classique au début d'un entretien.",
         speak: "자기소개",
+        audio: INTERVIEW_AUDIO.toolbox2,
       },
       {
         word: "자기소개 부탁드립니다",
@@ -320,6 +374,7 @@ const SCENES = [
         mean: "Présentez-vous, s'il vous plaît",
         context: "Phrase très fréquente en entretien.",
         speak: "자기소개 부탁드립니다",
+        audio: INTERVIEW_AUDIO.toolbox3,
       },
       {
         word: "저는 프랑스에서 왔습니다",
@@ -327,6 +382,7 @@ const SCENES = [
         mean: "Je viens de France",
         context: "Formule simple pour présenter son origine.",
         speak: "저는 프랑스에서 왔습니다",
+        audio: INTERVIEW_AUDIO.toolbox4,
       },
       {
         word: "이 분야",
@@ -334,6 +390,7 @@ const SCENES = [
         mean: "Ce domaine",
         context: "Très utile pour parler d'un secteur professionnel.",
         speak: "이 분야",
+        audio: INTERVIEW_AUDIO.toolbox5,
       },
       {
         word: "관심이 많습니다",
@@ -341,13 +398,15 @@ const SCENES = [
         mean: "Je m'y intéresse beaucoup",
         context: "Expression professionnelle pour parler de motivation.",
         speak: "관심이 많습니다",
+        audio: INTERVIEW_AUDIO.toolbox6,
       },
       {
-        word: "경험이 있습니다",
-        rom: "Gyeongheomi itseumnida",
-        mean: "J'ai de l'expérience",
+        word: "경력이 있습니다",
+        rom: "Gyeongryeogi itseumnida",
+        mean: "J'ai de l'expérience professionnelle",
         context: "Phrase clé pour valoriser son profil.",
-        speak: "경험이 있습니다",
+        speak: "경력이 있습니다",
+        audio: INTERVIEW_AUDIO.toolbox7,
       },
       {
         word: "장점",
@@ -355,6 +414,7 @@ const SCENES = [
         mean: "Point fort",
         context: "Utile pour parler de ses qualités.",
         speak: "장점",
+        audio: INTERVIEW_AUDIO.toolbox8,
       },
       {
         word: "잘 부탁드립니다",
@@ -362,6 +422,7 @@ const SCENES = [
         mean: "Je compte sur vous",
         context: "Expression culturelle très importante en contexte pro.",
         speak: "잘 부탁드립니다",
+        audio: INTERVIEW_AUDIO.toolbox9,
       },
     ],
   },
@@ -391,7 +452,7 @@ export default function BusinessImmersion() {
       useNativeDriver: true,
     }).start();
 
-    Speech.stop();
+    stopAudio();
     setSelectedWord(null);
     setVisibleMessages(1);
     setIsTyping(false);
@@ -400,7 +461,7 @@ export default function BusinessImmersion() {
       clearTimeout(typingTimer.current);
       typingTimer.current = null;
     }
-  }, [activeScene]);
+  }, [activeScene, fadeAnim, stopAudio]);
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -429,26 +490,9 @@ export default function BusinessImmersion() {
         clearTimeout(typingTimer.current);
       }
 
-      Speech.stop();
       stopAudio();
     };
   }, [tapHintPulse, stopAudio]);
-
-  const speak = (text: string, id: string) => {
-    Speech.stop();
-    stopAudio();
-    setSelectedWord(id);
-    Vibration.vibrate(8);
-
-    Speech.speak(text, {
-      language: "ko-KR",
-      rate: 0.78,
-      pitch: 1,
-      onDone: () => setSelectedWord(null),
-      onStopped: () => setSelectedWord(null),
-      onError: () => setSelectedWord(null),
-    });
-  };
 
   const handleSceneChange = (scene: (typeof SCENES)[number]) => {
     if (scene.id === activeScene.id) return;
@@ -720,7 +764,7 @@ export default function BusinessImmersion() {
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() => speak(exp.speak, cardId)}
+                    onPress={() => playAudio(exp.audio, cardId)}
                     style={({ pressed }) => [
                       styles.vocabPressable,
                       pressed && { transform: [{ scale: 0.985 }] },

@@ -1,7 +1,6 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -39,6 +38,9 @@ const POCHA_AUDIO = {
   message2: require("../../../assets/audio/voc/nuit/pocha-bulle-2.mp3"),
   message3: require("../../../assets/audio/voc/nuit/pocha-bulle-3.mp3"),
   message4: require("../../../assets/audio/voc/nuit/pocha-bulle-4.mp3"),
+  toolbox1: require("../../../assets/audio/voc/nuit/toolbox/pocha-toolbox-1.mp3"),
+  toolbox2: require("../../../assets/audio/voc/nuit/toolbox/pocha-toolbox-2.mp3"),
+  toolbox3: require("../../../assets/audio/voc/nuit/toolbox/pocha-toolbox-3.mp3"),
 };
 
 const NORAEBANG_AUDIO = {
@@ -46,6 +48,9 @@ const NORAEBANG_AUDIO = {
   message2: require("../../../assets/audio/voc/noraebang/noraebang-bulle-2.mp3"),
   message3: require("../../../assets/audio/voc/noraebang/noraebang-bulle-3.mp3"),
   message4: require("../../../assets/audio/voc/noraebang/noraebang-bulle-4.mp3"),
+  toolbox1: require("../../../assets/audio/voc/noraebang/toolbox/noraebang-toolbox-1.mp3"),
+  toolbox2: require("../../../assets/audio/voc/noraebang/toolbox/noraebang-toolbox-2.mp3"),
+  toolbox3: require("../../../assets/audio/voc/noraebang/toolbox/noraebang-toolbox-3.mp3"),
 };
 
 const NUIT_AUDIO = {
@@ -53,6 +58,9 @@ const NUIT_AUDIO = {
   message2: require("../../../assets/audio/voc/after/after-bulle-2.mp3"),
   message3: require("../../../assets/audio/voc/after/after-bulle-3.mp3"),
   message4: require("../../../assets/audio/voc/after/after-bulle-4.mp3"),
+  toolbox1: require("../../../assets/audio/voc/after/toolbox/after-toolbox-1.mp3"),
+  toolbox2: require("../../../assets/audio/voc/after/toolbox/after-toolbox-2.mp3"),
+  toolbox3: require("../../../assets/audio/voc/after/toolbox/after-toolbox-3.mp3"),
 };
 
 const SCENES = [
@@ -100,18 +108,21 @@ const SCENES = [
         rom: "Geonbae!",
         mean: "Santé !",
         context: "L'expression universelle pour trinquer.",
+        audio: POCHA_AUDIO.toolbox1,
       },
       {
         word: "안주",
         rom: "Anju",
         mean: "Accompagnement",
         context: "Plats servis avec l'alcool.",
+        audio: POCHA_AUDIO.toolbox2,
       },
       {
         word: "원샷!",
         rom: "One-shot!",
         mean: "Cul sec !",
         context: "Souvent crié lors des jeux à boire.",
+        audio: POCHA_AUDIO.toolbox3,
       },
     ],
   },
@@ -159,18 +170,21 @@ const SCENES = [
         rom: "Chwihyang-jeogyeok",
         mean: "Pile mon style",
         context: "Quand quelque chose correspond parfaitement à vos goûts.",
+        audio: NORAEBANG_AUDIO.toolbox1,
       },
       {
         word: "떼창",
         rom: "Ttechang",
         mean: "Chanter en chœur",
         context: "Quand tout le monde chante ensemble.",
+        audio: NORAEBANG_AUDIO.toolbox2,
       },
       {
         word: "서비스",
         rom: "Seobiseu",
         mean: "Temps offert",
         context: "Temps supplémentaire offert au noraebang.",
+        audio: NORAEBANG_AUDIO.toolbox3,
       },
     ],
   },
@@ -219,18 +233,21 @@ const SCENES = [
         rom: "I-cha",
         mean: "Deuxième étape",
         context: "Changer de lieu pour continuer la soirée.",
+        audio: NUIT_AUDIO.toolbox1,
       },
       {
         word: "해장국",
         rom: "Haejangguk",
         mean: "Soupe de lendemain",
         context: "Soupe coréenne associée à la gueule de bois.",
+        audio: NUIT_AUDIO.toolbox2,
       },
       {
         word: "불금",
         rom: "Bul-geum",
         mean: "Vendredi de feu",
         context: "Le vendredi soir où l'on sort après le travail.",
+        audio: NUIT_AUDIO.toolbox3,
       },
     ],
   },
@@ -261,7 +278,7 @@ export default function NightlifeImmersion() {
       typingTimer.current = null;
     }
 
-    Speech.stop();
+    stopAudio();
 
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -269,7 +286,7 @@ export default function NightlifeImmersion() {
       easing: Easing.out(Easing.back(1)),
       useNativeDriver: true,
     }).start();
-  }, [activeScene]);
+  }, [activeScene, fadeAnim, stopAudio]);
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -298,26 +315,9 @@ export default function NightlifeImmersion() {
         clearTimeout(typingTimer.current);
       }
 
-      Speech.stop();
       stopAudio();
     };
   }, [tapHintPulse, stopAudio]);
-
-  const speak = (text: string, id: string) => {
-    Speech.stop();
-    stopAudio();
-    setSelectedWord(id);
-    Vibration.vibrate(8);
-
-    Speech.speak(text, {
-      language: "ko-KR",
-      rate: 0.78,
-      pitch: 1,
-      onDone: () => setSelectedWord(null),
-      onStopped: () => setSelectedWord(null),
-      onError: () => setSelectedWord(null),
-    });
-  };
 
   const advanceDialogue = () => {
     if (isTyping) return;
@@ -606,7 +606,7 @@ export default function NightlifeImmersion() {
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() => speak(exp.word, cardId)}
+                    onPress={() => playAudio(exp.audio, cardId)}
                     style={({ pressed }) => [
                       styles.expPressable,
                       pressed && { transform: [{ scale: 0.985 }] },
