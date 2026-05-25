@@ -31,7 +31,82 @@ const COLORS = {
   muted: "rgba(255,255,255,0.60)",
 };
 
-const SCENES = [
+type CountingAudioSet = {
+  messages: number[];
+  toolbox: (number | undefined)[];
+};
+
+const withSceneAudio = (scenes: any[], audioSets: (CountingAudioSet | undefined)[]) =>
+  scenes.map((scene, sceneIndex) => {
+    const audioSet = audioSets[sceneIndex];
+
+    if (!audioSet) return scene;
+
+    return {
+      ...scene,
+      dialogue: scene.dialogue.map((line: any, index: number) => ({
+        ...line,
+        ...(audioSet.messages[index] ? { audio: audioSet.messages[index] } : {}),
+      })),
+      expressions: scene.expressions.map((expression: any, index: number) => ({
+        ...expression,
+        ...(audioSet.toolbox[index] ? { audio: audioSet.toolbox[index] } : {}),
+      })),
+    };
+  });
+
+const CLASSEMENT_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/ordinal/classement/classement-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/ordinal/classement/classement-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/ordinal/classement/classement-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/ordinal/classement/classement-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/ordinal/classement/toolbox/classement-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/ordinal/classement/toolbox/classement-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/ordinal/classement/toolbox/classement-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/ordinal/classement/toolbox/classement-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/ordinal/classement/toolbox/classement-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/ordinal/classement/toolbox/classement-toolbox-6.mp3"),
+  ],
+};
+
+const FAMILLE_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/ordinal/famille/famille-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/ordinal/famille/famille-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/ordinal/famille/famille-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/ordinal/famille/famille-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/ordinal/famille/toolbox/famille-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/ordinal/famille/toolbox/famille-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/ordinal/famille/toolbox/famille-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/ordinal/famille/toolbox/famille-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/ordinal/famille/toolbox/famille-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/ordinal/famille/toolbox/famille-toolbox-6.mp3"),
+  ],
+};
+
+const PREMIERE_FOIS_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/ordinal/premiere-fois/premierefois-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/ordinal/premiere-fois/premierefois-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/ordinal/premiere-fois/premierefois-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/ordinal/premiere-fois/premierefois-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/ordinal/premiere-fois/toolbox/premierefois-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/ordinal/premiere-fois/toolbox/premierefois-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/ordinal/premiere-fois/toolbox/premierefois-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/ordinal/premiere-fois/toolbox/premierefois-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/ordinal/premiere-fois/toolbox/premierefois-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/ordinal/premiere-fois/toolbox/premierefois-toolbox-6.mp3"),
+  ],
+};
+
+const SCENES = withSceneAudio([
   {
     id: "ranking",
     title: "Le Classement",
@@ -241,7 +316,7 @@ const SCENES = [
       },
     ],
   },
-];
+], [CLASSEMENT_AUDIO, FAMILLE_AUDIO, PREMIERE_FOIS_AUDIO]);
 
 export default function OrdinalsImmersion() {
   return (

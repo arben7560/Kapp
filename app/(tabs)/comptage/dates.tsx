@@ -31,7 +31,80 @@ const COLORS = {
   muted: "rgba(255,255,255,0.60)",
 };
 
-const SCENES = [
+type CountingAudioSet = {
+  messages: number[];
+  toolbox: (number | undefined)[];
+};
+
+const withSceneAudio = (scenes: any[], audioSets: CountingAudioSet[]) =>
+  scenes.map((scene, sceneIndex) => {
+    const audioSet = audioSets[sceneIndex];
+
+    if (!audioSet) return scene;
+
+    return {
+      ...scene,
+      dialogue: scene.dialogue.map((line: any, index: number) => ({
+        ...line,
+        ...(audioSet.messages[index] ? { audio: audioSet.messages[index] } : {}),
+      })),
+      expressions: scene.expressions.map((expression: any, index: number) => ({
+        ...expression,
+        ...(audioSet.toolbox[index] ? { audio: audioSet.toolbox[index] } : {}),
+      })),
+    };
+  });
+
+const DATE_ANNIVERSAIRE_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/date-calendrier/date-anniversaire/date-anniversaire-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/date-anniversaire/date-anniversaire-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/date-anniversaire/date-anniversaire-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/date-anniversaire/date-anniversaire-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/date-calendrier/date-anniversaire/toolbox/date-anniversaire-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/date-anniversaire/toolbox/date-anniversaire-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/date-anniversaire/toolbox/date-anniversaire-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/date-anniversaire/toolbox/date-anniversaire-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/date-anniversaire/toolbox/date-anniversaire-toolbox-5.mp3"),
+  ],
+};
+
+const VOYAGE_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/date-calendrier/voyage/voyage-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/voyage/voyage-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/voyage/voyage-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/voyage/voyage-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/date-calendrier/voyage/toolbox/voyage-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/voyage/toolbox/voyage-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/voyage/toolbox/voyage-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/voyage/toolbox/voyage-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/voyage/toolbox/voyage-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/voyage/toolbox/voyage-toolbox-6.mp3"),
+  ],
+};
+
+const SEMAINE_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/date-calendrier/semaine/semaine-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/semaine/semaine-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/semaine/semaine-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/semaine/semaine-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-5.mp3"),
+  ],
+};
+
+const SCENES = withSceneAudio([
   {
     id: "birthday",
     title: "L'Anniversaire",
@@ -240,7 +313,7 @@ const SCENES = [
       },
     ],
   },
-];
+], [DATE_ANNIVERSAIRE_AUDIO, VOYAGE_AUDIO, SEMAINE_AUDIO]);
 
 export default function DatesCalendarImmersion() {
   return (

@@ -31,7 +31,82 @@ const COLORS = {
   muted: "rgba(255,255,255,0.60)",
 };
 
-const SCENES = [
+type CountingAudioSet = {
+  messages: number[];
+  toolbox: (number | undefined)[];
+};
+
+const withSceneAudio = (scenes: any[], audioSets: CountingAudioSet[]) =>
+  scenes.map((scene, sceneIndex) => {
+    const audioSet = audioSets[sceneIndex];
+
+    if (!audioSet) return scene;
+
+    return {
+      ...scene,
+      dialogue: scene.dialogue.map((line: any, index: number) => ({
+        ...line,
+        ...(audioSet.messages[index] ? { audio: audioSet.messages[index] } : {}),
+      })),
+      expressions: scene.expressions.map((expression: any, index: number) => ({
+        ...expression,
+        ...(audioSet.toolbox[index] ? { audio: audioSet.toolbox[index] } : {}),
+      })),
+    };
+  });
+
+const STORE_SHOPPING_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/shopping-prix/store-shopping/store-shopping-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/store-shopping/store-shopping-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/store-shopping/store-shopping-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/store-shopping/store-shopping-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/shopping-prix/store-shopping/toolbox/store-shopping-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/store-shopping/toolbox/store-shopping-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/store-shopping/toolbox/store-shopping-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/store-shopping/toolbox/store-shopping-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/store-shopping/toolbox/store-shopping-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/store-shopping/toolbox/store-shopping-toolbox-6.mp3"),
+  ],
+};
+
+const MARKET_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/shopping-prix/market/market-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/market/market-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/market/market-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/market/market-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/shopping-prix/market/toolbox/market-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/market/toolbox/market-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/market/toolbox/market-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/market/toolbox/market-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/market/toolbox/market-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/market/toolbox/market-toolbox-6.mp3"),
+  ],
+};
+
+const CONVENIENCE_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/shopping-prix/convenience/convenience-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/convenience/convenience-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/convenience/convenience-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/convenience/convenience-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/shopping-prix/convenience/toolbox/convenience-toobox-1.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/convenience/toolbox/convenience-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/convenience/toolbox/convenience-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/convenience/toolbox/convenience-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/convenience/toolbox/convenience-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/shopping-prix/convenience/toolbox/convenience-toolbox-6.mp3"),
+  ],
+};
+
+const SCENES = withSceneAudio([
   {
     id: "department-store",
     title: "Le Grand Magasin",
@@ -240,7 +315,7 @@ const SCENES = [
       },
     ],
   },
-];
+], [STORE_SHOPPING_AUDIO, MARKET_AUDIO, CONVENIENCE_AUDIO]);
 
 export default function ShoppingImmersion() {
   return (

@@ -30,7 +30,82 @@ const COLORS = {
   muted: "rgba(255,255,255,0.60)",
 };
 
-const SCENES = [
+type CountingAudioSet = {
+  messages: number[];
+  toolbox: (number | undefined)[];
+};
+
+const withSceneAudio = (scenes: any[], audioSets: (CountingAudioSet | undefined)[]) =>
+  scenes.map((scene, sceneIndex) => {
+    const audioSet = audioSets[sceneIndex];
+
+    if (!audioSet) return scene;
+
+    return {
+      ...scene,
+      dialogue: scene.dialogue.map((line: any, index: number) => ({
+        ...line,
+        ...(audioSet.messages[index] ? { audio: audioSet.messages[index] } : {}),
+      })),
+      expressions: scene.expressions.map((expression: any, index: number) => ({
+        ...expression,
+        ...(audioSet.toolbox[index] ? { audio: audioSet.toolbox[index] } : {}),
+      })),
+    };
+  });
+
+const SHOPPING_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/sino/shooping/shopping-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/sino/shooping/shopping-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/sino/shooping/shopping-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/sino/shooping/shopping-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/sino/shooping/toolbox/shopping-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/sino/shooping/toolbox/shopping-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/sino/shooping/toolbox/shopping-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/sino/shooping/toolbox/shopping-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/sino/shooping/toolbox/shooping-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/sino/shooping/toolbox/shopping-toolbox-6.mp3"),
+  ],
+};
+
+const RDV_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/sino/rdv/rdv-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/sino/rdv/rdv-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/sino/rdv/rdv-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/sino/rdv/rdv-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/sino/rdv/toolbox/rdv-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/sino/rdv/toolbox/rdv-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/sino/rdv/toolbox/rdv-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/sino/rdv/toolbox/rdv-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/sino/rdv/toolbox/rdv-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/sino/rdv/toolbox/rdv-toolbox-6.mp3"),
+  ],
+};
+
+const COORDONNEE_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/sino/coordonnée/coordonnée-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/sino/coordonnée/coordonnée-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/sino/coordonnée/coordonnée-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/sino/coordonnée/coordonnée-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/sino/coordonnée/toolbox/coordonnée-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/sino/coordonnée/toolbox/coordonnée-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/sino/coordonnée/toolbox/coordonnée-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/sino/coordonnée/toolbox/coordonnée-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/sino/coordonnée/toolbox/coordonnée-toolbox-5.mp3"),
+    undefined,
+  ],
+};
+
+const SCENES = withSceneAudio([
   {
     id: "shopping",
     title: "Le Shopping",
@@ -235,7 +310,7 @@ const SCENES = [
       },
     ],
   },
-];
+], [SHOPPING_AUDIO, RDV_AUDIO, COORDONNEE_AUDIO]);
 
 export default function SinoNumbersImmersion() {
   return (

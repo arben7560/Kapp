@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import * as Speech from "expo-speech";
 import React, { useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { restaurantDialogueData } from "./data/restaurant/restaurant";
 
 const BG0 = "#070812";
 const TXT = "rgba(255,255,255,0.92)";
@@ -219,32 +220,14 @@ export default function RestaurantLesson() {
 
           <View style={{ height: 14 }} />
 
-          <LineBlock speaker="Serveur" kr="어서 오세요!" fr="Bienvenue !" />
-          <LineBlock
-            speaker="Serveur"
-            kr="몇 분이세요?"
-            fr="Vous êtes combien ?"
-          />
-          <LineBlock
-            speaker="Serveur"
-            kr="주문하시겠어요?"
-            fr="Voulez-vous commander ?"
-          />
-          <LineBlock
-            speaker="Serveur"
-            kr="맵게 드릴까요?"
-            fr="Je vous le fais épicé ?"
-          />
-          <LineBlock
-            speaker="Serveur"
-            kr="더 필요하신 거 있어요?"
-            fr="Vous avez besoin d'autre chose ?"
-          />
-          <LineBlock
-            speaker="Serveur"
-            kr="계산 도와드릴게요."
-            fr="Je vous aide pour le paiement."
-          />
+          {restaurantDialogueData.serverLines.map((line) => (
+            <LineBlock
+              key={`${line.speaker}-${line.korean}`}
+              speaker={line.speaker}
+              kr={line.korean}
+              fr={line.french}
+            />
+          ))}
         </>
       );
     }
@@ -263,32 +246,14 @@ export default function RestaurantLesson() {
 
           <View style={{ height: 14 }} />
 
-          <LineBlock
-            speaker="Client"
-            kr="이거 주세요."
-            fr="Je prends ça, s'il vous plaît."
-          />
-          <LineBlock
-            speaker="Client"
-            kr="물 주세요."
-            fr="De l'eau, s'il vous plaît."
-          />
-          <LineBlock
-            speaker="Client"
-            kr="안 매운 걸로 주세요."
-            fr="Quelque chose de non piquant, s'il vous plaît."
-          />
-          <LineBlock speaker="Client" kr="이거 뭐예요?" fr="C'est quoi, ça ?" />
-          <LineBlock
-            speaker="Client"
-            kr="계산서 주세요."
-            fr="L'addition, s'il vous plaît."
-          />
-          <LineBlock
-            speaker="Client"
-            kr="카드로 할게요."
-            fr="Je vais payer par carte."
-          />
+          {restaurantDialogueData.clientLines.map((line) => (
+            <LineBlock
+              key={`${line.speaker}-${line.korean}`}
+              speaker={line.speaker}
+              kr={line.korean}
+              fr={line.french}
+            />
+          ))}
         </>
       );
     }
@@ -301,7 +266,7 @@ export default function RestaurantLesson() {
               🔗 Connecteurs naturels
             </Text>
             <Text style={{ color: MUTED, marginTop: 8, lineHeight: 20 }}>
-              Pour ajouter de l'eau, lier plusieurs plats ou rebondir
+              Pour ajouter de l&apos;eau, lier plusieurs plats ou rebondir
               naturellement.
             </Text>
           </Card>
@@ -325,7 +290,7 @@ export default function RestaurantLesson() {
               비빔밥하고 물 주세요.
             </Text>
             <Text style={{ color: "rgba(255,255,255,0.82)", marginTop: 4 }}>
-              Un bibimbap et de l'eau, s'il vous plaît.
+              Un bibimbap et de l&apos;eau, s&apos;il vous plaît.
             </Text>
             <AudioButton kr="비빔밥하고 물 주세요." />
 
@@ -333,7 +298,7 @@ export default function RestaurantLesson() {
               그럼 안 매운 걸로 주세요.
             </Text>
             <Text style={{ color: "rgba(255,255,255,0.82)", marginTop: 4 }}>
-              Alors quelque chose de non piquant, s'il vous plaît.
+              Alors quelque chose de non piquant, s&apos;il vous plaît.
             </Text>
             <AudioButton kr="그럼 안 매운 걸로 주세요." />
 
@@ -363,60 +328,30 @@ export default function RestaurantLesson() {
 
           <View style={{ height: 14 }} />
 
-          <Card>
-            <Text style={{ color: "rgba(34,211,238,0.9)", fontWeight: "900" }}>
-              Dialogue 1 — commander un plat
-            </Text>
+          {restaurantDialogueData.miniDialogues.map((dialogue, index) => (
+            <React.Fragment key={dialogue.title}>
+              {index > 0 && <View style={{ height: 12 }} />}
 
-            <View style={{ height: 10 }} />
+              <Card>
+                <Text
+                  style={{ color: "rgba(34,211,238,0.9)", fontWeight: "900" }}
+                >
+                  {dialogue.title}
+                </Text>
 
-            <LineBlock
-              speaker="Serveur"
-              kr="주문하시겠어요?"
-              fr="Voulez-vous commander ?"
-            />
-            <LineBlock
-              speaker="Client"
-              kr="비빔밥 주세요."
-              fr="Un bibimbap, s'il vous plaît."
-            />
-            <LineBlock
-              speaker="Serveur"
-              kr="맵게 드릴까요?"
-              fr="Je vous le fais épicé ?"
-            />
-            <LineBlock
-              speaker="Client"
-              kr="안 매운 걸로 주세요."
-              fr="Quelque chose de non piquant, s'il vous plaît."
-            />
-          </Card>
+                <View style={{ height: 10 }} />
 
-          <View style={{ height: 12 }} />
-
-          <Card>
-            <Text style={{ color: "rgba(34,211,238,0.9)", fontWeight: "900" }}>
-              Dialogue 2 — demander l’addition
-            </Text>
-
-            <View style={{ height: 10 }} />
-
-            <LineBlock
-              speaker="Client"
-              kr="계산서 주세요."
-              fr="L'addition, s'il vous plaît."
-            />
-            <LineBlock
-              speaker="Serveur"
-              kr="카드예요, 현금이에요?"
-              fr="Carte ou espèces ?"
-            />
-            <LineBlock
-              speaker="Client"
-              kr="카드로 할게요."
-              fr="Je vais payer par carte."
-            />
-          </Card>
+                {dialogue.lines.map((line) => (
+                  <LineBlock
+                    key={`${dialogue.title}-${line.speaker}-${line.korean}`}
+                    speaker={line.speaker}
+                    kr={line.korean}
+                    fr={line.french}
+                  />
+                ))}
+              </Card>
+            </React.Fragment>
+          ))}
         </>
       );
     }
@@ -435,19 +370,19 @@ export default function RestaurantLesson() {
         <View style={{ height: 14 }} />
 
         <VocabRow
-          kr="주문하시겠어요?"
-          roman="jumunhasigesseoyo?"
-          fr="Voulez-vous commander ?"
+          kr={restaurantDialogueData.serverLines[2].korean}
+          roman={restaurantDialogueData.serverLines[2].romanization ?? ""}
+          fr={restaurantDialogueData.serverLines[2].french}
         />
         <VocabRow
-          kr="안 매운 걸로 주세요."
-          roman="an maeun geollo juseyo"
-          fr="Quelque chose de non piquant, s'il vous plaît."
+          kr={restaurantDialogueData.clientLines[2].korean}
+          roman={restaurantDialogueData.clientLines[2].romanization ?? ""}
+          fr={restaurantDialogueData.clientLines[2].french}
         />
         <VocabRow
-          kr="계산서 주세요."
-          roman="gyesanseo juseyo"
-          fr="L'addition, s'il vous plaît."
+          kr={restaurantDialogueData.clientLines[4].korean}
+          roman={restaurantDialogueData.clientLines[4].romanization ?? ""}
+          fr={restaurantDialogueData.clientLines[4].french}
         />
       </>
     );

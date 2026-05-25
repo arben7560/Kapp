@@ -15,11 +15,15 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useVocAudio } from "../../hooks/useVocAudio";
+
+type AudioAsset = number;
 
 type DialogueLine = {
   char: string;
   kr: string;
   fr: string;
+  audio?: AudioAsset;
 };
 
 type ExpressionItem = {
@@ -28,6 +32,7 @@ type ExpressionItem = {
   mean: string;
   context: string;
   speak?: string;
+  audio?: AudioAsset;
 };
 
 type Scene = {
@@ -66,6 +71,7 @@ export default function CountingImmersionScreen({
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const tapHintPulse = useRef(new Animated.Value(0)).current;
@@ -77,6 +83,7 @@ export default function CountingImmersionScreen({
     setIsTyping(false);
     setSelectedWord(null);
     Speech.stop();
+    stopAudio();
 
     if (typingTimer.current) {
       clearTimeout(typingTimer.current);
@@ -89,7 +96,7 @@ export default function CountingImmersionScreen({
       easing: Easing.out(Easing.back(1.2)),
       useNativeDriver: true,
     }).start();
-  }, [activeScene, fadeAnim]);
+  }, [activeScene, fadeAnim, stopAudio]);
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -118,11 +125,19 @@ export default function CountingImmersionScreen({
       }
 
       Speech.stop();
+      stopAudio();
     };
-  }, [tapHintPulse]);
+  }, [tapHintPulse, stopAudio]);
 
-  const speak = (text: string, id: string) => {
+  const playOrSpeak = (audio: AudioAsset | undefined, text: string, id: string) => {
     Speech.stop();
+
+    if (audio) {
+      playAudio(audio, id);
+      return;
+    }
+
+    stopAudio();
     setSelectedWord(id);
     Vibration.vibrate(8);
 
@@ -263,7 +278,7 @@ export default function CountingImmersionScreen({
                   return (
                     <Pressable
                       key={dialogueId}
-                      onPress={() => speak(line.kr, dialogueId)}
+                      onPress={() => playOrSpeak(line.audio, line.kr, dialogueId)}
                       style={[
                         styles.bubble,
                         idx % 2 === 0 ? styles.bubbleL : styles.bubbleR,
@@ -347,7 +362,9 @@ export default function CountingImmersionScreen({
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() => speak(exp.speak ?? exp.word, cardId)}
+                    onPress={() =>
+                      playOrSpeak(exp.audio, exp.speak ?? exp.word, cardId)
+                    }
                     style={({ pressed }) => [
                       styles.cardPressable,
                       pressed && { transform: [{ scale: 0.985 }] },

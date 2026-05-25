@@ -30,7 +30,82 @@ const COLORS = {
   muted: "rgba(255,255,255,0.60)",
 };
 
-const SCENES = [
+type CountingAudioSet = {
+  messages: number[];
+  toolbox: (number | undefined)[];
+};
+
+const withSceneAudio = (scenes: any[], audioSets: CountingAudioSet[]) =>
+  scenes.map((scene, sceneIndex) => {
+    const audioSet = audioSets[sceneIndex];
+
+    if (!audioSet) return scene;
+
+    return {
+      ...scene,
+      dialogue: scene.dialogue.map((line: any, index: number) => ({
+        ...line,
+        ...(audioSet.messages[index] ? { audio: audioSet.messages[index] } : {}),
+      })),
+      expressions: scene.expressions.map((expression: any, index: number) => ({
+        ...expression,
+        ...(audioSet.toolbox[index] ? { audio: audioSet.toolbox[index] } : {}),
+      })),
+    };
+  });
+
+const HEURE_RDV_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/heure/rdv/heure-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/heure/rdv/heure-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/heure/rdv/heure-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/heure/rdv/heure-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/heure/rdv/toolbox/heure-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/heure/rdv/toolbox/heure-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/heure/rdv/toolbox/heure-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/heure/rdv/toolbox/heure-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/heure/rdv/toolbox/heure-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/heure/rdv/toolbox/heure-toolbox-6.mp3"),
+  ],
+};
+
+const DERNIER_METRO_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/heure/dernier-metro/metro-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/heure/dernier-metro/metro-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/heure/dernier-metro/metro-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/heure/dernier-metro/metro-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/heure/dernier-metro/toolbox/metro-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/heure/dernier-metro/toolbox/metro-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/heure/dernier-metro/toolbox/metro-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/heure/dernier-metro/toolbox/metro-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/heure/dernier-metro/toolbox/metro-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/heure/dernier-metro/toolbox/metro-toolbox-6.mp3"),
+  ],
+};
+
+const AUBE_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/heure/aube/aube-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/heure/aube/aube-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/heure/aube/aube-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/heure/aube/aube-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/heure/aube/toolbox/aube-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/heure/aube/toolbox/aube-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/heure/aube/toolbox/aube-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/heure/aube/toolbox/aube-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/heure/aube/toolbox/aube-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/heure/aube/toolbox/aube-toolbox-6.mp3"),
+  ],
+};
+
+const SCENES = withSceneAudio([
   {
     id: "appointment",
     title: "Le Rendez-vous",
@@ -238,7 +313,7 @@ const SCENES = [
       },
     ],
   },
-];
+], [HEURE_RDV_AUDIO, DERNIER_METRO_AUDIO, AUBE_AUDIO]);
 
 export default function TimeImmersion() {
   return (

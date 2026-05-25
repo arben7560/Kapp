@@ -31,7 +31,82 @@ const COLORS = {
   muted: "rgba(255,255,255,0.60)",
 };
 
-const SCENES = [
+type CountingAudioSet = {
+  messages: number[];
+  toolbox: (number | undefined)[];
+};
+
+const withSceneAudio = (scenes: any[], audioSets: CountingAudioSet[]) =>
+  scenes.map((scene, sceneIndex) => {
+    const audioSet = audioSets[sceneIndex];
+
+    if (!audioSet) return scene;
+
+    return {
+      ...scene,
+      dialogue: scene.dialogue.map((line: any, index: number) => ({
+        ...line,
+        ...(audioSet.messages[index] ? { audio: audioSet.messages[index] } : {}),
+      })),
+      expressions: scene.expressions.map((expression: any, index: number) => ({
+        ...expression,
+        ...(audioSet.toolbox[index] ? { audio: audioSet.toolbox[index] } : {}),
+      })),
+    };
+  });
+
+const ECHANGE_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/telephone-contact/echange/echange-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/echange/echange-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/echange/echange-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/echange/echange-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/telephone-contact/echange/toolbox/echange-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/echange/toolbox/echange-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/echange/toolbox/echange-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/echange/toolbox/echange-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/echange/toolbox/echange-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/echange/toolbox/echange-toolbox-6.mp3"),
+  ],
+};
+
+const TELEPHONE_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/telephone-contact/telephone/telephone-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/telephone/telephone-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/telephone/telephone-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/telephone/telephone-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/telephone-contact/telephone/toolbox/telephone-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/telephone/toolbox/telephone-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/telephone/toolbox/telephone-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/telephone/toolbox/telephone-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/telephone/toolbox/telephone-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/telephone/toolbox/telephone-toolbox-6.mp3"),
+  ],
+};
+
+const MESSAGERIE_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/telephone-contact/messagerie/messagerie-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/messagerie/messagerie-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/messagerie/messagerie-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/messagerie/messagerie-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/telephone-contact/messagerie/toolbox/messagerie-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/messagerie/toolbox/messagerie-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/messagerie/toolbox/messagerie-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/messagerie/toolbox/messagerie-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/messagerie/toolbox/messagerie-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/telephone-contact/messagerie/toolbox/messagerie-toolbox-6.mp3"),
+  ],
+};
+
+const SCENES = withSceneAudio([
   {
     id: "exchange",
     title: "L'Échange",
@@ -241,7 +316,7 @@ const SCENES = [
       },
     ],
   },
-];
+], [ECHANGE_AUDIO, TELEPHONE_AUDIO, MESSAGERIE_AUDIO]);
 
 export default function PhoneContactImmersion() {
   return (
