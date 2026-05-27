@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useStore } from "../../../_store";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.png");
 
@@ -62,6 +63,21 @@ type QuizQuestion = {
   correctAnswer: string;
   questionType: "sound" | "meaning" | "batchim" | "contrast";
 };
+
+type QuizResult = {
+  score: number;
+  total: number;
+};
+
+const NEXT_HANGUL_ROUTE = "/(tabs)";
+const NEXT_HANGUL_LABEL = "REVENIR À L'ACCUEIL";
+const CURRENT_HANGUL_MODULE_ID = "hangul_batchim";
+const HANGUL_PREREQUISITES = [
+  { id: "hangul_vowels_basic", title: "Voyelles de base" },
+  { id: "hangul_consonants_basic", title: "Les consonnes" },
+  { id: "hangul_vowels_compound", title: "Voyelles composées" },
+  { id: "hangul_consonants_tense", title: "Consonnes doubles" },
+];
 
 const SCENES: Scene[] = [
   {
@@ -384,7 +400,7 @@ const getQuizResultMessage = (score: number, total: number) => {
 
   const ratio = score / total;
 
-  if (ratio >= 0.8) return "SÉQUENCE VALIDÉE";
+  if (total - score <= 1) return "SÉQUENCE VALIDÉE";
   if (ratio >= 0.6) return "BONNE PROGRESSION";
   if (ratio >= 0.4) return "BASES EN CONSTRUCTION";
   return "ON REPREND EN DOUCEUR";
@@ -401,8 +417,12 @@ const getQuizResultSubtitle = (score: number, total: number) => {
     return "Tu as parfaitement reconnu les finales, les contrastes ou le sens. Tu peux continuer vers la suite !";
   }
 
-  if (ratio >= 0.8) {
+  if (total - score <= 1) {
     return "Très solide. La séquence est validée, mais tu peux la refaire pour viser la maîtrise parfaite.";
+  }
+
+  if (ratio >= 0.8) {
+    return "Tu es très proche. Recommence la séquence pour descendre à une seule erreur maximum.";
   }
 
   if (ratio >= 0.6) {
@@ -427,12 +447,16 @@ const getQuizTitle = (question?: QuizQuestion) => {
 };
 
 export default function BatchimScreen() {
+  const { progress, complete } = useStore();
   const [activeScene, setActiveScene] = useState<Scene>(SCENES[0]);
   const [completedItems, setCompletedItems] = useState<Record<string, boolean>>(
     {},
   );
   const [ambientMode, setAmbientMode] = useState(false);
   const [masteredScenes, setMasteredScenes] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [quizResults, setQuizResults] = useState<Record<string, QuizResult>>(
     {},
   );
   const [showTeaser, setShowTeaser] = useState<Record<string, boolean>>({});
@@ -485,12 +509,53 @@ export default function BatchimScreen() {
     (acc, scene) => acc + scene.expressions.length,
     0,
   );
+  const activeSceneIndex = SCENES.findIndex(
+    (scene) => scene.id === activeScene.id,
+  );
+  const isLastScene = activeSceneIndex === SCENES.length - 1;
+  const isStrongQuizResult = (result?: QuizResult) =>
+    !!result && result.total > 0 && result.total - result.score <= 1;
+  const allScenesStrong = SCENES.every((scene) =>
+    isStrongQuizResult(quizResults[scene.id]),
+  );
+  const hasCompletedAllSceneQuizzes = SCENES.every(
+    (scene) => !!quizResults[scene.id],
+  );
+  const failedScenesToRetry = SCENES.filter((scene) => {
+    const result = quizResults[scene.id];
+    return result && result.total - result.score > 1;
+  });
+  const failedSceneToRetry = failedScenesToRetry[0];
+  const shouldMarkModuleComplete = hasCompletedAllSceneQuizzes && allScenesStrong;
+  const shouldSuggestNextSection = shouldMarkModuleComplete && isLastScene;
+  const shouldRetryBeforeNextSection =
+    hasCompletedAllSceneQuizzes &&
+    !!failedSceneToRetry &&
+    activeScene.id !== failedSceneToRetry.id;
+  const shouldShowProgressionTeaser =
+    showTeaser[activeScene.id] ||
+    shouldSuggestNextSection ||
+    shouldRetryBeforeNextSection;
+  const skippedPrerequisites = HANGUL_PREREQUISITES.filter(
+    (module) => !progress.completed[module.id],
+  );
+  const hasSkippedPrerequisites = skippedPrerequisites.length > 0;
+  const skippedPrerequisiteMessage =
+    skippedPrerequisites.length === 1
+      ? `Petit conseil : tu as validé ce parcours, mais le parcours "${skippedPrerequisites[0].title}" semble avoir été sauté. Tu peux y revenir avant de continuer, ou poursuivre si tu te sens prêt.`
+      : `Petit conseil : tu as validé ce parcours, mais les parcours ${skippedPrerequisites.map((module) => `"${module.title}"`).join(", ")} semblent avoir été sautés. Tu peux y revenir avant de continuer, ou poursuivre si tu te sens prêt.`;
 
-  const resetSceneToolbox = () => {
+  useEffect(() => {
+    if (shouldMarkModuleComplete) {
+      complete(CURRENT_HANGUL_MODULE_ID);
+    }
+  }, [complete, shouldMarkModuleComplete]);
+
+  const resetSceneToolbox = (sceneToReset = activeScene) => {
     setCompletedItems((prev) => {
       const next = { ...prev };
 
-      activeScene.expressions.forEach((exp) => {
+      sceneToReset.expressions.forEach((exp) => {
         delete next[exp.id];
       });
 
@@ -499,7 +564,17 @@ export default function BatchimScreen() {
 
     setReadyForQuiz((prev) => ({
       ...prev,
-      [activeScene.id]: false,
+      [sceneToReset.id]: false,
+    }));
+
+    setMasteredScenes((prev) => ({
+      ...prev,
+      [sceneToReset.id]: false,
+    }));
+
+    setShowTeaser((prev) => ({
+      ...prev,
+      [sceneToReset.id]: false,
     }));
   };
 
@@ -632,9 +707,13 @@ export default function BatchimScreen() {
 
       const finalScore = quizScore + (isCorrect ? 1 : 0);
       const total = quizQuestions.length;
-      const passed = total > 0 && finalScore / total >= 0.8;
+      const passed = total > 0 && total - finalScore <= 1;
 
       setQuizComplete(true);
+      setQuizResults((prev) => ({
+        ...prev,
+        [activeScene.id]: { score: finalScore, total },
+      }));
 
       setMasteredScenes((prev) => ({
         ...prev,
@@ -645,6 +724,10 @@ export default function BatchimScreen() {
         ...prev,
         [activeScene.id]: passed,
       }));
+
+      if (passed) {
+        complete(`${CURRENT_HANGUL_MODULE_ID}_${activeScene.id}`);
+      }
     }, 900);
   };
 
@@ -922,11 +1005,23 @@ export default function BatchimScreen() {
               </Pressable>
             )}
 
-          {showTeaser[activeScene.id] && (
+          {shouldShowProgressionTeaser && (
             <Pressable
               onPress={() => {
-                const nextIdx =
-                  SCENES.findIndex((scene) => scene.id === activeScene.id) + 1;
+                if (shouldSuggestNextSection) {
+                  router.push(NEXT_HANGUL_ROUTE as any);
+                  return;
+                }
+
+                if (shouldRetryBeforeNextSection) {
+                  if (failedSceneToRetry) {
+                    setActiveScene(failedSceneToRetry);
+                    resetSceneToolbox(failedSceneToRetry);
+                  }
+                  return;
+                }
+
+                const nextIdx = activeSceneIndex + 1;
 
                 if (nextIdx < SCENES.length) {
                   setActiveScene(SCENES[nextIdx]);
@@ -934,10 +1029,25 @@ export default function BatchimScreen() {
               }}
               style={styles.teaserBox}
             >
-              <Text style={styles.teaserText}>✨ {activeScene.teaser}</Text>
+              <Text style={styles.teaserText}>
+                ✨{" "}
+                {shouldSuggestNextSection
+                  ? hasSkippedPrerequisites
+                    ? skippedPrerequisiteMessage
+                    : "Bravo, tu as validé tout le parcours Hangul avec au maximum une erreur par thème. Reviens à l'accueil pour choisir librement la suite de ton apprentissage."
+                  : shouldRetryBeforeNextSection
+                    ? failedScenesToRetry.length > 1
+                      ? `Tu as terminé les 3 thèmes, mais ${failedScenesToRetry.length} thèmes doivent encore être corrigés : ${failedScenesToRetry.map((scene) => `"${scene.title}"`).join(", ")}. Reprends "${failedSceneToRetry?.title}" d'abord.`
+                      : `Bien, maintenant il ne te reste plus qu'à corriger le thème "${failedSceneToRetry?.title}" pour débloquer la suite.`
+                  : activeScene.teaser}
+              </Text>
 
               <Text style={[styles.teaserBtn, { color: activeScene.accent }]}>
-                DÉBLOQUER LA SUITE →
+                {shouldSuggestNextSection
+                  ? `${NEXT_HANGUL_LABEL} →`
+                  : shouldRetryBeforeNextSection
+                    ? `RECOMMENCER ${failedSceneToRetry?.title.toUpperCase()} →`
+                  : "DÉBLOQUER LA SUITE →"}
               </Text>
             </Pressable>
           )}
@@ -1005,7 +1115,7 @@ export default function BatchimScreen() {
                     />
 
                     <Text style={styles.resultLabelText}>
-                      {quizScore / quizQuestions.length >= 0.8
+                      {quizQuestions.length - quizScore <= 1
                         ? "SÉQUENCE VALIDÉE"
                         : "SÉQUENCE À REVOIR"}
                     </Text>
@@ -1075,7 +1185,9 @@ export default function BatchimScreen() {
                   <Pressable
                     onPress={() => {
                       setQuizActive(false);
-                      resetSceneToolbox();
+                      if (quizQuestions.length - quizScore > 1) {
+                        resetSceneToolbox();
+                      }
                     }}
                     style={styles.closeBtn}
                   >
@@ -1090,7 +1202,9 @@ export default function BatchimScreen() {
                       style={styles.closeBtnGradient}
                     >
                       <Text style={styles.closeBtnText}>
-                        {"CONTINUER L'IMMERSION"}
+                        {quizQuestions.length - quizScore <= 1
+                          ? "CONTINUER L'IMMERSION"
+                          : "RECOMMENCER LA SÉQUENCE"}
                       </Text>
                     </LinearGradient>
                   </Pressable>

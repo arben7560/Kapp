@@ -122,6 +122,7 @@ export default function Profile() {
                       isPremium: false,
                       completed: {},
                       hangulLevel: 1,
+                      learningTrack: null,
                     }),
                 },
               ]);

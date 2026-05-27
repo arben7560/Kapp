@@ -1,5 +1,4 @@
 import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import * as Speech from "expo-speech";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -144,68 +143,19 @@ export default function MetroLesson() {
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
-  const [visibleMessages, setVisibleMessages] = useState(1);
-  const [isTyping, setIsTyping] = useState(false);
 
-  const fadeAnim = useRef(new Animated.Value(0)).current;
   const bgFadeAnim = useRef(new Animated.Value(0)).current;
-  const tapHintPulse = useRef(new Animated.Value(0)).current;
-  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    setVisibleMessages(1);
-    setIsTyping(false);
     setSelectedWord(null);
-
-    if (typingTimer.current) {
-      clearTimeout(typingTimer.current);
-      typingTimer.current = null;
-    }
-
     Speech.stop();
-    fadeAnim.setValue(0);
-
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 600,
-      easing: Easing.out(Easing.back(1)),
-      useNativeDriver: true,
-    }).start();
-  }, [activeScene, fadeAnim]);
+  }, [activeScene]);
 
   useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(tapHintPulse, {
-          toValue: 1,
-          duration: 900,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(tapHintPulse, {
-          toValue: 0,
-          duration: 900,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-
-    animation.start();
-
     return () => {
-      animation.stop();
-
-      if (typingTimer.current) {
-        clearTimeout(typingTimer.current);
-      }
-
       Speech.stop();
     };
-  }, [tapHintPulse]);
-
-  const shouldHighlightHint =
-    !isTyping && visibleMessages < activeScene.dialogue.length;
+  }, []);
 
   const speak = (text: string, id: string) => {
     Speech.stop();
@@ -220,40 +170,6 @@ export default function MetroLesson() {
       onStopped: () => setSelectedWord(null),
       onError: () => setSelectedWord(null),
     });
-  };
-
-  const advanceDialogue = () => {
-    if (isTyping) return;
-
-    if (visibleMessages >= activeScene.dialogue.length) {
-      Vibration.vibrate(8);
-      setVisibleMessages(1);
-      setIsTyping(false);
-      return;
-    }
-
-    const nextMessage = activeScene.dialogue[visibleMessages];
-
-    Vibration.vibrate(8);
-
-    if (nextMessage.side === "server") {
-      setIsTyping(true);
-
-      const delay = 600 + Math.floor(Math.random() * 301);
-
-      typingTimer.current = setTimeout(() => {
-        setIsTyping(false);
-        setVisibleMessages((prev) =>
-          Math.min(prev + 1, activeScene.dialogue.length),
-        );
-      }, delay);
-
-      return;
-    }
-
-    setVisibleMessages((prev) =>
-      Math.min(prev + 1, activeScene.dialogue.length),
-    );
   };
 
   const handleSceneChange = (scene: Scene) => {
@@ -332,134 +248,7 @@ export default function MetroLesson() {
               </Pressable>
             ))}
           </View>
-
-          <Animated.View
-            style={[
-              styles.stage,
-              {
-                opacity: fadeAnim,
-                transform: [
-                  {
-                    scale: fadeAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.95, 1],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          >
-            <BlurView intensity={40} tint="dark" style={styles.glassCard}>
-              <LinearGradient
-                colors={[`${activeScene.accent}20`, "transparent"]}
-                style={StyleSheet.absoluteFill}
-              />
-
-              <View style={styles.sceneMetaRow}>
-                <Text style={[styles.sceneSub, { color: activeScene.accent }]}>
-                  {activeScene.koreanTitle}
-                </Text>
-              </View>
-
-              <Text style={styles.sceneTitle}>{activeScene.title}</Text>
-              <Text style={styles.sceneDesc}>{activeScene.description}</Text>
-
-              <Pressable onPress={advanceDialogue} style={styles.dialogueBox}>
-                {activeScene.dialogue
-                  .slice(0, visibleMessages)
-                  .map((d, index) => {
-                    const isMe = d.side === "me";
-
-                    return (
-                      <View
-                        key={`${activeScene.id}-dialogue-${index}`}
-                        style={[
-                          styles.bubble,
-                          isMe ? styles.bubbleRight : styles.bubbleLeft,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.charName,
-                            { color: activeScene.accent },
-                          ]}
-                        >
-                          {d.char}
-                        </Text>
-                        <Text style={styles.krText}>{d.kr}</Text>
-                        <Text style={styles.frText}>{d.fr}</Text>
-                      </View>
-                    );
-                  })}
-
-                {isTyping && (
-                  <View
-                    style={[
-                      styles.bubble,
-                      styles.bubbleLeft,
-                      styles.typingBubble,
-                    ]}
-                  >
-                    <Text
-                      style={[styles.charName, { color: activeScene.accent }]}
-                    >
-                      {activeScene.dialogue[visibleMessages]?.char}
-                    </Text>
-
-                    <View style={styles.typingDots}>
-                      <View
-                        style={[
-                          styles.dot,
-                          { backgroundColor: activeScene.accent },
-                        ]}
-                      />
-                      <View
-                        style={[
-                          styles.dot,
-                          { backgroundColor: activeScene.accent },
-                        ]}
-                      />
-                      <View
-                        style={[
-                          styles.dot,
-                          { backgroundColor: activeScene.accent },
-                        ]}
-                      />
-                    </View>
-                  </View>
-                )}
-
-                <Animated.Text
-                  style={[
-                    styles.tapHint,
-                    shouldHighlightHint && {
-                      color: activeScene.accent,
-                      opacity: tapHintPulse.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.45, 1],
-                      }),
-                      transform: [
-                        {
-                          scale: tapHintPulse.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [1, 1.03],
-                          }),
-                        },
-                      ],
-                    },
-                  ]}
-                >
-                  {visibleMessages >= activeScene.dialogue.length
-                    ? "Toucher pour recommencer"
-                    : isTyping
-                      ? "Réponse en cours..."
-                      : "Toucher pour continuer"}
-                </Animated.Text>
-              </Pressable>
-            </BlurView>
-          </Animated.View>
-
-          <View style={styles.toolbox}>
+<View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
               <Text style={styles.toolboxTitle}>METRO TOOLBOX</Text>
               <View
@@ -606,103 +395,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 
-  stage: { marginBottom: 18 },
-  glassCard: {
-    borderRadius: 32,
-    padding: 25,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-  },
-
-  sceneMetaRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 2,
-  },
-  sceneSub: {
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 14,
-    letterSpacing: 1,
-  },
-
-  sceneTitle: {
-    color: COLORS.txt,
-    fontFamily: "Outfit_900Black",
-    fontSize: 34,
-    marginBottom: 8,
-  },
-  sceneDesc: {
-    color: COLORS.muted,
-    fontSize: 14,
-    fontStyle: "italic",
-    marginBottom: 30,
-    lineHeight: 20,
-  },
-
-  dialogueBox: { gap: 16 },
-  bubble: {
-    maxWidth: "88%",
-    padding: 18,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
-  },
-  bubbleLeft: {
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderBottomLeftRadius: 4,
-  },
-  bubbleRight: {
-    alignSelf: "flex-end",
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderBottomRightRadius: 4,
-  },
-  charName: {
-    fontSize: 10,
-    fontFamily: "Outfit_700Bold",
-    marginBottom: 6,
-    letterSpacing: 1,
-    textTransform: "uppercase",
-  },
-  krText: {
-    color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 18,
-    lineHeight: 26,
-    marginBottom: 4,
-  },
-  frText: {
-    color: COLORS.muted,
-    fontSize: 13,
-    fontFamily: "Outfit_500Medium",
-  },
-  typingBubble: {
-    minWidth: 92,
-    paddingVertical: 15,
-  },
-  typingDots: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    paddingTop: 2,
-  },
-  dot: {
-    width: 7,
-    height: 7,
-    borderRadius: 999,
-    opacity: 0.85,
-  },
-  tapHint: {
-    alignSelf: "center",
-    color: "rgba(255,255,255,0.42)",
-    fontFamily: "Outfit_700Bold",
-    fontSize: 10,
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
-    marginTop: 4,
-  },
+  toolbox: { marginTop: 40 },
 
   toolboxHeader: {
     flexDirection: "row",

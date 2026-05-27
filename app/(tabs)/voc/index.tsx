@@ -324,7 +324,10 @@ function FamilyCard({
   const icon = title.charAt(0);
 
   return (
-    <Pressable style={styles.cardPressable} onPress={() => router.push(route)}>
+    <Pressable
+      style={styles.cardPressable}
+      onPress={() => router.push(route as any)}
+    >
       <BlurView
         intensity={40}
         tint="dark"

@@ -20,7 +20,7 @@ export type Progress = {
 const initialProgress: Progress = {
   learningTrack: null,
   xp: 120,
-  streak: 2,
+  streak: 0,
   isPremium: false,
   completed: { cafe_americano: true },
   hangulLevel: 1,
@@ -47,7 +47,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const complete = (id: string) => {
     setProgress((p) => {
       if (p.completed[id]) return p;
-      return { ...p, completed: { ...p.completed, [id]: true }, xp: p.xp + 40 };
+      const isHangulProgress = id.startsWith("hangul_");
+
+      return {
+        ...p,
+        completed: { ...p.completed, [id]: true },
+        xp: p.xp + 40,
+        streak: isHangulProgress ? p.streak + 1 : p.streak,
+      };
     });
   };
 

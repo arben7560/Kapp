@@ -1,4 +1,4 @@
-import type { MetroLesson } from "./types";
+import type { MetroLesson } from "./type";
 
 const seoulStationToJamsilLesson: MetroLesson = {
   id: "seoul_station_to_jamsil",

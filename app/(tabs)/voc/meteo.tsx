@@ -60,7 +60,7 @@ const PHRASES = [
 ];
 
 // --- UTILS ---
-const speakKo = (text) => {
+const speakKo = (text: string) => {
   Speech.stop();
   Speech.speak(text, { language: "ko-KR", rate: 0.85 });
 };
@@ -87,7 +87,7 @@ export default function MeteoCyberScreen() {
 
   const currentWord = WORDS[wordIndex];
 
-  const animateChange = (direction) => {
+  const animateChange = (direction: number) => {
     triggerHaptic(Haptics.ImpactFeedbackStyle.Light);
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -151,7 +151,7 @@ export default function MeteoCyberScreen() {
               </Pressable>
               <View>
                 <Text style={styles.navEyebrow}>SÉOUL IMMERSION</Text>
-                <Text style={styles.navTitle}>Centre d'apprentissage</Text>
+                <Text style={styles.navTitle}>{"Centre d'apprentissage"}</Text>
               </View>
             </View>
 

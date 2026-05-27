@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 
 const { width } = Dimensions.get("window");
-const BACKGROUND_SOURCE = require("../../assets/images/seoulbg1.jpg");
+const BACKGROUND_SOURCE = require("../../assets/images/seoulhub.png");
 
 // ──────────────────────────────────────────────
 // DESIGN TOKENS
@@ -35,6 +35,8 @@ const fonts = {
   bold: "Outfit_700Bold",
   krBold: "NotoSansKR_700Bold",
 };
+
+const HANGUL_PROGRESS_TOTAL = 20;
 
 const SEQUENCES: any[] = [
   {
@@ -104,6 +106,12 @@ export default function Home() {
   const currentTrack = progress.learningTrack;
   const activeSeq =
     SEQUENCES.find((s) => s.trackKey === currentTrack) ?? SEQUENCES[0];
+  const activeSeqProgress = getSequenceProgress(activeSeq.trackKey, progress);
+  const activeSeqNarrative =
+    activeSeq.trackKey === "hangul" &&
+    (progress.streak > 0 || activeSeqProgress > 0)
+      ? "Reprends ta session Hangul."
+      : activeSeq.narrative;
 
   const pedagogicalSequences = SEQUENCES.filter(
     (s) => s.type === "pedagogical",
@@ -133,7 +141,12 @@ export default function Home() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground source={BACKGROUND_SOURCE} style={styles.bgImage}>
+      <ImageBackground
+        source={BACKGROUND_SOURCE}
+        style={styles.bgImage}
+        resizeMode="cover"
+        blurRadius={0}
+      >
         <BlurView intensity={18} tint="dark" style={styles.bgBlur} />
         <View style={styles.vignetteOverlay} />
         <View style={styles.topFade} />
@@ -202,7 +215,8 @@ export default function Home() {
           <AnimatedFragment index={0}>
             <MainActionCard
               sequence={activeSeq}
-              progress={0.45}
+              narrative={activeSeqNarrative}
+              progress={activeSeqProgress}
               onPress={() => {
                 setTrack(activeSeq.trackKey);
                 router.push(activeSeq.route);
@@ -211,7 +225,7 @@ export default function Home() {
           </AnimatedFragment>
 
           <View style={styles.sectionDivider}>
-            <Text style={styles.sectionTitle}>POINTS D'ENTRÉE</Text>
+            <Text style={styles.sectionTitle}>{"POINTS D'ENTRÉE"}</Text>
             <View style={styles.titleLineWrap}>
               <View style={styles.titleLine} />
               <LinearGradient
@@ -338,14 +352,14 @@ function AnimatedFragment({
   );
 }
 
-function MainActionCard({ sequence, progress, onPress }: any) {
+function MainActionCard({ sequence, narrative, progress, onPress }: any) {
   return (
     <Pressable onPress={onPress} style={styles.mainCardWrap}>
       <BlurView intensity={60} tint="dark" style={styles.mainCard}>
         <View style={styles.cardContent}>
           <Text style={styles.cardKicker}>REPRENDRE LA SÉQUENCE</Text>
           <Text style={styles.cardTitle}>{sequence.label}</Text>
-          <Text style={styles.cardNarrative}>{sequence.narrative}</Text>
+          <Text style={styles.cardNarrative}>{narrative}</Text>
           <View style={styles.progressContainer}>
             <View style={styles.progressTrack}>
               <View
@@ -359,13 +373,23 @@ function MainActionCard({ sequence, progress, onPress }: any) {
               />
             </View>
             <Text style={styles.progressText}>
-              {Math.round(progress * 100)}% d'immersion
+              {Math.round(progress * 100)}% {"d'immersion"}
             </Text>
           </View>
         </View>
       </BlurView>
     </Pressable>
   );
+}
+
+function getSequenceProgress(trackKey: string, progress: any) {
+  if (trackKey !== "hangul") return 0.45;
+
+  const completedHangulItems = Object.keys(progress.completed ?? {}).filter(
+    (id) => id.startsWith("hangul_"),
+  ).length;
+
+  return Math.min(1, completedHangulItems / HANGUL_PROGRESS_TOTAL);
 }
 
 function getSequenceIcon(trackKey: string) {
@@ -518,14 +542,14 @@ function SequenceCard({ item, isActive, onPress }: any) {
 // ──────────────────────────────────────────────
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG_DEEP },
-  bgImage: { flex: 1 },
+  bgImage: { flex: 1, backgroundColor: BG_DEEP },
   bgBlur: {
     ...StyleSheet.absoluteFillObject,
   },
 
   vignetteOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.56)",
+    backgroundColor: "rgba(2,3,6,0.62)",
   },
   topFade: {
     ...StyleSheet.absoluteFillObject,
@@ -645,7 +669,7 @@ const styles = StyleSheet.create({
 
   heroSeoulTitleWrap: {
     position: "absolute",
-    top: 32,
+    top: 18,
     left: -4,
     width: width - 48,
     height: 115,

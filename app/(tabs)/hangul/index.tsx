@@ -382,7 +382,7 @@ function HangulFamilyCard({
   isLocked?: boolean;
 }) {
   return (
-    <Link href={href} asChild>
+    <Link href={href as any} asChild>
       <Pressable style={styles.cardPressable}>
         <BlurView
           intensity={40}

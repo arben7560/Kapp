@@ -144,7 +144,7 @@ export default function ComptageHub() {
               </BlurView>
 
               <Text style={styles.subtitle}>
-                "Comprendre le rythme numérique de la ville."
+                {'"Comprendre le rythme numérique de la ville."'}
               </Text>
             </View>
           </View>
@@ -161,7 +161,7 @@ export default function ComptageHub() {
               <AnimatedItem key={i} index={i}>
                 <Pressable
                   style={styles.cardWrap}
-                  onPress={() => router.push(m.route)}
+                  onPress={() => router.push(m.route as any)}
                 >
                   <BlurView
                     intensity={40}

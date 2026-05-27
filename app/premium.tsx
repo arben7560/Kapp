@@ -300,7 +300,7 @@ export default function PlacesScreen() {
             ctaAccent="pink"
             microBadges={["Nuances", "TTS", "Oral naturel"]}
             premium
-            onPress={() => router.push("/voc/emotions")}
+            onPress={() => router.push("/voc/emotions" as any)}
           />
 
           <ThemeCard
@@ -313,7 +313,7 @@ export default function PlacesScreen() {
             ctaAccent="pink"
             microBadges={["Nuances", "TTS", "Oral naturel"]}
             premium
-            onPress={() => router.push("/voc/work-email")}
+            onPress={() => router.push("/voc/work-email" as any)}
           />
 
           <View style={styles.spacerMedium} />

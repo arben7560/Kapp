@@ -495,7 +495,6 @@ export default function CafeIaScreen() {
                     style={styles.video}
                     contentFit="contain"
                     nativeControls={false}
-                    allowsFullscreen={false}
                     allowsPictureInPicture={false}
                   />
                 ) : (
