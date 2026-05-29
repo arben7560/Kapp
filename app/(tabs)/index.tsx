@@ -50,7 +50,7 @@ const SEQUENCES: any[] = [
     type: "pedagogical",
   },
   {
-    title: "Scènes Guidées",
+    title: "Scènes intéractives",
     label: "Restaurant",
     color: "#F59E0B",
     route: "/voc",
@@ -60,7 +60,7 @@ const SEQUENCES: any[] = [
     type: "pedagogical",
   },
   {
-    title: "Compter à Séoul",
+    title: "Les nombres coréens",
     label: "Comptage",
     color: CYAN,
     route: "/comptage",
@@ -75,6 +75,7 @@ const SEQUENCES: any[] = [
     color: "#34D399",
     route: "/classificateur",
     trackKey: "classifier",
+    isComingSoon: true,
     place: "MARCHÉ • QUANTITÉS",
     narrative: "Donne une forme aux objets et aux personnes.",
     type: "pedagogical",
@@ -231,7 +232,7 @@ export default function Home() {
               <LinearGradient
                 colors={["transparent", CYAN, PINK]}
                 start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
+                end={{ x: 0.5, y: 0 }}
                 style={styles.titleLineGlow}
               />
             </View>
@@ -259,7 +260,7 @@ export default function Home() {
               <LinearGradient
                 colors={["transparent", "#8B5CF6", PINK]}
                 start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
+                end={{ x: 0.5, y: 0 }}
                 style={styles.titleLineGlow}
               />
             </View>
@@ -353,12 +354,25 @@ function AnimatedFragment({
 }
 
 function MainActionCard({ sequence, narrative, progress, onPress }: any) {
+  const displayLabel =
+    sequence.trackKey === "numbers" ? "Les nombres" : sequence.label;
+
   return (
-    <Pressable onPress={onPress} style={styles.mainCardWrap}>
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.mainCardWrap,
+        {
+          borderColor: `${sequence.color}70`,
+          shadowColor: sequence.color,
+          shadowOpacity: 0.24,
+        },
+      ]}
+    >
       <BlurView intensity={60} tint="dark" style={styles.mainCard}>
         <View style={styles.cardContent}>
           <Text style={styles.cardKicker}>REPRENDRE LA SÉQUENCE</Text>
-          <Text style={styles.cardTitle}>{sequence.label}</Text>
+          <Text style={styles.cardTitle}>{displayLabel}</Text>
           <Text style={styles.cardNarrative}>{narrative}</Text>
           <View style={styles.progressContainer}>
             <View style={styles.progressTrack}>
@@ -413,12 +427,14 @@ function getSequenceIcon(trackKey: string) {
 
 function SequenceCard({ item, isActive, onPress }: any) {
   const icon = getSequenceIcon(item.trackKey);
+  const isComingSoon = !!item.isComingSoon;
 
   return (
     <Pressable
       onPress={onPress}
       style={[
         styles.seqCard,
+        isComingSoon && styles.seqCardDisabled,
         isActive && {
           borderColor: `${item.color}66`,
           shadowColor: item.color,
@@ -532,6 +548,25 @@ function SequenceCard({ item, isActive, onPress }: any) {
         >
           ›
         </Text>
+
+        {isComingSoon && (
+          <View pointerEvents="none" style={styles.comingSoonOverlay}>
+            <View style={styles.comingSoonScrim} />
+            <View
+              style={[
+                styles.comingSoonBadge,
+                {
+                  borderColor: `${item.color}70`,
+                  backgroundColor: `${item.color}18`,
+                },
+              ]}
+            >
+              <Text style={[styles.comingSoonText, { color: item.color }]}>
+                PROCHAINEMENT
+              </Text>
+            </View>
+          </View>
+        )}
       </BlurView>
     </Pressable>
   );
@@ -797,7 +832,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 0,
     width: 70,
-    height: 2,
+    height: 1,
     borderRadius: 2,
     opacity: 0.85,
   },
@@ -815,6 +850,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.28,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 8 },
+  },
+  seqCardDisabled: {
+    opacity: 0.82,
   },
   seqBlur: {
     minHeight: 78,
@@ -839,9 +877,9 @@ const styles = StyleSheet.create({
     left: 0,
     top: 14,
     bottom: 14,
-    width: 4,
-    borderTopRightRadius: 6,
-    borderBottomRightRadius: 6,
+    width: 3,
+    borderTopRightRadius: 9,
+    borderBottomRightRadius: 9,
     shadowOpacity: 0.75,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 },
@@ -916,6 +954,27 @@ const styles = StyleSheet.create({
     fontSize: 28,
     opacity: 0.52,
     marginLeft: 8,
+  },
+  comingSoonOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "flex-end",
+    justifyContent: "center",
+    paddingRight: 14,
+  },
+  comingSoonScrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(2,3,6,0.88)",
+  },
+  comingSoonBadge: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  comingSoonText: {
+    fontFamily: fonts.bold,
+    fontSize: 9,
+    letterSpacing: 1.4,
   },
   seqRainA: {
     position: "absolute",

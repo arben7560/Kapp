@@ -335,12 +335,9 @@ export const cafeDialogueData = {
       ped_bell: {
         id: "ped_bell",
         type: "ia",
-        korean:
-          "진동벨 드릴게요. 편하신 자리에 앉아 계시면 됩니다. 준비되면 불러드릴게요.",
-        french:
-          "Voici le buzzer. Vous pouvez vous asseoir où vous voulez. Je vous appellerai quand ce sera prêt.",
-        romanization:
-          "Jindongbel deurilgeyo. Pyeonhasin jarie anja gyesimyeon doemnida. Junbidoemyeon bulleodeurilgeyo.",
+        korean: "진동벨 드릴게요. 준비되면 불러드릴게요.",
+        french: "Voici le buzzer. Je vous appellerai quand ce sera prêt.",
+        romanization: "Jindongbel deurilgeyo. Junbidoemyeon bulleodeurilgeyo.",
         videoSource: jingdonbelVideo,
         nextNodeId: null,
       },

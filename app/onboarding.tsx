@@ -440,9 +440,9 @@ export default function OnboardingScreen() {
                     </Text>
                   </View>
 
-                  <Text style={styles.pathTitle}>Explorer l’app</Text>
+                  <Text style={styles.pathTitle}>Choisis ton parcours</Text>
                   <Text style={styles.pathText}>
-                    Hangul · vocabulaire · parcours
+                    Hangul , vocabulaires et autres
                   </Text>
 
                   <View style={styles.pathBottomRow}>
@@ -475,7 +475,7 @@ export default function OnboardingScreen() {
                     </Text>
                   </View>
 
-                  <Text style={styles.pathTitle}>Lancer une scène</Text>
+                  <Text style={styles.pathTitle}>Choisis ta scène</Text>
                   <Text style={styles.pathText}>Café · métro · restaurant</Text>
 
                   <View style={styles.pathBottomRow}>

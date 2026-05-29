@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -24,7 +25,7 @@ import {
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
-const BG_NAVY = "#0A0D1A";
+// Ancien background gradient : const BG_NAVY = "#0A0D1A";
 const TXT = "rgba(255,255,255,0.98)";
 const MUTED = "rgba(255,255,255,0.64)";
 const SOFT = "rgba(255,255,255,0.48)";
@@ -50,6 +51,7 @@ const byCashReceiptReal = require("../../assets/ai/cafe/byCashReceiptReal.mp4");
 const byCardReceiptReal = require("../../assets/ai/cafe/byCardReceiptReal.mp4");
 const takeOutThanksReal = require("../../assets/ai/cafe/takeOutThanksReal.mp4");
 const jingdonbelReal = require("../../assets/ai/cafe/jingdonbelReal.mp4");
+const cafeBackground = require("../../assets/images/cafe.png");
 
 type ModeType = "guided" | "real";
 
@@ -65,30 +67,49 @@ function normalizeMode(rawMode: string | string[] | undefined): ModeType {
 }
 
 function getProgressIndex(nodeId: string): number {
-  const id = nodeId.toLowerCase();
+  const progressByNodeId: Record<string, number> = {
+    ped_welcome: 0,
+    real_welcome: 0,
 
-  if (/welcome|start|intro|accueil|begin|ped_welcome|real_welcome/.test(id))
-    return 0;
+    ped_choice1: 1,
+    ped_confirm: 1,
+    ped_confirm_alt: 1,
+    ped_choice2_drink: 1,
+    ped_choice2_cake: 1,
+    real_choice1: 1,
+    real_confirm: 1,
+    real_confirm_alt: 1,
+    real_choice2_drink: 1,
+    real_choice2_cake: 1,
 
-  if (
-    /surplace|takeout|place|pickup|drinkhere|포장|매장|choice_place|order_type|confirm|order|choice|menu/.test(
-      id,
-    )
-  ) {
-    return 1;
-  }
+    ped_payment_here: 2,
+    ped_payment_takeout: 2,
+    ped_choice3_here: 2,
+    ped_choice3_takeout: 2,
+    ped_receipt_card_here: 2,
+    ped_receipt_cash_here: 2,
+    ped_receipt_card_takeout: 2,
+    ped_receipt_cash_takeout: 2,
+    ped_receipt_choice_here: 2,
+    ped_receipt_choice_takeout: 2,
+    real_payment_here: 2,
+    real_payment_takeout: 2,
+    real_choice3_here: 2,
+    real_choice3_takeout: 2,
+    real_card_done_here: 2,
+    real_cash_done_here: 2,
+    real_card_done_takeout: 2,
+    real_cash_done_takeout: 2,
+    real_receipt_choice_here: 2,
+    real_receipt_choice_takeout: 2,
 
-  if (/payment|pay|card|cash|receipt|결제|카드|현금/.test(id)) return 2;
+    ped_bell: 3,
+    ped_takeout_end: 3,
+    real_here_end: 3,
+    real_takeout_end: 3,
+  };
 
-  if (
-    /final|finish|done|end|bell|wait|pickup_done|complete|완료|진동벨|ready/.test(
-      id,
-    )
-  ) {
-    return 3;
-  }
-
-  return 0;
+  return progressByNodeId[nodeId] ?? 0;
 }
 
 function attachRealVideosToScenario(
@@ -386,30 +407,49 @@ export default function CafeIaScreen() {
     transcriptFrench.trim().length > 0;
 
   return (
-    <LinearGradient colors={[BG_DEEP, BG_NAVY]} style={{ flex: 1 }}>
-      <View
-        style={[
-          styles.glow,
-          {
-            top: -70,
-            right: -60,
-            backgroundColor:
-              mode === "real"
-                ? "rgba(34,211,238,0.08)"
-                : "rgba(168,85,247,0.10)",
-          },
-        ]}
-      />
-      <View
-        style={[
-          styles.glow,
-          {
-            top: 120,
-            left: -90,
-            backgroundColor: "rgba(244,114,182,0.06)",
-          },
-        ]}
-      />
+    <ImageBackground
+      source={cafeBackground}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+      blurRadius={2}
+    >
+      <View pointerEvents="none" style={styles.backgroundDarkOverlay} />
+
+      {/*
+        Background précédent :
+        <LinearGradient colors={[BG_DEEP, BG_NAVY]} style={{ flex: 1 }}>
+      */}
+
+      {/*
+        Halo de background précédent :
+        <View
+          style={[
+            styles.glow,
+            {
+              top: -70,
+              right: -60,
+              backgroundColor:
+                mode === "real"
+                  ? "rgba(34,211,238,0.08)"
+                  : "rgba(168,85,247,0.10)",
+            },
+          ]}
+        />
+      */}
+
+      {/*
+        Halo de background précédent :
+        <View
+          style={[
+            styles.glow,
+            {
+              top: 120,
+              left: -90,
+              backgroundColor: "rgba(244,114,182,0.06)",
+            },
+          ]}
+        />
+      */}
 
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         <View
@@ -649,11 +689,24 @@ export default function CafeIaScreen() {
           </ScrollView>
         </View>
       </SafeAreaView>
-    </LinearGradient>
+      {/*
+        Fermeture du background précédent :
+        </LinearGradient>
+      */}
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    backgroundColor: BG_DEEP,
+  },
+  backgroundDarkOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(5,5,8,0.54)",
+  },
+
   body: {
     flex: 1,
   },

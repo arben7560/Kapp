@@ -4,7 +4,6 @@ import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Dimensions,
   Easing,
   ImageBackground,
   ImageSourcePropType,
@@ -17,8 +16,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useVocAudio } from "../../../hooks/useVocAudio";
-
-const { width } = Dimensions.get("window");
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — NIGHTLIFE EDITION
@@ -440,7 +437,7 @@ export default function NightlifeImmersion() {
                     },
                   ]}
                 >
-                  {scene.koreanTitle}
+                  {scene.title}
                 </Text>
               </Pressable>
             ))}
@@ -719,8 +716,18 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 
-  tabContainer: { flexDirection: "row", gap: 10, marginBottom: 25 },
+  tabContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 10,
+    marginBottom: 25,
+  },
   tab: {
+    minWidth: 92,
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -731,6 +738,7 @@ const styles = StyleSheet.create({
     color: COLORS.muted,
     fontFamily: "NotoSansKR_700Bold",
     fontSize: 13,
+    textAlign: "center",
   },
 
   glassCard: {

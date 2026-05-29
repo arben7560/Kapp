@@ -4,7 +4,6 @@ import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Dimensions,
   Image,
   ImageBackground,
   ImageSourcePropType,
@@ -17,11 +16,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const { width } = Dimensions.get("window");
-const BACKGROUND_SOURCE = require("../../assets/images/seoulbg1.jpg");
+const BACKGROUND_SOURCE = require("../../assets/images/speak.png");
 
 const BG_DEEP = "#020306";
-const BG_NAVY = "#080B16";
 const TXT = "rgba(255,255,255,0.98)";
 const MUTED = "rgba(255,255,255,0.72)";
 const SOFT = "rgba(255,255,255,0.45)";
@@ -139,11 +136,9 @@ export default function SpeakScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ImageBackground
-        source={{
-          uri: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=1000&auto=format&fit=crop",
-        }}
+        source={BACKGROUND_SOURCE}
         style={styles.bgImage}
-        blurRadius={10}
+        blurRadius={2}
       >
         <BlurView intensity={55} tint="dark" style={styles.bgBlur} />
         <View style={styles.bgDarkOverlay} />
@@ -173,14 +168,14 @@ export default function SpeakScreen() {
                   <Text style={styles.krHero}>대화</Text>
                 </View>
 
-                <Text style={styles.heroTitle}>Interactions</Text>
+                {/* <Text style={styles.heroTitle}>Interactions</Text> */}
 
                 <BlurView intensity={18} tint="dark" style={styles.levelPill}>
                   <Text style={styles.levelText}>IMMERSION ACTIVE</Text>
                 </BlurView>
 
                 <Text style={styles.heroQuote}>
-                  "Choisir un lieu, vivre une situation, parler coréen."
+                  Choisir un lieu, vivre une situation, parler coréen.
                 </Text>
               </View>
             </View>
@@ -198,7 +193,6 @@ export default function SpeakScreen() {
           visible={sheetVisible}
           onClose={() => setSheetVisible(false)}
           selectedTheme={selectedTheme}
-          onOpenPaywall={() => setPaywallVisible(true)}
         />
 
         <PaywallModal
@@ -240,7 +234,10 @@ function ThemeCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.themeCard,
-        { transform: [{ scale: pressed ? 0.98 : 1 }] },
+        {
+          shadowColor: config.accent,
+          transform: [{ scale: pressed ? 0.98 : 1 }],
+        },
       ]}
     >
       <View style={styles.cinemaVignette}>
@@ -248,11 +245,6 @@ function ThemeCard({
           source={config.image}
           style={styles.vignetteImage}
           resizeMode="contain"
-        />
-
-        <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.8)"]}
-          style={StyleSheet.absoluteFill}
         />
 
         <View style={styles.vignetteContent}>
@@ -280,12 +272,10 @@ function ThemeModeSheet({
   visible,
   onClose,
   selectedTheme,
-  onOpenPaywall,
 }: {
   visible: boolean;
   onClose: () => void;
   selectedTheme: ThemeKey | null;
-  onOpenPaywall: () => void;
 }) {
   const translateY = useRef(new Animated.Value(80)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -385,8 +375,8 @@ function ThemeModeSheet({
           <BlurView intensity={94} tint="dark" style={styles.sheetWrap}>
             <LinearGradient
               colors={[
-                "rgba(255,255,255,0.07)",
-                "rgba(255,255,255,0.02)",
+                "rgba(255,255,255,0.12)",
+                "rgba(255,255,255,0.035)",
                 "transparent",
               ]}
               start={{ x: 0.2, y: 0 }}
@@ -408,13 +398,104 @@ function ThemeModeSheet({
             <View style={styles.sheetTopSpecular} />
             <View style={styles.sheetHandle} />
 
-            <View style={styles.sheetHeader}>
-              <View
-                style={[
-                  styles.sheetImageFrame,
-                  { borderColor: `${config.accent}40` },
+            <View
+              style={[
+                styles.sheetHeroFrame,
+                {
+                  borderColor: `${config.accent}48`,
+                  shadowColor: config.accent,
+                },
+              ]}
+            >
+              <Image
+                source={config.image}
+                style={styles.sheetHeroImg}
+                resizeMode="cover"
+              />
+
+              <LinearGradient
+                colors={[
+                  "rgba(0,0,0,0.05)",
+                  "rgba(0,0,0,0.28)",
+                  "rgba(0,0,0,0.82)",
                 ]}
-              >
+                locations={[0, 0.48, 1]}
+                style={StyleSheet.absoluteFill}
+              />
+
+              <LinearGradient
+                colors={[`${config.accent}22`, "transparent"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0.65 }}
+                style={StyleSheet.absoluteFill}
+              />
+
+              <Pressable onPress={onClose} style={styles.sheetCloseIcon}>
+                <Text style={styles.sheetCloseIconText}>×</Text>
+              </Pressable>
+
+              <View style={styles.sheetHeroCopy}>
+                <View style={styles.sheetKickerRow}>
+                  <View
+                    style={[
+                      styles.sheetStatusDot,
+                      { backgroundColor: config.accent },
+                    ]}
+                  />
+                  <Text style={styles.sheetKicker}>SCÈNE IMMERSIVE</Text>
+                </View>
+
+                <Text style={styles.sheetTitle}>{config.title}</Text>
+                <Text style={styles.sheetSub}>{config.sub}</Text>
+              </View>
+            </View>
+
+            <View style={styles.sheetMetaRow}>
+              {["Guidé", "Interactif", "Coréen réel"].map((label) => (
+                <View
+                  key={label}
+                  style={[
+                    styles.sheetMetaPill,
+                    { borderColor: `${config.accent}26` },
+                  ]}
+                >
+                  <Text style={styles.sheetMetaText}>{label}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.sheetBody}>
+              <View style={styles.sheetModeHeader}>
+                <Text style={styles.sheetSectionTitle}>
+                  Choisis ton expérience
+                </Text>
+                <Text style={styles.sheetSectionHint}>
+                  Une scène courte, claire, pensée pour passer à l’action.
+                </Text>
+              </View>
+
+              <View style={styles.sheetOptions}>
+                <SheetOptionCard
+                  title="Scène guidée "
+                  subtitle="Entre dans la situation, écoute et réponds comme sur place."
+                  icon="IA"
+                  accent={config.accent}
+                  recommended
+                  onPress={goToImmersive}
+                />
+                <SheetOptionCard
+                  title="Mémo utile"
+                  subtitle="Revois les mots et expressions utilisés couramment."
+                  icon="Aa"
+                  accent={config.accent}
+                  onPress={goToText}
+                />
+              </View>
+            </View>
+
+            {/* Ancien header de modale conservé pendant la refonte :
+            <View style={styles.sheetHeader}>
+              <View style={[styles.sheetImageFrame, { borderColor: `${config.accent}40` }]}>
                 <Image
                   source={config.image}
                   style={styles.sheetHeroImg}
@@ -468,6 +549,7 @@ function ThemeModeSheet({
                 onPress={goToImmersive}
               />
             </View>
+            */}
 
             <Pressable onPress={onClose} style={styles.sheetCloseButton}>
               <Text style={styles.sheetCloseText}>Fermer</Text>
@@ -558,17 +640,6 @@ function SheetOptionCard({
           <View style={styles.optionTextBlock}>
             <View style={styles.optionTitleRow}>
               <Text style={styles.optionTitle}>{title}</Text>
-
-              {recommended ? (
-                <View
-                  style={[
-                    styles.recommendedBadge,
-                    { borderColor: `${accent}40` },
-                  ]}
-                >
-                  <Text style={styles.recommendedText}>RECOMMANDÉ</Text>
-                </View>
-              ) : null}
 
               {locked ? (
                 <View style={styles.lockedBadge}>
@@ -673,7 +744,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 5.5,
     textAlign: "center",
-    marginBottom: 28,
+    marginBottom: 48,
     opacity: 0.9,
   },
 
@@ -757,7 +828,7 @@ const styles = StyleSheet.create({
 
   bgDarkOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.75)",
+    backgroundColor: "rgba(0,0,0,0.55)",
   },
 
   bgBlur: {
@@ -765,6 +836,7 @@ const styles = StyleSheet.create({
   },
 
   sectionDivider: {
+    marginTop: -30,
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 35,
@@ -785,7 +857,19 @@ const styles = StyleSheet.create({
   },
 
   scenesGrid: { gap: 20 },
-  themeCard: { borderRadius: 28, overflow: "hidden" },
+  themeCard: {
+    borderRadius: 28,
+    overflow: "visible",
+    position: "relative",
+
+    // Ombre portée externe dirigée vers la droite et le bas.
+    // La couleur est injectée dynamiquement depuis config.accent,
+    // donc elle reprend le même ton que le trait vertical de chaque card.
+    shadowOffset: { width: 12, height: 13 },
+    shadowOpacity: 0.56,
+    shadowRadius: 8,
+    elevation: 12,
+  },
 
   cinemaVignette: {
     width: "100%",
@@ -793,6 +877,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     overflow: "hidden",
     backgroundColor: "#050508",
+    position: "relative",
   },
 
   vignetteImage: {
@@ -858,32 +943,34 @@ const styles = StyleSheet.create({
 
   sheetAnimatedWrap: {
     justifyContent: "flex-end",
+    paddingHorizontal: 10,
+    paddingBottom: 8,
   },
 
   sheetAmbientGlow: {
     position: "absolute",
-    bottom: 275,
+    bottom: 305,
     alignSelf: "center",
-    width: 260,
-    height: 160,
+    width: 300,
+    height: 190,
     borderRadius: 999,
-    opacity: 0.62,
+    opacity: 0.72,
   },
 
   sheetWrap: {
     overflow: "hidden",
-    borderTopLeftRadius: 38,
-    borderTopRightRadius: 38,
-    paddingHorizontal: 22,
-    paddingTop: 12,
-    paddingBottom: 28,
-    borderTopWidth: 1,
+    borderRadius: 36,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 18,
+    borderWidth: 1,
     borderLeftWidth: 1,
     borderRightWidth: 1,
     borderTopColor: "rgba(255,255,255,0.16)",
     borderLeftColor: "rgba(255,255,255,0.07)",
     borderRightColor: "rgba(255,255,255,0.07)",
-    backgroundColor: "rgba(7,9,14,0.76)",
+    borderBottomColor: "rgba(255,255,255,0.05)",
+    backgroundColor: "rgba(7,9,14,0.78)",
   },
 
   sheetTopSpecular: {
@@ -903,7 +990,81 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     alignSelf: "center",
     marginTop: 6,
-    marginBottom: 20,
+    marginBottom: 14,
+  },
+
+  sheetHeroFrame: {
+    height: 218,
+    borderRadius: 30,
+    overflow: "hidden",
+    borderWidth: 1,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    shadowOpacity: 0.28,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 12 },
+  },
+
+  sheetHeroImg: {
+    ...StyleSheet.absoluteFillObject,
+    width: "100%",
+    height: "100%",
+  },
+
+  sheetHeroCopy: {
+    position: "absolute",
+    left: 18,
+    right: 74,
+    bottom: 18,
+  },
+
+  sheetCloseIcon: {
+    position: "absolute",
+    top: 14,
+    right: 14,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(8,10,16,0.58)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+  },
+
+  sheetCloseIconText: {
+    color: "rgba(255,255,255,0.82)",
+    fontSize: 20,
+    lineHeight: 22,
+    fontFamily: fonts.medium,
+  },
+
+  sheetMetaRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 12,
+    paddingHorizontal: 2,
+  },
+
+  sheetMetaPill: {
+    flex: 1,
+    minHeight: 34,
+    borderRadius: 999,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.035)",
+  },
+
+  sheetMetaText: {
+    color: "rgba(255,255,255,0.64)",
+    fontSize: 11.5,
+    fontFamily: fonts.bold,
+    letterSpacing: 0.2,
+  },
+
+  sheetBody: {
+    paddingHorizontal: 6,
+    paddingTop: 18,
   },
 
   sheetHeader: {
@@ -920,11 +1081,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: "rgba(255,255,255,0.04)",
     marginRight: 16,
-  },
-
-  sheetHeroImg: {
-    width: "100%",
-    height: "100%",
   },
 
   sheetHeaderInfo: {
@@ -946,7 +1102,7 @@ const styles = StyleSheet.create({
   },
 
   sheetKicker: {
-    color: "rgba(255,255,255,0.52)",
+    color: "rgba(255,255,255,0.68)",
     fontSize: 10.5,
     fontFamily: fonts.bold,
     letterSpacing: 1.9,
@@ -954,32 +1110,32 @@ const styles = StyleSheet.create({
 
   sheetTitle: {
     color: TXT,
-    fontSize: 27,
+    fontSize: 34,
     fontFamily: fonts.black,
-    letterSpacing: -0.7,
+    letterSpacing: -0.9,
   },
 
   sheetSub: {
-    color: MUTED,
+    color: "rgba(255,255,255,0.76)",
     fontSize: 14.5,
     marginTop: 2,
     fontFamily: fonts.medium,
   },
 
   sheetModeHeader: {
-    marginBottom: 14,
+    marginBottom: 15,
   },
 
   sheetSectionTitle: {
     color: TXT,
-    fontSize: 17,
-    fontFamily: fonts.bold,
-    letterSpacing: -0.2,
+    fontSize: 19,
+    fontFamily: fonts.black,
+    letterSpacing: -0.45,
   },
 
   sheetSectionHint: {
     color: SOFT,
-    fontSize: 13.5,
+    fontSize: 13.8,
     marginTop: 4,
     fontFamily: fonts.medium,
   },
@@ -989,17 +1145,17 @@ const styles = StyleSheet.create({
   },
 
   optionCard: {
-    borderRadius: 24,
+    borderRadius: 26,
     overflow: "hidden",
   },
 
   optionBlur: {
-    minHeight: 84,
-    borderRadius: 24,
+    minHeight: 88,
+    borderRadius: 26,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.09)",
-    backgroundColor: "rgba(255,255,255,0.026)",
+    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255,255,255,0.035)",
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 16,

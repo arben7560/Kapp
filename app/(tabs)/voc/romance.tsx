@@ -4,7 +4,6 @@ import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Dimensions,
   Easing,
   ImageBackground,
   ImageSourcePropType,
@@ -17,8 +16,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useVocAudio } from "../../../hooks/useVocAudio";
-
-const { width } = Dimensions.get("window");
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — ROMANCE EDITION
@@ -399,18 +396,15 @@ export default function RomanceDating() {
           contentContainerStyle={styles.scroll}
         >
           {/* HEADER */}
-          <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <View style={styles.topNav}>
+            <Pressable onPress={() => router.back()} style={styles.backCircle}>
               <Text style={styles.backArrow}>‹</Text>
-              <Text style={styles.backText}>SÉOUL NOCTURNE</Text>
             </Pressable>
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: activeScene.accent },
-              ]}
-            >
-              <Text style={styles.statusText}>EN SCÈNE</Text>
+            <View>
+              <Text style={[styles.navEyebrow, { color: activeScene.accent }]}>
+                SÉOUL IMMERSION
+              </Text>
+              <Text style={styles.navTitle}>Romance & Dating</Text>
             </View>
           </View>
 
@@ -423,8 +417,8 @@ export default function RomanceDating() {
                 style={[
                   styles.tab,
                   activeScene.id === scene.id && {
-                    borderBottomColor: scene.accent,
-                    borderBottomWidth: 2,
+                    borderColor: scene.accent,
+                    backgroundColor: `${scene.accent}18`,
                   },
                 ]}
               >
@@ -676,36 +670,54 @@ const styles = StyleSheet.create({
   },
   scroll: { paddingHorizontal: 20, paddingBottom: 60 },
 
-  header: {
+  topNav: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 15,
-    marginBottom: 20,
+    gap: 15,
+    marginBottom: 30,
   },
-  backBtn: { flexDirection: "row", alignItems: "center" },
-  backArrow: { color: COLORS.txt, fontSize: 30, marginRight: 8 },
-  backText: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-    letterSpacing: 1.5,
+  backCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
   },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  statusText: { color: "#000", fontFamily: "Outfit_700Bold", fontSize: 9 },
+  backArrow: { color: "#fff", fontSize: 24, marginTop: -2 },
+  navEyebrow: {
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 2,
+  },
+  navTitle: { color: "#fff", fontSize: 14, fontWeight: "600", opacity: 0.8 },
 
   sceneTabs: {
     flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    flexWrap: "wrap",
     marginBottom: 25,
-    gap: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.1)",
+    gap: 10,
   },
-  tab: { paddingBottom: 10 },
+  tab: {
+    minWidth: 92,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255,255,255,0.04)",
+  },
   tabText: {
     color: COLORS.muted,
     fontFamily: "NotoSansKR_700Bold",
-    fontSize: 14,
+    fontSize: 13,
+    textAlign: "center",
   },
 
   mainCard: {

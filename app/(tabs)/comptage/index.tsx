@@ -137,7 +137,7 @@ export default function ComptageHub() {
                 <Text style={[styles.kr, styles.krGlowInner]}>숫자</Text>
                 <Text style={styles.kr}>숫자</Text>
               </View>
-              <Text style={styles.title}>Comptage</Text>
+              <Text style={styles.title}>Les nombres</Text>
 
               <BlurView intensity={18} tint="dark" style={styles.badge}>
                 <Text style={styles.badgeText}>IMMERSION NIVEAU 1</Text>

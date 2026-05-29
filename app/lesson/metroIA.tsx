@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -19,7 +20,7 @@ import hongikToGangnamLesson from "./data/metro/hongikToGangnam";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
-const BG_NAVY = "#0A0D1A";
+// Ancien background gradient : const BG_NAVY = "#0A0D1A";
 const TXT = "rgba(255,255,255,0.98)";
 const MUTED = "rgba(255,255,255,0.64)";
 const SOFT = "rgba(255,255,255,0.48)";
@@ -64,6 +65,7 @@ const iaRepeatExitLandmarkInfoShort = require("../../assets/ai/metro/ia_repeat_e
 const iaEndSummary = require("../../assets/ai/metro/ia_end_summary.mp4");
 const iaEndSummaryShort = require("../../assets/ai/metro/ia_end_summary_short.mp4");
 const iaEnd = require("../../assets/ai/metro/ia_end.mp4");
+const metroBackground = require("../../assets/images/metrobg.png");
 
 // ==================== TYPES ====================
 type ModeType = "guided" | "real";
@@ -483,31 +485,49 @@ export default function MetroIaScreen() {
   const isUserChoice = currentNode?.type === "user_choice";
 
   return (
-    <LinearGradient colors={[BG_DEEP, BG_NAVY]} style={{ flex: 1 }}>
-      <View
-        style={[
-          styles.glow,
-          {
-            top: -70,
-            right: -60,
-            backgroundColor:
-              mode === "real"
-                ? "rgba(34,211,238,0.08)"
-                : "rgba(168,85,247,0.10)",
-          },
-        ]}
-      />
+    <ImageBackground
+      source={metroBackground}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+      blurRadius={2}
+    >
+      <View pointerEvents="none" style={styles.backgroundDarkOverlay} />
 
-      <View
-        style={[
-          styles.glow,
-          {
-            top: 120,
-            left: -90,
-            backgroundColor: "rgba(244,114,182,0.06)",
-          },
-        ]}
-      />
+      {/*
+        Background précédent :
+        <LinearGradient colors={[BG_DEEP, BG_NAVY]} style={{ flex: 1 }}>
+      */}
+
+      {/*
+        Halo de background précédent :
+        <View
+          style={[
+            styles.glow,
+            {
+              top: -70,
+              right: -60,
+              backgroundColor:
+                mode === "real"
+                  ? "rgba(34,211,238,0.08)"
+                  : "rgba(168,85,247,0.10)",
+            },
+          ]}
+        />
+      */}
+
+      {/*
+        Halo de background précédent :
+        <View
+          style={[
+            styles.glow,
+            {
+              top: 120,
+              left: -90,
+              backgroundColor: "rgba(244,114,182,0.06)",
+            },
+          ]}
+        />
+      */}
 
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         <View
@@ -746,12 +766,25 @@ export default function MetroIaScreen() {
           </ScrollView>
         </View>
       </SafeAreaView>
-    </LinearGradient>
+      {/*
+        Fermeture du background précédent :
+        </LinearGradient>
+      */}
+    </ImageBackground>
   );
 }
 
 // ==================== STYLES ====================
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    backgroundColor: BG_DEEP,
+  },
+  backgroundDarkOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(5,5,8,0.74)",
+  },
+
   body: {
     flex: 1,
   },

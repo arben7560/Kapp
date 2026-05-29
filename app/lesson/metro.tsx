@@ -56,14 +56,119 @@ type Scene = {
   expressions: Expression[];
 };
 
-const uniqueByWord = (items: Expression[]) => {
-  const seen = new Set<string>();
-  return items.filter((item) => {
-    if (seen.has(item.word)) return false;
-    seen.add(item.word);
-    return true;
-  });
-};
+const AI_TOOLBOX_EXPRESSIONS: Expression[] = [
+  {
+    word: "환승",
+    rom: "Hwanseung",
+    mean: "Correspondance",
+    context: "Mot essentiel pour changer de ligne.",
+  },
+  {
+    word: "명동역에서 타세요",
+    rom: "Myeongdong-yeogeseo taseyo",
+    mean: "Prenez le métro à Myeongdong",
+    context: "Point de départ du trajet.",
+  },
+  {
+    word: "삼각지역에서 내리세요",
+    rom: "Samgakji-yeogeseo naeriseyo",
+    mean: "Descendez à Samgakji",
+    context: "Arrêt où faire la correspondance.",
+  },
+  {
+    word: "6호선을 타세요",
+    rom: "Yukhoseoneul taseyo",
+    mean: "Prenez la ligne 6",
+    context: "Ligne à prendre après la correspondance.",
+  },
+  {
+    word: "이태원역까지 가세요",
+    rom: "Itaewon-yeokkkaji gaseyo",
+    mean: "Allez jusqu'à Itaewon",
+    context: "Destination finale.",
+  },
+  {
+    word: "약 네 정거장 후에",
+    rom: "Yak ne jeonggeojang hue",
+    mean: "Après environ 4 arrêts",
+    context: "Indication de distance dans le métro.",
+  },
+  {
+    word: "두 정거장",
+    rom: "Du jeonggeojang",
+    mean: "2 arrêts",
+    context: "Nombre d'arrêts court et fréquent.",
+  },
+  {
+    word: "표지판을 따라가세요",
+    rom: "Pyojipaneul ttaragaseyo",
+    mean: "Suivez les panneaux",
+    context: "Utile pour trouver une ligne ou une sortie.",
+  },
+  {
+    word: "1번 출구",
+    rom: "Ilbeon chulgu",
+    mean: "Sortie 1",
+    context: "Expression essentielle pour les sorties.",
+  },
+];
+
+const USER_TOOLBOX_EXPRESSIONS: Expression[] = [
+  {
+    word: "이태원역 어떻게 가요?",
+    rom: "Itaewon-yeok eotteoke gayo?",
+    mean: "Comment aller à Itaewon ?",
+    context: "Question courte pour demander son chemin.",
+  },
+  {
+    word: "어디에서 환승해요?",
+    rom: "Eodieseo hwanseunghaeyo?",
+    mean: "Où est-ce que je change ?",
+    context: "Pour demander le lieu de correspondance.",
+  },
+  {
+    word: "어디에서 내려요?",
+    rom: "Eodieseo naeryeoyo?",
+    mean: "Où dois-je descendre ?",
+    context: "Question essentielle dans le métro.",
+  },
+  {
+    word: "몇 정거장이에요?",
+    rom: "Myeot jeonggeojang-ieyo?",
+    mean: "C'est à combien d'arrêts ?",
+    context: "Pour vérifier la distance.",
+  },
+  {
+    word: "한 정거장",
+    rom: "Han jeonggeojang",
+    mean: "1 arrêt",
+    context: "Réponse ou repère très fréquent.",
+  },
+  {
+    word: "두 정거장",
+    rom: "Du jeonggeojang",
+    mean: "2 arrêts",
+    context: "Réponse ou repère très fréquent.",
+  },
+  {
+    word: "몇 번 출구예요?",
+    rom: "Myeot beon chulgu-yeyo?",
+    mean: "Quelle sortie ?",
+    context: "Pour demander le numéro de sortie.",
+  },
+  {
+    word: "다시 말해 주세요",
+    rom: "Dasi malhae juseyo",
+    mean: "Répétez, s'il vous plaît",
+    context: "Phrase de secours si l'information va trop vite.",
+  },
+  {
+    word: "감사합니다",
+    rom: "Gamsahamnida",
+    mean: "Merci",
+    context: "Fin naturelle de l'échange.",
+  },
+];
 
 const buildScenes = (): Scene[] => {
   const aiSteps = metroLesson.steps.filter(
@@ -77,28 +182,6 @@ const buildScenes = (): Scene[] => {
         ...choice,
         phase: step.phase,
       })),
-  );
-
-  const aiExpressions = uniqueByWord(
-    aiSteps.map((step) => ({
-      word: step.korean ?? "",
-      rom: step.romanization ?? "",
-      mean: step.french ?? step.text,
-      context: step.phase
-        ? `Réplique IA du script métro - ${step.phase}.`
-        : "Réplique IA du script métro.",
-    })),
-  );
-
-  const userExpressions = uniqueByWord(
-    userChoices.map((choice) => ({
-      word: choice.korean ?? "",
-      rom: choice.romanization ?? "",
-      mean: choice.label,
-      context: choice.phase
-        ? `Choix utilisateur du script métro - ${choice.phase}.`
-        : "Choix utilisateur du script métro.",
-    })),
   );
 
   return [
@@ -116,7 +199,7 @@ const buildScenes = (): Scene[] => {
         fr: step.french ?? step.text,
         side: "server",
       })),
-      expressions: aiExpressions,
+      expressions: AI_TOOLBOX_EXPRESSIONS,
     },
     {
       id: "user",
@@ -132,7 +215,7 @@ const buildScenes = (): Scene[] => {
         fr: choice.label,
         side: "me",
       })),
-      expressions: userExpressions,
+      expressions: USER_TOOLBOX_EXPRESSIONS,
     },
   ];
 };
