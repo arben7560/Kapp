@@ -360,14 +360,16 @@ export default function HealthEmergency() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scroll}
         >
-          <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <View style={styles.topNav}>
+            <Pressable onPress={() => router.back()} style={styles.backCircle}>
               <Text style={styles.backArrow}>‹</Text>
-              <Text style={styles.backText}>SÉOUL SAFETY</Text>
             </Pressable>
-            <View
-              style={[styles.pulseCircle, { shadowColor: activeScene.accent }]}
-            />
+            <View>
+              <Text style={[styles.navEyebrow, { color: activeScene.accent }]}>
+                SÉOUL IMMERSION
+              </Text>
+              <Text style={styles.navTitle}>Urgence & Santé</Text>
+            </View>
           </View>
 
           <View style={styles.tabContainer}>
@@ -649,6 +651,30 @@ const styles = StyleSheet.create({
   },
   scroll: { paddingHorizontal: 22, paddingBottom: 60 },
 
+  topNav: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 15,
+    marginBottom: 30,
+  },
+  backCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+  },
+  backArrow: { color: "#fff", fontSize: 24, marginTop: -2 },
+  navEyebrow: {
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 2,
+  },
+  navTitle: { color: "#fff", fontSize: 14, fontWeight: "600", opacity: 0.8 },
+
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -656,7 +682,6 @@ const styles = StyleSheet.create({
     marginVertical: 15,
   },
   backBtn: { flexDirection: "row", alignItems: "center" },
-  backArrow: { color: COLORS.txt, fontSize: 32, marginRight: 5 },
   backText: {
     color: COLORS.muted,
     fontFamily: "Outfit_700Bold",

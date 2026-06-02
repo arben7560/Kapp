@@ -329,14 +329,14 @@ export const restaurantDialogueData = {
             label: "Demander plus de salade.",
             korean: "상추 좀 더 주세요.",
             romanization: "Sangchu jom deo juseyo.",
-            nextNodeId: "ped_payment_prompt",
+            nextNodeId: "ped_extra_bring",
           },
           {
             id: "ped_more_banchan",
             label: "Demander plus d’accompagnements.",
             korean: "반찬 좀 더 주세요.",
             romanization: "Banchan jom deo juseyo.",
-            nextNodeId: "ped_payment_prompt",
+            nextNodeId: "ped_extra_bring",
           },
           {
             id: "ped_no_extra",
@@ -353,6 +353,15 @@ export const restaurantDialogueData = {
             nextNodeId: "ped_extra_prompt",
           },
         ],
+      },
+
+      ped_extra_bring: {
+        id: "ped_extra_bring",
+        type: "ia",
+        korean: "네, 바로 가져다드릴게요.",
+        french: "Bien sûr, je vous apporte ça tout de suite.",
+        romanization: "Ne, baro gajyeodadeurilgeyo.",
+        nextNodeId: "ped_payment_prompt",
       },
 
       ped_payment_prompt: {

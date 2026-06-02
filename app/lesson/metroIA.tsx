@@ -489,7 +489,7 @@ export default function MetroIaScreen() {
       source={metroBackground}
       style={styles.backgroundImage}
       resizeMode="cover"
-      blurRadius={2}
+      blurRadius={0}
     >
       <View pointerEvents="none" style={styles.backgroundDarkOverlay} />
 

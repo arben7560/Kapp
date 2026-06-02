@@ -42,8 +42,11 @@ const fonts = {
 };
 
 // ==================== VIDEOS ====================
+const pedWelcome = require("../../assets/ai/restaurant/ped_welcome.mp4");
+const pedRecommendation = require("../../assets/ai/restaurant/ped_recommendation.mp4");
 const pedConfirmGalb = require("../../assets/ai/restaurant/ped_confirm_galb.mp4");
 const pedConfirmSamgyeopsal = require("../../assets/ai/restaurant/ped_confirm_samgyeopsal.mp4");
+const pedExtraBring = require("../../assets/ai/restaurant/ped_extra_bring.mp4.mp4");
 const pedExtraPrompt = require("../../assets/ai/restaurant/ped_extra_prompt.mp4");
 const pedSpicyPrompt = require("../../assets/ai/restaurant/ped_spicy_prompt.mp4");
 const pedSidePrompt = require("../../assets/ai/restaurant/ped_side_prompt.mp4");
@@ -54,8 +57,11 @@ const pedGoodbye = require("../../assets/ai/restaurant/ped_goodbye.mp4");
 const restaurantBackground = require("../../assets/images/restaurant.png");
 
 const videoByNodeId: Record<string, number> = {
+  ped_welcome: pedWelcome,
+  ped_recommendation: pedRecommendation,
   ped_confirm_galbi: pedConfirmGalb,
   ped_confirm_samgyeopsal: pedConfirmSamgyeopsal,
+  ped_extra_bring: pedExtraBring,
   ped_extra_prompt: pedExtraPrompt,
   ped_spicy_prompt: pedSpicyPrompt,
   ped_side_prompt: pedSidePrompt,
@@ -96,6 +102,7 @@ function getProgressIndex(nodeId: string): number {
     ped_spicy_choice: 2,
     ped_extra_prompt: 2,
     ped_extra_choice: 2,
+    ped_extra_bring: 2,
 
     ped_payment_prompt: 3,
     ped_payment_choice: 3,

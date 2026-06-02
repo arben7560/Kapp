@@ -411,7 +411,7 @@ export default function CafeIaScreen() {
       source={cafeBackground}
       style={styles.backgroundImage}
       resizeMode="cover"
-      blurRadius={2}
+      blurRadius={0}
     >
       <View pointerEvents="none" style={styles.backgroundDarkOverlay} />
 

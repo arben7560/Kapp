@@ -26,50 +26,50 @@ const COLORS = {
   glass: "rgba(255,255,255,0.05)",
 };
 
-const CAFE_IMAGE = require("../../assets/images/culturecafe.png");
+const CAFE_IMAGE = require("../../assets/images/cafe.png");
 
 const SCENES = [
   {
     id: "server",
     tab: "Serveur",
-    title: "Script IA",
+    title: "Côté Barista",
     koreanTitle: "AI 바리스타",
-    description: "Les répliques exactes que l'IA peut dire dans le café.",
+    description: "Les phrases utiles que le barista peut employer au café.",
     accent: COLORS.gold,
     image: CAFE_IMAGE,
     dialogue: [
       {
-        char: "IA",
+        char: "Barista",
         kr: "어서 오세요. 주문 도와드릴게요. 무엇으로 드시겠어요?",
         fr: "Bienvenue. Je vais vous aider pour la commande. Que souhaitez-vous prendre ?",
         side: "server",
       },
       {
-        char: "IA",
+        char: "Barista",
         kr: "네, 확인해 드릴게요. 아이스 아메리카노 두 잔이랑 오렌지 주스 한 잔 맞으시죠?",
         fr: "Très bien, je vérifie. Deux américanos glacés et un jus d'orange, c'est bien ça ?",
         side: "server",
       },
       {
-        char: "IA",
+        char: "Barista",
         kr: "드시고 가세요, 아니면 포장하세요?",
         fr: "Vous consommez sur place ou à emporter ?",
         side: "server",
       },
       {
-        char: "IA",
+        char: "Barista",
         kr: "총 9,500원입니다. 카드로 결제하시겠어요, 아니면 현금으로 하시겠어요?",
         fr: "Cela fait 9 500 wons au total. Vous souhaitez payer par carte ou en espèces ?",
         side: "server",
       },
       {
-        char: "IA",
+        char: "Barista",
         kr: "네, 카드 결제 도와드릴게요. 영수증 필요하세요?",
         fr: "Très bien, je lance le paiement par carte. Avez-vous besoin du reçu ?",
         side: "server",
       },
       {
-        char: "IA",
+        char: "Barista",
         kr: "진동벨 드릴게요. 편하신 자리에 앉아 계시면 됩니다.",
         fr: "Voici le buzzer. Vous pouvez vous asseoir où vous voulez.",
         side: "server",
@@ -80,31 +80,37 @@ const SCENES = [
         word: "어서 오세요",
         rom: "Eoseo oseyo",
         mean: "Bienvenue",
-        context: "Ouverture du script IA au début de la scène café.",
+        context: "Accueil naturel quand le client arrive au comptoir.",
       },
       {
         word: "주문 도와드릴게요",
         rom: "Jumun dowadeurilgeyo",
         mean: "Je vais vous aider pour la commande",
-        context: "Phrase polie utilisée par l'IA pour lancer l'échange.",
+        context: "Phrase polie utilisée par le barista pour lancer l'échange.",
       },
       {
         word: "무엇으로 드시겠어요?",
         rom: "Mueoseuro deusigesseoyo?",
         mean: "Que souhaitez-vous prendre ?",
-        context: "Question serveur centrale du dialogue IA.",
+        context: "Question centrale du barista.",
+      },
+      {
+        word: "뭐 드릴까요?",
+        rom: "Mwo deurilkkayo?",
+        mean: "Qu'est-ce que je vous sers ?",
+        context: "Forme plus directe et familière, fréquente sur le terrain.",
       },
       {
         word: "확인해 드릴게요",
         rom: "Hwaginhae deurilgeyo",
         mean: "Je vais vérifier pour vous",
-        context: "L'IA confirme la commande avant la suite.",
+        context: "Le barista confirme la commande avant la suite.",
       },
       {
         word: "드시고 가세요, 아니면 포장하세요?",
         rom: "Deusigo gaseyo, animyeon pojanghaseyo?",
         mean: "Sur place ou à emporter ?",
-        context: "Choix clé du script après la confirmation.",
+        context: "La question simple pour savoir si la commande est sur place ou à emporter.",
       },
       {
         word: "영수증 필요하세요?",
@@ -117,50 +123,50 @@ const SCENES = [
   {
     id: "client",
     tab: "Clients",
-    title: "Réponses User",
+    title: "Côté Client",
     koreanTitle: "사용자 선택",
-    description: "Les réponses exactes que l'utilisateur peut choisir dans le dialogue IA.",
+    description: "Les phrases utiles pour commander et répondre au café.",
     accent: COLORS.pink,
     image: CAFE_IMAGE,
     dialogue: [
       {
-        char: "User",
+        char: "Client",
         kr: "아이스 아메리카노 두 잔이랑 오렌지 주스 한 잔 주세요.",
         fr: "Je voudrais deux américanos glacés et un jus d'orange, s'il vous plaît.",
         side: "me",
       },
       {
-        char: "User",
+        char: "Client",
         kr: "아이스 라떼 한 잔이랑 치즈케이크 한 조각 주세요.",
         fr: "Un latte glacé et un cheesecake, s'il vous plaît.",
         side: "me",
       },
       {
-        char: "User",
+        char: "Client",
         kr: "다시 한번 말씀해 주시겠어요?",
         fr: "Pouvez-vous répéter ?",
         side: "me",
       },
       {
-        char: "User",
+        char: "Client",
         kr: "네, 먹고 갈게요.",
         fr: "Sur place.",
         side: "me",
       },
       {
-        char: "User",
+        char: "Client",
         kr: "포장해 주세요.",
         fr: "À emporter.",
         side: "me",
       },
       {
-        char: "User",
+        char: "Client",
         kr: "카드로 할게요.",
         fr: "Par carte.",
         side: "me",
       },
       {
-        char: "User",
+        char: "Client",
         kr: "아니요, 괜찮아요.",
         fr: "Non, merci.",
         side: "me",
@@ -168,22 +174,52 @@ const SCENES = [
     ],
     expressions: [
       {
-        word: "아이스 아메리카노 두 잔이랑 오렌지 주스 한 잔 주세요.",
-        rom: "Aiseu amerikano du janirang orenji juseu han jan juseyo.",
-        mean: "Deux américanos glacés et un jus d'orange, s'il vous plaît",
-        context: "Choix utilisateur principal dans le script pédagogique.",
+        word: "아이스 아메리카노",
+        rom: "Aiseu amerikano",
+        mean: "Américano glacé",
+        context: "Boisson principale côté client.",
       },
       {
-        word: "아이스 라떼 한 잔이랑 치즈케이크 한 조각 주세요.",
-        rom: "Aiseu ratte han janirang chijeu keikeu han jogak juseyo.",
-        mean: "Un latte glacé et une part de cheesecake, s'il vous plaît",
-        context: "Deuxième commande possible dans le dialogue IA.",
+        word: "두 잔",
+        rom: "Du jan",
+        mean: "Deux verres / deux tasses",
+        context: "Quantité utile pour commander une boisson.",
+      },
+      {
+        word: "한 잔",
+        rom: "Han jan",
+        mean: "Un verre / une tasse",
+        context: "Compteur naturel pour les boissons au café.",
+      },
+      {
+        word: "하나",
+        rom: "Hana",
+        mean: "Un / une",
+        context: "Nombre général, à éviter seul pour commander une boisson.",
+      },
+      {
+        word: "오렌지 주스",
+        rom: "Orenji juseu",
+        mean: "Jus d'orange",
+        context: "Boisson complémentaire de la commande.",
+      },
+      {
+        word: "이랑",
+        rom: "irang",
+        mean: "avec / et",
+        context: "Connecteur oral côté client.",
+      },
+      {
+        word: "주세요",
+        rom: "juseyo",
+        mean: "Donnez-moi / s'il vous plaît",
+        context: "Formule essentielle pour commander.",
       },
       {
         word: "다시 한번 말씀해 주시겠어요?",
         rom: "Dasi hanbeon malsseumhae jusigesseoyo?",
         mean: "Pouvez-vous répéter ?",
-        context: "Réponse de réparation prévue dans le script.",
+        context: "À sortir quand la phrase est allée trop vite.",
       },
       {
         word: "네, 먹고 갈게요.",
@@ -198,10 +234,16 @@ const SCENES = [
         context: "Choix utilisateur pour l'option takeout.",
       },
       {
+        word: "테이크아웃이요.",
+        rom: "Teikeu-aut-iyo.",
+        mean: "Take out / à emporter.",
+        context: "Version Konglish très entendue dans les cafés.",
+      },
+      {
         word: "카드로 할게요.",
         rom: "Kadeuro halgeyo.",
         mean: "Je vais payer par carte",
-        context: "Réponse attendue au moment du paiement.",
+        context: "À utiliser au moment de payer.",
       },
       {
         word: "아니요, 괜찮아요.",
@@ -272,7 +314,7 @@ export default function CafeLesson() {
           source={activeScene.image}
           style={styles.bgLayer}
           fadeDuration={0}
-          resizeMode="contain"
+          resizeMode="cover"
         />
         {previousBackground ? (
           <Animated.View
@@ -283,7 +325,7 @@ export default function CafeLesson() {
               source={previousBackground}
               style={styles.bgLayer}
               fadeDuration={0}
-              resizeMode="contain"
+              resizeMode="cover"
             />
           </Animated.View>
         ) : null}

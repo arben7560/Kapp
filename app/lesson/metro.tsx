@@ -28,7 +28,7 @@ const COLORS = {
   glass: "rgba(255,255,255,0.05)",
 };
 
-const METRO_IMAGE = require("../../assets/images/bg-metro-station.png");
+const METRO_IMAGE = require("../../assets/images/metrobg.png");
 
 type DialogueLine = {
   char: string;
@@ -56,7 +56,7 @@ type Scene = {
   expressions: Expression[];
 };
 
-const AI_TOOLBOX_EXPRESSIONS: Expression[] = [
+const AGENT_TOOLBOX_EXPRESSIONS: Expression[] = [
   {
     word: "환승",
     rom: "Hwanseung",
@@ -94,10 +94,10 @@ const AI_TOOLBOX_EXPRESSIONS: Expression[] = [
     context: "Indication de distance dans le métro.",
   },
   {
-    word: "두 정거장",
-    rom: "Du jeonggeojang",
-    mean: "2 arrêts",
-    context: "Nombre d'arrêts court et fréquent.",
+    word: "그다음 6호선으로 환승하세요",
+    rom: "Geudaeum yukhoseoneuro hwanseunghaseyo",
+    mean: "Ensuite, changez pour la ligne 6",
+    context: "Formulation de guidage côté agent.",
   },
   {
     word: "표지판을 따라가세요",
@@ -113,7 +113,7 @@ const AI_TOOLBOX_EXPRESSIONS: Expression[] = [
   },
 ];
 
-const USER_TOOLBOX_EXPRESSIONS: Expression[] = [
+const VOYAGEUR_TOOLBOX_EXPRESSIONS: Expression[] = [
   {
     word: "이태원역 어떻게 가요?",
     rom: "Itaewon-yeok eotteoke gayo?",
@@ -187,35 +187,35 @@ const buildScenes = (): Scene[] => {
   return [
     {
       id: "ai",
-      tab: "IA",
-      title: "Script IA",
+      tab: "Agent",
+      title: "Côté Agent",
       koreanTitle: "길 안내",
       description: metroLesson.situation,
       accent: COLORS.cyan,
       image: METRO_IMAGE,
       dialogue: aiSteps.map((step) => ({
-        char: step.phase ?? "IA",
+        char: step.phase ?? "Agent",
         kr: step.korean ?? "",
         fr: step.french ?? step.text,
         side: "server",
       })),
-      expressions: AI_TOOLBOX_EXPRESSIONS,
+      expressions: AGENT_TOOLBOX_EXPRESSIONS,
     },
     {
       id: "user",
-      tab: "User",
-      title: "Réponses User",
+      tab: "Voyageur",
+      title: "Côté Voyageur",
       koreanTitle: "사용자 선택",
       description: metroLesson.objective,
       accent: COLORS.pink,
       image: METRO_IMAGE,
       dialogue: userChoices.map((choice) => ({
-        char: "User",
+        char: "Voyageur",
         kr: choice.korean ?? "",
         fr: choice.label,
         side: "me",
       })),
-      expressions: USER_TOOLBOX_EXPRESSIONS,
+      expressions: VOYAGEUR_TOOLBOX_EXPRESSIONS,
     },
   ];
 };
@@ -280,7 +280,7 @@ export default function MetroLesson() {
           source={activeScene.image}
           style={styles.bgLayer}
           fadeDuration={0}
-          resizeMode="contain"
+          resizeMode="cover"
         />
         {previousBackground ? (
           <Animated.View
@@ -291,7 +291,7 @@ export default function MetroLesson() {
               source={previousBackground}
               style={styles.bgLayer}
               fadeDuration={0}
-              resizeMode="contain"
+              resizeMode="cover"
             />
           </Animated.View>
         ) : null}
@@ -331,7 +331,7 @@ export default function MetroLesson() {
               </Pressable>
             ))}
           </View>
-<View style={styles.toolbox}>
+          <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
               <Text style={styles.toolboxTitle}>METRO TOOLBOX</Text>
               <View

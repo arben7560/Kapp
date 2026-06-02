@@ -289,27 +289,27 @@ const styles = StyleSheet.create({
   topNav: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
-    marginBottom: 24,
+    gap: 15,
+    marginBottom: 30,
   },
   backCircle: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: "rgba(255,255,255,0.08)",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
   },
-  backArrow: { color: "#fff", fontSize: 28, marginTop: -3 },
+  backArrow: { color: "#fff", fontSize: 24, marginTop: -2 },
   navEyebrow: {
     color: PINK,
     fontSize: 10,
     fontWeight: "900",
-    letterSpacing: 1.5,
+    letterSpacing: 2,
   },
-  navTitle: { color: TXT_SECONDARY, fontSize: 13, fontWeight: "500" },
+  navTitle: { color: "#fff", fontSize: 14, fontWeight: "600", opacity: 0.8 },
 
   // Hero Section
   heroSection: { marginBottom: 32 },
