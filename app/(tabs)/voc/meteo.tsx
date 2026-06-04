@@ -16,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ABSOLUTE_FILL } from "../../../constants/layout";
 
 const { width } = Dimensions.get("window");
 // Note: Remplacez par votre chemin d'image local
@@ -125,12 +126,13 @@ export default function MeteoCyberScreen() {
     <View style={styles.container}>
       <ImageBackground
         source={BACKGROUND_SOURCE}
-        style={StyleSheet.absoluteFill}
-        blurRadius={15}
+        style={ABSOLUTE_FILL}
+        blurRadius={4}
+        resizeMode="cover"
       >
         <LinearGradient
-          colors={["rgba(5,5,12,0.88)", "rgba(10,13,28,0.98)"]}
-          style={StyleSheet.absoluteFill}
+          colors={["rgba(5,5,12,0.58)", "rgba(10,13,28,0.76)"]}
+          style={ABSOLUTE_FILL}
         />
 
         <SafeAreaView style={{ flex: 1 }}>
@@ -166,7 +168,7 @@ export default function MeteoCyberScreen() {
               <BlurView intensity={65} tint="dark" style={styles.glassCard}>
                 <LinearGradient
                   colors={["rgba(255,255,255,0.12)", "transparent"]}
-                  style={StyleSheet.absoluteFill}
+                  style={ABSOLUTE_FILL}
                 />
 
                 <View style={styles.cardHeader}>

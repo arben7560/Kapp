@@ -41,7 +41,8 @@ type ListenTheme = {
   route:
     | "/listen/CafeListen"
     | "/listen/MetroListen"
-    | "/listen/RestaurantListen";
+    | "/listen/RestaurantListen"
+    | "/listen/teacherIA";
 };
 
 const THEMES: ListenTheme[] = [
@@ -68,6 +69,14 @@ const THEMES: ListenTheme[] = [
     icon: "🍽️",
     accent: ORANGE,
     route: "/listen/RestaurantListen",
+  },
+  {
+    id: "teacher-ia",
+    title: "Prof IA",
+    subtitle: "Questions libres en coreen",
+    icon: "IA",
+    accent: CYAN,
+    route: "/listen/teacherIA",
   },
 ];
 

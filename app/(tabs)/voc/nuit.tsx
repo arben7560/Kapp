@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useVocAudio } from "../../../hooks/useVocAudio";
+import { ABSOLUTE_FILL } from "../../../constants/layout";
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — NIGHTLIFE EDITION
@@ -378,18 +379,18 @@ export default function NightlifeImmersion() {
           source={activeScene.image}
           style={styles.bgLayer}
           fadeDuration={0}
-          resizeMode="contain"
+          resizeMode="cover"
         />
         {previousBackground ? (
           <Animated.View
             pointerEvents="none"
-            style={[StyleSheet.absoluteFillObject, { opacity: bgFadeAnim }]}
+            style={[ABSOLUTE_FILL, { opacity: bgFadeAnim }]}
           >
             <ImageBackground
               source={previousBackground}
               style={styles.bgLayer}
               fadeDuration={0}
-              resizeMode="contain"
+              resizeMode="cover"
             />
           </Animated.View>
         ) : null}
@@ -457,7 +458,7 @@ export default function NightlifeImmersion() {
             <BlurView intensity={60} tint="dark" style={styles.glassCard}>
               <LinearGradient
                 colors={[`${activeScene.accent}25`, "transparent"]}
-                style={StyleSheet.absoluteFill}
+                style={ABSOLUTE_FILL}
               />
 
               <View style={styles.cardHeader}>
@@ -679,11 +680,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   bg: { flex: 1, position: "relative" },
   bgLayer: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.80)",
+    ...ABSOLUTE_FILL,
+    backgroundColor: "rgba(2,3,6,0.54)",
   },
   scroll: { paddingHorizontal: 20, paddingBottom: 80 },
 

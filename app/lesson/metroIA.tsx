@@ -16,7 +16,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
-import hongikToGangnamLesson from "./data/metro/hongikToGangnam";
+import { metroLessons } from "../../data/lesson/metroLessons";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -271,6 +271,10 @@ export default function MetroIaScreen() {
   const hasAdvancedFromVideoRef = useRef(false);
 
   const metroScenario = useMemo(() => {
+    const hongikToGangnamLesson =
+      metroLessons.find((lesson) => lesson.id === "hongik_to_gangnam") ??
+      metroLessons[0];
+
     return buildMetroScenario(hongikToGangnamLesson as MetroLesson);
   }, []);
 

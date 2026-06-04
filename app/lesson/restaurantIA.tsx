@@ -21,7 +21,7 @@ import {
   type DialogueChoice,
   type DialogueNode,
   type DialogueScenario,
-} from "./data/restaurant/restaurant";
+} from "../../data/lesson/restaurantLesson";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";

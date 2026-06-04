@@ -17,6 +17,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ABSOLUTE_FILL } from "../../../constants/layout";
 
 const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../../assets/images/seoul-hub-bg.jpg");
@@ -125,12 +126,13 @@ export default function HealthCyber() {
       />
       <ImageBackground
         source={BACKGROUND_SOURCE}
-        style={StyleSheet.absoluteFill}
-        blurRadius={10}
+        style={ABSOLUTE_FILL}
+        blurRadius={4}
+        resizeMode="cover"
       >
         <LinearGradient
-          colors={["rgba(5,5,8,0.85)", "rgba(15,10,20,0.95)"]}
-          style={StyleSheet.absoluteFill}
+          colors={["rgba(5,5,8,0.58)", "rgba(15,10,20,0.76)"]}
+          style={ABSOLUTE_FILL}
         />
 
         <SafeAreaView style={{ flex: 1 }}>
@@ -162,7 +164,7 @@ export default function HealthCyber() {
               <BlurView intensity={40} tint="dark" style={styles.glassCard}>
                 <LinearGradient
                   colors={["rgba(244,114,182,0.1)", "transparent"]}
-                  style={StyleSheet.absoluteFill}
+                  style={ABSOLUTE_FILL}
                 />
 
                 <View style={styles.cardHeader}>

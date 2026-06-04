@@ -6,7 +6,7 @@ import { Animated, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CafeAvatar from "../../components/ai/CafeAvatar";
 import { isCorrect } from "../../lib/answerCheck";
-import { CAFE_SESSION, type ListenExercise } from "./data/cafe";
+import { CAFE_SESSION, type ListenExercise } from "../../data/listen/cafe";
 
 const BG0 = "#060816";
 const BG1 = "#090D1D";

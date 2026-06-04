@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useVocAudio } from "../../../hooks/useVocAudio";
+import { ABSOLUTE_FILL } from "../../../constants/layout";
 
 const { width } = Dimensions.get("window");
 
@@ -415,7 +416,7 @@ export default function HealthEmergency() {
             <BlurView intensity={45} tint="dark" style={styles.medicalCard}>
               <LinearGradient
                 colors={[`${activeScene.accent}15`, "transparent"]}
-                style={StyleSheet.absoluteFill}
+                style={ABSOLUTE_FILL}
               />
 
               <View style={styles.cardHeader}>
@@ -646,7 +647,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   bg: { flex: 1 },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     backgroundColor: "rgba(2,3,6,0.85)",
   },
   scroll: { paddingHorizontal: 22, paddingBottom: 60 },

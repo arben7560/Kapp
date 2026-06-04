@@ -17,6 +17,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ABSOLUTE_FILL } from "../../../constants/layout";
 
 const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../../assets/images/seoul-hub-bg.jpg");
@@ -142,12 +143,13 @@ export default function ObjectsCyber() {
       />
       <ImageBackground
         source={BACKGROUND_SOURCE}
-        style={StyleSheet.absoluteFill}
-        blurRadius={10}
+        style={ABSOLUTE_FILL}
+        blurRadius={4}
+        resizeMode="cover"
       >
         <LinearGradient
-          colors={["rgba(5,5,10,0.85)", "rgba(10,10,30,0.96)"]}
-          style={StyleSheet.absoluteFill}
+          colors={["rgba(5,5,10,0.58)", "rgba(10,10,30,0.76)"]}
+          style={ABSOLUTE_FILL}
         />
 
         <SafeAreaView style={{ flex: 1 }}>
@@ -179,7 +181,7 @@ export default function ObjectsCyber() {
               <BlurView intensity={40} tint="dark" style={styles.glassCard}>
                 <LinearGradient
                   colors={["rgba(255,179,71,0.1)", "transparent"]}
-                  style={StyleSheet.absoluteFill}
+                  style={ABSOLUTE_FILL}
                 />
 
                 <View style={styles.cardHeader}>

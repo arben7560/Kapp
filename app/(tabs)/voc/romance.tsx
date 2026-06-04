@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useVocAudio } from "../../../hooks/useVocAudio";
+import { ABSOLUTE_FILL } from "../../../constants/layout";
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — ROMANCE EDITION
@@ -255,16 +256,13 @@ export default function RomanceDating() {
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
 
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const bgFadeAnim = useRef(new Animated.Value(0)).current;
-  const tapHintPulse = useRef(new Animated.Value(0)).current;
+  const [fadeAnim] = useState(() => new Animated.Value(0));
+  const [bgFadeAnim] = useState(() => new Animated.Value(0));
+  const [tapHintPulse] = useState(() => new Animated.Value(0));
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fadeAnim.setValue(0);
-    setSelectedWord(null);
-    setVisibleMessages(1);
-    setIsTyping(false);
 
     if (typingTimer.current) {
       clearTimeout(typingTimer.current);
@@ -349,6 +347,16 @@ export default function RomanceDating() {
   const handleSceneChange = (scene: (typeof SCENES)[number]) => {
     if (scene.id === activeScene.id) return;
 
+    setSelectedWord(null);
+    setVisibleMessages(1);
+    setIsTyping(false);
+
+    if (typingTimer.current) {
+      clearTimeout(typingTimer.current);
+      typingTimer.current = null;
+    }
+
+    stopAudio();
     setPreviousBackground(activeScene.image);
     bgFadeAnim.setValue(1);
     setActiveScene(scene);
@@ -374,18 +382,18 @@ export default function RomanceDating() {
           source={activeScene.image}
           style={styles.bgLayer}
           fadeDuration={0}
-          resizeMode="contain"
+          resizeMode="cover"
         />
         {previousBackground ? (
           <Animated.View
             pointerEvents="none"
-            style={[StyleSheet.absoluteFillObject, { opacity: bgFadeAnim }]}
+            style={[ABSOLUTE_FILL, { opacity: bgFadeAnim }]}
           >
             <ImageBackground
               source={previousBackground}
               style={styles.bgLayer}
               fadeDuration={0}
-              resizeMode="contain"
+              resizeMode="cover"
             />
           </Animated.View>
         ) : null}
@@ -451,7 +459,7 @@ export default function RomanceDating() {
             <BlurView intensity={50} tint="dark" style={styles.mainCard}>
               <LinearGradient
                 colors={[`${activeScene.accent}30`, "transparent"]}
-                style={StyleSheet.absoluteFill}
+                style={ABSOLUTE_FILL}
               />
               <Text
                 style={[styles.sceneCategory, { color: activeScene.accent }]}
@@ -662,11 +670,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   bg: { flex: 1, position: "relative" },
   bgLayer: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.75)",
+    ...ABSOLUTE_FILL,
+    backgroundColor: "rgba(2,3,6,0.52)",
   },
   scroll: { paddingHorizontal: 20, paddingBottom: 60 },
 

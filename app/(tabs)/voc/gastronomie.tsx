@@ -20,6 +20,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ABSOLUTE_FILL } from "../../../constants/layout";
 
 type AudioAsset = number;
 
@@ -689,19 +690,19 @@ export default function GastronomyImmersion() {
           source={activeScene.image}
           style={styles.bgLayer}
           fadeDuration={0}
-          resizeMode="contain"
+          resizeMode="cover"
         />
 
         {previousBackground ? (
           <Animated.View
             pointerEvents="none"
-            style={[StyleSheet.absoluteFillObject, { opacity: bgFadeAnim }]}
+            style={[ABSOLUTE_FILL, { opacity: bgFadeAnim }]}
           >
             <ImageBackground
               source={previousBackground}
               style={styles.bgLayer}
               fadeDuration={0}
-              resizeMode="contain"
+              resizeMode="cover"
             />
           </Animated.View>
         ) : null}
@@ -767,7 +768,7 @@ export default function GastronomyImmersion() {
             <BlurView intensity={40} tint="dark" style={styles.glassCard}>
               <LinearGradient
                 colors={[`${activeScene.accent}20`, "transparent"]}
-                style={StyleSheet.absoluteFill}
+                style={ABSOLUTE_FILL}
               />
 
               <View style={styles.cardHeader}>
@@ -987,11 +988,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   bg: { flex: 1, position: "relative" },
   bgLayer: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.84)",
+    ...ABSOLUTE_FILL,
+    backgroundColor: "rgba(2,3,6,0.56)",
   },
   scroll: { paddingHorizontal: 22, paddingBottom: 90 },
 

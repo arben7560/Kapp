@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { restaurantDialogueData } from "./data/restaurant/restaurant";
+import { restaurantDialogueData } from "../../data/lesson/restaurantLesson";
 
 const COLORS = {
   bg: "#020306",

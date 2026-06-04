@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import metroLesson from "./data/metro/myeongdongToItaewon";
+import { metroLessons } from "../../data/lesson/metroLessons";
 
 const COLORS = {
   bg: "#020306",
@@ -29,6 +29,9 @@ const COLORS = {
 };
 
 const METRO_IMAGE = require("../../assets/images/metrobg.png");
+const metroLesson =
+  metroLessons.find((lesson) => lesson.id === "myeongdong_to_itaewon") ??
+  metroLessons[0];
 
 type DialogueLine = {
   char: string;

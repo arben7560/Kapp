@@ -7,6 +7,9 @@
     "icon": "./assets/images/icon.png",
     "scheme": "kapp",
     "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "assets/**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -42,7 +45,8 @@
       "expo-image",
       "expo-web-browser",
       "expo-video",
-      "expo-audio"
+      "expo-audio",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true,

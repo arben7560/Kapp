@@ -1,15 +1,15 @@
-import hongikToGangnamLesson from "./hongikToGangnam";
-import myeongdongToItaewonLesson from "./myeongdongToItaewon";
-import seoulStationToJamsilLesson from "./seoulStationToJamsil";
-import type { MetroLesson, MetroState, MetroStep } from "./type";
+import hongikToGangnamLesson from "./metro/hongikToGangnam";
+import myeongdongToItaewonLesson from "./metro/myeongdong-to-itaewon";
+import seoulStationToJamsilLesson from "./metro/seoulStationToJamsil";
+import type { MetroLesson, MetroState, MetroStep } from "./metro/type";
 
 export type {
   MetroChoice,
   MetroLesson,
   MetroPhase,
   MetroState,
-  MetroStep
-} from "./type";
+  MetroStep,
+} from "./metro/type";
 
 export const metroLessons: MetroLesson[] = [
   hongikToGangnamLesson,

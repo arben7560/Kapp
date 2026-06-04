@@ -20,6 +20,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ABSOLUTE_FILL } from "../../../constants/layout";
 
 type AudioAsset = number;
 
@@ -639,7 +640,7 @@ export default function TransportCity() {
   return (
     <SafeAreaView style={styles.container}>
       <ImageBackground source={activeScene.image} style={styles.bg}>
-        <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
+        <BlurView intensity={40} tint="dark" style={ABSOLUTE_FILL} />
         <View style={styles.overlay} />
 
         <ScrollView
@@ -705,7 +706,7 @@ export default function TransportCity() {
             <BlurView intensity={40} tint="dark" style={styles.glassCard}>
               <LinearGradient
                 colors={[`${activeScene.accent}20`, "transparent"]}
-                style={StyleSheet.absoluteFill}
+                style={ABSOLUTE_FILL}
               />
 
               <View style={styles.cardInfo}>
@@ -922,7 +923,7 @@ const styles = StyleSheet.create({
   bg: { flex: 1 },
 
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     backgroundColor: "rgba(2,3,6,0.85)",
   },
 

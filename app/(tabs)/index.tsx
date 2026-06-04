@@ -26,6 +26,7 @@ const BG_DEEP = "#020306";
 const TXT = "#F1F5F9";
 const MUTED = "rgba(241, 245, 249, 0.62)";
 const SOFT = "rgba(241, 245, 249, 0.45)";
+const HUB_BACKGROUND_DARKNESS = 0.58;
 
 const CYAN = "#67E8F9";
 const PINK = "#F472B6";
@@ -34,6 +35,14 @@ const fonts = {
   medium: "Outfit_500Medium",
   bold: "Outfit_700Bold",
   krBold: "NotoSansKR_700Bold",
+};
+
+const ABSOLUTE_FILL = {
+  position: "absolute" as const,
+  top: 0,
+  right: 0,
+  bottom: 0,
+  left: 0,
 };
 
 const HANGUL_PROGRESS_TOTAL = 20;
@@ -149,7 +158,7 @@ export default function Home() {
         blurRadius={0}
       >
         <BlurView intensity={18} tint="dark" style={styles.bgBlur} />
-        <View style={styles.vignetteOverlay} />
+        <View style={styles.hubDarkOverlay} />
         <View style={styles.topFade} />
         <View style={styles.bottomFade} />
 
@@ -579,15 +588,14 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG_DEEP },
   bgImage: { flex: 1, backgroundColor: BG_DEEP },
   bgBlur: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
   },
-
-  vignetteOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.62)",
+  hubDarkOverlay: {
+    ...ABSOLUTE_FILL,
+    backgroundColor: `rgba(2,3,6,${HUB_BACKGROUND_DARKNESS})`,
   },
   topFade: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     backgroundColor: "rgba(0,0,0,0.07)",
   },
   bottomFade: {
@@ -956,13 +964,13 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   comingSoonOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     alignItems: "flex-end",
     justifyContent: "center",
     paddingRight: 14,
   },
   comingSoonScrim: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     backgroundColor: "rgba(2,3,6,0.88)",
   },
   comingSoonBadge: {

@@ -1,4 +1,4 @@
-export interface DialogueChoice {
+export interface ScenarioChoice {
   id: string;
   label: string;
   korean: string;
@@ -6,34 +6,54 @@ export interface DialogueChoice {
   nextNodeId: string;
 }
 
-export interface DialogueNode {
+export interface ScenarioNode {
   id: string;
   type: "ia" | "user_choice";
   korean?: string;
   french?: string;
   romanization?: string;
   nextNodeId?: string | null;
-  choices?: DialogueChoice[];
-  videoSource?: any;
+  choices?: ScenarioChoice[];
 }
 
-export interface DialogueScenario {
-  startNodeId: string;
-  nodes: Record<string, DialogueNode>;
+export interface ScenarioData {
+  id: string;
+  title: string;
+  description: string;
+  context: string;
+  learningGoals: string[];
+  pedagogical: {
+    startNodeId: string;
+    nodes: Record<string, ScenarioNode>;
+  };
+  real: {
+    startNodeId: string;
+    nodes: Record<string, ScenarioNode>;
+  };
 }
 
-const welcomeCafeVideo = require("../../../../assets/ai/cafe/welcomeCafe.mp4");
-const orderConfirmationJuiceVideo = require("../../../../assets/ai/cafe/orderConfirmationJuice.mp4");
-const orderConfirmationCakeVideo = require("../../../../assets/ai/cafe/orderConfirmationCake.mp4");
-const pricePaimentChooseVideo = require("../../../../assets/ai/cafe/pricePaimentChoose.mp4");
-const byCardReceiptVideo = require("../../../../assets/ai/cafe/byCardReceipt.mp4");
-const byCashReceiptVideo = require("../../../../assets/ai/cafe/byCashReceipt.mp4");
-const jingdonbelVideo = require("../../../../assets/ai/cafe/jingdonbel.mp4");
-const takeOutThanksVideo = require("../../../../assets/ai/cafe/takeOutThanks.mp4");
-export const cafeDialogueData = {
-  scenarioTitle: "Commande au café à Séoul",
-  scenarioDescription: "Deux expériences différentes pour mieux apprendre.",
+export const cafeScenario: ScenarioData = {
+  id: "cafe",
+  title: "Commande au café à Séoul",
+  description: "Scénario pour apprendre à commander dans un café coréen.",
+  context: `
+L'utilisateur pratique une situation réaliste dans un café à Séoul.
+Le but est de savoir :
 
+* commander une boisson ou un dessert
+* répondre sur place ou à emporter
+* payer par carte ou en espèces
+* demander ou refuser le reçu
+* comprendre les phrases naturelles d'un employé de café
+  `.trim(),
+  learningGoals: [
+    "Commander une boisson",
+    "Commander un dessert",
+    "Répondre sur place ou à emporter",
+    "Payer par carte ou en espèces",
+    "Demander ou refuser un reçu",
+    "Comprendre des formulations polies et naturelles",
+  ],
   pedagogical: {
     startNodeId: "ped_welcome",
     nodes: {
@@ -45,10 +65,8 @@ export const cafeDialogueData = {
           "Bienvenue. Je vais vous aider pour la commande. Que souhaitez-vous prendre ?",
         romanization:
           "Eoseo oseyo. Jumun dowadeurilgeyo. Mueoseuro deusigesseoyo?",
-        videoSource: welcomeCafeVideo,
         nextNodeId: "ped_choice1",
       },
-
       ped_choice1: {
         id: "ped_choice1",
         type: "user_choice",
@@ -56,18 +74,18 @@ export const cafeDialogueData = {
           {
             id: "ped_order1",
             label:
-              "Je voudrais deux américanos glacés et un jus d’orange, s’il vous plaît.",
+              "Je voudrais deux américanos glacés et un jus d'orange, s'il vous plaît.",
             korean: "아이스 아메리카노 두 잔이랑 오렌지 주스 한 잔 주세요.",
             romanization:
-              "Aiseu amerikano du janirang orenji juseu han jan juseyo.",
+              "Aiseu Amerikano du janirang orenji juseu han jan juseyo.",
             nextNodeId: "ped_confirm",
           },
           {
             id: "ped_order2",
-            label: "Un latte glacé et un cheesecake, s’il vous plaît.",
+            label: "Un latte glacé et un cheesecake, s'il vous plaît.",
             korean: "아이스 라떼 한 잔이랑 치즈케이크 한 조각 주세요.",
             romanization:
-              "Aiseu ratte han janirang chijeu keikeu han jogak juseyo.",
+              "Aiseu latte han janirang chijeu keikeu han jogak juseyo.",
             nextNodeId: "ped_confirm_alt",
           },
           {
@@ -79,33 +97,28 @@ export const cafeDialogueData = {
           },
         ],
       },
-
       ped_confirm: {
         id: "ped_confirm",
         type: "ia",
         korean:
           "네, 확인해 드릴게요. 아이스 아메리카노 두 잔이랑 오렌지 주스 한 잔 맞으시죠? 드시고 가세요, 아니면 포장하세요?",
         french:
-          "Très bien, je vérifie. Deux américanos glacés et un jus d’orange, c’est bien ça ? Vous consommez sur place ou à emporter ?",
+          "Très bien, je vérifie. Deux américanos glacés et un jus d'orange, c'est bien ça ? Vous consommez sur place ou à emporter ?",
         romanization:
-          "Ne, hwaginhae deurilgeyo. Aiseu amerikano du janirang orenji juseu han jan majeusijyo? Deusigo gaseyo, animyeon pojanghaseyo?",
-        videoSource: orderConfirmationJuiceVideo,
+          "Ne, hwaginhae deurilgeyo. Aiseu Amerikano du janirang orenji juseu han jan majeusijyo? Deusigo gaseyo, animyeon pojanghaseyo?",
         nextNodeId: "ped_choice2_drink",
       },
-
       ped_confirm_alt: {
         id: "ped_confirm_alt",
         type: "ia",
         korean:
           "네, 확인해 드릴게요. 아이스 라떼 한 잔이랑 치즈케이크 한 조각 맞으시죠? 드시고 가세요, 아니면 포장하세요?",
         french:
-          "Très bien, je vérifie. Un latte glacé et une part de cheesecake, c’est bien ça ? Vous consommez sur place ou à emporter ?",
+          "Très bien, je vérifie. Un latte glacé et une part de cheesecake, c'est bien ça ? Vous consommez sur place ou à emporter ?",
         romanization:
-          "Ne, hwaginhae deurilgeyo. Aiseu ratte han janirang chijeu keikeu han jogak majeusijyo? Deusigo gaseyo, animyeon pojanghaseyo?",
-        videoSource: orderConfirmationCakeVideo,
+          "Ne, hwaginhae deurilgeyo. Aiseu latte han janirang chijeu keikeu han jogak majeusijyo? Deusigo gaseyo, animyeon pojanghaseyo?",
         nextNodeId: "ped_choice2_cake",
       },
-
       ped_choice2_drink: {
         id: "ped_choice2_drink",
         type: "user_choice",
@@ -133,7 +146,6 @@ export const cafeDialogueData = {
           },
         ],
       },
-
       ped_choice2_cake: {
         id: "ped_choice2_cake",
         type: "user_choice",
@@ -161,7 +173,6 @@ export const cafeDialogueData = {
           },
         ],
       },
-
       ped_payment_here: {
         id: "ped_payment_here",
         type: "ia",
@@ -171,10 +182,8 @@ export const cafeDialogueData = {
           "Cela fait 9 500 wons au total. Vous souhaitez payer par carte ou en espèces ?",
         romanization:
           "Chong gucheon obaegwonimnida. Kadeuro gyeoljehasigesseoyo, animyeon hyeongeumeuro hasigesseoyo?",
-        videoSource: pricePaimentChooseVideo,
         nextNodeId: "ped_choice3_here",
       },
-
       ped_payment_takeout: {
         id: "ped_payment_takeout",
         type: "ia",
@@ -184,10 +193,8 @@ export const cafeDialogueData = {
           "Cela fait 9 500 wons au total. Vous souhaitez payer par carte ou en espèces ?",
         romanization:
           "Chong gucheon obaegwonimnida. Kadeuro gyeoljehasigesseoyo, animyeon hyeongeumeuro hasigesseoyo?",
-        videoSource: pricePaimentChooseVideo,
         nextNodeId: "ped_choice3_takeout",
       },
-
       ped_choice3_here: {
         id: "ped_choice3_here",
         type: "user_choice",
@@ -215,7 +222,6 @@ export const cafeDialogueData = {
           },
         ],
       },
-
       ped_choice3_takeout: {
         id: "ped_choice3_takeout",
         type: "user_choice",
@@ -243,7 +249,6 @@ export const cafeDialogueData = {
           },
         ],
       },
-
       ped_receipt_card_here: {
         id: "ped_receipt_card_here",
         type: "ia",
@@ -252,10 +257,8 @@ export const cafeDialogueData = {
           "Très bien, je lance le paiement par carte. Avez-vous besoin du reçu ?",
         romanization:
           "Ne, kadeu gyeolje dowadeurilgeyo. Yeongsujeung piryohaseyo?",
-        videoSource: byCardReceiptVideo,
         nextNodeId: "ped_receipt_choice_here",
       },
-
       ped_receipt_cash_here: {
         id: "ped_receipt_cash_here",
         type: "ia",
@@ -263,10 +266,8 @@ export const cafeDialogueData = {
         french: "Très bien, en espèces. Avez-vous besoin du reçu ?",
         romanization:
           "Ne, hyeongeumeuro dowadeurilgeyo. Yeongsujeung piryohaseyo?",
-        videoSource: byCashReceiptVideo,
         nextNodeId: "ped_receipt_choice_here",
       },
-
       ped_receipt_card_takeout: {
         id: "ped_receipt_card_takeout",
         type: "ia",
@@ -275,10 +276,8 @@ export const cafeDialogueData = {
           "Très bien, je lance le paiement par carte. Avez-vous besoin du reçu ?",
         romanization:
           "Ne, kadeu gyeolje dowadeurilgeyo. Yeongsujeung piryohaseyo?",
-        videoSource: byCardReceiptVideo,
         nextNodeId: "ped_receipt_choice_takeout",
       },
-
       ped_receipt_cash_takeout: {
         id: "ped_receipt_cash_takeout",
         type: "ia",
@@ -286,17 +285,15 @@ export const cafeDialogueData = {
         french: "Très bien, en espèces. Avez-vous besoin du reçu ?",
         romanization:
           "Ne, hyeongeumeuro dowadeurilgeyo. Yeongsujeung piryohaseyo?",
-        videoSource: byCashReceiptVideo,
         nextNodeId: "ped_receipt_choice_takeout",
       },
-
       ped_receipt_choice_here: {
         id: "ped_receipt_choice_here",
         type: "user_choice",
         choices: [
           {
             id: "ped_receipt_yes_here",
-            label: "Oui, s’il vous plaît.",
+            label: "Oui, s'il vous plaît.",
             korean: "네, 주세요.",
             romanization: "Ne, juseyo.",
             nextNodeId: "ped_bell",
@@ -310,14 +307,13 @@ export const cafeDialogueData = {
           },
         ],
       },
-
       ped_receipt_choice_takeout: {
         id: "ped_receipt_choice_takeout",
         type: "user_choice",
         choices: [
           {
             id: "ped_receipt_yes_takeout",
-            label: "Oui, s’il vous plaît.",
+            label: "Oui, s'il vous plaît.",
             korean: "네, 주세요.",
             romanization: "Ne, juseyo.",
             nextNodeId: "ped_takeout_end",
@@ -331,32 +327,27 @@ export const cafeDialogueData = {
           },
         ],
       },
-
       ped_bell: {
         id: "ped_bell",
         type: "ia",
         korean: "진동벨 드릴게요. 준비되면 불러드릴게요.",
         french: "Voici le buzzer. Je vous appellerai quand ce sera prêt.",
         romanization: "Jindongbel deurilgeyo. Junbidoemyeon bulleodeurilgeyo.",
-        videoSource: jingdonbelVideo,
         nextNodeId: null,
       },
-
       ped_takeout_end: {
         id: "ped_takeout_end",
         type: "ia",
         korean:
           "포장 주문이 완료되었습니다. 준비되면 바로 드릴게요. 감사합니다.",
         french:
-          "La commande à emporter est bien enregistrée. Je vous la donne dès qu’elle est prête. Merci.",
+          "La commande à emporter est bien enregistrée. Je vous la donne dès qu'elle est prête. Merci.",
         romanization:
           "Pojang jumuni wallyodoeeotseumnida. Junbidoemyeon baro deurilgeyo. Gamsahamnida.",
-        videoSource: takeOutThanksVideo,
         nextNodeId: null,
       },
     },
-  } as DialogueScenario,
-
+  },
   real: {
     startNodeId: "real_welcome",
     nodes: {
@@ -364,28 +355,27 @@ export const cafeDialogueData = {
         id: "real_welcome",
         type: "ia",
         korean: "어서 오세요. 뭐 드릴까요?",
-        french: "Bienvenue. Qu’est-ce que je vous sers ?",
+        french: "Bienvenue. Qu'est-ce que je vous sers ?",
         romanization: "Eoseo oseyo. Mwo deurilkkayo?",
         nextNodeId: "real_choice1",
       },
-
       real_choice1: {
         id: "real_choice1",
         type: "user_choice",
         choices: [
           {
             id: "real_order1",
-            label: "Deux américanos glacés et un jus d’orange.",
+            label: "Deux américanos glacés et un jus d'orange.",
             korean: "아이스 아메리카노 두 잔이랑 오렌지 주스 하나 주세요.",
             romanization:
-              "Aiseu amerikano du janirang orenji juseu hana juseyo.",
+              "Aiseu Amerikano du janirang orenji juseu hana juseyo.",
             nextNodeId: "real_confirm",
           },
           {
             id: "real_order2",
             label: "Un latte glacé et un cheesecake.",
             korean: "아이스 라떼 하나랑 치즈케이크 하나 주세요.",
-            romanization: "Aiseu ratte hanarang chijeu keikeu hana juseyo.",
+            romanization: "Aiseu latte hanarang chijeu keikeu hana juseyo.",
             nextNodeId: "real_confirm_alt",
           },
           {
@@ -397,31 +387,28 @@ export const cafeDialogueData = {
           },
         ],
       },
-
       real_confirm: {
         id: "real_confirm",
         type: "ia",
         korean:
           "네, 아이스 아메리카노 두 잔이랑 오렌지 주스 하나 맞죠? 드시고 가세요, 가져가세요?",
         french:
-          "D’accord, deux américanos glacés et un jus d’orange, c’est bien ça ? Sur place ou à emporter ?",
+          "D'accord, deux américanos glacés et un jus d'orange, c'est bien ça ? Sur place ou à emporter ?",
         romanization:
-          "Ne, aiseu amerikano du janirang orenji juseu hana matjyo? Deusigo gaseyo, gajyeogaseyo?",
+          "Ne, Aiseu Amerikano du janirang orenji juseu hana matjyo? Deusigo gaseyo, gajyeogaseyo?",
         nextNodeId: "real_choice2_drink",
       },
-
       real_confirm_alt: {
         id: "real_confirm_alt",
         type: "ia",
         korean:
           "네, 아이스 라떼 하나랑 치즈케이크 하나 맞죠? 드시고 가세요, 가져가세요?",
         french:
-          "D’accord, un latte glacé et un cheesecake, c’est bien ça ? Sur place ou à emporter ?",
+          "D'accord, un latte glacé et un cheesecake, c'est bien ça ? Sur place ou à emporter ?",
         romanization:
-          "Ne, aiseu ratte hanarang chijeu keikeu hana matjyo? Deusigo gaseyo, gajyeogaseyo?",
+          "Ne, Aiseu latte hanarang chijeu keikeu hana matjyo? Deusigo gaseyo, gajyeogaseyo?",
         nextNodeId: "real_choice2_cake",
       },
-
       real_choice2_drink: {
         id: "real_choice2_drink",
         type: "user_choice",
@@ -429,8 +416,8 @@ export const cafeDialogueData = {
           {
             id: "real_here_drink",
             label: "Sur place.",
-            korean: "매장에서 먹고 갈게요.",
-            romanization: "Maejangeseo meokgo galgeyo.",
+            korean: "먹고 갈게요.",
+            romanization: "Meokgo galgeyo.",
             nextNodeId: "real_payment_here",
           },
           {
@@ -449,7 +436,6 @@ export const cafeDialogueData = {
           },
         ],
       },
-
       real_choice2_cake: {
         id: "real_choice2_cake",
         type: "user_choice",
@@ -457,8 +443,8 @@ export const cafeDialogueData = {
           {
             id: "real_here_cake",
             label: "Sur place.",
-            korean: "매장에서 먹고 갈게요.",
-            romanization: "Maejangeseo meokgo galgeyo.",
+            korean: "먹고 갈게요.",
+            romanization: "Meokgo galgeyo.",
             nextNodeId: "real_payment_here",
           },
           {
@@ -477,7 +463,6 @@ export const cafeDialogueData = {
           },
         ],
       },
-
       real_payment_here: {
         id: "real_payment_here",
         type: "ia",
@@ -486,7 +471,6 @@ export const cafeDialogueData = {
         romanization: "Chong gucheon obaegwoniyo. Kadeuseyo, hyeongeumiseyo?",
         nextNodeId: "real_choice3_here",
       },
-
       real_payment_takeout: {
         id: "real_payment_takeout",
         type: "ia",
@@ -495,7 +479,6 @@ export const cafeDialogueData = {
         romanization: "Chong gucheon obaegwoniyo. Kadeuseyo, hyeongeumiseyo?",
         nextNodeId: "real_choice3_takeout",
       },
-
       real_choice3_here: {
         id: "real_choice3_here",
         type: "user_choice",
@@ -503,16 +486,16 @@ export const cafeDialogueData = {
           {
             id: "real_card_here",
             label: "Par carte.",
-            korean: "카드요.",
-            romanization: "Kadeuyo.",
-            nextNodeId: "real_card_done_here",
+            korean: "카드로 할게요.",
+            romanization: "Kadeuro halgeyo.",
+            nextNodeId: "real_here_end",
           },
           {
             id: "real_cash_here",
             label: "En espèces.",
-            korean: "현금이요.",
-            romanization: "Hyeongeumiyo.",
-            nextNodeId: "real_cash_done_here",
+            korean: "현금으로 할게요.",
+            romanization: "Hyeongeumeuro halgeyo.",
+            nextNodeId: "real_here_end",
           },
           {
             id: "repeat_real3_here",
@@ -523,7 +506,6 @@ export const cafeDialogueData = {
           },
         ],
       },
-
       real_choice3_takeout: {
         id: "real_choice3_takeout",
         type: "user_choice",
@@ -531,16 +513,16 @@ export const cafeDialogueData = {
           {
             id: "real_card_takeout",
             label: "Par carte.",
-            korean: "카드요.",
-            romanization: "Kadeuyo.",
-            nextNodeId: "real_card_done_takeout",
+            korean: "카드로 할게요.",
+            romanization: "Kadeuro halgeyo.",
+            nextNodeId: "real_takeout_end",
           },
           {
             id: "real_cash_takeout",
             label: "En espèces.",
-            korean: "현금이요.",
-            romanization: "Hyeongeumiyo.",
-            nextNodeId: "real_cash_done_takeout",
+            korean: "현금으로 할게요.",
+            romanization: "Hyeongeumeuro halgeyo.",
+            nextNodeId: "real_takeout_end",
           },
           {
             id: "repeat_real3_takeout",
@@ -551,102 +533,76 @@ export const cafeDialogueData = {
           },
         ],
       },
-
-      real_card_done_here: {
-        id: "real_card_done_here",
-        type: "ia",
-        korean: "네, 카드요. 영수증 드릴까요?",
-        french: "D’accord, par carte. Je vous donne le reçu ?",
-        romanization: "Ne, kadeuyo. Yeongsujeung deurilkkayo?",
-        nextNodeId: "real_receipt_choice_here",
-      },
-
-      real_cash_done_here: {
-        id: "real_cash_done_here",
-        type: "ia",
-        korean: "네, 영수증 필요하세요?",
-        french: "D’accord. Vous avez besoin du reçu ?",
-        romanization: "Ne, yeongsujeung piryohaseyo?",
-        nextNodeId: "real_receipt_choice_here",
-      },
-
-      real_card_done_takeout: {
-        id: "real_card_done_takeout",
-        type: "ia",
-        korean: "네, 카드요. 영수증 드릴까요?",
-        french: "D’accord, par carte. Je vous donne le reçu ?",
-        romanization: "Ne, kadeuyo. Yeongsujeung deurilkkayo?",
-        nextNodeId: "real_receipt_choice_takeout",
-      },
-
-      real_cash_done_takeout: {
-        id: "real_cash_done_takeout",
-        type: "ia",
-        korean: "네, 영수증 필요하세요?",
-        french: "D’accord. Vous avez besoin du reçu ?",
-        romanization: "Ne, yeongsujeung piryohaseyo?",
-        nextNodeId: "real_receipt_choice_takeout",
-      },
-
-      real_receipt_choice_here: {
-        id: "real_receipt_choice_here",
-        type: "user_choice",
-        choices: [
-          {
-            id: "real_receipt_yes_here",
-            label: "Oui, le reçu.",
-            korean: "영수증 주세요.",
-            romanization: "Yeongsujeung juseyo.",
-            nextNodeId: "real_here_end",
-          },
-          {
-            id: "real_receipt_no_here",
-            label: "Non, merci.",
-            korean: "괜찮아요.",
-            romanization: "Gwaenchanayo.",
-            nextNodeId: "real_here_end",
-          },
-        ],
-      },
-
-      real_receipt_choice_takeout: {
-        id: "real_receipt_choice_takeout",
-        type: "user_choice",
-        choices: [
-          {
-            id: "real_receipt_yes_takeout",
-            label: "Oui, le reçu.",
-            korean: "영수증 주세요.",
-            romanization: "Yeongsujeung juseyo.",
-            nextNodeId: "real_takeout_end",
-          },
-          {
-            id: "real_receipt_no_takeout",
-            label: "Non, merci.",
-            korean: "괜찮아요.",
-            romanization: "Gwaenchanayo.",
-            nextNodeId: "real_takeout_end",
-          },
-        ],
-      },
-
       real_here_end: {
         id: "real_here_end",
         type: "ia",
-        korean: "진동벨 드릴게요. 자리에서 기다려 주세요.",
-        french: "Je vous donne le buzzer. Veuillez attendre à votre place.",
-        romanization: "Jindongbel deurilgeyo. Jarieseo gidaryeo juseyo.",
+        korean: "네, 진동벨 드릴게요. 준비되면 알려드릴게요.",
+        french:
+          "Très bien, voici le buzzer. Je vous préviens quand c'est prêt.",
+        romanization:
+          "Ne, jindongbel deurilgeyo. Junbidoemyeon allyeodeurilgeyo.",
         nextNodeId: null,
       },
-
       real_takeout_end: {
         id: "real_takeout_end",
         type: "ia",
         korean: "네, 준비되면 바로 드릴게요. 감사합니다.",
-        french: "D’accord, je vous le donne dès que c’est prêt. Merci.",
+        french: "D'accord, je vous le donne dès que c'est prêt. Merci.",
         romanization: "Ne, junbidoemyeon baro deurilgeyo. Gamsahamnida.",
         nextNodeId: null,
       },
     },
-  } as DialogueScenario,
-} as const;
+  },
+};
+
+function formatScenarioNode(node: ScenarioNode): string {
+  if (node.type === "ia") {
+    return `IA: ${node.korean} / ${node.romanization} / ${node.french}`;
+  }
+
+  return (
+    node.choices
+      ?.map(
+        (choice) =>
+          `Utilisateur: ${choice.korean} / ${choice.romanization} / ${choice.label}`,
+      )
+      .join("\n") ?? ""
+  );
+}
+
+export function getCafeScenarioForPrompt(): string {
+  const pedagogicalNodes = Object.values(cafeScenario.pedagogical.nodes)
+    .map(formatScenarioNode)
+    .filter(Boolean)
+    .join("\n");
+
+  const realNodes = Object.values(cafeScenario.real.nodes)
+    .map(formatScenarioNode)
+    .filter(Boolean)
+    .join("\n");
+
+  return `
+SCÉNARIO CAFÉ :
+${cafeScenario.context}
+
+OBJECTIFS :
+${cafeScenario.learningGoals.map((goal) => `- ${goal}`).join("\n")}
+
+RÉPLIQUES IMPORTANTES - MODE PÉDAGOGIQUE :
+${pedagogicalNodes}
+
+RÉPLIQUES IMPORTANTES - MODE RÉEL :
+${realNodes}
+
+CONSIGNE MODE HYBRIDE :
+Tu joues principalement l'employée du café.
+Si l'utilisateur répond comme un client, continue la scène.
+Si l'utilisateur pose une question, réponds brièvement comme prof de coréen, puis reviens immédiatement à la scène.
+Si l'utilisateur fait une erreur, corrige doucement, donne la phrase naturelle, puis continue la scène.
+Si l'utilisateur est bloqué, propose 2 ou 3 réponses possibles.
+Ne fais pas de longue leçon.
+Garde les réponses courtes pour un avatar vidéo.
+`.trim();
+}
+
+export const cafeScenarioContext = getCafeScenarioForPrompt();

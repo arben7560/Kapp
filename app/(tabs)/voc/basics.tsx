@@ -20,6 +20,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ABSOLUTE_FILL } from "../../../constants/layout";
 
 const { width } = Dimensions.get("window");
 
@@ -688,7 +689,7 @@ export default function FirstStepsImmersion() {
             <BlurView intensity={30} tint="dark" style={styles.mainCard}>
               <LinearGradient
                 colors={[`${activeScene.accent}15`, "transparent"]}
-                style={StyleSheet.absoluteFill}
+                style={ABSOLUTE_FILL}
               />
 
               <View style={styles.cardInfo}>
@@ -900,7 +901,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   bg: { flex: 1 },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     backgroundColor: "rgba(2,3,6,0.86)",
   },
   scroll: { paddingHorizontal: 22, paddingBottom: 90 },

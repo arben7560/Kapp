@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ABSOLUTE_FILL } from "../../../constants/layout";
 
 const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../../assets/images/vocabulaire.png");
@@ -341,7 +342,7 @@ function FamilyCard({
           ]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
+          style={ABSOLUTE_FILL}
         />
 
         <LinearGradient
@@ -451,16 +452,16 @@ const styles = StyleSheet.create({
 
   bgImage: { flex: 1 },
   bgBlur: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
   },
 
   vignetteOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     backgroundColor: "rgba(2,3,6,0.46)",
   },
 
   topFade: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     backgroundColor: "rgba(0,0,0,0.04)",
   },
 
