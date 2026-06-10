@@ -54,6 +54,7 @@ export default function RootLayout() {
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="listen/teacherIA" />
+        <Stack.Screen name="listen/teacherIARealtime" />
       </Stack>
     </StoreProvider>
   );

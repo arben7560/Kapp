@@ -36,5 +36,7 @@ export interface TeacherAnswer {
   mode: TeacherMode;
   emotion: "neutral" | "encouraging" | "corrective" | "warm";
   audioUrl?: string;
+  avatarJobId?: string;
   avatarVideoUrl?: string;
+  avatarError?: string;
 }

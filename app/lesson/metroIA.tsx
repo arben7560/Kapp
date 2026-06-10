@@ -16,6 +16,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
+import { ABSOLUTE_FILL } from "../../constants/layout";
 import { metroLessons } from "../../data/lesson/metroLessons";
 
 // ==================== DESIGN SYSTEM ====================
@@ -299,7 +300,7 @@ export default function MetroIaScreen() {
 
   const currentVideoSource = videoSources.length > 0 ? videoSources[0] : null;
 
-  const player = useVideoPlayer(displayedVideoSource, (playerInstance) => {
+  const player = useVideoPlayer(null, (playerInstance) => {
     playerInstance.loop = false;
   });
 
@@ -356,21 +357,33 @@ export default function MetroIaScreen() {
     if (!currentNode) return;
     if (!displayedVideoSource) return;
 
-    try {
-      player.replace(displayedVideoSource);
+    let isCancelled = false;
 
-      if (currentNode.type === "ia" && currentVideoSource) {
-        player.play();
-      } else {
-        /**
-         * Sur le node "start", il n'y a pas encore de vidéo de node,
-         * mais on garde iaIntroRoute affichée comme avatar visuel de départ.
-         */
-        player.pause();
+    async function updateVideoSource() {
+      try {
+        await player.replaceAsync(displayedVideoSource);
+
+        if (isCancelled) return;
+
+        if (currentNode?.type === "ia" && currentVideoSource) {
+          player.play();
+        } else {
+          /**
+           * Sur le node "start", il n'y a pas encore de vidéo de node,
+           * mais on garde iaIntroRoute affichée comme avatar visuel de départ.
+           */
+          player.pause();
+        }
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore
     }
+
+    void updateVideoSource();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [
     currentNode,
     currentNodeId,
@@ -727,7 +740,7 @@ export default function MetroIaScreen() {
                           styles.choiceBtn,
                           isSelected && {
                             borderColor: accent,
-                            backgroundColor: "rgba(255,255,255,0.08)",
+                            backgroundColor: "rgba(5,5,8,0.92)",
                           },
                           pressed && { opacity: 0.92 },
                         ]}
@@ -785,7 +798,7 @@ const styles = StyleSheet.create({
     backgroundColor: BG_DEEP,
   },
   backgroundDarkOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     backgroundColor: "rgba(5,5,8,0.74)",
   },
 
@@ -983,12 +996,17 @@ const styles = StyleSheet.create({
   },
 
   choiceBtn: {
-    backgroundColor: "rgba(255,255,255,0.03)",
+    backgroundColor: "rgba(5,5,8,0.74)",
     borderRadius: 22,
     padding: 18,
     borderWidth: 1,
-    borderColor: LINE,
+    borderColor: "rgba(255,255,255,0.14)",
     overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.24,
+    shadowRadius: 14,
+    elevation: 5,
   },
 
   choiceGlow: {

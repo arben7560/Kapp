@@ -45,6 +45,12 @@ const ABSOLUTE_FILL = {
   left: 0,
 };
 
+function textGlow(color: string, radius: number) {
+  return {
+    textShadow: `0px 0px ${radius}px ${color}`,
+  };
+}
+
 const HANGUL_PROGRESS_TOTAL = 20;
 
 const SEQUENCES: any[] = [
@@ -373,8 +379,7 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
         styles.mainCardWrap,
         {
           borderColor: `${sequence.color}70`,
-          shadowColor: sequence.color,
-          shadowOpacity: 0.24,
+          boxShadow: `0px 8px 18px ${sequence.color}3D`,
         },
       ]}
     >
@@ -446,8 +451,7 @@ function SequenceCard({ item, isActive, onPress }: any) {
         isComingSoon && styles.seqCardDisabled,
         isActive && {
           borderColor: `${item.color}66`,
-          shadowColor: item.color,
-          shadowOpacity: 0.22,
+          boxShadow: `0px 8px 18px ${item.color}38`,
         },
       ]}
     >
@@ -494,8 +498,8 @@ function SequenceCard({ item, isActive, onPress }: any) {
             styles.seqAccent,
             {
               backgroundColor: item.color,
-              shadowColor: item.color,
               opacity: isActive ? 1 : 0.9,
+              boxShadow: `0px 0px 10px ${item.color}BF`,
             },
           ]}
         />
@@ -507,8 +511,7 @@ function SequenceCard({ item, isActive, onPress }: any) {
               {
                 borderColor: `${item.color}55`,
                 backgroundColor: `${item.color}12`,
-                shadowColor: item.color,
-                shadowOpacity: isActive ? 0.34 : 0.22,
+                boxShadow: `0px 0px 12px ${item.color}${isActive ? "57" : "38"}`,
               },
             ]}
           >
@@ -527,8 +530,8 @@ function SequenceCard({ item, isActive, onPress }: any) {
                 styles.seqIcon,
                 {
                   color: item.color,
-                  textShadowColor: item.color,
                 },
+                textGlow(item.color, 10),
               ]}
             >
               {icon}
@@ -550,9 +553,8 @@ function SequenceCard({ item, isActive, onPress }: any) {
             isActive && {
               color: item.color,
               opacity: 0.9,
-              textShadowColor: item.color,
-              textShadowRadius: 8,
             },
+            isActive && textGlow(item.color, 8),
           ]}
         >
           ›
@@ -727,18 +729,14 @@ const styles = StyleSheet.create({
     lineHeight: 108,
     fontFamily: fonts.krBold,
     color: "rgba(103,232,249,0.16)",
-    textShadowColor: "rgba(199,184,255,0.30)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 26,
+    ...textGlow("rgba(199,184,255,0.30)", 26),
   },
   heroSeoulTitle: {
     fontSize: 60,
     lineHeight: 108,
     fontFamily: fonts.krBold,
     color: "rgba(215,247,255,0.84)",
-    textShadowColor: "rgba(103,232,249,0.38)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 18,
+    ...textGlow("rgba(103,232,249,0.38)", 18),
   },
 
   heroTitle: {
@@ -854,10 +852,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(2,3,6,0.26)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.09)",
-    shadowColor: "#000",
-    shadowOpacity: 0.28,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
+    boxShadow: "0px 8px 14px rgba(0,0,0,0.28)",
   },
   seqCardDisabled: {
     opacity: 0.82,
@@ -888,9 +883,6 @@ const styles = StyleSheet.create({
     width: 3,
     borderTopRightRadius: 9,
     borderBottomRightRadius: 9,
-    shadowOpacity: 0.75,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 0 },
   },
   seqIconZone: {
     width: 48,
@@ -909,8 +901,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
     overflow: "hidden",
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 0 },
   },
   seqIconLight: {
     position: "absolute",
@@ -924,8 +914,6 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontFamily: fonts.bold,
     letterSpacing: -0.8,
-    textShadowRadius: 10,
-    textShadowOffset: { width: 0, height: 0 },
   },
   seqDividerLine: {
     width: 1,

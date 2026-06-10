@@ -16,7 +16,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { ABSOLUTE_FILL } from "../../constants/layout";
+
 const BACKGROUND_SOURCE = require("../../assets/images/speak.png");
+const SPEAK_BACKGROUND_DARKNESS = 0.72;
 
 const BG_DEEP = "#020306";
 const TXT = "rgba(255,255,255,0.98)";
@@ -827,12 +830,12 @@ const styles = StyleSheet.create({
   },
 
   bgDarkOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.55)",
+    ...ABSOLUTE_FILL,
+    backgroundColor: `rgba(0,0,0,${SPEAK_BACKGROUND_DARKNESS})`,
   },
 
   bgBlur: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
   },
 
   sectionDivider: {

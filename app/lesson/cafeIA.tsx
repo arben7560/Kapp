@@ -22,6 +22,7 @@ import {
   type DialogueNode,
   type DialogueScenario,
 } from "../../data/lesson/cafeLesson";
+import { ABSOLUTE_FILL } from "../../constants/layout";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -210,7 +211,7 @@ export default function CafeIaScreen() {
 
   const currentVideoSource = videoSources.length > 0 ? videoSources[0] : null;
 
-  const player = useVideoPlayer(displayedVideoSource, (playerInstance) => {
+  const player = useVideoPlayer(null, (playerInstance) => {
     playerInstance.loop = false;
   });
 
@@ -271,17 +272,29 @@ export default function CafeIaScreen() {
     if (!currentNode) return;
     if (!displayedVideoSource) return;
 
-    try {
-      player.replace(displayedVideoSource);
+    let isCancelled = false;
 
-      if (currentNode.type === "ia" && currentVideoSource) {
-        player.play();
-      } else {
-        player.pause();
+    async function updateVideoSource() {
+      try {
+        await player.replaceAsync(displayedVideoSource);
+
+        if (isCancelled) return;
+
+        if (currentNode?.type === "ia" && currentVideoSource) {
+          player.play();
+        } else {
+          player.pause();
+        }
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore
     }
+
+    void updateVideoSource();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [
     currentNode,
     currentNodeId,
@@ -703,7 +716,7 @@ const styles = StyleSheet.create({
     backgroundColor: BG_DEEP,
   },
   backgroundDarkOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     backgroundColor: "rgba(5,5,8,0.54)",
   },
 

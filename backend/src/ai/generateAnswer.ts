@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import { getRequiredEnv } from "../env.js";
 import type { ChatMessage } from "../memory/conversationMemory.js";
-import { getCafeScenarioForPrompt } from "../scenarios/cafeScenario.js";
 import type {
   TeacherAnswer,
   TeacherMode,
@@ -11,14 +10,54 @@ import { buildKoreanTeacherPrompt } from "./koreanTeacherPrompt.js";
 
 const openai = new OpenAI({
   apiKey: getRequiredEnv("OPENAI_API_KEY"),
+  maxRetries: 1,
+  timeout: 25_000,
 });
 
-function getScenarioContext(mode: TeacherMode): string {
-  if (mode === "cafe") {
-    return getCafeScenarioForPrompt();
+function buildCurrentTurnInstruction(params: {
+  message: string;
+  mode: TeacherMode;
+  hasScenarioContext: boolean;
+}): string {
+  const normalizedMessage = params.message
+    .trim()
+    .toLowerCase()
+    .replace(/[!.?。！？\s]+/g, " ");
+  const isSimpleGreeting = /^(bonjour|salut|hello|coucou|안녕|안녕하세요)$/.test(
+    normalizedMessage.trim(),
+  );
+
+  if (params.mode === "free") {
+    return isSimpleGreeting
+      ? `Instruction du tour actuel :
+L'utilisateur vient seulement de saluer. Réponds comme Mina, pas comme un personnage de scénario.
+Ne continue pas un ancien scénario de l'historique.
+Pose une question ouverte et propose quelques pistes : traduction, correction, conversation libre, café, métro ou restaurant.`
+      : `Instruction du tour actuel :
+Mode libre. Réponds à la demande actuelle sans continuer automatiquement un ancien scénario.
+Si l'objectif est flou, pose une question ouverte.`;
   }
 
-  return "";
+  if (params.mode === "metro") {
+    return `Instruction du tour actuel :
+Le mode actuel est métro. Réutilise le script métro actif quand c'est pertinent, en particulier Hongik University vers Gangnam, ligne 2, direction, quai, durée, transfert et sortie 2.
+Ne réponds pas comme une employée de café.`;
+  }
+
+  if (params.mode === "restaurant") {
+    return `Instruction du tour actuel :
+Le mode actuel est restaurant. Réutilise le script restaurant actif quand c'est pertinent, en particulier BBQ coréen, samgyeopsal, galbi, recommandation, cuisson, doenjang jjigae, 계란찜, épice, banchan, paiement et reçu.
+Ne réponds pas comme une employée de café ou comme un passant du métro.`;
+  }
+
+  if (params.hasScenarioContext) {
+    return `Instruction du tour actuel :
+Le scénario actif est ${params.mode}. Utilise uniquement ce scénario comme contexte de scène.
+Ne bascule pas vers un autre scénario sauf si l'utilisateur le demande clairement.`;
+  }
+
+  return `Instruction du tour actuel :
+Réponds à la demande actuelle comme Mina, prof de coréen. Ne continue pas automatiquement un ancien scénario.`;
 }
 
 export async function generateAnswer(params: {
@@ -29,7 +68,12 @@ export async function generateAnswer(params: {
   history?: ChatMessage[];
 }): Promise<TeacherAnswer> {
   const systemPrompt = buildKoreanTeacherPrompt(params.mode, params.memory);
-  const scenarioContext = getScenarioContext(params.mode);
+  const scenarioContext = params.scenarioContext ?? "";
+  const currentTurnInstruction = buildCurrentTurnInstruction({
+    message: params.message,
+    mode: params.mode,
+    hasScenarioContext: !!scenarioContext,
+  });
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
@@ -60,12 +104,26 @@ Garde les réponses courtes pour un avatar vidéo.`
         content: message.content,
       })),
       {
+        role: "system",
+        content: `CONTRAINTE AVATAR VIDEO :
+La reponse sera lue par un avatar video.
+Reponds en 1 a 3 phrases maximum.
+Ne fais pas de liste.
+Ne mets pas de titres.
+Privilegie une phrase coreenne + une traduction courte.
+Ne depasse pas environ 15 secondes de parole.`,
+      },
+      {
+        role: "system",
+        content: currentTurnInstruction,
+      },
+      {
         role: "user",
         content: params.message,
       },
     ],
     temperature: 0.7,
-    max_tokens: 350,
+    max_tokens: 120,
   });
 
   const text =
