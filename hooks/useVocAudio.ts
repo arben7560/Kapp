@@ -5,6 +5,7 @@ import {
 } from "expo-audio";
 import { useCallback, useEffect, useRef } from "react";
 import { Vibration } from "react-native";
+import { trackAudioPlayed } from "../lib/immersionStreak";
 
 type AudioAsset = number;
 
@@ -52,6 +53,7 @@ export function useVocAudio(setSelectedAudio: SetSelectedAudio) {
         }
 
         Vibration.vibrate(8);
+        void trackAudioPlayed();
 
         const player = createAudioPlayer(audioSource, {
           updateInterval: 250,

@@ -16,6 +16,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useVocAudio } from "../../hooks/useVocAudio";
+import {
+  trackAudioPlayed,
+  trackSceneCompleted,
+  trackSubModuleVisited,
+  trackToolboxOpened,
+} from "../../lib/immersionStreak";
 
 type AudioAsset = number;
 
@@ -76,6 +82,7 @@ export default function CountingImmersionScreen({
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const tapHintPulse = useRef(new Animated.Value(0)).current;
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const completedSceneIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     fadeAnim.setValue(0);
@@ -140,6 +147,7 @@ export default function CountingImmersionScreen({
     stopAudio();
     setSelectedWord(id);
     Vibration.vibrate(8);
+    void trackAudioPlayed();
 
     Speech.speak(text, {
       language: "ko-KR",
@@ -155,6 +163,11 @@ export default function CountingImmersionScreen({
     if (isTyping) return;
 
     if (visibleMessages >= activeScene.dialogue.length) {
+      if (!completedSceneIdsRef.current.has(activeScene.id)) {
+        completedSceneIdsRef.current.add(activeScene.id);
+        void trackSceneCompleted(activeScene.id);
+      }
+
       Vibration.vibrate(8);
       setVisibleMessages(1);
       setIsTyping(false);
@@ -220,7 +233,10 @@ export default function CountingImmersionScreen({
             {scenes.map((scene) => (
               <Pressable
                 key={scene.id}
-                onPress={() => setActiveScene(scene)}
+                onPress={() => {
+                  setActiveScene(scene);
+                  void trackSubModuleVisited(scene.id);
+                }}
                 style={[
                   styles.tab,
                   activeScene.id === scene.id && {
@@ -362,9 +378,10 @@ export default function CountingImmersionScreen({
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() =>
-                      playOrSpeak(exp.audio, exp.speak ?? exp.word, cardId)
-                    }
+                    onPress={() => {
+                      void trackToolboxOpened();
+                      playOrSpeak(exp.audio, exp.speak ?? exp.word, cardId);
+                    }}
                     style={({ pressed }) => [
                       styles.cardPressable,
                       pressed && { transform: [{ scale: 0.985 }] },
@@ -432,7 +449,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   bg: { flex: 1 },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(2,3,6,0.85)",
   },
   scroll: { paddingHorizontal: 22, paddingBottom: 60 },

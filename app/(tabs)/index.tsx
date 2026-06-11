@@ -1,7 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -15,6 +15,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
+import {
+  getImmersionStreakState,
+  trackSubModuleVisited,
+  type ImmersionStreakState,
+} from "../../lib/immersionStreak";
 
 const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../assets/images/seoulhub.png");
@@ -47,7 +52,9 @@ const ABSOLUTE_FILL = {
 
 function textGlow(color: string, radius: number) {
   return {
-    textShadow: `0px 0px ${radius}px ${color}`,
+    textShadowColor: color,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: radius,
   };
 }
 
@@ -119,6 +126,8 @@ const SEQUENCES: any[] = [
 
 export default function Home() {
   const { progress, setTrack } = useStore();
+  const [immersionStreak, setImmersionStreak] =
+    useState<ImmersionStreakState | null>(null);
   const currentTrack = progress.learningTrack;
   const activeSeq =
     SEQUENCES.find((s) => s.trackKey === currentTrack) ?? SEQUENCES[0];
@@ -154,6 +163,28 @@ export default function Home() {
       ]),
     ).start();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+
+      getImmersionStreakState()
+        .then((state) => {
+          if (isMounted) setImmersionStreak(state);
+        })
+        .catch(() => null);
+
+      return () => {
+        isMounted = false;
+      };
+    }, []),
+  );
+
+  const openSequence = (sequence: any) => {
+    setTrack(sequence.trackKey);
+    void trackSubModuleVisited(sequence.trackKey).then(setImmersionStreak);
+    router.push(sequence.route);
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -233,12 +264,11 @@ export default function Home() {
               sequence={activeSeq}
               narrative={activeSeqNarrative}
               progress={activeSeqProgress}
-              onPress={() => {
-                setTrack(activeSeq.trackKey);
-                router.push(activeSeq.route);
-              }}
+              onPress={() => openSequence(activeSeq)}
             />
           </AnimatedFragment>
+
+          <ImmersionStreakCard streak={immersionStreak} />
 
           <View style={styles.sectionDivider}>
             <Text style={styles.sectionTitle}>{"POINTS D'ENTRÉE"}</Text>
@@ -259,10 +289,7 @@ export default function Home() {
                 <SequenceCard
                   item={seq}
                   isActive={seq.trackKey === currentTrack}
-                  onPress={() => {
-                    setTrack(seq.trackKey);
-                    router.push(seq.route);
-                  }}
+                  onPress={() => openSequence(seq)}
                 />
               </AnimatedFragment>
             ))}
@@ -290,10 +317,7 @@ export default function Home() {
                 <SequenceCard
                   item={seq}
                   isActive={seq.trackKey === currentTrack}
-                  onPress={() => {
-                    setTrack(seq.trackKey);
-                    router.push(seq.route);
-                  }}
+                  onPress={() => openSequence(seq)}
                 />
               </AnimatedFragment>
             ))}
@@ -407,6 +431,64 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
         </View>
       </BlurView>
     </Pressable>
+  );
+}
+
+function ImmersionStreakCard({
+  streak,
+}: {
+  streak: ImmersionStreakState | null;
+}) {
+  const currentStreak = streak?.currentStreak ?? 0;
+  const isValidated = streak?.today.validated ?? false;
+  const audiosPlayed = streak?.today.audiosPlayed ?? 0;
+  const activeMinutes = Math.floor((streak?.today.activeSeconds ?? 0) / 60);
+
+  return (
+    <BlurView intensity={42} tint="dark" style={styles.streakCard}>
+      <LinearGradient
+        colors={["rgba(103,232,249,0.12)", "rgba(244,114,182,0.08)"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      <View style={styles.streakAccent} />
+
+      <View style={styles.streakTopRow}>
+        <View>
+          <Text style={styles.streakKicker}>STREAK D&apos;IMMERSION</Text>
+          <Text style={styles.streakTitle}>
+            Immersion : {currentStreak} {currentStreak > 1 ? "jours" : "jour"}
+          </Text>
+        </View>
+
+        <View
+          style={[
+            styles.streakStatus,
+            isValidated && styles.streakStatusValidated,
+          ]}
+        >
+          <Text
+            style={[
+              styles.streakStatusText,
+              isValidated && styles.streakStatusTextValidated,
+            ]}
+          >
+            {isValidated ? "VALIDE" : "EN COURS"}
+          </Text>
+        </View>
+      </View>
+
+      <Text style={styles.streakGoal}>
+        Objectif du jour : ecouter 3 audios ou explorer une scene.
+      </Text>
+
+      <View style={styles.streakMetrics}>
+        <Text style={styles.streakMetric}>{audiosPlayed}/3 audios</Text>
+        <Text style={styles.streakMetric}>{activeMinutes}/5 min</Text>
+      </View>
+    </BlurView>
   );
 }
 
@@ -809,6 +891,84 @@ const styles = StyleSheet.create({
   },
   progressFill: { height: "100%", borderRadius: 2 },
   progressText: { fontSize: 12, fontFamily: fonts.medium, color: SOFT },
+
+  streakCard: {
+    borderRadius: 22,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(103,232,249,0.20)",
+    padding: 16,
+    marginTop: -14,
+    marginBottom: 28,
+  },
+  streakAccent: {
+    position: "absolute",
+    left: 0,
+    top: 14,
+    bottom: 14,
+    width: 3,
+    borderTopRightRadius: 8,
+    borderBottomRightRadius: 8,
+    backgroundColor: CYAN,
+    opacity: 0.85,
+  },
+  streakTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 14,
+  },
+  streakKicker: {
+    color: "rgba(241,245,249,0.48)",
+    fontSize: 9,
+    fontFamily: fonts.bold,
+    letterSpacing: 1.5,
+    marginBottom: 5,
+  },
+  streakTitle: {
+    color: TXT,
+    fontSize: 18,
+    fontFamily: fonts.bold,
+  },
+  streakStatus: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.14)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: "rgba(255,255,255,0.04)",
+  },
+  streakStatusValidated: {
+    borderColor: "rgba(103,232,249,0.55)",
+    backgroundColor: "rgba(103,232,249,0.12)",
+  },
+  streakStatusText: {
+    color: "rgba(241,245,249,0.55)",
+    fontSize: 9,
+    fontFamily: fonts.bold,
+    letterSpacing: 1.2,
+  },
+  streakStatusTextValidated: {
+    color: CYAN,
+  },
+  streakGoal: {
+    color: MUTED,
+    fontSize: 12,
+    lineHeight: 17,
+    fontFamily: fonts.medium,
+    marginTop: 10,
+  },
+  streakMetrics: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 12,
+  },
+  streakMetric: {
+    color: "rgba(241,245,249,0.62)",
+    fontFamily: fonts.bold,
+    fontSize: 10,
+    letterSpacing: 0.8,
+  },
 
   // SECTION DIVIDERS
   sectionDivider: {

@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import React from "react";
 import { StoreProvider } from "../_store";
+import { useImmersionActiveTime } from "../hooks/useImmersionActiveTime";
 
 /*const SCREEN_CAPTURE_PROTECTION_KEY = "k-app-global-protection";
 
@@ -46,6 +47,8 @@ function ScreenCaptureProtection() {
 }*/
 
 export default function RootLayout() {
+  useImmersionActiveTime();
+
   return (
     <StoreProvider>
       {/* <ScreenCaptureProtection /> */}

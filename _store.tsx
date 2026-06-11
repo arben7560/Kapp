@@ -1,4 +1,5 @@
 import React from "react";
+import { trackHangulExerciseCompleted } from "./lib/immersionStreak";
 
 export type LearningTrack =
   | "hangul"
@@ -39,12 +40,28 @@ const StoreContext = React.createContext<StoreValue | undefined>(undefined);
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [progress, setProgress] = React.useState<Progress>(initialProgress);
+  const completedRef = React.useRef(initialProgress.completed);
+
+  React.useEffect(() => {
+    completedRef.current = progress.completed;
+  }, [progress.completed]);
 
   const setTrack = (t: LearningTrack) => {
     setProgress((p) => ({ ...p, learningTrack: t }));
   };
 
   const complete = (id: string) => {
+    if (completedRef.current[id]) return;
+
+    completedRef.current = {
+      ...completedRef.current,
+      [id]: true,
+    };
+
+    if (id.startsWith("hangul_")) {
+      void trackHangulExerciseCompleted(id);
+    }
+
     setProgress((p) => {
       if (p.completed[id]) return p;
       const isHangulProgress = id.startsWith("hangul_");
