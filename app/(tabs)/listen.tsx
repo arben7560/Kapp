@@ -1,6 +1,5 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
@@ -14,11 +13,8 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { WebView, type WebViewMessageEvent } from "react-native-webview";
 
 import { ABSOLUTE_FILL } from "../../constants/layout";
-
-const API_BASE_URL = "https://clicker-squall-moocher.ngrok-free.dev";
 
 const listenBackground = require("../../assets/images/avatarIA.png");
 
@@ -37,419 +33,67 @@ const fonts = {
   kr: "NotoSansKR_700Bold",
 };
 
-type RealtimeStatus =
-  | "idle"
-  | "connecting"
-  | "connected"
-  | "sending"
-  | "error";
+type ChatLine = {
+  id: number;
+  role: "user" | "teacher";
+  text: string;
+};
 
-type WebViewEvent =
-  | { type: "status"; status: RealtimeStatus; message?: string }
-  | { type: "error"; message: string }
-  | { type: "log"; message: string }
-  | { type: "message-sent"; videoId?: string }
-  | { type: "stream-ready" };
+function createLocalAnswer(message: string) {
+  const normalized = message.toLowerCase();
 
-function escapeForInjectedJavaScript(value: string): string {
-  return JSON.stringify(value).replace(/<\/script/gi, "<\\/script");
-}
+  if (normalized.includes("cafe") || normalized.includes("café")) {
+    return "En coreen, tu peux dire : 커피 한 잔 주세요. Cela veut dire : un cafe, s'il vous plait.";
+  }
 
-function createAvatarHtml(apiBaseUrl: string) {
-  const safeApiBaseUrl = JSON.stringify(apiBaseUrl);
+  if (normalized.includes("bonjour") || normalized.includes("salut")) {
+    return "Tu peux dire 안녕하세요. C'est la salutation polie la plus utile au quotidien.";
+  }
 
-  return `<!doctype html>
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-    <style>
-      html, body {
-        margin: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        background: transparent;
-        color: #c7d2fe;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      }
+  if (normalized.includes("merci")) {
+    return "Merci se dit 감사합니다 dans une situation polie. Plus naturel entre proches : 고마워요.";
+  }
 
-      #root {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        isolation: isolate;
-        background:
-          radial-gradient(circle at 50% 18%, rgba(34, 211, 238, 0.18), transparent 34%),
-          linear-gradient(180deg, rgba(14, 23, 45, 0.78), rgba(5, 5, 8, 0.92));
-      }
+  if (normalized.includes("restaurant")) {
+    return "Au restaurant, une phrase tres pratique est 이거 주세요 : je voudrais ceci, s'il vous plait.";
+  }
 
-      video {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        background: transparent;
-        transform: scale(1.4) translateY(10px);
-        transform-origin: center center;
-        mix-blend-mode: screen;
-        filter: saturate(1.04) contrast(1.06);
-        opacity: 0;
-        transition: opacity 180ms ease;
-      }
-
-      video.is-visible {
-        opacity: 1;
-      }
-
-      #placeholder {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background:
-          radial-gradient(circle at 50% 20%, rgba(34, 211, 238, 0.20), transparent 36%),
-          linear-gradient(180deg, rgba(14, 23, 45, 0.82), rgba(5, 5, 8, 0.94));
-        opacity: 1;
-        transition: opacity 160ms ease;
-      }
-
-      #placeholder.is-hidden {
-        opacity: 0;
-        pointer-events: none;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="root">
-      <video id="avatarVideo" autoplay playsinline></video>
-      <div id="placeholder"></div>
-    </div>
-
-    <script>
-      const API_BASE_URL = ${safeApiBaseUrl};
-      let pc;
-      let streamId;
-      let didSessionId;
-      let isSdpAccepted = false;
-      const pendingCandidates = [];
-      const video = document.getElementById("avatarVideo");
-      const placeholder = document.getElementById("placeholder");
-
-      function post(message) {
-        window.ReactNativeWebView?.postMessage(JSON.stringify(message));
-      }
-
-      function log(message) {
-        post({ type: "log", message });
-      }
-
-      function revealVideo() {
-        video.classList.add("is-visible");
-        placeholder.classList.add("is-hidden");
-        window.setTimeout(() => {
-          placeholder.style.display = "none";
-        }, 180);
-      }
-
-      async function readApiResponse(response) {
-        const text = await response.text();
-        if (!text) return {};
-        try {
-          return JSON.parse(text);
-        } catch {
-          return { raw: text };
-        }
-      }
-
-      function getError(data, fallback) {
-        const value = data?.details ?? data?.error ?? data?.raw ?? fallback;
-        return typeof value === "string" ? value : JSON.stringify(value, null, 2);
-      }
-
-      function getPlainCandidate(candidate) {
-        return {
-          candidate: candidate.candidate,
-          sdpMid: candidate.sdpMid,
-          sdpMLineIndex: candidate.sdpMLineIndex,
-        };
-      }
-
-      async function sendCandidate(candidate) {
-        const response = await fetch(API_BASE_URL + "/api/avatar/realtime/session/" + encodeURIComponent(streamId) + "/ice", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...getPlainCandidate(candidate),
-            session_id: didSessionId,
-          }),
-        });
-        const data = await readApiResponse(response);
-        if (!response.ok) {
-          post({ type: "error", message: getError(data, "ice_failed") });
-        }
-      }
-
-      async function connect() {
-        try {
-          post({ type: "status", status: "connecting" });
-          await closeSession();
-
-          const sessionResponse = await fetch(API_BASE_URL + "/api/avatar/realtime/session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: "{}",
-          });
-          const session = await readApiResponse(sessionResponse);
-          log("session response " + sessionResponse.status);
-
-          if (!sessionResponse.ok) {
-            throw new Error(getError(session, "session_failed"));
-          }
-
-          streamId = session.id;
-          didSessionId = session.session_id;
-          log("stream " + streamId + " chat " + (session.chat_id || "none"));
-
-          if (!streamId || !didSessionId || !session.offer) {
-            throw new Error("La session D-ID ne contient pas les informations WebRTC attendues.");
-          }
-
-          pc = new RTCPeerConnection({
-            iceServers: session.ice_servers || session.iceServers || [],
-          });
-
-          pc.onconnectionstatechange = () => {
-            log("pc connection " + pc.connectionState);
-          };
-
-          pc.oniceconnectionstatechange = () => {
-            log("ice " + pc.iceConnectionState);
-          };
-
-          pc.ontrack = (event) => {
-            log("track received");
-            const [remoteStream] = event.streams || [];
-            if (!remoteStream) return;
-            video.srcObject = remoteStream;
-            video.muted = false;
-            video.onloadeddata = revealVideo;
-            video.oncanplay = revealVideo;
-            video.onplaying = revealVideo;
-            video.play()
-              .then(() => {
-                revealVideo();
-                post({ type: "stream-ready" });
-              })
-              .catch((error) => log("video play " + String(error?.message || error)));
-          };
-
-          pc.onicecandidate = (event) => {
-            if (!event.candidate) return;
-            if (!isSdpAccepted) {
-              pendingCandidates.push(event.candidate);
-              return;
-            }
-            sendCandidate(event.candidate).catch((error) => {
-              post({ type: "error", message: String(error?.message || error) });
-            });
-          };
-
-          await pc.setRemoteDescription(session.offer);
-          log("remote description ok");
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          log("local description ok");
-
-          const sdpResponse = await fetch(API_BASE_URL + "/api/avatar/realtime/session/" + encodeURIComponent(streamId) + "/sdp", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              answer: {
-                type: answer.type,
-                sdp: answer.sdp,
-              },
-              session_id: didSessionId,
-            }),
-          });
-          const sdpData = await readApiResponse(sdpResponse);
-          log("sdp response " + sdpResponse.status);
-
-          if (!sdpResponse.ok) {
-            throw new Error(getError(sdpData, "sdp_failed"));
-          }
-
-          isSdpAccepted = true;
-          await Promise.all(pendingCandidates.map(sendCandidate));
-          pendingCandidates.length = 0;
-          post({ type: "status", status: "connected" });
-        } catch (error) {
-          const message = String(error?.message || error);
-          post({ type: "error", message });
-        }
-      }
-
-      async function sendAgentMessage(message) {
-        if (!streamId || !message) return;
-
-        try {
-          post({ type: "status", status: "sending" });
-          const response = await fetch(API_BASE_URL + "/api/avatar/realtime/session/" + encodeURIComponent(streamId) + "/message", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              message,
-              session_id: didSessionId,
-            }),
-          });
-          const data = await readApiResponse(response);
-          log("message response " + response.status);
-
-          if (!response.ok) {
-            throw new Error(getError(data, "message_failed"));
-          }
-
-          post({ type: "message-sent", videoId: data.videoId || data.video_id });
-          post({ type: "status", status: "connected" });
-        } catch (error) {
-          post({ type: "error", message: String(error?.message || error) });
-        }
-      }
-
-      async function closeSession() {
-        isSdpAccepted = false;
-        pendingCandidates.length = 0;
-
-        if (pc) {
-          pc.close();
-          pc = null;
-        }
-
-        video.classList.remove("is-visible");
-        placeholder.classList.remove("is-hidden");
-        placeholder.style.display = "flex";
-
-        if (streamId) {
-          await fetch(API_BASE_URL + "/api/avatar/realtime/session/" + encodeURIComponent(streamId), {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ session_id: didSessionId }),
-          }).catch(() => null);
-        }
-
-        streamId = undefined;
-        didSessionId = undefined;
-      }
-
-      window.connectAvatar = connect;
-      window.sendAgentMessage = sendAgentMessage;
-      window.closeAvatar = closeSession;
-      window.addEventListener("beforeunload", closeSession);
-      connect();
-    </script>
-  </body>
-</html>`;
+  return "Bonne question. Pour le moment, le prof IA fonctionne en local : essaie une question sur bonjour, merci, cafe ou restaurant.";
 }
 
 export default function TeacherIARealtimeScreen() {
   const [message, setMessage] = useState("");
-  const [lastUserMessage, setLastUserMessage] = useState<string | undefined>();
-  const [status, setStatus] = useState<RealtimeStatus>("idle");
-  const [errorMessage, setErrorMessage] = useState<string | undefined>();
-  const [isStreamReady, setIsStreamReady] = useState(false);
-  const [debugLines, setDebugLines] = useState<string[]>([]);
+  const [history, setHistory] = useState<ChatLine[]>([
+    {
+      id: 1,
+      role: "teacher",
+      text: "Le prof IA est maintenant en mode frontend local. Pose une question courte.",
+    },
+  ]);
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const webViewRef = useRef<WebView>(null);
-  const avatarHtml = useMemo(() => createAvatarHtml(API_BASE_URL), []);
   const videoHeight = Math.min(screenWidth * 0.9, screenHeight * 0.34);
 
-  function handleWebViewMessage(event: WebViewMessageEvent) {
-    try {
-      const data = JSON.parse(event.nativeEvent.data) as WebViewEvent;
+  const lastUserMessage = useMemo(
+    () => [...history].reverse().find((line) => line.role === "user")?.text,
+    [history],
+  );
 
-      if (data.type === "log") {
-        console.log("Avatar WebView:", data.message);
-        setDebugLines((lines) => [data.message, ...lines].slice(0, 6));
-        return;
-      }
-
-      if (data.type === "status") {
-        setStatus(data.status);
-        setErrorMessage(undefined);
-        return;
-      }
-
-      if (data.type === "stream-ready") {
-        setIsStreamReady(true);
-        setStatus("connected");
-        setErrorMessage(undefined);
-        return;
-      }
-
-      if (data.type === "message-sent") {
-        setDebugLines((lines) =>
-          [`message envoye${data.videoId ? ` (${data.videoId})` : ""}`, ...lines].slice(
-            0,
-            6,
-          ),
-        );
-        return;
-      }
-
-      if (data.type === "error") {
-        setStatus("error");
-        setErrorMessage(data.message);
-      }
-    } catch (error) {
-      setStatus("error");
-      setErrorMessage(error instanceof Error ? error.message : String(error));
-    }
-  }
-
-  function reconnectAvatar() {
-    setStatus("connecting");
-    setErrorMessage(undefined);
-    setIsStreamReady(false);
-    webViewRef.current?.injectJavaScript("window.connectAvatar?.(); true;");
-  }
-
-  function sendRealtimeMessage() {
+  function sendLocalMessage() {
     const trimmedMessage = message.trim();
     if (!trimmedMessage) return;
 
-    setStatus("sending");
-    setLastUserMessage(trimmedMessage);
-    webViewRef.current?.injectJavaScript(
-      `window.sendAgentMessage?.(${escapeForInjectedJavaScript(trimmedMessage)}); true;`,
-    );
+    const now = Date.now();
+    setHistory((lines) => [
+      ...lines,
+      { id: now, role: "user", text: trimmedMessage },
+      { id: now + 1, role: "teacher", text: createLocalAnswer(trimmedMessage) },
+    ]);
     setMessage("");
   }
 
-  const steps = ["Ecoute", "Connexion", "Echange", "Reponse"];
-  const progressIndex =
-    status === "idle" || status === "connecting"
-      ? 1
-      : status === "sending"
-        ? 3
-        : status === "connected"
-          ? 2
-          : 0;
-
-  const statusLabel =
-    status === "connecting"
-      ? "Connexion WebRTC..."
-      : status === "connected"
-        ? isStreamReady
-          ? "Avatar realtime connecte."
-          : "Session connectee, attente du flux video..."
-        : status === "sending"
-          ? "Message envoye a l'avatar..."
-          : status === "error"
-            ? "Session realtime indisponible"
-            : "Session non connectee";
+  const steps = ["Ecoute", "Local", "Echange", "Reponse"];
+  const progressIndex = history.length > 1 ? 3 : 1;
 
   return (
     <KeyboardAvoidingView
@@ -525,48 +169,23 @@ export default function TeacherIARealtimeScreen() {
                     },
                   ]}
                 >
-                  <WebView
-                    allowsInlineMediaPlayback
-                    androidLayerType="hardware"
-                    containerStyle={styles.webViewContainer}
-                    javaScriptEnabled
-                    mediaPlaybackRequiresUserAction={false}
-                    onMessage={handleWebViewMessage}
-                    originWhitelist={["*"]}
-                    ref={webViewRef}
-                    source={{ html: avatarHtml, baseUrl: API_BASE_URL }}
-                    style={styles.webView}
-                  />
+                  <View style={styles.avatarPlaceholder}>
+                    <Text style={styles.avatarText}>AI</Text>
+                  </View>
 
                   <LinearGradient
                     colors={["transparent", "rgba(0,0,0,0.62)"]}
                     style={styles.videoOverlay}
                   />
-
-                  {status === "connecting" || status === "idle" ? (
-                    <View pointerEvents="none" style={styles.loadingOverlay}>
-                      <ActivityIndicator color={TXT} size="large" />
-                    </View>
-                  ) : null}
                 </View>
 
                 <View style={styles.aiCard}>
-                  <Text style={styles.aiKr}>{statusLabel}</Text>
+                  <Text style={styles.aiKr}>Mode local active</Text>
 
-                  {errorMessage ? (
-                    <Text style={styles.aiFr}>{errorMessage}</Text>
-                  ) : (
-                    <Text style={styles.aiFr}>
-                      Pose une question courte et l&apos;avatar te repond en
-                      direct.
-                    </Text>
-                  )}
-
-                  {debugLines.length ? (
-                    <Text style={styles.transcriptHint}>
-                      {debugLines.slice(0, 2).join(" | ")}
-                    </Text>
-                  ) : null}
+                  <Text style={styles.aiFr}>
+                    Plus aucun appel serveur : les reponses sont generees dans
+                    l&apos;application.
+                  </Text>
                 </View>
               </View>
             </View>
@@ -589,6 +208,23 @@ export default function TeacherIARealtimeScreen() {
                   </View>
                 ) : null}
 
+                <View style={styles.historyList}>
+                  {history.slice(-4).map((line) => (
+                    <View
+                      key={line.id}
+                      style={[
+                        styles.messageBubble,
+                        line.role === "user" && styles.messageBubbleUser,
+                      ]}
+                    >
+                      <Text style={styles.choiceKr}>{line.text}</Text>
+                      <Text style={styles.choiceFr}>
+                        {line.role === "user" ? "Toi" : "Prof IA"}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+
                 <View style={styles.inputCard}>
                   <TextInput
                     multiline
@@ -599,46 +235,23 @@ export default function TeacherIARealtimeScreen() {
                     value={message}
                   />
 
-                  <View style={styles.actions}>
-                    <Pressable
-                      disabled={status !== "connected"}
-                      onPress={sendRealtimeMessage}
-                      style={({ pressed }) => [
-                        styles.primaryAction,
-                        (pressed || status !== "connected") &&
-                          styles.buttonDimmed,
-                      ]}
+                  <Pressable
+                    disabled={!message.trim()}
+                    onPress={sendLocalMessage}
+                    style={({ pressed }) => [
+                      styles.primaryAction,
+                      (pressed || !message.trim()) && styles.buttonDimmed,
+                    ]}
+                  >
+                    <LinearGradient
+                      colors={[CYAN, "#56CCF2"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.primaryActionInner}
                     >
-                      <LinearGradient
-                        colors={[CYAN, "#56CCF2"]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.primaryActionInner}
-                      >
-                        {status === "sending" ? (
-                          <ActivityIndicator color="#FFFFFF" />
-                        ) : (
-                          <Text style={styles.primaryActionText}>
-                            Envoyer a l&apos;avatar
-                          </Text>
-                        )}
-                      </LinearGradient>
-                    </Pressable>
-
-                    <Pressable
-                      disabled={status === "connecting"}
-                      onPress={reconnectAvatar}
-                      style={({ pressed }) => [
-                        styles.secondaryAction,
-                        (pressed || status === "connecting") &&
-                          styles.buttonDimmed,
-                      ]}
-                    >
-                      <Text style={styles.secondaryActionText}>
-                        Reconnecter
-                      </Text>
-                    </Pressable>
-                  </View>
+                      <Text style={styles.primaryActionText}>Envoyer</Text>
+                    </LinearGradient>
+                  </Pressable>
                 </View>
               </View>
             </ScrollView>
@@ -736,13 +349,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
 
-  webViewContainer: {
-    backgroundColor: "transparent",
+  avatarPlaceholder: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(5,5,8,0.34)",
   },
 
-  webView: {
-    backgroundColor: "transparent",
-    flex: 1,
+  avatarText: {
+    color: TXT,
+    fontSize: 52,
+    fontFamily: fonts.black,
   },
 
   videoOverlay: {
@@ -751,13 +368,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 88,
-  },
-
-  loadingOverlay: {
-    ...ABSOLUTE_FILL,
-    alignItems: "center",
-    backgroundColor: "rgba(5,5,8,0.44)",
-    justifyContent: "center",
   },
 
   aiCard: {
@@ -793,15 +403,6 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
   },
 
-  transcriptHint: {
-    color: SOFT,
-    fontSize: 12,
-    lineHeight: 17,
-    textAlign: "center",
-    fontFamily: fonts.medium,
-    marginTop: 8,
-  },
-
   interactionScroll: {
     paddingHorizontal: 20,
     paddingTop: 26,
@@ -832,6 +433,24 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
     elevation: 5,
     marginBottom: 12,
+  },
+
+  historyList: {
+    gap: 10,
+    marginBottom: 12,
+  },
+
+  messageBubble: {
+    backgroundColor: "rgba(255,255,255,0.035)",
+    borderRadius: 20,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: LINE,
+  },
+
+  messageBubbleUser: {
+    backgroundColor: "rgba(34,211,238,0.08)",
+    borderColor: "rgba(34,211,238,0.22)",
   },
 
   choiceKr: {
@@ -869,10 +488,6 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
 
-  actions: {
-    gap: 10,
-  },
-
   primaryAction: {
     borderRadius: 18,
     overflow: "hidden",
@@ -887,22 +502,6 @@ const styles = StyleSheet.create({
   primaryActionText: {
     color: "white",
     fontSize: 14,
-    fontFamily: fonts.bold,
-  },
-
-  secondaryAction: {
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    backgroundColor: "rgba(255,255,255,0.04)",
-    paddingVertical: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  secondaryActionText: {
-    color: TXT,
-    fontSize: 15,
     fontFamily: fonts.bold,
   },
 

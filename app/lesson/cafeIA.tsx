@@ -16,13 +16,13 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
+import { ABSOLUTE_FILL } from "../../constants/layout";
 import {
   cafeDialogueData,
   type DialogueChoice,
   type DialogueNode,
   type DialogueScenario,
-} from "../../data/lesson/cafeLesson";
-import { ABSOLUTE_FILL } from "../../constants/layout";
+} from "../../data/lesson/cafe/cafe";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -221,7 +221,8 @@ export default function CafeIaScreen() {
     }
   }, [currentNode, currentVideoSource]);
 
-  const videoHeight = Math.min(screenWidth * 0.9, screenHeight * 0.34);
+  const avatarFrameHeight = Math.min(screenWidth * 0.9, screenHeight * 0.54);
+  const avatarVideoHeight = Math.min(screenWidth * 0.9, screenHeight * 0.34);
 
   const goToNextNode = useCallback((node?: DialogueNodeWithVideo) => {
     if (!node || !mountedRef.current) return;
@@ -474,24 +475,6 @@ export default function CafeIaScreen() {
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
             <Text style={styles.backTxt}>✕</Text>
           </Pressable>
-
-          <View
-            style={[
-              styles.modeBadge,
-              { borderColor: mode === "real" ? CYAN : PURPLE },
-            ]}
-          >
-            <Text
-              style={[
-                styles.modeTxt,
-                { color: mode === "real" ? CYAN : PURPLE },
-              ]}
-            >
-              {mode === "real" ? "MODE RÉEL" : "MODE GUIDÉ"}
-            </Text>
-          </View>
-
-          <View style={{ width: 42 }} />
         </View>
 
         <View style={styles.body}>
@@ -534,7 +517,7 @@ export default function CafeIaScreen() {
                 style={[
                   styles.videoContainer,
                   {
-                    height: videoHeight,
+                    height: avatarFrameHeight,
                     borderColor:
                       mode === "real"
                         ? "rgba(34,211,238,0.40)"
@@ -545,7 +528,7 @@ export default function CafeIaScreen() {
                 {displayedVideoSource ? (
                   <VideoView
                     player={player}
-                    style={styles.video}
+                    style={[styles.video, { height: avatarVideoHeight }]}
                     contentFit="contain"
                     nativeControls={false}
                     allowsPictureInPicture={false}
@@ -748,9 +731,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     paddingHorizontal: 20,
-    paddingBottom: 10,
+    paddingBottom: 0,
   },
 
   backBtn: {
@@ -767,20 +750,6 @@ const styles = StyleSheet.create({
   backTxt: {
     color: TXT,
     fontSize: 18,
-  },
-
-  modeBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: 99,
-    borderWidth: 1,
-    backgroundColor: "rgba(255,255,255,0.03)",
-  },
-
-  modeTxt: {
-    fontSize: 10,
-    fontFamily: fonts.bold,
-    letterSpacing: 1.4,
   },
 
   stepsContainer: {
@@ -814,13 +783,17 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     borderRadius: 32,
     overflow: "hidden",
-    backgroundColor: "#000",
+    backgroundColor: "#050508",
     borderWidth: 1,
   },
 
   video: {
-    flex: 1,
-    transform: [{ scale: 1.4 }, { translateY: 10 }],
+    left: 0,
+    position: "absolute",
+    right: 0,
+    top: 0,
+    width: "100%",
+    transform: [{ scale: 1.45 }, { translateY: 40 }],
   },
 
   videoFallback: {

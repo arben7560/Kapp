@@ -16,13 +16,13 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
+import { ABSOLUTE_FILL } from "../../constants/layout";
 import {
   restaurantDialogueData,
   type DialogueChoice,
   type DialogueNode,
   type DialogueScenario,
-} from "../../data/lesson/restaurantLesson";
-import { ABSOLUTE_FILL } from "../../constants/layout";
+} from "../../data/lesson/restaurant/restaurant";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -125,7 +125,9 @@ function attachRestaurantVideosToScenario(
   for (const [nodeId, node] of Object.entries(scenario.nodes)) {
     nodes[nodeId] = {
       ...node,
-      ...(videoByNodeId[nodeId] ? { videoSources: [videoByNodeId[nodeId]] } : {}),
+      ...(videoByNodeId[nodeId]
+        ? { videoSources: [videoByNodeId[nodeId]] }
+        : {}),
     };
   }
 
@@ -194,7 +196,8 @@ export default function RestaurantIaScreen() {
     }
   }, [currentNode, currentVideoSource]);
 
-  const videoHeight = Math.min(screenWidth * 0.9, screenHeight * 0.34);
+  const avatarFrameHeight = Math.min(screenWidth * 0.9, screenHeight * 0.54);
+  const avatarVideoHeight = Math.min(screenWidth * 0.9, screenHeight * 0.34);
 
   const goToNextNode = useCallback((node?: DialogueNodeWithVideo) => {
     if (!node || !mountedRef.current) return;
@@ -412,24 +415,6 @@ export default function RestaurantIaScreen() {
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
             <Text style={styles.backTxt}>x</Text>
           </Pressable>
-
-          <View
-            style={[
-              styles.modeBadge,
-              { borderColor: mode === "real" ? CYAN : PURPLE },
-            ]}
-          >
-            <Text
-              style={[
-                styles.modeTxt,
-                { color: mode === "real" ? CYAN : PURPLE },
-              ]}
-            >
-              {mode === "real" ? "MODE REEL" : "MODE GUIDE"}
-            </Text>
-          </View>
-
-          <View style={{ width: 42 }} />
         </View>
 
         <View style={styles.body}>
@@ -472,7 +457,7 @@ export default function RestaurantIaScreen() {
                 style={[
                   styles.videoContainer,
                   {
-                    height: videoHeight,
+                    height: avatarFrameHeight,
                     borderColor:
                       mode === "real"
                         ? "rgba(34,211,238,0.40)"
@@ -483,7 +468,7 @@ export default function RestaurantIaScreen() {
                 {displayedVideoSource ? (
                   <VideoView
                     player={player}
-                    style={styles.video}
+                    style={[styles.video, { height: avatarVideoHeight }]}
                     contentFit="contain"
                     nativeControls={false}
                     allowsPictureInPicture={false}
@@ -675,9 +660,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     paddingHorizontal: 20,
-    paddingBottom: 10,
+    paddingBottom: 0,
   },
 
   backBtn: {
@@ -694,20 +679,6 @@ const styles = StyleSheet.create({
   backTxt: {
     color: TXT,
     fontSize: 18,
-  },
-
-  modeBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: 99,
-    borderWidth: 1,
-    backgroundColor: "rgba(255,255,255,0.03)",
-  },
-
-  modeTxt: {
-    fontSize: 10,
-    fontFamily: fonts.bold,
-    letterSpacing: 1.4,
   },
 
   stepsContainer: {
@@ -741,13 +712,17 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     borderRadius: 32,
     overflow: "hidden",
-    backgroundColor: "#000",
+    backgroundColor: "#050508",
     borderWidth: 1,
   },
 
   video: {
-    flex: 1,
-    transform: [{ scale: 1.4 }, { translateY: 10 }],
+    left: 0,
+    position: "absolute",
+    right: 0,
+    top: 0,
+    width: "100%",
+    transform: [{ scale: 1.48 }, { translateX: -4 }, { translateY: 40 }],
   },
 
   videoFallback: {
