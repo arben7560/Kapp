@@ -1,20 +1,5 @@
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { Dimensions, StyleSheet } from "react-native";
 import CountingImmersionScreen from "../../../components/comptage/CountingImmersionScreen";
-import React, { useEffect, useRef, useState } from "react";
-import {
-    Animated,
-    Dimensions,
-    Easing,
-    ImageBackground,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../../assets/images/comptage.png");
@@ -136,13 +121,7 @@ const SCENES = [
         context: "Notez comment 'Set' devient 'Se' devant un classificateur.",
         audio: CAFE_AUDIO.toolbox4,
       },
-      {
-        word: "몇 개예요?",
-        rom: "Myeot gae-yeyo?",
-        mean: "Combien y en a-t-il ?",
-        context: "Question essentielle pour demander une quantité.",
-        audio: CAFE_AUDIO.toolbox5,
-      },
+
       {
         word: "두 조각",
         rom: "Du jogak",
@@ -297,7 +276,7 @@ const SCENES = [
       {
         word: "몇 살?",
         rom: "Myeot sal?",
-        mean: "Quel âge ?",
+        mean: "Quel âge",
         context: "Toujours utiliser le système natif pour l'âge.",
         audio: ANNIVERSAIRE_AUDIO.toolbox3,
       },

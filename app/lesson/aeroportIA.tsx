@@ -209,6 +209,10 @@ export default function AeroportIaScreen() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isSceneEnded, setIsSceneEnded] = useState(false);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
+  const [lastIaTranscript, setLastIaTranscript] = useState<{
+    korean: string;
+    french?: string;
+  } | null>(null);
 
   const currentNode = currentScenario.nodes[currentNodeId];
 
@@ -230,6 +234,13 @@ export default function AeroportIaScreen() {
 
   const goToNextNode = useCallback((node?: DialogueNode) => {
     if (!node || !mountedRef.current) return;
+
+    if (node.type === "ia") {
+      setLastIaTranscript({
+        korean: node.korean || "...",
+        french: node.french,
+      });
+    }
 
     if (node.nextNodeId) {
       setIsTranscriptOpen(false);
@@ -397,22 +408,36 @@ export default function AeroportIaScreen() {
     setIsTransitioning(false);
     setIsSceneEnded(false);
     setIsTranscriptOpen(false);
+    setLastIaTranscript(null);
     hasAdvancedFromVideoRef.current = false;
   };
 
   const isStartChoiceNode = currentNodeId === "welcome_choices";
 
   const isReviewableTranscript =
-    currentNode?.type === "user_choice" && !isStartChoiceNode;
+    currentNode?.type === "user_choice" &&
+    !isStartChoiceNode &&
+    !!lastIaTranscript;
 
   const shouldCollapseTranscript = isReviewableTranscript && !isTranscriptOpen;
 
+  const transcriptKorean = isReviewableTranscript
+    ? lastIaTranscript?.korean
+    : currentNode?.korean;
+
+  const transcriptFrench = isReviewableTranscript
+    ? lastIaTranscript?.french
+    : currentNode?.french;
+
   const displayedKoreanText = shouldCollapseTranscript
     ? "..."
-    : currentNode?.korean || "...";
+    : transcriptKorean || "...";
 
   const shouldShowFrench =
-    !shouldCollapseTranscript && !isStartChoiceNode && !!currentNode?.french;
+    !shouldCollapseTranscript &&
+    !isStartChoiceNode &&
+    typeof transcriptFrench === "string" &&
+    transcriptFrench.trim().length > 0;
   const isUserChoice = currentNode?.type === "user_choice";
 
   return (
@@ -522,7 +547,7 @@ export default function AeroportIaScreen() {
                 </Text>
 
                 {shouldShowFrench ? (
-                  <Text style={styles.aiFr}>{currentNode?.french}</Text>
+                  <Text style={styles.aiFr}>{transcriptFrench}</Text>
                 ) : null}
 
                 {isReviewableTranscript ? (

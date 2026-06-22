@@ -370,9 +370,9 @@ const seoulStationToJamsilLesson: MetroLesson = {
       phase: "Fin",
       narrator: "La conversation se termine naturellement.",
       text: "De rien ! Bon trajet jusqu'à Jamsil !",
-      korean: "천만에요! 잠실까지 조심해서 가세요!",
+      korean: "아니에요! 잠실까지 조심해서 가세요!",
       french: "De rien ! Bon trajet jusqu'à Jamsil !",
-      romanization: "Cheonmaneyo! Jamsilkkaji josimhaeseo gaseyo!",
+      romanization: "Aniyeyo! Jamsilkkaji josimhaeseo gaseyo!",
     },
   ],
 };

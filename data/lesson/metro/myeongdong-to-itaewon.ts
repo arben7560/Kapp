@@ -1072,9 +1072,9 @@ const myeongdongToItaewonLesson: MetroLesson = {
       phase: "Fin",
       narrator: "La conversation se termine naturellement.",
       text: "De rien ! Passez un bon moment à Itaewon !",
-      korean: "천만에요! 이태원에서 즐거운 시간 보내세요!",
+      korean: "아니에요! 이태원에서 즐거운 시간 보내세요!",
       french: "De rien ! Passez un bon moment à Itaewon !",
-      romanization: "Cheonmaneyo! Itaewon-eseo jeulgeoun sigan bonaeseyo!",
+      romanization: "Aniyeyo! Itaewon-eseo jeulgeoun sigan bonaeseyo!",
     },
   ],
 };

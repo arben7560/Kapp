@@ -193,6 +193,12 @@ const CLIENT_TOOLBOX_EXPRESSIONS: Expression[] = [
     context: "Pour rebondir après une recommandation.",
   },
   {
+    word: "추가",
+    rom: "chuga",
+    mean: "Supplément",
+    context: "Utile pour demander ou comprendre un supplément.",
+  },
+  {
     word: "카드로 할게요.",
     rom: "Kadeuro halgeyo.",
     mean: "Je vais payer par carte.",

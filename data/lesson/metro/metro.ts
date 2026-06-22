@@ -378,9 +378,9 @@ export const seoulStationToJamsilLesson: MetroLesson = {
       phase: "Fin",
       narrator: "La conversation se termine naturellement.",
       text: "De rien ! Bon trajet jusqu'à Jamsil !",
-      korean: "천만에요! 잠실까지 조심해서 가세요!",
+      korean: "아니에요! 잠실까지 조심해서 가세요!",
       french: "De rien ! Bon trajet jusqu'à Jamsil !",
-      romanization: "Cheonmaneyo! Jamsilkkaji josimhaeseo gaseyo!",
+      romanization: "Aniyeyo! Jamsilkkaji josimhaeseo gaseyo!",
     },
   ],
 };
@@ -1457,9 +1457,9 @@ export const myeongdongToItaewonLesson: MetroLesson = {
       phase: "Fin",
       narrator: "La conversation se termine naturellement.",
       text: "De rien ! Passez un bon moment à Itaewon !",
-      korean: "천만에요! 이태원에서 즐거운 시간 보내세요!",
+      korean: "아니에요! 이태원에서 즐거운 시간 보내세요!",
       french: "De rien ! Passez un bon moment à Itaewon !",
-      romanization: "Cheonmaneyo! Itaewon-eseo jeulgeoun sigan bonaeseyo!",
+      romanization: "Aniyeyo! Itaewon-eseo jeulgeoun sigan bonaeseyo!",
     },
   ],
 };
@@ -1515,11 +1515,11 @@ export const hongikToGangnamLesson: MetroLesson = {
       narrator: "Le passant vous répond d'abord de manière claire et concise.",
       text: "Oui, bien sûr. Depuis Hongik University, prenez la ligne 2. Suivez les panneaux de la ligne 2 et prenez le train en direction de Gangnam.",
       korean:
-        "네, 물론이죠. 홍익대입구역에서 2호선을 타세요. 2호선 표지판을 따라가시고 강남 방향 열차를 타시면 돼요.",
+        "네, 물론입니다. 홍대입구역에서 2호선을 타시면 됩니다. 2호선 표지판을 따라가서 강남 방향 열차를 타세요.",
       french:
         "Oui, bien sûr. Depuis Hongik University, prenez la ligne 2. Suivez les panneaux de la ligne 2 et prenez le train en direction de Gangnam.",
       romanization:
-        "Ne, mullonijyo. Hongikdaeipgu-yeogeseo ihoseoneul taseyo. Ihoseon pyojipaneul ttaragashigo Gangnam banghyang yeolchareul tasimyeon dwaeyo.",
+        "Ne, mullon ibnida. Hongdaeipgu-yeogeseo ihoseoneul tasimyeon doemnida. Ihoseon pyojipaneul ttaragaseo Gangnam banghyang yeolchareul taseyo.",
       choices: [
         {
           id: "repeat_intro",
@@ -1639,8 +1639,8 @@ export const hongikToGangnamLesson: MetroLesson = {
         {
           id: "ask_transfer",
           label: "Est-ce qu'il y a un transfert ?",
-          korean: "환승은 있나요?",
-          romanization: "Hwansung-eun innayo?",
+          korean: "갈아타야 하나요?",
+          romanization: "garattaya hanayo ?",
           nextId: "ia_transfer_info",
         },
         {
@@ -1676,8 +1676,8 @@ export const hongikToGangnamLesson: MetroLesson = {
         {
           id: "ask_transfer_after_platform_repeat",
           label: "Est-ce qu'il y a un transfert ?",
-          korean: "환승은 있나요?",
-          romanization: "Hwansung-eun innayo?",
+          korean: "갈아타야 하나요?",
+          romanization: "garattaya hanayo ?",
           nextId: "ia_transfer_info",
         },
         {
@@ -1705,8 +1705,8 @@ export const hongikToGangnamLesson: MetroLesson = {
         {
           id: "ask_transfer_after_short_platform",
           label: "Est-ce qu'il y a un transfert ?",
-          korean: "환승은 있나요?",
-          romanization: "Hwansung-eun innayo?",
+          korean: "갈아타야 하나요?",
+          romanization: "garattaya hanayo ?",
           nextId: "ia_transfer_info",
         },
         {
@@ -1750,8 +1750,8 @@ export const hongikToGangnamLesson: MetroLesson = {
         {
           id: "ask_transfer_from_trip",
           label: "Est-ce qu'il y a un transfert ?",
-          korean: "환승은 있나요?",
-          romanization: "Hwansung-eun innayo?",
+          korean: "갈아타야 하나요?",
+          romanization: "garattaya hanayo ?",
           nextId: "ia_transfer_info",
         },
         {
@@ -1786,8 +1786,8 @@ export const hongikToGangnamLesson: MetroLesson = {
         {
           id: "ask_transfer_after_trip_repeat",
           label: "Est-ce qu'il y a un transfert ?",
-          korean: "환승은 있나요?",
-          romanization: "Hwansung-eun innayo?",
+          korean: "갈아타야 하나요?",
+          romanization: "garattaya hanayo ?",
           nextId: "ia_transfer_info",
         },
         {
@@ -1814,8 +1814,8 @@ export const hongikToGangnamLesson: MetroLesson = {
         {
           id: "ask_transfer_after_trip_short",
           label: "Est-ce qu'il y a un transfert ?",
-          korean: "환승은 있나요?",
-          romanization: "Hwansung-eun innayo?",
+          korean: "갈아타야 하나요?",
+          romanization: "garattaya hanayo ?",
           nextId: "ia_transfer_info",
         },
         {
@@ -1841,11 +1841,11 @@ export const hongikToGangnamLesson: MetroLesson = {
       speaker: "ai",
       phase: "Trajet",
       text: "Non, il n'y a pas de transfert. Vous pouvez y aller directement en restant sur la ligne 2.",
-      korean: "아니요, 환승은 없어요. 2호선으로 그대로 가시면 돼요.",
+      korean: "아니요, 안 갈아타셔도 돼요. 2호선으로 그대로 가시면 돼요.",
       french:
         "Non, il n'y a pas de transfert. Vous pouvez y aller directement en restant sur la ligne 2.",
       romanization:
-        "Aniyo, hwansung-eun eopseoyo. Ihoseoneuro geudaero gasimyeon dwaeyo.",
+        "Aniyo, an garattashyeodo dwaeyo. Ihoseoneuro geudaero gasimyeon dwaeyo.",
       choices: [
         {
           id: "repeat_transfer",
@@ -1877,7 +1877,7 @@ export const hongikToGangnamLesson: MetroLesson = {
       speaker: "ai",
       phase: "Trajet",
       text: "Oui. C'est direct. Aucun transfert n'est nécessaire.",
-      korean: "네. 직행이에요. 환승은 필요 없어요.",
+      korean: "네. 직행이에요. 갈아탈 필요 없어요.",
       french: "Oui. C'est direct. Aucun transfert n'est nécessaire.",
       romanization: "Ne. Jikhaeng-ieyo. Hwansung-eun pilyo eopseoyo.",
       choices: [
@@ -1911,7 +1911,7 @@ export const hongikToGangnamLesson: MetroLesson = {
       speaker: "ai",
       phase: "Trajet",
       text: "Très simplement : pas de transfert, restez sur la ligne 2.",
-      korean: "아주 간단히 말씀드리면, 환승 없이 2호선 그대로 가시면 돼요.",
+      korean: "아주 간단히 말씀드리면, 갈아타지 않고 2호선 그대로 가시면 돼요.",
       french: "Très simplement : pas de transfert, restez sur la ligne 2.",
       romanization:
         "Aju gandanhi malsseumdeurimyeon, hwansung eopsi ihoseon geudaero gasimyeon dwaeyo.",
@@ -2035,13 +2035,6 @@ export const hongikToGangnamLesson: MetroLesson = {
           romanization: "Gamsahamnida, da ihaehaesseoyo!",
           nextId: "ia_end",
         },
-        {
-          id: "ask_transfer_again_from_exit_short",
-          label: "Donc il n'y a vraiment pas de transfert ?",
-          korean: "그럼 정말 환승은 없나요?",
-          romanization: "Geureom jeongmal hwansung-eun eomnayo?",
-          nextId: "ia_transfer_info",
-        },
       ],
     },
 
@@ -2071,13 +2064,6 @@ export const hongikToGangnamLesson: MetroLesson = {
           romanization: "Gamsahamnida, da ihaehaesseoyo!",
           nextId: "ia_end",
         },
-        {
-          id: "ask_transfer_after_landmark",
-          label: "Et il n'y a toujours pas de transfert ?",
-          korean: "그리고 여전히 환승은 없나요?",
-          romanization: "Geurigo yeojeonhi hwansung-eun eomnayo?",
-          nextId: "ia_transfer_info",
-        },
       ],
     },
 
@@ -2087,11 +2073,11 @@ export const hongikToGangnamLesson: MetroLesson = {
       phase: "Sortie",
       text: "Oui. Sortez par la sortie 2, puis continuez vers Gangnam-daero. Le COEX et Teheran-ro sont accessibles depuis là.",
       korean:
-        "네. 2번 출구로 나오신 다음 강남대로 쪽으로 가세요. 거기서 COEX와 테헤란로로 이동하실 수 있어요.",
+        "네. 2번 출구로 나가신 다음 강남대로 쪽으로 가세요. 거기서 COEX와 테헤란로로 이동하실 수 있어요.",
       french:
         "Oui. Sortez par la sortie 2, puis continuez vers Gangnam-daero. Le COEX et Teheran-ro sont accessibles depuis là.",
       romanization:
-        "Ne. 2beon chulgu-ro naosin daeum Gangnam-daero jjogeuro gaseyo. Geogiseo COEX-wa Teheran-ro-ro idonghasil su isseoyo.",
+        "Ne. 2beon chulgu-ro nagashin daeum Gangnam-daero jjogeuro gaseyo. Geogiseo COEX-wa Teheran-ro-ro idonghasil su isseoyo.",
       choices: [
         {
           id: "thank_after_landmark_repeat",
@@ -2106,13 +2092,6 @@ export const hongikToGangnamLesson: MetroLesson = {
           korean: "다시 한번 말씀해 주실 수 있나요?",
           romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
           nextId: "ia_repeat_exit_landmark_info_short",
-        },
-        {
-          id: "ask_transfer_after_landmark_repeat",
-          label: "Et il n'y a toujours pas de transfert ?",
-          korean: "그리고 여전히 환승은 없나요?",
-          romanization: "Geurigo yeojeonhi hwansung-eun eomnayo?",
-          nextId: "ia_transfer_info",
         },
       ],
     },
@@ -2133,13 +2112,6 @@ export const hongikToGangnamLesson: MetroLesson = {
           korean: "감사합니다, 다 이해했어요!",
           romanization: "Gamsahamnida, da ihaehaesseoyo!",
           nextId: "ia_end",
-        },
-        {
-          id: "ask_transfer_after_landmark_short",
-          label: "Et il n'y a toujours pas de transfert ?",
-          korean: "그리고 여전히 환승은 없나요?",
-          romanization: "Geurigo yeojeonhi hwansung-eun eomnayo?",
-          nextId: "ia_transfer_info",
         },
         {
           id: "repeat_landmark_short_again",
@@ -2176,13 +2148,6 @@ export const hongikToGangnamLesson: MetroLesson = {
           korean: "다시 한번 말씀해 주실 수 있나요?",
           romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
           nextId: "ia_end_summary_short",
-        },
-        {
-          id: "ask_transfer_after_summary",
-          label: "Donc il n'y a vraiment pas de transfert ?",
-          korean: "그럼 정말 환승은 없나요?",
-          romanization: "Geureom jeongmal hwansung-eun eomnayo?",
-          nextId: "ia_transfer_info",
         },
       ],
     },
@@ -2229,9 +2194,9 @@ export const hongikToGangnamLesson: MetroLesson = {
       phase: "Fin",
       narrator: "La conversation se termine naturellement.",
       text: "De rien ! Bon voyage et bonne journée !",
-      korean: "천만에요! 안전하게 다녀오세요. 좋은 하루 되세요!",
+      korean: "아니에요! 안전하게 다녀오세요. 좋은 하루 되세요!",
       french: "De rien ! Bon voyage et bonne journée !",
-      romanization: "Cheonmaneyo! Anjeonhage danyeooseyo. Joeun haru doeseyo!",
+      romanization: "Aniyeyo! Anjeonhage danyeooseyo. Joeun haru doeseyo!",
     },
   ],
 };
