@@ -68,6 +68,7 @@ const DATE_ANNIVERSAIRE_AUDIO = {
     require("../../../assets/audio/comptage/date-calendrier/date-anniversaire/toolbox/date-anniversaire-toolbox-3.mp3"),
     require("../../../assets/audio/comptage/date-calendrier/date-anniversaire/toolbox/date-anniversaire-toolbox-4.mp3"),
     require("../../../assets/audio/comptage/date-calendrier/date-anniversaire/toolbox/date-anniversaire-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/date-anniversaire/toolbox/date-anniversaire-toolbox-6.mp3"),
   ],
 };
 

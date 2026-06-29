@@ -1949,7 +1949,7 @@ export const hongikToGangnamLesson: MetroLesson = {
         "Le passant vous explique maintenant comment sortir une fois arrivé à Gangnam.",
       text: "Une fois arrivé à Gangnam, prenez la sortie numéro 2. Vous arriverez directement vers Gangnam-daero.",
       korean:
-        "강남역에 도착하면 2번 출구로 나오세요. 그러면 바로 강남대로 쪽으로 나가실 수 있어요.",
+        "강남역에 도착하면 2번 출구로 나가세요. 그러면 바로 강남대로 쪽으로 나가실 수 있어요.",
       french:
         "Une fois arrivé à Gangnam, prenez la sortie numéro 2. Vous arriverez directement vers Gangnam-daero.",
       romanization:
