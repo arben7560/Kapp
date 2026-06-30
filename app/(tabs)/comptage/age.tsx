@@ -30,7 +30,82 @@ const COLORS = {
   muted: "rgba(255,255,255,0.60)",
 };
 
-const SCENES = [
+type CountingAudioSet = {
+  messages: number[];
+  toolbox: number[];
+};
+
+const withSceneAudio = (scenes: any[], audioSets: CountingAudioSet[]) =>
+  scenes.map((scene, sceneIndex) => {
+    const audioSet = audioSets[sceneIndex];
+
+    if (!audioSet) return scene;
+
+    return {
+      ...scene,
+      dialogue: scene.dialogue.map((line: any, index: number) => ({
+        ...line,
+        ...(audioSet.messages[index] ? { audio: audioSet.messages[index] } : {}),
+      })),
+      expressions: scene.expressions.map((expression: any, index: number) => ({
+        ...expression,
+        ...(audioSet.toolbox[index] ? { audio: audioSet.toolbox[index] } : {}),
+      })),
+    };
+  });
+
+const HIERARCHIE_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/age/hierarchie/hierarchie-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/age/hierarchie/hierarchie-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/age/hierarchie/hierarchie-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/age/hierarchie/hierarchie-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/age/hierarchie/toolbox/hierarchie-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/age/hierarchie/toolbox/hierarchie-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/age/hierarchie/toolbox/hierarchie-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/age/hierarchie/toolbox/hierarchie-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/age/hierarchie/toolbox/hierarchie-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/age/hierarchie/toolbox/hierarchie-toolbox-6.mp3"),
+  ],
+};
+
+const SYSTEM_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/age/system/system-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/age/system/system-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/age/system/system-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/age/system/system-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/age/system/toolbox/system-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/age/system/toolbox/system-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/age/system/toolbox/system-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/age/system/toolbox/system-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/age/system/toolbox/system-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/age/system/toolbox/system-toolbox-6.mp3"),
+  ],
+};
+
+const MAJORITE_AUDIO = {
+  messages: [
+    require("../../../assets/audio/comptage/age/majorité/majorité-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/age/majorité/majorité-bulle-2.mp3"),
+    require("../../../assets/audio/comptage/age/majorité/majorité-bulle-3.mp3"),
+    require("../../../assets/audio/comptage/age/majorité/majorité-bulle-4.mp3"),
+  ],
+  toolbox: [
+    require("../../../assets/audio/comptage/age/majorité/toolbox/majorité-toolbox-1.mp3"),
+    require("../../../assets/audio/comptage/age/majorité/toolbox/majorité-toolbox-2.mp3"),
+    require("../../../assets/audio/comptage/age/majorité/toolbox/majorité-toolbox-3.mp3"),
+    require("../../../assets/audio/comptage/age/majorité/toolbox/majorité-toolbox-4.mp3"),
+    require("../../../assets/audio/comptage/age/majorité/toolbox/majorité-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/age/majorité/toolbox/majorité-toolbox-6.mp3"),
+  ],
+};
+
+const SCENES = withSceneAudio([
   {
     id: "introduction",
     title: "La Hiérarchie",
@@ -239,7 +314,7 @@ const SCENES = [
       },
     ],
   },
-];
+], [HIERARCHIE_AUDIO, SYSTEM_AUDIO, MAJORITE_AUDIO]);
 
 export default function AgeLifeImmersion() {
   return (
