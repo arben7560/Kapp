@@ -1,511 +1,967 @@
-import { useMemo, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  createAudioPlayer,
+  setAudioModeAsync,
+  type AudioPlayer,
+} from "expo-audio";
+import { router } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ImageBackground,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
-  useWindowDimensions,
   View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ABSOLUTE_FILL } from "../../constants/layout";
+const BG_URL =
+  "https://images.unsplash.com/photo-1741533911359-943221043128?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=75&w=1600";
 
-const listenBackground = require("../../assets/images/avatarIA.png");
-
-const BG_DEEP = "#050508";
-const TXT = "rgba(255,255,255,0.98)";
-const MUTED = "rgba(255,255,255,0.64)";
-const SOFT = "rgba(255,255,255,0.48)";
-const LINE = "rgba(255,255,255,0.08)";
-
-const CYAN = "#22D3EE";
-
-const fonts = {
-  bold: "Outfit_700Bold",
-  black: "Outfit_900Black",
-  medium: "Outfit_500Medium",
-  kr: "NotoSansKR_700Bold",
+const COLORS = {
+  bg: "#07080d",
+  card: "rgba(14, 17, 28, 0.78)",
+  cardSoft: "rgba(255,255,255,0.08)",
+  line: "rgba(255,255,255,0.14)",
+  text: "#ffffff",
+  muted: "rgba(255,255,255,0.66)",
+  faint: "rgba(255,255,255,0.42)",
+  red: "#ff4f66",
+  redSoft: "rgba(255,79,102,0.18)",
+  purple: "#a855f7",
+  green: "#8df0b5",
 };
 
-type ChatLine = {
-  id: number;
-  role: "user" | "teacher";
-  text: string;
+type ExerciseKind = "dictation" | "situation" | "gap" | "order" | "reaction";
+type AudioAsset = number;
+
+type BaseExercise = {
+  id: string;
+  kind: ExerciseKind;
+  theme: string;
+  title: string;
+  instruction: string;
+  audio: AudioAsset | null;
+  explanation?: string;
 };
 
-function createLocalAnswer(message: string) {
-  const normalized = message.toLowerCase();
+type ChoiceExercise = BaseExercise & {
+  kind: "dictation" | "situation" | "reaction";
+  options: string[];
+  answer: number;
+};
 
-  if (normalized.includes("cafe") || normalized.includes("café")) {
-    return "En coreen, tu peux dire : 커피 한 잔 주세요. Cela veut dire : un cafe, s'il vous plait.";
-  }
+type GapExercise = BaseExercise & {
+  kind: "gap";
+  before: string;
+  after: string;
+  options: string[];
+  answer: string;
+};
 
-  if (normalized.includes("bonjour") || normalized.includes("salut")) {
-    return "Tu peux dire 안녕하세요. C'est la salutation polie la plus utile au quotidien.";
-  }
+type OrderExercise = BaseExercise & {
+  kind: "order";
+  words: string[];
+  answer: string[];
+};
 
-  if (normalized.includes("merci")) {
-    return "Merci se dit 감사합니다 dans une situation polie. Plus naturel entre proches : 고마워요.";
-  }
+type ListenExercise = ChoiceExercise | GapExercise | OrderExercise;
 
-  if (normalized.includes("restaurant")) {
-    return "Au restaurant, une phrase tres pratique est 이거 주세요 : je voudrais ceci, s'il vous plait.";
-  }
+const EXERCISES: ListenExercise[] = [
+  {
+    id: "cafe-dictation-01",
+    kind: "dictation",
+    theme: "Café",
+    title: "Retrouve la phrase",
+    instruction: "Écoute, puis choisis la bonne écriture.",
+    audio: null,
+    // audio: require('../assets/audio/listen/cafe/myeot-bun-iseyo.mp3'),
+    options: ["몇 분이세요?", "몇 본이세요?", "몇 분 이세요?"],
+    answer: 0,
+    explanation: "몇 분이세요? = Vous êtes combien ?",
+  },
+  {
+    id: "bbq-situation-01",
+    kind: "situation",
+    theme: "K-BBQ",
+    title: "Comprends la situation",
+    instruction: "Écoute la serveuse et choisis la réponse logique.",
+    audio: null,
+    // audio: require('../assets/audio/listen/bbq/myeot-bun-iseyo.mp3'),
+    options: ["두 명이에요.", "카드로 계산할게요.", "물 주세요."],
+    answer: 0,
+    explanation: "La serveuse demande le nombre de personnes.",
+  },
+  {
+    id: "restaurant-gap-01",
+    kind: "gap",
+    theme: "Restaurant",
+    title: "Complète le mot",
+    instruction: "Écoute, puis complète la phrase.",
+    audio: null,
+    // audio: require('../assets/audio/listen/restaurant/samgyeopsal-ibonbun-juseyo.mp3'),
+    before: "삼겹살 ",
+    after: " 주세요.",
+    options: ["2인분", "2번", "2명"],
+    answer: "2인분",
+    explanation: "2인분 = deux portions.",
+  },
+  {
+    id: "metro-order-01",
+    kind: "order",
+    theme: "Métro",
+    title: "Remets en ordre",
+    instruction: "Écoute, puis reconstruis la phrase.",
+    audio: null,
+    // audio: require('../assets/audio/listen/metro/igoseuro-gaseyo.mp3'),
+    words: ["가세요", "이곳으로", "그냥"],
+    answer: ["그냥", "이곳으로", "가세요"],
+    explanation: "그냥 이곳으로 가세요. = Allez simplement par ici.",
+  },
+  {
+    id: "cafe-reaction-01",
+    kind: "reaction",
+    theme: "Café",
+    title: "Choisis la réaction",
+    instruction: "Écoute et réponds naturellement.",
+    audio: null,
+    // audio: require('../assets/audio/listen/cafe/mueoseuro-deurigessseumnikka.mp3'),
+    options: ["아이스 아메리카노 주세요.", "화장실이 어디예요?", "괜찮아요."],
+    answer: 0,
+    explanation: "On te demande ce que tu veux prendre.",
+  },
+];
 
-  return "Bonne question. Pour le moment, le prof IA fonctionne en local : essaie une question sur bonjour, merci, cafe ou restaurant.";
-}
+const KIND_LABEL: Record<ExerciseKind, { mini: string; skill: string }> = {
+  dictation: { mini: "Orthographe", skill: "Écoute + Hangul" },
+  situation: { mini: "Situation", skill: "Compréhension" },
+  gap: { mini: "Mot manquant", skill: "Vocabulaire" },
+  order: { mini: "Ordre", skill: "Syntaxe" },
+  reaction: { mini: "Réaction", skill: "Conversation" },
+};
 
-export default function TeacherIARealtimeScreen() {
-  const [message, setMessage] = useState("");
-  const [history, setHistory] = useState<ChatLine[]>([
-    {
-      id: 1,
-      role: "teacher",
-      text: "Le prof IA est maintenant en mode frontend local. Pose une question courte.",
-    },
-  ]);
-  const insets = useSafeAreaInsets();
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const videoHeight = Math.min(screenWidth * 0.9, screenHeight * 0.34);
+export default function ListenScreen() {
+  const playerRef = useRef<AudioPlayer | null>(null);
+  const playbackListenerRef = useRef<{ remove: () => void } | null>(null);
+  const [index, setIndex] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [picked, setPicked] = useState<number[]>([]);
+  const [checked, setChecked] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [hint, setHint] = useState("Audio IA à brancher");
 
-  const lastUserMessage = useMemo(
-    () => [...history].reverse().find((line) => line.role === "user")?.text,
-    [history],
-  );
+  const item = EXERCISES[index];
+  const meta = KIND_LABEL[item.kind];
 
-  function sendLocalMessage() {
-    const trimmedMessage = message.trim();
-    if (!trimmedMessage) return;
+  const cleanupPlaybackListener = useCallback(() => {
+    if (playbackListenerRef.current) {
+      playbackListenerRef.current.remove();
+      playbackListenerRef.current = null;
+    }
+  }, []);
 
-    const now = Date.now();
-    setHistory((lines) => [
-      ...lines,
-      { id: now, role: "user", text: trimmedMessage },
-      { id: now + 1, role: "teacher", text: createLocalAnswer(trimmedMessage) },
-    ]);
-    setMessage("");
-  }
+  const stopAudio = useCallback(() => {
+    cleanupPlaybackListener();
 
-  const steps = ["Ecoute", "Local", "Echange", "Reponse"];
-  const progressIndex = history.length > 1 ? 3 : 1;
+    try {
+      playerRef.current?.pause();
+      playerRef.current?.remove();
+    } catch {
+      // The player can already be released during a navigation cleanup.
+    }
+
+    playerRef.current = null;
+    setIsPlaying(false);
+  }, [cleanupPlaybackListener]);
+
+  useEffect(() => {
+    setAudioModeAsync({
+      playsInSilentMode: true,
+      allowsRecording: false,
+      shouldPlayInBackground: false,
+    }).catch(() => null);
+
+    return stopAudio;
+  }, [stopAudio]);
+
+  const canCheck = useMemo(() => {
+    if (item.kind === "order") return picked.length === item.words.length;
+    return selected !== null;
+  }, [item, picked.length, selected]);
+
+  const isCorrect = useMemo(() => {
+    if (!checked) return false;
+
+    if (item.kind === "order") {
+      const sentence = picked.map((id) => item.words[id]);
+      return sentence.join(" ") === item.answer.join(" ");
+    }
+
+    if (item.kind === "gap") {
+      return item.options[selected ?? -1] === item.answer;
+    }
+
+    return selected === item.answer;
+  }, [checked, item, picked, selected]);
+
+  const resetAnswer = () => {
+    stopAudio();
+    setSelected(null);
+    setPicked([]);
+    setChecked(false);
+    setHint("Audio IA à brancher");
+  };
+
+  const goNext = () => {
+    const nextIndex = index === EXERCISES.length - 1 ? 0 : index + 1;
+    setIndex(nextIndex);
+    resetAnswer();
+  };
+
+  const playAudio = async () => {
+    if (!item.audio) {
+      setHint("Ajoute ton fichier audio dans EXERCISES.audio");
+      return;
+    }
+
+    try {
+      stopAudio();
+      setIsPlaying(true);
+      const player = createAudioPlayer(item.audio, {
+        updateInterval: 250,
+      });
+
+      playerRef.current = player;
+
+      playbackListenerRef.current = player.addListener(
+        "playbackStatusUpdate",
+        (status) => {
+          const statusAny = status as any;
+          const didFinish =
+            statusAny.didJustFinish === true ||
+            statusAny.playbackState === "ended" ||
+            statusAny.playbackState === "finished" ||
+            statusAny.timeControlStatus === "ended" ||
+            (typeof statusAny.currentTime === "number" &&
+              typeof statusAny.duration === "number" &&
+              statusAny.duration > 0 &&
+              statusAny.currentTime >= statusAny.duration - 0.05 &&
+              statusAny.playing === false);
+
+          if (!didFinish) return;
+
+          cleanupPlaybackListener();
+
+          try {
+            player.remove();
+          } catch {
+            // The player can already be released by the native layer.
+          }
+
+          if (playerRef.current === player) {
+            playerRef.current = null;
+          }
+
+          setIsPlaying(false);
+        },
+      );
+
+      player.seekTo(0);
+      player.play();
+    } catch (error) {
+      setIsPlaying(false);
+      setHint("Impossible de lire cet audio");
+      console.warn(error);
+    }
+  };
+
+  const pickOrderWord = (wordIndex: number) => {
+    if (checked || picked.includes(wordIndex)) return;
+    setPicked((prev) => [...prev, wordIndex]);
+  };
+
+  const removeOrderWord = (wordIndex: number) => {
+    if (checked) return;
+    setPicked((prev) => prev.filter((id) => id !== wordIndex));
+  };
+
+  const renderChoices = () => {
+    if (item.kind === "order") {
+      return (
+        <View>
+          <View style={styles.sentenceBox}>
+            {picked.length === 0 ? (
+              <Text style={styles.placeholder}>Construis la phrase ici</Text>
+            ) : (
+              picked.map((wordIndex) => (
+                <Pressable
+                  key={wordIndex}
+                  onPress={() => removeOrderWord(wordIndex)}
+                  style={styles.wordSelected}
+                >
+                  <Text style={styles.wordText}>{item.words[wordIndex]}</Text>
+                </Pressable>
+              ))
+            )}
+          </View>
+
+          <View style={styles.wordGrid}>
+            {item.words.map((word, wordIndex) => {
+              const used = picked.includes(wordIndex);
+              return (
+                <Pressable
+                  key={`${word}-${wordIndex}`}
+                  disabled={used || checked}
+                  onPress={() => pickOrderWord(wordIndex)}
+                  style={[styles.wordOption, used && styles.disabledOption]}
+                >
+                  <Text
+                    style={[styles.optionText, used && styles.disabledText]}
+                  >
+                    {word}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      );
+    }
+
+    if (item.kind === "gap") {
+      return (
+        <View>
+          <View style={styles.gapSentence}>
+            <Text style={styles.koreanInline}>{item.before}</Text>
+            <View style={styles.blank} />
+            <Text style={styles.koreanInline}>{item.after}</Text>
+          </View>
+
+          <View style={styles.choiceStack}>
+            {item.options.map((option, optionIndex) => (
+              <ChoiceButton
+                key={option}
+                label={option}
+                active={selected === optionIndex}
+                locked={checked}
+                correct={checked && option === item.answer}
+                wrong={
+                  checked && selected === optionIndex && option !== item.answer
+                }
+                onPress={() => !checked && setSelected(optionIndex)}
+              />
+            ))}
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.choiceStack}>
+        {item.options.map((option, optionIndex) => (
+          <ChoiceButton
+            key={option}
+            label={option}
+            active={selected === optionIndex}
+            locked={checked}
+            correct={checked && optionIndex === item.answer}
+            wrong={
+              checked && selected === optionIndex && optionIndex !== item.answer
+            }
+            onPress={() => !checked && setSelected(optionIndex)}
+          />
+        ))}
+      </View>
+    );
+  };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={styles.keyboard}
+    <ImageBackground
+      source={{ uri: BG_URL }}
+      style={styles.bg}
+      resizeMode="cover"
     >
-      <ImageBackground
-        source={listenBackground}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-        blurRadius={0}
-      >
-        <View pointerEvents="none" style={styles.backgroundDarkOverlay} />
+      <View style={styles.overlay} />
 
-        <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
-          <View
-            style={[
-              styles.header,
-              { paddingTop: Math.max(6, insets.top * 0.15) },
-            ]}
-          >
-            <View style={{ width: 42 }} />
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} style={styles.roundButton}>
+            <Ionicons name="chevron-back" size={24} color={COLORS.text} />
+          </Pressable>
 
-            <View style={styles.modeBadge}>
-              <Text style={styles.modeTxt}>PROF IA</Text>
-            </View>
-
-            <View style={{ width: 42 }} />
+          <View style={styles.headerTextWrap}>
+            <Text style={styles.kicker}>SÉOUL IMMERSION</Text>
+            <Text style={styles.headerTitle}>Écoute active</Text>
           </View>
 
-          <View style={styles.body}>
-            <View style={styles.topFixedSection}>
-              <View style={styles.topInner}>
-                <View style={styles.stepsContainer}>
-                  {steps.map((step, index) => {
-                    const active = index === progressIndex;
-                    const done = index <= progressIndex;
+          <Pressable style={styles.roundButton}>
+            <Ionicons name="settings-sharp" size={24} color={COLORS.muted} />
+          </Pressable>
+        </View>
 
-                    return (
-                      <View key={step} style={styles.stepWrapper}>
-                        <View
-                          style={[
-                            styles.stepDot,
-                            done && {
-                              backgroundColor: CYAN,
-                              opacity: active ? 1 : 0.7,
-                            },
-                          ]}
-                        />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.content}
+        >
+          <View style={styles.modePill}>
+            <Ionicons name="volume-high" size={16} color={COLORS.purple} />
+            <Text style={styles.modeText}>MODE ÉCOUTE</Text>
+          </View>
 
-                        <Text
-                          style={[
-                            styles.stepLabel,
-                            active && {
-                              color: TXT,
-                              fontFamily: fonts.bold,
-                            },
-                          ]}
-                        >
-                          {step}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                </View>
+          <View style={styles.modeSwitcherWrap}>
+            <Pressable
+              onPress={() => {
+                const prevIndex =
+                  index === 0 ? EXERCISES.length - 1 : index - 1;
+                setIndex(prevIndex);
+                resetAnswer();
+              }}
+              style={styles.arrowButton}
+            >
+              <Ionicons name="chevron-back" size={22} color={COLORS.text} />
+            </Pressable>
 
-                <View
+            <View style={styles.modeCenterPill}>
+              <Text style={styles.modeCenterMini}>ENTRAÎNEMENT</Text>
+              <Text style={styles.modeCenterLabel}>{meta.mini}</Text>
+            </View>
+
+            <Pressable
+              onPress={() => {
+                const nextIndex =
+                  index === EXERCISES.length - 1 ? 0 : index + 1;
+                setIndex(nextIndex);
+                resetAnswer();
+              }}
+              style={styles.arrowButton}
+            >
+              <Ionicons name="chevron-forward" size={22} color={COLORS.text} />
+            </Pressable>
+          </View>
+
+          <View style={styles.card}>
+            <View style={styles.cardTop}>
+              <View>
+                <Text style={styles.theme}>{item.theme}</Text>
+                <Text style={styles.title}>{item.title}</Text>
+              </View>
+              <Text style={styles.counter}>
+                {String(index + 1).padStart(2, "0")} /{" "}
+                {String(EXERCISES.length).padStart(2, "0")}
+              </Text>
+            </View>
+
+            <View style={styles.skillRow}>
+              <Text style={styles.skillPill}>{meta.mini}</Text>
+              <Text style={styles.skillText}>{meta.skill}</Text>
+            </View>
+
+            <Text style={styles.instruction}>{item.instruction}</Text>
+
+            <Pressable onPress={playAudio} style={styles.listenButton}>
+              <Ionicons
+                name={isPlaying ? "pause" : "play"}
+                size={18}
+                color={COLORS.text}
+              />
+              <Text style={styles.listenText}>
+                {isPlaying ? "Lecture..." : "Écouter"}
+              </Text>
+            </Pressable>
+
+            <Text style={styles.audioHint}>{hint}</Text>
+
+            {renderChoices()}
+
+            {checked && (
+              <View
+                style={[styles.feedback, isCorrect ? styles.good : styles.bad]}
+              >
+                <Text style={styles.feedbackTitle}>
+                  {isCorrect ? "Correct" : "À revoir"}
+                </Text>
+                <Text style={styles.feedbackText}>{item.explanation}</Text>
+              </View>
+            )}
+
+            <View style={styles.actionRow}>
+              <Pressable
+                onPress={resetAnswer}
+                style={[styles.actionButton, styles.secondaryButton]}
+              >
+                <Text style={styles.secondaryText}>Réessayer</Text>
+              </Pressable>
+
+              {!checked ? (
+                <Pressable
+                  disabled={!canCheck}
+                  onPress={() => setChecked(true)}
                   style={[
-                    styles.videoContainer,
-                    {
-                      height: videoHeight,
-                      borderColor: "rgba(34,211,238,0.40)",
-                    },
+                    styles.actionButton,
+                    !canCheck && styles.disabledButton,
                   ]}
                 >
-                  <View style={styles.avatarPlaceholder}>
-                    <Text style={styles.avatarText}>AI</Text>
-                  </View>
-
-                  <LinearGradient
-                    colors={["transparent", "rgba(0,0,0,0.62)"]}
-                    style={styles.videoOverlay}
-                  />
-                </View>
-
-                <View style={styles.aiCard}>
-                  <Text style={styles.aiKr}>Mode local active</Text>
-
-                  <Text style={styles.aiFr}>
-                    Plus aucun appel serveur : les reponses sont generees dans
-                    l&apos;application.
-                  </Text>
-                </View>
-              </View>
+                  <Text style={styles.actionText}>Valider</Text>
+                </Pressable>
+              ) : (
+                <Pressable onPress={goNext} style={styles.actionButton}>
+                  <Text style={styles.actionText}>Suivant</Text>
+                </Pressable>
+              )}
             </View>
-
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={[
-                styles.interactionScroll,
-                { paddingBottom: Math.max(22, insets.bottom + 8) },
-              ]}
-            >
-              <View style={styles.interactionSection}>
-                <Text style={styles.sectionTitle}>Ton message</Text>
-
-                {lastUserMessage ? (
-                  <View style={styles.userBubble}>
-                    <Text style={styles.choiceKr}>{lastUserMessage}</Text>
-                    <Text style={styles.choiceFr}>Dernier message envoye</Text>
-                  </View>
-                ) : null}
-
-                <View style={styles.historyList}>
-                  {history.slice(-4).map((line) => (
-                    <View
-                      key={line.id}
-                      style={[
-                        styles.messageBubble,
-                        line.role === "user" && styles.messageBubbleUser,
-                      ]}
-                    >
-                      <Text style={styles.choiceKr}>{line.text}</Text>
-                      <Text style={styles.choiceFr}>
-                        {line.role === "user" ? "Toi" : "Prof IA"}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-
-                <View style={styles.inputCard}>
-                  <TextInput
-                    multiline
-                    onChangeText={setMessage}
-                    placeholder="Ex : Comment dire je voudrais un cafe en coreen ?"
-                    placeholderTextColor={SOFT}
-                    style={styles.input}
-                    value={message}
-                  />
-
-                  <Pressable
-                    disabled={!message.trim()}
-                    onPress={sendLocalMessage}
-                    style={({ pressed }) => [
-                      styles.primaryAction,
-                      (pressed || !message.trim()) && styles.buttonDimmed,
-                    ]}
-                  >
-                    <LinearGradient
-                      colors={[CYAN, "#56CCF2"]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.primaryActionInner}
-                    >
-                      <Text style={styles.primaryActionText}>Envoyer</Text>
-                    </LinearGradient>
-                  </Pressable>
-                </View>
-              </View>
-            </ScrollView>
           </View>
-        </SafeAreaView>
-      </ImageBackground>
-    </KeyboardAvoidingView>
+
+          <View style={styles.footerNote}>
+            <Text style={styles.footerTitle}>Objectif</Text>
+            <Text style={styles.footerText}>
+              Comprendre avant de lire. La traduction n’apparaît qu’après
+              validation.
+            </Text>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </ImageBackground>
+  );
+}
+
+function ChoiceButton({
+  label,
+  active,
+  locked,
+  correct,
+  wrong,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  locked: boolean;
+  correct: boolean;
+  wrong: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      disabled={locked}
+      onPress={onPress}
+      style={[
+        styles.choice,
+        active && styles.choiceActive,
+        correct && styles.choiceCorrect,
+        wrong && styles.choiceWrong,
+      ]}
+    >
+      <Text style={styles.optionText}>{label}</Text>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  keyboard: {
+  bg: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.66)",
+  },
+  safe: {
     flex: 1,
   },
-
-  backgroundImage: {
-    flex: 1,
-    backgroundColor: BG_DEEP,
-  },
-
-  backgroundDarkOverlay: {
-    ...ABSOLUTE_FILL,
-    backgroundColor: "rgba(5,5,8,0.64)",
-  },
-
-  body: {
-    flex: 1,
-  },
-
-  topFixedSection: {
-    paddingHorizontal: 20,
-    paddingTop: 6,
-  },
-
-  topInner: {
-    flexShrink: 0,
-  },
-
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingBottom: 10,
-  },
-
-  modeBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: 99,
-    borderWidth: 1,
-    borderColor: CYAN,
-    backgroundColor: "rgba(255,255,255,0.03)",
-  },
-
-  modeTxt: {
-    color: CYAN,
-    fontSize: 10,
-    fontFamily: fonts.bold,
-    letterSpacing: 1.4,
-  },
-
-  stepsContainer: {
+    paddingTop: 10,
+    paddingBottom: 14,
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 22,
-    marginTop: 6,
-  },
-
-  stepWrapper: {
     alignItems: "center",
+    justifyContent: "space-between",
+  },
+  roundButton: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerTextWrap: {
     flex: 1,
+    paddingHorizontal: 16,
+  },
+  kicker: {
+    color: COLORS.red,
+    fontSize: 13,
+    fontWeight: "800",
+    letterSpacing: 4,
+  },
+  headerTitle: {
+    color: COLORS.text,
+    fontSize: 23,
+    fontWeight: "800",
+    marginTop: 3,
+  },
+  content: {
+    paddingHorizontal: 22,
+    paddingBottom: 28,
+  },
+  modePill: {
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 22,
+    paddingVertical: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: COLORS.purple,
+    backgroundColor: "rgba(168,85,247,0.12)",
+    marginBottom: 18,
+  },
+  modeText: {
+    color: COLORS.text,
+    letterSpacing: 3,
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  progressRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 24,
+    marginBottom: 22,
+  },
+  dot: {
+    width: 11,
+    height: 11,
+    borderRadius: 11,
+    backgroundColor: "rgba(255,255,255,0.22)",
+  },
+  dotActive: {
+    backgroundColor: COLORS.purple,
+    transform: [{ scale: 1.2 }],
+  },
+  card: {
+    borderRadius: 34,
+    padding: 22,
+    backgroundColor: COLORS.card,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    overflow: "hidden",
+  },
+  cardTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 14,
+  },
+  theme: {
+    color: COLORS.red,
+    fontSize: 13,
+    letterSpacing: 3,
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+  title: {
+    color: COLORS.text,
+    fontSize: 30,
+    fontWeight: "800",
+    marginTop: 8,
+  },
+  counter: {
+    color: COLORS.faint,
+    fontSize: 13,
+    fontWeight: "700",
+    paddingTop: 4,
+  },
+  skillRow: {
+    marginTop: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  skillPill: {
+    color: COLORS.text,
+    fontSize: 12,
+    fontWeight: "800",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: COLORS.redSoft,
+    overflow: "hidden",
+  },
+  skillText: {
+    color: COLORS.muted,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  instruction: {
+    color: COLORS.muted,
+    fontSize: 17,
+    lineHeight: 25,
+    marginTop: 18,
+  },
+  listenButton: {
+    marginTop: 22,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: COLORS.redSoft,
+    borderWidth: 1,
+    borderColor: "rgba(255,79,102,0.55)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  listenText: {
+    color: COLORS.text,
+    fontSize: 14,
+    fontWeight: "800",
+    letterSpacing: 2,
+    textTransform: "uppercase",
+  },
+  audioHint: {
+    color: COLORS.faint,
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 10,
+    marginBottom: 18,
+  },
+  choiceStack: {
+    gap: 12,
+  },
+  choice: {
+    minHeight: 58,
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    backgroundColor: COLORS.cardSoft,
+    justifyContent: "center",
+  },
+  choiceActive: {
+    borderColor: COLORS.red,
+    backgroundColor: COLORS.redSoft,
+  },
+  choiceCorrect: {
+    borderColor: COLORS.green,
+    backgroundColor: "rgba(141,240,181,0.14)",
+  },
+  choiceWrong: {
+    borderColor: COLORS.red,
+    backgroundColor: "rgba(255,79,102,0.22)",
+  },
+  optionText: {
+    color: COLORS.text,
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "center",
   },
 
-  stepDot: {
-    width: 6,
-    height: 6,
+  modeSwitcherWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 14,
+    marginBottom: 22,
+  },
+
+  arrowButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  modeCenterPill: {
+    minWidth: 190,
+    minHeight: 72,
+    borderRadius: 28,
+    paddingHorizontal: 22,
+    paddingVertical: 12,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  modeCenterMini: {
+    color: COLORS.faint,
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 2.2,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+
+  modeCenterLabel: {
+    color: COLORS.text,
+    fontSize: 20,
+    fontWeight: "800",
+  },
+  gapSentence: {
+    minHeight: 76,
+    borderRadius: 24,
+    backgroundColor: "rgba(0,0,0,0.22)",
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    marginBottom: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    flexWrap: "wrap",
+  },
+  koreanInline: {
+    color: COLORS.text,
+    fontSize: 24,
+    fontWeight: "800",
+  },
+  blank: {
+    width: 82,
+    height: 3,
     borderRadius: 3,
-    backgroundColor: "rgba(255,255,255,0.16)",
+    backgroundColor: COLORS.red,
+    marginHorizontal: 8,
+    marginTop: 18,
+  },
+  sentenceBox: {
+    minHeight: 88,
+    borderRadius: 24,
+    backgroundColor: "rgba(0,0,0,0.22)",
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 14,
+  },
+  placeholder: {
+    color: COLORS.faint,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  wordGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 10,
+  },
+  wordOption: {
+    paddingHorizontal: 18,
+    paddingVertical: 13,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    backgroundColor: COLORS.cardSoft,
+  },
+  wordSelected: {
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+    borderRadius: 16,
+    backgroundColor: COLORS.redSoft,
+    borderWidth: 1,
+    borderColor: COLORS.red,
+  },
+  wordText: {
+    color: COLORS.text,
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  disabledOption: {
+    opacity: 0.26,
+  },
+  disabledText: {
+    color: COLORS.faint,
+  },
+  feedback: {
+    marginTop: 18,
+    borderRadius: 22,
+    padding: 15,
+    borderWidth: 1,
+  },
+  good: {
+    backgroundColor: "rgba(141,240,181,0.12)",
+    borderColor: "rgba(141,240,181,0.42)",
+  },
+  bad: {
+    backgroundColor: "rgba(255,79,102,0.12)",
+    borderColor: "rgba(255,79,102,0.45)",
+  },
+  feedbackTitle: {
+    color: COLORS.text,
+    fontSize: 15,
+    fontWeight: "900",
+    marginBottom: 4,
+  },
+  feedbackText: {
+    color: COLORS.muted,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 18,
+  },
+  actionButton: {
+    flex: 1,
+    height: 52,
+    borderRadius: 18,
+    backgroundColor: COLORS.red,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  secondaryButton: {
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: COLORS.line,
+  },
+  actionText: {
+    color: COLORS.text,
+    fontSize: 14,
+    fontWeight: "900",
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+  },
+  secondaryText: {
+    color: COLORS.muted,
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  disabledButton: {
+    opacity: 0.35,
+  },
+  footerNote: {
+    marginTop: 16,
+    padding: 18,
+    borderRadius: 24,
+    backgroundColor: "rgba(0,0,0,0.24)",
+    borderWidth: 1,
+    borderColor: COLORS.line,
+  },
+  footerTitle: {
+    color: COLORS.red,
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 3,
+    textTransform: "uppercase",
     marginBottom: 8,
   },
-
-  stepLabel: {
-    color: MUTED,
-    fontSize: 12,
-    fontFamily: fonts.medium,
-  },
-
-  videoContainer: {
-    width: "88%",
-    alignSelf: "center",
-    borderRadius: 32,
-    overflow: "hidden",
-    backgroundColor: "rgba(14,23,45,0.78)",
-    borderWidth: 1,
-  },
-
-  avatarPlaceholder: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(5,5,8,0.34)",
-  },
-
-  avatarText: {
-    color: TXT,
-    fontSize: 52,
-    fontFamily: fonts.black,
-  },
-
-  videoOverlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 88,
-  },
-
-  aiCard: {
-    marginTop: -20,
-    marginHorizontal: 18,
-    backgroundColor: "rgba(10,13,26,0.96)",
-    borderRadius: 26,
-    paddingHorizontal: 18,
-    paddingVertical: 18,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    shadowColor: "#000",
-    shadowOpacity: 0.32,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 7,
-  },
-
-  aiKr: {
-    color: TXT,
-    fontSize: 19,
-    lineHeight: 29,
-    fontFamily: fonts.kr,
-    textAlign: "center",
-    marginBottom: 10,
-  },
-
-  aiFr: {
-    color: MUTED,
+  footerText: {
+    color: COLORS.muted,
     fontSize: 14,
     lineHeight: 21,
-    textAlign: "center",
-    fontStyle: "italic",
-  },
-
-  interactionScroll: {
-    paddingHorizontal: 20,
-    paddingTop: 26,
-  },
-
-  interactionSection: {
-    minHeight: 220,
-  },
-
-  sectionTitle: {
-    color: TXT,
-    fontSize: 18,
-    fontFamily: fonts.black,
-    marginBottom: 14,
-    marginLeft: 4,
-  },
-
-  userBubble: {
-    backgroundColor: "rgba(5,5,8,0.74)",
-    borderRadius: 22,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.14)",
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.24,
-    shadowRadius: 14,
-    elevation: 5,
-    marginBottom: 12,
-  },
-
-  historyList: {
-    gap: 10,
-    marginBottom: 12,
-  },
-
-  messageBubble: {
-    backgroundColor: "rgba(255,255,255,0.035)",
-    borderRadius: 20,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: LINE,
-  },
-
-  messageBubbleUser: {
-    backgroundColor: "rgba(34,211,238,0.08)",
-    borderColor: "rgba(34,211,238,0.22)",
-  },
-
-  choiceKr: {
-    color: TXT,
-    fontSize: 16,
-    lineHeight: 22,
-    fontFamily: fonts.bold,
-    marginBottom: 6,
-  },
-
-  choiceFr: {
-    color: MUTED,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-
-  inputCard: {
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: LINE,
-    backgroundColor: "rgba(255,255,255,0.03)",
-    padding: 14,
-    overflow: "hidden",
-  },
-
-  input: {
-    color: TXT,
-    fontSize: 16,
-    lineHeight: 22,
-    fontFamily: fonts.medium,
-    minHeight: 112,
-    paddingHorizontal: 4,
-    paddingTop: 4,
-    paddingBottom: 12,
-    textAlignVertical: "top",
-  },
-
-  primaryAction: {
-    borderRadius: 18,
-    overflow: "hidden",
-  },
-
-  primaryActionInner: {
-    paddingVertical: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  primaryActionText: {
-    color: "white",
-    fontSize: 14,
-    fontFamily: fonts.bold,
-  },
-
-  buttonDimmed: {
-    opacity: 0.62,
   },
 });
