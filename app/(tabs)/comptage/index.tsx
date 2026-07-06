@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { usePaywall } from "../../../lib/paywall/PaywallProvider";
 
 const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../../assets/images/comptage.png");
@@ -103,6 +104,8 @@ const MODULES = [
 // SCREEN
 // ----------------------------------------------
 export default function ComptageHub() {
+  const { hasPremiumAccess } = usePaywall();
+
   return (
     <SafeAreaView style={styles.safe}>
       <ImageBackground
@@ -161,7 +164,14 @@ export default function ComptageHub() {
               <AnimatedItem key={i} index={i}>
                 <Pressable
                   style={styles.cardWrap}
-                  onPress={() => router.push(m.route as any)}
+                  onPress={() => {
+                    if (m.isLocked && !hasPremiumAccess) {
+                      router.push("/premium");
+                      return;
+                    }
+
+                    router.push(m.route as any);
+                  }}
                 >
                   <BlurView
                     intensity={40}

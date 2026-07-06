@@ -18,6 +18,12 @@ import {
 
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import { metroLessons } from "../../data/lesson/metro/metro";
+import {
+  DEFAULT_METRO_MISSION_ID,
+  getMetroMissionById,
+  getMetroMissionLesson,
+} from "../../data/lesson/metro/metroMissions";
+import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -128,6 +134,10 @@ type DialogueScenario = {
 function normalizeMode(rawMode: string | string[] | undefined): ModeType {
   const value = Array.isArray(rawMode) ? rawMode[0] : rawMode;
   return value === "real" ? "real" : "guided";
+}
+
+function normalizeParam(rawValue: string | string[] | undefined) {
+  return Array.isArray(rawValue) ? rawValue[0] : rawValue;
 }
 
 function getProgressIndex(nodeId: string): number {
@@ -265,6 +275,14 @@ export default function MetroIaScreen() {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const params = useLocalSearchParams();
   const mode = normalizeMode(params.mode as string | string[] | undefined);
+  const missionId =
+    normalizeParam(params.mission as string | string[] | undefined) ??
+    DEFAULT_METRO_MISSION_ID;
+  const currentMission =
+    getMetroMissionById(missionId) ?? getMetroMissionById(DEFAULT_METRO_MISSION_ID);
+  const { hasPremiumAccess, isLoading: isPaywallLoading } = usePaywall();
+  const canEnterMission =
+    currentMission?.access !== "premium" || hasPremiumAccess;
 
   const scrollRef = useRef<ScrollView>(null);
   const mountedRef = useRef(true);
@@ -272,12 +290,13 @@ export default function MetroIaScreen() {
   const hasAdvancedFromVideoRef = useRef(false);
 
   const metroScenario = useMemo(() => {
-    const hongikToGangnamLesson =
-      metroLessons.find((lesson) => lesson.id === "hongik_to_gangnam") ??
+    const lesson =
+      getMetroMissionLesson(currentMission) ??
+      metroLessons.find((item) => item.id === "hongik_to_gangnam") ??
       metroLessons[0];
 
-    return buildMetroScenario(hongikToGangnamLesson as MetroLesson);
-  }, []);
+    return buildMetroScenario(lesson as MetroLesson);
+  }, [currentMission]);
 
   const [currentNodeId, setCurrentNodeId] = useState(metroScenario.startNodeId);
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
@@ -305,10 +324,16 @@ export default function MetroIaScreen() {
   });
 
   useEffect(() => {
+    if (isPaywallLoading || canEnterMission) return;
+    router.replace("/premium");
+  }, [canEnterMission, isPaywallLoading]);
+
+  useEffect(() => {
+    if (!canEnterMission) return;
     if (currentNode?.type === "ia" && currentVideoSource) {
       setDisplayedVideoSource(currentVideoSource);
     }
-  }, [currentNode, currentVideoSource]);
+  }, [canEnterMission, currentNode, currentVideoSource]);
 
   const avatarFrameHeight = Math.min(screenWidth * 0.9, screenHeight * 0.54);
   const avatarVideoHeight = Math.min(screenWidth * 0.9, screenHeight * 0.34);
@@ -355,6 +380,7 @@ export default function MetroIaScreen() {
   }, [currentNodeId]);
 
   useEffect(() => {
+    if (!canEnterMission) return;
     if (!currentNode) return;
     if (!displayedVideoSource) return;
 
@@ -390,10 +416,12 @@ export default function MetroIaScreen() {
     currentNodeId,
     currentVideoSource,
     displayedVideoSource,
+    canEnterMission,
     player,
   ]);
 
   useEffect(() => {
+    if (!canEnterMission) return;
     if (!currentNode) return;
     if (currentNode.type !== "ia") return;
     if (!currentVideoSource) return;
@@ -423,11 +451,13 @@ export default function MetroIaScreen() {
     currentVideoSource,
     isTransitioning,
     isSceneEnded,
+    canEnterMission,
     player,
     goToNextNode,
   ]);
 
   useEffect(() => {
+    if (!canEnterMission) return;
     if (!currentNode) return;
     if (currentNode.type !== "ia") return;
     if (currentVideoSource) return;
@@ -452,6 +482,7 @@ export default function MetroIaScreen() {
     mode,
     isTransitioning,
     isSceneEnded,
+    canEnterMission,
     goToNextNode,
   ]);
 
@@ -501,6 +532,10 @@ export default function MetroIaScreen() {
   const shouldShowFrench =
     !shouldCollapseTranscript && !isStartChoiceNode && !!currentNode?.french;
   const isUserChoice = currentNode?.type === "user_choice";
+
+  if (!isPaywallLoading && !canEnterMission) {
+    return null;
+  }
 
   return (
     <ImageBackground

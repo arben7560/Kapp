@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../../_store";
+import { usePaywall } from "../../../lib/paywall/PaywallProvider";
 
 const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.png");
@@ -381,8 +382,11 @@ function HangulFamilyCard({
   color: string;
   isLocked?: boolean;
 }) {
+  const { hasPremiumAccess } = usePaywall();
+  const targetHref = isLocked && !hasPremiumAccess ? "/premium" : href;
+
   return (
-    <Link href={href as any} asChild>
+    <Link href={targetHref as any} asChild>
       <Pressable style={styles.cardPressable}>
         <BlurView
           intensity={40}

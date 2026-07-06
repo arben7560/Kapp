@@ -2,6 +2,8 @@ import { Stack } from "expo-router";
 import React from "react";
 import { StoreProvider } from "../_store";
 import { useImmersionActiveTime } from "../hooks/useImmersionActiveTime";
+import { PaywallProvider } from "../lib/paywall/PaywallProvider";
+import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard";
 
 /*const SCREEN_CAPTURE_PROTECTION_KEY = "k-app-global-protection";
 
@@ -51,14 +53,18 @@ export default function RootLayout() {
 
   return (
     <StoreProvider>
-      {/* <ScreenCaptureProtection /> */}
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="onboarding" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="listen/teacherIA" />
-        <Stack.Screen name="listen/teacherIARealtime" />
-      </Stack>
+      <PaywallProvider>
+        <SubscriptionAccessGuard />
+        {/* <ScreenCaptureProtection /> */}
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="onboarding" />
+          <Stack.Screen name="premium" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="listen/teacherIA" />
+          <Stack.Screen name="listen/teacherIARealtime" />
+        </Stack>
+      </PaywallProvider>
     </StoreProvider>
   );
 }

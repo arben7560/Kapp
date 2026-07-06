@@ -64,9 +64,9 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
     image: ASSETS.cafe,
     accent: PINK,
     textRoute: "/lesson/cafe",
-    guidedRoute: "/lesson/cafeIA",
+    guidedRoute: "/lesson/cafeMissions",
     guidedParams: { mode: "guided" },
-    realRoute: "/lesson/cafeIA",
+    realRoute: "/lesson/cafeMissions",
     realParams: { mode: "real" },
   },
   metro: {
@@ -75,7 +75,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
     image: ASSETS.metro,
     accent: CYAN,
     textRoute: "/lesson/metro",
-    guidedRoute: "/lesson/metroIA",
+    guidedRoute: "/lesson/metroMissions",
     guidedParams: { mode: "guided" },
   },
   restaurant: {
@@ -84,7 +84,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
     image: ASSETS.restaurant,
     accent: ORANGE,
     textRoute: "/lesson/restaurant",
-    guidedRoute: "/lesson/restaurantIA",
+    guidedRoute: "/lesson/restaurantMissions",
     guidedParams: { mode: "guided" },
   },
   airport: {
@@ -93,7 +93,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
     image: ASSETS.airport,
     accent: CYAN,
     textRoute: "/lesson/airport",
-    guidedRoute: "/lesson/airportIA",
+    guidedRoute: "/lesson/aeroportMissions",
     guidedParams: { mode: "guided" },
   },
   shopping: {

@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { usePaywall } from "../../../lib/paywall/PaywallProvider";
 
 const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../../assets/images/classificateur.png");
@@ -223,9 +224,20 @@ function AnimatedFragment({ children, index }: any) {
 
 function ClassifierCard({ title, subtitle, color, route, isLocked }: any) {
   const icon = title.charAt(0);
+  const { hasPremiumAccess } = usePaywall();
 
   return (
-    <Pressable style={styles.cardPressable} onPress={() => router.push(route)}>
+    <Pressable
+      style={styles.cardPressable}
+      onPress={() => {
+        if (isLocked && !hasPremiumAccess) {
+          router.push("/premium");
+          return;
+        }
+
+        router.push(route);
+      }}
+    >
       <BlurView
         intensity={40}
         tint="dark"

@@ -23,6 +23,12 @@ import {
   type DialogueNode,
   type DialogueScenario,
 } from "../../data/lesson/restaurant/restaurant";
+import {
+  DEFAULT_RESTAURANT_MISSION_ID,
+  getRestaurantMissionById,
+  getRestaurantMissionScenario,
+} from "../../data/lesson/restaurant/restaurantMissions";
+import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -83,6 +89,10 @@ type DialogueNodeWithVideo = DialogueNode & {
 function normalizeMode(rawMode: string | string[] | undefined): ModeType {
   const value = Array.isArray(rawMode) ? rawMode[0] : rawMode;
   return value === "real" ? "real" : "guided";
+}
+
+function normalizeParam(rawValue: string | string[] | undefined) {
+  return Array.isArray(rawValue) ? rawValue[0] : rawValue;
 }
 
 function getProgressIndex(nodeId: string): number {
@@ -150,6 +160,15 @@ export default function RestaurantIaScreen() {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const params = useLocalSearchParams();
   const mode = normalizeMode(params.mode as string | string[] | undefined);
+  const missionId =
+    normalizeParam(params.mission as string | string[] | undefined) ??
+    DEFAULT_RESTAURANT_MISSION_ID;
+  const currentMission =
+    getRestaurantMissionById(missionId) ??
+    getRestaurantMissionById(DEFAULT_RESTAURANT_MISSION_ID);
+  const { hasPremiumAccess, isLoading: isPaywallLoading } = usePaywall();
+  const canEnterMission =
+    currentMission?.access !== "premium" || hasPremiumAccess;
 
   const scrollRef = useRef<ScrollView>(null);
   const mountedRef = useRef(true);
@@ -157,8 +176,15 @@ export default function RestaurantIaScreen() {
   const hasAdvancedFromVideoRef = useRef(false);
 
   const currentScenario = useMemo(() => {
-    return attachRestaurantVideosToScenario(restaurantDialogueData.pedagogical);
-  }, []);
+    const missionScenario = currentMission
+      ? getRestaurantMissionScenario(
+          restaurantDialogueData.pedagogical,
+          currentMission.scenarioKey,
+        )
+      : restaurantDialogueData.pedagogical;
+
+    return attachRestaurantVideosToScenario(missionScenario);
+  }, [currentMission]);
 
   const [currentNodeId, setCurrentNodeId] = useState(
     currentScenario.startNodeId,
@@ -191,10 +217,16 @@ export default function RestaurantIaScreen() {
   });
 
   useEffect(() => {
+    if (isPaywallLoading || canEnterMission) return;
+    router.replace("/premium");
+  }, [canEnterMission, isPaywallLoading]);
+
+  useEffect(() => {
+    if (!canEnterMission) return;
     if (currentNode?.type === "ia" && currentVideoSource) {
       setDisplayedVideoSource(currentVideoSource);
     }
-  }, [currentNode, currentVideoSource]);
+  }, [canEnterMission, currentNode, currentVideoSource]);
 
   const avatarFrameHeight = Math.min(screenWidth * 0.9, screenHeight * 0.54);
   const avatarVideoHeight = Math.min(screenWidth * 0.9, screenHeight * 0.34);
@@ -245,6 +277,7 @@ export default function RestaurantIaScreen() {
   }, [currentNodeId]);
 
   useEffect(() => {
+    if (!canEnterMission) return;
     if (!currentNode) return;
     if (!displayedVideoSource) return;
 
@@ -276,10 +309,12 @@ export default function RestaurantIaScreen() {
     currentNodeId,
     currentVideoSource,
     displayedVideoSource,
+    canEnterMission,
     player,
   ]);
 
   useEffect(() => {
+    if (!canEnterMission) return;
     if (!currentNode) return;
     if (currentNode.type !== "ia") return;
     if (!currentVideoSource) return;
@@ -309,11 +344,13 @@ export default function RestaurantIaScreen() {
     currentVideoSource,
     isTransitioning,
     isSceneEnded,
+    canEnterMission,
     player,
     goToNextNode,
   ]);
 
   useEffect(() => {
+    if (!canEnterMission) return;
     if (!currentNode) return;
     if (currentNode.type !== "ia") return;
     if (currentVideoSource) return;
@@ -338,6 +375,7 @@ export default function RestaurantIaScreen() {
     mode,
     isTransitioning,
     isSceneEnded,
+    canEnterMission,
     goToNextNode,
   ]);
 
@@ -395,6 +433,10 @@ export default function RestaurantIaScreen() {
     !shouldCollapseTranscript &&
     typeof transcriptFrench === "string" &&
     transcriptFrench.trim().length > 0;
+
+  if (!isPaywallLoading && !canEnterMission) {
+    return null;
+  }
 
   return (
     <ImageBackground

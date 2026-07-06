@@ -1,11 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import {
-  createAudioPlayer,
-  setAudioModeAsync,
-  type AudioPlayer,
-} from "expo-audio";
 import { router } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ImageBackground,
   Pressable,
@@ -34,7 +29,6 @@ const COLORS = {
 };
 
 type ExerciseKind = "dictation" | "situation" | "gap" | "order" | "reaction";
-type AudioAsset = number;
 
 type BaseExercise = {
   id: string;
@@ -42,7 +36,6 @@ type BaseExercise = {
   theme: string;
   title: string;
   instruction: string;
-  audio: AudioAsset | null;
   explanation?: string;
 };
 
@@ -68,70 +61,292 @@ type OrderExercise = BaseExercise & {
 
 type ListenExercise = ChoiceExercise | GapExercise | OrderExercise;
 
-const EXERCISES: ListenExercise[] = [
-  {
-    id: "cafe-dictation-01",
-    kind: "dictation",
-    theme: "Café",
-    title: "Retrouve la phrase",
-    instruction: "Écoute, puis choisis la bonne écriture.",
-    audio: null,
-    // audio: require('../assets/audio/listen/cafe/myeot-bun-iseyo.mp3'),
-    options: ["몇 분이세요?", "몇 본이세요?", "몇 분 이세요?"],
-    answer: 0,
-    explanation: "몇 분이세요? = Vous êtes combien ?",
-  },
-  {
-    id: "bbq-situation-01",
-    kind: "situation",
-    theme: "K-BBQ",
-    title: "Comprends la situation",
-    instruction: "Écoute la serveuse et choisis la réponse logique.",
-    audio: null,
-    // audio: require('../assets/audio/listen/bbq/myeot-bun-iseyo.mp3'),
-    options: ["두 명이에요.", "카드로 계산할게요.", "물 주세요."],
-    answer: 0,
-    explanation: "La serveuse demande le nombre de personnes.",
-  },
-  {
-    id: "restaurant-gap-01",
-    kind: "gap",
-    theme: "Restaurant",
-    title: "Complète le mot",
-    instruction: "Écoute, puis complète la phrase.",
-    audio: null,
-    // audio: require('../assets/audio/listen/restaurant/samgyeopsal-ibonbun-juseyo.mp3'),
-    before: "삼겹살 ",
-    after: " 주세요.",
-    options: ["2인분", "2번", "2명"],
-    answer: "2인분",
-    explanation: "2인분 = deux portions.",
-  },
-  {
-    id: "metro-order-01",
-    kind: "order",
-    theme: "Métro",
-    title: "Remets en ordre",
-    instruction: "Écoute, puis reconstruis la phrase.",
-    audio: null,
-    // audio: require('../assets/audio/listen/metro/igoseuro-gaseyo.mp3'),
-    words: ["가세요", "이곳으로", "그냥"],
-    answer: ["그냥", "이곳으로", "가세요"],
-    explanation: "그냥 이곳으로 가세요. = Allez simplement par ici.",
-  },
-  {
-    id: "cafe-reaction-01",
-    kind: "reaction",
-    theme: "Café",
-    title: "Choisis la réaction",
-    instruction: "Écoute et réponds naturellement.",
-    audio: null,
-    // audio: require('../assets/audio/listen/cafe/mueoseuro-deurigessseumnikka.mp3'),
-    options: ["아이스 아메리카노 주세요.", "화장실이 어디예요?", "괜찮아요."],
-    answer: 0,
-    explanation: "On te demande ce que tu veux prendre.",
-  },
+const TRAINING_ORDER: ExerciseKind[] = [
+  "dictation",
+  "situation",
+  "gap",
+  "order",
+  "reaction",
 ];
+
+const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
+  dictation: [
+    {
+      id: "cafe-dictation-01",
+      kind: "dictation",
+      theme: "Café",
+      title: "Retrouve la phrase",
+      instruction: "Écoute, puis choisis la bonne écriture.",
+      options: ["몇 분이세요?", "몇 본이세요?", "몇 분 이세요?"],
+      answer: 0,
+      explanation: "몇 분이세요? = Vous êtes combien ?",
+    },
+    {
+      id: "cafe-dictation-02",
+      kind: "dictation",
+      theme: "Café",
+      title: "Repère la formule",
+      instruction: "Écoute, puis choisis la phrase exacte.",
+      options: [
+        "아이스 아메리카노 주세요.",
+        "아이 아메리카노 주세요.",
+        "아이스 아메리카노 주새요.",
+      ],
+      answer: 0,
+      explanation:
+        "아이스 아메리카노 주세요. = Un americano glacé, s'il vous plaît.",
+    },
+    {
+      id: "metro-dictation-03",
+      kind: "dictation",
+      theme: "Métro",
+      title: "Entends la direction",
+      instruction: "Écoute, puis retrouve l'écriture correcte.",
+      options: ["이곳으로 가세요.", "이것으로 가세요.", "이곳으로 가새요."],
+      answer: 0,
+      explanation: "이곳으로 가세요. = Allez par ici.",
+    },
+    {
+      id: "shop-dictation-04",
+      kind: "dictation",
+      theme: "Boutique",
+      title: "Distingue le prix",
+      instruction: "Écoute, puis sélectionne la bonne phrase.",
+      options: ["얼마예요?", "얼마에요?", "얼마이에요?"],
+      answer: 0,
+      explanation: "얼마예요? = Combien ça coûte ?",
+    },
+    {
+      id: "hotel-dictation-05",
+      kind: "dictation",
+      theme: "Hôtel",
+      title: "Note la demande",
+      instruction: "Écoute, puis choisis la bonne écriture.",
+      options: ["예약했어요.", "여약했어요.", "예약해써요."],
+      answer: 0,
+      explanation: "예약했어요. = J'ai réservé.",
+    },
+  ],
+  situation: [
+    {
+      id: "bbq-situation-01",
+      kind: "situation",
+      theme: "K-BBQ",
+      title: "Comprends la situation",
+      instruction: "Écoute la serveuse et choisis la réponse logique.",
+      options: ["두 명이에요.", "카드로 계산할게요.", "물 주세요."],
+      answer: 0,
+      explanation: "La serveuse demande le nombre de personnes.",
+    },
+    {
+      id: "cafe-situation-02",
+      kind: "situation",
+      theme: "Café",
+      title: "Réponds au barista",
+      instruction: "Écoute la question et choisis la réponse naturelle.",
+      options: ["따뜻한 라떼 주세요.", "여기서 내려요.", "예약했어요."],
+      answer: 0,
+      explanation: "On te demande ce que tu veux commander.",
+    },
+    {
+      id: "metro-situation-03",
+      kind: "situation",
+      theme: "Métro",
+      title: "Trouve l'arrêt",
+      instruction: "Écoute l'annonce et choisis quoi faire.",
+      options: ["여기서 내려요.", "두 명이에요.", "포장해 주세요."],
+      answer: 0,
+      explanation: "L'annonce indique que c'est l'arrêt où descendre.",
+    },
+    {
+      id: "shop-situation-04",
+      kind: "situation",
+      theme: "Boutique",
+      title: "Choisis le paiement",
+      instruction: "Écoute la question et choisis la réponse adaptée.",
+      options: ["카드로 할게요.", "화장실이 어디예요?", "괜찮아요."],
+      answer: 0,
+      explanation: "On te demande comment tu veux payer.",
+    },
+    {
+      id: "street-situation-05",
+      kind: "situation",
+      theme: "Rue",
+      title: "Demande ton chemin",
+      instruction: "Écoute la personne et choisis la réponse logique.",
+      options: ["네, 감사합니다.", "아이스로 주세요.", "삼겹살 주세요."],
+      answer: 0,
+      explanation: "La personne vient de t'indiquer le chemin.",
+    },
+  ],
+  gap: [
+    {
+      id: "restaurant-gap-01",
+      kind: "gap",
+      theme: "Restaurant",
+      title: "Complète le mot",
+      instruction: "Écoute, puis complète la phrase.",
+      before: "삼겹살 ",
+      after: " 주세요.",
+      options: ["2인분", "2번", "2명"],
+      answer: "2인분",
+      explanation: "2인분 = deux portions.",
+    },
+    {
+      id: "cafe-gap-02",
+      kind: "gap",
+      theme: "Café",
+      title: "Complète la commande",
+      instruction: "Écoute, puis choisis le mot manquant.",
+      before: "아이스 ",
+      after: " 주세요.",
+      options: ["라떼", "지하철", "계산"],
+      answer: "라떼",
+      explanation: "아이스 라떼 주세요. = Un latte glacé, s'il vous plaît.",
+    },
+    {
+      id: "shop-gap-03",
+      kind: "gap",
+      theme: "Boutique",
+      title: "Complète le paiement",
+      instruction: "Écoute, puis complète la phrase.",
+      before: "",
+      after: "로 계산할게요.",
+      options: ["카드", "물", "여기"],
+      answer: "카드",
+      explanation: "카드로 계산할게요. = Je vais payer par carte.",
+    },
+    {
+      id: "metro-gap-04",
+      kind: "gap",
+      theme: "Métro",
+      title: "Complète le lieu",
+      instruction: "Écoute, puis choisis le mot manquant.",
+      before: "",
+      after: "에서 내려요.",
+      options: ["홍대입구", "커피", "예약"],
+      answer: "홍대입구",
+      explanation: "홍대입구에서 내려요. = Je descends à Hongdae입구.",
+    },
+    {
+      id: "hotel-gap-05",
+      kind: "gap",
+      theme: "Hôtel",
+      title: "Complète la réservation",
+      instruction: "Écoute, puis complète la phrase.",
+      before: "",
+      after: "했어요.",
+      options: ["예약", "주문", "하차"],
+      answer: "예약",
+      explanation: "예약했어요. = J'ai réservé.",
+    },
+  ],
+  order: [
+    {
+      id: "metro-order-01",
+      kind: "order",
+      theme: "Métro",
+      title: "Remets en ordre",
+      instruction: "Écoute, puis reconstruis la phrase.",
+      words: ["가세요", "이곳으로", "그냥"],
+      answer: ["그냥", "이곳으로", "가세요"],
+      explanation: "그냥 이곳으로 가세요. = Allez simplement par ici.",
+    },
+    {
+      id: "cafe-order-02",
+      kind: "order",
+      theme: "Café",
+      title: "Reconstruis la commande",
+      instruction: "Écoute, puis remets les mots dans l'ordre.",
+      words: ["주세요", "아이스", "아메리카노"],
+      answer: ["아이스", "아메리카노", "주세요"],
+      explanation:
+        "아이스 아메리카노 주세요. = Un americano glacé, s'il vous plaît.",
+    },
+    {
+      id: "shop-order-03",
+      kind: "order",
+      theme: "Boutique",
+      title: "Replace les mots",
+      instruction: "Écoute, puis reconstruis la phrase.",
+      words: ["얼마예요", "이거", "?"],
+      answer: ["이거", "얼마예요", "?"],
+      explanation: "이거 얼마예요? = Combien coûte ceci ?",
+    },
+    {
+      id: "restaurant-order-04",
+      kind: "order",
+      theme: "Restaurant",
+      title: "Remets la demande",
+      instruction: "Écoute, puis remets les mots en ordre.",
+      words: ["주세요", "물", "좀"],
+      answer: ["물", "좀", "주세요"],
+      explanation: "물 좀 주세요. = Un peu d'eau, s'il vous plaît.",
+    },
+    {
+      id: "street-order-05",
+      kind: "order",
+      theme: "Rue",
+      title: "Reconstruis la question",
+      instruction: "Écoute, puis reconstruis la phrase.",
+      words: ["어디예요", "화장실이", "?"],
+      answer: ["화장실이", "어디예요", "?"],
+      explanation: "화장실이 어디예요? = Où sont les toilettes ?",
+    },
+  ],
+  reaction: [
+    {
+      id: "cafe-reaction-01",
+      kind: "reaction",
+      theme: "Café",
+      title: "Choisis la réaction",
+      instruction: "Écoute et réponds naturellement.",
+      options: ["아이스 아메리카노 주세요.", "화장실이 어디예요?", "괜찮아요."],
+      answer: 0,
+      explanation: "On te demande ce que tu veux prendre.",
+    },
+    {
+      id: "restaurant-reaction-02",
+      kind: "reaction",
+      theme: "Restaurant",
+      title: "Réagis à la serveuse",
+      instruction: "Écoute et choisis la réponse naturelle.",
+      options: ["네, 물 좀 주세요.", "여기서 내려요.", "예약했어요."],
+      answer: 0,
+      explanation: "La serveuse demande si tu as besoin de quelque chose.",
+    },
+    {
+      id: "shop-reaction-03",
+      kind: "reaction",
+      theme: "Boutique",
+      title: "Réponds au vendeur",
+      instruction: "Écoute, puis choisis la bonne réaction.",
+      options: ["괜찮아요, 그냥 볼게요.", "두 명이에요.", "맛있어요."],
+      answer: 0,
+      explanation: "Le vendeur propose de t'aider, tu réponds que tu regardes.",
+    },
+    {
+      id: "hotel-reaction-04",
+      kind: "reaction",
+      theme: "Hôtel",
+      title: "Réponds à l'accueil",
+      instruction: "Écoute et choisis la réponse adaptée.",
+      options: ["예약했어요.", "포장해 주세요.", "얼마예요?"],
+      answer: 0,
+      explanation: "La réception demande si tu as une réservation.",
+    },
+    {
+      id: "street-reaction-05",
+      kind: "reaction",
+      theme: "Rue",
+      title: "Réagis poliment",
+      instruction: "Écoute, puis choisis la réaction naturelle.",
+      options: ["감사합니다.", "아이스로 주세요.", "카드로 할게요."],
+      answer: 0,
+      explanation: "Quelqu'un vient de t'aider, tu remercies.",
+    },
+  ],
+};
 
 const KIND_LABEL: Record<ExerciseKind, { mini: string; skill: string }> = {
   dictation: { mini: "Orthographe", skill: "Écoute + Hangul" },
@@ -142,57 +357,24 @@ const KIND_LABEL: Record<ExerciseKind, { mini: string; skill: string }> = {
 };
 
 export default function ListenScreen() {
-  const playerRef = useRef<AudioPlayer | null>(null);
-  const playbackListenerRef = useRef<{ remove: () => void } | null>(null);
-  const [index, setIndex] = useState(0);
+  const [trainingIndex, setTrainingIndex] = useState(0);
+  const [exerciseIndex, setExerciseIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [picked, setPicked] = useState<number[]>([]);
   const [checked, setChecked] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [hint, setHint] = useState("Audio IA à brancher");
 
-  const item = EXERCISES[index];
-  const meta = KIND_LABEL[item.kind];
-
-  const cleanupPlaybackListener = useCallback(() => {
-    if (playbackListenerRef.current) {
-      playbackListenerRef.current.remove();
-      playbackListenerRef.current = null;
-    }
-  }, []);
-
-  const stopAudio = useCallback(() => {
-    cleanupPlaybackListener();
-
-    try {
-      playerRef.current?.pause();
-      playerRef.current?.remove();
-    } catch {
-      // The player can already be released during a navigation cleanup.
-    }
-
-    playerRef.current = null;
-    setIsPlaying(false);
-  }, [cleanupPlaybackListener]);
-
-  useEffect(() => {
-    setAudioModeAsync({
-      playsInSilentMode: true,
-      allowsRecording: false,
-      shouldPlayInBackground: false,
-    }).catch(() => null);
-
-    return stopAudio;
-  }, [stopAudio]);
+  const trainingKind = TRAINING_ORDER[trainingIndex];
+  const exercises = EXERCISES_BY_KIND[trainingKind];
+  const item = exercises[exerciseIndex];
+  const meta = KIND_LABEL[trainingKind];
 
   const canCheck = useMemo(() => {
     if (item.kind === "order") return picked.length === item.words.length;
     return selected !== null;
   }, [item, picked.length, selected]);
 
-  const isCorrect = useMemo(() => {
-    if (!checked) return false;
-
+  const isAnswerCorrect = () => {
     if (item.kind === "order") {
       const sentence = picked.map((id) => item.words[id]);
       return sentence.join(" ") === item.answer.join(" ");
@@ -203,10 +385,11 @@ export default function ListenScreen() {
     }
 
     return selected === item.answer;
-  }, [checked, item, picked, selected]);
+  };
+
+  const isCorrect = checked && isAnswerCorrect();
 
   const resetAnswer = () => {
-    stopAudio();
     setSelected(null);
     setPicked([]);
     setChecked(false);
@@ -214,66 +397,35 @@ export default function ListenScreen() {
   };
 
   const goNext = () => {
-    const nextIndex = index === EXERCISES.length - 1 ? 0 : index + 1;
-    setIndex(nextIndex);
+    const nextIndex =
+      exerciseIndex === exercises.length - 1 ? 0 : exerciseIndex + 1;
+    setExerciseIndex(nextIndex);
     resetAnswer();
   };
 
-  const playAudio = async () => {
-    if (!item.audio) {
-      setHint("Ajoute ton fichier audio dans EXERCISES.audio");
+  const changeTraining = (direction: -1 | 1) => {
+    const nextTrainingIndex =
+      (trainingIndex + direction + TRAINING_ORDER.length) %
+      TRAINING_ORDER.length;
+
+    setTrainingIndex(nextTrainingIndex);
+    setExerciseIndex(0);
+    resetAnswer();
+  };
+
+  const handleValidate = () => {
+    if (!canCheck) return;
+
+    if (isAnswerCorrect()) {
+      goNext();
       return;
     }
 
-    try {
-      stopAudio();
-      setIsPlaying(true);
-      const player = createAudioPlayer(item.audio, {
-        updateInterval: 250,
-      });
+    setChecked(true);
+  };
 
-      playerRef.current = player;
-
-      playbackListenerRef.current = player.addListener(
-        "playbackStatusUpdate",
-        (status) => {
-          const statusAny = status as any;
-          const didFinish =
-            statusAny.didJustFinish === true ||
-            statusAny.playbackState === "ended" ||
-            statusAny.playbackState === "finished" ||
-            statusAny.timeControlStatus === "ended" ||
-            (typeof statusAny.currentTime === "number" &&
-              typeof statusAny.duration === "number" &&
-              statusAny.duration > 0 &&
-              statusAny.currentTime >= statusAny.duration - 0.05 &&
-              statusAny.playing === false);
-
-          if (!didFinish) return;
-
-          cleanupPlaybackListener();
-
-          try {
-            player.remove();
-          } catch {
-            // The player can already be released by the native layer.
-          }
-
-          if (playerRef.current === player) {
-            playerRef.current = null;
-          }
-
-          setIsPlaying(false);
-        },
-      );
-
-      player.seekTo(0);
-      player.play();
-    } catch (error) {
-      setIsPlaying(false);
-      setHint("Impossible de lire cet audio");
-      console.warn(error);
-    }
+  const playAudio = () => {
+    setHint("Audio IA à brancher");
   };
 
   const pickOrderWord = (wordIndex: number) => {
@@ -411,12 +563,7 @@ export default function ListenScreen() {
 
           <View style={styles.modeSwitcherWrap}>
             <Pressable
-              onPress={() => {
-                const prevIndex =
-                  index === 0 ? EXERCISES.length - 1 : index - 1;
-                setIndex(prevIndex);
-                resetAnswer();
-              }}
+              onPress={() => changeTraining(-1)}
               style={styles.arrowButton}
             >
               <Ionicons name="chevron-back" size={22} color={COLORS.text} />
@@ -428,27 +575,38 @@ export default function ListenScreen() {
             </View>
 
             <Pressable
-              onPress={() => {
-                const nextIndex =
-                  index === EXERCISES.length - 1 ? 0 : index + 1;
-                setIndex(nextIndex);
-                resetAnswer();
-              }}
+              onPress={() => changeTraining(1)}
               style={styles.arrowButton}
             >
               <Ionicons name="chevron-forward" size={22} color={COLORS.text} />
             </Pressable>
           </View>
 
+          <View style={styles.progressRow}>
+            {exercises.map((exercise, currentExerciseIndex) => (
+              <Pressable
+                key={exercise.id}
+                onPress={() => {
+                  setExerciseIndex(currentExerciseIndex);
+                  resetAnswer();
+                }}
+                style={[
+                  styles.dot,
+                  currentExerciseIndex === exerciseIndex && styles.dotActive,
+                ]}
+              />
+            ))}
+          </View>
+
           <View style={styles.card}>
             <View style={styles.cardTop}>
-              <View>
+              <View style={styles.cardTopTitleWrap}>
                 <Text style={styles.theme}>{item.theme}</Text>
                 <Text style={styles.title}>{item.title}</Text>
               </View>
               <Text style={styles.counter}>
-                {String(index + 1).padStart(2, "0")} /{" "}
-                {String(EXERCISES.length).padStart(2, "0")}
+                {String(exerciseIndex + 1).padStart(2, "0")} /{" "}
+                {String(exercises.length).padStart(2, "0")}
               </Text>
             </View>
 
@@ -460,14 +618,8 @@ export default function ListenScreen() {
             <Text style={styles.instruction}>{item.instruction}</Text>
 
             <Pressable onPress={playAudio} style={styles.listenButton}>
-              <Ionicons
-                name={isPlaying ? "pause" : "play"}
-                size={18}
-                color={COLORS.text}
-              />
-              <Text style={styles.listenText}>
-                {isPlaying ? "Lecture..." : "Écouter"}
-              </Text>
+              <Ionicons name="play" size={18} color={COLORS.text} />
+              <Text style={styles.listenText}>Écouter</Text>
             </Pressable>
 
             <Text style={styles.audioHint}>{hint}</Text>
@@ -496,7 +648,7 @@ export default function ListenScreen() {
               {!checked ? (
                 <Pressable
                   disabled={!canCheck}
-                  onPress={() => setChecked(true)}
+                  onPress={handleValidate}
                   style={[
                     styles.actionButton,
                     !canCheck && styles.disabledButton,
@@ -505,8 +657,8 @@ export default function ListenScreen() {
                   <Text style={styles.actionText}>Valider</Text>
                 </Pressable>
               ) : (
-                <Pressable onPress={goNext} style={styles.actionButton}>
-                  <Text style={styles.actionText}>Suivant</Text>
+                <Pressable onPress={resetAnswer} style={styles.actionButton}>
+                  <Text style={styles.actionText}>Corriger</Text>
                 </Pressable>
               )}
             </View>
@@ -570,16 +722,16 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 14,
+    paddingTop: 35,
+    paddingBottom: 18,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
   roundButton: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: "rgba(255,255,255,0.08)",
     borderWidth: 1,
     borderColor: COLORS.line,
@@ -592,37 +744,80 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: COLORS.red,
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: "800",
-    letterSpacing: 4,
+    letterSpacing: 3.8,
   },
   headerTitle: {
     color: COLORS.text,
-    fontSize: 23,
+    fontSize: 21,
     fontWeight: "800",
     marginTop: 3,
   },
   content: {
     paddingHorizontal: 22,
-    paddingBottom: 28,
+    paddingBottom: 32,
+    paddingTop: 14,
   },
   modePill: {
     alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 22,
-    paddingVertical: 10,
+    gap: 7,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: COLORS.purple,
     backgroundColor: "rgba(168,85,247,0.12)",
-    marginBottom: 18,
+    marginBottom: 22,
   },
   modeText: {
     color: COLORS.text,
-    letterSpacing: 3,
-    fontSize: 12,
+    letterSpacing: 2.5,
+    fontSize: 10,
+    fontWeight: "800",
+  },
+  modeSwitcherWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 18,
+    marginBottom: 28,
+  },
+  arrowButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modeCenterPill: {
+    minWidth: 158,
+    minHeight: 54,
+    borderRadius: 23,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modeCenterMini: {
+    color: COLORS.faint,
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 1.8,
+    textTransform: "uppercase",
+    marginBottom: 1,
+  },
+  modeCenterLabel: {
+    color: COLORS.text,
+    fontSize: 16,
     fontWeight: "800",
   },
   progressRow: {
@@ -643,8 +838,11 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1.2 }],
   },
   card: {
-    borderRadius: 34,
-    padding: 22,
+    borderRadius: 32,
+    paddingTop: 24,
+    paddingBottom: 26,
+    paddingLeft: 22,
+    paddingRight: 28,
     backgroundColor: COLORS.card,
     borderWidth: 1,
     borderColor: COLORS.line,
@@ -654,7 +852,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    gap: 14,
+    gap: 12,
+  },
+  cardTopTitleWrap: {
+    flex: 1,
+    paddingRight: 10,
   },
   theme: {
     color: COLORS.red,
@@ -665,15 +867,17 @@ const styles = StyleSheet.create({
   },
   title: {
     color: COLORS.text,
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: "800",
-    marginTop: 8,
+    marginTop: 7,
   },
   counter: {
     color: COLORS.faint,
     fontSize: 13,
     fontWeight: "700",
     paddingTop: 4,
+    minWidth: 48,
+    textAlign: "right",
   },
   skillRow: {
     marginTop: 18,
@@ -758,53 +962,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "700",
     textAlign: "center",
-  },
-
-  modeSwitcherWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 14,
-    marginBottom: 22,
-  },
-
-  arrowButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderWidth: 1,
-    borderColor: COLORS.line,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  modeCenterPill: {
-    minWidth: 190,
-    minHeight: 72,
-    borderRadius: 28,
-    paddingHorizontal: 22,
-    paddingVertical: 12,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderWidth: 1,
-    borderColor: COLORS.line,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  modeCenterMini: {
-    color: COLORS.faint,
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 2.2,
-    textTransform: "uppercase",
-    marginBottom: 4,
-  },
-
-  modeCenterLabel: {
-    color: COLORS.text,
-    fontSize: 20,
-    fontWeight: "800",
   },
   gapSentence: {
     minHeight: 76,

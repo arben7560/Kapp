@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
+import { usePaywall } from "../../../lib/paywall/PaywallProvider";
 
 const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../../assets/images/vocabulaire.png");
@@ -323,11 +324,19 @@ function FamilyCard({
   variant?: "hero" | "secondary" | "tertiary";
 }) {
   const icon = title.charAt(0);
+  const { hasPremiumAccess } = usePaywall();
 
   return (
     <Pressable
       style={styles.cardPressable}
-      onPress={() => router.push(route as any)}
+      onPress={() => {
+        if (isLocked && !hasPremiumAccess) {
+          router.push("/premium");
+          return;
+        }
+
+        router.push(route as any);
+      }}
     >
       <BlurView
         intensity={40}

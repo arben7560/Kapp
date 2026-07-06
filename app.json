@@ -65,7 +65,8 @@
       "expo-video",
       "expo-audio",
       "expo-status-bar",
-      "@config-plugins/react-native-webrtc"
+      "@config-plugins/react-native-webrtc",
+      "expo-iap"
     ],
     "experiments": {
       "typedRoutes": true,

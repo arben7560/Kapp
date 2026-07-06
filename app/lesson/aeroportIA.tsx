@@ -18,6 +18,12 @@ import {
 
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import { aeroportDialogueData } from "../../data/lesson/aeroport/aeroport";
+import {
+  applyAeroportMissionToScenario,
+  DEFAULT_AEROPORT_MISSION_ID,
+  getAeroportMissionById,
+} from "../../data/lesson/aeroport/aeroportMissions";
+import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -102,6 +108,10 @@ type ScriptNode = {
 function normalizeMode(rawMode: string | string[] | undefined): ModeType {
   const value = Array.isArray(rawMode) ? rawMode[0] : rawMode;
   return value === "real" ? "real" : "guided";
+}
+
+function normalizeParam(rawValue: string | string[] | undefined) {
+  return Array.isArray(rawValue) ? rawValue[0] : rawValue;
 }
 
 function getProgressIndex(nodeId: string): number {
@@ -194,13 +204,27 @@ export default function AeroportIaScreen() {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const params = useLocalSearchParams();
   const mode = normalizeMode(params.mode as string | string[] | undefined);
+  const missionId =
+    normalizeParam(params.mission as string | string[] | undefined) ??
+    DEFAULT_AEROPORT_MISSION_ID;
+  const currentMission =
+    getAeroportMissionById(missionId) ??
+    getAeroportMissionById(DEFAULT_AEROPORT_MISSION_ID);
+  const { hasPremiumAccess, isLoading: isPaywallLoading } = usePaywall();
+  const canEnterMission =
+    currentMission?.access !== "premium" || hasPremiumAccess;
 
   const scrollRef = useRef<ScrollView>(null);
   const mountedRef = useRef(true);
   const iaAutoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasAdvancedFromVideoRef = useRef(false);
 
-  const currentScenario = useMemo(() => buildAeroportScenarioFromScript(), []);
+  const currentScenario = useMemo(() => {
+    const scenario = buildAeroportScenarioFromScript();
+    return currentMission
+      ? applyAeroportMissionToScenario(scenario, currentMission.scenarioKey)
+      : scenario;
+  }, [currentMission]);
 
   const [currentNodeId, setCurrentNodeId] = useState(
     currentScenario.startNodeId,
@@ -228,6 +252,11 @@ export default function AeroportIaScreen() {
   const player = useVideoPlayer(null, (playerInstance) => {
     playerInstance.loop = false;
   });
+
+  useEffect(() => {
+    if (isPaywallLoading || canEnterMission) return;
+    router.replace("/premium");
+  }, [canEnterMission, isPaywallLoading]);
 
   const avatarFrameHeight = Math.min(screenWidth * 0.9, screenHeight * 0.54);
   const avatarVideoHeight = Math.min(screenWidth * 0.9, screenHeight * 0.34);
@@ -272,6 +301,7 @@ export default function AeroportIaScreen() {
   }, [currentNodeId]);
 
   useEffect(() => {
+    if (!canEnterMission) return;
     if (!currentNode) return;
     if (!displayedVideoSource) return;
 
@@ -303,10 +333,12 @@ export default function AeroportIaScreen() {
     currentNodeId,
     currentVideoSource,
     displayedVideoSource,
+    canEnterMission,
     player,
   ]);
 
   useEffect(() => {
+    if (!canEnterMission) return;
     if (!currentNode) return;
     if (currentNode.type !== "ia") return;
     if (!currentVideoSource) return;
@@ -336,11 +368,13 @@ export default function AeroportIaScreen() {
     currentVideoSource,
     isTransitioning,
     isSceneEnded,
+    canEnterMission,
     player,
     goToNextNode,
   ]);
 
   useEffect(() => {
+    if (!canEnterMission) return;
     if (!currentNode) return;
     if (currentNode.type !== "ia") return;
     if (currentVideoSource) return;
@@ -365,6 +399,7 @@ export default function AeroportIaScreen() {
     mode,
     isTransitioning,
     isSceneEnded,
+    canEnterMission,
     goToNextNode,
   ]);
 
@@ -439,6 +474,10 @@ export default function AeroportIaScreen() {
     typeof transcriptFrench === "string" &&
     transcriptFrench.trim().length > 0;
   const isUserChoice = currentNode?.type === "user_choice";
+
+  if (!isPaywallLoading && !canEnterMission) {
+    return null;
+  }
 
   return (
     <ImageBackground

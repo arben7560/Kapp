@@ -23,6 +23,12 @@ import {
   type DialogueNode,
   type DialogueScenario,
 } from "../../data/lesson/cafe/cafe";
+import {
+  DEFAULT_CAFE_MISSION_ID,
+  getCafeMissionById,
+  getCafeMissionScenario,
+} from "../../data/lesson/cafe/cafeMissions";
+import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -65,6 +71,10 @@ type DialogueNodeWithVideo = DialogueNode & {
 function normalizeMode(rawMode: string | string[] | undefined): ModeType {
   const value = Array.isArray(rawMode) ? rawMode[0] : rawMode;
   return value === "real" ? "real" : "guided";
+}
+
+function normalizeParam(rawValue: string | string[] | undefined) {
+  return Array.isArray(rawValue) ? rawValue[0] : rawValue;
 }
 
 function getProgressIndex(nodeId: string): number {
@@ -174,6 +184,14 @@ export default function CafeIaScreen() {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const params = useLocalSearchParams();
   const mode = normalizeMode(params.mode as string | string[] | undefined);
+  const missionId =
+    normalizeParam(params.mission as string | string[] | undefined) ??
+    DEFAULT_CAFE_MISSION_ID;
+  const currentMission =
+    getCafeMissionById(missionId) ?? getCafeMissionById(DEFAULT_CAFE_MISSION_ID);
+  const { hasPremiumAccess, isLoading: isPaywallLoading } = usePaywall();
+  const canEnterMission =
+    currentMission?.access !== "premium" || hasPremiumAccess;
 
   const scrollRef = useRef<ScrollView>(null);
   const mountedRef = useRef(true);
@@ -193,10 +211,16 @@ export default function CafeIaScreen() {
     french?: string;
   } | null>(null);
   const currentScenario = useMemo(() => {
+    const baseScenario =
+      mode === "real" ? cafeDialogueData.real : cafeDialogueData.pedagogical;
+    const missionScenario = currentMission
+      ? getCafeMissionScenario(baseScenario, currentMission.scenarioKey)
+      : baseScenario;
+
     return mode === "real"
-      ? attachRealVideosToScenario(cafeDialogueData.real)
-      : cafeDialogueData.pedagogical;
-  }, [mode]);
+      ? attachRealVideosToScenario(missionScenario)
+      : missionScenario;
+  }, [currentMission, mode]);
 
   const currentNode = currentScenario.nodes[currentNodeId] as
     | DialogueNodeWithVideo
@@ -216,10 +240,16 @@ export default function CafeIaScreen() {
   });
 
   useEffect(() => {
+    if (isPaywallLoading || canEnterMission) return;
+    router.replace("/premium");
+  }, [canEnterMission, isPaywallLoading]);
+
+  useEffect(() => {
+    if (!canEnterMission) return;
     if (currentNode?.type === "ia" && currentVideoSource) {
       setDisplayedVideoSource(currentVideoSource);
     }
-  }, [currentNode, currentVideoSource]);
+  }, [canEnterMission, currentNode, currentVideoSource]);
 
   const avatarFrameHeight = Math.min(screenWidth * 0.9, screenHeight * 0.54);
   const avatarVideoHeight = Math.min(screenWidth * 0.9, screenHeight * 0.34);
@@ -270,6 +300,7 @@ export default function CafeIaScreen() {
   }, [currentNodeId]);
 
   useEffect(() => {
+    if (!canEnterMission) return;
     if (!currentNode) return;
     if (!displayedVideoSource) return;
 
@@ -301,10 +332,12 @@ export default function CafeIaScreen() {
     currentNodeId,
     currentVideoSource,
     displayedVideoSource,
+    canEnterMission,
     player,
   ]);
 
   useEffect(() => {
+    if (!canEnterMission) return;
     if (!currentNode) return;
     if (currentNode.type !== "ia") return;
     if (!currentVideoSource) return;
@@ -334,11 +367,13 @@ export default function CafeIaScreen() {
     currentVideoSource,
     isTransitioning,
     isSceneEnded,
+    canEnterMission,
     player,
     goToNextNode,
   ]);
 
   useEffect(() => {
+    if (!canEnterMission) return;
     if (!currentNode) return;
     if (currentNode.type !== "ia") return;
     if (currentVideoSource) return;
@@ -363,6 +398,7 @@ export default function CafeIaScreen() {
     mode,
     isTransitioning,
     isSceneEnded,
+    canEnterMission,
     goToNextNode,
   ]);
 
@@ -419,6 +455,13 @@ export default function CafeIaScreen() {
     !shouldCollapseTranscript &&
     typeof transcriptFrench === "string" &&
     transcriptFrench.trim().length > 0;
+
+  const shouldShowPremiumSuggestion =
+    currentMission?.access === "free" && (!hasPremiumAccess || __DEV__);
+
+  if (!isPaywallLoading && !canEnterMission) {
+    return null;
+  }
 
   return (
     <ImageBackground
@@ -628,6 +671,20 @@ export default function CafeIaScreen() {
                       <Text style={styles.endActionSecondaryText}>Retour</Text>
                     </Pressable>
                   </View>
+
+                  {shouldShowPremiumSuggestion ? (
+                    <Pressable
+                      onPress={() => router.push("/premium")}
+                      style={({ pressed }) => [
+                        styles.endPremiumLink,
+                        { opacity: pressed ? 0.82 : 1 },
+                      ]}
+                    >
+                      <Text style={styles.endPremiumLinkText}>
+                        Debloquer toutes les missions
+                      </Text>
+                    </Pressable>
+                  ) : null}
                 </View>
               ) : isUserChoice ? (
                 <View style={styles.choicesGrid}>
@@ -1023,6 +1080,23 @@ const styles = StyleSheet.create({
   endActionSecondaryText: {
     color: TXT,
     fontSize: 14,
+    fontFamily: fonts.bold,
+  },
+
+  endPremiumLink: {
+    marginTop: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(253,224,71,0.28)",
+    backgroundColor: "rgba(253,224,71,0.08)",
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  endPremiumLinkText: {
+    color: "#FDE047",
+    fontSize: 13,
     fontFamily: fonts.bold,
   },
 });
