@@ -28,7 +28,10 @@ import {
   getCafeMissionById,
   getCafeMissionScenario,
 } from "../../data/lesson/cafe/cafeMissions";
+import { useStore } from "../../_store";
+import { completeDailyActivity } from "../../lib/dailyStreak";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
+import { buildProgressId } from "../../lib/progressIds";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -177,6 +180,7 @@ function getAutoAdvanceDelay(node: DialogueNodeWithVideo, mode: ModeType) {
 
 // ==================== MAIN ====================
 export default function CafeIaScreen() {
+  const { complete } = useStore();
   const [displayedVideoSource, setDisplayedVideoSource] = useState<
     number | null
   >(null);
@@ -197,6 +201,7 @@ export default function CafeIaScreen() {
   const mountedRef = useRef(true);
   const iaAutoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasAdvancedFromVideoRef = useRef(false);
+  const hasReportedMissionCompleteRef = useRef(false);
 
   const [currentNodeId, setCurrentNodeId] = useState(
     cafeDialogueData.pedagogical.startNodeId,
@@ -279,7 +284,16 @@ export default function CafeIaScreen() {
     setIsTranscriptOpen(false);
     setLastIaTranscript(null);
     hasAdvancedFromVideoRef.current = false;
+    hasReportedMissionCompleteRef.current = false;
   }, [currentScenario]);
+
+  useEffect(() => {
+    if (!isSceneEnded || hasReportedMissionCompleteRef.current) return;
+
+    hasReportedMissionCompleteRef.current = true;
+    complete(buildProgressId("cafe", mode, missionId));
+    void completeDailyActivity("ai_mission");
+  }, [complete, isSceneEnded, missionId, mode]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -431,6 +445,7 @@ export default function CafeIaScreen() {
     setIsTranscriptOpen(false);
     setLastIaTranscript(null);
     hasAdvancedFromVideoRef.current = false;
+    hasReportedMissionCompleteRef.current = false;
   };
   const isUserChoice = currentNode?.type === "user_choice";
 
@@ -640,6 +655,8 @@ export default function CafeIaScreen() {
                   <Text style={styles.endSubtitle}>
                     Tu peux rejouer cette scène ou revenir au menu.
                   </Text>
+
+                  <Text style={styles.endSubtitle}>Serie conservee.</Text>
 
                   <View style={styles.endActions}>
                     <Pressable

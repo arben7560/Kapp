@@ -23,7 +23,10 @@ import {
   DEFAULT_AEROPORT_MISSION_ID,
   getAeroportMissionById,
 } from "../../data/lesson/aeroport/aeroportMissions";
+import { useStore } from "../../_store";
+import { completeDailyActivity } from "../../lib/dailyStreak";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
+import { buildProgressId } from "../../lib/progressIds";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -196,6 +199,7 @@ function buildAeroportScenarioFromScript(): DialogueScenario {
 
 // ==================== MAIN ====================
 export default function AeroportIaScreen() {
+  const { complete } = useStore();
   const [displayedVideoSource, setDisplayedVideoSource] = useState<
     number | null
   >(iaWelcome);
@@ -218,6 +222,7 @@ export default function AeroportIaScreen() {
   const mountedRef = useRef(true);
   const iaAutoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasAdvancedFromVideoRef = useRef(false);
+  const hasReportedMissionCompleteRef = useRef(false);
 
   const currentScenario = useMemo(() => {
     const scenario = buildAeroportScenarioFromScript();
@@ -290,6 +295,18 @@ export default function AeroportIaScreen() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    hasReportedMissionCompleteRef.current = false;
+  }, [currentScenario]);
+
+  useEffect(() => {
+    if (!isSceneEnded || hasReportedMissionCompleteRef.current) return;
+
+    hasReportedMissionCompleteRef.current = true;
+    complete(buildProgressId("aeroport", mode, missionId));
+    void completeDailyActivity("ai_mission");
+  }, [complete, isSceneEnded, missionId, mode]);
 
   useEffect(() => {
     hasAdvancedFromVideoRef.current = false;
@@ -445,6 +462,7 @@ export default function AeroportIaScreen() {
     setIsTranscriptOpen(false);
     setLastIaTranscript(null);
     hasAdvancedFromVideoRef.current = false;
+    hasReportedMissionCompleteRef.current = false;
   };
 
   const isStartChoiceNode = currentNodeId === "welcome_choices";
@@ -618,6 +636,8 @@ export default function AeroportIaScreen() {
                   <Text style={styles.endSubtitle}>
                     Tu peux rejouer cette scene ou revenir au menu.
                   </Text>
+
+                  <Text style={styles.endSubtitle}>Serie conservee.</Text>
 
                   <View style={styles.endActions}>
                     <Pressable

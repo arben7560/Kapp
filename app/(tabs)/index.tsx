@@ -1,7 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import {
   Animated,
   Dimensions,
@@ -15,11 +15,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
-import {
-  getImmersionStreakState,
-  trackSubModuleVisited,
-  type ImmersionStreakState,
-} from "../../lib/immersionStreak";
+import { useDailyStreak } from "../../lib/DailyStreakProvider";
+import type { DailyStreakState } from "../../lib/dailyStreak";
 
 const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../assets/images/seoulhub.png");
@@ -124,17 +121,64 @@ const SEQUENCES: any[] = [
   },
 ];
 
+const RESUME_SEQUENCES: Record<string, any> = {
+  aeroport_ia: {
+    title: "Mission aeroport",
+    label: "Aeroport",
+    color: CYAN,
+    route: "/lesson/aeroportMissions",
+    routeParams: { mode: "guided" },
+    trackKey: "aeroport_ia",
+    place: "INCHEON - ARRIVEE",
+    narrative: "Reprends ta derniere mission aeroport.",
+    type: "immersion",
+  },
+  cafe_ia: {
+    title: "Mission cafe",
+    label: "Cafe",
+    color: PINK,
+    route: "/lesson/cafeMissions",
+    routeParams: { mode: "guided" },
+    trackKey: "cafe_ia",
+    place: "HONGDAE - CAFE",
+    narrative: "Reprends ta derniere mission cafe.",
+    type: "immersion",
+  },
+  metro_ia: {
+    title: "Mission metro",
+    label: "Le Metro",
+    color: CYAN,
+    route: "/lesson/metroMissions",
+    routeParams: { mode: "guided" },
+    trackKey: "metro_ia",
+    place: "LIGNE 2 - SE DEPLACER",
+    narrative: "Reprends ta derniere mission metro.",
+    type: "immersion",
+  },
+  restaurant_ia: {
+    title: "Mission restaurant",
+    label: "Restaurant",
+    color: "#F59E0B",
+    route: "/lesson/restaurantMissions",
+    routeParams: { mode: "guided" },
+    trackKey: "restaurant_ia",
+    place: "ITAEWON - DINER",
+    narrative: "Reprends ta derniere mission restaurant.",
+    type: "immersion",
+  },
+};
+
 export default function Home() {
   const { progress, setTrack } = useStore();
-  const [immersionStreak, setImmersionStreak] =
-    useState<ImmersionStreakState | null>(null);
+  const { refreshStreak, streak } = useDailyStreak();
   const currentTrack = progress.learningTrack;
   const activeSeq =
-    SEQUENCES.find((s) => s.trackKey === currentTrack) ?? SEQUENCES[0];
+    (currentTrack ? RESUME_SEQUENCES[currentTrack] : undefined) ??
+    SEQUENCES.find((s) => s.trackKey === currentTrack) ??
+    SEQUENCES[0];
   const activeSeqProgress = getSequenceProgress(activeSeq.trackKey, progress);
   const activeSeqNarrative =
-    activeSeq.trackKey === "hangul" &&
-    (progress.streak > 0 || activeSeqProgress > 0)
+    activeSeq.trackKey === "hangul" && activeSeqProgress > 0
       ? "Reprends ta session Hangul."
       : activeSeq.narrative;
 
@@ -168,21 +212,28 @@ export default function Home() {
     useCallback(() => {
       let isMounted = true;
 
-      getImmersionStreakState()
-        .then((state) => {
-          if (isMounted) setImmersionStreak(state);
+      refreshStreak()
+        .then(() => {
+          if (!isMounted) return;
         })
         .catch(() => null);
 
       return () => {
         isMounted = false;
       };
-    }, []),
+    }, [refreshStreak]),
   );
 
   const openSequence = (sequence: any) => {
     setTrack(sequence.trackKey);
-    void trackSubModuleVisited(sequence.trackKey).then(setImmersionStreak);
+    if (sequence.routeParams) {
+      router.push({
+        pathname: sequence.route,
+        params: sequence.routeParams,
+      } as any);
+      return;
+    }
+
     router.push(sequence.route);
   };
 
@@ -268,7 +319,10 @@ export default function Home() {
             />
           </AnimatedFragment>
 
-          <ImmersionStreakCard streak={immersionStreak} />
+          <DailyStreakCard
+            streak={streak}
+            onPress={() => router.push("/streak")}
+          />
 
           <View style={styles.sectionDivider}>
             <Text style={styles.sectionTitle}>{"POINTS D'ENTRÉE"}</Text>
@@ -434,61 +488,100 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
   );
 }
 
-function ImmersionStreakCard({
+function DailyStreakCard({
+  onPress,
   streak,
 }: {
-  streak: ImmersionStreakState | null;
+  onPress: () => void;
+  streak: DailyStreakState | null;
 }) {
   const currentStreak = streak?.currentStreak ?? 0;
-  const isValidated = streak?.today.validated ?? false;
-  const audiosPlayed = streak?.today.audiosPlayed ?? 0;
-  const activeMinutes = Math.floor((streak?.today.activeSeconds ?? 0) / 60);
+  const longestStreak = streak?.longestStreak ?? 0;
+  const isValidated = streak?.isTodayCompleted ?? false;
+  const freezesAvailable = streak?.freezesAvailable ?? 0;
+  const statusLabel = isValidated ? "Jour valide" : "A faire";
+  const helperText = isValidated
+    ? "Ta serie est conservee. Les autres activites du jour restent du bonus."
+    : "Termine une activite aujourd'hui pour conserver ta serie.";
 
   return (
-    <BlurView intensity={42} tint="dark" style={styles.streakCard}>
-      <LinearGradient
-        colors={["rgba(103,232,249,0.12)", "rgba(244,114,182,0.08)"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-
-      <View style={styles.streakAccent} />
-
-      <View style={styles.streakTopRow}>
-        <View>
-          <Text style={styles.streakKicker}>STREAK D&apos;IMMERSION</Text>
-          <Text style={styles.streakTitle}>
-            Immersion : {currentStreak} {currentStreak > 1 ? "jours" : "jour"}
-          </Text>
-        </View>
-
-        <View
-          style={[
-            styles.streakStatus,
-            isValidated && styles.streakStatusValidated,
+    <Pressable onPress={onPress}>
+      <BlurView intensity={42} tint="dark" style={styles.streakCard}>
+        <LinearGradient
+          colors={[
+            "rgba(103,232,249,0.16)",
+            "rgba(244,114,182,0.08)",
+            "rgba(2,3,6,0.16)",
           ]}
-        >
-          <Text
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+
+        <View style={styles.streakAccent} />
+
+        <View style={styles.streakTopRow}>
+          <View style={styles.streakCounterBlock}>
+            <Text style={styles.streakKicker}>SERIE QUOTIDIENNE</Text>
+            <View style={styles.streakNumberRow}>
+              <View style={styles.streakSymbol}>
+                <Text style={styles.streakSymbolText}>ST</Text>
+              </View>
+              <Text style={styles.streakNumber}>{currentStreak}</Text>
+              <Text style={styles.streakUnit}>
+                {currentStreak > 1 ? "jours" : "jour"}
+              </Text>
+            </View>
+          </View>
+
+          <View
             style={[
-              styles.streakStatusText,
-              isValidated && styles.streakStatusTextValidated,
+              styles.streakStatus,
+              isValidated && styles.streakStatusValidated,
             ]}
           >
-            {isValidated ? "VALIDE" : "EN COURS"}
-          </Text>
+            <Text
+              style={[
+                styles.streakStatusText,
+                isValidated && styles.streakStatusTextValidated,
+              ]}
+            >
+              {statusLabel}
+            </Text>
+          </View>
         </View>
-      </View>
 
-      <Text style={styles.streakGoal}>
-        Objectif du jour : ecouter 3 audios ou explorer une scene.
-      </Text>
+        <View style={styles.streakMessageBox}>
+          <Text style={styles.streakMessageTitle}>
+            {isValidated ? "Objectif du jour atteint" : "Objectif du jour"}
+          </Text>
+          <Text style={styles.streakGoal}>{helperText}</Text>
+        </View>
 
-      <View style={styles.streakMetrics}>
-        <Text style={styles.streakMetric}>{audiosPlayed}/3 audios</Text>
-        <Text style={styles.streakMetric}>{activeMinutes}/5 min</Text>
-      </View>
-    </BlurView>
+        <View style={styles.streakMetrics}>
+          <View style={styles.streakMetricCard}>
+            <Text style={styles.streakMetricValue}>{longestStreak} j</Text>
+            <Text style={styles.streakMetricLabel}>Record</Text>
+          </View>
+          <View style={styles.streakMetricCard}>
+            <Text style={styles.streakMetricValue}>{freezesAvailable}</Text>
+            <Text style={styles.streakMetricLabel}>Freezes</Text>
+          </View>
+          <View style={styles.streakMetricCard}>
+            <Text style={styles.streakMetricValue}>
+              {isValidated ? "OK" : "1"}
+            </Text>
+            <Text style={styles.streakMetricLabel}>
+              {isValidated ? "Valide" : "activite"}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.streakOpenHint}>
+          Voir le calendrier et les badges
+        </Text>
+      </BlurView>
+    </Pressable>
   );
 }
 
@@ -897,7 +990,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(103,232,249,0.20)",
-    padding: 16,
+    padding: 18,
     marginTop: -14,
     marginBottom: 28,
   },
@@ -914,9 +1007,12 @@ const styles = StyleSheet.create({
   },
   streakTopRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
     gap: 14,
+  },
+  streakCounterBlock: {
+    flex: 1,
   },
   streakKicker: {
     color: "rgba(241,245,249,0.48)",
@@ -925,17 +1021,47 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     marginBottom: 5,
   },
-  streakTitle: {
-    color: TXT,
-    fontSize: 18,
+  streakNumberRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 7,
+  },
+  streakSymbol: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(103,232,249,0.45)",
+    backgroundColor: "rgba(103,232,249,0.12)",
+    marginBottom: 6,
+  },
+  streakSymbolText: {
+    color: CYAN,
+    fontSize: 10,
     fontFamily: fonts.bold,
+    letterSpacing: 0.8,
+  },
+  streakNumber: {
+    color: TXT,
+    fontSize: 42,
+    fontFamily: fonts.bold,
+    lineHeight: 46,
+    letterSpacing: -1,
+  },
+  streakUnit: {
+    color: "rgba(241,245,249,0.72)",
+    fontSize: 14,
+    fontFamily: fonts.bold,
+    paddingBottom: 7,
   },
   streakStatus: {
     borderRadius: 999,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.14)",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
     backgroundColor: "rgba(255,255,255,0.04)",
   },
   streakStatusValidated: {
@@ -946,28 +1072,64 @@ const styles = StyleSheet.create({
     color: "rgba(241,245,249,0.55)",
     fontSize: 9,
     fontFamily: fonts.bold,
-    letterSpacing: 1.2,
+    letterSpacing: 1,
+    textTransform: "uppercase",
   },
   streakStatusTextValidated: {
     color: CYAN,
+  },
+  streakMessageBox: {
+    marginTop: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(2,3,6,0.22)",
+    paddingHorizontal: 13,
+    paddingVertical: 12,
+  },
+  streakMessageTitle: {
+    color: TXT,
+    fontSize: 13,
+    fontFamily: fonts.bold,
+    marginBottom: 4,
   },
   streakGoal: {
     color: MUTED,
     fontSize: 12,
     lineHeight: 17,
     fontFamily: fonts.medium,
-    marginTop: 10,
   },
   streakMetrics: {
     flexDirection: "row",
     gap: 10,
     marginTop: 12,
   },
-  streakMetric: {
-    color: "rgba(241,245,249,0.62)",
+  streakMetricCard: {
+    flex: 1,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(255,255,255,0.045)",
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+  },
+  streakMetricValue: {
+    color: TXT,
     fontFamily: fonts.bold,
+    fontSize: 15,
+  },
+  streakMetricLabel: {
+    color: "rgba(241,245,249,0.50)",
+    fontFamily: fonts.medium,
     fontSize: 10,
-    letterSpacing: 0.8,
+    marginTop: 3,
+  },
+  streakOpenHint: {
+    color: "rgba(103,232,249,0.72)",
+    fontFamily: fonts.bold,
+    fontSize: 11,
+    marginTop: 12,
+    textAlign: "center",
   },
 
   // SECTION DIVIDERS

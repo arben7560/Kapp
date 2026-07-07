@@ -2,6 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { useStore } from "../../_store";
+import { useDailyStreak } from "../../lib/DailyStreakProvider";
 
 const BG0 = "#070812";
 const TXT = "rgba(255,255,255,0.92)";
@@ -11,6 +12,7 @@ const CARD = "rgba(255,255,255,0.06)";
 
 export default function Profile() {
   const { progress, setProgress, togglePremium } = useStore();
+  const { resetStreak, streak } = useDailyStreak();
 
   return (
     <LinearGradient colors={[BG0, "#0b0b1d", "#0b0f22"]} style={{ flex: 1 }}>
@@ -41,13 +43,19 @@ export default function Profile() {
           </Text>
           <Text style={{ color: MUTED, marginTop: 6 }}>XP : {progress.xp}</Text>
           <Text style={{ color: MUTED, marginTop: 2 }}>
-            Streak : {progress.streak} 🔥
+            Streak : {streak?.currentStreak ?? 0} jours
+          </Text>
+          <Text style={{ color: MUTED, marginTop: 2 }}>
+            Record : {streak?.longestStreak ?? 0} jours
+          </Text>
+          <Text style={{ color: MUTED, marginTop: 2 }}>
+            Jour valide : {streak?.isTodayCompleted ? "Oui" : "Non"}
           </Text>
           <Text style={{ color: MUTED, marginTop: 2 }}>
             Hangul : niveau {progress.hangulLevel}/4
           </Text>
           <Text style={{ color: MUTED, marginTop: 2 }}>
-            Premium : {progress.isPremium ? "Actif ✅" : "Non"}
+            Premium : {progress.isPremium ? "Actif" : "Non"}
           </Text>
         </View>
 
@@ -65,7 +73,7 @@ export default function Profile() {
             Premium
           </Text>
           <Text style={{ color: MUTED, marginTop: 6 }}>
-            Débloque dialogues avancés + prononciation intensive.
+            Debloque dialogues avances + prononciation intensive.
           </Text>
 
           <View style={{ height: 12 }} />
@@ -84,7 +92,7 @@ export default function Profile() {
           >
             <Text style={{ color: TXT, fontWeight: "900" }}>
               {progress.isPremium
-                ? "Désactiver Premium (prototype)"
+                ? "Desactiver Premium (prototype)"
                 : "Activer Premium (prototype)"}
             </Text>
           </Pressable>
@@ -103,27 +111,29 @@ export default function Profile() {
             Outils
           </Text>
           <Text style={{ color: MUTED, marginTop: 6 }}>
-            (Prototype) pour tester vite.
+            Prototype pour tester vite.
           </Text>
 
           <View style={{ height: 12 }} />
 
           <Pressable
             onPress={() => {
-              Alert.alert("Reset", "Réinitialiser la progression ?", [
+              Alert.alert("Reset", "Reinitialiser la progression ?", [
                 { text: "Annuler", style: "cancel" },
                 {
                   text: "Oui",
                   style: "destructive",
-                  onPress: () =>
+                  onPress: () => {
+                    void resetStreak();
                     setProgress({
-                      xp: 0,
-                      streak: 0,
-                      isPremium: false,
                       completed: {},
                       hangulLevel: 1,
+                      isPremium: false,
                       learningTrack: null,
-                    }),
+                      streak: 0,
+                      xp: 0,
+                    });
+                  },
                 },
               ]);
             }}
@@ -137,7 +147,7 @@ export default function Profile() {
               alignItems: "center",
             })}
           >
-            <Text style={{ color: TXT, fontWeight: "900" }}>Réinitialiser</Text>
+            <Text style={{ color: TXT, fontWeight: "900" }}>Reinitialiser</Text>
           </Pressable>
         </View>
       </ScrollView>

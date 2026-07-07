@@ -1,12 +1,19 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React from "react";
 import { trackHangulExerciseCompleted } from "./lib/immersionStreak";
 
 export type LearningTrack =
   | "hangul"
   | "vocab"
+  | "numbers"
+  | "classifier"
   | "dialogs"
   | "listen"
   | "immersion"
+  | "cafe_ia"
+  | "restaurant_ia"
+  | "metro_ia"
+  | "aeroport_ia"
   | null;
 
 export type Progress = {
@@ -18,12 +25,14 @@ export type Progress = {
   hangulLevel: number;
 };
 
+const STORE_KEY = "@k_app/pedagogical_progress_v1";
+
 const initialProgress: Progress = {
   learningTrack: null,
   xp: 120,
   streak: 0,
   isPremium: false,
-  completed: { cafe_americano: true },
+  completed: {},
   hangulLevel: 1,
 };
 
@@ -34,17 +43,77 @@ type StoreValue = {
   complete: (id: string) => void;
   togglePremium: () => void;
   bumpHangul: () => void;
+  isHydrated: boolean;
 };
 
 const StoreContext = React.createContext<StoreValue | undefined>(undefined);
 
+function mergeProgress(saved: Partial<Progress>): Progress {
+  return {
+    ...initialProgress,
+    ...saved,
+    completed: {
+      ...(saved.completed ?? {}),
+    },
+  };
+}
+
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [progress, setProgress] = React.useState<Progress>(initialProgress);
-  const completedRef = React.useRef(initialProgress.completed);
+  const [isHydrated, setIsHydrated] = React.useState(false);
+  const completedRef = React.useRef<Record<string, boolean>>(
+    initialProgress.completed,
+  );
+
+  React.useEffect(() => {
+    let mounted = true;
+
+    async function hydrateStore() {
+      try {
+        const raw = await AsyncStorage.getItem(STORE_KEY);
+
+        if (!mounted) return;
+
+        if (raw) {
+          const saved = JSON.parse(raw) as Partial<Progress>;
+          const restoredProgress = mergeProgress(saved);
+
+          setProgress(restoredProgress);
+          completedRef.current = restoredProgress.completed;
+        }
+      } catch (error) {
+        console.warn("Impossible de restaurer le store pédagogique:", error);
+      } finally {
+        if (mounted) {
+          setIsHydrated(true);
+        }
+      }
+    }
+
+    void hydrateStore();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   React.useEffect(() => {
     completedRef.current = progress.completed;
   }, [progress.completed]);
+
+  React.useEffect(() => {
+    if (!isHydrated) return;
+
+    async function persistStore() {
+      try {
+        await AsyncStorage.setItem(STORE_KEY, JSON.stringify(progress));
+      } catch (error) {
+        console.warn("Impossible de sauvegarder le store pédagogique:", error);
+      }
+    }
+
+    void persistStore();
+  }, [progress, isHydrated]);
 
   const setTrack = (t: LearningTrack) => {
     setProgress((p) => ({ ...p, learningTrack: t }));
@@ -64,13 +133,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     setProgress((p) => {
       if (p.completed[id]) return p;
-      const isHangulProgress = id.startsWith("hangul_");
 
       return {
         ...p,
         completed: { ...p.completed, [id]: true },
         xp: p.xp + 40,
-        streak: isHangulProgress ? p.streak + 1 : p.streak,
       };
     });
   };
@@ -95,6 +162,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         togglePremium,
         bumpHangul,
         setTrack,
+        isHydrated,
       }}
     >
       {children}
@@ -104,8 +172,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
 export function useStore() {
   const ctx = React.useContext(StoreContext);
+
   if (!ctx) {
     throw new Error("StoreProvider missing. Wrap app in StoreProvider.");
   }
+
   return ctx;
 }

@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useStore } from "../../_store";
 import { MissionLaunchModal } from "../../components/immersion/MissionLaunchModal";
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import {
@@ -37,6 +38,7 @@ function normalizeMode(rawMode: string | string[] | undefined) {
 export default function RestaurantMissionsScreen() {
   const params = useLocalSearchParams();
   const mode = normalizeMode(params.mode as string | string[] | undefined);
+  const { setTrack } = useStore();
   const { hasPremiumAccess } = usePaywall();
   const [selectedMission, setSelectedMission] =
     React.useState<RestaurantMission | null>(null);
@@ -54,6 +56,7 @@ export default function RestaurantMissionsScreen() {
     if (!selectedMission) return;
     const mission = selectedMission;
     setSelectedMission(null);
+    setTrack("restaurant_ia");
     router.push({
       pathname: "/lesson/restaurantIA",
       params: { mode, mission: mission.id },

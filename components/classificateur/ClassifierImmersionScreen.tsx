@@ -15,12 +15,14 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useStore } from "../../_store";
 import {
   trackAudioPlayed,
   trackSceneCompleted,
   trackSubModuleVisited,
   trackToolboxOpened,
 } from "../../lib/immersionStreak";
+import { buildProgressId } from "../../lib/progressIds";
 
 type DialogueLine = {
   char: string;
@@ -53,6 +55,7 @@ type Props = {
   badgeLabel: string;
   toolboxTitle: string;
   badgeVariant?: "solid" | "outline";
+  completionPrefix?: string;
 };
 
 const COLORS = {
@@ -67,7 +70,9 @@ export default function ClassifierImmersionScreen({
   badgeLabel,
   toolboxTitle,
   badgeVariant = "outline",
+  completionPrefix = "classifier",
 }: Props) {
+  const { complete } = useStore();
   const [activeScene, setActiveScene] = useState(scenes[0]);
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
@@ -149,6 +154,7 @@ export default function ClassifierImmersionScreen({
     if (visibleMessages >= activeScene.dialogue.length) {
       if (!completedSceneIdsRef.current.has(activeScene.id)) {
         completedSceneIdsRef.current.add(activeScene.id);
+        complete(buildProgressId(completionPrefix, activeScene.id));
         void trackSceneCompleted(activeScene.id);
       }
 

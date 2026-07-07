@@ -1,36 +1,35 @@
 import type { ProductSubscription } from "expo-iap";
 import React from "react";
-import { Platform } from "react-native";
 import {
   DEV_UNLOCK_ALL,
   ENABLE_NATIVE_IAP,
-  PREMIUM_MONTHLY_PRICE_FALLBACK,
+  PREMIUM_PRICE_FALLBACKS,
   PREMIUM_PRODUCT_IDS,
-  STORE_PACKAGE_NAME_ANDROID,
-  SUBSCRIPTION_PRODUCT_IDS,
+  PREMIUM_SUBSCRIPTION_OFFERS,
+  type SubscriptionOfferId,
 } from "./config";
 import {
   createDeveloperEntitlement,
   derivePremiumEntitlement,
   isPremiumPurchase,
 } from "./entitlements";
+import {
+  findSubscriptionOffer,
+  openStoreSubscriptionManagement,
+  requestSubscriptionPurchase,
+  toPaywallError,
+} from "./purchases";
 import type { PaywallContextValue, PaywallError } from "./types";
 
 const PaywallContext = React.createContext<PaywallContextValue | undefined>(
   undefined
 );
 
-const toPaywallError = (error: unknown): PaywallError => {
-  if (error && typeof error === "object") {
-    const maybeError = error as { code?: string; message?: string };
-    return {
-      code: maybeError.code,
-      message: maybeError.message ?? "Une erreur est survenue.",
-    };
-  }
+const emptySubscriptions = {} as Partial<
+  Record<SubscriptionOfferId, ProductSubscription>
+>;
 
-  return { message: "Une erreur est survenue." };
-};
+const noopAsync = async () => undefined;
 
 const getExpoIap = () => {
   // Keep the native module out of Expo Go / preview runtimes.
@@ -45,7 +44,7 @@ function DevPaywallProvider({ children }: { children: React.ReactNode }) {
     () => ({
       activeSubscriptions: [],
       clearError: () => null,
-      displayPrice: PREMIUM_MONTHLY_PRICE_FALLBACK,
+      displayPrices: PREMIUM_PRICE_FALLBACKS,
       entitlement,
       error: null,
       hasPremiumAccess: true,
@@ -54,11 +53,13 @@ function DevPaywallProvider({ children }: { children: React.ReactNode }) {
       isPurchasing: false,
       isReady: true,
       isRestoring: false,
-      monthlySubscription: undefined,
-      openSubscriptionManagement: async () => undefined,
-      refreshEntitlements: async () => undefined,
-      restorePurchases: async () => undefined,
-      subscribeMonthly: async () => undefined,
+      openSubscriptionManagement: noopAsync,
+      refreshEntitlements: noopAsync,
+      restorePurchases: noopAsync,
+      subscribe: noopAsync,
+      subscribeMonthly: noopAsync,
+      subscribeYearly: noopAsync,
+      subscriptions: emptySubscriptions,
     }),
     [entitlement]
   );
@@ -86,7 +87,7 @@ function LockedPreviewPaywallProvider({
     setError({
       code: "native-iap-disabled",
       message:
-        "Aperçu du paywall actif. Pour tester un achat réel, utilise un dev client reconstruit et passe ENABLE_NATIVE_IAP à true.",
+        "Apercu du paywall actif. Pour tester un achat reel, utilise un dev client reconstruit et passe ENABLE_NATIVE_IAP a true.",
     });
   }, []);
 
@@ -94,7 +95,7 @@ function LockedPreviewPaywallProvider({
     () => ({
       activeSubscriptions: [],
       clearError: () => setError(null),
-      displayPrice: PREMIUM_MONTHLY_PRICE_FALLBACK,
+      displayPrices: PREMIUM_PRICE_FALLBACKS,
       entitlement,
       error,
       hasPremiumAccess: false,
@@ -103,11 +104,13 @@ function LockedPreviewPaywallProvider({
       isPurchasing: false,
       isReady: true,
       isRestoring: false,
-      monthlySubscription: undefined,
       openSubscriptionManagement: showNativeRuntimeError,
-      refreshEntitlements: async () => undefined,
+      refreshEntitlements: noopAsync,
       restorePurchases: showNativeRuntimeError,
+      subscribe: showNativeRuntimeError,
       subscribeMonthly: showNativeRuntimeError,
+      subscribeYearly: showNativeRuntimeError,
+      subscriptions: emptySubscriptions,
     }),
     [entitlement, error, showNativeRuntimeError]
   );
@@ -132,7 +135,7 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
     getActiveSubscriptions,
     requestPurchase,
     restorePurchases: restoreNativePurchases,
-    subscriptions,
+    subscriptions: nativeSubscriptions,
   } = useIAP({
     onError: (iapError) => {
       setError(toPaywallError(iapError));
@@ -158,10 +161,28 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
     },
   });
 
-  const monthlySubscription = React.useMemo(
+  const subscriptions = React.useMemo(
     () =>
-      subscriptions.find(
-        (subscription) => subscription.id === SUBSCRIPTION_PRODUCT_IDS.monthly
+      PREMIUM_SUBSCRIPTION_OFFERS.reduce(
+        (mappedSubscriptions, offer) => ({
+          ...mappedSubscriptions,
+          [offer.id]: findSubscriptionOffer(nativeSubscriptions, offer.id),
+        }),
+        {} as Partial<Record<SubscriptionOfferId, ProductSubscription>>
+      ),
+    [nativeSubscriptions]
+  );
+
+  const displayPrices = React.useMemo(
+    () =>
+      PREMIUM_SUBSCRIPTION_OFFERS.reduce(
+        (prices, offer) => ({
+          ...prices,
+          [offer.id]:
+            subscriptions[offer.id]?.displayPrice ??
+            PREMIUM_PRICE_FALLBACKS[offer.id],
+        }),
+        {} as Record<SubscriptionOfferId, string>
       ),
     [subscriptions]
   );
@@ -217,30 +238,24 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
     };
   }, [connected, fetchProducts, getActiveSubscriptions]);
 
-  const subscribeMonthly = React.useCallback(async () => {
-    setError(null);
-    setIsPurchasing(true);
+  const subscribe = React.useCallback(
+    async (offerId: SubscriptionOfferId) => {
+      setError(null);
+      setIsPurchasing(true);
 
-    try {
-      const offerToken = getAndroidOfferToken(monthlySubscription);
-
-      await requestPurchase({
-        request: {
-          apple: { sku: SUBSCRIPTION_PRODUCT_IDS.monthly },
-          google: {
-            skus: [SUBSCRIPTION_PRODUCT_IDS.monthly],
-            subscriptionOffers: offerToken
-              ? [{ sku: SUBSCRIPTION_PRODUCT_IDS.monthly, offerToken }]
-              : undefined,
-          },
-        },
-        type: "subs",
-      });
-    } catch (purchaseError) {
-      setError(toPaywallError(purchaseError));
-      setIsPurchasing(false);
-    }
-  }, [monthlySubscription, requestPurchase]);
+      try {
+        await requestSubscriptionPurchase({
+          offerId,
+          requestPurchase,
+          subscription: subscriptions[offerId],
+        });
+      } catch (purchaseError) {
+        setError(toPaywallError(purchaseError));
+        setIsPurchasing(false);
+      }
+    },
+    [requestPurchase, subscriptions]
+  );
 
   const restorePurchases = React.useCallback(async () => {
     setError(null);
@@ -260,23 +275,24 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
     setError(null);
 
     try {
-      if (Platform.OS === "ios" || Platform.OS === "android") {
-        await deepLinkToSubscriptions({
-          packageNameAndroid: STORE_PACKAGE_NAME_ANDROID,
-          skuAndroid: SUBSCRIPTION_PRODUCT_IDS.monthly,
-        });
-      }
+      await openStoreSubscriptionManagement({
+        deepLinkToSubscriptions,
+        offerId: entitlement.productId
+          ? PREMIUM_SUBSCRIPTION_OFFERS.find(
+              (offer) => offer.productId === entitlement.productId
+            )?.id
+          : undefined,
+      });
     } catch (managementError) {
       setError(toPaywallError(managementError));
     }
-  }, [deepLinkToSubscriptions]);
+  }, [deepLinkToSubscriptions, entitlement.productId]);
 
   const value = React.useMemo<PaywallContextValue>(
     () => ({
       activeSubscriptions,
       clearError: () => setError(null),
-      displayPrice:
-        monthlySubscription?.displayPrice ?? PREMIUM_MONTHLY_PRICE_FALLBACK,
+      displayPrices,
       entitlement,
       error,
       hasPremiumAccess: entitlement.hasAccess,
@@ -285,36 +301,34 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
       isPurchasing,
       isReady: connected && !isLoading,
       isRestoring,
-      monthlySubscription,
       openSubscriptionManagement,
       refreshEntitlements,
       restorePurchases,
-      subscribeMonthly,
+      subscribe,
+      subscribeMonthly: () => subscribe("monthly"),
+      subscribeYearly: () => subscribe("yearly"),
+      subscriptions,
     }),
     [
       activeSubscriptions,
       connected,
+      displayPrices,
       entitlement,
       error,
       isLoading,
       isPurchasing,
       isRestoring,
-      monthlySubscription,
       openSubscriptionManagement,
       refreshEntitlements,
       restorePurchases,
-      subscribeMonthly,
+      subscribe,
+      subscriptions,
     ]
   );
 
   return (
     <PaywallContext.Provider value={value}>{children}</PaywallContext.Provider>
   );
-}
-
-function getAndroidOfferToken(subscription?: ProductSubscription) {
-  if (!subscription || subscription.platform !== "android") return undefined;
-  return subscription.subscriptionOffers?.[0]?.offerTokenAndroid ?? undefined;
 }
 
 export function PaywallProvider({ children }: { children: React.ReactNode }) {

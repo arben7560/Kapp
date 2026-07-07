@@ -5,8 +5,11 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CafeAvatar from "../../components/ai/CafeAvatar";
-import { isCorrect } from "../../lib/answerCheck";
+import { useStore } from "../../_store";
 import { CAFE_SESSION, type ListenExercise } from "../../data/listen/cafe";
+import { isCorrect } from "../../lib/answerCheck";
+import { completeDailyActivity } from "../../lib/dailyStreak";
+import { buildProgressId } from "../../lib/progressIds";
 
 const BG0 = "#060816";
 const BG1 = "#090D1D";
@@ -178,9 +181,11 @@ function ActionButton({
 }
 
 export default function CafeListenScreen() {
+  const { complete } = useStore();
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const speechTokenRef = useRef(0);
   const finishTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasReportedCompletionRef = useRef(false);
 
   const [session, setSession] = useState<ListenExercise[]>(() =>
     shuffleArray(CAFE_SESSION),
@@ -244,6 +249,14 @@ export default function CafeListenScreen() {
       },
     });
   }
+
+  useEffect(() => {
+    if (!finished || hasReportedCompletionRef.current) return;
+
+    hasReportedCompletionRef.current = true;
+    complete(buildProgressId("listen", "cafe_session"));
+    void completeDailyActivity("listen_exercise");
+  }, [complete, finished]);
 
   useEffect(() => {
     if (!exercise) return;
@@ -313,6 +326,7 @@ export default function CafeListenScreen() {
       setResult(null);
       setScore(0);
       setWrongExercises([]);
+      hasReportedCompletionRef.current = false;
     });
   }
 
@@ -326,6 +340,7 @@ export default function CafeListenScreen() {
       setResult(null);
       setScore(0);
       setWrongExercises([]);
+      hasReportedCompletionRef.current = false;
     });
   }
 

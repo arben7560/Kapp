@@ -23,7 +23,10 @@ import {
   getMetroMissionById,
   getMetroMissionLesson,
 } from "../../data/lesson/metro/metroMissions";
+import { useStore } from "../../_store";
+import { completeDailyActivity } from "../../lib/dailyStreak";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
+import { buildProgressId } from "../../lib/progressIds";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -261,6 +264,7 @@ function buildMetroScenario(lesson: MetroLesson): DialogueScenario {
 
 // ==================== MAIN ====================
 export default function MetroIaScreen() {
+  const { complete } = useStore();
   /**
    * Important :
    * On initialise directement avec iaIntroRoute.
@@ -288,6 +292,7 @@ export default function MetroIaScreen() {
   const mountedRef = useRef(true);
   const iaAutoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasAdvancedFromVideoRef = useRef(false);
+  const hasReportedMissionCompleteRef = useRef(false);
 
   const metroScenario = useMemo(() => {
     const lesson =
@@ -355,7 +360,16 @@ export default function MetroIaScreen() {
     setIsTransitioning(false);
     setIsSceneEnded(false);
     hasAdvancedFromVideoRef.current = false;
+    hasReportedMissionCompleteRef.current = false;
   }, [currentScenario]);
+
+  useEffect(() => {
+    if (!isSceneEnded || hasReportedMissionCompleteRef.current) return;
+
+    hasReportedMissionCompleteRef.current = true;
+    complete(buildProgressId("metro", mode, missionId));
+    void completeDailyActivity("ai_mission");
+  }, [complete, isSceneEnded, missionId, mode]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -516,6 +530,7 @@ export default function MetroIaScreen() {
     setIsTransitioning(false);
     setIsSceneEnded(false);
     hasAdvancedFromVideoRef.current = false;
+    hasReportedMissionCompleteRef.current = false;
   };
 
   const isStartChoiceNode = currentNodeId === "start";
@@ -712,6 +727,8 @@ export default function MetroIaScreen() {
                   <Text style={styles.endSubtitle}>
                     Tu peux rejouer cette scène ou revenir au menu.
                   </Text>
+
+                  <Text style={styles.endSubtitle}>Serie conservee.</Text>
 
                   <View style={styles.endActions}>
                     <Pressable

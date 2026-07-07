@@ -1,7 +1,10 @@
 import * as Speech from "expo-speech";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
+import { useStore } from "../../_store";
 import { isCorrect } from "../../lib/answerCheck";
+import { completeDailyActivity } from "../../lib/dailyStreak";
+import { buildProgressId } from "../../lib/progressIds";
 
 type Exercise = {
   audio?: string;
@@ -59,11 +62,21 @@ const SESSION: Exercise[] = [
 ];
 
 export default function ListeningScreen() {
+  const { complete } = useStore();
   const [index, setIndex] = useState(0);
   const [input, setInput] = useState("");
   const [result, setResult] = useState<string | null>(null);
+  const isDailyActivityReportedRef = useRef(false);
 
   const exercise = SESSION[index];
+
+  useEffect(() => {
+    if (exercise || isDailyActivityReportedRef.current) return;
+
+    isDailyActivityReportedRef.current = true;
+    complete(buildProgressId("listen", "index_quiz"));
+    void completeDailyActivity("listen_exercise");
+  }, [complete, exercise]);
 
   function playAudio() {
     if (!exercise?.audio) return;

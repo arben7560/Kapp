@@ -28,7 +28,10 @@ import {
   getRestaurantMissionById,
   getRestaurantMissionScenario,
 } from "../../data/lesson/restaurant/restaurantMissions";
+import { useStore } from "../../_store";
+import { completeDailyActivity } from "../../lib/dailyStreak";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
+import { buildProgressId } from "../../lib/progressIds";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -153,6 +156,7 @@ function getAutoAdvanceDelay(node: DialogueNodeWithVideo, mode: ModeType) {
 
 // ==================== MAIN ====================
 export default function RestaurantIaScreen() {
+  const { complete } = useStore();
   const [displayedVideoSource, setDisplayedVideoSource] = useState<
     number | null
   >(null);
@@ -174,6 +178,7 @@ export default function RestaurantIaScreen() {
   const mountedRef = useRef(true);
   const iaAutoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasAdvancedFromVideoRef = useRef(false);
+  const hasReportedMissionCompleteRef = useRef(false);
 
   const currentScenario = useMemo(() => {
     const missionScenario = currentMission
@@ -256,7 +261,16 @@ export default function RestaurantIaScreen() {
     setIsTranscriptOpen(false);
     setLastIaTranscript(null);
     hasAdvancedFromVideoRef.current = false;
+    hasReportedMissionCompleteRef.current = false;
   }, [currentScenario]);
+
+  useEffect(() => {
+    if (!isSceneEnded || hasReportedMissionCompleteRef.current) return;
+
+    hasReportedMissionCompleteRef.current = true;
+    complete(buildProgressId("restaurant", mode, missionId));
+    void completeDailyActivity("ai_mission");
+  }, [complete, isSceneEnded, missionId, mode]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -408,6 +422,7 @@ export default function RestaurantIaScreen() {
     setIsTranscriptOpen(false);
     setLastIaTranscript(null);
     hasAdvancedFromVideoRef.current = false;
+    hasReportedMissionCompleteRef.current = false;
   };
 
   const isUserChoice = currentNode?.type === "user_choice";
@@ -580,6 +595,8 @@ export default function RestaurantIaScreen() {
                     Tu peux rejouer cette scene ou revenir au menu.
                   </Text>
 
+                  <Text style={styles.endSubtitle}>Serie conservee.</Text>
+
                   <View style={styles.endActions}>
                     <Pressable
                       onPress={handleRestart}
@@ -654,7 +671,7 @@ export default function RestaurantIaScreen() {
                   <View style={styles.waitingPulseRow}>
                     <View style={styles.waitingDot} />
                     <Text style={styles.waitingTxt}>
-                      Ecoute de l'interlocuteur...
+                      {"Ecoute de l'interlocuteur..."}
                     </Text>
                   </View>
 

@@ -11,7 +11,11 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { DEV_UNLOCK_ALL, PAYWALL_COPY } from "../lib/paywall/config";
+import {
+  DEV_UNLOCK_ALL,
+  PAYWALL_COPY,
+  PREMIUM_SUBSCRIPTION_OFFERS,
+} from "../lib/paywall/config";
 import { usePaywall } from "../lib/paywall/PaywallProvider";
 
 const COLORS = {
@@ -27,15 +31,24 @@ const COLORS = {
 };
 
 const FEATURES = [
-  "Tous les modules actuels débloqués",
+  "Tous les modules actuels debloques",
   "Tous les exercices et programmes Premium",
-  "Toutes les futures fonctionnalités Premium incluses",
+  "Toutes les futures fonctionnalites Premium incluses",
   "Restaurable sur tes appareils via ton compte Store",
 ];
 
+const isAnnualOffer = (offer: (typeof PREMIUM_SUBSCRIPTION_OFFERS)[number]) => {
+  const label = `${offer.id} ${offer.title}`.toLowerCase();
+  return (
+    label.includes("year") ||
+    label.includes("annual") ||
+    label.includes("annuel")
+  );
+};
+
 export default function PremiumScreen() {
   const {
-    displayPrice,
+    displayPrices,
     error,
     hasPremiumAccess,
     isDeveloperUnlocked,
@@ -44,13 +57,30 @@ export default function PremiumScreen() {
     isRestoring,
     openSubscriptionManagement,
     restorePurchases,
-    subscribeMonthly,
+    subscribe,
   } = usePaywall();
 
   const busy = isPurchasing || isRestoring;
+  const highlightedOfferId =
+    PREMIUM_SUBSCRIPTION_OFFERS.find(isAnnualOffer)?.id ??
+    PREMIUM_SUBSCRIPTION_OFFERS[1]?.id ??
+    PREMIUM_SUBSCRIPTION_OFFERS[0]?.id;
+  const [selectedOfferId, setSelectedOfferId] =
+    React.useState(highlightedOfferId);
+  const selectedOffer = React.useMemo(
+    () =>
+      PREMIUM_SUBSCRIPTION_OFFERS.find(
+        (offer) => offer.id === selectedOfferId,
+      ) ?? PREMIUM_SUBSCRIPTION_OFFERS[0],
+    [selectedOfferId],
+  );
+  const canSubscribe = !!selectedOffer && !busy && !hasPremiumAccess;
 
   return (
-    <LinearGradient colors={[COLORS.bg, "#0b0b1d", "#0b0f22"]} style={styles.screen}>
+    <LinearGradient
+      colors={[COLORS.bg, "#0b0b1d", "#0b0f22"]}
+      style={styles.screen}
+    >
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.iconButton}>
@@ -64,39 +94,84 @@ export default function PremiumScreen() {
           <View style={styles.heroCard}>
             <View style={styles.badge}>
               <Ionicons name="sparkles" size={15} color={COLORS.gold} />
-              <Text style={styles.badgeText}>ACCÈS TOTAL</Text>
+              <Text style={styles.badgeText}>ACCES TOTAL</Text>
             </View>
 
             <Text style={styles.title}>{PAYWALL_COPY.title}</Text>
             <Text style={styles.subtitle}>{PAYWALL_COPY.subtitle}</Text>
 
-            <View style={styles.priceBox}>
-              {isLoading ? (
-                <ActivityIndicator color={COLORS.text} />
-              ) : (
-                <>
-                  <Text style={styles.price}>{displayPrice}</Text>
-                  <Text style={styles.priceCaption}>
-                    Abonnement mensuel, résiliable depuis le Store.
-                  </Text>
-                </>
-              )}
+            <View style={styles.offers}>
+              {PREMIUM_SUBSCRIPTION_OFFERS.map((offer) => (
+                <Pressable
+                  key={offer.id}
+                  disabled={busy || hasPremiumAccess}
+                  onPress={() => setSelectedOfferId(offer.id)}
+                  style={({ pressed }) => [
+                    styles.priceBox,
+                    offer.id === highlightedOfferId && styles.priceBoxFeatured,
+                    offer.id === selectedOfferId && styles.priceBoxSelected,
+                    pressed && !busy && !hasPremiumAccess && styles.planPressed,
+                  ]}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color={COLORS.text} />
+                  ) : (
+                    <>
+                      <View style={styles.offerHeader}>
+                        <View style={styles.offerTitleWrap}>
+                          <Text style={styles.offerTitle}>{offer.title}</Text>
+                          {offer.id === highlightedOfferId && (
+                            <View style={styles.savingBadge}>
+                              <Text style={styles.savingBadgeText}>
+                                Economisez 17%
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+
+                        <Ionicons
+                          name={
+                            offer.id === selectedOfferId
+                              ? "checkmark-circle"
+                              : "ellipse-outline"
+                          }
+                          size={22}
+                          color={
+                            offer.id === selectedOfferId
+                              ? COLORS.cyan
+                              : COLORS.faint
+                          }
+                        />
+                      </View>
+
+                      <Text style={styles.price}>
+                        {displayPrices[offer.id]}
+                      </Text>
+                      <Text style={styles.priceCaption}>{offer.caption}</Text>
+                    </>
+                  )}
+                </Pressable>
+              ))}
             </View>
 
             {DEV_UNLOCK_ALL && (
               <View style={styles.devBox}>
                 <Text style={styles.devText}>
-                  Mode développeur actif : tout est débloqué sans achat.
+                  Mode developpeur actif : tout est debloque sans achat.
                 </Text>
               </View>
             )}
 
             {hasPremiumAccess && (
               <View style={styles.activeBox}>
-                <Ionicons name="checkmark-circle" size={18} color={COLORS.cyan} />
+                <Ionicons
+                  name="checkmark-circle"
+                  size={18}
+                  color={COLORS.cyan}
+                />
                 <Text style={styles.activeText}>
                   {isDeveloperUnlocked
-                    ? "Accès complet activé en développement."
+                    ? "Acces complet active en developpement."
                     : "Ton abonnement Premium est actif."}
                 </Text>
               </View>
@@ -120,22 +195,28 @@ export default function PremiumScreen() {
           )}
 
           <Pressable
-            disabled={busy || hasPremiumAccess}
-            onPress={subscribeMonthly}
+            disabled={!canSubscribe}
+            onPress={() => selectedOffer && subscribe(selectedOffer.id)}
             style={({ pressed }) => [
               styles.primaryButton,
-              (busy || hasPremiumAccess) && styles.buttonDisabled,
-              pressed && !busy && !hasPremiumAccess && styles.buttonPressed,
+              !canSubscribe && styles.buttonDisabled,
+              pressed && canSubscribe && styles.buttonPressed,
             ]}
           >
             {isPurchasing ? (
               <ActivityIndicator color={COLORS.text} />
             ) : (
               <Text style={styles.primaryButtonText}>
-                {hasPremiumAccess ? "Premium actif" : PAYWALL_COPY.cta}
+                {hasPremiumAccess ? "Premium actif" : "Continuer"}
               </Text>
             )}
           </Pressable>
+
+          {!hasPremiumAccess && selectedOffer && (
+            <Text style={styles.selectedPlanText}>
+              Offre selectionnee : {selectedOffer.title}
+            </Text>
+          )}
 
           <Pressable
             disabled={busy}
@@ -149,17 +230,23 @@ export default function PremiumScreen() {
             {isRestoring ? (
               <ActivityIndicator color={COLORS.text} />
             ) : (
-              <Text style={styles.secondaryButtonText}>{PAYWALL_COPY.restore}</Text>
+              <Text style={styles.secondaryButtonText}>
+                {PAYWALL_COPY.restore}
+              </Text>
             )}
           </Pressable>
 
-          <Pressable onPress={openSubscriptionManagement} style={styles.textButton}>
+          <Pressable
+            onPress={openSubscriptionManagement}
+            style={styles.textButton}
+          >
             <Text style={styles.textButtonText}>{PAYWALL_COPY.manage}</Text>
           </Pressable>
 
           <Text style={styles.legalText}>
-            Le paiement est traité par l’App Store ou Google Play. Le renouvellement
-            et l’expiration de l’abonnement sont gérés par ton compte Store.
+            {
+              "Le paiement est traite par l'App Store ou Google Play. Le renouvellement et l'expiration de l'abonnement sont geres par ton compte Store."
+            }
           </Text>
         </ScrollView>
       </SafeAreaView>
@@ -242,20 +329,63 @@ const styles = StyleSheet.create({
     lineHeight: 23,
     marginTop: 10,
   },
+  offers: {
+    gap: 12,
+    marginTop: 20,
+  },
   priceBox: {
-    minHeight: 84,
+    minHeight: 94,
     borderRadius: 22,
     borderWidth: 1,
     borderColor: COLORS.line,
     backgroundColor: "rgba(0,0,0,0.22)",
-    marginTop: 20,
     padding: 16,
     justifyContent: "center",
+  },
+  priceBoxFeatured: {
+    borderColor: "rgba(251,191,36,0.42)",
+    backgroundColor: "rgba(251,191,36,0.08)",
+  },
+  priceBoxSelected: {
+    borderColor: COLORS.cyan,
+    backgroundColor: "rgba(34,211,238,0.1)",
+  },
+  offerHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  offerTitleWrap: {
+    flex: 1,
+    gap: 8,
+  },
+  offerTitle: {
+    color: COLORS.muted,
+    fontSize: 13,
+    fontWeight: "900",
+    textTransform: "uppercase",
+  },
+  savingBadge: {
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    backgroundColor: "rgba(251,191,36,0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(251,191,36,0.42)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  savingBadgeText: {
+    color: COLORS.gold,
+    fontSize: 11,
+    fontWeight: "900",
+    textTransform: "uppercase",
   },
   price: {
     color: COLORS.text,
     fontSize: 28,
     fontWeight: "900",
+    marginTop: 5,
   },
   priceCaption: {
     color: COLORS.faint,
@@ -334,12 +464,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: COLORS.pink,
   },
+  primaryButtonSecondary: {
+    marginTop: 12,
+    backgroundColor: "rgba(255,255,255,0.13)",
+    borderWidth: 1,
+    borderColor: "rgba(255,99,132,0.28)",
+  },
   primaryButtonText: {
     color: COLORS.text,
     fontSize: 15,
     fontWeight: "900",
     letterSpacing: 1.2,
     textTransform: "uppercase",
+  },
+  selectedPlanText: {
+    color: COLORS.muted,
+    fontSize: 13,
+    fontWeight: "800",
+    marginTop: 10,
+    textAlign: "center",
   },
   secondaryButton: {
     marginTop: 12,
@@ -366,6 +509,10 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     opacity: 0.86,
+    transform: [{ scale: 0.99 }],
+  },
+  planPressed: {
+    opacity: 0.92,
     transform: [{ scale: 0.99 }],
   },
   buttonDisabled: {

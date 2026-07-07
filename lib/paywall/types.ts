@@ -1,4 +1,5 @@
 import type { ActiveSubscription, ProductSubscription } from "expo-iap";
+import type { SubscriptionOfferId } from "./config";
 
 export type EntitlementSource = "developer" | "store" | "none";
 
@@ -23,12 +24,14 @@ export type PaywallContextValue = {
   isLoading: boolean;
   isPurchasing: boolean;
   isRestoring: boolean;
-  monthlySubscription?: ProductSubscription;
-  displayPrice: string;
+  subscriptions: Partial<Record<SubscriptionOfferId, ProductSubscription>>;
+  displayPrices: Record<SubscriptionOfferId, string>;
   error: PaywallError | null;
   activeSubscriptions: ActiveSubscription[];
   refreshEntitlements: () => Promise<void>;
   subscribeMonthly: () => Promise<void>;
+  subscribeYearly: () => Promise<void>;
+  subscribe: (offerId: SubscriptionOfferId) => Promise<void>;
   restorePurchases: () => Promise<void>;
   openSubscriptionManagement: () => Promise<void>;
   clearError: () => void;

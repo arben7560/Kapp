@@ -15,6 +15,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useStore } from "../../_store";
 import { useVocAudio } from "../../hooks/useVocAudio";
 import {
   trackAudioPlayed,
@@ -22,6 +23,7 @@ import {
   trackSubModuleVisited,
   trackToolboxOpened,
 } from "../../lib/immersionStreak";
+import { buildProgressId } from "../../lib/progressIds";
 
 type AudioAsset = number;
 
@@ -57,6 +59,7 @@ type Props = {
   backLabel: string;
   badgeLabel: string;
   toolboxTitle: string;
+  completionPrefix?: string;
 };
 
 const BACKGROUND_SOURCE = require("../../assets/images/comptage.png");
@@ -72,7 +75,9 @@ export default function CountingImmersionScreen({
   backLabel,
   badgeLabel,
   toolboxTitle,
+  completionPrefix = "numbers",
 }: Props) {
+  const { complete } = useStore();
   const [activeScene, setActiveScene] = useState(scenes[0]);
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
@@ -165,6 +170,7 @@ export default function CountingImmersionScreen({
     if (visibleMessages >= activeScene.dialogue.length) {
       if (!completedSceneIdsRef.current.has(activeScene.id)) {
         completedSceneIdsRef.current.add(activeScene.id);
+        complete(buildProgressId(completionPrefix, activeScene.id));
         void trackSceneCompleted(activeScene.id);
       }
 

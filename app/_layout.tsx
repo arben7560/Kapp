@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import React from "react";
 import { StoreProvider } from "../_store";
 import { useImmersionActiveTime } from "../hooks/useImmersionActiveTime";
+import { DailyStreakProvider } from "../lib/DailyStreakProvider";
 import { PaywallProvider } from "../lib/paywall/PaywallProvider";
 import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard";
 
@@ -53,18 +54,21 @@ export default function RootLayout() {
 
   return (
     <StoreProvider>
-      <PaywallProvider>
-        <SubscriptionAccessGuard />
-        {/* <ScreenCaptureProtection /> */}
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="onboarding" />
-          <Stack.Screen name="premium" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="listen/teacherIA" />
-          <Stack.Screen name="listen/teacherIARealtime" />
-        </Stack>
-      </PaywallProvider>
+      <DailyStreakProvider>
+        <PaywallProvider>
+          <SubscriptionAccessGuard />
+          {/* <ScreenCaptureProtection /> */}
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="onboarding" />
+            <Stack.Screen name="premium" />
+            <Stack.Screen name="streak" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="listen/teacherIA" />
+            <Stack.Screen name="listen/teacherIARealtime" />
+          </Stack>
+        </PaywallProvider>
+      </DailyStreakProvider>
     </StoreProvider>
   );
 }

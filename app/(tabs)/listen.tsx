@@ -10,6 +10,9 @@ import {
   Text,
   View,
 } from "react-native";
+import { useStore } from "../../_store";
+import { completeDailyActivity } from "../../lib/dailyStreak";
+import { buildProgressId } from "../../lib/progressIds";
 
 const BG_URL =
   "https://images.unsplash.com/photo-1741533911359-943221043128?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=75&w=1600";
@@ -357,11 +360,13 @@ const KIND_LABEL: Record<ExerciseKind, { mini: string; skill: string }> = {
 };
 
 export default function ListenScreen() {
+  const { complete } = useStore();
   const [trainingIndex, setTrainingIndex] = useState(0);
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [picked, setPicked] = useState<number[]>([]);
   const [checked, setChecked] = useState(false);
+  const [dailyMessage, setDailyMessage] = useState<string | null>(null);
   const [hint, setHint] = useState("Audio IA à brancher");
 
   const trainingKind = TRAINING_ORDER[trainingIndex];
@@ -417,6 +422,15 @@ export default function ListenScreen() {
     if (!canCheck) return;
 
     if (isAnswerCorrect()) {
+      complete(buildProgressId("listen", item.id));
+      void completeDailyActivity("listen_exercise").then((state) => {
+        setDailyMessage(
+          state.lastCompletionResult === "completed_with_freeze"
+            ? "Freeze utilise. Serie conservee."
+            : "Serie conservee.",
+        );
+        setTimeout(() => setDailyMessage(null), 2200);
+      });
       goNext();
       return;
     }
@@ -637,6 +651,13 @@ export default function ListenScreen() {
               </View>
             )}
 
+            {!!dailyMessage && (
+              <View style={styles.streakToast}>
+                <Ionicons name="flame" size={16} color={COLORS.green} />
+                <Text style={styles.streakToastText}>{dailyMessage}</Text>
+              </View>
+            )}
+
             <View style={styles.actionRow}>
               <Pressable
                 onPress={resetAnswer}
@@ -714,7 +735,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bg,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(0,0,0,0.66)",
   },
   safe: {
@@ -1066,6 +1087,25 @@ const styles = StyleSheet.create({
     color: COLORS.muted,
     fontSize: 14,
     lineHeight: 20,
+  },
+  streakToast: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(141,240,181,0.12)",
+    borderColor: "rgba(141,240,181,0.42)",
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 7,
+    marginTop: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  streakToastText: {
+    color: COLORS.green,
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 0.6,
   },
   actionRow: {
     flexDirection: "row",
