@@ -210,7 +210,7 @@ const SCENES = withSceneAudio([
       {
         word: "첫째 / 둘째",
         rom: "Cheot-jjae / Dul-jjae",
-        mean: "1er / 2ème (enfant)",
+        mean: "1er / 2e (enfant)",
         context:
           "Suffixe '-jjae' utilisé spécifiquement pour l'ordre des personnes/enfants.",
       },
@@ -224,7 +224,7 @@ const SCENES = withSceneAudio([
       {
         word: "셋째 / 넷째",
         rom: "Set-jjae / Net-jjae",
-        mean: "3ème / 4ème",
+        mean: "3e / 4e",
         context: "L'ordre continue en suivant les nombres natifs.",
       },
       {

@@ -118,17 +118,49 @@ function normalizeParam(rawValue: string | string[] | undefined) {
 }
 
 function getProgressIndex(nodeId: string): number {
-  const id = nodeId.toLowerCase();
+  const progressByNodeId: Record<string, number> = {
+    user_start: 0,
+    ia_welcome: 0,
+    user_after_welcome: 0,
+    ia_welcome_repeat: 0,
 
-  if (/welcome|lost/.test(id)) return 0;
+    ia_tmoney: 1,
+    user_after_tmoney: 1,
+    ia_tmoney_repeat: 1,
+    ia_tmoney_charge: 1,
+    user_after_tmoney_charge: 1,
+    ia_tmoney_charge_repeat: 1,
+    ia_tmoney_arex: 1,
+    user_after_tmoney_arex: 1,
+    ia_tmoney_arex_repeat: 1,
 
-  if (/tmoney|charge/.test(id)) return 1;
+    ia_transport: 2,
+    user_after_transport: 2,
+    ia_transport_repeat: 2,
+    ia_recommend: 2,
+    user_after_recommend: 2,
+    ia_recommend_repeat: 2,
+    ia_platform: 2,
+    user_after_platform: 2,
+    ia_platform_repeat: 2,
+    ia_verify_train: 2,
+    user_after_verify_train: 2,
+    ia_verify_train_repeat: 2,
+    ia_time: 2,
+    user_after_time: 2,
+    ia_time_repeat: 2,
 
-  if (/transport|arex|recommend|platform|verify|time/.test(id)) return 2;
+    ia_lost: 3,
+    user_after_lost: 3,
+    ia_lost_repeat: 3,
+    ia_summary: 3,
+    user_after_summary: 3,
+    ia_summary_short: 3,
+    user_after_summary_short: 3,
+    ia_end: 3,
+  };
 
-  if (/summary|end/.test(id)) return 3;
-
-  return 0;
+  return progressByNodeId[nodeId] ?? 0;
 }
 
 function getAutoAdvanceDelay(node: DialogueNode, mode: ModeType) {
@@ -234,6 +266,9 @@ export default function AeroportIaScreen() {
   const [currentNodeId, setCurrentNodeId] = useState(
     currentScenario.startNodeId,
   );
+  const [maxProgressIndex, setMaxProgressIndex] = useState(() =>
+    getProgressIndex(currentScenario.startNodeId),
+  );
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isSceneEnded, setIsSceneEnded] = useState(false);
@@ -245,7 +280,10 @@ export default function AeroportIaScreen() {
 
   const currentNode = currentScenario.nodes[currentNodeId];
 
-  const progressIndex = getProgressIndex(currentNodeId);
+  const progressIndex = Math.max(
+    maxProgressIndex,
+    getProgressIndex(currentNodeId),
+  );
   const steps = ["Accueil", "T-money", "Trajet", "Final"];
 
   const videoSources =
@@ -278,6 +316,9 @@ export default function AeroportIaScreen() {
 
     if (node.nextNodeId) {
       setIsTranscriptOpen(false);
+      setMaxProgressIndex((current) =>
+        Math.max(current, getProgressIndex(node.nextNodeId)),
+      );
       setCurrentNodeId(node.nextNodeId);
     } else {
       setIsSceneEnded(true);
@@ -447,6 +488,9 @@ export default function AeroportIaScreen() {
       }
 
       setIsTranscriptOpen(false);
+      setMaxProgressIndex((current) =>
+        Math.max(current, getProgressIndex(choice.nextNodeId)),
+      );
       setCurrentNodeId(choice.nextNodeId);
       setSelectedChoiceId(null);
       setIsTransitioning(false);
@@ -455,6 +499,7 @@ export default function AeroportIaScreen() {
 
   const handleRestart = () => {
     setCurrentNodeId(currentScenario.startNodeId);
+    setMaxProgressIndex(getProgressIndex(currentScenario.startNodeId));
     setDisplayedVideoSource(iaWelcome);
     setSelectedChoiceId(null);
     setIsTransitioning(false);

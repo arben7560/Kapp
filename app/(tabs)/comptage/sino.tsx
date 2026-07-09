@@ -134,7 +134,7 @@ const SCENES = withSceneAudio(
         {
           word: "삼만 오천 원",
           rom: "Sam-man Oh-cheon won",
-          mean: "35 000 Won",
+          mean: "35 000 won",
           context: "Sino-coréen pur pour l'argent.",
         },
         {

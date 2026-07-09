@@ -6,7 +6,7 @@ import {
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -356,13 +356,6 @@ const SCENES: Scene[] = [
       },
     ],
     expressions: [
-      {
-        word: "아아 하나 주세요",
-        rom: "Ah-Ah hana juseyo",
-        mean: "Un Ice Americano svp",
-        context: "Abréviation ultra-populaire en Corée.",
-        audio: CULTURE_CAFE_AUDIO.ahAh,
-      },
       {
         word: "아이스 아메리카노",
         rom: "Aiseu Amerikano",

@@ -108,32 +108,128 @@ export function getRestaurantMissionScenario(
     case "order_simple":
       keepChoices(missionScenario, "ped_meat_choice", [
         "ped_order_samgyeopsal",
+        "repeat_ped_welcome",
       ]);
       keepChoices(missionScenario, "ped_grill_choice_samgyeopsal", [
         "ped_self_grill_samgyeopsal",
+        "repeat_ped_confirm_samgyeopsal",
       ]);
-      keepChoices(missionScenario, "ped_side_choice", ["ped_no_side"]);
-      keepChoices(missionScenario, "ped_extra_choice", ["ped_no_extra"]);
+      keepChoices(missionScenario, "ped_side_choice", [
+        "ped_no_side",
+        "repeat_ped_side",
+      ]);
+      keepChoices(missionScenario, "ped_extra_choice", [
+        "ped_no_extra",
+        "repeat_ped_extra",
+      ]);
+      keepChoices(missionScenario, "ped_payment_choice", [
+        "ped_pay_card",
+        "repeat_ped_payment",
+      ]);
+      keepChoices(missionScenario, "ped_receipt_choice", ["ped_receipt_no"]);
       break;
     case "ask_recommendation":
       keepChoices(missionScenario, "ped_meat_choice", [
         "ped_order_recommendation",
+        "repeat_ped_welcome",
       ]);
+      keepChoices(missionScenario, "ped_after_recommendation_choice", [
+        "ped_reco_samgyeopsal",
+        "repeat_ped_recommendation",
+      ]);
+      keepChoices(missionScenario, "ped_grill_choice_samgyeopsal", [
+        "ped_self_grill_samgyeopsal",
+        "repeat_ped_confirm_samgyeopsal",
+      ]);
+      keepChoices(missionScenario, "ped_side_choice", [
+        "ped_no_side",
+        "repeat_ped_side",
+      ]);
+      keepChoices(missionScenario, "ped_extra_choice", [
+        "ped_no_extra",
+        "repeat_ped_extra",
+      ]);
+      keepChoices(missionScenario, "ped_payment_choice", [
+        "ped_pay_card",
+        "repeat_ped_payment",
+      ]);
+      keepChoices(missionScenario, "ped_receipt_choice", ["ped_receipt_no"]);
       break;
     case "choose_grill":
+      keepChoices(missionScenario, "ped_meat_choice", [
+        "ped_order_samgyeopsal",
+        "repeat_ped_welcome",
+      ]);
       keepChoices(missionScenario, "ped_grill_choice_samgyeopsal", [
         "ped_staff_grill_samgyeopsal",
+        "repeat_ped_confirm_samgyeopsal",
       ]);
       keepChoices(missionScenario, "ped_grill_choice_galbi", [
         "ped_staff_grill_galbi",
+        "repeat_ped_confirm_galbi",
       ]);
+      keepChoices(missionScenario, "ped_side_choice", [
+        "ped_no_side",
+        "repeat_ped_side",
+      ]);
+      keepChoices(missionScenario, "ped_extra_choice", [
+        "ped_no_extra",
+        "repeat_ped_extra",
+      ]);
+      keepChoices(missionScenario, "ped_payment_choice", [
+        "ped_pay_card",
+        "repeat_ped_payment",
+      ]);
+      keepChoices(missionScenario, "ped_receipt_choice", ["ped_receipt_no"]);
       break;
     case "add_sides":
-      keepChoices(missionScenario, "ped_side_choice", ["ped_add_doenjang"]);
-      keepChoices(missionScenario, "ped_extra_choice", ["ped_more_lettuce"]);
+      keepChoices(missionScenario, "ped_meat_choice", [
+        "ped_order_samgyeopsal",
+        "repeat_ped_welcome",
+      ]);
+      keepChoices(missionScenario, "ped_grill_choice_samgyeopsal", [
+        "ped_self_grill_samgyeopsal",
+        "repeat_ped_confirm_samgyeopsal",
+      ]);
+      keepChoices(missionScenario, "ped_side_choice", [
+        "ped_add_doenjang",
+        "repeat_ped_side",
+      ]);
+      keepChoices(missionScenario, "ped_spicy_choice", [
+        "ped_less_spicy",
+        "repeat_ped_spicy",
+      ]);
+      keepChoices(missionScenario, "ped_extra_choice", [
+        "ped_more_lettuce",
+        "repeat_ped_extra",
+      ]);
+      keepChoices(missionScenario, "ped_payment_choice", [
+        "ped_pay_card",
+        "repeat_ped_payment",
+      ]);
+      keepChoices(missionScenario, "ped_receipt_choice", ["ped_receipt_no"]);
       break;
     case "pay_receipt":
-      keepChoices(missionScenario, "ped_payment_choice", ["ped_pay_card"]);
+      keepChoices(missionScenario, "ped_meat_choice", [
+        "ped_order_samgyeopsal",
+        "repeat_ped_welcome",
+      ]);
+      keepChoices(missionScenario, "ped_grill_choice_samgyeopsal", [
+        "ped_self_grill_samgyeopsal",
+        "repeat_ped_confirm_samgyeopsal",
+      ]);
+      keepChoices(missionScenario, "ped_side_choice", [
+        "ped_no_side",
+        "repeat_ped_side",
+      ]);
+      keepChoices(missionScenario, "ped_extra_choice", [
+        "ped_no_extra",
+        "repeat_ped_extra",
+      ]);
+      keepChoices(missionScenario, "ped_payment_choice", [
+        "ped_pay_card",
+        "repeat_ped_payment",
+      ]);
       keepChoices(missionScenario, "ped_receipt_choice", ["ped_receipt_yes"]);
       break;
   }

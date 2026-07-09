@@ -142,7 +142,7 @@ const SCENES = withSceneAudio([
         word: "만 (萬)",
         rom: "Man",
         mean: "10 000",
-        context: "L'unité monétaire de base en Corée. 10 000 Won ≈ 7€.",
+        context: "L'unité monétaire de base en Corée. 10 000 won ≈ 7 €.",
       },
       {
         word: "할부",
@@ -293,7 +293,7 @@ const SCENES = withSceneAudio([
         word: "봉투",
         rom: "Bong-tu",
         mean: "Sac",
-        context: "Souvent facturé 100-200 Won séparément.",
+        context: "Souvent facturé 100-200 won séparément.",
       },
       {
         word: "백 원",

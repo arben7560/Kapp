@@ -25,10 +25,9 @@ const CAFE_AUDIO = {
   toolbox2: require("../../../assets/audio/comptage/nombres de bases/au-cafe/toolbox/au-cafe-toolbox-2.mp3"),
   toolbox3: require("../../../assets/audio/comptage/nombres de bases/au-cafe/toolbox/au-cafe-toolbox-3.mp3"),
   toolbox4: require("../../../assets/audio/comptage/nombres de bases/au-cafe/toolbox/au-cafe-toolbox-4.mp3"),
-  toolbox5: require("../../../assets/audio/comptage/nombres de bases/au-cafe/toolbox/au-cafe-toolbox-6.mp3"),
-  toolbox6: undefined,
-  toolbox7: undefined,
-  toolbox8: undefined,
+  toolbox5: require("../../../assets/audio/comptage/nombres de bases/au-cafe/toolbox/au-cafe-toolbox-5.mp3"),
+  toolbox6: require("../../../assets/audio/comptage/nombres de bases/au-cafe/toolbox/au-cafe-toolbox-6.mp3"),
+  toolbox7: require("../../../assets/audio/comptage/nombres de bases/au-cafe/toolbox/au-cafe-toolbox-7.mp3"),
 };
 
 const ENTRAINEMENT_AUDIO = {
@@ -134,14 +133,14 @@ const SCENES = [
         rom: "Ne jan",
         mean: "Quatre verres",
         context: "Net devient Ne devant un classificateur comme 'jan'.",
-        audio: CAFE_AUDIO.toolbox7,
+        audio: CAFE_AUDIO.toolbox6,
       },
       {
         word: "다섯 개",
         rom: "Daseot gae",
         mean: "Cinq unités",
         context: "Gae est le classificateur passe-partout pour les objets.",
-        audio: CAFE_AUDIO.toolbox8,
+        audio: CAFE_AUDIO.toolbox7,
       },
     ],
   },

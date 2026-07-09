@@ -1,4 +1,4 @@
-export const DEV_UNLOCK_ALL = false;
+export const DEV_UNLOCK_ALL = true;
 
 export const ENABLE_NATIVE_IAP = false;
 

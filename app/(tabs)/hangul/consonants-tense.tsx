@@ -216,7 +216,7 @@ const SCENES: Scene[] = [
   },
   {
     id: "tense-words",
-    title: "Mots Tendues",
+    title: "Mots tendus",
     koreanTitle: "된소리 단어",
     description:
       "Les consonnes tendues apparaissent dans beaucoup de mots très courants.",

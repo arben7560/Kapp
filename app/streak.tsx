@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React from "react";
 import {
+  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -19,17 +21,26 @@ import {
 } from "../lib/dailyStreak";
 
 const COLORS = {
-  bg: "#070812",
-  card: "rgba(255,255,255,0.07)",
+  bg: "#020306",
+  card: "rgba(2,3,6,0.34)",
   cyan: "#67E8F9",
   gold: "#FDE047",
-  line: "rgba(255,255,255,0.12)",
-  muted: "rgba(255,255,255,0.62)",
+  line: "rgba(255,255,255,0.10)",
+  muted: "rgba(241,245,249,0.62)",
   pink: "#F472B6",
-  text: "rgba(255,255,255,0.94)",
+  soft: "rgba(241,245,249,0.44)",
+  text: "#F1F5F9",
 };
 
 const CALENDAR_DAYS = 35;
+const BACKGROUND_SOURCE = require("../assets/images/seoulhub.png");
+const ABSOLUTE_FILL = {
+  position: "absolute" as const,
+  top: 0,
+  right: 0,
+  bottom: 0,
+  left: 0,
+};
 
 export default function StreakScreen() {
   const { applyFreeze, grantFreeze, isLoading, streak } = useDailyStreak();
@@ -38,7 +49,15 @@ export default function StreakScreen() {
   const isTodayCompleted = streak?.isTodayCompleted ?? false;
 
   return (
-    <LinearGradient colors={[COLORS.bg, "#0b0b1d", "#0b0f22"]} style={styles.screen}>
+    <ImageBackground
+      source={BACKGROUND_SOURCE}
+      style={styles.screen}
+      resizeMode="cover"
+    >
+      <BlurView intensity={18} tint="dark" style={styles.bgBlur} />
+      <View style={styles.hubDarkOverlay} />
+      <View style={styles.topFade} />
+      <View style={styles.bottomFade} />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.iconButton}>
@@ -49,7 +68,18 @@ export default function StreakScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.heroCard}>
+          <BlurView intensity={54} tint="dark" style={styles.heroCard}>
+            <LinearGradient
+              colors={[
+                "rgba(103,232,249,0.18)",
+                "rgba(244,114,182,0.09)",
+                "rgba(2,3,6,0.16)",
+              ]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.heroAccent} />
             <Text style={styles.kicker}>HABITUDE QUOTIDIENNE</Text>
             <Text style={styles.bigNumber}>{currentStreak}</Text>
             <Text style={styles.heroTitle}>
@@ -57,16 +87,16 @@ export default function StreakScreen() {
             </Text>
             <Text style={styles.heroText}>
               {isTodayCompleted
-                ? "Jour valide. Ta serie est conservee."
-                : "Une petite activite suffit pour conserver ta serie."}
+                ? "Jour valide. Ta série est conservée."
+                : "Une petite activité suffit pour conserver ta série."}
             </Text>
-          </View>
+          </BlurView>
 
           <View style={styles.statsGrid}>
             <StatCard label="Record" value={`${longestStreak} j`} />
             <StatCard
               label="Aujourd'hui"
-              value={isTodayCompleted ? "Valide" : "A faire"}
+              value={isTodayCompleted ? "Valide" : "À faire"}
             />
             <StatCard
               label="Freezes"
@@ -74,22 +104,22 @@ export default function StreakScreen() {
             />
           </View>
 
-          <View style={styles.section}>
+          <BlurView intensity={42} tint="dark" style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Calendrier</Text>
               <Text style={styles.sectionCaption}>Derniers {CALENDAR_DAYS} jours</Text>
             </View>
             <CalendarGrid streak={streak} />
-          </View>
+          </BlurView>
 
-          <View style={styles.section}>
+          <BlurView intensity={42} tint="dark" style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Streak Freeze</Text>
               <Text style={styles.sectionCaption}>Protection douce</Text>
             </View>
             <Text style={styles.bodyText}>
-              Un freeze protege une journee manquee. Si tu rates une seule
-              journee, il peut garder la serie vivante.
+              Un freeze protège une journée manquée. Si tu rates une seule
+              journée, il peut garder la série vivante.
             </Text>
             <View style={styles.actionRow}>
               <Pressable
@@ -120,9 +150,9 @@ export default function StreakScreen() {
                 <Text style={styles.secondaryText}>Ajouter un joker</Text>
               </Pressable>
             </View>
-          </View>
+          </BlurView>
 
-          <View style={styles.section}>
+          <BlurView intensity={42} tint="dark" style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Badges</Text>
               <Text style={styles.sectionCaption}>Paliers non punitifs</Text>
@@ -148,19 +178,19 @@ export default function StreakScreen() {
                 );
               })}
             </View>
-          </View>
+          </BlurView>
         </ScrollView>
       </SafeAreaView>
-    </LinearGradient>
+    </ImageBackground>
   );
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <View style={styles.statCard}>
+    <BlurView intensity={34} tint="dark" style={styles.statCard}>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
-    </View>
+    </BlurView>
   );
 }
 
@@ -207,7 +237,26 @@ function CalendarGrid({ streak }: { streak: DailyStreakState | null }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
+  screen: { flex: 1, backgroundColor: COLORS.bg },
+  bgBlur: {
+    ...ABSOLUTE_FILL,
+  },
+  hubDarkOverlay: {
+    ...ABSOLUTE_FILL,
+    backgroundColor: "rgba(2,3,6,0.70)",
+  },
+  topFade: {
+    ...ABSOLUTE_FILL,
+    backgroundColor: "rgba(0,0,0,0.07)",
+  },
+  bottomFade: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 240,
+    backgroundColor: "rgba(2,3,6,0.46)",
+  },
   safe: { flex: 1 },
   header: {
     alignItems: "center",
@@ -219,29 +268,55 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.07)",
-    borderColor: COLORS.line,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderColor: "rgba(255,255,255,0.13)",
     borderRadius: 23,
     borderWidth: 1,
     height: 46,
     justifyContent: "center",
+    shadowColor: COLORS.cyan,
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
     width: 46,
   },
   iconButtonGhost: { height: 46, width: 46 },
-  headerTitle: { color: COLORS.text, fontSize: 18, fontWeight: "900" },
+  headerTitle: {
+    color: COLORS.text,
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 3,
+    textTransform: "uppercase",
+  },
   content: { padding: 20, paddingBottom: 42 },
   heroCard: {
-    backgroundColor: COLORS.card,
+    backgroundColor: "rgba(2,3,6,0.24)",
     borderColor: "rgba(103,232,249,0.22)",
-    borderRadius: 28,
+    borderRadius: 26,
     borderWidth: 1,
+    overflow: "hidden",
     padding: 22,
+    shadowColor: COLORS.cyan,
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+  },
+  heroAccent: {
+    position: "absolute",
+    left: 0,
+    top: 18,
+    bottom: 18,
+    width: 3,
+    borderTopRightRadius: 8,
+    borderBottomRightRadius: 8,
+    backgroundColor: COLORS.cyan,
+    opacity: 0.9,
   },
   kicker: {
     color: COLORS.cyan,
     fontSize: 11,
     fontWeight: "900",
     letterSpacing: 2.2,
+    textShadowColor: "rgba(103,232,249,0.38)",
+    textShadowRadius: 12,
   },
   bigNumber: {
     color: COLORS.text,
@@ -249,26 +324,30 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     lineHeight: 86,
     marginTop: 8,
+    textShadowColor: "rgba(103,232,249,0.18)",
+    textShadowRadius: 18,
   },
   heroTitle: { color: COLORS.text, fontSize: 23, fontWeight: "900" },
   heroText: { color: COLORS.muted, fontSize: 15, lineHeight: 22, marginTop: 8 },
   statsGrid: { flexDirection: "row", gap: 10, marginTop: 14 },
   statCard: {
-    backgroundColor: "rgba(255,255,255,0.055)",
+    backgroundColor: "rgba(255,255,255,0.045)",
     borderColor: COLORS.line,
-    borderRadius: 18,
+    borderRadius: 16,
     borderWidth: 1,
     flex: 1,
+    overflow: "hidden",
     padding: 14,
   },
   statValue: { color: COLORS.text, fontSize: 18, fontWeight: "900" },
-  statLabel: { color: COLORS.muted, fontSize: 11, marginTop: 4 },
+  statLabel: { color: COLORS.soft, fontSize: 11, marginTop: 4 },
   section: {
-    backgroundColor: "rgba(255,255,255,0.045)",
+    backgroundColor: COLORS.card,
     borderColor: COLORS.line,
     borderRadius: 22,
     borderWidth: 1,
     marginTop: 14,
+    overflow: "hidden",
     padding: 16,
   },
   sectionHeader: {
@@ -278,12 +357,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: { color: COLORS.text, fontSize: 16, fontWeight: "900" },
-  sectionCaption: { color: COLORS.muted, fontSize: 11, fontWeight: "700" },
+  sectionCaption: { color: COLORS.soft, fontSize: 11, fontWeight: "700" },
   bodyText: { color: COLORS.muted, fontSize: 14, lineHeight: 20 },
   calendarGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   calendarDay: {
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: "rgba(255,255,255,0.045)",
     borderColor: "rgba(255,255,255,0.08)",
     borderRadius: 10,
     borderWidth: 1,
@@ -292,29 +371,38 @@ const styles = StyleSheet.create({
     width: "12.2%",
   },
   calendarCompleted: {
-    backgroundColor: "rgba(103,232,249,0.16)",
-    borderColor: "rgba(103,232,249,0.5)",
+    backgroundColor: "rgba(103,232,249,0.18)",
+    borderColor: "rgba(103,232,249,0.58)",
+    shadowColor: COLORS.cyan,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
   },
   calendarFrozen: {
-    backgroundColor: "rgba(147,197,253,0.14)",
-    borderColor: "rgba(147,197,253,0.48)",
+    backgroundColor: "rgba(244,114,182,0.15)",
+    borderColor: "rgba(244,114,182,0.48)",
   },
-  calendarToday: { borderColor: COLORS.gold },
-  calendarText: { color: "rgba(255,255,255,0.42)", fontSize: 11 },
+  calendarToday: {
+    borderColor: COLORS.gold,
+    borderWidth: 1.5,
+  },
+  calendarText: { color: "rgba(241,245,249,0.42)", fontSize: 11 },
   calendarTextActive: { color: COLORS.text, fontWeight: "900" },
   actionRow: { gap: 10, marginTop: 14 },
   actionButton: {
     alignItems: "center",
-    backgroundColor: COLORS.cyan,
+    backgroundColor: "rgba(103,232,249,0.92)",
     borderRadius: 16,
     justifyContent: "center",
     minHeight: 50,
+    shadowColor: COLORS.cyan,
+    shadowOpacity: 0.26,
+    shadowRadius: 16,
   },
   actionText: { color: "#020306", fontSize: 14, fontWeight: "900" },
   secondaryButton: {
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderColor: COLORS.line,
+    backgroundColor: "rgba(255,255,255,0.055)",
+    borderColor: "rgba(103,232,249,0.22)",
     borderRadius: 16,
     borderWidth: 1,
     justifyContent: "center",
@@ -326,7 +414,7 @@ const styles = StyleSheet.create({
   badgeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   badgeCard: {
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.055)",
+    backgroundColor: "rgba(255,255,255,0.045)",
     borderColor: COLORS.line,
     borderRadius: 16,
     borderWidth: 1,
@@ -334,8 +422,11 @@ const styles = StyleSheet.create({
     width: "30.8%",
   },
   badgeUnlocked: {
-    backgroundColor: "rgba(253,224,71,0.13)",
-    borderColor: "rgba(253,224,71,0.48)",
+    backgroundColor: "rgba(253,224,71,0.14)",
+    borderColor: "rgba(253,224,71,0.52)",
+    shadowColor: COLORS.gold,
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
   },
   badgeValue: { color: COLORS.muted, fontSize: 22, fontWeight: "900" },
   badgeValueUnlocked: { color: COLORS.gold },

@@ -101,32 +101,142 @@ export function applyAeroportMissionToScenario<TScenario extends ScenarioLike>(
   switch (scenarioKey) {
     case "go_seoul_station":
       keepChoices(scenario, "user_start", ["choice_ask_seoul_station"]);
-      keepChoices(scenario, "user_after_welcome", ["choice_ready"]);
-      keepChoices(scenario, "user_after_transport", ["choice_which_train"]);
+      keepChoices(scenario, "user_after_welcome", [
+        "choice_ready",
+        "repeat_welcome",
+      ]);
+      keepChoices(scenario, "user_after_transport", [
+        "choice_which_train",
+        "repeat_transport",
+      ]);
       keepChoices(scenario, "user_after_recommend", [
         "choice_time_after_recommend",
+        "repeat_recommend",
       ]);
-      keepChoices(scenario, "user_after_time", ["choice_summary_after_time"]);
+      keepChoices(scenario, "user_after_time", [
+        "choice_summary_after_time",
+        "repeat_time",
+      ]);
       keepChoices(scenario, "user_after_summary", [
         "choice_thanks_after_summary",
+        "repeat_summary",
       ]);
       break;
     case "buy_tmoney":
-      keepChoices(scenario, "user_after_welcome", ["choice_tmoney"]);
-      keepChoices(scenario, "user_after_tmoney", ["choice_charge"]);
+      keepChoices(scenario, "user_start", ["choice_want_seoul_station"]);
+      keepChoices(scenario, "user_after_welcome", [
+        "choice_tmoney",
+        "repeat_welcome",
+      ]);
+      keepChoices(scenario, "user_after_tmoney", [
+        "choice_charge",
+        "repeat_tmoney",
+      ]);
+      keepChoices(scenario, "user_after_tmoney_charge", [
+        "choice_train_after_charge",
+        "repeat_tmoney_charge",
+      ]);
+      keepChoices(scenario, "user_after_recommend", [
+        "choice_time_after_recommend",
+        "repeat_recommend",
+      ]);
+      keepChoices(scenario, "user_after_time", [
+        "choice_summary_after_time",
+        "repeat_time",
+      ]);
+      keepChoices(scenario, "user_after_summary", [
+        "choice_thanks_after_summary",
+        "repeat_summary",
+      ]);
       break;
     case "choose_arex":
       keepChoices(scenario, "user_start", ["choice_ask_arex"]);
-      keepChoices(scenario, "user_after_welcome", ["choice_tmoney"]);
-      keepChoices(scenario, "user_after_tmoney", ["choice_tmoney_arex"]);
+      keepChoices(scenario, "user_after_welcome", [
+        "choice_ready",
+        "repeat_welcome",
+      ]);
+      keepChoices(scenario, "user_after_transport", [
+        "choice_which_train",
+        "repeat_transport",
+      ]);
+      keepChoices(scenario, "user_after_recommend", [
+        "choice_platform_after_recommend",
+        "repeat_recommend",
+      ]);
+      keepChoices(scenario, "user_after_platform", [
+        "choice_verify_train",
+        "repeat_platform",
+      ]);
+      keepChoices(scenario, "user_after_verify_train", [
+        "choice_time_after_verify",
+        "repeat_verify_train",
+      ]);
+      keepChoices(scenario, "user_after_time", [
+        "choice_summary_after_time",
+        "repeat_time",
+      ]);
+      keepChoices(scenario, "user_after_summary", [
+        "choice_thanks_after_summary",
+        "repeat_summary",
+      ]);
       break;
     case "find_platform":
-      keepChoices(scenario, "user_after_transport", ["choice_platform"]);
-      keepChoices(scenario, "user_after_platform", ["choice_verify_train"]);
+      keepChoices(scenario, "user_start", ["choice_ask_arex"]);
+      keepChoices(scenario, "user_after_welcome", [
+        "choice_ready",
+        "repeat_welcome",
+      ]);
+      keepChoices(scenario, "user_after_transport", [
+        "choice_platform",
+        "repeat_transport",
+      ]);
+      keepChoices(scenario, "user_after_platform", [
+        "choice_verify_train",
+        "repeat_platform",
+      ]);
+      keepChoices(scenario, "user_after_verify_train", [
+        "choice_time_after_verify",
+        "repeat_verify_train",
+      ]);
+      keepChoices(scenario, "user_after_time", [
+        "choice_summary_after_time",
+        "repeat_time",
+      ]);
+      keepChoices(scenario, "user_after_summary", [
+        "choice_thanks_after_summary",
+        "repeat_summary",
+      ]);
       break;
     case "lost_help":
-      keepChoices(scenario, "user_after_time", ["choice_lost_after_time"]);
-      keepChoices(scenario, "user_after_lost", ["choice_summary_after_lost"]);
+      keepChoices(scenario, "user_start", ["choice_want_seoul_station"]);
+      keepChoices(scenario, "user_after_welcome", [
+        "choice_ready",
+        "repeat_welcome",
+      ]);
+      keepChoices(scenario, "user_after_transport", [
+        "choice_platform",
+        "repeat_transport",
+      ]);
+      keepChoices(scenario, "user_after_platform", [
+        "choice_verify_train",
+        "repeat_platform",
+      ]);
+      keepChoices(scenario, "user_after_verify_train", [
+        "choice_lost_after_verify",
+        "repeat_verify_train",
+      ]);
+      keepChoices(scenario, "user_after_time", [
+        "choice_lost_after_time",
+        "repeat_time",
+      ]);
+      keepChoices(scenario, "user_after_lost", [
+        "choice_summary_after_lost",
+        "repeat_lost",
+      ]);
+      keepChoices(scenario, "user_after_summary", [
+        "choice_thanks_after_summary",
+        "repeat_summary",
+      ]);
       break;
   }
 

@@ -1,7 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -16,8 +16,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useVocAudio } from "../../../hooks/useVocAudio";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
+import { useVocAudio } from "../../../hooks/useVocAudio";
 
 const { width } = Dimensions.get("window");
 
@@ -296,14 +296,7 @@ const SCENES = [
         speak: "감사합니다",
         audio: MAIL_AUDIO.toolbox8,
       },
-      {
-        word: "좋은 하루 보내고 계시길 바랍니다",
-        rom: "Joeun haru bonego gyesigil barabnida",
-        mean: "J'espère que vous passez une bonne journée",
-        context: "Formule polie et chaleureuse dans un message professionnel.",
-        speak: "좋은 하루 보내고 계시길 바랍니다",
-        audio: undefined,
-      },
+
       {
         word: "회신 부탁드립니다",
         rom: "Hoesin butakdeurimnida",

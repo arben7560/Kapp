@@ -1,5 +1,6 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { Compass, MessageCircleMore } from "lucide-react-native";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef } from "react";
 import {
@@ -59,7 +60,7 @@ const HANGUL_PROGRESS_TOTAL = 20;
 
 const SEQUENCES: any[] = [
   {
-    title: "L'alphabet Coréen",
+    title: "L'alphabet coréen",
     label: "Hangul",
     color: CYAN,
     route: "/hangul",
@@ -69,7 +70,7 @@ const SEQUENCES: any[] = [
     type: "pedagogical",
   },
   {
-    title: "Scènes intéractives",
+    title: "Scènes interactives",
     label: "Restaurant",
     color: "#F59E0B",
     route: "/voc",
@@ -123,36 +124,36 @@ const SEQUENCES: any[] = [
 
 const RESUME_SEQUENCES: Record<string, any> = {
   aeroport_ia: {
-    title: "Mission aeroport",
-    label: "Aeroport",
+    title: "Mission aéroport",
+    label: "Aéroport",
     color: CYAN,
     route: "/lesson/aeroportMissions",
     routeParams: { mode: "guided" },
     trackKey: "aeroport_ia",
-    place: "INCHEON - ARRIVEE",
-    narrative: "Reprends ta derniere mission aeroport.",
+    place: "INCHEON - ARRIVÉE",
+    narrative: "Reprends ta dernière mission aéroport.",
     type: "immersion",
   },
   cafe_ia: {
-    title: "Mission cafe",
-    label: "Cafe",
+    title: "Mission café",
+    label: "Café",
     color: PINK,
     route: "/lesson/cafeMissions",
     routeParams: { mode: "guided" },
     trackKey: "cafe_ia",
-    place: "HONGDAE - CAFE",
-    narrative: "Reprends ta derniere mission cafe.",
+    place: "HONGDAE - CAFÉ",
+    narrative: "Reprends ta dernière mission café.",
     type: "immersion",
   },
   metro_ia: {
-    title: "Mission metro",
-    label: "Le Metro",
+    title: "Mission métro",
+    label: "Le Métro",
     color: CYAN,
     route: "/lesson/metroMissions",
     routeParams: { mode: "guided" },
     trackKey: "metro_ia",
-    place: "LIGNE 2 - SE DEPLACER",
-    narrative: "Reprends ta derniere mission metro.",
+    place: "LIGNE 2 - SE DÉPLACER",
+    narrative: "Reprends ta dernière mission métro.",
     type: "immersion",
   },
   restaurant_ia: {
@@ -163,7 +164,7 @@ const RESUME_SEQUENCES: Record<string, any> = {
     routeParams: { mode: "guided" },
     trackKey: "restaurant_ia",
     place: "ITAEWON - DINER",
-    narrative: "Reprends ta derniere mission restaurant.",
+    narrative: "Reprends ta dernière mission restaurant.",
     type: "immersion",
   },
 };
@@ -499,10 +500,10 @@ function DailyStreakCard({
   const longestStreak = streak?.longestStreak ?? 0;
   const isValidated = streak?.isTodayCompleted ?? false;
   const freezesAvailable = streak?.freezesAvailable ?? 0;
-  const statusLabel = isValidated ? "Jour valide" : "A faire";
+  const statusLabel = isValidated ? "Jour valide" : "À faire";
   const helperText = isValidated
-    ? "Ta serie est conservee. Les autres activites du jour restent du bonus."
-    : "Termine une activite aujourd'hui pour conserver ta serie.";
+    ? "Ta série est conservée. Les autres activités du jour restent du bonus."
+    : "Termine une activité aujourd'hui pour conserver ta série.";
 
   return (
     <Pressable onPress={onPress}>
@@ -522,7 +523,7 @@ function DailyStreakCard({
 
         <View style={styles.streakTopRow}>
           <View style={styles.streakCounterBlock}>
-            <Text style={styles.streakKicker}>SERIE QUOTIDIENNE</Text>
+            <Text style={styles.streakKicker}>SÉRIE QUOTIDIENNE</Text>
             <View style={styles.streakNumberRow}>
               <View style={styles.streakSymbol}>
                 <Text style={styles.streakSymbolText}>ST</Text>
@@ -572,7 +573,7 @@ function DailyStreakCard({
               {isValidated ? "OK" : "1"}
             </Text>
             <Text style={styles.streakMetricLabel}>
-              {isValidated ? "Valide" : "activite"}
+              {isValidated ? "Valide" : "activité"}
             </Text>
           </View>
         </View>
@@ -600,18 +601,42 @@ function getSequenceIcon(trackKey: string) {
     case "hangul":
       return "가";
     case "vocab":
-      return "말";
+      return "dialogue";
     case "numbers":
       return "123";
     case "classifier":
       return "○";
     case "dialogs":
-      return "2";
+      return "compass";
     case "listen":
       return "음";
     default:
       return "•";
   }
+}
+
+function SequenceIconGlyph({ icon, color }: { icon: string; color: string }) {
+  if (icon === "dialogue") {
+    return <MessageCircleMore color={color} size={23} strokeWidth={2.25} />;
+  }
+
+  if (icon === "compass") {
+    return <Compass color={color} size={23} strokeWidth={2.25} />;
+  }
+
+  return (
+    <Text
+      style={[
+        styles.seqIcon,
+        {
+          color,
+        },
+        textGlow(color, 10),
+      ]}
+    >
+      {icon}
+    </Text>
+  );
 }
 
 function SequenceCard({ item, isActive, onPress }: any) {
@@ -700,17 +725,7 @@ function SequenceCard({ item, isActive, onPress }: any) {
               style={styles.seqIconLight}
             />
 
-            <Text
-              style={[
-                styles.seqIcon,
-                {
-                  color: item.color,
-                },
-                textGlow(item.color, 10),
-              ]}
-            >
-              {icon}
-            </Text>
+            <SequenceIconGlyph icon={icon} color={item.color} />
           </View>
         </View>
 

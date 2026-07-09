@@ -194,6 +194,9 @@ export default function RestaurantIaScreen() {
   const [currentNodeId, setCurrentNodeId] = useState(
     currentScenario.startNodeId,
   );
+  const [maxProgressIndex, setMaxProgressIndex] = useState(() =>
+    getProgressIndex(currentScenario.startNodeId),
+  );
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isSceneEnded, setIsSceneEnded] = useState(false);
@@ -208,7 +211,10 @@ export default function RestaurantIaScreen() {
     | DialogueNodeWithVideo
     | undefined;
 
-  const progressIndex = getProgressIndex(currentNodeId);
+  const progressIndex = Math.max(
+    maxProgressIndex,
+    getProgressIndex(currentNodeId),
+  );
   const steps = ["Commande", "Viande", "Accomp.", "Paiement", "Final"];
 
   const videoSources =
@@ -247,6 +253,9 @@ export default function RestaurantIaScreen() {
     }
 
     if (node.nextNodeId) {
+      setMaxProgressIndex((current) =>
+        Math.max(current, getProgressIndex(node.nextNodeId)),
+      );
       setCurrentNodeId(node.nextNodeId);
     } else {
       setIsSceneEnded(true);
@@ -255,6 +264,7 @@ export default function RestaurantIaScreen() {
 
   useEffect(() => {
     setCurrentNodeId(currentScenario.startNodeId);
+    setMaxProgressIndex(getProgressIndex(currentScenario.startNodeId));
     setSelectedChoiceId(null);
     setIsTransitioning(false);
     setIsSceneEnded(false);
@@ -408,6 +418,9 @@ export default function RestaurantIaScreen() {
 
     setTimeout(() => {
       if (!mountedRef.current) return;
+      setMaxProgressIndex((current) =>
+        Math.max(current, getProgressIndex(choice.nextNodeId)),
+      );
       setCurrentNodeId(choice.nextNodeId);
       setSelectedChoiceId(null);
       setIsTransitioning(false);
@@ -416,6 +429,7 @@ export default function RestaurantIaScreen() {
 
   const handleRestart = () => {
     setCurrentNodeId(currentScenario.startNodeId);
+    setMaxProgressIndex(getProgressIndex(currentScenario.startNodeId));
     setSelectedChoiceId(null);
     setIsTransitioning(false);
     setIsSceneEnded(false);

@@ -118,7 +118,7 @@ const SCENES = withSceneAudio([
       {
         char: "In-ho",
         kr: "나이가 어떻게 되세요?",
-        fr: "Quel âge avez-vous ? (Formel)",
+        fr: "Quel âge avez-vous ? (formel)",
       },
       {
         char: "Moi",
@@ -286,7 +286,7 @@ const SCENES = withSceneAudio([
         word: "성년의 날",
         rom: "Seongnyeon-ui nal",
         mean: "Jour de la majorité",
-        context: "Fête célébrée le 3ème lundi de mai.",
+        context: "Fête célébrée le 3e lundi de mai.",
       },
       {
         word: "미성년자",
