@@ -479,13 +479,6 @@ export const myeongdongToItaewonLesson: MetroLesson = {
         "Mullonijyo. Myeongdong-yeogeseo sahoseoneul tago Samgakji-yeogeseo naeriseyo. Geogiseo yukhoseoneuro garatago Itaewon-yeokkkaji gasimyeon dwaeyo.",
       choices: [
         {
-          id: "repeat_intro_2",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
-          nextId: "ia_repeat_intro_route_short",
-        },
-        {
           id: "ask_direction_after_repeat",
           label: "Dans quelle direction je dois prendre la ligne 4 ?",
           korean: "4호선은 어느 방향으로 타야 하나요?",
@@ -494,42 +487,6 @@ export const myeongdongToItaewonLesson: MetroLesson = {
         },
         {
           id: "ask_time_after_repeat",
-          label: "Combien de temps dure le trajet ?",
-          korean: "시간은 얼마나 걸리나요?",
-          romanization: "Siganeun eolmana geollinayo?",
-          nextId: "ia_trip_time",
-        },
-      ],
-    },
-
-    {
-      id: "ia_repeat_intro_route_short",
-      speaker: "ai",
-      phase: "Ligne",
-      text: "Je répète plus simplement : ligne 4 jusqu'à Samgakji, puis ligne 6 jusqu'à Itaewon.",
-      korean:
-        "더 간단히 말씀드리면, 4호선으로 삼각지역까지 가고, 거기서 6호선으로 이태원역까지 가시면 돼요.",
-      french:
-        "Je répète plus simplement : ligne 4 jusqu'à Samgakji, puis ligne 6 jusqu'à Itaewon.",
-      romanization:
-        "Deo gandanhi malsseumdeurimyeon, sahoseoneuro Samgakji-yeokkkaji gago, geogiseo yukhoseoneuro Itaewon-yeokkkaji gasimyeon dwaeyo.",
-      choices: [
-        {
-          id: "go_direction_after_short",
-          label: "D'accord. Quelle direction pour la ligne 4 ?",
-          korean: "알겠어요. 4호선은 어느 방향이에요?",
-          romanization: "Algesseoyo. Sahoseoneun eoneu banghyang-ieyo?",
-          nextId: "ia_line4_direction",
-        },
-        {
-          id: "go_transfer_after_short",
-          label: "Je change bien à Samgakji ?",
-          korean: "삼각지역에서 환승하는 거 맞죠?",
-          romanization: "Samgakji-yeogeseo hwanseunghaneun geo matjyo?",
-          nextId: "ia_transfer_station",
-        },
-        {
-          id: "go_time_after_short",
           label: "Combien de temps dure le trajet ?",
           korean: "시간은 얼마나 걸리나요?",
           romanization: "Siganeun eolmana geollinayo?",
@@ -588,13 +545,6 @@ export const myeongdongToItaewonLesson: MetroLesson = {
         "Ne. Sahoseon Sadang-ina Oido bangmyeon-ieyo. Samgakji-yeogeseo naerisimyeon doemnida.",
       choices: [
         {
-          id: "repeat_line4_direction_2",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
-          nextId: "ia_repeat_line4_direction_short",
-        },
-        {
           id: "ask_transfer_after_direction_repeat",
           label: "Et ensuite je change où ?",
           korean: "그다음 어디서 갈아타나요?",
@@ -607,43 +557,6 @@ export const myeongdongToItaewonLesson: MetroLesson = {
           korean: "시간은 얼마나 걸리나요?",
           romanization: "Siganeun eolmana geollinayo?",
           nextId: "ia_trip_time",
-        },
-      ],
-    },
-
-    {
-      id: "ia_repeat_line4_direction_short",
-      speaker: "ai",
-      phase: "Direction",
-      text: "Très simplement : ligne 4, direction Sadang ou Oido, descendez à Samgakji.",
-      korean:
-        "아주 간단히 말씀드리면, 4호선 사당이나 오이도 방면, 삼각지역에서 하차예요.",
-      french:
-        "Très simplement : ligne 4, direction Sadang ou Oido, descendez à Samgakji.",
-      romanization:
-        "Aju gandanhi malsseumdeurimyeon, sahoseon Sadang-ina Oido bangmyeon, Samgakji-yeogeseo hacha-yeyo.",
-      choices: [
-        {
-          id: "ask_transfer_after_direction_short",
-          label: "Je change bien à Samgakji ?",
-          korean: "삼각지역에서 환승하는 거 맞죠?",
-          romanization: "Samgakji-yeogeseo hwanseunghaneun geo matjyo?",
-          nextId: "ia_transfer_station",
-        },
-        {
-          id: "ask_time_after_direction_short",
-          label: "Combien de temps dure le trajet ?",
-          korean: "시간은 얼마나 걸리나요?",
-          romanization: "Siganeun eolmana geollinayo?",
-          nextId: "ia_trip_time",
-        },
-        {
-          id: "ask_exit_after_direction_short",
-          label: "Quelle sortie dois-je prendre à Itaewon ?",
-          korean: "이태원역에서는 몇 번 출구로 나가야 하나요?",
-          romanization:
-            "Itaewon-yeogeseoneun myeot beon chulgu-ro nagaya hanayo?",
-          nextId: "ia_exit_info",
         },
       ],
     },
@@ -699,13 +612,6 @@ export const myeongdongToItaewonLesson: MetroLesson = {
         "Ne. Samgakji-yeogeseo garataseyo. Geudaeum yukhoseoneul tago Itaewon-yeogeuro gasimyeon dwaeyo.",
       choices: [
         {
-          id: "repeat_transfer_station_2",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
-          nextId: "ia_repeat_transfer_station_short",
-        },
-        {
           id: "ask_line6_after_transfer_repeat",
           label: "Quelle direction pour la ligne 6 ?",
           korean: "6호선은 어느 방향으로 타야 하나요?",
@@ -718,43 +624,6 @@ export const myeongdongToItaewonLesson: MetroLesson = {
           korean: "총 몇 정거장인가요?",
           romanization: "Chong myeot jeonggeojang-ingayo?",
           nextId: "ia_station_count",
-        },
-      ],
-    },
-
-    {
-      id: "ia_repeat_transfer_station_short",
-      speaker: "ai",
-      phase: "Correspondance",
-      text: "Très simplement : changement à Samgakji, puis ligne 6 jusqu'à Itaewon.",
-      korean:
-        "아주 간단히 말씀드리면, 삼각지역에서 환승, 그다음 6호선으로 이태원역까지 가시면 돼요.",
-      french:
-        "Très simplement : changement à Samgakji, puis ligne 6 jusqu'à Itaewon.",
-      romanization:
-        "Aju gandanhi malsseumdeurimyeon, Samgakji-yeogeseo hwanseung, geudaeum yukhoseoneuro Itaewon-yeokkkaji gasimyeon dwaeyo.",
-      choices: [
-        {
-          id: "ask_line6_after_transfer_short",
-          label: "Quelle direction pour la ligne 6 ?",
-          korean: "6호선은 어느 방향으로 타야 하나요?",
-          romanization: "Yukhoseoneun eoneu banghyang-euro taya hanayo?",
-          nextId: "ia_line6_direction",
-        },
-        {
-          id: "ask_exit_after_transfer_short",
-          label: "Quelle sortie dois-je prendre à Itaewon ?",
-          korean: "이태원역에서는 몇 번 출구로 나가야 하나요?",
-          romanization:
-            "Itaewon-yeogeseoneun myeot beon chulgu-ro nagaya hanayo?",
-          nextId: "ia_exit_info",
-        },
-        {
-          id: "ask_time_after_transfer_short",
-          label: "Combien de temps dure le trajet ?",
-          korean: "시간은 얼마나 걸리나요?",
-          romanization: "Siganeun eolmana geollinayo?",
-          nextId: "ia_trip_time",
         },
       ],
     },
@@ -811,13 +680,6 @@ export const myeongdongToItaewonLesson: MetroLesson = {
         "Ne. Yukhoseon Bonghwasan-ina Sinnae bangmyeon-ieyo. Du jeonggeojang hue Itaewon-yeogeseo naerisimyeon doemnida.",
       choices: [
         {
-          id: "repeat_line6_direction_2",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
-          nextId: "ia_repeat_line6_direction_short",
-        },
-        {
           id: "ask_time_after_line6_repeat",
           label: "Combien de temps dure le trajet ?",
           korean: "시간은 얼마나 걸리나요?",
@@ -831,43 +693,6 @@ export const myeongdongToItaewonLesson: MetroLesson = {
           romanization:
             "Itaewon-yeogeseoneun myeot beon chulgu-ro nagaya hanayo?",
           nextId: "ia_exit_info",
-        },
-      ],
-    },
-
-    {
-      id: "ia_repeat_line6_direction_short",
-      speaker: "ai",
-      phase: "Direction",
-      text: "Très simplement : ligne 6 direction Bonghwasan ou Sinnae, deux arrêts jusqu'à Itaewon.",
-      korean:
-        "아주 간단히 말씀드리면, 6호선 봉화산이나 신내 방면, 이태원까지 두 정거장이에요.",
-      french:
-        "Très simplement : ligne 6 direction Bonghwasan ou Sinnae, deux arrêts jusqu'à Itaewon.",
-      romanization:
-        "Aju gandanhi malsseumdeurimyeon, yukhoseon Bonghwasan-ina Sinnae bangmyeon, Itaewon-kkaji du jeonggeojang-ieyo.",
-      choices: [
-        {
-          id: "ask_time_after_line6_short",
-          label: "Combien de temps dure le trajet ?",
-          korean: "시간은 얼마나 걸리나요?",
-          romanization: "Siganeun eolmana geollinayo?",
-          nextId: "ia_trip_time",
-        },
-        {
-          id: "ask_exit_after_line6_short",
-          label: "Quelle sortie dois-je prendre à Itaewon ?",
-          korean: "이태원역에서는 몇 번 출구로 나가야 하나요?",
-          romanization:
-            "Itaewon-yeogeseoneun myeot beon chulgu-ro nagaya hanayo?",
-          nextId: "ia_exit_info",
-        },
-        {
-          id: "thank_after_line6_short",
-          label: "Merci beaucoup, j'ai tout compris !",
-          korean: "감사합니다, 다 이해했어요!",
-          romanization: "Gamsahamnida, da ihaehaesseoyo!",
-          nextId: "ia_end",
         },
       ],
     },
@@ -924,13 +749,6 @@ export const myeongdongToItaewonLesson: MetroLesson = {
         "Ne. Botong isipbun jeongdo saenggakhasimyeon doego, hwanseung sigane ttara jogeum deo geollil sudo isseoyo.",
       choices: [
         {
-          id: "repeat_trip_time_2",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
-          nextId: "ia_repeat_trip_time_short",
-        },
-        {
           id: "ask_station_count_after_repeat",
           label: "Il y a combien d'arrêts en tout ?",
           korean: "총 몇 정거장인가요?",
@@ -944,41 +762,6 @@ export const myeongdongToItaewonLesson: MetroLesson = {
           romanization:
             "Itaewon-yeogeseoneun myeot beon chulgu-ro nagaya hanayo?",
           nextId: "ia_exit_info",
-        },
-      ],
-    },
-
-    {
-      id: "ia_repeat_trip_time_short",
-      speaker: "ai",
-      phase: "Trajet",
-      text: "En résumé : environ vingt minutes.",
-      korean: "정리해서 말씀드리면, 약 20분 정도예요.",
-      french: "En résumé : environ vingt minutes.",
-      romanization:
-        "Jeongrihaeseo malsseumdeurimyeon, yak isipbun jeongdo-yeyo.",
-      choices: [
-        {
-          id: "ask_station_count_after_short",
-          label: "Il y a combien d'arrêts en tout ?",
-          korean: "총 몇 정거장인가요?",
-          romanization: "Chong myeot jeonggeojang-ingayo?",
-          nextId: "ia_station_count",
-        },
-        {
-          id: "ask_exit_after_trip_short",
-          label: "Quelle sortie dois-je prendre à Itaewon ?",
-          korean: "이태원역에서는 몇 번 출구로 나가야 하나요?",
-          romanization:
-            "Itaewon-yeogeseoneun myeot beon chulgu-ro nagaya hanayo?",
-          nextId: "ia_exit_info",
-        },
-        {
-          id: "thank_after_trip_short",
-          label: "Merci beaucoup, j'ai tout compris !",
-          korean: "감사합니다, 다 이해했어요!",
-          romanization: "Gamsahamnida, da ihaehaesseoyo!",
-          nextId: "ia_end",
         },
       ],
     },
@@ -1033,13 +816,6 @@ export const myeongdongToItaewonLesson: MetroLesson = {
         "Ne. Jeonchejeogeuro yak yeoseot jeonggeojang-ieyo. Sahoseon-eseo ne jeonggeojang, yukhoseon-eseo du jeonggeojang-imnida.",
       choices: [
         {
-          id: "repeat_station_count_2",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
-          nextId: "ia_repeat_station_count_short",
-        },
-        {
           id: "ask_exit_after_station_repeat",
           label: "Quelle sortie dois-je prendre à Itaewon ?",
           korean: "이태원역에서는 몇 번 출구로 나가야 하나요?",
@@ -1049,41 +825,6 @@ export const myeongdongToItaewonLesson: MetroLesson = {
         },
         {
           id: "thank_after_station_repeat",
-          label: "Merci beaucoup, j'ai tout compris !",
-          korean: "감사합니다, 다 이해했어요!",
-          romanization: "Gamsahamnida, da ihaehaesseoyo!",
-          nextId: "ia_end",
-        },
-      ],
-    },
-
-    {
-      id: "ia_repeat_station_count_short",
-      speaker: "ai",
-      phase: "Trajet",
-      text: "Très simplement : environ six arrêts au total.",
-      korean: "아주 간단히 말씀드리면, 전체 약 6정거장이에요.",
-      french: "Très simplement : environ six arrêts au total.",
-      romanization:
-        "Aju gandanhi malsseumdeurimyeon, jeonche yak yeoseot jeonggeojang-ieyo.",
-      choices: [
-        {
-          id: "ask_exit_after_station_short",
-          label: "Quelle sortie dois-je prendre à Itaewon ?",
-          korean: "이태원역에서는 몇 번 출구로 나가야 하나요?",
-          romanization:
-            "Itaewon-yeogeseoneun myeot beon chulgu-ro nagaya hanayo?",
-          nextId: "ia_exit_info",
-        },
-        {
-          id: "ask_transfer_again_after_station_short",
-          label: "Je change bien à Samgakji, c'est ça ?",
-          korean: "삼각지역에서 환승하는 거 맞죠?",
-          romanization: "Samgakji-yeogeseo hwanseunghaneun geo matjyo?",
-          nextId: "ia_repeat_transfer_station_short",
-        },
-        {
-          id: "thank_after_station_short",
           label: "Merci beaucoup, j'ai tout compris !",
           korean: "감사합니다, 다 이해했어요!",
           romanization: "Gamsahamnida, da ihaehaesseoyo!",
@@ -1142,13 +883,6 @@ export const myeongdongToItaewonLesson: MetroLesson = {
         "Ne. Itaewon mein geori-ro gasiryeomyeon ilbeon chulguga pyeonhaeyo.",
       choices: [
         {
-          id: "repeat_exit_2",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
-          nextId: "ia_repeat_exit_info_short",
-        },
-        {
           id: "ask_landmark_after_exit_repeat",
           label: "C'est près des restaurants et de la rue principale ?",
           korean: "레스토랑이 많은 메인 거리랑 가까운가요?",
@@ -1157,39 +891,6 @@ export const myeongdongToItaewonLesson: MetroLesson = {
         },
         {
           id: "thank_after_exit_repeat",
-          label: "Merci beaucoup, j'ai tout compris !",
-          korean: "감사합니다, 다 이해했어요!",
-          romanization: "Gamsahamnida, da ihaehaesseoyo!",
-          nextId: "ia_end",
-        },
-      ],
-    },
-
-    {
-      id: "ia_repeat_exit_info_short",
-      speaker: "ai",
-      phase: "Sortie",
-      text: "Très simplement : sortie numéro 1.",
-      korean: "아주 간단히 말씀드리면, 1번 출구예요.",
-      french: "Très simplement : sortie numéro 1.",
-      romanization: "Aju gandanhi malsseumdeurimyeon, ilbeon chulgu-yeyo.",
-      choices: [
-        {
-          id: "ask_landmark_after_exit_short",
-          label: "C'est près des restaurants et de la rue principale ?",
-          korean: "레스토랑이 많은 메인 거리랑 가까운가요?",
-          romanization: "Reseutorang-i maneun mein geori-rang gakkaunga-yo?",
-          nextId: "ia_exit_landmark_info",
-        },
-        {
-          id: "ask_transfer_again_from_exit_short",
-          label: "Je dois bien changer une seule fois ?",
-          korean: "환승은 한 번만 하면 되죠?",
-          romanization: "Hwanseung-eun han beonman hamyeon doejyo?",
-          nextId: "ia_transfer_count_info",
-        },
-        {
-          id: "thank_after_exit_short",
           label: "Merci beaucoup, j'ai tout compris !",
           korean: "감사합니다, 다 이해했어요!",
           romanization: "Gamsahamnida, da ihaehaesseoyo!",
@@ -1247,13 +948,6 @@ export const myeongdongToItaewonLesson: MetroLesson = {
         "Ne. Ilbeon chulgu-ro naosimyeon gotbaro Itaewon mein geori jjogeuro gasil su isseoyo.",
       choices: [
         {
-          id: "repeat_landmark_again",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
-          nextId: "ia_repeat_exit_landmark_info_short",
-        },
-        {
           id: "ask_summary_after_landmark_repeat",
           label: "Pouvez-vous résumer tout le trajet ?",
           korean: "전체 경로를 다시 정리해 주실 수 있나요?",
@@ -1262,41 +956,6 @@ export const myeongdongToItaewonLesson: MetroLesson = {
         },
         {
           id: "thank_after_landmark_repeat",
-          label: "Merci beaucoup, j'ai tout compris !",
-          korean: "감사합니다, 다 이해했어요!",
-          romanization: "Gamsahamnida, da ihaehaesseoyo!",
-          nextId: "ia_end",
-        },
-      ],
-    },
-
-    {
-      id: "ia_repeat_exit_landmark_info_short",
-      speaker: "ai",
-      phase: "Sortie",
-      text: "En bref : sortie 1, puis rue principale d'Itaewon.",
-      korean:
-        "짧게 말씀드리면, 1번 출구로 나와서 이태원 메인 거리로 가시면 돼요.",
-      french: "En bref : sortie 1, puis rue principale d'Itaewon.",
-      romanization:
-        "Jjalge malsseumdeurimyeon, ilbeon chulgu-ro nawaseo Itaewon mein geori-ro gasimyeon dwaeyo.",
-      choices: [
-        {
-          id: "ask_summary_after_landmark_short",
-          label: "Pouvez-vous résumer tout le trajet ?",
-          korean: "전체 경로를 다시 정리해 주실 수 있나요?",
-          romanization: "Jeonche gyeongnoreul dasi jeongnihae jusil su innayo?",
-          nextId: "ia_end_summary",
-        },
-        {
-          id: "ask_transfer_after_landmark_short",
-          label: "Je dois bien changer une seule fois ?",
-          korean: "환승은 한 번만 하면 되죠?",
-          romanization: "Hwanseung-eun han beonman hamyeon doejyo?",
-          nextId: "ia_transfer_count_info",
-        },
-        {
-          id: "thank_after_landmark_short",
           label: "Merci beaucoup, j'ai tout compris !",
           korean: "감사합니다, 다 이해했어요!",
           romanization: "Gamsahamnida, da ihaehaesseoyo!",
@@ -1383,13 +1042,13 @@ export const myeongdongToItaewonLesson: MetroLesson = {
       id: "ia_end_summary",
       speaker: "ai",
       phase: "Fin",
-      text: "Je résume : à Myeongdong, prenez la ligne 4 direction Sadang ou Oido. Descendez à Samgakji, changez pour la ligne 6 direction Bonghwasan ou Sinnae, puis descendez à Itaewon. Pour la rue principale, prenez la sortie 1.",
+      text: "Pour résumer : à la station Myeongdong, prenez la ligne 4 en direction de Sadang ou d'Oido. À la station Samgakji, changez pour la ligne 6 en direction de Bonghwasan ou de Sinnae, puis descendez à la station Itaewon. Pour rejoindre la rue principale, c'est la sortie n°1.",
       korean:
         "정리해 드리면, 명동역에서 4호선 사당이나 오이도 방면 열차를 타세요. 삼각지역에서 내려서 6호선 봉화산이나 신내 방면으로 갈아타고, 이태원역에서 내리시면 됩니다. 메인 거리로 가시려면 1번 출구가 편해요.",
       french:
-        "Je résume : à Myeongdong, prenez la ligne 4 direction Sadang ou Oido. Descendez à Samgakji, changez pour la ligne 6 direction Bonghwasan ou Sinnae, puis descendez à Itaewon. Pour la rue principale, prenez la sortie 1.",
+        "Pour résumer : à la station Myeongdong, prenez la ligne 4 en direction de Sadang ou d'Oido. À la station Samgakji, changez pour la ligne 6 en direction de Bonghwasan ou de Sinnae, puis descendez à la station Itaewon. Pour rejoindre la rue principale, c'est la sortie n°1.",
       romanization:
-        "Jeongrihae deurimyeon, Myeongdong-yeogeseo sahoseon Sadang-ina Oido bangmyeon yeolchareul taseyo. Samgakji-yeogeseo naeryeoseo yukhoseon Bonghwasan-ina Sinnae bangmyeoneuro garatago, Itaewon-yeogeseo naerisimyeon doemnida. Mein geori-ro gasiryeomyeon ilbeon chulguga pyeonhaeyo.",
+        "Jeongnihae deurimyeon, Myeongdong-yeogeseo sahoseon Sadang-ina Oido bangmyeon yeolchareul taseyo.Samgakji-yeogeseo naeryeoseo yukhoseon Bonghwasan-ina Sinnae bangmyeoneuro garatago,Itaewon-yeogeseo naerisimyeon doemnida.Mein georiro gasiryeomyeon ilbeon chulguga pyeonhaeyo.",
       choices: [
         {
           id: "thank_after_summary",
@@ -1410,7 +1069,7 @@ export const myeongdongToItaewonLesson: MetroLesson = {
           label: "Quelle sortie déjà ?",
           korean: "출구가 몇 번이라고 하셨죠?",
           romanization: "Chulgu-ga myeot beon-irago hasyeotjyo?",
-          nextId: "ia_repeat_exit_info_short",
+          nextId: "ia_repeat_exit_info",
         },
       ],
     },
@@ -1439,7 +1098,7 @@ export const myeongdongToItaewonLesson: MetroLesson = {
           label: "Quelle sortie déjà ?",
           korean: "출구가 몇 번이라고 하셨죠?",
           romanization: "Chulgu-ga myeot beon-irago hasyeotjyo?",
-          nextId: "ia_repeat_exit_info_short",
+          nextId: "ia_repeat_exit_info",
         },
         {
           id: "ask_transfer_again_after_summary_short",

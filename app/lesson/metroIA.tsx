@@ -48,34 +48,99 @@ const fonts = {
 };
 
 // ==================== VIDEOS ====================
-const iaIntroRoute = require("../../assets/ai/metro/ia_intro_route.mp4");
-const iaRepeatIntroRoute = require("../../assets/ai/metro/ia_repeat_intro_route.mp4");
-const iaRepeatIntroRouteSlow = require("../../assets/ai/metro/ia_repeat_intro_route_slow.mp4");
+const iaIntroRoute = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_intro_route.mp4");
+const iaRepeatIntroRoute = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_intro_route.mp4");
+const iaRepeatIntroRouteSlow = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_intro_route_slow.mp4");
 
-const iaPlatformDirection = require("../../assets/ai/metro/ia_platform_direction.mp4");
-const iaRepeatPlatformDirection = require("../../assets/ai/metro/ia_repeat_platform_direction.mp4");
-const iaRepeatPlatformDirectionShort = require("../../assets/ai/metro/ia_repeat_platform_direction_short.mp4");
+const iaPlatformDirection = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_platform_direction.mp4");
+const iaRepeatPlatformDirection = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_platform_direction.mp4");
+const iaRepeatPlatformDirectionShort = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_platform_direction_short.mp4");
 
-const iaTripTime = require("../../assets/ai/metro/ia_trip_time.mp4");
-const iaRepeatTripTime = require("../../assets/ai/metro/ia_repeat_trip_time.mp4");
-const iaRepeatTripTimeShort = require("../../assets/ai/metro/ia_repeat_trip_time_short.mp4");
+const iaTripTime = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_trip_time.mp4");
+const iaRepeatTripTime = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_trip_time.mp4");
+const iaRepeatTripTimeShort = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_trip_time_short.mp4");
 
-const iaTransferInfo = require("../../assets/ai/metro/ia_transfer_info.mp4");
-const iaRepeatTransferInfo = require("../../assets/ai/metro/ia_repeat_transfer_info.mp4");
-const iaRepeatTransferInfoShort = require("../../assets/ai/metro/ia_repeat_transfer_info_short.mp4");
+const iaTransferInfo = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_transfer_info.mp4");
+const iaRepeatTransferInfo = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_transfer_info.mp4");
+const iaRepeatTransferInfoShort = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_transfer_info_short.mp4");
 
-const iaExitInfo = require("../../assets/ai/metro/ia_exit_info.mp4");
-const iaRepeatExitInfo = require("../../assets/ai/metro/ia_repeat_exit_info.mp4");
-const iaRepeatExitInfoShort = require("../../assets/ai/metro/ia_repeat_exit_info_short.mp4");
+const iaExitInfo = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_exit_info.mp4");
+const iaRepeatExitInfo = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_exit_info.mp4");
+const iaRepeatExitInfoShort = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_exit_info_short.mp4");
 
-const iaExitLandmarkInfo = require("../../assets/ai/metro/ia_exit_landmark_info.mp4");
-const iaRepeatExitLandmarkInfo = require("../../assets/ai/metro/ia_repeat_exit_landmark_info.mp4");
-const iaRepeatExitLandmarkInfoShort = require("../../assets/ai/metro/ia_repeat_exit_landmark_info_short.mp4");
+const iaExitLandmarkInfo = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_exit_landmark_info.mp4");
+const iaRepeatExitLandmarkInfo = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_exit_landmark_info.mp4");
+const iaRepeatExitLandmarkInfoShort = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_exit_landmark_info_short.mp4");
 
-const iaEndSummary = require("../../assets/ai/metro/ia_end_summary.mp4");
-const iaEndSummaryShort = require("../../assets/ai/metro/ia_end_summary_short.mp4");
-const iaEnd = require("../../assets/ai/metro/ia_end.mp4");
+const iaEndSummary = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_end_summary.mp4");
+const iaEndSummaryShort = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_end_summary_short.mp4");
+const iaEnd = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_end.mp4");
 const metroBackground = require("../../assets/images/metrobg.png");
+
+type VideoMap = Record<string, number>;
+
+const hongikToGangnamVideos: VideoMap = {
+  ia_intro_route: iaIntroRoute,
+  ia_repeat_intro_route: iaRepeatIntroRoute,
+  ia_repeat_intro_route_slow: iaRepeatIntroRouteSlow,
+
+  ia_platform_direction: iaPlatformDirection,
+  ia_repeat_platform_direction: iaRepeatPlatformDirection,
+  ia_repeat_platform_direction_short: iaRepeatPlatformDirectionShort,
+
+  ia_trip_time: iaTripTime,
+  ia_repeat_trip_time: iaRepeatTripTime,
+  ia_repeat_trip_time_short: iaRepeatTripTimeShort,
+
+  ia_transfer_info: iaTransferInfo,
+  ia_repeat_transfer_info: iaRepeatTransferInfo,
+  ia_repeat_transfer_info_short: iaRepeatTransferInfoShort,
+
+  ia_exit_info: iaExitInfo,
+  ia_repeat_exit_info: iaRepeatExitInfo,
+  ia_repeat_exit_info_short: iaRepeatExitInfoShort,
+
+  ia_exit_landmark_info: iaExitLandmarkInfo,
+  ia_repeat_exit_landmark_info: iaRepeatExitLandmarkInfo,
+  ia_repeat_exit_landmark_info_short: iaRepeatExitLandmarkInfoShort,
+
+  ia_end_summary: iaEndSummary,
+  ia_end_summary_short: iaEndSummaryShort,
+  ia_end: iaEnd,
+};
+
+const myeongdongToItaewonVideos: VideoMap = {
+  ia_intro_route: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_info_route.mp4"),
+  ia_repeat_intro_route: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_repeat_intro_route.mp4"),
+
+  ia_line4_direction: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_line4_direction.mp4"),
+  ia_repeat_line4_direction: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_repeat_line4_direction.mp4"),
+
+  ia_transfer_station: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_transfer_station.mp4"),
+  ia_repeat_transfer_station: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_repeat_transfer_station.mp4"),
+
+  ia_line6_direction: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_line6_direction.mp4"),
+  ia_repeat_line6_direction: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_repeat_line6_direction.mp4"),
+
+  ia_trip_time: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_trip_time.mp4"),
+  ia_repeat_trip_time: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_repeat_trip_time.mp4"),
+
+  ia_station_count: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_station_count.mp4"),
+  ia_repeat_station_count: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_repeat_station_count.mp4"),
+
+  ia_exit_info: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_exit_info.mp4"),
+  ia_repeat_exit_info: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_repeat_exit_info.mp4"),
+
+  ia_exit_landmark_info: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_exit_landmark_info.mp4"),
+  ia_repeat_exit_landmark_info: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_repeat_exit_landmark_info.mp4"),
+
+  ia_transfer_count_info: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_transfer_count_info.mp4"),
+  ia_repeat_transfer_count_info: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_repeat_transfer_count_info.mp4"),
+
+  ia_end_summary: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_end_summary.mp4"),
+  ia_end_summary_short: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_end_summary_short.mp4"),
+  ia_end: require("../../assets/ai/metro/Myeongdong-To-Itaewon/ia_end.mp4"),
+};
 
 // ==================== TYPES ====================
 type ModeType = "guided" | "real";
@@ -165,36 +230,43 @@ function getAutoAdvanceDelay(node: DialogueNode, mode: ModeType) {
   return base + byLength;
 }
 
-function attachMetroVideosToNode(nodeId: string): number[] | undefined {
-  const videos: Record<string, number> = {
-    ia_intro_route: iaIntroRoute,
-    ia_repeat_intro_route: iaRepeatIntroRoute,
-    ia_repeat_intro_route_slow: iaRepeatIntroRouteSlow,
+function getMetroVideosForLesson(lessonId: string): VideoMap {
+  if (lessonId === "myeongdong_to_itaewon") {
+    return myeongdongToItaewonVideos;
+  }
 
-    ia_platform_direction: iaPlatformDirection,
-    ia_repeat_platform_direction: iaRepeatPlatformDirection,
-    ia_repeat_platform_direction_short: iaRepeatPlatformDirectionShort,
+  return hongikToGangnamVideos;
+}
 
-    ia_trip_time: iaTripTime,
-    ia_repeat_trip_time: iaRepeatTripTime,
-    ia_repeat_trip_time_short: iaRepeatTripTimeShort,
+function getMetroIntroVideoSource(lessonId: string): number {
+  return getMetroVideosForLesson(lessonId).ia_intro_route ?? iaIntroRoute;
+}
 
-    ia_transfer_info: iaTransferInfo,
-    ia_repeat_transfer_info: iaRepeatTransferInfo,
-    ia_repeat_transfer_info_short: iaRepeatTransferInfoShort,
+function getAskExitVideoSource(nodeId: string): number | undefined {
+  const hongikPrefix = "ask_exit_hongik_";
+  const myeongdongPrefix = "ask_exit_myeongdong_";
 
-    ia_exit_info: iaExitInfo,
-    ia_repeat_exit_info: iaRepeatExitInfo,
-    ia_repeat_exit_info_short: iaRepeatExitInfoShort,
+  if (nodeId.startsWith(hongikPrefix)) {
+    return hongikToGangnamVideos[nodeId.slice(hongikPrefix.length)];
+  }
 
-    ia_exit_landmark_info: iaExitLandmarkInfo,
-    ia_repeat_exit_landmark_info: iaRepeatExitLandmarkInfo,
-    ia_repeat_exit_landmark_info_short: iaRepeatExitLandmarkInfoShort,
+  if (nodeId.startsWith(myeongdongPrefix)) {
+    return myeongdongToItaewonVideos[nodeId.slice(myeongdongPrefix.length)];
+  }
 
-    ia_end_summary: iaEndSummary,
-    ia_end_summary_short: iaEndSummaryShort,
-    ia_end: iaEnd,
-  };
+  return undefined;
+}
+
+function attachMetroVideosToNode(
+  nodeId: string,
+  lessonId: string,
+): number[] | undefined {
+  if (lessonId === "ask_exit") {
+    const askExitVideo = getAskExitVideoSource(nodeId);
+    return askExitVideo ? [askExitVideo] : undefined;
+  }
+
+  const videos = getMetroVideosForLesson(lessonId);
 
   return videos[nodeId] ? [videos[nodeId]] : undefined;
 }
@@ -236,7 +308,7 @@ function buildMetroScenario(lesson: MetroLesson): DialogueScenario {
       korean: step.korean || step.text || "...",
       french: step.french || step.text,
       nextNodeId: hasChoices ? choiceNodeId : undefined,
-      videoSources: attachMetroVideosToNode(step.id),
+      videoSources: attachMetroVideosToNode(step.id, lesson.id),
     };
 
     if (hasChoices && step.choices) {
@@ -355,7 +427,7 @@ export default function MetroIaScreen() {
 
   useEffect(() => {
     setCurrentNodeId(currentScenario.startNodeId);
-    setDisplayedVideoSource(iaIntroRoute);
+    setDisplayedVideoSource(getMetroIntroVideoSource(currentScenario.id));
     setSelectedChoiceId(null);
     setIsTransitioning(false);
     setIsSceneEnded(false);
@@ -525,7 +597,7 @@ export default function MetroIaScreen() {
 
   const handleRestart = () => {
     setCurrentNodeId(currentScenario.startNodeId);
-    setDisplayedVideoSource(iaIntroRoute);
+    setDisplayedVideoSource(getMetroIntroVideoSource(currentScenario.id));
     setSelectedChoiceId(null);
     setIsTransitioning(false);
     setIsSceneEnded(false);
