@@ -11,6 +11,7 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -175,9 +176,11 @@ function BackgroundLayer({
 }
 
 export default function OnboardingScreen() {
+  const { height, width } = useWindowDimensions();
   const [step, setStep] = useState<Step>("arrival");
   const [selectedScene, setSelectedScene] = useState<SceneKey>("cafe");
   const [selectedMode, setSelectedMode] = useState<ModeKey>("guided");
+  const isCompactScreen = height <= 700 || width <= 380;
 
   const fade = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(24)).current;
@@ -324,7 +327,10 @@ export default function OnboardingScreen() {
         darkOverlayOpacity={backgroundDarkOverlayOpacity}
       />
 
-      <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+      <SafeAreaView
+        style={[styles.safe, isCompactScreen && styles.safeCompact]}
+        edges={["top", "bottom"]}
+      >
         {step === "arrival" && (
           <Animated.View style={[styles.page, animatedStyle]}>
             <View style={styles.topRow}>
@@ -384,6 +390,10 @@ export default function OnboardingScreen() {
 
             <View style={styles.bottomCtaArea}>
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Commencer l'experience"
+                accessibilityHint="Ouvre le choix de la scene de depart"
+                hitSlop={6}
                 style={styles.primaryWrap}
                 onPress={() => goToStep("scene")}
               >
@@ -407,6 +417,16 @@ export default function OnboardingScreen() {
 
         {step === "scene" && (
           <Animated.View style={[styles.page, animatedStyle]}>
+            <ScrollView
+              style={styles.stepScroll}
+              contentContainerStyle={[
+                styles.stepScrollContent,
+                isCompactScreen && styles.stepScrollContentCompact,
+              ]}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
+            >
             <View style={styles.topRow}>
               <View style={styles.badge}>
                 <View style={[styles.badgeDot, { backgroundColor: PINK }]} />
@@ -414,14 +434,46 @@ export default function OnboardingScreen() {
               </View>
             </View>
 
-            <View style={styles.sectionHead}>
+            <View
+              style={[
+                styles.sectionHead,
+                isCompactScreen && styles.sectionHeadCompact,
+              ]}
+            >
               <Text style={styles.sectionEyebrow}>START HERE</Text>
-              <Text style={styles.sectionTitle}>Où veux-tu commencer ?</Text>
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  styles.sectionTitleScene,
+                  isCompactScreen && styles.sectionTitleCompact,
+                ]}
+              >
+                Où veux-tu commencer ?
+              </Text>
             </View>
 
-            <View style={styles.pathGrid}>
-              <Pressable style={styles.pathPress} onPress={openBasics}>
-                <BlurView intensity={25} tint="dark" style={styles.pathCard}>
+            <View
+              style={[
+                styles.pathGrid,
+                isCompactScreen && styles.pathGridCompact,
+              ]}
+            >
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel="Choisir ton parcours. Hangul, vocabulaire et autres bases"
+                accessibilityHint="Ouvre l'accueil des parcours"
+                hitSlop={6}
+                style={styles.pathPress}
+                onPress={openBasics}
+              >
+                <BlurView
+                  intensity={25}
+                  tint="dark"
+                  style={[
+                    styles.pathCard,
+                    isCompactScreen && styles.pathCardCompact,
+                  ]}
+                >
                   <LinearGradient
                     colors={["rgba(34,211,238,0.12)", "rgba(255,255,255,0.02)"]}
                     start={{ x: 0, y: 0 }}
@@ -429,7 +481,12 @@ export default function OnboardingScreen() {
                     style={StyleSheet.absoluteFill}
                   />
 
-                  <View style={styles.pathTopRow}>
+                  <View
+                    style={[
+                      styles.pathTopRow,
+                      isCompactScreen && styles.pathTopRowCompact,
+                    ]}
+                  >
                     <View
                       style={[styles.pathIcon, { borderColor: `${CYAN}33` }]}
                     >
@@ -440,20 +497,48 @@ export default function OnboardingScreen() {
                     </Text>
                   </View>
 
-                  <Text style={styles.pathTitle}>Choisis ton parcours</Text>
-                  <Text style={styles.pathText}>
+                  <Text
+                    style={[
+                      styles.pathTitle,
+                      isCompactScreen && styles.pathTitleCompact,
+                    ]}
+                  >
+                    Choisis ton parcours
+                  </Text>
+                  <Text
+                    style={[
+                      styles.pathText,
+                      isCompactScreen && styles.pathTextCompact,
+                    ]}
+                  >
                     Hangul , vocabulaires et autres
                   </Text>
 
-                  <View style={styles.pathBottomRow}>
+                  <View
+                    style={[
+                      styles.pathBottomRow,
+                      isCompactScreen && styles.pathBottomRowCompact,
+                    ]}
+                  >
                     <Text style={styles.pathAction}>Entrer</Text>
                     <Text style={[styles.pathArrow, { color: CYAN }]}>→</Text>
                   </View>
                 </BlurView>
               </Pressable>
 
-              <View style={styles.pathPress}>
-                <BlurView intensity={25} tint="dark" style={styles.pathCard}>
+              <View
+                accessibilityRole="summary"
+                accessibilityLabel="Immersion directe. Choisis une scene cafe, metro ou restaurant"
+                style={styles.pathPress}
+              >
+                <BlurView
+                  intensity={25}
+                  tint="dark"
+                  style={[
+                    styles.pathCard,
+                    isCompactScreen && styles.pathCardCompact,
+                  ]}
+                >
                   <LinearGradient
                     colors={[
                       "rgba(244,114,182,0.12)",
@@ -464,7 +549,12 @@ export default function OnboardingScreen() {
                     style={StyleSheet.absoluteFill}
                   />
 
-                  <View style={styles.pathTopRow}>
+                  <View
+                    style={[
+                      styles.pathTopRow,
+                      isCompactScreen && styles.pathTopRowCompact,
+                    ]}
+                  >
                     <View
                       style={[styles.pathIcon, { borderColor: `${PINK}33` }]}
                     >
@@ -475,10 +565,29 @@ export default function OnboardingScreen() {
                     </Text>
                   </View>
 
-                  <Text style={styles.pathTitle}>Choisis ta scène</Text>
-                  <Text style={styles.pathText}>Café · métro · restaurant</Text>
+                  <Text
+                    style={[
+                      styles.pathTitle,
+                      isCompactScreen && styles.pathTitleCompact,
+                    ]}
+                  >
+                    Choisis ta scène
+                  </Text>
+                  <Text
+                    style={[
+                      styles.pathText,
+                      isCompactScreen && styles.pathTextCompact,
+                    ]}
+                  >
+                    Café · métro · restaurant
+                  </Text>
 
-                  <View style={styles.pathBottomRow}>
+                  <View
+                    style={[
+                      styles.pathBottomRow,
+                      isCompactScreen && styles.pathBottomRowCompact,
+                    ]}
+                  >
                     <Text style={styles.pathAction}>Choisir</Text>
                     <Text style={[styles.pathArrow, { color: PINK }]}>↓</Text>
                   </View>
@@ -486,15 +595,21 @@ export default function OnboardingScreen() {
               </View>
             </View>
 
-            <View style={styles.subSectionHead}>
+            <View
+              style={[
+                styles.subSectionHead,
+                isCompactScreen && styles.subSectionHeadCompact,
+              ]}
+            >
               <Text style={styles.subSectionEyebrow}>IMMERSION DIRECTE</Text>
               <Text style={styles.subSectionTitle}>Choisis une scène</Text>
             </View>
 
-            <ScrollView
-              style={styles.scroll}
-              contentContainerStyle={styles.sceneList}
-              showsVerticalScrollIndicator={false}
+            <View
+              style={[
+                styles.sceneList,
+                isCompactScreen && styles.sceneListCompact,
+              ]}
             >
               {SCENES.map((scene) => {
                 const active = selectedScene === scene.key;
@@ -503,6 +618,12 @@ export default function OnboardingScreen() {
                 return (
                   <Pressable
                     key={scene.key}
+                    accessibilityRole="radio"
+                    accessibilityLabel={`${scene.title}. ${scene.subtitle}`}
+                    accessibilityState={{ checked: active, selected: active }}
+                    aria-checked={active}
+                    aria-selected={active}
+                    hitSlop={6}
                     style={styles.scenePress}
                     onPress={async () => {
                       await tap();
@@ -520,6 +641,7 @@ export default function OnboardingScreen() {
                         tint="dark"
                         style={[
                           styles.sceneCard,
+                          isCompactScreen && styles.sceneCardCompact,
                           active && { borderColor: "rgba(255,255,255,0.28)" },
                         ]}
                       >
@@ -621,15 +743,25 @@ export default function OnboardingScreen() {
                 );
               })}
 
-              <Pressable style={styles.discreetAction} onPress={openMoreScenes}>
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel="Voir plus de scenes"
+                hitSlop={8}
+                style={styles.discreetAction}
+                onPress={openMoreScenes}
+              >
                 <Text style={styles.discreetActionText}>
                   Voir plus de scènes
                 </Text>
               </Pressable>
+            </View>
             </ScrollView>
 
-            <View style={styles.bottomBar}>
+            <View style={[styles.bottomBar, styles.bottomBarContained]}>
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Retour a l'ecran de bienvenue"
+                hitSlop={6}
                 style={styles.secondaryButton}
                 onPress={() => goToStep("arrival")}
               >
@@ -637,6 +769,9 @@ export default function OnboardingScreen() {
               </Pressable>
 
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Choisir ${selectedSceneData.title.toLowerCase()}`}
+                hitSlop={6}
                 style={styles.primaryInlineWrap}
                 onPress={() => goToStep("mode")}
               >
@@ -685,6 +820,12 @@ export default function OnboardingScreen() {
                 return (
                   <Pressable
                     key={mode.key}
+                    accessibilityRole="radio"
+                    accessibilityLabel={`${mode.title}. ${mode.subtitle}`}
+                    accessibilityState={{ checked: active, selected: active }}
+                    aria-checked={active}
+                    aria-selected={active}
+                    hitSlop={6}
                     style={styles.modePress}
                     onPress={async () => {
                       await tap();
@@ -775,6 +916,9 @@ export default function OnboardingScreen() {
 
             <View style={styles.bottomBar}>
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Retour au choix de scene"
+                hitSlop={6}
                 style={styles.secondaryButton}
                 onPress={() => goToStep("scene")}
               >
@@ -782,6 +926,9 @@ export default function OnboardingScreen() {
               </Pressable>
 
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Commencer la scene choisie"
+                hitSlop={6}
                 style={styles.primaryInlineWrap}
                 onPress={finishOnboarding}
               >
@@ -839,6 +986,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
   },
+  safeCompact: {
+    paddingHorizontal: 16,
+  },
   page: {
     flex: 1,
   },
@@ -873,6 +1023,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     paddingBottom: 20,
+    width: "100%",
+    maxWidth: 520,
+    alignSelf: "center",
   },
   koreanLine: {
     color: "rgba(255,255,255,0.85)",
@@ -901,6 +1054,9 @@ const styles = StyleSheet.create({
   },
   heroCardWrap: {
     marginTop: 38,
+    width: "100%",
+    maxWidth: 520,
+    alignSelf: "center",
   },
   heroCard: {
     borderRadius: 24,
@@ -932,6 +1088,9 @@ const styles = StyleSheet.create({
   },
   bottomCtaArea: {
     paddingBottom: 24,
+    width: "100%",
+    maxWidth: 520,
+    alignSelf: "center",
   },
   primaryWrap: {
     borderRadius: 999,
@@ -958,6 +1117,10 @@ const styles = StyleSheet.create({
     marginTop: 26,
     marginBottom: 20,
   },
+  sectionHeadCompact: {
+    marginTop: 18,
+    marginBottom: 14,
+  },
   sectionEyebrow: {
     color: TXT_SOFT,
     fontSize: 10.5,
@@ -972,6 +1135,14 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: -0.6,
   },
+  sectionTitleScene: {
+    maxWidth: 320,
+  },
+  sectionTitleCompact: {
+    fontSize: 25,
+    lineHeight: 31,
+    maxWidth: 300,
+  },
   sectionText: {
     color: "rgba(255,255,255,0.65)",
     fontSize: 14,
@@ -982,6 +1153,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     marginBottom: 24,
+  },
+  pathGridCompact: {
+    gap: 8,
+    marginBottom: 16,
   },
   pathPress: {
     flex: 1,
@@ -996,11 +1171,20 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.12)",
     padding: 18,
   },
+  pathCardCompact: {
+    minHeight: 108,
+    height: 108,
+    borderRadius: 20,
+    padding: 12,
+  },
   pathTopRow: {
     flexDirection: "row",
     alignItems: "center",
 
     marginBottom: 20,
+  },
+  pathTopRowCompact: {
+    marginBottom: 8,
   },
   pathIcon: {
     width: 32,
@@ -1031,11 +1215,18 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: -0.3,
   },
+  pathTitleCompact: {
+    fontSize: 15,
+    lineHeight: 19,
+  },
   pathText: {
     color: "rgba(255,255,255,0.52)",
     fontSize: 12,
     lineHeight: 17,
     marginTop: 6,
+  },
+  pathTextCompact: {
+    display: "none",
   },
   pathBottomRow: {
     marginTop: "auto",
@@ -1043,6 +1234,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingTop: 12,
+  },
+  pathBottomRowCompact: {
+    paddingTop: 6,
   },
   pathAction: {
     color: TXT_SOFT,
@@ -1057,6 +1251,9 @@ const styles = StyleSheet.create({
   },
   subSectionHead: {
     marginBottom: 14,
+  },
+  subSectionHeadCompact: {
+    marginBottom: 10,
   },
   subSectionEyebrow: {
     color: TXT_SOFT,
@@ -1075,10 +1272,26 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: -4,
   },
+  stepScroll: {
+    flex: 1,
+  },
+  stepScrollContent: {
+    width: "100%",
+    maxWidth: 520,
+    alignSelf: "center",
+    paddingBottom: 14,
+  },
+  stepScrollContentCompact: {
+    paddingBottom: 10,
+  },
   sceneList: {
     paddingHorizontal: 4,
     gap: 12,
     paddingBottom: 24,
+  },
+  sceneListCompact: {
+    gap: 8,
+    paddingBottom: 84,
   },
   scenePress: {
     borderRadius: 24,
@@ -1095,6 +1308,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.12)",
     flexDirection: "row",
+  },
+  sceneCardCompact: {
+    height: 80,
+    borderRadius: 20,
   },
   sceneAccent: {
     width: 4,
@@ -1260,6 +1477,13 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingBottom: 20,
     paddingTop: 12,
+    width: "100%",
+    maxWidth: 520,
+    alignSelf: "center",
+  },
+  bottomBarContained: {
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.08)",
   },
   secondaryButton: {
     height: 56,

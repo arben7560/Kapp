@@ -5,6 +5,7 @@ export type ListenExercise = {
   speaker: string;
   place: string;
   audio: string;
+  audioSource?: number;
   question: string;
   translation: string;
   correct: string | string[];
@@ -13,9 +14,23 @@ export type ListenExercise = {
   hint?: string;
 };
 
+export const CAFE_LISTEN_AUDIO: Record<string, number> = {
+  "cafe-1": require("../../assets/ai/listen/cafe/cafe-1.mp3"),
+  "cafe-2": require("../../assets/ai/listen/cafe/cafe-2.mp3"),
+  "cafe-3": require("../../assets/ai/listen/cafe/cafe-3.mp3"),
+  "cafe-4": require("../../assets/ai/listen/cafe/cafe-4.mp3"),
+  "cafe-5": require("../../assets/ai/listen/cafe/cafe-5.mp3"),
+  "cafe-6": require("../../assets/ai/listen/cafe/cafe-6.mp3"),
+  "cafe-7": require("../../assets/ai/listen/cafe/cafe-7.mp3"),
+  "cafe-8": require("../../assets/ai/listen/cafe/cafe-8.mp3"),
+  "cafe-9": require("../../assets/ai/listen/cafe/cafe-9.mp3"),
+  "cafe-10": require("../../assets/ai/listen/cafe/cafe-10.mp3"),
+};
+
 export const CAFE_SESSION: ListenExercise[] = [
   {
     id: "cafe-1",
+    audioSource: CAFE_LISTEN_AUDIO["cafe-1"],
     step: 1,
     category: "Accueil",
     speaker: "Minji • 바리스타",
@@ -34,6 +49,7 @@ export const CAFE_SESSION: ListenExercise[] = [
   },
   {
     id: "cafe-2",
+    audioSource: CAFE_LISTEN_AUDIO["cafe-2"],
     step: 2,
     category: "Commande",
     speaker: "Minji • 바리스타",
@@ -52,6 +68,7 @@ export const CAFE_SESSION: ListenExercise[] = [
   },
   {
     id: "cafe-3",
+    audioSource: CAFE_LISTEN_AUDIO["cafe-3"],
     step: 3,
     category: "Commande",
     speaker: "Minji • 바리스타",
@@ -70,6 +87,7 @@ export const CAFE_SESSION: ListenExercise[] = [
   },
   {
     id: "cafe-4",
+    audioSource: CAFE_LISTEN_AUDIO["cafe-4"],
     step: 4,
     category: "Commande",
     speaker: "Minji • 바리스타",
@@ -88,6 +106,7 @@ export const CAFE_SESSION: ListenExercise[] = [
   },
   {
     id: "cafe-5",
+    audioSource: CAFE_LISTEN_AUDIO["cafe-5"],
     step: 5,
     category: "Commande",
     speaker: "Minji • 바리스타",
@@ -106,6 +125,7 @@ export const CAFE_SESSION: ListenExercise[] = [
   },
   {
     id: "cafe-6",
+    audioSource: CAFE_LISTEN_AUDIO["cafe-6"],
     step: 6,
     category: "Commande",
     speaker: "Minji • 바리스타",
@@ -124,6 +144,7 @@ export const CAFE_SESSION: ListenExercise[] = [
   },
   {
     id: "cafe-7",
+    audioSource: CAFE_LISTEN_AUDIO["cafe-7"],
     step: 7,
     category: "Commande",
     speaker: "Minji • 바리스타",
@@ -142,6 +163,7 @@ export const CAFE_SESSION: ListenExercise[] = [
   },
   {
     id: "cafe-8",
+    audioSource: CAFE_LISTEN_AUDIO["cafe-8"],
     step: 8,
     category: "Nom",
     speaker: "Minji • 바리스타",
@@ -160,6 +182,7 @@ export const CAFE_SESSION: ListenExercise[] = [
   },
   {
     id: "cafe-9",
+    audioSource: CAFE_LISTEN_AUDIO["cafe-9"],
     step: 9,
     category: "Commande",
     speaker: "Minji • 바리스타",
@@ -178,6 +201,7 @@ export const CAFE_SESSION: ListenExercise[] = [
   },
   {
     id: "cafe-10",
+    audioSource: CAFE_LISTEN_AUDIO["cafe-10"],
     step: 10,
     category: "Commande",
     speaker: "Minji • 바리스타",

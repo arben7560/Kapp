@@ -12,8 +12,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
+import { MissionAccessBadge } from "../../components/immersion/MissionAccessBadge";
 import { MissionLaunchModal } from "../../components/immersion/MissionLaunchModal";
 import { ABSOLUTE_FILL } from "../../constants/layout";
+import { AppFontFamily, SeoulMidnightGlass } from "../../constants/theme";
 import {
   cafeMissions,
   type CafeMission,
@@ -30,7 +32,8 @@ const SOFT = "rgba(255,255,255,0.46)";
 const LINE = "rgba(255,255,255,0.10)";
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
-const GOLD = "#FDE047";
+const GOLD = SeoulMidnightGlass.colors.premiumGold;
+const fonts = AppFontFamily.outfit;
 
 function normalizeMode(rawMode: string | string[] | undefined) {
   const value = Array.isArray(rawMode) ? rawMode[0] : rawMode;
@@ -85,14 +88,14 @@ export default function CafeMissionsScreen() {
           </Pressable>
           <View style={styles.headerCopy}>
             <Text style={styles.kicker}>{"MISSIONS D'IMMERSION"}</Text>
-            <Text style={styles.title}>Cafe</Text>
+            <Text style={styles.title}>Café</Text>
           </View>
         </View>
 
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.intro}>
             {
-              "Choisis une mission complete. Une fois lancee, elle reste jouable jusqu'a la fin."
+              "Choisis une mission complète. Une fois lancée, elle reste jouable jusqu'à la fin."
             }
           </Text>
 
@@ -104,6 +107,22 @@ export default function CafeMissionsScreen() {
               return (
                 <Pressable
                   key={mission.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${mission.title}. ${
+                    isLocked
+                      ? "Mission premium verrouillée"
+                      : isPremium
+                        ? "Mission premium incluse"
+                        : "Mission gratuite"
+                  }. ${mission.subtitle}. ${
+                    isLocked ? "Ouvre l'écran Premium" : "Ouvre cette mission"
+                  }`}
+                  accessibilityHint={
+                    isLocked
+                      ? "Ouvre l'offre Premium"
+                      : "Prépare le lancement de cette mission"
+                  }
+                  hitSlop={6}
                   onPress={() => openMission(mission)}
                   style={({ pressed }) => [
                     styles.missionCard,
@@ -123,17 +142,13 @@ export default function CafeMissionsScreen() {
                   />
 
                   <View style={styles.cardTop}>
-                    <View style={styles.badge}>
-                      <Text
-                        style={[
-                          styles.badgeText,
-                          isPremium && styles.premiumBadgeText,
-                        ]}
-                      >
-                        {isPremium ? "PREMIUM" : "GRATUIT"}
-                      </Text>
-                    </View>
-                    <Text style={styles.cardArrow}>
+                    <MissionAccessBadge access={mission.access} accent={CYAN} />
+                    <Text
+                      style={[
+                        styles.cardArrow,
+                        isLocked && styles.cardArrowPremium,
+                      ]}
+                    >
                       {isLocked ? "Premium" : "Ouvrir"}
                     </Text>
                   </View>
@@ -162,6 +177,7 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     backgroundColor: BG_DEEP,
+    overflow: "hidden",
   },
   overlay: {
     ...ABSOLUTE_FILL,
@@ -191,7 +207,7 @@ const styles = StyleSheet.create({
   backText: {
     color: TXT,
     fontSize: 18,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
   },
   headerCopy: {
     flex: 1,
@@ -199,13 +215,13 @@ const styles = StyleSheet.create({
   kicker: {
     color: PINK,
     fontSize: 11,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
     letterSpacing: 2.5,
   },
   title: {
     color: TXT,
     fontSize: 34,
-    fontWeight: "900",
+    fontFamily: fonts.black,
     marginTop: 4,
   },
   content: {
@@ -216,6 +232,7 @@ const styles = StyleSheet.create({
   intro: {
     color: MUTED,
     fontSize: 15,
+    fontFamily: fonts.medium,
     lineHeight: 22,
     marginBottom: 18,
   },
@@ -232,7 +249,7 @@ const styles = StyleSheet.create({
     padding: 18,
   },
   premiumCard: {
-    borderColor: "rgba(253,224,71,0.34)",
+    borderColor: SeoulMidnightGlass.colors.premiumBorder,
   },
   pressedCard: {
     opacity: 0.88,
@@ -244,37 +261,25 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 16,
   },
-  badge: {
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.16)",
-    backgroundColor: "rgba(255,255,255,0.07)",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  badgeText: {
-    color: CYAN,
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 1.3,
-  },
-  premiumBadgeText: {
-    color: GOLD,
-  },
   cardArrow: {
     color: SOFT,
-    fontSize: 12,
-    fontWeight: "800",
+    fontSize: SeoulMidnightGlass.cta.fontSize,
+    fontFamily: fonts.bold,
+    letterSpacing: SeoulMidnightGlass.cta.letterSpacing,
+  },
+  cardArrowPremium: {
+    color: GOLD,
   },
   missionTitle: {
     color: TXT,
     fontSize: 21,
     lineHeight: 27,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
   },
   missionSubtitle: {
     color: MUTED,
     fontSize: 14,
+    fontFamily: fonts.medium,
     lineHeight: 20,
     marginTop: 7,
   },

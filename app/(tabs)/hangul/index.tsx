@@ -1,7 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link, router } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import { router } from "expo-router";
+import React, { useEffect, useMemo } from "react";
 import {
   Animated,
   Dimensions,
@@ -15,7 +15,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../../_store";
-import { usePaywall } from "../../../lib/paywall/PaywallProvider";
+import { ModuleCard } from "../../../components/ModuleCard";
+import { ABSOLUTE_FILL } from "../../../constants/layout";
+import { AppFontFamily, SeoulMidnightGlass } from "../../../constants/theme";
 
 const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.png");
@@ -23,26 +25,21 @@ const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.png");
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — SEOUL MIDNIGHT GLASS
 // ──────────────────────────────────────────────
-const BG_DEEP = "#020306";
-const TXT = "rgba(255,255,255,0.96)";
-const MUTED = "rgba(255,255,255,0.66)";
-const SOFT = "rgba(255,255,255,0.46)";
-const LINE = "rgba(255,255,255,0.10)";
-const LINE_SOFT = "rgba(255,255,255,0.07)";
+const BG_DEEP = SeoulMidnightGlass.colors.bgDeep;
+const TXT = SeoulMidnightGlass.colors.text;
+const SOFT = SeoulMidnightGlass.colors.soft;
+const LINE_SOFT = SeoulMidnightGlass.colors.lineSoft;
 
-const PINK = "#F472B6";
-const CYAN = "#22D3EE";
-const GOLD = "#FDE047"; // Teinte Premium
+const PINK = SeoulMidnightGlass.colors.pink;
+const CYAN = SeoulMidnightGlass.colors.cyan;
 
 const HERO_CIRCLE = width * 0.76;
-const CARD_HEIGHT = 124;
-const CARD_RADIUS = 28;
 
 const fonts = {
-  bold: "Outfit_700Bold",
-  black: "Outfit_900Black",
-  medium: "Outfit_500Medium",
-  kr: "NotoSansKR_700Bold",
+  bold: AppFontFamily.outfit.bold,
+  black: AppFontFamily.outfit.black,
+  medium: AppFontFamily.outfit.medium,
+  kr: AppFontFamily.korean.bold,
 };
 
 type HangulModule = {
@@ -135,13 +132,16 @@ export default function HangulHub() {
           <View style={styles.grid}>
             {HANGUL_MODULES.map((module, i) => (
               <AnimatedFragment key={module.href} index={i}>
-                <HangulFamilyCard
+                <ModuleCard
                   title={module.title}
                   subtitle={module.sub}
                   icon={module.icon}
                   href={module.href}
-                  color={module.color ?? CYAN}
-                  isLocked={module.isLocked}
+                  accentColor={module.color ?? CYAN}
+                  requiresPremium={module.isLocked}
+                  metaLabel="PARCOURS HANGUL"
+                  accessibilityContext="ce module Hangul"
+                  iconScript="korean"
                 />
               </AnimatedFragment>
             ))}
@@ -158,14 +158,28 @@ export default function HangulHub() {
 function UnifiedNavHeader() {
   return (
     <View style={styles.navHeader}>
-      <Pressable onPress={() => router.back()} style={styles.backBtn}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Retour"
+        hitSlop={8}
+        onPress={() => router.back()}
+        style={styles.backBtn}
+      >
         <Text style={styles.backArrow}>‹</Text>
         <Text style={styles.backText}>SÉOUL IMMERSION</Text>
       </Pressable>
 
-      <View style={styles.settingsShell}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Paramètres"
+        accessibilityState={{ disabled: true }}
+        aria-disabled={true}
+        hitSlop={8}
+        disabled
+        style={styles.settingsShell}
+      >
         <View style={styles.settingsOrb} />
-      </View>
+      </Pressable>
     </View>
   );
 }
@@ -186,7 +200,7 @@ function UnifiedHeroHeader({
   badgeText: string;
   accent: string;
 }) {
-  const glowAnim = useRef(new Animated.Value(0)).current;
+  const glowAnim = useMemo(() => new Animated.Value(0), []);
 
   useEffect(() => {
     Animated.loop(
@@ -324,8 +338,8 @@ function AnimatedFragment({
   children: React.ReactNode;
   index: number;
 }) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(18)).current;
+  const fadeAnim = useMemo(() => new Animated.Value(0), []);
+  const slideAnim = useMemo(() => new Animated.Value(18), []);
 
   useEffect(() => {
     const anim = Animated.parallel([
@@ -365,149 +379,6 @@ function AnimatedFragment({
 }
 
 // ──────────────────────────────────────────────
-// CARD
-// ──────────────────────────────────────────────
-function HangulFamilyCard({
-  title,
-  subtitle,
-  icon,
-  href,
-  color,
-  isLocked,
-}: {
-  title: string;
-  subtitle: string;
-  icon: string;
-  href: string;
-  color: string;
-  isLocked?: boolean;
-}) {
-  const { hasPremiumAccess } = usePaywall();
-  const targetHref = isLocked && !hasPremiumAccess ? "/premium" : href;
-
-  return (
-    <Link href={targetHref as any} asChild>
-      <Pressable style={styles.cardPressable}>
-        <BlurView
-          intensity={40}
-          tint="dark"
-          style={[styles.themeCard, isLocked && styles.premiumCardBorder]}
-        >
-          <LinearGradient
-            colors={[
-              isLocked ? "rgba(253,224,71,0.18)" : `${color}18`,
-              "rgba(2,3,6,0.48)",
-              "rgba(255,255,255,0.035)",
-            ]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-
-          <LinearGradient
-            colors={[
-              "rgba(255,255,255,0.13)",
-              "rgba(255,255,255,0.025)",
-              "transparent",
-            ]}
-            locations={[0, 0.35, 1]}
-            style={styles.cardTopReflect}
-          />
-
-          <View style={styles.cardRainA} />
-          <View
-            style={[
-              styles.cardRainB,
-              { backgroundColor: `${isLocked ? GOLD : color}14` },
-            ]}
-          />
-          <View style={styles.cardRainC} />
-          <View
-            style={[
-              styles.cardRainDrop,
-              { backgroundColor: isLocked ? GOLD : color },
-            ]}
-          />
-
-          <View
-            style={[
-              styles.cardAccent,
-              {
-                backgroundColor: isLocked ? GOLD : color,
-                shadowColor: isLocked ? GOLD : color,
-              },
-            ]}
-          />
-
-          <View style={styles.cardIconZone}>
-            <View
-              style={[
-                styles.cardIconBox,
-                {
-                  borderColor: `${isLocked ? GOLD : color}55`,
-                  backgroundColor: `${isLocked ? GOLD : color}12`,
-                  shadowColor: isLocked ? GOLD : color,
-                  shadowOpacity: isLocked ? 0.28 : 0.22,
-                },
-              ]}
-            >
-              <LinearGradient
-                colors={[
-                  "rgba(255,255,255,0.24)",
-                  "rgba(255,255,255,0.05)",
-                  "transparent",
-                ]}
-                locations={[0, 0.45, 1]}
-                style={styles.cardIconLight}
-              />
-
-              <Text
-                style={[
-                  styles.cardIcon,
-                  {
-                    color: isLocked ? GOLD : color,
-                    textShadowColor: isLocked ? GOLD : color,
-                  },
-                ]}
-              >
-                {icon}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.cardDividerLine} />
-
-          {isLocked && (
-            <View style={styles.premiumTag}>
-              <Text style={styles.premiumTagText}>PREMIUM 🔒</Text>
-            </View>
-          )}
-
-          <View style={styles.cardTextContent}>
-            <Text style={[styles.cardMeta, isLocked && styles.cardMetaPremium]}>
-              {isLocked ? "MODULE PREMIUM" : "PARCOURS HANGUL"}
-            </Text>
-            <Text style={styles.cardTitle}>{title}</Text>
-            <Text style={styles.cardSub}>
-              {isLocked ? "Débloquer ce module exclusif" : subtitle}
-            </Text>
-          </View>
-
-          <Text
-            style={[
-              styles.cardArrow,
-              isLocked && { color: GOLD, opacity: 0.8 },
-            ]}
-          >
-            {isLocked ? "✧" : "›"}
-          </Text>
-        </BlurView>
-      </Pressable>
-    </Link>
-  );
-}
-
-// ──────────────────────────────────────────────
 // STYLES
 // ──────────────────────────────────────────────
 const styles = StyleSheet.create({
@@ -516,18 +387,21 @@ const styles = StyleSheet.create({
     backgroundColor: BG_DEEP,
   },
 
-  bgImage: { flex: 1 },
+  bgImage: {
+    flex: 1,
+    overflow: "hidden",
+  },
   bgBlur: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
   },
 
   vignetteOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     backgroundColor: "rgba(2,3,6,0.48)",
   },
 
   topFade: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     backgroundColor: "rgba(0,0,0,0.05)",
   },
 
@@ -771,189 +645,5 @@ const styles = StyleSheet.create({
   // GRID
   grid: {
     gap: 12,
-  },
-
-  // CARD
-  cardPressable: {
-    borderRadius: 22,
-    overflow: "hidden",
-    backgroundColor: "rgba(2,3,6,0.26)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.09)",
-    shadowColor: "#000",
-    shadowOpacity: 0.28,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
-  },
-
-  themeCard: {
-    minHeight: 78,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.11)",
-    position: "relative",
-  },
-
-  cardTopReflect: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: "50%",
-    opacity: 0.55,
-  },
-
-  cardRainA: {
-    position: "absolute",
-    top: 0,
-    left: "18%",
-    width: 1,
-    height: "100%",
-    backgroundColor: "rgba(255,255,255,0.04)",
-  },
-
-  cardRainB: {
-    position: "absolute",
-    top: 0,
-    left: "54%",
-    width: 1,
-    height: "100%",
-  },
-
-  cardRainC: {
-    position: "absolute",
-    top: 0,
-    right: "18%",
-    width: 1,
-    height: "100%",
-    backgroundColor: "rgba(255,255,255,0.03)",
-  },
-
-  cardRainDrop: {
-    position: "absolute",
-    top: 14,
-    right: 18,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    opacity: 0.65,
-  },
-
-  premiumCardBorder: {
-    borderColor: "rgba(253,224,71,0.28)",
-  },
-
-  cardAccent: {
-    position: "absolute",
-    left: 0,
-    top: 14,
-    bottom: 14,
-    width: 4,
-    borderTopRightRadius: 6,
-    borderBottomRightRadius: 6,
-    shadowOpacity: 0.75,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 0 },
-  },
-
-  cardIconZone: {
-    width: 48,
-    height: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 6,
-    marginRight: 10,
-    position: "relative",
-  },
-
-  cardIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    overflow: "hidden",
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 0 },
-  },
-
-  cardIconLight: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: "58%",
-    borderRadius: 22,
-  },
-
-  cardIcon: {
-    fontSize: 21,
-    fontFamily: fonts.bold,
-    letterSpacing: -0.8,
-    textShadowRadius: 10,
-    textShadowOffset: { width: 0, height: 0 },
-  },
-
-  cardDividerLine: {
-    width: 1,
-    height: 42,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    marginRight: 12,
-  },
-
-  premiumTag: {
-    position: "absolute",
-    top: 10,
-    right: 18,
-    backgroundColor: GOLD,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-
-  premiumTagText: {
-    color: "#000",
-    fontFamily: fonts.bold,
-    fontSize: 8,
-    letterSpacing: 0.5,
-  },
-
-  cardTextContent: {
-    flex: 1,
-  },
-
-  cardMeta: {
-    fontSize: 7.8,
-    fontFamily: fonts.bold,
-    color: "rgba(255,255,255,0.44)",
-    letterSpacing: 2.1,
-    marginBottom: 4,
-  },
-
-  cardMetaPremium: {
-    color: "rgba(253,224,71,0.78)",
-  },
-
-  cardTitle: {
-    color: TXT,
-    fontSize: 18,
-    fontFamily: fonts.bold,
-  },
-
-  cardSub: {
-    fontSize: 13,
-    fontFamily: fonts.medium,
-    color: MUTED,
-    marginTop: 2,
-  },
-
-  cardArrow: {
-    color: SOFT,
-    fontSize: 22,
-    opacity: 0.3,
   },
 });

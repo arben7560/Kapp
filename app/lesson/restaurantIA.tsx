@@ -483,7 +483,13 @@ export default function RestaurantIaScreen() {
             { paddingTop: Math.max(6, insets.top * 0.15) },
           ]}
         >
-          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Retour"
+            hitSlop={8}
+            onPress={() => router.back()}
+            style={styles.backBtn}
+          >
             <Text style={styles.backTxt}>x</Text>
           </Pressable>
         </View>
@@ -538,6 +544,9 @@ export default function RestaurantIaScreen() {
               >
                 {displayedVideoSource ? (
                   <VideoView
+                    accessible
+                    accessibilityRole="image"
+                    accessibilityLabel="Video de l'interlocuteur restaurant"
                     player={player}
                     style={[styles.video, { height: avatarVideoHeight }]}
                     contentFit="contain"
@@ -557,6 +566,19 @@ export default function RestaurantIaScreen() {
               </View>
 
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={
+                  isTranscriptOpen
+                    ? "Refermer la transcription"
+                    : "Revoir la transcription"
+                }
+                accessibilityState={{
+                  disabled: !isReviewableTranscript,
+                  expanded: isTranscriptOpen,
+                }}
+                aria-disabled={!isReviewableTranscript}
+                aria-expanded={isTranscriptOpen}
+                hitSlop={6}
                 disabled={!isReviewableTranscript}
                 onPress={() => {
                   if (!isReviewableTranscript) return;
@@ -613,6 +635,9 @@ export default function RestaurantIaScreen() {
 
                   <View style={styles.endActions}>
                     <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Rejouer la scene"
+                      hitSlop={6}
                       onPress={handleRestart}
                       style={({ pressed }) => [
                         styles.endActionPrimary,
@@ -632,6 +657,9 @@ export default function RestaurantIaScreen() {
                     </Pressable>
 
                     <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Retour"
+                      hitSlop={6}
                       onPress={() => router.back()}
                       style={({ pressed }) => [
                         styles.endActionSecondary,
@@ -651,6 +679,11 @@ export default function RestaurantIaScreen() {
                     return (
                       <Pressable
                         key={choice.id}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${choice.korean}. ${choice.label}`}
+                        accessibilityState={{ selected: isSelected }}
+                        aria-selected={isSelected}
+                        hitSlop={6}
                         onPress={() => handleChoice(choice)}
                         style={({ pressed }) => [
                           styles.choiceBtn,

@@ -530,7 +530,13 @@ export default function CafeIaScreen() {
             { paddingTop: Math.max(6, insets.top * 0.15) },
           ]}
         >
-          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Retour"
+            hitSlop={8}
+            onPress={() => router.back()}
+            style={styles.backBtn}
+          >
             <Text style={styles.backTxt}>✕</Text>
           </Pressable>
         </View>
@@ -585,6 +591,9 @@ export default function CafeIaScreen() {
               >
                 {displayedVideoSource ? (
                   <VideoView
+                    accessible
+                    accessibilityRole="image"
+                    accessibilityLabel="Video de l'interlocuteur cafe"
                     player={player}
                     style={[styles.video, { height: avatarVideoHeight }]}
                     contentFit="contain"
@@ -604,6 +613,19 @@ export default function CafeIaScreen() {
               </View>
 
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={
+                  isTranscriptOpen
+                    ? "Refermer la transcription"
+                    : "Revoir la transcription"
+                }
+                accessibilityState={{
+                  disabled: !isReviewableTranscript,
+                  expanded: isTranscriptOpen,
+                }}
+                aria-disabled={!isReviewableTranscript}
+                aria-expanded={isTranscriptOpen}
+                hitSlop={6}
                 disabled={!isReviewableTranscript}
                 onPress={() => {
                   if (!isReviewableTranscript) return;
@@ -660,6 +682,9 @@ export default function CafeIaScreen() {
 
                   <View style={styles.endActions}>
                     <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Rejouer la scene"
+                      hitSlop={6}
                       onPress={handleRestart}
                       style={({ pressed }) => [
                         styles.endActionPrimary,
@@ -679,6 +704,9 @@ export default function CafeIaScreen() {
                     </Pressable>
 
                     <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Retour"
+                      hitSlop={6}
                       onPress={() => router.back()}
                       style={({ pressed }) => [
                         styles.endActionSecondary,
@@ -691,6 +719,9 @@ export default function CafeIaScreen() {
 
                   {shouldShowPremiumSuggestion ? (
                     <Pressable
+                      accessibilityRole="link"
+                      accessibilityLabel="Debloquer toutes les missions"
+                      hitSlop={6}
                       onPress={() => router.push("/premium")}
                       style={({ pressed }) => [
                         styles.endPremiumLink,
@@ -712,6 +743,11 @@ export default function CafeIaScreen() {
                     return (
                       <Pressable
                         key={choice.id}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${choice.korean}. ${choice.label}`}
+                        accessibilityState={{ selected: isSelected }}
+                        aria-selected={isSelected}
+                        hitSlop={6}
                         onPress={() => handleChoice(choice)}
                         style={({ pressed }) => [
                           styles.choiceBtn,

@@ -276,7 +276,15 @@ export default function Home() {
               </View>
             </View>
 
-            <Pressable style={styles.settingsTrigger}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Parametres"
+              accessibilityState={{ disabled: true }}
+              aria-disabled={true}
+              hitSlop={8}
+              disabled
+              style={styles.settingsTrigger}
+            >
               <BlurView intensity={80} tint="dark" style={styles.settingsBlur}>
                 <View style={styles.settingsInner} />
               </BlurView>
@@ -453,6 +461,10 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
 
   return (
     <Pressable
+      accessibilityRole="link"
+      accessibilityLabel={`Reprendre la sequence ${displayLabel}. ${narrative}`}
+      accessibilityHint="Ouvre le parcours actif"
+      hitSlop={6}
       onPress={onPress}
       style={[
         styles.mainCardWrap,
@@ -506,7 +518,15 @@ function DailyStreakCard({
     : "Termine une activité aujourd'hui pour conserver ta série.";
 
   return (
-    <Pressable onPress={onPress}>
+    <Pressable
+      accessibilityRole="link"
+      accessibilityLabel={`Serie quotidienne. ${currentStreak} ${currentStreak > 1 ? "jours" : "jour"}. ${statusLabel}`}
+      accessibilityState={{ selected: isValidated }}
+      aria-selected={isValidated}
+      accessibilityHint="Ouvre le calendrier de serie"
+      hitSlop={6}
+      onPress={onPress}
+    >
       <BlurView intensity={42} tint="dark" style={styles.streakCard}>
         <LinearGradient
           colors={[
@@ -645,6 +665,14 @@ function SequenceCard({ item, isActive, onPress }: any) {
 
   return (
     <Pressable
+      accessibilityRole="link"
+      accessibilityLabel={`${item.title}. ${item.narrative}${isComingSoon ? ". Prochainement" : ""}`}
+      accessibilityState={{ selected: isActive, disabled: isComingSoon }}
+      aria-selected={isActive}
+      aria-disabled={isComingSoon}
+      accessibilityHint={isComingSoon ? undefined : "Ouvre ce module"}
+      hitSlop={6}
+      disabled={isComingSoon}
       onPress={onPress}
       style={[
         styles.seqCard,

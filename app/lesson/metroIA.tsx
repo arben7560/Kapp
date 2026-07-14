@@ -235,40 +235,49 @@ function getMetroVideosForLesson(lessonId: string): VideoMap {
     return myeongdongToItaewonVideos;
   }
 
-  return hongikToGangnamVideos;
+  if (lessonId === "hongik_to_gangnam") {
+    return hongikToGangnamVideos;
+  }
+
+  return {};
 }
 
 function getMetroIntroVideoSource(lessonId: string): number {
   return getMetroVideosForLesson(lessonId).ia_intro_route ?? iaIntroRoute;
 }
 
-function getAskExitVideoSource(nodeId: string): number | undefined {
-  const hongikPrefix = "ask_exit_hongik_";
-  const myeongdongPrefix = "ask_exit_myeongdong_";
-
-  if (nodeId.startsWith(hongikPrefix)) {
-    return hongikToGangnamVideos[nodeId.slice(hongikPrefix.length)];
-  }
-
-  if (nodeId.startsWith(myeongdongPrefix)) {
-    return myeongdongToItaewonVideos[nodeId.slice(myeongdongPrefix.length)];
-  }
-
-  return undefined;
-}
-
 function attachMetroVideosToNode(
   nodeId: string,
   lessonId: string,
 ): number[] | undefined {
-  if (lessonId === "ask_exit") {
-    const askExitVideo = getAskExitVideoSource(nodeId);
-    return askExitVideo ? [askExitVideo] : undefined;
+  const prefixedVideo = getPrefixedMetroVideoSource(nodeId);
+  if (prefixedVideo) {
+    return [prefixedVideo];
   }
 
   const videos = getMetroVideosForLesson(lessonId);
 
   return videos[nodeId] ? [videos[nodeId]] : undefined;
+}
+
+function getPrefixedMetroVideoSource(nodeId: string): number | undefined {
+  const prefixVideoMaps: { prefix: string; videos: VideoMap }[] = [
+    { prefix: "ask_exit_hongik_", videos: hongikToGangnamVideos },
+    { prefix: "ask_time_hongik_", videos: hongikToGangnamVideos },
+    { prefix: "ask_direction_hongik_", videos: hongikToGangnamVideos },
+    { prefix: "ask_exit_myeongdong_", videos: myeongdongToItaewonVideos },
+    { prefix: "ask_transfer_myeongdong_", videos: myeongdongToItaewonVideos },
+    { prefix: "ask_time_myeongdong_", videos: myeongdongToItaewonVideos },
+    { prefix: "ask_direction_myeongdong_", videos: myeongdongToItaewonVideos },
+  ];
+
+  for (const item of prefixVideoMaps) {
+    if (nodeId.startsWith(item.prefix)) {
+      return item.videos[nodeId.slice(item.prefix.length)];
+    }
+  }
+
+  return undefined;
 }
 
 function buildMetroScenario(lesson: MetroLesson): DialogueScenario {
@@ -676,7 +685,13 @@ export default function MetroIaScreen() {
             { paddingTop: Math.max(6, insets.top * 0.15) },
           ]}
         >
-          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Retour"
+            hitSlop={8}
+            onPress={() => router.back()}
+            style={styles.backBtn}
+          >
             <Text style={styles.backTxt}>✕</Text>
           </Pressable>
         </View>
@@ -731,6 +746,9 @@ export default function MetroIaScreen() {
                 ]}
               >
                 <VideoView
+                  accessible
+                  accessibilityRole="image"
+                  accessibilityLabel="Video de l'interlocuteur metro"
                   player={player}
                   style={[styles.video, { height: avatarVideoHeight }]}
                   contentFit="contain"
@@ -745,6 +763,19 @@ export default function MetroIaScreen() {
               </View>
 
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={
+                  isTranscriptOpen
+                    ? "Refermer la transcription"
+                    : "Revoir la transcription"
+                }
+                accessibilityState={{
+                  disabled: !isReviewableTranscript,
+                  expanded: isTranscriptOpen,
+                }}
+                aria-disabled={!isReviewableTranscript}
+                aria-expanded={isTranscriptOpen}
+                hitSlop={6}
                 disabled={!isReviewableTranscript}
                 onPress={() => {
                   if (!isReviewableTranscript) return;
@@ -804,6 +835,9 @@ export default function MetroIaScreen() {
 
                   <View style={styles.endActions}>
                     <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Rejouer la scene"
+                      hitSlop={6}
                       onPress={handleRestart}
                       style={({ pressed }) => [
                         styles.endActionPrimary,
@@ -823,6 +857,9 @@ export default function MetroIaScreen() {
                     </Pressable>
 
                     <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Retour"
+                      hitSlop={6}
                       onPress={() => router.back()}
                       style={({ pressed }) => [
                         styles.endActionSecondary,
@@ -842,6 +879,11 @@ export default function MetroIaScreen() {
                     return (
                       <Pressable
                         key={choice.id}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${choice.korean}. ${choice.label}`}
+                        accessibilityState={{ selected: isSelected }}
+                        aria-selected={isSelected}
+                        hitSlop={6}
                         onPress={() => handleChoice(choice)}
                         style={({ pressed }) => [
                           styles.choiceBtn,

@@ -1,12 +1,12 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CafeAvatar from "../../components/ai/CafeAvatar";
 import { useStore } from "../../_store";
 import { CAFE_SESSION, type ListenExercise } from "../../data/listen/cafe";
+import { useVocAudio } from "../../hooks/useVocAudio";
 import { isCorrect } from "../../lib/answerCheck";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { buildProgressId } from "../../lib/progressIds";
@@ -115,6 +115,18 @@ function ChoiceButton({
 
   return (
     <Pressable
+      accessibilityRole="radio"
+      accessibilityLabel={`${label}. ${
+        state === "correct"
+          ? "Bonne reponse"
+          : state === "wrong"
+            ? "Reponse incorrecte"
+            : "Choix disponible"
+      }`}
+      accessibilityState={{ disabled: !!disabled, checked: state === "correct" }}
+      aria-disabled={!!disabled}
+      aria-checked={state === "correct"}
+      hitSlop={6}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => ({
@@ -161,6 +173,9 @@ function ActionButton({
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      hitSlop={6}
       onPress={onPress}
       style={({ pressed }) => ({
         flex: 1,
@@ -182,73 +197,33 @@ function ActionButton({
 
 export default function CafeListenScreen() {
   const { complete } = useStore();
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const speechTokenRef = useRef(0);
-  const finishTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [fadeAnim] = useState(() => new Animated.Value(1));
   const hasReportedCompletionRef = useRef(false);
 
   const [session, setSession] = useState<ListenExercise[]>(() =>
     shuffleArray(CAFE_SESSION),
   );
   const [index, setIndex] = useState(0);
-  const [speaking, setSpeaking] = useState(false);
+  const [activeAudioId, setActiveAudioId] = useState<string | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [result, setResult] = useState<null | { ok: boolean }>(null);
   const [score, setScore] = useState(0);
   const [wrongExercises, setWrongExercises] = useState<ListenExercise[]>([]);
+  const { playAudio: playAssetAudio, stopAudio } = useVocAudio(setActiveAudioId);
 
   const exercise = session[index];
   const finished = !exercise;
+  const speaking = activeAudioId === exercise?.id;
 
   const progressLabel = useMemo(() => {
     if (!exercise) return "Terminé";
     return `Étape ${index + 1}/${session.length}`;
   }, [exercise, index, session.length]);
 
-  function clearSpeechTimeout() {
-    if (finishTimeoutRef.current) {
-      clearTimeout(finishTimeoutRef.current);
-      finishTimeoutRef.current = null;
-    }
-  }
-
-  function stopSpeech() {
-    speechTokenRef.current += 1;
-    clearSpeechTimeout();
-    Speech.stop();
-    setSpeaking(false);
-  }
-
-  function playAudio() {
-    if (!exercise?.audio) return;
-
-    stopSpeech();
-
-    const token = speechTokenRef.current + 1;
-    speechTokenRef.current = token;
-    setSpeaking(true);
-
-    Speech.speak(exercise.audio, {
-      language: "ko-KR",
-      rate: 0.9,
-      pitch: 1,
-      onDone: () => {
-        if (speechTokenRef.current !== token) return;
-        finishTimeoutRef.current = setTimeout(() => {
-          if (speechTokenRef.current !== token) return;
-          setSpeaking(false);
-        }, 220);
-      },
-      onStopped: () => {
-        if (speechTokenRef.current !== token) return;
-        setSpeaking(false);
-      },
-      onError: () => {
-        if (speechTokenRef.current !== token) return;
-        setSpeaking(false);
-      },
-    });
-  }
+  const playAudio = useCallback(() => {
+    if (!exercise?.audioSource) return;
+    playAssetAudio(exercise.audioSource, exercise.id);
+  }, [exercise, playAssetAudio]);
 
   useEffect(() => {
     if (!finished || hasReportedCompletionRef.current) return;
@@ -266,16 +241,14 @@ export default function CafeListenScreen() {
     }, 180);
 
     return () => clearTimeout(id);
-  }, [index, exercise]);
+  }, [index, exercise, playAudio]);
 
   useEffect(() => {
-    return () => {
-      stopSpeech();
-    };
-  }, []);
+    return stopAudio;
+  }, [stopAudio]);
 
   function animateToNext(update: () => void) {
-    stopSpeech();
+    stopAudio();
 
     Animated.timing(fadeAnim, {
       toValue: 0,
@@ -489,6 +462,8 @@ export default function CafeListenScreen() {
           }}
         >
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Retour"
             onPress={() => router.back()}
             hitSlop={10}
             style={{
@@ -724,6 +699,13 @@ export default function CafeListenScreen() {
                 <View style={{ height: 12 }} />
 
                 <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    speaking ? "Lecture audio en cours" : "Reecouter l'audio"
+                  }
+                  accessibilityState={{ disabled: speaking }}
+                  aria-disabled={speaking}
+                  hitSlop={6}
                   disabled={speaking}
                   onPress={playAudio}
                   style={({ pressed }) => ({
@@ -804,6 +786,14 @@ export default function CafeListenScreen() {
 
             {result && (
               <View
+                accessibilityLiveRegion="polite"
+                accessible
+                accessibilityRole="alert"
+                accessibilityLabel={`${result.ok ? "Correct" : "Pas tout a fait"}. Reponse attendue : ${
+                  Array.isArray(exercise.correct)
+                    ? exercise.correct.join(" / ")
+                    : exercise.correct
+                }`}
                 style={{
                   marginTop: 16,
                   borderRadius: 18,

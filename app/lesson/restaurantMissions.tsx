@@ -11,8 +11,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
+import { MissionAccessBadge } from "../../components/immersion/MissionAccessBadge";
 import { MissionLaunchModal } from "../../components/immersion/MissionLaunchModal";
 import { ABSOLUTE_FILL } from "../../constants/layout";
+import { AppFontFamily, SeoulMidnightGlass } from "../../constants/theme";
 import {
   restaurantMissions,
   type RestaurantMission,
@@ -28,7 +30,8 @@ const MUTED = "rgba(255,255,255,0.66)";
 const SOFT = "rgba(255,255,255,0.46)";
 const LINE = "rgba(255,255,255,0.10)";
 const ORANGE = "#FB923C";
-const GOLD = "#FDE047";
+const GOLD = SeoulMidnightGlass.colors.premiumGold;
+const fonts = AppFontFamily.outfit;
 
 function normalizeMode(rawMode: string | string[] | undefined) {
   const value = Array.isArray(rawMode) ? rawMode[0] : rawMode;
@@ -79,7 +82,7 @@ export default function RestaurantMissionsScreen() {
 
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.intro}>
-            Choisis une mission complete. Le paywall apparait avant la scene.
+            Choisis une mission complète. Le paywall apparaît avant la scène.
           </Text>
           <View style={styles.missionStack}>
             {restaurantMissions.map((mission) => {
@@ -88,6 +91,22 @@ export default function RestaurantMissionsScreen() {
               return (
                 <Pressable
                   key={mission.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${mission.title}. ${
+                    isLocked
+                      ? "Mission premium verrouillée"
+                      : isPremium
+                        ? "Mission premium incluse"
+                        : "Mission gratuite"
+                  }. ${mission.subtitle}. ${
+                    isLocked ? "Ouvre l'écran Premium" : "Ouvre cette mission"
+                  }`}
+                  accessibilityHint={
+                    isLocked
+                      ? "Ouvre l'offre Premium"
+                      : "Prépare le lancement de cette mission"
+                  }
+                  hitSlop={6}
                   onPress={() => openMission(mission)}
                   style={({ pressed }) => [
                     styles.missionCard,
@@ -96,17 +115,16 @@ export default function RestaurantMissionsScreen() {
                   ]}
                 >
                   <View style={styles.cardTop}>
-                    <View style={styles.badge}>
-                      <Text
-                        style={[
-                          styles.badgeText,
-                          isPremium && styles.premiumBadgeText,
-                        ]}
-                      >
-                        {isPremium ? "PREMIUM" : "GRATUIT"}
-                      </Text>
-                    </View>
-                    <Text style={styles.cardArrow}>
+                    <MissionAccessBadge
+                      access={mission.access}
+                      accent={ORANGE}
+                    />
+                    <Text
+                      style={[
+                        styles.cardArrow,
+                        isLocked && styles.cardArrowPremium,
+                      ]}
+                    >
                       {isLocked ? "Premium" : "Ouvrir"}
                     </Text>
                   </View>
@@ -131,7 +149,7 @@ export default function RestaurantMissionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1, backgroundColor: BG_DEEP },
+  background: { flex: 1, backgroundColor: BG_DEEP, overflow: "hidden" },
   overlay: { ...ABSOLUTE_FILL, backgroundColor: "rgba(5,5,8,0.70)" },
   safe: { flex: 1 },
   header: {
@@ -152,17 +170,23 @@ const styles = StyleSheet.create({
     borderColor: LINE,
     backgroundColor: "rgba(255,255,255,0.06)",
   },
-  backText: { color: TXT, fontSize: 18, fontWeight: "800" },
+  backText: { color: TXT, fontSize: 18, fontFamily: fonts.bold },
   headerCopy: { flex: 1 },
   kicker: {
     color: ORANGE,
     fontSize: 11,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
     letterSpacing: 2.5,
   },
-  title: { color: TXT, fontSize: 34, fontWeight: "900", marginTop: 4 },
+  title: { color: TXT, fontSize: 34, fontFamily: fonts.black, marginTop: 4 },
   content: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 42 },
-  intro: { color: MUTED, fontSize: 15, lineHeight: 22, marginBottom: 18 },
+  intro: {
+    color: MUTED,
+    fontSize: 15,
+    fontFamily: fonts.medium,
+    lineHeight: 22,
+    marginBottom: 18,
+  },
   missionStack: { gap: 14 },
   missionCard: {
     minHeight: 126,
@@ -172,7 +196,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.05)",
     padding: 18,
   },
-  premiumCard: { borderColor: "rgba(253,224,71,0.34)" },
+  premiumCard: { borderColor: SeoulMidnightGlass.colors.premiumBorder },
   pressedCard: { opacity: 0.88, transform: [{ scale: 0.99 }] },
   cardTop: {
     flexDirection: "row",
@@ -180,22 +204,24 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 16,
   },
-  badge: {
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.16)",
-    backgroundColor: "rgba(255,255,255,0.07)",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+  cardArrow: {
+    color: SOFT,
+    fontSize: SeoulMidnightGlass.cta.fontSize,
+    fontFamily: fonts.bold,
+    letterSpacing: SeoulMidnightGlass.cta.letterSpacing,
   },
-  badgeText: {
-    color: ORANGE,
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 1.3,
+  cardArrowPremium: { color: GOLD },
+  missionTitle: {
+    color: TXT,
+    fontSize: 21,
+    fontFamily: fonts.bold,
+    lineHeight: 27,
   },
-  premiumBadgeText: { color: GOLD },
-  cardArrow: { color: SOFT, fontSize: 12, fontWeight: "800" },
-  missionTitle: { color: TXT, fontSize: 21, lineHeight: 27, fontWeight: "900" },
-  missionSubtitle: { color: MUTED, fontSize: 14, lineHeight: 20, marginTop: 7 },
+  missionSubtitle: {
+    color: MUTED,
+    fontSize: 14,
+    fontFamily: fonts.medium,
+    lineHeight: 20,
+    marginTop: 7,
+  },
 });

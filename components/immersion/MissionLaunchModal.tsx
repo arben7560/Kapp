@@ -8,14 +8,16 @@ import {
   View,
 } from "react-native";
 
+import { AppFontFamily, SeoulMidnightGlass } from "../../constants/theme";
 import type { ImmersionMission } from "../../lib/immersion/missions";
+import { MissionAccessBadge } from "./MissionAccessBadge";
 
 const TXT = "rgba(255,255,255,0.98)";
 const MUTED = "rgba(255,255,255,0.68)";
 const SOFT = "rgba(255,255,255,0.48)";
 const LINE = "rgba(255,255,255,0.12)";
-const GOLD = "#FDE047";
 const CYAN = "#22D3EE";
+const fonts = AppFontFamily.outfit;
 
 type MissionLaunchModalProps = {
   visible: boolean;
@@ -49,7 +51,6 @@ export function MissionLaunchModal({
 }: MissionLaunchModalProps) {
   if (!mission) return null;
 
-  const isPremium = mission.access === "premium";
   const highlights = mission.goals?.length ? mission.goals : mission.skills;
 
   return (
@@ -71,17 +72,7 @@ export function MissionLaunchModal({
           />
 
           <View style={styles.topRow}>
-            <View
-              style={[
-                styles.badge,
-                isPremium && styles.premiumBadge,
-                { borderColor: isPremium ? "rgba(253,224,71,0.42)" : `${accent}55` },
-              ]}
-            >
-              <Text style={[styles.badgeText, isPremium && styles.premiumText]}>
-                {isPremium ? "PREMIUM" : "GRATUIT"}
-              </Text>
-            </View>
+            <MissionAccessBadge access={mission.access} accent={accent} />
 
             {mission.duration ? (
               <Text style={styles.duration}>{mission.duration}</Text>
@@ -151,39 +142,21 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 16,
   },
-  badge: {
-    borderRadius: 999,
-    borderWidth: 1,
-    backgroundColor: "rgba(255,255,255,0.07)",
-    paddingHorizontal: 11,
-    paddingVertical: 7,
-  },
-  premiumBadge: {
-    backgroundColor: "rgba(253,224,71,0.10)",
-  },
-  badgeText: {
-    color: CYAN,
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 1.4,
-  },
-  premiumText: {
-    color: GOLD,
-  },
   duration: {
     color: SOFT,
     fontSize: 12,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
   },
   title: {
     color: TXT,
     fontSize: 27,
     lineHeight: 33,
-    fontWeight: "900",
+    fontFamily: fonts.black,
   },
   subtitle: {
     color: MUTED,
     fontSize: 15,
+    fontFamily: fonts.medium,
     lineHeight: 22,
     marginTop: 9,
   },
@@ -198,6 +171,7 @@ const styles = StyleSheet.create({
   objectiveText: {
     color: MUTED,
     fontSize: 14,
+    fontFamily: fonts.medium,
     lineHeight: 20,
     marginTop: 6,
   },
@@ -208,7 +182,7 @@ const styles = StyleSheet.create({
   detailTitle: {
     color: TXT,
     fontSize: 13,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
     letterSpacing: 0.6,
     textTransform: "uppercase",
   },
@@ -228,6 +202,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: MUTED,
     fontSize: 14,
+    fontFamily: fonts.medium,
     lineHeight: 20,
   },
   actions: {
@@ -243,8 +218,8 @@ const styles = StyleSheet.create({
   startText: {
     color: TXT,
     fontSize: 14,
-    fontWeight: "900",
-    letterSpacing: 0.9,
+    fontFamily: fonts.bold,
+    letterSpacing: SeoulMidnightGlass.cta.letterSpacing,
     textTransform: "uppercase",
   },
   cancelButton: {
@@ -259,7 +234,7 @@ const styles = StyleSheet.create({
   cancelText: {
     color: MUTED,
     fontSize: 14,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
   },
   pressed: {
     opacity: 0.86,

@@ -1,7 +1,7 @@
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 import * as Speech from "expo-speech";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -52,13 +52,13 @@ const SCENES = [
       },
       {
         char: "Barista",
-        kr: "드시고 가세요, 아니면 포장하세요?",
+        kr: "드시고 가세요, 아니면 포장에 드릴까요?",
         fr: "Vous consommez sur place ou à emporter ?",
         side: "server",
       },
       {
         char: "Barista",
-        kr: "총 9,500원입니다. 카드로 결제하시겠어요, 아니면 현금으로 하시겠어요?",
+        kr: "총 9 500원입니다. 카드로 결제하시겠어요, 아니면 현금으로 하시겠어요?",
         fr: "Cela fait 9 500 wons au total. Vous souhaitez payer par carte ou en espèces ?",
         side: "server",
       },
@@ -110,7 +110,8 @@ const SCENES = [
         word: "드시고 가세요, 아니면 포장하세요?",
         rom: "Deusigo gaseyo, animyeon pojanghaseyo?",
         mean: "Sur place ou à emporter ?",
-        context: "La question simple pour savoir si la commande est sur place ou à emporter.",
+        context:
+          "La question simple pour savoir si la commande est sur place ou à emporter.",
       },
       {
         word: "영수증 필요하세요?",
@@ -365,7 +366,7 @@ export default function CafeLesson() {
               </Pressable>
             ))}
           </View>
-<View style={styles.toolbox}>
+          <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
               <Text style={styles.toolboxTitle}>CAFE TOOLBOX</Text>
               <View

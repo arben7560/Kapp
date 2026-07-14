@@ -46,28 +46,6 @@ export const cafeMissions: CafeMission[] = [
     goals: ["Commander", "Demander a emporter", "Payer"],
     scenarioKey: "order_takeout",
   },
-  {
-    id: "modify-order",
-    title: "Modifier une commande",
-    subtitle: "Corrige ta commande simplement.",
-    access: "premium",
-    duration: "4-6 min",
-    objective: "Changer un choix sans bloquer l'echange.",
-    skills: ["Corriger", "Reformuler", "Confirmer"],
-    goals: ["Modifier", "Reconfirmer", "Payer"],
-    scenarioKey: "modify_order",
-  },
-  {
-    id: "ask-recommendation",
-    title: "Demander une recommandation",
-    subtitle: "Demande conseil avant de choisir.",
-    access: "premium",
-    duration: "4-6 min",
-    objective: "Choisir apres une suggestion.",
-    skills: ["Demander conseil", "Reagir", "Choisir"],
-    goals: ["Demander", "Choisir", "Commander"],
-    scenarioKey: "ask_recommendation",
-  },
 ];
 
 export function getCafeMissionById(

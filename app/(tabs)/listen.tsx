@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
+  AccessibilityInfo,
   ImageBackground,
   Pressable,
   SafeAreaView,
@@ -361,6 +362,7 @@ const KIND_LABEL: Record<ExerciseKind, { mini: string; skill: string }> = {
 
 export default function ListenScreen() {
   const { complete } = useStore();
+  const scrollRef = useRef<ScrollView | null>(null);
   const [trainingIndex, setTrainingIndex] = useState(0);
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -392,6 +394,12 @@ export default function ListenScreen() {
     return selected === item.answer;
   };
 
+  const getExpectedAnswer = () => {
+    if (item.kind === "order") return item.answer.join(" ");
+    if (item.kind === "gap") return item.answer;
+    return item.options[item.answer] ?? "";
+  };
+
   const isCorrect = checked && isAnswerCorrect();
 
   const resetAnswer = () => {
@@ -421,7 +429,19 @@ export default function ListenScreen() {
   const handleValidate = () => {
     if (!canCheck) return;
 
-    if (isAnswerCorrect()) {
+    const correct = isAnswerCorrect();
+    const expectedAnswer = getExpectedAnswer();
+
+    setChecked(true);
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 120);
+
+    AccessibilityInfo.announceForAccessibility(
+      correct
+        ? `Correct. Reponse attendue : ${expectedAnswer}.`
+        : `A revoir. Reponse attendue : ${expectedAnswer}.`,
+    );
+
+    if (correct) {
       complete(buildProgressId("listen", item.id));
       void completeDailyActivity("listen_exercise").then((state) => {
         setDailyMessage(
@@ -429,13 +449,13 @@ export default function ListenScreen() {
             ? "Freeze utilise. Serie conservee."
             : "Serie conservee.",
         );
+        setTimeout(
+          () => scrollRef.current?.scrollToEnd({ animated: true }),
+          80,
+        );
         setTimeout(() => setDailyMessage(null), 2200);
       });
-      goNext();
-      return;
     }
-
-    setChecked(true);
   };
 
   const playAudio = () => {
@@ -463,6 +483,11 @@ export default function ListenScreen() {
               picked.map((wordIndex) => (
                 <Pressable
                   key={wordIndex}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Retirer ${item.words[wordIndex]} de la phrase`}
+                  accessibilityState={{ selected: true }}
+                  aria-selected={true}
+                  hitSlop={6}
                   onPress={() => removeOrderWord(wordIndex)}
                   style={styles.wordSelected}
                 >
@@ -478,6 +503,15 @@ export default function ListenScreen() {
               return (
                 <Pressable
                   key={`${word}-${wordIndex}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Ajouter ${word} a la phrase`}
+                  accessibilityState={{
+                    disabled: used || checked,
+                    selected: used,
+                  }}
+                  aria-disabled={used || checked}
+                  aria-selected={used}
+                  hitSlop={6}
                   disabled={used || checked}
                   onPress={() => pickOrderWord(wordIndex)}
                   style={[styles.wordOption, used && styles.disabledOption]}
@@ -552,7 +586,13 @@ export default function ListenScreen() {
 
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.roundButton}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Retour"
+            hitSlop={6}
+            onPress={() => router.back()}
+            style={styles.roundButton}
+          >
             <Ionicons name="chevron-back" size={24} color={COLORS.text} />
           </Pressable>
 
@@ -561,12 +601,20 @@ export default function ListenScreen() {
             <Text style={styles.headerTitle}>Écoute active</Text>
           </View>
 
-          <Pressable style={styles.roundButton}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Parametres"
+            accessibilityState={{ disabled: true }}
+            hitSlop={6}
+            disabled
+            style={styles.roundButton}
+          >
             <Ionicons name="settings-sharp" size={24} color={COLORS.muted} />
           </Pressable>
         </View>
 
         <ScrollView
+          ref={scrollRef}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}
         >
@@ -577,6 +625,9 @@ export default function ListenScreen() {
 
           <View style={styles.modeSwitcherWrap}>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Entrainement precedent"
+              hitSlop={8}
               onPress={() => changeTraining(-1)}
               style={styles.arrowButton}
             >
@@ -589,6 +640,9 @@ export default function ListenScreen() {
             </View>
 
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Entrainement suivant"
+              hitSlop={8}
               onPress={() => changeTraining(1)}
               style={styles.arrowButton}
             >
@@ -600,6 +654,13 @@ export default function ListenScreen() {
             {exercises.map((exercise, currentExerciseIndex) => (
               <Pressable
                 key={exercise.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Question ${currentExerciseIndex + 1} sur ${exercises.length}`}
+                accessibilityState={{
+                  selected: currentExerciseIndex === exerciseIndex,
+                }}
+                aria-selected={currentExerciseIndex === exerciseIndex}
+                hitSlop={12}
                 onPress={() => {
                   setExerciseIndex(currentExerciseIndex);
                   resetAnswer();
@@ -631,7 +692,13 @@ export default function ListenScreen() {
 
             <Text style={styles.instruction}>{item.instruction}</Text>
 
-            <Pressable onPress={playAudio} style={styles.listenButton}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Ecouter l'audio de la question"
+              hitSlop={6}
+              onPress={playAudio}
+              style={styles.listenButton}
+            >
               <Ionicons name="play" size={18} color={COLORS.text} />
               <Text style={styles.listenText}>Écouter</Text>
             </Pressable>
@@ -642,24 +709,26 @@ export default function ListenScreen() {
 
             {checked && (
               <View
+                accessibilityLiveRegion="polite"
+                accessible
+                accessibilityRole="alert"
+                accessibilityLabel={`${isCorrect ? "Correct" : "A revoir"}. Reponse attendue : ${getExpectedAnswer()}. ${item.explanation ?? ""}`}
                 style={[styles.feedback, isCorrect ? styles.good : styles.bad]}
               >
                 <Text style={styles.feedbackTitle}>
                   {isCorrect ? "Correct" : "À revoir"}
                 </Text>
+                <Text style={styles.expectedLabel}>Réponse attendue</Text>
+                <Text style={styles.expectedText}>{getExpectedAnswer()}</Text>
                 <Text style={styles.feedbackText}>{item.explanation}</Text>
-              </View>
-            )}
-
-            {!!dailyMessage && (
-              <View style={styles.streakToast}>
-                <Ionicons name="flame" size={16} color={COLORS.green} />
-                <Text style={styles.streakToastText}>{dailyMessage}</Text>
               </View>
             )}
 
             <View style={styles.actionRow}>
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Reessayer cette question"
+                hitSlop={6}
                 onPress={resetAnswer}
                 style={[styles.actionButton, styles.secondaryButton]}
               >
@@ -668,6 +737,11 @@ export default function ListenScreen() {
 
               {!checked ? (
                 <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Valider la reponse"
+                  accessibilityState={{ disabled: !canCheck }}
+                  aria-disabled={!canCheck}
+                  hitSlop={6}
                   disabled={!canCheck}
                   onPress={handleValidate}
                   style={[
@@ -678,11 +752,30 @@ export default function ListenScreen() {
                   <Text style={styles.actionText}>Valider</Text>
                 </Pressable>
               ) : (
-                <Pressable onPress={resetAnswer} style={styles.actionButton}>
-                  <Text style={styles.actionText}>Corriger</Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    isCorrect
+                      ? "Passer a la question suivante"
+                      : "Corriger la reponse"
+                  }
+                  hitSlop={6}
+                  onPress={isCorrect ? goNext : resetAnswer}
+                  style={styles.actionButton}
+                >
+                  <Text style={styles.actionText}>
+                    {isCorrect ? "Suivant" : "Corriger"}
+                  </Text>
                 </Pressable>
               )}
             </View>
+
+            {!!dailyMessage && (
+              <View style={styles.streakToast}>
+                <Ionicons name="flame" size={16} color={COLORS.green} />
+                <Text style={styles.streakToastText}>{dailyMessage}</Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.footerNote}>
@@ -713,8 +806,27 @@ function ChoiceButton({
   wrong: boolean;
   onPress: () => void;
 }) {
+  const stateLabel = correct
+    ? "Bonne reponse"
+    : wrong
+      ? "Reponse choisie incorrecte"
+      : active
+        ? "Selectionnee"
+        : "Non selectionnee";
+
   return (
     <Pressable
+      accessibilityRole="radio"
+      accessibilityLabel={`${label}. ${stateLabel}`}
+      accessibilityState={{
+        checked: active,
+        selected: active,
+        disabled: locked,
+      }}
+      aria-checked={active}
+      aria-selected={active}
+      aria-disabled={locked}
+      hitSlop={6}
       disabled={locked}
       onPress={onPress}
       style={[
@@ -1064,9 +1176,9 @@ const styles = StyleSheet.create({
     color: COLORS.faint,
   },
   feedback: {
-    marginTop: 18,
+    marginTop: 14,
     borderRadius: 22,
-    padding: 15,
+    padding: 12,
     borderWidth: 1,
   },
   good: {
@@ -1082,6 +1194,20 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "900",
     marginBottom: 4,
+  },
+  expectedLabel: {
+    color: COLORS.text,
+    fontSize: 13,
+    fontWeight: "900",
+    marginTop: 6,
+    marginBottom: 3,
+  },
+  expectedText: {
+    color: COLORS.green,
+    fontSize: 15,
+    fontWeight: "900",
+    lineHeight: 20,
+    marginBottom: 6,
   },
   feedbackText: {
     color: COLORS.muted,
@@ -1110,7 +1236,7 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: "row",
     gap: 12,
-    marginTop: 18,
+    marginTop: 12,
   },
   actionButton: {
     flex: 1,
