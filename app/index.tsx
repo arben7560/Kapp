@@ -8,6 +8,9 @@ const BG_DEEP = "#050508";
 const TXT = "rgba(255,255,255,0.96)";
 const MUTED = "rgba(255,255,255,0.58)";
 const ONBOARDING_KEY = "kapp_onboarding_completed";
+const fonts = {
+  bold: "Outfit_700Bold",
+};
 
 export default function IndexGate() {
   useEffect(() => {
@@ -58,7 +61,7 @@ const styles = StyleSheet.create({
   title: {
     color: TXT,
     fontSize: 22,
-    fontWeight: "700",
+    fontFamily: fonts.bold,
     letterSpacing: 0.4,
   },
   subtitle: {

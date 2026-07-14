@@ -11,6 +11,8 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  type StyleProp,
+  type ViewStyle,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,9 +20,10 @@ import { useStore } from "../../../_store";
 import { ModuleCard } from "../../../components/ModuleCard";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 import { AppFontFamily, SeoulMidnightGlass } from "../../../constants/theme";
+import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
 
-const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.png");
+const { width } = Dimensions.get("window");
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — SEOUL MIDNIGHT GLASS
@@ -99,6 +102,16 @@ const HANGUL_MODULES: HangulModule[] = [
 // ──────────────────────────────────────────────
 export default function HangulHub() {
   const { progress } = useStore();
+  const responsive = useResponsiveLayout({ maxWidth: 920 });
+  const gridColumns = responsive.getColumns({
+    minColumnWidth: 330,
+    maxColumns: 2,
+    gap: responsive.gridGap,
+  });
+  const gridItemWidth = responsive.getGridItemWidth(
+    gridColumns,
+    responsive.gridGap,
+  );
   const displayLevel = Math.max(1, progress?.hangulLevel ?? 1);
 
   return (
@@ -115,8 +128,12 @@ export default function HangulHub() {
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingHorizontal: responsive.horizontalPadding },
+          ]}
         >
+          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
           <UnifiedNavHeader />
 
           <UnifiedHeroHeader
@@ -129,9 +146,19 @@ export default function HangulHub() {
 
           <UnifiedSectionHeader title="TON PARCOURS DE DÉCRYPTAGE" />
 
-          <View style={styles.grid}>
+          <View
+            style={[
+              styles.grid,
+              gridColumns > 1 && styles.gridWide,
+              { gap: responsive.gridGap },
+            ]}
+          >
             {HANGUL_MODULES.map((module, i) => (
-              <AnimatedFragment key={module.href} index={i}>
+              <AnimatedFragment
+                key={module.href}
+                index={i}
+                style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
+              >
                 <ModuleCard
                   title={module.title}
                   subtitle={module.sub}
@@ -142,9 +169,11 @@ export default function HangulHub() {
                   metaLabel="PARCOURS HANGUL"
                   accessibilityContext="ce module Hangul"
                   iconScript="korean"
+                  visualVariant="legacyGlass"
                 />
               </AnimatedFragment>
             ))}
+          </View>
           </View>
         </ScrollView>
       </ImageBackground>
@@ -334,9 +363,11 @@ function UnifiedSectionHeader({ title }: { title: string }) {
 function AnimatedFragment({
   children,
   index,
+  style,
 }: {
   children: React.ReactNode;
   index: number;
+  style?: StyleProp<ViewStyle>;
 }) {
   const fadeAnim = useMemo(() => new Animated.Value(0), []);
   const slideAnim = useMemo(() => new Animated.Value(18), []);
@@ -368,10 +399,13 @@ function AnimatedFragment({
 
   return (
     <Animated.View
-      style={{
-        opacity: fadeAnim,
-        transform: [{ translateY: slideAnim }],
-      }}
+      style={[
+        style,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+        },
+      ]}
     >
       {children}
     </Animated.View>
@@ -415,9 +449,12 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingHorizontal: 24,
     paddingTop: 10,
     paddingBottom: 120,
+  },
+  contentFrame: {
+    width: "100%",
+    alignSelf: "center",
   },
 
   // NAV
@@ -645,5 +682,10 @@ const styles = StyleSheet.create({
   // GRID
   grid: {
     gap: 12,
+  },
+  gridWide: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "stretch",
   },
 });

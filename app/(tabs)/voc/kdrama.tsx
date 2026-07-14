@@ -4,7 +4,6 @@ import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Dimensions,
   Easing,
   ImageBackground,
   ImageSourcePropType,
@@ -18,8 +17,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useVocAudio } from "../../../hooks/useVocAudio";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
-
-const { width } = Dimensions.get("window");
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM

@@ -1,7 +1,6 @@
-import { Dimensions, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 import CountingImmersionScreen from "../../../components/comptage/CountingImmersionScreen";
 
-const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../../assets/images/comptage.png");
 
 // ----------------------------------------------

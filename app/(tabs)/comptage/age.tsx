@@ -5,7 +5,6 @@ import CountingImmersionScreen from "../../../components/comptage/CountingImmers
 import React, { useEffect, useRef, useState } from "react";
 import {
     Animated,
-    Dimensions,
     Easing,
     ImageBackground,
     Pressable,
@@ -15,8 +14,6 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const { width } = Dimensions.get("window");
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — SUNSET HERITAGE EDITION

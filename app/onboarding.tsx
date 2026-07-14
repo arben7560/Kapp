@@ -15,6 +15,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppFontFamily } from "../constants/theme";
 
 let Haptics: any = null;
 try {
@@ -35,6 +36,8 @@ const CYAN = "#22D3EE";
 const GOLD = "#F59E0B";
 
 const STEP_DURATION = 760;
+const fonts = AppFontFamily.outfit;
+const koreanFonts = AppFontFamily.korean;
 
 type Step = "arrival" | "scene" | "mode" | "transition";
 type SceneKey = "cafe" | "metro" | "restaurant";
@@ -991,6 +994,9 @@ const styles = StyleSheet.create({
   },
   page: {
     flex: 1,
+    width: "100%",
+    maxWidth: 560,
+    alignSelf: "center",
   },
   topRow: {
     paddingTop: 16,
@@ -1017,7 +1023,7 @@ const styles = StyleSheet.create({
     color: TXT_SOFT,
     fontSize: 10.5,
     letterSpacing: 1.8,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
   },
   arrivalCenter: {
     flex: 1,
@@ -1030,7 +1036,7 @@ const styles = StyleSheet.create({
   koreanLine: {
     color: "rgba(255,255,255,0.85)",
     fontSize: 22,
-    fontWeight: "300",
+    fontFamily: koreanFonts.regular,
     letterSpacing: 1.5,
     textAlign: "center",
     marginBottom: 12,
@@ -1039,7 +1045,7 @@ const styles = StyleSheet.create({
     color: TXT,
     fontSize: 36,
     lineHeight: 44,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     letterSpacing: -1,
     textAlign: "center",
   },
@@ -1047,6 +1053,7 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.68)",
     fontSize: 15,
     lineHeight: 24,
+    fontFamily: fonts.medium,
     textAlign: "center",
     marginTop: 14,
     maxWidth: 290,
@@ -1069,7 +1076,7 @@ const styles = StyleSheet.create({
   heroEyebrow: {
     color: TXT_SOFT,
     fontSize: 10.5,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     letterSpacing: 2.2,
     marginBottom: 10,
   },
@@ -1077,13 +1084,14 @@ const styles = StyleSheet.create({
     color: TXT,
     fontSize: 21,
     lineHeight: 28,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     letterSpacing: -0.4,
   },
   heroText: {
     color: "rgba(255,255,255,0.60)",
     fontSize: 14,
     lineHeight: 22,
+    fontFamily: fonts.medium,
     marginTop: 12,
   },
   bottomCtaArea: {
@@ -1110,7 +1118,7 @@ const styles = StyleSheet.create({
   primaryText: {
     color: "#FFFFFF",
     fontSize: 15,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     letterSpacing: 0.6,
   },
   sectionHead: {
@@ -1124,7 +1132,7 @@ const styles = StyleSheet.create({
   sectionEyebrow: {
     color: TXT_SOFT,
     fontSize: 10.5,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     letterSpacing: 2,
     marginBottom: 6,
   },
@@ -1132,7 +1140,7 @@ const styles = StyleSheet.create({
     color: TXT,
     fontSize: 28,
     lineHeight: 34,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     letterSpacing: -0.6,
   },
   sectionTitleScene: {
@@ -1147,6 +1155,7 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.65)",
     fontSize: 14,
     lineHeight: 22,
+    fontFamily: fonts.medium,
     marginTop: 6,
   },
   pathGrid: {
@@ -1199,12 +1208,12 @@ const styles = StyleSheet.create({
     color: TXT,
     fontSize: 14,
     lineHeight: 18,
-    fontWeight: "700",
+    fontFamily: fonts.bold,
     textAlign: "center",
   },
   pathStep: {
     fontSize: 9.5,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
     letterSpacing: 1.5,
     marginLeft: 10,
   },
@@ -1212,7 +1221,7 @@ const styles = StyleSheet.create({
     color: TXT,
     fontSize: 17,
     lineHeight: 22,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
   pathTitleCompact: {
@@ -1223,6 +1232,7 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.52)",
     fontSize: 12,
     lineHeight: 17,
+    fontFamily: fonts.medium,
     marginTop: 6,
   },
   pathTextCompact: {
@@ -1241,12 +1251,12 @@ const styles = StyleSheet.create({
   pathAction: {
     color: TXT_SOFT,
     fontSize: 12.5,
-    fontWeight: "700",
+    fontFamily: fonts.bold,
     letterSpacing: 0.4,
   },
   pathArrow: {
     fontSize: 15,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     lineHeight: 18,
   },
   subSectionHead: {
@@ -1258,14 +1268,14 @@ const styles = StyleSheet.create({
   subSectionEyebrow: {
     color: TXT_SOFT,
     fontSize: 10,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     letterSpacing: 2,
     marginBottom: 4,
   },
   subSectionTitle: {
     color: TXT,
     fontSize: 18,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
   scroll: {
@@ -1336,7 +1346,7 @@ const styles = StyleSheet.create({
   sceneEyebrow: {
     color: "rgba(255,255,255,0.45)",
     fontSize: 9.5,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
     letterSpacing: 1.6,
   },
   selectedPill: {
@@ -1349,18 +1359,19 @@ const styles = StyleSheet.create({
   selectedPillText: {
     color: TXT,
     fontSize: 8,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
     letterSpacing: 1,
   },
   sceneTitleText: {
     color: TXT,
     fontSize: 19,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
   sceneSubtitle: {
     color: "rgba(255,255,255,0.58)",
     fontSize: 13,
+    fontFamily: fonts.medium,
     marginTop: 2,
   },
   radioWrap: {
@@ -1386,7 +1397,7 @@ const styles = StyleSheet.create({
   discreetActionText: {
     color: "rgba(255,255,255,0.45)",
     fontSize: 13,
-    fontWeight: "600",
+    fontFamily: fonts.medium,
     letterSpacing: 0.2,
   },
   modeList: {
@@ -1423,12 +1434,13 @@ const styles = StyleSheet.create({
   modeTitle: {
     color: TXT,
     fontSize: 17,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     letterSpacing: -0.2,
   },
   modeSubtitle: {
     color: "rgba(255,255,255,0.52)",
     fontSize: 13,
+    fontFamily: fonts.medium,
     marginTop: 2,
   },
   signatureBadge: {
@@ -1442,11 +1454,15 @@ const styles = StyleSheet.create({
   signatureText: {
     color: PINK,
     fontSize: 9,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
     letterSpacing: 1.2,
   },
   modeActiveRing: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     borderRadius: 20,
     borderWidth: 1.5,
     pointerEvents: "none",
@@ -1462,14 +1478,14 @@ const styles = StyleSheet.create({
   previewEyebrow: {
     color: "rgba(255,255,255,0.40)",
     fontSize: 9.5,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
     letterSpacing: 1.8,
     marginBottom: 4,
   },
   previewTitle: {
     color: TXT,
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: fonts.bold,
   },
   bottomBar: {
     flexDirection: "row",
@@ -1494,7 +1510,7 @@ const styles = StyleSheet.create({
   secondaryText: {
     color: "rgba(255,255,255,0.55)",
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: fonts.bold,
     letterSpacing: 0.2,
   },
   primaryInlineWrap: {
@@ -1533,19 +1549,20 @@ const styles = StyleSheet.create({
   transitionEyebrow: {
     color: PINK,
     fontSize: 11,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
     letterSpacing: 3,
     marginBottom: 12,
   },
   transitionTitle: {
     color: TXT,
     fontSize: 32,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     letterSpacing: -0.8,
   },
   transitionText: {
     color: TXT_SOFT,
     fontSize: 16,
+    fontFamily: fonts.medium,
     marginTop: 8,
     textAlign: "center",
   },

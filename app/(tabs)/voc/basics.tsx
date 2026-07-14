@@ -9,7 +9,6 @@ import { router } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Dimensions,
   Easing,
   ImageBackground,
   Pressable,
@@ -21,8 +20,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
-
-const { width } = Dimensions.get("window");
 
 type AudioAsset = number;
 
@@ -899,7 +896,7 @@ export default function FirstStepsImmersion() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
-  bg: { flex: 1 },
+  bg: { flex: 1, overflow: "hidden" },
   overlay: {
     ...ABSOLUTE_FILL,
     backgroundColor: "rgba(2,3,6,0.86)",

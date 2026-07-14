@@ -4,7 +4,6 @@ import { router } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import {
   Animated,
-  Dimensions,
   Easing,
   ImageBackground,
   Pressable,
@@ -16,9 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { usePaywall } from "../../../lib/paywall/PaywallProvider";
 
-const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../../assets/images/comptage.png");
-const HERO_CIRCLE = width * 0.76;
 
 // ----------------------------------------------
 // DESIGN TOKENS

@@ -1,8 +1,10 @@
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import {
+  Outfit_300Light,
   Outfit_400Regular,
   Outfit_500Medium,
+  Outfit_600SemiBold,
   Outfit_700Bold,
   Outfit_900Black,
 } from "@expo-google-fonts/outfit";
@@ -12,13 +14,62 @@ import {
 } from "@expo-google-fonts/noto-sans-kr";
 import * as SplashScreen from "expo-splash-screen";
 import React from "react";
+import { Text, TextInput } from "react-native";
 import { StoreProvider } from "../_store";
+import { AppFontFamily } from "../constants/theme";
 import { useImmersionActiveTime } from "../hooks/useImmersionActiveTime";
 import { DailyStreakProvider } from "../lib/DailyStreakProvider";
 import { PaywallProvider } from "../lib/paywall/PaywallProvider";
 import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard";
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
+
+const DEFAULT_TEXT_STYLE = { fontFamily: AppFontFamily.outfit.regular };
+const DEFAULT_FONT_PATCH_KEY = "__kAppDefaultOutfitFontPatched";
+
+type TextLikeComponent = {
+  defaultProps?: { style?: unknown };
+  render?: (
+    this: unknown,
+    ...args: unknown[]
+  ) => React.ReactElement<{ style?: unknown }>;
+};
+
+function installDefaultOutfitFont() {
+  const globalRef = globalThis as typeof globalThis & {
+    [DEFAULT_FONT_PATCH_KEY]?: boolean;
+  };
+
+  if (globalRef[DEFAULT_FONT_PATCH_KEY]) return;
+
+  globalRef[DEFAULT_FONT_PATCH_KEY] = true;
+
+  [Text, TextInput].forEach((Component) => {
+    const component = Component as TextLikeComponent;
+    const render = component.render;
+
+    if (typeof render !== "function") {
+      component.defaultProps = {
+        ...component.defaultProps,
+        style: [DEFAULT_TEXT_STYLE, component.defaultProps?.style],
+      };
+      return;
+    }
+
+    component.render = function renderWithDefaultOutfitFont(
+      this: unknown,
+      ...args: unknown[]
+    ) {
+      const origin = render.apply(this, args);
+
+      return React.cloneElement(origin, {
+        style: [DEFAULT_TEXT_STYLE, origin.props.style],
+      });
+    };
+  });
+}
+
+installDefaultOutfitFont();
 
 /*const SCREEN_CAPTURE_PROTECTION_KEY = "k-app-global-protection";
 
@@ -65,8 +116,10 @@ function ScreenCaptureProtection() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
+    Outfit_300Light,
     Outfit_400Regular,
     Outfit_500Medium,
+    Outfit_600SemiBold,
     Outfit_700Bold,
     Outfit_900Black,
     NotoSansKR_400Regular,

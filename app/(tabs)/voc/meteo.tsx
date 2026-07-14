@@ -6,7 +6,6 @@ import * as Speech from "expo-speech";
 import React, { useRef, useState } from "react";
 import {
   Animated,
-  Dimensions,
   Easing,
   ImageBackground,
   Pressable,
@@ -18,7 +17,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 
-const { width } = Dimensions.get("window");
 // Note: Remplacez par votre chemin d'image local
 const BACKGROUND_SOURCE = require("../../../assets/images/seoul-hub-bg.jpg");
 

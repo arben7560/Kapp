@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
 
   scenesGrid: { gap: 20 },
   themeCard: {
-    borderRadius: 28,
+    borderRadius: 32,
     overflow: "visible",
     position: "relative",
 
@@ -877,7 +877,7 @@ const styles = StyleSheet.create({
   cinemaVignette: {
     width: "100%",
     aspectRatio: 16 / 9,
-    borderRadius: 28,
+    borderRadius: 32,
     overflow: "hidden",
     backgroundColor: "#050508",
     position: "relative",
@@ -998,7 +998,7 @@ const styles = StyleSheet.create({
 
   sheetHeroFrame: {
     height: 218,
-    borderRadius: 30,
+    borderRadius: 32,
     overflow: "hidden",
     borderWidth: 1,
     backgroundColor: "rgba(255,255,255,0.04)",
@@ -1148,13 +1148,13 @@ const styles = StyleSheet.create({
   },
 
   optionCard: {
-    borderRadius: 26,
+    borderRadius: 30,
     overflow: "hidden",
   },
 
   optionBlur: {
     minHeight: 88,
-    borderRadius: 26,
+    borderRadius: 30,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.12)",
@@ -1180,7 +1180,7 @@ const styles = StyleSheet.create({
   optionIconBox: {
     width: 44,
     height: 44,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",

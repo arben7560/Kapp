@@ -23,6 +23,7 @@ export type ModuleCardProps = {
   lockedSubtitle?: string;
   accessibilityContext: string;
   iconScript?: "latin" | "korean";
+  visualVariant?: "default" | "legacyGlass";
 };
 
 export function ModuleCard({
@@ -37,12 +38,19 @@ export function ModuleCard({
   lockedSubtitle = "Débloquer ce module exclusif",
   accessibilityContext,
   iconScript = "latin",
+  visualVariant = "default",
 }: ModuleCardProps) {
   const { hasPremiumAccess } = usePaywall();
+  const isLegacyGlass = visualVariant === "legacyGlass";
   const isLocked = requiresPremium && !hasPremiumAccess;
   const targetHref = isLocked ? "/premium" : href;
   const activeColor = requiresPremium ? colors.premiumGold : accentColor;
-  const displayedSubtitle = isLocked ? lockedSubtitle : subtitle;
+  const displayedSubtitle =
+    isLegacyGlass && requiresPremium
+      ? lockedSubtitle
+      : isLocked
+        ? lockedSubtitle
+        : subtitle;
   const accessLabel = isLocked
     ? "Module premium verrouillé"
     : requiresPremium
@@ -73,29 +81,47 @@ export function ModuleCard({
         hitSlop={6}
         style={({ pressed }) => [
           styles.cardPressable,
+          isLegacyGlass && styles.legacyCardPressable,
           selected && styles.selectedCard,
           pressed && styles.pressedCard,
         ]}
       >
         <BlurView
-          intensity={40}
+          intensity={isLegacyGlass ? 30 : 40}
           tint="dark"
           style={[
             styles.themeCard,
-            requiresPremium && styles.premiumCardBorder,
+            isLegacyGlass && styles.legacyThemeCard,
+            requiresPremium &&
+              (isLegacyGlass
+                ? styles.legacyPremiumCardBorder
+                : styles.premiumCardBorder),
             selected && styles.selectedThemeCard,
           ]}
         >
-          <LinearGradient
-            colors={[
-              requiresPremium ? colors.premiumSurfaceStrong : `${accentColor}18`,
-              "rgba(2,3,6,0.48)",
-              "rgba(255,255,255,0.035)",
-            ]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={ABSOLUTE_FILL}
-          />
+          {isLegacyGlass ? (
+            <LinearGradient
+              colors={
+                requiresPremium
+                  ? ["rgba(253,224,71,0.12)", "transparent"]
+                  : [`${activeColor}18`, "transparent"]
+              }
+              style={ABSOLUTE_FILL}
+            />
+          ) : (
+            <LinearGradient
+              colors={[
+                requiresPremium
+                  ? colors.premiumSurfaceStrong
+                  : `${accentColor}18`,
+                "rgba(2,3,6,0.48)",
+                "rgba(255,255,255,0.035)",
+              ]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={ABSOLUTE_FILL}
+            />
+          )}
 
           <LinearGradient
             colors={[
@@ -122,6 +148,7 @@ export function ModuleCard({
           <View
             style={[
               styles.cardAccent,
+              isLegacyGlass && styles.legacyCardAccent,
               {
                 backgroundColor: activeColor,
                 shadowColor: activeColor,
@@ -154,6 +181,7 @@ export function ModuleCard({
               <Text
                 style={[
                   styles.cardIcon,
+                  isLegacyGlass && styles.legacyCardIcon,
                   iconScript === "korean" && styles.cardIconKorean,
                   {
                     color: activeColor,
@@ -169,31 +197,68 @@ export function ModuleCard({
           <View style={styles.cardDividerLine} />
 
           {requiresPremium && (
-            <View style={styles.premiumTag}>
-              <Text style={styles.premiumTagText}>PREMIUM</Text>
+            <View
+              style={[
+                styles.premiumTag,
+                isLegacyGlass && styles.legacyPremiumTag,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.premiumTagText,
+                  isLegacyGlass && styles.legacyPremiumTagText,
+                ]}
+              >
+                {isLegacyGlass ? "PREMIUM 🔒" : "PREMIUM"}
+              </Text>
             </View>
           )}
 
           <View
             style={[
               styles.cardTextContent,
-              requiresPremium && styles.cardTextContentWithTag,
+              requiresPremium &&
+                !isLegacyGlass &&
+                styles.cardTextContentWithTag,
             ]}
           >
             <Text
               style={[
                 styles.cardMeta,
+                isLegacyGlass && styles.legacyCardMeta,
                 requiresPremium && styles.cardMetaPremium,
               ]}
             >
               {requiresPremium ? "MODULE PREMIUM" : metaLabel}
             </Text>
-            <Text style={styles.cardTitle}>{title}</Text>
-            <Text style={styles.cardSub}>{displayedSubtitle}</Text>
+            <Text
+              style={[styles.cardTitle, isLegacyGlass && styles.legacyCardTitle]}
+            >
+              {title}
+            </Text>
+            <Text style={[styles.cardSub, isLegacyGlass && styles.legacyCardSub]}>
+              {displayedSubtitle}
+            </Text>
           </View>
 
-          <Text style={[styles.cardAction, isLocked && styles.cardActionPremium]}>
-            {isLocked ? "Premium" : "Ouvrir"}
+          <Text
+            style={[
+              styles.cardAction,
+              isLegacyGlass && styles.legacyCardAction,
+              (isLocked || (isLegacyGlass && requiresPremium)) &&
+                styles.cardActionPremium,
+              isLegacyGlass &&
+                requiresPremium &&
+                styles.legacyCardActionPremium,
+            ]}
+          >
+              {isLegacyGlass
+                ? requiresPremium
+                  ? "✧"
+                  : "›"
+              : isLocked
+                ? "Premium"
+                : "Ouvrir"}
           </Text>
         </BlurView>
       </Pressable>
@@ -213,6 +278,14 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 8 },
   },
+  legacyCardPressable: {
+    borderRadius: 20,
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 0 },
+  },
   selectedCard: {
     borderColor: colors.selectedBorder,
   },
@@ -221,6 +294,8 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.995 }],
   },
   themeCard: {
+    borderRadius: SeoulMidnightGlass.radii.card,
+    overflow: "hidden",
     minHeight: 82,
     flexDirection: "row",
     alignItems: "center",
@@ -229,6 +304,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.11)",
     position: "relative",
+  },
+  legacyThemeCard: {
+    borderRadius: 20,
+    minHeight: 90,
+    paddingVertical: 18,
+    paddingHorizontal: 18,
+    borderColor: "rgba(255,255,255,0.08)",
   },
   selectedThemeCard: {
     borderColor: colors.selectedBorder,
@@ -243,6 +325,9 @@ const styles = StyleSheet.create({
   },
   premiumCardBorder: {
     borderColor: colors.lockedBorder,
+  },
+  legacyPremiumCardBorder: {
+    borderColor: "rgba(253,224,71,0.25)",
   },
   cardRainA: {
     position: "absolute",
@@ -288,6 +373,13 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 },
   },
+  legacyCardAccent: {
+    width: 3,
+    borderTopRightRadius: 4,
+    borderBottomRightRadius: 4,
+    shadowOpacity: 0,
+    shadowRadius: 0,
+  },
   cardIconZone: {
     width: 48,
     height: 48,
@@ -318,10 +410,13 @@ const styles = StyleSheet.create({
   },
   cardIcon: {
     fontSize: 21,
-    fontFamily: fonts.outfit.bold,
+    fontFamily: fonts.outfit.regular,
     letterSpacing: 0,
     textShadowRadius: 10,
     textShadowOffset: { width: 0, height: 0 },
+  },
+  legacyCardIcon: {
+    letterSpacing: 0,
   },
   cardIconKorean: {
     fontFamily: fonts.korean.bold,
@@ -343,14 +438,27 @@ const styles = StyleSheet.create({
     paddingVertical: SeoulMidnightGlass.spacing.badgePaddingY,
     justifyContent: "center",
   },
+  legacyPremiumTag: {
+    top: 10,
+    right: 18,
+    minHeight: 0,
+    borderRadius: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
   premiumTagText: {
     color: colors.premiumInk,
-    fontFamily: fonts.outfit.bold,
+    fontFamily: fonts.outfit.semibold,
     fontSize: SeoulMidnightGlass.badge.fontSize,
     letterSpacing: SeoulMidnightGlass.badge.letterSpacing,
   },
+  legacyPremiumTagText: {
+    fontSize: 8,
+    letterSpacing: 0.5,
+  },
   cardTextContent: {
     flex: 1,
+    minWidth: 0,
     paddingRight: 10,
   },
   cardTextContentWithTag: {
@@ -358,10 +466,15 @@ const styles = StyleSheet.create({
   },
   cardMeta: {
     fontSize: 10,
-    fontFamily: fonts.outfit.bold,
+    fontFamily: fonts.outfit.medium,
     color: "rgba(255,255,255,0.44)",
     letterSpacing: 1.5,
     marginBottom: 4,
+  },
+  legacyCardMeta: {
+    fontSize: 7.8,
+    fontFamily: fonts.outfit.medium,
+    letterSpacing: 2.1,
   },
   cardMetaPremium: {
     color: "rgba(253,224,71,0.78)",
@@ -369,24 +482,45 @@ const styles = StyleSheet.create({
   cardTitle: {
     color: colors.text,
     fontSize: 18,
-    fontFamily: fonts.outfit.bold,
+    lineHeight: 22,
+    fontFamily: fonts.outfit.regular,
+  },
+  legacyCardTitle: {
+    fontFamily: fonts.outfit.regular,
   },
   cardSub: {
     fontSize: 13,
-    fontFamily: fonts.outfit.medium,
+    lineHeight: 18,
+    fontFamily: fonts.outfit.light,
     color: colors.muted,
     marginTop: 2,
   },
+  legacyCardSub: {
+    fontFamily: fonts.outfit.light,
+  },
   cardAction: {
     alignSelf: "flex-end",
+    flexShrink: 0,
+    marginLeft: 6,
     color: colors.soft,
     fontSize: SeoulMidnightGlass.cta.fontSize,
-    fontFamily: fonts.outfit.bold,
+    fontFamily: fonts.outfit.regular,
     letterSpacing: SeoulMidnightGlass.cta.letterSpacing,
     opacity: 0.82,
+  },
+  legacyCardAction: {
+    color: colors.soft,
+    fontSize: 22,
+    fontFamily: fonts.outfit.regular,
+    letterSpacing: 0,
+    opacity: 0.3,
+    marginLeft: 8,
   },
   cardActionPremium: {
     color: colors.premiumGold,
     opacity: 0.95,
+  },
+  legacyCardActionPremium: {
+    opacity: 0.8,
   },
 });

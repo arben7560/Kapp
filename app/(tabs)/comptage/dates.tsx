@@ -1,10 +1,7 @@
 import {
-  Dimensions,
   StyleSheet
 } from "react-native";
 import CountingImmersionScreen from "../../../components/comptage/CountingImmersionScreen";
-
-const { width } = Dimensions.get("window");
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — TEMPORAL SKY EDITION

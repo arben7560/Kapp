@@ -43,16 +43,16 @@ export function MissionAccessBadge({
 
 const styles = StyleSheet.create({
   badge: {
-    minHeight: SeoulMidnightGlass.badge.minHeight,
+    minHeight: 22,
     borderRadius: SeoulMidnightGlass.radii.pill,
     borderWidth: 1,
-    paddingHorizontal: SeoulMidnightGlass.spacing.badgePaddingX,
-    paddingVertical: SeoulMidnightGlass.spacing.badgePaddingY,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     justifyContent: "center",
   },
   badgeText: {
-    fontSize: SeoulMidnightGlass.badge.fontSize,
-    fontFamily: AppFontFamily.outfit.bold,
-    letterSpacing: SeoulMidnightGlass.badge.letterSpacing,
+    fontSize: 10.5,
+    fontFamily: AppFontFamily.outfit.medium,
+    letterSpacing: 1,
   },
 });

@@ -54,8 +54,10 @@ export const Fonts = Platform.select({
 
 export const AppFontFamily = {
   outfit: {
+    light: 'Outfit_300Light',
     regular: 'Outfit_400Regular',
     medium: 'Outfit_500Medium',
+    semibold: 'Outfit_600SemiBold',
     bold: 'Outfit_700Bold',
     black: 'Outfit_900Black',
   },
@@ -95,8 +97,8 @@ export const SeoulMidnightGlass = {
     lockedBorder: 'rgba(253,224,71,0.34)',
   },
   radii: {
-    card: 22,
-    missionCard: 24,
+    card: 32,
+    missionCard: 30,
     pill: 999,
     icon: 22,
   },

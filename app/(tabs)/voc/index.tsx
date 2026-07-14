@@ -10,15 +10,18 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  type StyleProp,
+  type ViewStyle,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ModuleCard } from "../../../components/ModuleCard";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 import { AppFontFamily, SeoulMidnightGlass } from "../../../constants/theme";
+import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
 
-const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../../assets/images/vocabulaire.png");
+const { width } = Dimensions.get("window");
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — SEOUL MIDNIGHT GLASS
@@ -34,6 +37,8 @@ const AMBER = "#F6C27A";
 const HERO_CIRCLE = width * 0.76;
 
 const fonts = {
+  light: AppFontFamily.outfit.light,
+  regular: AppFontFamily.outfit.regular,
   bold: AppFontFamily.outfit.bold,
   black: AppFontFamily.outfit.black,
   medium: AppFontFamily.outfit.medium,
@@ -131,6 +136,17 @@ const THEMES = [
   },
 ];
 export default function VocabHub() {
+  const responsive = useResponsiveLayout({ maxWidth: 920 });
+  const gridColumns = responsive.getColumns({
+    minColumnWidth: 330,
+    maxColumns: 2,
+    gap: responsive.gridGap,
+  });
+  const gridItemWidth = responsive.getGridItemWidth(
+    gridColumns,
+    responsive.gridGap,
+  );
+
   return (
     <SafeAreaView style={styles.safe}>
       <ImageBackground source={BACKGROUND_SOURCE} style={styles.bgImage}>
@@ -141,8 +157,12 @@ export default function VocabHub() {
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingHorizontal: responsive.horizontalPadding },
+          ]}
         >
+          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
           <UnifiedNavHeader />
 
           <UnifiedHeroHeader
@@ -154,9 +174,19 @@ export default function VocabHub() {
 
           <UnifiedSectionHeader title="COLLECTIONS THÉMATIQUES" />
 
-          <View style={styles.grid}>
+          <View
+            style={[
+              styles.grid,
+              gridColumns > 1 && styles.gridWide,
+              { gap: responsive.gridGap },
+            ]}
+          >
             {THEMES.map((theme, i) => (
-              <AnimatedFragment key={theme.id} index={i}>
+              <AnimatedFragment
+                key={theme.id}
+                index={i}
+                style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
+              >
                 <ModuleCard
                   title={theme.title}
                   subtitle={theme.sub}
@@ -166,9 +196,11 @@ export default function VocabHub() {
                   requiresPremium={theme.isLocked}
                   metaLabel="COLLECTION VOCAB"
                   accessibilityContext="cette collection de vocabulaire"
+                  visualVariant="legacyGlass"
                 />
               </AnimatedFragment>
             ))}
+          </View>
           </View>
         </ScrollView>
       </ImageBackground>
@@ -268,9 +300,11 @@ function UnifiedSectionHeader({ title }: { title: string }) {
 function AnimatedFragment({
   children,
   index,
+  style,
 }: {
   children: React.ReactNode;
   index: number;
+  style?: StyleProp<ViewStyle>;
 }) {
   const fadeAnim = useMemo(() => new Animated.Value(0), []);
   const slideAnim = useMemo(() => new Animated.Value(18), []);
@@ -302,10 +336,13 @@ function AnimatedFragment({
 
   return (
     <Animated.View
-      style={{
-        opacity: fadeAnim,
-        transform: [{ translateY: slideAnim }],
-      }}
+      style={[
+        style,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+        },
+      ]}
     >
       {children}
     </Animated.View>
@@ -346,9 +383,12 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingHorizontal: 24,
     paddingTop: 10,
     paddingBottom: 120,
+  },
+  contentFrame: {
+    width: "100%",
+    alignSelf: "center",
   },
 
   navHeader: {
@@ -553,7 +593,7 @@ const styles = StyleSheet.create({
 
   sectionTitle: {
     fontSize: 11,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.medium,
     color: SOFT,
     letterSpacing: 3,
   },
@@ -566,5 +606,10 @@ const styles = StyleSheet.create({
 
   grid: {
     gap: 12,
+  },
+  gridWide: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "stretch",
   },
 });

@@ -16,6 +16,8 @@ import {
   PAYWALL_COPY,
   PREMIUM_SUBSCRIPTION_OFFERS,
 } from "../lib/paywall/config";
+import { AppFontFamily } from "../constants/theme";
+import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { usePaywall } from "../lib/paywall/PaywallProvider";
 
 const COLORS = {
@@ -29,6 +31,7 @@ const COLORS = {
   gold: "#fbbf24",
   cyan: "#22d3ee",
 };
+const fonts = AppFontFamily.outfit;
 
 const FEATURES = [
   "Tous les modules actuels debloques",
@@ -47,6 +50,7 @@ const isAnnualOffer = (offer: (typeof PREMIUM_SUBSCRIPTION_OFFERS)[number]) => {
 };
 
 export default function PremiumScreen() {
+  const responsive = useResponsiveLayout({ maxWidth: 620 });
   const {
     displayPrices,
     error,
@@ -82,7 +86,16 @@ export default function PremiumScreen() {
       style={styles.screen}
     >
       <SafeAreaView style={styles.safe}>
-        <View style={styles.header}>
+        <View
+          style={[
+            styles.header,
+            styles.contentFrame,
+            {
+              maxWidth: responsive.maxWidth,
+              paddingHorizontal: responsive.horizontalPadding,
+            },
+          ]}
+        >
           <Pressable onPress={() => router.back()} style={styles.iconButton}>
             <Ionicons name="chevron-back" size={24} color={COLORS.text} />
           </Pressable>
@@ -90,7 +103,13 @@ export default function PremiumScreen() {
           <View style={styles.iconButtonGhost} />
         </View>
 
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            { paddingHorizontal: responsive.horizontalPadding },
+          ]}
+        >
+          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
           <View style={styles.heroCard}>
             <View style={styles.badge}>
               <Ionicons name="sparkles" size={15} color={COLORS.gold} />
@@ -248,6 +267,7 @@ export default function PremiumScreen() {
               "Le paiement est traite par l'App Store ou Google Play. Le renouvellement et l'expiration de l'abonnement sont geres par ton compte Store."
             }
           </Text>
+          </View>
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
@@ -261,8 +281,11 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
   },
+  contentFrame: {
+    width: "100%",
+    alignSelf: "center",
+  },
   header: {
-    paddingHorizontal: 18,
     paddingTop: 8,
     paddingBottom: 12,
     flexDirection: "row",
@@ -286,10 +309,10 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: COLORS.text,
     fontSize: 18,
-    fontWeight: "900",
+    fontFamily: fonts.black,
   },
   content: {
-    padding: 20,
+    paddingTop: 20,
     paddingBottom: 42,
   },
   heroCard: {
@@ -314,19 +337,21 @@ const styles = StyleSheet.create({
   badgeText: {
     color: COLORS.text,
     fontSize: 11,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
     letterSpacing: 1.8,
   },
   title: {
     color: COLORS.text,
     fontSize: 34,
-    fontWeight: "900",
+    lineHeight: 40,
+    fontFamily: fonts.black,
     marginTop: 18,
   },
   subtitle: {
     color: COLORS.muted,
     fontSize: 16,
     lineHeight: 23,
+    fontFamily: fonts.medium,
     marginTop: 10,
   },
   offers: {
@@ -363,7 +388,7 @@ const styles = StyleSheet.create({
   offerTitle: {
     color: COLORS.muted,
     fontSize: 13,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
     textTransform: "uppercase",
   },
   savingBadge: {
@@ -378,19 +403,20 @@ const styles = StyleSheet.create({
   savingBadgeText: {
     color: COLORS.gold,
     fontSize: 11,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
     textTransform: "uppercase",
   },
   price: {
     color: COLORS.text,
     fontSize: 28,
-    fontWeight: "900",
+    fontFamily: fonts.black,
     marginTop: 5,
   },
   priceCaption: {
     color: COLORS.faint,
     fontSize: 12,
     lineHeight: 18,
+    fontFamily: fonts.medium,
     marginTop: 5,
   },
   devBox: {
@@ -404,7 +430,7 @@ const styles = StyleSheet.create({
   devText: {
     color: COLORS.text,
     fontSize: 13,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
   },
   activeBox: {
     marginTop: 14,
@@ -415,7 +441,7 @@ const styles = StyleSheet.create({
   activeText: {
     flex: 1,
     color: COLORS.text,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
   },
   featuresCard: {
     marginTop: 16,
@@ -436,7 +462,7 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontSize: 15,
     lineHeight: 21,
-    fontWeight: "700",
+    fontFamily: fonts.bold,
   },
   errorCard: {
     marginTop: 16,
@@ -449,11 +475,12 @@ const styles = StyleSheet.create({
   errorTitle: {
     color: COLORS.text,
     fontSize: 14,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
   },
   errorText: {
     color: COLORS.muted,
     lineHeight: 19,
+    fontFamily: fonts.medium,
     marginTop: 4,
   },
   primaryButton: {
@@ -473,14 +500,14 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: COLORS.text,
     fontSize: 15,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
     letterSpacing: 1.2,
     textTransform: "uppercase",
   },
   selectedPlanText: {
     color: COLORS.muted,
     fontSize: 13,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     marginTop: 10,
     textAlign: "center",
   },
@@ -497,7 +524,7 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: COLORS.text,
     fontSize: 14,
-    fontWeight: "900",
+    fontFamily: fonts.bold,
   },
   textButton: {
     alignItems: "center",
@@ -505,7 +532,7 @@ const styles = StyleSheet.create({
   },
   textButtonText: {
     color: COLORS.muted,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
   },
   buttonPressed: {
     opacity: 0.86,
@@ -522,6 +549,7 @@ const styles = StyleSheet.create({
     color: COLORS.faint,
     fontSize: 12,
     lineHeight: 18,
+    fontFamily: fonts.medium,
     textAlign: "center",
     marginTop: 8,
   },

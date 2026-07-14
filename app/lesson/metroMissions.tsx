@@ -19,6 +19,7 @@ import {
   metroMissions,
   type MetroMission,
 } from "../../data/lesson/metro/metroMissions";
+import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
@@ -45,6 +46,16 @@ export default function MetroMissionsScreen() {
   const { hasPremiumAccess } = usePaywall();
   const [selectedMission, setSelectedMission] =
     React.useState<MetroMission | null>(null);
+  const responsive = useResponsiveLayout({ maxWidth: 900 });
+  const missionColumns = responsive.getColumns({
+    minColumnWidth: 320,
+    maxColumns: 2,
+    gap: responsive.gridGap,
+  });
+  const missionItemWidth = responsive.getGridItemWidth(
+    missionColumns,
+    responsive.gridGap,
+  );
   const completeMissions = metroMissions.filter(
     (mission) => mission.missionKind === "complete",
   );
@@ -75,7 +86,16 @@ export default function MetroMissionsScreen() {
     <ImageBackground source={metroBackground} style={styles.background}>
       <View pointerEvents="none" style={styles.overlay} />
       <SafeAreaView style={styles.safe}>
-        <View style={styles.header}>
+        <View
+          style={[
+            styles.header,
+            styles.contentFrame,
+            {
+              maxWidth: responsive.maxWidth,
+              paddingHorizontal: responsive.horizontalPadding,
+            },
+          ]}
+        >
           <Pressable onPress={() => router.back()} style={styles.backButton}>
             <Text style={styles.backText}>x</Text>
           </Pressable>
@@ -85,7 +105,13 @@ export default function MetroMissionsScreen() {
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            { paddingHorizontal: responsive.horizontalPadding },
+          ]}
+        >
+          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
           <Text style={styles.intro}>
             {
               "Lance un vrai trajet dans Séoul, ou entraîne une compétence précise avec une mini-mission."
@@ -98,6 +124,9 @@ export default function MetroMissionsScreen() {
             missions={completeMissions}
             hasPremiumAccess={hasPremiumAccess}
             onOpenMission={openMission}
+            missionColumns={missionColumns}
+            missionItemWidth={missionItemWidth}
+            missionGap={responsive.gridGap}
             featured
           />
 
@@ -107,8 +136,12 @@ export default function MetroMissionsScreen() {
             missions={miniMissions}
             hasPremiumAccess={hasPremiumAccess}
             onOpenMission={openMission}
+            missionColumns={missionColumns}
+            missionItemWidth={missionItemWidth}
+            missionGap={responsive.gridGap}
             compact
           />
+          </View>
         </ScrollView>
 
         <MissionLaunchModal
@@ -131,6 +164,9 @@ type MissionSectionProps = {
   onOpenMission: (mission: MetroMission) => void;
   featured?: boolean;
   compact?: boolean;
+  missionColumns: number;
+  missionItemWidth: number | "100%";
+  missionGap: number;
 };
 
 function MissionSection({
@@ -141,6 +177,9 @@ function MissionSection({
   onOpenMission,
   featured = false,
   compact = false,
+  missionColumns,
+  missionItemWidth,
+  missionGap,
 }: MissionSectionProps) {
   if (!missions.length) return null;
 
@@ -151,7 +190,13 @@ function MissionSection({
         <Text style={styles.sectionSubtitle}>{subtitle}</Text>
       </View>
 
-      <View style={styles.missionStack}>
+      <View
+        style={[
+          styles.missionStack,
+          missionColumns > 1 && styles.missionGrid,
+          { gap: missionGap },
+        ]}
+      >
         {missions.map((mission) => {
           const isPremium = mission.access === "premium";
           const isLocked = isPremium && !hasPremiumAccess;
@@ -177,6 +222,7 @@ function MissionSection({
               onPress={() => onOpenMission(mission)}
               style={({ pressed }) => [
                 styles.missionCard,
+                missionColumns > 1 && { width: missionItemWidth },
                 featured && styles.featuredCard,
                 compact && styles.compactCard,
                 isPremium && styles.premiumCard,
@@ -212,8 +258,11 @@ const styles = StyleSheet.create({
   background: { flex: 1, backgroundColor: BG_DEEP, overflow: "hidden" },
   overlay: { ...ABSOLUTE_FILL, backgroundColor: "rgba(5,5,8,0.70)" },
   safe: { flex: 1 },
+  contentFrame: {
+    width: "100%",
+    alignSelf: "center",
+  },
   header: {
-    paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 8,
     flexDirection: "row",
@@ -238,12 +287,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
     letterSpacing: 2.5,
   },
-  title: { color: TXT, fontSize: 34, fontFamily: fonts.black, marginTop: 4 },
-  content: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 42 },
+  title: { color: TXT, fontSize: 34, fontFamily: fonts.bold, marginTop: 4 },
+  content: { paddingTop: 14, paddingBottom: 42 },
   intro: {
     color: MUTED,
     fontSize: 15,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.regular,
     lineHeight: 22,
     marginBottom: 18,
   },
@@ -252,20 +301,26 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: TXT,
     fontSize: 20,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.medium,
     lineHeight: 26,
   },
   sectionSubtitle: {
     color: MUTED,
     fontSize: 13,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.regular,
     lineHeight: 19,
     marginTop: 4,
   },
   missionStack: { gap: 12 },
+  missionGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "stretch",
+  },
   missionCard: {
     minHeight: 126,
-    borderRadius: 24,
+    borderRadius: SeoulMidnightGlass.radii.missionCard,
+    overflow: "hidden",
     borderWidth: 1,
     borderColor: LINE,
     backgroundColor: "rgba(255,255,255,0.05)",
@@ -291,20 +346,20 @@ const styles = StyleSheet.create({
   cardArrow: {
     color: SOFT,
     fontSize: SeoulMidnightGlass.cta.fontSize,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.medium,
     letterSpacing: SeoulMidnightGlass.cta.letterSpacing,
   },
   cardArrowPremium: { color: GOLD },
   missionTitle: {
     color: TXT,
     fontSize: 21,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.medium,
     lineHeight: 27,
   },
   missionSubtitle: {
     color: MUTED,
     fontSize: 14,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.regular,
     lineHeight: 20,
     marginTop: 7,
   },

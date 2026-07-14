@@ -979,7 +979,7 @@ export default function GastronomyImmersion() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
-  bg: { flex: 1, position: "relative" },
+  bg: { flex: 1, position: "relative", overflow: "hidden" },
   bgLayer: {
     ...ABSOLUTE_FILL,
   },
@@ -1008,10 +1008,15 @@ const styles = StyleSheet.create({
   backArrow: { color: "#fff", fontSize: 24, marginTop: -2 },
   navEyebrow: {
     fontSize: 10,
-    fontWeight: "900",
+    fontFamily: "Outfit_500Medium",
     letterSpacing: 2,
   },
-  navTitle: { color: "#fff", fontSize: 14, fontWeight: "600", opacity: 0.8 },
+  navTitle: {
+    color: "#fff",
+    fontSize: 14,
+    fontFamily: "Outfit_500Medium",
+    opacity: 0.8,
+  },
 
   header: {
     flexDirection: "row",
@@ -1022,7 +1027,7 @@ const styles = StyleSheet.create({
   backBtn: { flexDirection: "row", alignItems: "center" },
   backText: {
     color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
+    fontFamily: "Outfit_500Medium",
     fontSize: 11,
     letterSpacing: 2,
   },
@@ -1037,7 +1042,7 @@ const styles = StyleSheet.create({
   badgeText: {
     color: COLORS.muted,
     fontSize: 9,
-    fontFamily: "Outfit_700Bold",
+    fontFamily: "Outfit_500Medium",
     letterSpacing: 1,
   },
 
@@ -1052,7 +1057,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
+    fontFamily: "Outfit_500Medium",
     fontSize: 11,
   },
 
@@ -1065,14 +1070,14 @@ const styles = StyleSheet.create({
   },
   cardHeader: { marginBottom: 15 },
   krLabel: {
-    fontFamily: "NotoSansKR_700Bold",
+    fontFamily: "NotoSansKR_400Regular",
     fontSize: 14,
     letterSpacing: 1,
     marginBottom: 2,
   },
   sceneMainTitle: {
     color: COLORS.txt,
-    fontFamily: "Outfit_900Black",
+    fontFamily: "Outfit_500Medium",
     fontSize: 34,
   },
   sceneDesc: {
@@ -1103,14 +1108,14 @@ const styles = StyleSheet.create({
   },
   bubbleChar: {
     fontSize: 10,
-    fontFamily: "Outfit_700Bold",
+    fontFamily: "Outfit_500Medium",
     marginBottom: 6,
     letterSpacing: 1,
     textTransform: "uppercase",
   },
   bubbleKr: {
     color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
+    fontFamily: "NotoSansKR_400Regular",
     fontSize: 18,
     lineHeight: 26,
     marginBottom: 4,
@@ -1118,7 +1123,7 @@ const styles = StyleSheet.create({
   bubbleFr: {
     color: COLORS.muted,
     fontSize: 13,
-    fontFamily: "Outfit_500Medium",
+    fontFamily: "Outfit_400Regular",
   },
   typingBubble: {
     minWidth: 92,
@@ -1139,7 +1144,7 @@ const styles = StyleSheet.create({
   tapHint: {
     alignSelf: "center",
     color: "rgba(255,255,255,0.42)",
-    fontFamily: "Outfit_700Bold",
+    fontFamily: "Outfit_500Medium",
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: "uppercase",
@@ -1155,7 +1160,7 @@ const styles = StyleSheet.create({
   },
   toolboxTitle: {
     color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
+    fontFamily: "Outfit_500Medium",
     fontSize: 11,
     letterSpacing: 3,
   },
@@ -1185,18 +1190,18 @@ const styles = StyleSheet.create({
   },
   vocabKr: {
     color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
+    fontFamily: "NotoSansKR_400Regular",
     fontSize: 24,
     marginBottom: 2,
   },
   vocabRom: {
-    fontFamily: "Outfit_700Bold",
+    fontFamily: "Outfit_500Medium",
     fontSize: 12,
     textTransform: "uppercase",
   },
   vocabMean: {
     color: COLORS.txt,
-    fontFamily: "Outfit_700Bold",
+    fontFamily: "Outfit_500Medium",
     fontSize: 16,
     marginBottom: 4,
   },
@@ -1216,11 +1221,11 @@ const styles = StyleSheet.create({
   },
   listenIcon: {
     fontSize: 9,
-    fontFamily: "Outfit_700Bold",
+    fontFamily: "Outfit_500Medium",
   },
   listenText: {
     color: "rgba(255,255,255,0.78)",
-    fontFamily: "Outfit_700Bold",
+    fontFamily: "Outfit_500Medium",
     fontSize: 9,
     letterSpacing: 1,
   },

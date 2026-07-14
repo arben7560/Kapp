@@ -1138,6 +1138,7 @@ const styles = StyleSheet.create({
 
   bg: {
     flex: 1,
+    overflow: "hidden",
   },
 
   scroll: {

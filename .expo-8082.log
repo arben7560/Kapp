@@ -1,0 +1,6 @@
+Starting project at C:\Users\arben\k-app
+Logs: C:\Users\arben\k-app\.expo\dev\logs\start.log
+🔍 [expo-iap] Config values: horizonAppId=undefined, isHorizonEnabled=false, isOnsideEnabled=false
+📦 [expo-iap] Using OpenIAP from CocoaPods
+› Port 8082 is being used by another process
+› Skipping dev server

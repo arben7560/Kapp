@@ -24,6 +24,7 @@ import {
   getAeroportMissionById,
 } from "../../data/lesson/aeroport/aeroportMissions";
 import { useStore } from "../../_store";
+import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { buildProgressId } from "../../lib/progressIds";
@@ -37,12 +38,13 @@ const SOFT = "rgba(255,255,255,0.48)";
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
 const PURPLE = "#A855F7";
+const VIDEO_OVERSCAN_SCALE = 1.06;
 
 const fonts = {
-  bold: "Outfit_700Bold",
-  black: "Outfit_900Black",
-  medium: "Outfit_500Medium",
-  kr: "NotoSansKR_700Bold",
+  bold: "Outfit_500Medium",
+  black: "Outfit_500Medium",
+  medium: "Outfit_400Regular",
+  kr: "NotoSansKR_400Regular",
 };
 
 // ==================== VIDEOS ====================
@@ -238,6 +240,7 @@ export default function AeroportIaScreen() {
 
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const responsive = useResponsiveLayout({ maxWidth: 760 });
   const params = useLocalSearchParams();
   const mode = normalizeMode(params.mode as string | string[] | undefined);
   const missionId =
@@ -301,8 +304,13 @@ export default function AeroportIaScreen() {
     router.replace("/premium");
   }, [canEnterMission, isPaywallLoading]);
 
-  const avatarFrameHeight = Math.min(screenWidth * 0.9, screenHeight * 0.54);
-  const avatarVideoHeight = Math.min(screenWidth * 0.9, screenHeight * 0.34);
+  const avatarFrameHeight = Math.min(
+    responsive.contentWidth * 0.95,
+    screenWidth * 0.9,
+    screenHeight * 0.54,
+    420,
+  );
+  const avatarVideoHeight = avatarFrameHeight;
 
   const goToNextNode = useCallback((node?: DialogueNode) => {
     if (!node || !mountedRef.current) return;
@@ -314,12 +322,14 @@ export default function AeroportIaScreen() {
       });
     }
 
-    if (node.nextNodeId) {
+    const nextNodeId = node.nextNodeId;
+
+    if (nextNodeId) {
       setIsTranscriptOpen(false);
       setMaxProgressIndex((current) =>
-        Math.max(current, getProgressIndex(node.nextNodeId)),
+        Math.max(current, getProgressIndex(nextNodeId)),
       );
-      setCurrentNodeId(node.nextNodeId);
+      setCurrentNodeId(nextNodeId);
     } else {
       setIsSceneEnded(true);
     }
@@ -564,8 +574,13 @@ export default function AeroportIaScreen() {
         </View>
 
         <View style={styles.body}>
-          <View style={styles.topFixedSection}>
-            <View style={styles.topInner}>
+          <View
+            style={[
+              styles.topFixedSection,
+              { paddingHorizontal: responsive.horizontalPadding },
+            ]}
+          >
+            <View style={[styles.topInner, { maxWidth: responsive.maxWidth }]}>
               <View style={styles.stepsContainer}>
                 {steps.map((s, i) => {
                   const active = i === progressIndex;
@@ -612,16 +627,34 @@ export default function AeroportIaScreen() {
                   },
                 ]}
               >
+                <LinearGradient
+                  colors={[
+                    "rgba(34,211,238,0.14)",
+                    "rgba(10,13,26,0.96)",
+                    "rgba(244,114,182,0.10)",
+                  ]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+
                 <VideoView
                   player={player}
                   style={[styles.video, { height: avatarVideoHeight }]}
-                  contentFit="contain"
+                  contentFit="cover"
+                  surfaceType="textureView"
+                  useExoShutter={false}
                   nativeControls={false}
                   allowsPictureInPicture={false}
                 />
 
                 <LinearGradient
-                  colors={["transparent", "rgba(0,0,0,0.62)"]}
+                  colors={[
+                    "transparent",
+                    "rgba(10,13,26,0.32)",
+                    "rgba(10,13,26,0.50)",
+                  ]}
+                  locations={[0, 0.62, 1]}
                   style={styles.videoOverlay}
                 />
               </View>
@@ -668,10 +701,16 @@ export default function AeroportIaScreen() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={[
               styles.interactionScroll,
+              { paddingHorizontal: responsive.horizontalPadding },
               { paddingBottom: Math.max(22, insets.bottom + 8) },
             ]}
           >
-            <View style={styles.interactionSection}>
+            <View
+              style={[
+                styles.interactionSection,
+                { maxWidth: responsive.maxWidth },
+              ]}
+            >
               <Text style={styles.sectionTitle}>Ta reponse</Text>
 
               {isSceneEnded ? (
@@ -781,6 +820,7 @@ const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
     backgroundColor: BG_DEEP,
+    overflow: "hidden",
   },
   backgroundDarkOverlay: {
     ...ABSOLUTE_FILL,
@@ -792,16 +832,16 @@ const styles = StyleSheet.create({
   },
 
   topFixedSection: {
-    paddingHorizontal: 20,
     paddingTop: 6,
   },
 
   topInner: {
     flexShrink: 0,
+    width: "100%",
+    alignSelf: "center",
   },
 
   interactionScroll: {
-    paddingHorizontal: 20,
     paddingTop: 26,
   },
 
@@ -867,7 +907,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     borderRadius: 32,
     overflow: "hidden",
-    backgroundColor: "#050508",
+    backgroundColor: "rgba(10,13,26,0.96)",
     borderWidth: 1,
   },
   video: {
@@ -876,7 +916,8 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     width: "100%",
-    transform: [{ scale: 1.88 }, { translateY: 30 }],
+    height: "100%",
+    transform: [{ scale: VIDEO_OVERSCAN_SCALE }],
   },
 
   videoOverlay: {
@@ -884,7 +925,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 88,
+    height: 72,
   },
 
   aiCardCollapsed: {
@@ -949,6 +990,8 @@ const styles = StyleSheet.create({
 
   interactionSection: {
     minHeight: 220,
+    width: "100%",
+    alignSelf: "center",
   },
 
   sectionTitle: {

@@ -20,6 +20,7 @@ import {
   cafeMissions,
   type CafeMission,
 } from "../../data/lesson/cafe/cafeMissions";
+import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
@@ -47,6 +48,16 @@ export default function CafeMissionsScreen() {
   const { hasPremiumAccess } = usePaywall();
   const [selectedMission, setSelectedMission] =
     React.useState<CafeMission | null>(null);
+  const responsive = useResponsiveLayout({ maxWidth: 860 });
+  const missionColumns = responsive.getColumns({
+    minColumnWidth: 320,
+    maxColumns: 2,
+    gap: responsive.gridGap,
+  });
+  const missionItemWidth = responsive.getGridItemWidth(
+    missionColumns,
+    responsive.gridGap,
+  );
 
   const openMission = (mission: CafeMission) => {
     if (!canOpenImmersionMission(mission, hasPremiumAccess)) {
@@ -82,7 +93,16 @@ export default function CafeMissionsScreen() {
       <View pointerEvents="none" style={styles.overlay} />
 
       <SafeAreaView style={styles.safe}>
-        <View style={styles.header}>
+        <View
+          style={[
+            styles.header,
+            styles.contentFrame,
+            {
+              maxWidth: responsive.maxWidth,
+              paddingHorizontal: responsive.horizontalPadding,
+            },
+          ]}
+        >
           <Pressable onPress={() => router.back()} style={styles.backButton}>
             <Text style={styles.backText}>x</Text>
           </Pressable>
@@ -92,14 +112,26 @@ export default function CafeMissionsScreen() {
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            { paddingHorizontal: responsive.horizontalPadding },
+          ]}
+        >
+          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
           <Text style={styles.intro}>
             {
               "Choisis une mission complète. Une fois lancée, elle reste jouable jusqu'à la fin."
             }
           </Text>
 
-          <View style={styles.missionStack}>
+          <View
+            style={[
+              styles.missionStack,
+              missionColumns > 1 && styles.missionGrid,
+              { gap: responsive.gridGap },
+            ]}
+          >
             {cafeMissions.map((mission) => {
               const isPremium = mission.access === "premium";
               const isLocked = isPremium && !hasPremiumAccess;
@@ -126,6 +158,7 @@ export default function CafeMissionsScreen() {
                   onPress={() => openMission(mission)}
                   style={({ pressed }) => [
                     styles.missionCard,
+                    missionColumns > 1 && { width: missionItemWidth },
                     isPremium && styles.premiumCard,
                     pressed && styles.pressedCard,
                   ]}
@@ -159,6 +192,7 @@ export default function CafeMissionsScreen() {
               );
             })}
           </View>
+          </View>
         </ScrollView>
 
         <MissionLaunchModal
@@ -186,8 +220,11 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
   },
+  contentFrame: {
+    width: "100%",
+    alignSelf: "center",
+  },
   header: {
-    paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 8,
     flexDirection: "row",
@@ -221,27 +258,31 @@ const styles = StyleSheet.create({
   title: {
     color: TXT,
     fontSize: 34,
-    fontFamily: fonts.black,
+    fontFamily: fonts.bold,
     marginTop: 4,
   },
   content: {
-    paddingHorizontal: 20,
     paddingTop: 14,
     paddingBottom: 42,
   },
   intro: {
     color: MUTED,
     fontSize: 15,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.regular,
     lineHeight: 22,
     marginBottom: 18,
   },
   missionStack: {
     gap: 14,
   },
+  missionGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "stretch",
+  },
   missionCard: {
     minHeight: 136,
-    borderRadius: 24,
+    borderRadius: SeoulMidnightGlass.radii.missionCard,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: LINE,
@@ -264,7 +305,7 @@ const styles = StyleSheet.create({
   cardArrow: {
     color: SOFT,
     fontSize: SeoulMidnightGlass.cta.fontSize,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.medium,
     letterSpacing: SeoulMidnightGlass.cta.letterSpacing,
   },
   cardArrowPremium: {
@@ -274,12 +315,12 @@ const styles = StyleSheet.create({
     color: TXT,
     fontSize: 21,
     lineHeight: 27,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.medium,
   },
   missionSubtitle: {
     color: MUTED,
     fontSize: 14,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.regular,
     lineHeight: 20,
     marginTop: 7,
   },

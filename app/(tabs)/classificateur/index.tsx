@@ -4,7 +4,6 @@ import { router } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import {
   Animated,
-  Dimensions,
   Easing,
   ImageBackground,
   Pressable,
@@ -16,7 +15,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { usePaywall } from "../../../lib/paywall/PaywallProvider";
 
-const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../../assets/images/classificateur.png");
 
 // ──────────────────────────────────────────────
@@ -33,7 +31,7 @@ const PINK = "#F472B6";
 const CYAN = "#22D3EE";
 const GOLD = "#FDE047"; // Teinte Premium
 
-const HERO_CIRCLE = width * 0.76;
+const HERO_CIRCLE = 280;
 const CARD_HEIGHT = 100;
 const CARD_RADIUS = 24;
 

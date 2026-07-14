@@ -1,25 +1,26 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { Compass, MessageCircleMore } from "lucide-react-native";
+import { Compass, MessageCircleMore, Settings } from "lucide-react-native";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef } from "react";
 import {
   Animated,
-  Dimensions,
   Easing,
   ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  type StyleProp,
+  type ViewStyle,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
+import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import type { DailyStreakState } from "../../lib/dailyStreak";
 
-const { width } = Dimensions.get("window");
 const BACKGROUND_SOURCE = require("../../assets/images/seoulhub.png");
 
 // ──────────────────────────────────────────────
@@ -35,7 +36,10 @@ const CYAN = "#67E8F9";
 const PINK = "#F472B6";
 
 const fonts = {
+  light: "Outfit_300Light",
+  regular: "Outfit_400Regular",
   medium: "Outfit_500Medium",
+  semibold: "Outfit_600SemiBold",
   bold: "Outfit_700Bold",
   krBold: "NotoSansKR_700Bold",
 };
@@ -60,7 +64,7 @@ const HANGUL_PROGRESS_TOTAL = 20;
 
 const SEQUENCES: any[] = [
   {
-    title: "L'alphabet coréen",
+    title: "L'alphabet Coréen",
     label: "Hangul",
     color: CYAN,
     route: "/hangul",
@@ -172,6 +176,18 @@ const RESUME_SEQUENCES: Record<string, any> = {
 export default function Home() {
   const { progress, setTrack } = useStore();
   const { refreshStreak, streak } = useDailyStreak();
+  const responsive = useResponsiveLayout({ maxWidth: 900 });
+  const gridColumns = responsive.getColumns({
+    minColumnWidth: 330,
+    maxColumns: 2,
+    gap: responsive.gridGap,
+  });
+  const gridItemWidth = responsive.getGridItemWidth(
+    gridColumns,
+    responsive.gridGap,
+  );
+  const heroTextWidth = Math.max(260, responsive.contentWidth);
+  const heroSubtitleWidth = Math.min(430, Math.max(240, heroTextWidth - 44));
   const currentTrack = progress.learningTrack;
   const activeSeq =
     (currentTrack ? RESUME_SEQUENCES[currentTrack] : undefined) ??
@@ -251,10 +267,32 @@ export default function Home() {
         <View style={styles.topFade} />
         <View style={styles.bottomFade} />
 
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Parametres"
+          accessibilityState={{ disabled: true }}
+          aria-disabled={true}
+          hitSlop={8}
+          disabled
+          style={styles.settingsTrigger}
+        >
+          <BlurView intensity={80} tint="dark" style={styles.settingsBlur}>
+            <Settings
+              size={24}
+              strokeWidth={3}
+              color="rgba(241,245,249,0.82)"
+            />
+          </BlurView>
+        </Pressable>
+
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingHorizontal: responsive.horizontalPadding },
+          ]}
         >
+          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
           {/* TOP HEADER */}
           <View style={styles.header}>
             <View style={styles.headerIdentity}>
@@ -276,19 +314,6 @@ export default function Home() {
               </View>
             </View>
 
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Parametres"
-              accessibilityState={{ disabled: true }}
-              aria-disabled={true}
-              hitSlop={8}
-              disabled
-              style={styles.settingsTrigger}
-            >
-              <BlurView intensity={80} tint="dark" style={styles.settingsBlur}>
-                <View style={styles.settingsInner} />
-              </BlurView>
-            </Pressable>
           </View>
 
           {/* HERO - SEOUL IMMERSION */}
@@ -298,13 +323,26 @@ export default function Home() {
                 <Text style={styles.heroLabel}>SÉOUL IMMERSION</Text>
 
                 <View style={styles.heroSeoulTitleWrap}>
-                  <Text style={styles.heroSeoulShadow}>어서 오세요.</Text>
-                  <Text style={styles.heroSeoulTitle}>어서 오세요.</Text>
+                  <Text
+                    style={[
+                      styles.heroSeoulShadow,
+                      { maxWidth: heroTextWidth },
+                    ]}
+                  >
+                    어서 오세요.
+                  </Text>
+                  <Text
+                    style={[styles.heroSeoulTitle, { maxWidth: heroTextWidth }]}
+                  >
+                    어서 오세요.
+                  </Text>
                 </View>
 
                 <Text style={styles.heroTitle}>Entre dans la ville.</Text>
 
-                <Text style={styles.heroSubtitle}>
+                <Text
+                  style={[styles.heroSubtitle, { maxWidth: heroSubtitleWidth }]}
+                >
                   Apprends le coréen comme si tu y étais déjà.
                 </Text>
 
@@ -346,9 +384,19 @@ export default function Home() {
             </View>
           </View>
 
-          <View style={styles.grid}>
+          <View
+            style={[
+              styles.grid,
+              gridColumns > 1 && styles.gridWide,
+              { gap: responsive.gridGap },
+            ]}
+          >
             {pedagogicalSequences.map((seq, i) => (
-              <AnimatedFragment key={seq.trackKey} index={i + 1}>
+              <AnimatedFragment
+                key={seq.trackKey}
+                index={i + 1}
+                style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
+              >
                 <SequenceCard
                   item={seq}
                   isActive={seq.trackKey === currentTrack}
@@ -371,11 +419,18 @@ export default function Home() {
             </View>
           </View>
 
-          <View style={styles.grid}>
+          <View
+            style={[
+              styles.grid,
+              gridColumns > 1 && styles.gridWide,
+              { gap: responsive.gridGap },
+            ]}
+          >
             {immersionSequences.map((seq, i) => (
               <AnimatedFragment
                 key={seq.trackKey}
                 index={i + 1 + pedagogicalSequences.length}
+                style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
               >
                 <SequenceCard
                   item={seq}
@@ -384,6 +439,7 @@ export default function Home() {
                 />
               </AnimatedFragment>
             ))}
+          </View>
           </View>
         </ScrollView>
       </ImageBackground>
@@ -397,9 +453,11 @@ export default function Home() {
 function AnimatedFragment({
   children,
   index,
+  style,
 }: {
   children: React.ReactNode;
   index: number;
+  style?: StyleProp<ViewStyle>;
 }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -449,7 +507,9 @@ function AnimatedFragment({
   );
 
   return (
-    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY }] }}>
+    <Animated.View
+      style={[style, { opacity: fadeAnim, transform: [{ translateY }] }]}
+    >
       {children}
     </Animated.View>
   );
@@ -806,7 +866,7 @@ function SequenceCard({ item, isActive, onPress }: any) {
 // ──────────────────────────────────────────────
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG_DEEP },
-  bgImage: { flex: 1, backgroundColor: BG_DEEP },
+  bgImage: { flex: 1, backgroundColor: BG_DEEP, overflow: "hidden" },
   bgBlur: {
     ...ABSOLUTE_FILL,
   },
@@ -826,7 +886,11 @@ const styles = StyleSheet.create({
     height: 240,
     backgroundColor: "rgba(2,3,6,0.40)",
   },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 100 },
+  scrollContent: { paddingTop: 12, paddingBottom: 100 },
+  contentFrame: {
+    width: "100%",
+    alignSelf: "center",
+  },
 
   // HEADER
   header: {
@@ -848,7 +912,7 @@ const styles = StyleSheet.create({
   },
   headerCityEn: {
     fontSize: 9.8,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.medium,
     color: "rgba(255,255,255,0.65)",
     letterSpacing: 4,
     marginTop: -3,
@@ -874,37 +938,32 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: "#E0F2FE",
-    fontFamily: fonts.bold,
+    fontFamily: fonts.medium,
     fontSize: 9.5,
     letterSpacing: 1.6,
   },
   locationText: {
     color: "rgba(224, 242, 254, 0.55)",
-    fontFamily: fonts.medium,
+    fontFamily: fonts.regular,
     fontSize: 8.2,
     letterSpacing: 0.6,
   },
   settingsTrigger: {
     position: "absolute",
-    right: 4,
+    top: 17,
+    right: 24,
     width: 44,
     height: 44,
     borderRadius: 22,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.12)",
+    zIndex: 50,
   },
   settingsBlur: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-  },
-  settingsInner: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: "#F1F5F9",
-    opacity: 0.85,
   },
 
   // HERO - SEOUL IMMERSION
@@ -934,7 +993,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 18,
     left: -4,
-    width: width - 48,
     height: 115,
     justifyContent: "center",
     alignItems: "flex-start",
@@ -959,7 +1017,7 @@ const styles = StyleSheet.create({
 
   heroTitle: {
     fontSize: 21,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.regular,
     color: "#FFFFFF",
     opacity: 0.9,
     marginTop: 120,
@@ -969,11 +1027,10 @@ const styles = StyleSheet.create({
   },
   heroSubtitle: {
     fontSize: 13,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.light,
     color: "rgba(255,255,255,0.65)",
     lineHeight: 22,
     marginBottom: 18,
-    maxWidth: width - 96,
     textAlign: "center",
   },
   heroLine: {
@@ -1001,20 +1058,20 @@ const styles = StyleSheet.create({
   cardContent: {},
   cardKicker: {
     fontSize: 10,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.medium,
     color: SOFT,
     letterSpacing: 1.5,
     marginBottom: 8,
   },
   cardTitle: {
     fontSize: 28,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.regular,
     color: TXT,
     marginBottom: 8,
   },
   cardNarrative: {
     fontSize: 15,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.light,
     color: MUTED,
     lineHeight: 22,
     marginBottom: 24,
@@ -1026,7 +1083,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   progressFill: { height: "100%", borderRadius: 2 },
-  progressText: { fontSize: 12, fontFamily: fonts.medium, color: SOFT },
+  progressText: { fontSize: 12, fontFamily: fonts.light, color: SOFT },
 
   streakCard: {
     borderRadius: 22,
@@ -1185,7 +1242,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 12,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.medium,
     color: "rgba(241,245,249,0.48)",
     letterSpacing: 3,
   },
@@ -1209,6 +1266,11 @@ const styles = StyleSheet.create({
   },
 
   grid: { gap: 10 },
+  gridWide: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "stretch",
+  },
 
   // SEQUENCE CARDS
   seqCard: {
@@ -1277,8 +1339,8 @@ const styles = StyleSheet.create({
   },
   seqIcon: {
     fontSize: 21,
-    fontFamily: fonts.bold,
-    letterSpacing: -0.8,
+    fontFamily: fonts.regular,
+    letterSpacing: 0,
   },
   seqDividerLine: {
     width: 1,
@@ -1291,28 +1353,30 @@ const styles = StyleSheet.create({
   },
   seqPlace: {
     fontSize: 7.8,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.medium,
     color: "rgba(241,245,249,0.34)",
     letterSpacing: 1.45,
     marginBottom: 4,
     textTransform: "uppercase",
   },
   seqTitle: {
-    fontSize: 17,
-    fontFamily: fonts.bold,
+    fontSize: 18,
+    lineHeight: 22,
+    fontFamily: fonts.regular,
     color: TXT,
-    letterSpacing: -0.25,
+    letterSpacing: 0,
   },
   seqSub: {
-    fontSize: 12.2,
-    fontFamily: fonts.medium,
+    fontSize: 13,
+    fontFamily: fonts.light,
     color: "rgba(241,245,249,0.62)",
-    marginTop: 3,
-    lineHeight: 16.5,
+    marginTop: 2,
+    lineHeight: 18,
   },
   seqArrow: {
     color: "rgba(255,255,255,0.36)",
     fontSize: 28,
+    fontFamily: fonts.regular,
     opacity: 0.52,
     marginLeft: 8,
   },
@@ -1333,7 +1397,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   comingSoonText: {
-    fontFamily: fonts.bold,
+    fontFamily: fonts.medium,
     fontSize: 9,
     letterSpacing: 1.4,
   },

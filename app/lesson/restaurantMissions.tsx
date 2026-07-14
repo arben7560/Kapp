@@ -19,6 +19,7 @@ import {
   restaurantMissions,
   type RestaurantMission,
 } from "../../data/lesson/restaurant/restaurantMissions";
+import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
@@ -45,6 +46,16 @@ export default function RestaurantMissionsScreen() {
   const { hasPremiumAccess } = usePaywall();
   const [selectedMission, setSelectedMission] =
     React.useState<RestaurantMission | null>(null);
+  const responsive = useResponsiveLayout({ maxWidth: 860 });
+  const missionColumns = responsive.getColumns({
+    minColumnWidth: 320,
+    maxColumns: 2,
+    gap: responsive.gridGap,
+  });
+  const missionItemWidth = responsive.getGridItemWidth(
+    missionColumns,
+    responsive.gridGap,
+  );
 
   const openMission = (mission: RestaurantMission) => {
     if (!canOpenImmersionMission(mission, hasPremiumAccess)) {
@@ -70,7 +81,16 @@ export default function RestaurantMissionsScreen() {
     <ImageBackground source={restaurantBackground} style={styles.background}>
       <View pointerEvents="none" style={styles.overlay} />
       <SafeAreaView style={styles.safe}>
-        <View style={styles.header}>
+        <View
+          style={[
+            styles.header,
+            styles.contentFrame,
+            {
+              maxWidth: responsive.maxWidth,
+              paddingHorizontal: responsive.horizontalPadding,
+            },
+          ]}
+        >
           <Pressable onPress={() => router.back()} style={styles.backButton}>
             <Text style={styles.backText}>x</Text>
           </Pressable>
@@ -80,11 +100,23 @@ export default function RestaurantMissionsScreen() {
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            { paddingHorizontal: responsive.horizontalPadding },
+          ]}
+        >
+          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
           <Text style={styles.intro}>
             Choisis une mission complète. Le paywall apparaît avant la scène.
           </Text>
-          <View style={styles.missionStack}>
+          <View
+            style={[
+              styles.missionStack,
+              missionColumns > 1 && styles.missionGrid,
+              { gap: responsive.gridGap },
+            ]}
+          >
             {restaurantMissions.map((mission) => {
               const isPremium = mission.access === "premium";
               const isLocked = isPremium && !hasPremiumAccess;
@@ -110,6 +142,7 @@ export default function RestaurantMissionsScreen() {
                   onPress={() => openMission(mission)}
                   style={({ pressed }) => [
                     styles.missionCard,
+                    missionColumns > 1 && { width: missionItemWidth },
                     isPremium && styles.premiumCard,
                     pressed && styles.pressedCard,
                   ]}
@@ -134,6 +167,7 @@ export default function RestaurantMissionsScreen() {
               );
             })}
           </View>
+          </View>
         </ScrollView>
 
         <MissionLaunchModal
@@ -152,8 +186,11 @@ const styles = StyleSheet.create({
   background: { flex: 1, backgroundColor: BG_DEEP, overflow: "hidden" },
   overlay: { ...ABSOLUTE_FILL, backgroundColor: "rgba(5,5,8,0.70)" },
   safe: { flex: 1 },
+  contentFrame: {
+    width: "100%",
+    alignSelf: "center",
+  },
   header: {
-    paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 8,
     flexDirection: "row",
@@ -178,19 +215,25 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
     letterSpacing: 2.5,
   },
-  title: { color: TXT, fontSize: 34, fontFamily: fonts.black, marginTop: 4 },
-  content: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 42 },
+  title: { color: TXT, fontSize: 34, fontFamily: fonts.bold, marginTop: 4 },
+  content: { paddingTop: 14, paddingBottom: 42 },
   intro: {
     color: MUTED,
     fontSize: 15,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.regular,
     lineHeight: 22,
     marginBottom: 18,
   },
   missionStack: { gap: 14 },
+  missionGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "stretch",
+  },
   missionCard: {
     minHeight: 126,
-    borderRadius: 24,
+    borderRadius: SeoulMidnightGlass.radii.missionCard,
+    overflow: "hidden",
     borderWidth: 1,
     borderColor: LINE,
     backgroundColor: "rgba(255,255,255,0.05)",
@@ -207,20 +250,20 @@ const styles = StyleSheet.create({
   cardArrow: {
     color: SOFT,
     fontSize: SeoulMidnightGlass.cta.fontSize,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.medium,
     letterSpacing: SeoulMidnightGlass.cta.letterSpacing,
   },
   cardArrowPremium: { color: GOLD },
   missionTitle: {
     color: TXT,
     fontSize: 21,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.medium,
     lineHeight: 27,
   },
   missionSubtitle: {
     color: MUTED,
     fontSize: 14,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.regular,
     lineHeight: 20,
     marginTop: 7,
   },
