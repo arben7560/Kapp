@@ -23,7 +23,6 @@ export interface DialogueScenario {
 }
 
 const welcomeCafeVideo = require("../../../assets/ai/cafe/welcomeCafe.mp4");
-const orderConfirmationJuiceVideo = require("../../../assets/ai/cafe/orderConfirmationJuice.mp4");
 const orderConfirmationCakeVideo = require("../../../assets/ai/cafe/orderConfirmationCake.mp4");
 const pricePaimentChooseVideo = require("../../../assets/ai/cafe/pricePaimentChoose.mp4");
 const byCardReceiptVideo = require("../../../assets/ai/cafe/byCardReceipt.mp4");
@@ -84,12 +83,11 @@ export const cafeDialogueData = {
         id: "ped_confirm",
         type: "ia",
         korean:
-          "네, 확인해 드릴게요. 아이스 아메리카노 두 잔이랑 오렌지 주스 한 잔 맞으시죠? 드시고 가세요, 아니면 포장에 드릴까요?",
+          "네, 확인해 드릴게요. 아이스 아메리카노 두 잔이랑 오렌지 주스 한 잔 맞으시죠? 드시고 가세요? 아니면 포장해 드릴까요?",
         french:
           "Très bien, je vérifie. Deux américanos glacés et un jus d’orange, c’est bien ça ? Vous consommez sur place ou à emporter ?",
         romanization:
-          "Ne, hwaginhae deurilgeyo. Aiseu amerikano du janirang orenji juseu han jan majeusijyo? Deusigo gaseyo, animyeon pojanghaseyo?",
-        videoSource: orderConfirmationJuiceVideo,
+          "Ne, hwaginhae deurilgeyo. Aiseu amerikano du janirang orenji juseu han jan majeusijyo? Deusigo gaseyo? Animyeon pojanghae deurilkkayo?",
         nextNodeId: "ped_choice2_drink",
       },
 

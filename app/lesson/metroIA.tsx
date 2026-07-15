@@ -15,15 +15,15 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
-import { ABSOLUTE_FILL } from "../../constants/layout";
+import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { ABSOLUTE_FILL } from "../../constants/layout";
 import { metroLessons } from "../../data/lesson/metro/metro";
 import {
   DEFAULT_METRO_MISSION_ID,
   getMetroMissionById,
   getMetroMissionLesson,
 } from "../../data/lesson/metro/metroMissions";
-import { useStore } from "../../_store";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
@@ -35,21 +35,9 @@ const BG_DEEP = "#050508";
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
 const PURPLE = "#A855F7";
-const VIDEO_OVERSCAN_SCALE = 1.06;
+const VIDEO_OVERSCAN_SCALE = 1;
 
 // ==================== VIDEOS ====================
-const iaIntroRoute = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_intro_route.mp4");
-const iaRepeatIntroRoute = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_intro_route.mp4");
-const iaRepeatIntroRouteSlow = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_intro_route_slow.mp4");
-
-const iaPlatformDirection = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_platform_direction.mp4");
-const iaRepeatPlatformDirection = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_platform_direction.mp4");
-const iaRepeatPlatformDirectionShort = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_platform_direction_short.mp4");
-
-const iaTripTime = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_trip_time.mp4");
-const iaRepeatTripTime = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_trip_time.mp4");
-const iaRepeatTripTimeShort = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_trip_time_short.mp4");
-
 const iaTransferInfo = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_transfer_info.mp4");
 const iaRepeatTransferInfo = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_transfer_info.mp4");
 const iaRepeatTransferInfoShort = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_transfer_info_short.mp4");
@@ -58,29 +46,20 @@ const iaExitInfo = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_exit_info
 const iaRepeatExitInfo = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_exit_info.mp4");
 const iaRepeatExitInfoShort = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_exit_info_short.mp4");
 
-const iaExitLandmarkInfo = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_exit_landmark_info.mp4");
-const iaRepeatExitLandmarkInfo = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_exit_landmark_info.mp4");
-const iaRepeatExitLandmarkInfoShort = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_exit_landmark_info_short.mp4");
-
-const iaEndSummary = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_end_summary.mp4");
-const iaEndSummaryShort = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_end_summary_short.mp4");
 const iaEnd = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_end.mp4");
 const metroBackground = require("../../assets/images/metrobg.png");
 
 type VideoMap = Record<string, number>;
 
 const hongikToGangnamVideos: VideoMap = {
-  ia_intro_route: iaIntroRoute,
-  ia_repeat_intro_route: iaRepeatIntroRoute,
-  ia_repeat_intro_route_slow: iaRepeatIntroRouteSlow,
+  ia_intro_route: require("../../assets/ai/metro/Hongik-to-Gangnam/ia_intro_route.mp4"),
+  ia_repeat_intro_route: require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_intro_route.mp4"),
 
-  ia_platform_direction: iaPlatformDirection,
-  ia_repeat_platform_direction: iaRepeatPlatformDirection,
-  ia_repeat_platform_direction_short: iaRepeatPlatformDirectionShort,
+  ia_platform_direction: require("../../assets/ai/metro/Hongik-to-Gangnam/ia_platform_direction.mp4"),
+  ia_repeat_platform_direction: require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_platform_direction.mp4"),
 
-  ia_trip_time: iaTripTime,
-  ia_repeat_trip_time: iaRepeatTripTime,
-  ia_repeat_trip_time_short: iaRepeatTripTimeShort,
+  ia_trip_time: require("../../assets/ai/metro/Hongik-to-Gangnam/ia_trip_time.mp4"),
+  ia_repeat_trip_time: require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_trip_time.mp4"),
 
   ia_transfer_info: iaTransferInfo,
   ia_repeat_transfer_info: iaRepeatTransferInfo,
@@ -90,12 +69,11 @@ const hongikToGangnamVideos: VideoMap = {
   ia_repeat_exit_info: iaRepeatExitInfo,
   ia_repeat_exit_info_short: iaRepeatExitInfoShort,
 
-  ia_exit_landmark_info: iaExitLandmarkInfo,
-  ia_repeat_exit_landmark_info: iaRepeatExitLandmarkInfo,
-  ia_repeat_exit_landmark_info_short: iaRepeatExitLandmarkInfoShort,
+  ia_exit_landmark_info: require("../../assets/ai/metro/Hongik-to-Gangnam/ia_exit_landmark_info.mp4"),
+  ia_repeat_exit_landmark_info: require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_exit_landmark_info.mp4"),
 
-  ia_end_summary: iaEndSummary,
-  ia_end_summary_short: iaEndSummaryShort,
+  ia_end_summary: require("../../assets/ai/metro/Hongik-to-Gangnam/ia_end_summary.mp4"),
+  ia_end_summary_short: require("../../assets/ai/metro/Hongik-to-Gangnam/ia_end_summary_short.mp4"),
   ia_end: iaEnd,
 };
 
@@ -232,8 +210,8 @@ function getMetroVideosForLesson(lessonId: string): VideoMap {
   return {};
 }
 
-function getMetroIntroVideoSource(lessonId: string): number {
-  return getMetroVideosForLesson(lessonId).ia_intro_route ?? iaIntroRoute;
+function getMetroIntroVideoSource(lessonId: string): number | null {
+  return getMetroVideosForLesson(lessonId).ia_intro_route ?? null;
 }
 
 function attachMetroVideosToNode(
@@ -336,15 +314,9 @@ function buildMetroScenario(lesson: MetroLesson): DialogueScenario {
 // ==================== MAIN ====================
 export default function MetroIaScreen() {
   const { complete } = useStore();
-  /**
-   * Important :
-   * On initialise directement avec iaIntroRoute.
-   * Comme le node "start" n'a pas de vidéo propre, cela permet d'afficher
-   * l'avatar immédiatement au lieu d'afficher une icône fallback.
-   */
   const [displayedVideoSource, setDisplayedVideoSource] = useState<
     number | null
-  >(iaIntroRoute);
+  >(null);
 
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
@@ -355,7 +327,8 @@ export default function MetroIaScreen() {
     normalizeParam(params.mission as string | string[] | undefined) ??
     DEFAULT_METRO_MISSION_ID;
   const currentMission =
-    getMetroMissionById(missionId) ?? getMetroMissionById(DEFAULT_METRO_MISSION_ID);
+    getMetroMissionById(missionId) ??
+    getMetroMissionById(DEFAULT_METRO_MISSION_ID);
   const { hasPremiumAccess, isLoading: isPaywallLoading } = usePaywall();
   const canEnterMission =
     currentMission?.access !== "premium" || hasPremiumAccess;
@@ -407,18 +380,27 @@ export default function MetroIaScreen() {
 
   useEffect(() => {
     if (!canEnterMission) return;
-    if (currentNode?.type === "ia" && currentVideoSource) {
+    if (currentNode?.type === "ia") {
       setDisplayedVideoSource(currentVideoSource);
+    } else if (currentNodeId !== currentScenario.startNodeId) {
+      setDisplayedVideoSource(null);
     }
-  }, [canEnterMission, currentNode, currentVideoSource]);
+  }, [
+    canEnterMission,
+    currentNode,
+    currentNodeId,
+    currentScenario.startNodeId,
+    currentVideoSource,
+  ]);
 
-  const avatarFrameHeight = Math.min(
-    responsive.contentWidth * 0.95,
-    screenWidth * 0.9,
-    screenHeight * 0.54,
+  const avatarVideoHeight = Math.min(
+    responsive.contentWidth * 1.2,
+    screenWidth * 1,
+    screenHeight * 1,
     420,
   );
-  const avatarVideoHeight = avatarFrameHeight;
+
+  const avatarFrameHeight = avatarVideoHeight - 40;
 
   const goToNextNode = useCallback((node?: DialogueNode) => {
     if (!node || !mountedRef.current) return;
@@ -473,12 +455,17 @@ export default function MetroIaScreen() {
   useEffect(() => {
     if (!canEnterMission) return;
     if (!currentNode) return;
-    if (!displayedVideoSource) return;
 
     let isCancelled = false;
 
     async function updateVideoSource() {
       try {
+        if (!displayedVideoSource) {
+          player.pause();
+          await player.replaceAsync(null);
+          return;
+        }
+
         await player.replaceAsync(displayedVideoSource);
 
         if (isCancelled) return;
@@ -486,10 +473,6 @@ export default function MetroIaScreen() {
         if (currentNode?.type === "ia" && currentVideoSource) {
           player.play();
         } else {
-          /**
-           * Sur le node "start", il n'y a pas encore de vidéo de node,
-           * mais on garde iaIntroRoute affichée comme avatar visuel de départ.
-           */
           player.pause();
         }
       } catch {
@@ -688,7 +671,12 @@ export default function MetroIaScreen() {
             onPress={() => router.back()}
             style={styles.backBtn}
           >
-            <AppText variant="button" tone="strong" script="latin" style={styles.backTxt}>
+            <AppText
+              variant="button"
+              tone="strong"
+              script="latin"
+              style={styles.backTxt}
+            >
               ✕
             </AppText>
           </Pressable>

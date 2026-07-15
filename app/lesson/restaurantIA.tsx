@@ -15,8 +15,9 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
-import { ABSOLUTE_FILL } from "../../constants/layout";
+import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { ABSOLUTE_FILL } from "../../constants/layout";
 import {
   restaurantDialogueData,
   type DialogueChoice,
@@ -28,7 +29,6 @@ import {
   getRestaurantMissionById,
   getRestaurantMissionScenario,
 } from "../../data/lesson/restaurant/restaurantMissions";
-import { useStore } from "../../_store";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
@@ -233,10 +233,10 @@ export default function RestaurantIaScreen() {
   }, [canEnterMission, currentNode, currentVideoSource]);
 
   const avatarFrameHeight = Math.min(
-    responsive.contentWidth * 0.95,
-    screenWidth * 0.9,
-    screenHeight * 0.54,
-    420,
+    responsive.contentWidth * 1.2,
+    screenWidth * 1,
+    screenHeight * 1,
+    520,
   );
   const avatarVideoHeight = avatarFrameHeight;
 
@@ -490,7 +490,12 @@ export default function RestaurantIaScreen() {
             onPress={() => router.back()}
             style={styles.backBtn}
           >
-            <AppText variant="button" tone="strong" script="latin" style={styles.backTxt}>
+            <AppText
+              variant="button"
+              tone="strong"
+              script="latin"
+              style={styles.backTxt}
+            >
               x
             </AppText>
           </Pressable>

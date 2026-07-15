@@ -11,8 +11,8 @@ const COLORS = {
 // ──────────────────────────────────────────────
 
 type CountingAudioSet = {
-  messages: number[];
-  toolbox: number[];
+  messages: (number | null)[];
+  toolbox: (number | null)[];
 };
 
 const withSceneAudio = (scenes: any[], audioSets: CountingAudioSet[]) =>
@@ -37,7 +37,7 @@ const withSceneAudio = (scenes: any[], audioSets: CountingAudioSet[]) =>
 const HIERARCHIE_AUDIO = {
   messages: [
     require("../../../assets/audio/comptage/age/hierarchie/hierarchie-bulle-1.mp3"),
-    require("../../../assets/audio/comptage/age/hierarchie/hierarchie-bulle-2.mp3"),
+    null,
     require("../../../assets/audio/comptage/age/hierarchie/hierarchie-bulle-3.mp3"),
     require("../../../assets/audio/comptage/age/hierarchie/hierarchie-bulle-4.mp3"),
   ],
@@ -54,7 +54,7 @@ const HIERARCHIE_AUDIO = {
 const SYSTEM_AUDIO = {
   messages: [
     require("../../../assets/audio/comptage/age/system/system-bulle-1.mp3"),
-    require("../../../assets/audio/comptage/age/system/system-bulle-2.mp3"),
+    null,
     require("../../../assets/audio/comptage/age/system/system-bulle-3.mp3"),
     require("../../../assets/audio/comptage/age/system/system-bulle-4.mp3"),
   ],
@@ -70,10 +70,10 @@ const SYSTEM_AUDIO = {
 
 const MAJORITE_AUDIO = {
   messages: [
-    require("../../../assets/audio/comptage/age/majorité/majorité-bulle-1.mp3"),
-    require("../../../assets/audio/comptage/age/majorité/majorité-bulle-2.mp3"),
+    null,
+    null,
     require("../../../assets/audio/comptage/age/majorité/majorité-bulle-3.mp3"),
-    require("../../../assets/audio/comptage/age/majorité/majorité-bulle-4.mp3"),
+    null,
   ],
   toolbox: [
     require("../../../assets/audio/comptage/age/majorité/toolbox/majorité-toolbox-1.mp3"),
@@ -102,8 +102,8 @@ const SCENES = withSceneAudio([
       },
       {
         char: "Moi",
-        kr: "저는 서른 살이에요. 오빠라고 불러도 돼요?",
-        fr: "J'ai 30 ans (Seoreun-sal). Puis-je vous appeler Oppa ?",
+        kr: "저는 서른 살이에요. 인호 씨는요?",
+        fr: "J'ai 30 ans. Et vous, In-ho ?",
       },
       {
         char: "In-ho",
@@ -159,7 +159,8 @@ const SCENES = withSceneAudio([
     id: "system",
     title: "Âge Coréen vs Mondial",
     koreanTitle: "만 나이 (Man Nai)",
-    description: "Comprendre le nouveau système officiel adopté en 2023.",
+    description:
+      "Comprendre la règle civile et administrative généralisée en 2023.",
     accent: COLORS.bronze,
     image:
       "https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=800&q=80",
@@ -171,8 +172,8 @@ const SCENES = withSceneAudio([
       },
       {
         char: "Min-ji",
-        kr: "네, 하지만 생일이 지나야 한 살 줄어들어요.",
-        fr: "Oui, mais il faut attendre son anniversaire pour 'perdre' un an.",
+        kr: "네. 만 나이는 생일이 지날 때마다 한 살씩 늘어요.",
+        fr: "Oui. Avec l'âge international, on prend un an à chaque anniversaire.",
       },
       {
         char: "Moi",
@@ -190,11 +191,12 @@ const SCENES = withSceneAudio([
         word: "만 나이",
         rom: "Man Nai",
         mean: "Âge international",
-        context: "Le système légal actuel basé sur la date de naissance.",
+        context:
+          "Règle générale civile et administrative fondée sur la date de naissance, avec des exceptions prévues par certaines lois.",
       },
       {
         word: "띠",
-        rom: "Ddi",
+        rom: "Tti",
         mean: "Signe zodiacal",
         context:
           "Souvent utilisé pour deviner l'âge (Année du Dragon, Rat...).",
@@ -202,8 +204,9 @@ const SCENES = withSceneAudio([
       {
         word: "연도",
         rom: "Yeon-do",
-        mean: "Année de naissance",
-        context: "C'est le chiffre le plus important pour la hiérarchie.",
+        mean: "Année",
+        context:
+          "Pour préciser l'année de naissance, on dit 출생 연도 (chulsaeng yeondo).",
       },
       {
         word: "생일 전",
@@ -229,20 +232,21 @@ const SCENES = withSceneAudio([
     id: "majority",
     title: "La Majorité",
     koreanTitle: "성인 (Seong-in)",
-    description: "Célébrer le passage à l'âge adulte (20 ans).",
+    description:
+      "Distinguer la majorité civile à 19 ans révolus de la règle d'achat d'alcool, fixée au 1er janvier de l'année des 19 ans.",
     accent: COLORS.coral,
     image:
       "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=80",
     dialogue: [
       {
         char: "Ami",
-        kr: "드디어 스무 살이네! 성인 축하해!",
-        fr: "Enfin 20 ans (Seumu-sal) ! Félicitations pour ta majorité !",
+        kr: "드디어 만 열아홉 살이네! 성인이 된 걸 축하해!",
+        fr: "Enfin 19 ans révolus ! Félicitations pour ta majorité !",
       },
       {
         char: "Moi",
-        kr: "고마워! 이제 술 마실 수 있어!",
-        fr: "Merci ! Maintenant je peux boire de l'alcool !",
+        kr: "고마워! 술은 이미 올해 1월 1일부터 살 수 있었어.",
+        fr: "Merci ! Je pouvais déjà acheter de l'alcool depuis le 1er janvier de cette année.",
       },
       {
         char: "Ami",
@@ -251,8 +255,8 @@ const SCENES = withSceneAudio([
       },
       {
         char: "Moi",
-        kr: "알겠어, 스무 살 첫날이니까 조심할게.",
-        fr: "Compris, c'est mon premier jour à vingt ans, je ferai attention.",
+        kr: "알겠어. 성년이 되는 날과 술을 살 수 있는 기준은 다르구나.",
+        fr: "Compris. La majorité civile et la règle applicable à l'achat d'alcool ne suivent donc pas la même date.",
       },
     ],
     expressions: [
@@ -272,7 +276,8 @@ const SCENES = withSceneAudio([
         word: "미성년자",
         rom: "Mi-seong-nyeon-ja",
         mean: "Mineur",
-        context: "Interdit de tabac et d'alcool.",
+        context:
+          "Mineur au sens civil : personne n'ayant pas encore 19 ans révolus. La vente d'alcool suit une règle distincte liée à l'année de naissance.",
       },
       {
         word: "첫날",

@@ -1172,13 +1172,13 @@ export const hongikToGangnamLesson: MetroLesson = {
       speaker: "ai",
       phase: "Ligne",
       narrator: "Le passant vous répond d'abord de manière claire et concise.",
-      text: "Oui, bien sûr. Depuis Hongik University, prenez la ligne 2. Suivez les panneaux de la ligne 2 et prenez le train en direction de Gangnam.",
+      text: "Oui, bien sûr. À Hongik University, prenez la ligne 2. Suivez les panneaux « circulation extérieure » en direction de Hapjeong et Sindorim.",
       korean:
-        "네, 물론입니다. 홍대입구역에서 2호선을 타시면 됩니다. 2호선 표지판을 따라가서 강남 방향 열차를 타세요.",
+        "네, 물론입니다. 홍대입구역에서 2호선을 타세요. 외선순환, 합정·신도림 방면 표지판을 따라가시면 됩니다.",
       french:
-        "Oui, bien sûr. Depuis Hongik University, prenez la ligne 2. Suivez les panneaux de la ligne 2 et prenez le train en direction de Gangnam.",
+        "Oui, bien sûr. À Hongik University, prenez la ligne 2. Suivez les panneaux « circulation extérieure » en direction de Hapjeong et Sindorim.",
       romanization:
-        "Ne, mullon ibnida. Hongdaeipgu-yeogeseo ihoseoneul tasimyeon doemnida. Ihoseon pyojipaneul ttaragaseo Gangnam banghyang yeolchareul taseyo.",
+        "Ne, mullonimnida. Hongdaeipgu-yeogeseo ihoseoneul taseyo. Oeseonsunhwan, Hapjeong·Sindorim bangmyeon pyojipaneul ttaragasimyeon doemnida.",
       choices: [
         {
           id: "repeat_intro",
@@ -1208,20 +1208,14 @@ export const hongikToGangnamLesson: MetroLesson = {
       id: "ia_repeat_intro_route",
       speaker: "ai",
       phase: "Ligne",
-      text: "Bien sûr. Depuis ici, prenez la ligne 2 et montez dans le train en direction de Gangnam.",
-      korean: "물론이죠. 여기서 2호선을 타시고 강남 방향 열차를 타시면 돼요.",
+      text: "Bien sûr. Prenez ici la ligne 2, circulation extérieure, en direction de Hapjeong et Sindorim.",
+      korean:
+        "물론이죠. 여기서 2호선 외선순환, 합정·신도림 방면 열차를 타시면 돼요.",
       french:
-        "Bien sûr. Depuis ici, prenez la ligne 2 et montez dans le train en direction de Gangnam.",
+        "Bien sûr. Prenez ici la ligne 2, circulation extérieure, en direction de Hapjeong et Sindorim.",
       romanization:
-        "Mullonijyo. Yeogiseo ihoseoneul tasigo Gangnam banghyang yeolchareul tasimyeon dwaeyo.",
+        "Mullonijyo. Yeogiseo ihoseon oeseonsunhwan, Hapjeong·Sindorim bangmyeon yeolchareul tasimyeon dwaeyo.",
       choices: [
-        {
-          id: "repeat_intro_2",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
-          nextId: "ia_repeat_intro_route_slow",
-        },
         {
           id: "ask_platform_after_repeat",
           label: "Où est exactement le quai et dans quelle direction ?",
@@ -1240,53 +1234,18 @@ export const hongikToGangnamLesson: MetroLesson = {
     },
 
     {
-      id: "ia_repeat_intro_route_slow",
-      speaker: "ai",
-      phase: "Ligne",
-      text: "Je répète plus simplement : ligne 2, direction Gangnam.",
-      korean: "더 간단히 말씀드리면, 2호선, 강남 방향이에요.",
-      french: "Je répète plus simplement : ligne 2, direction Gangnam.",
-      romanization:
-        "Deo gandanhi malsseumdeurimyeon, ihoseon, Gangnam banghyang-ieyo.",
-      choices: [
-        {
-          id: "go_platform_after_slow",
-          label: "D'accord. Où est le quai exactement ?",
-          korean: "알겠어요. 플랫폼은 정확히 어디예요?",
-          romanization: "Algesseoyo. Peullaetpomeun jeonghwakhi eodiyeyo?",
-          nextId: "ia_platform_direction",
-        },
-        {
-          id: "go_trip_after_slow",
-          label: "Combien de temps dure le trajet ?",
-          korean: "시간은 얼마나 걸리나요?",
-          romanization: "Siganeun eolmana geollinayo?",
-          nextId: "ia_trip_time",
-        },
-        {
-          id: "go_exit_after_slow",
-          label: "Et quelle sortie prendre à Gangnam ?",
-          korean: "그리고 강남역에서는 몇 번 출구로 나가면 되나요?",
-          romanization:
-            "Geurigo Gangnam-yeogeseoneun myeot beon chulgu-ro nagamyeon doenayo?",
-          nextId: "ia_exit_info",
-        },
-      ],
-    },
-
-    {
       id: "ia_platform_direction",
       speaker: "ai",
       phase: "Direction",
       narrator:
         "Le passant vous donne maintenant des détails plus précis sur le quai et le sens du trajet.",
-      text: "Le train est au sous-sol 2, quai B. Regardez l'écran au-dessus du quai. Si la direction affichée correspond à Gangnam, c'est le bon quai.",
+      text: "Le quai de la ligne 2 se trouve au deuxième sous-sol, indiqué B2 (지하 2층). Vérifiez l'écran indiquant la circulation extérieure vers Hapjeong et Sindorim.",
       korean:
-        "열차는 지하 2층 B 플랫폼이에요. 플랫폼 위 전광판을 보시고 강남 방향이라고 나오면 그쪽이 맞아요.",
+        "2호선 승강장은 지하 2층(B2)에 있어요. 외선순환, 합정·신도림 방면 전광판을 확인하세요.",
       french:
-        "Le train est au sous-sol 2, quai B. Regardez l'écran au-dessus du quai. Si la direction affichée correspond à Gangnam, c'est le bon quai.",
+        "Le quai de la ligne 2 se trouve au deuxième sous-sol, indiqué B2 (지하 2층). Vérifiez l'écran indiquant la circulation extérieure vers Hapjeong et Sindorim.",
       romanization:
-        "Yeolchaneun jihah 2cheung B peullaetpom-ieyo. Peullaetpom wi jeon-gwangpaneul bosigo Gangnam banghyang-irago naomyeon geujjogi majayo.",
+        "Ihoseon seunggangjangeun jiha icheung (B2)-e isseoyo. Oeseonsunhwan, Hapjeong·Sindorim bangmyeon jeongwangpaneul hwaginhaseyo.",
       choices: [
         {
           id: "repeat_platform",
@@ -1317,21 +1276,14 @@ export const hongikToGangnamLesson: MetroLesson = {
       id: "ia_repeat_platform_direction",
       speaker: "ai",
       phase: "Direction",
-      text: "Oui. Sous-sol 2, quai B. Vérifiez l'écran du quai et prenez le train en direction de Gangnam.",
+      text: "Oui. Le quai de la ligne 2 est au deuxième sous-sol. Vérifiez la circulation extérieure vers Hapjeong et Sindorim.",
       korean:
-        "네. 지하 2층 B 플랫폼이에요. 전광판을 확인하시고 강남 방향 열차를 타세요.",
+        "네. 2호선 승강장은 지하 2층이에요. 외선순환, 합정·신도림 방면을 확인하세요.",
       french:
-        "Oui. Sous-sol 2, quai B. Vérifiez l'écran du quai et prenez le train en direction de Gangnam.",
+        "Oui. Le quai de la ligne 2 est au deuxième sous-sol. Vérifiez la circulation extérieure vers Hapjeong et Sindorim.",
       romanization:
-        "Ne. Jihah 2cheung B peullaetpom-ieyo. Jeon-gwangpaneul hwaginhashigo Gangnam banghyang yeolchareul taseyo.",
+        "Ne. Ihoseon seunggangjangeun jiha icheung-ieyo. Oeseonsunhwan, Hapjeong·Sindorim bangmyeon-eul hwaginhaseyo.",
       choices: [
-        {
-          id: "repeat_platform_2",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
-          nextId: "ia_repeat_platform_direction_short",
-        },
         {
           id: "ask_transfer_after_platform_repeat",
           label: "Est-ce qu'il y a un transfert ?",
@@ -1351,53 +1303,17 @@ export const hongikToGangnamLesson: MetroLesson = {
     },
 
     {
-      id: "ia_repeat_platform_direction_short",
-      speaker: "ai",
-      phase: "Direction",
-      text: "Je répète très simplement : quai B, sous-sol 2, direction Gangnam.",
-      korean: "아주 간단히 말씀드리면, 지하 2층 B 플랫폼, 강남 방향이에요.",
-      french:
-        "Je répète très simplement : quai B, sous-sol 2, direction Gangnam.",
-      romanization:
-        "Aju gandanhi malsseumdeurimyeon, jihah 2cheung B peullaetpom, Gangnam banghyang-ieyo.",
-      choices: [
-        {
-          id: "ask_transfer_after_short_platform",
-          label: "Est-ce qu'il y a un transfert ?",
-          korean: "갈아타야 하나요?",
-          romanization: "garattaya hanayo ?",
-          nextId: "ia_transfer_info",
-        },
-        {
-          id: "ask_trip_after_short_platform",
-          label: "Combien de temps dure le trajet ?",
-          korean: "시간은 얼마나 걸리나요?",
-          romanization: "Siganeun eolmana geollinayo?",
-          nextId: "ia_trip_time",
-        },
-        {
-          id: "ask_exit_after_short_platform",
-          label: "Quelle sortie dois-je prendre à Gangnam ?",
-          korean: "강남역에서는 몇 번 출구로 나가야 하나요?",
-          romanization:
-            "Gangnam-yeogeseoneun myeot beon chulgu-ro nagaya hanayo?",
-          nextId: "ia_exit_info",
-        },
-      ],
-    },
-
-    {
       id: "ia_trip_time",
       speaker: "ai",
       phase: "Trajet",
       narrator:
         "Vous obtenez maintenant des précisions sur la durée et le nombre d'arrêts.",
-      text: "Le trajet dure environ 44 minutes et il y a à peu près 22 arrêts jusqu'à Gangnam.",
-      korean: "강남역까지는 약 44분 정도 걸리고, 대략 22정거장 정도 지나가요.",
+      text: "Le trajet dure environ 40 minutes et Gangnam est à 17 stations.",
+      korean: "강남역까지는 약 40분 걸리고, 열일곱 정거장이에요.",
       french:
-        "Le trajet dure environ 44 minutes et il y a à peu près 22 arrêts jusqu'à Gangnam.",
+        "Le trajet dure environ 40 minutes et Gangnam est à 17 stations.",
       romanization:
-        "Gangnam-yeokkkajineun yak 44bun jeongdo geolligo, daeryak 22jeonggeojang jeongdo jinagayo.",
+        "Gangnam-yeokkkajineun yak sasip bun geolligo, yeolilgop jeonggeojang-ieyo.",
       choices: [
         {
           id: "repeat_trip",
@@ -1428,20 +1344,13 @@ export const hongikToGangnamLesson: MetroLesson = {
       id: "ia_repeat_trip_time",
       speaker: "ai",
       phase: "Trajet",
-      text: "Bien sûr. Comptez environ 44 minutes, soit à peu près 22 arrêts.",
-      korean: "네. 약 44분 정도 걸리고, 대략 22정거장 정도예요.",
+      text: "Bien sûr. Comptez environ 40 minutes pour 17 stations.",
+      korean: "네. 약 40분 걸리고, 열일곱 정거장이에요.",
       french:
-        "Bien sûr. Comptez environ 44 minutes, soit à peu près 22 arrêts.",
+        "Bien sûr. Comptez environ 40 minutes pour 17 stations.",
       romanization:
-        "Ne. Yak 44bun jeongdo geolligo, daeryak 22jeonggeojang jeongdo-yeyo.",
+        "Ne. Yak sasip bun geolligo, yeolilgop jeonggeojang-ieyo.",
       choices: [
-        {
-          id: "repeat_trip_2",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
-          nextId: "ia_repeat_trip_time_short",
-        },
         {
           id: "ask_transfer_after_trip_repeat",
           label: "Est-ce qu'il y a un transfert ?",
@@ -1456,41 +1365,6 @@ export const hongikToGangnamLesson: MetroLesson = {
           romanization:
             "Gangnam-yeogeseoneun myeot beon chulgu-ro nagaya hanayo?",
           nextId: "ia_exit_info",
-        },
-      ],
-    },
-
-    {
-      id: "ia_repeat_trip_time_short",
-      speaker: "ai",
-      phase: "Trajet",
-      text: "En résumé : environ 44 minutes, environ 22 arrêts.",
-      korean: "정리해서 말씀드리면, 약 44분, 약 22정거장이에요.",
-      french: "En résumé : environ 44 minutes, environ 22 arrêts.",
-      romanization:
-        "Jeongrihaeseo malsseumdeurimyeon, yak 44bun, yak 22jeonggeojang-ieyo.",
-      choices: [
-        {
-          id: "ask_transfer_after_trip_short",
-          label: "Est-ce qu'il y a un transfert ?",
-          korean: "갈아타야 하나요?",
-          romanization: "garattaya hanayo ?",
-          nextId: "ia_transfer_info",
-        },
-        {
-          id: "ask_exit_after_trip_short",
-          label: "Quelle sortie dois-je prendre à Gangnam ?",
-          korean: "강남역에서는 몇 번 출구로 나가야 하나요?",
-          romanization:
-            "Gangnam-yeogeseoneun myeot beon chulgu-ro nagaya hanayo?",
-          nextId: "ia_exit_info",
-        },
-        {
-          id: "thank_after_trip_short",
-          label: "Merci beaucoup, j'ai tout compris !",
-          korean: "감사합니다, 다 이해했어요!",
-          romanization: "Gamsahamnida, da ihaehaesseoyo!",
-          nextId: "ia_end",
         },
       ],
     },
@@ -1701,13 +1575,13 @@ export const hongikToGangnamLesson: MetroLesson = {
       id: "ia_exit_landmark_info",
       speaker: "ai",
       phase: "Sortie",
-      text: "Oui, c'est assez proche. En sortant par la sortie 2, vous rejoignez facilement Gangnam-daero, et vous pouvez ensuite continuer vers le COEX ou Teheran-ro.",
+      text: "Teheran-ro commence à Gangnam. En revanche, le COEX se trouve à Samseong. Restez sur la ligne 2 pendant trois stations supplémentaires, descendez à Samseong, puis dirigez-vous vers les sorties 5 ou 6.",
       korean:
-        "네, 꽤 가까워요. 2번 출구로 나오시면 강남대로로 쉽게 가실 수 있고, 거기서 COEX나 테헤란로 쪽으로 계속 가시면 돼요.",
+        "테헤란로는 강남역에서 이어져요. 하지만 코엑스는 삼성역에 있어요. 2호선을 세 정거장 더 타고 삼성역에서 내려 5번이나 6번 출구 쪽으로 가세요.",
       french:
-        "Oui, c'est assez proche. En sortant par la sortie 2, vous rejoignez facilement Gangnam-daero, et vous pouvez ensuite continuer vers le COEX ou Teheran-ro.",
+        "Teheran-ro commence à Gangnam. En revanche, le COEX se trouve à Samseong. Restez sur la ligne 2 pendant trois stations supplémentaires, descendez à Samseong, puis dirigez-vous vers les sorties 5 ou 6.",
       romanization:
-        "Ne, kkwae gakkawoyo. 2beon chulgu-ro naosimyeon Gangnam-daero-ro swipge gasil su itgo, geogiseo COEX-na Teheran-ro jjogeuro gyesok gasimyeon dwaeyo.",
+        "Teheran-roneun Gangnam-yeogeseo ieojyeoyo. Hajiman Koekseuneun Samseong-yeoge isseoyo. Ihoseoneul se jeonggeojang deo tago Samseong-yeogeseo naeryeo obeon-ina yukbeon chulgu jjogeuro gaseyo.",
       choices: [
         {
           id: "repeat_landmark",
@@ -1730,13 +1604,13 @@ export const hongikToGangnamLesson: MetroLesson = {
       id: "ia_repeat_exit_landmark_info",
       speaker: "ai",
       phase: "Sortie",
-      text: "Oui. Sortez par la sortie 2, puis continuez vers Gangnam-daero. Le COEX et Teheran-ro sont accessibles depuis là.",
+      text: "Teheran-ro part de Gangnam. Pour le COEX, descendez à Samseong et empruntez le passage relié aux sorties 5 ou 6.",
       korean:
-        "네. 2번 출구로 나가신 다음 강남대로 쪽으로 가세요. 거기서 COEX와 테헤란로로 이동하실 수 있어요.",
+        "테헤란로는 강남역에서 이어져요. 코엑스는 삼성역에서 내려 5번이나 6번 출구 쪽 연결 통로를 이용하세요.",
       french:
-        "Oui. Sortez par la sortie 2, puis continuez vers Gangnam-daero. Le COEX et Teheran-ro sont accessibles depuis là.",
+        "Teheran-ro part de Gangnam. Pour le COEX, descendez à Samseong et empruntez le passage relié aux sorties 5 ou 6.",
       romanization:
-        "Ne. 2beon chulgu-ro nagashin daeum Gangnam-daero jjogeuro gaseyo. Geogiseo COEX-wa Teheran-ro-ro idonghasil su isseoyo.",
+        "Teheran-roneun Gangnam-yeogeseo ieojyeoyo. Koekseuneun Samseong-yeogeseo naeryeo obeon-ina yukbeon chulgu jjok yeongyeol tongnoreul iyonghaseyo.",
       choices: [
         {
           id: "thank_after_landmark_repeat",
@@ -1745,54 +1619,19 @@ export const hongikToGangnamLesson: MetroLesson = {
           romanization: "Gamsahamnida, da ihaehaesseoyo!",
           nextId: "ia_end",
         },
-        {
-          id: "repeat_landmark_again",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
-          nextId: "ia_repeat_exit_landmark_info_short",
-        },
       ],
     },
-
-    {
-      id: "ia_repeat_exit_landmark_info_short",
-      speaker: "ai",
-      phase: "Sortie",
-      text: "En bref : sortie 2, puis direction Gangnam-daero.",
-      korean: "짧게 말씀드리면, 2번 출구, 그리고 강남대로 방향이에요.",
-      french: "En bref : sortie 2, puis direction Gangnam-daero.",
-      romanization:
-        "Jjalge malsseumdeurimyeon, 2beon chulgu, geurigo Gangnam-daero banghyang-ieyo.",
-      choices: [
-        {
-          id: "thank_after_landmark_short",
-          label: "Merci beaucoup, j'ai tout compris !",
-          korean: "감사합니다, 다 이해했어요!",
-          romanization: "Gamsahamnida, da ihaehaesseoyo!",
-          nextId: "ia_end",
-        },
-        {
-          id: "repeat_landmark_short_again",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
-          nextId: "ia_end_summary",
-        },
-      ],
-    },
-
     {
       id: "ia_end_summary",
       speaker: "ai",
       phase: "Fin",
-      text: "Je résume : prenez la ligne 2 à Hongik University, direction Gangnam, sans transfert, puis sortez par la sortie 2.",
+      text: "À Hongik University, prenez la ligne 2 dans le sens extérieur. Sans correspondance, descendez à Gangnam après 17 stations, puis prenez la sortie 2.",
       korean:
-        "정리해 드리면, 홍익대입구역에서 2호선을 타고 강남 방향으로 가세요. 환승은 없고, 도착하면 2번 출구로 나오시면 됩니다.",
+        "홍대입구역에서 2호선 외선순환 열차를 타세요. 환승 없이 열일곱 정거장 뒤 강남역에서 내려 2번 출구로 나오시면 됩니다.",
       french:
-        "Je résume : prenez la ligne 2 à Hongik University, direction Gangnam, sans transfert, puis sortez par la sortie 2.",
+        "À Hongik University, prenez la ligne 2 dans le sens extérieur. Sans correspondance, descendez à Gangnam après 17 stations, puis prenez la sortie 2.",
       romanization:
-        "Jeongrihae deurimyeon, Hongikdaeipgu-yeogeseo ihoseoneul tago Gangnam banghyang-euro gaseyo. Hwansung-eun eopgo, dochakhamyeon 2beon chulgu-ro naosimyeon doemnida.",
+        "Hongdaeipgu-yeogeseo ihoseon oeseonsunhwan yeolchareul taseyo. Hwanseung eopsi yeolilgop jeonggeojang dwi Gangnam-yeogeseo naeryeo ibeon chulgu-ro naosimyeon doemnida.",
       choices: [
         {
           id: "thank_after_summary",
@@ -1815,13 +1654,13 @@ export const hongikToGangnamLesson: MetroLesson = {
       id: "ia_end_summary_short",
       speaker: "ai",
       phase: "Fin",
-      text: "Très simplement : ligne 2, direction Gangnam, pas de transfert, sortie 2.",
+      text: "Très simplement : ligne 2, circulation extérieure vers Hapjeong et Sindorim, 17 stations, pas de correspondance, sortie 2.",
       korean:
-        "아주 간단히 말씀드리면, 2호선, 강남 방향, 환승 없음, 2번 출구예요.",
+        "아주 간단히 말씀드리면, 2호선 외선순환, 합정·신도림 방면, 열일곱 정거장, 환승 없음, 2번 출구예요.",
       french:
-        "Très simplement : ligne 2, direction Gangnam, pas de transfert, sortie 2.",
+        "Très simplement : ligne 2, circulation extérieure vers Hapjeong et Sindorim, 17 stations, pas de correspondance, sortie 2.",
       romanization:
-        "Aju gandanhi malsseumdeurimyeon, ihoseon, Gangnam banghyang, hwansung eopseum, 2beon chulgu-yeyo.",
+        "Aju gandanhi malsseumdeurimyeon, ihoseon oeseonsunhwan, Hapjeong·Sindorim bangmyeon, yeolilgop jeonggeojang, hwanseung eopseum, ibeon chulgu-yeyo.",
       choices: [
         {
           id: "thank_after_summary_short",

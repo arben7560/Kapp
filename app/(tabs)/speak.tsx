@@ -250,7 +250,6 @@ export default function SpeakScreen() {
           onClose={() => setSheetVisible(false)}
           selectedTheme={selectedTheme}
         />
-
       </ImageBackground>
     </SafeAreaView>
   );
@@ -294,7 +293,15 @@ function ThemeModeSheet({
   const [translateY] = useState(() => new Animated.Value(80));
   const [backdropOpacity] = useState(() => new Animated.Value(0));
   const [mounted, setMounted] = useState(visible);
-  const { height: windowHeight } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+
+  const sheetWidth = Math.min(Math.max(windowWidth - 32, 0), 520);
+  const sheetMaxHeight = Math.min(
+    Math.max(300, windowHeight * (windowHeight < 600 ? 0.86 : 0.82)),
+    Math.max(300, windowHeight - 24),
+    680,
+  );
+  const heroHeight = windowHeight < 500 ? 104 : windowHeight < 700 ? 128 : 152;
 
   useEffect(() => {
     if (visible && selectedTheme) {
@@ -407,7 +414,13 @@ function ThemeModeSheet({
           <BlurView
             intensity={94}
             tint="dark"
-            style={[styles.sheetWrap, { maxHeight: Math.max(280, windowHeight - 24) }]}
+            style={[
+              styles.sheetWrap,
+              {
+                width: sheetWidth,
+                maxHeight: sheetMaxHeight,
+              },
+            ]}
           >
             <LinearGradient
               colors={[
@@ -440,147 +453,147 @@ function ThemeModeSheet({
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-            <View
-              style={[
-                styles.sheetHeroFrame,
-                {
-                  borderColor: `${config.accent}48`,
-                  shadowColor: config.accent,
-                },
-              ]}
-            >
-              <Image
-                source={config.image}
-                style={styles.sheetHeroImg}
-                resizeMode="cover"
-              />
-
-              <LinearGradient
-                colors={[
-                  "rgba(0,0,0,0.05)",
-                  "rgba(0,0,0,0.28)",
-                  "rgba(0,0,0,0.82)",
+              <View
+                style={[
+                  styles.sheetHeroFrame,
+                  {
+                    height: heroHeight,
+                    borderColor: `${config.accent}48`,
+                    shadowColor: config.accent,
+                  },
                 ]}
-                locations={[0, 0.48, 1]}
-                style={StyleSheet.absoluteFill}
-              />
+              >
+                <Image
+                  source={config.image}
+                  style={styles.sheetHeroImg}
+                  resizeMode="cover"
+                />
 
-              <LinearGradient
-                colors={[`${config.accent}22`, "transparent"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0.65 }}
-                style={StyleSheet.absoluteFill}
-              />
-
-              <Pressable onPress={onClose} style={styles.sheetCloseIcon}>
-                <AppText
-                  variant="sectionTitle"
-                  tone="muted"
-                  align="center"
-                  accessibilityLabel="Fermer"
-                >
-                  ×
-                </AppText>
-              </Pressable>
-
-              <View style={styles.sheetHeroCopy}>
-                <View style={styles.sheetKickerRow}>
-                  <View
-                    style={[
-                      styles.sheetStatusDot,
-                      { backgroundColor: config.accent },
-                    ]}
-                  />
-                  <AppText
-                    variant="sectionLabel"
-                    tone="muted"
-                  >
-                    SCÈNE IMMERSIVE
-                  </AppText>
-                </View>
-
-                <AppText
-                  variant="sceneTitle"
-                  tone="strong"
-                >
-                  {config.title}
-                </AppText>
-                <AppText
-                  variant="subtitle"
-                  tone="muted"
-                  style={styles.sheetSub}
-                >
-                  {config.sub}
-                </AppText>
-              </View>
-            </View>
-
-            <View style={styles.sheetMetaRow}>
-              {["Guidé", "Interactif", "Coréen réel"].map((label) => (
-                <View
-                  key={label}
-                  style={[
-                    styles.sheetMetaPill,
-                    { borderColor: `${config.accent}26` },
+                <LinearGradient
+                  colors={[
+                    "rgba(0,0,0,0.05)",
+                    "rgba(0,0,0,0.28)",
+                    "rgba(0,0,0,0.82)",
                   ]}
-                >
+                  locations={[0, 0.48, 1]}
+                  style={StyleSheet.absoluteFill}
+                />
+
+                <LinearGradient
+                  colors={[`${config.accent}22`, "transparent"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0.65 }}
+                  style={StyleSheet.absoluteFill}
+                />
+
+                <Pressable onPress={onClose} style={styles.sheetCloseIcon}>
                   <AppText
-                    variant="caption"
+                    variant="sectionTitle"
                     tone="muted"
                     align="center"
+                    accessibilityLabel="Fermer"
                   >
-                    {label}
+                    ×
+                  </AppText>
+                </Pressable>
+
+                <View style={styles.sheetHeroCopy}>
+                  <View style={styles.sheetKickerRow}>
+                    <View
+                      style={[
+                        styles.sheetStatusDot,
+                        { backgroundColor: config.accent },
+                      ]}
+                    />
+                    <AppText
+                      variant="sectionLabel"
+                      tone="muted"
+                      lineContract="singleLine"
+                    >
+                      SCÈNE IMMERSIVE
+                    </AppText>
+                  </View>
+
+                  <AppText
+                    variant="sceneTitle"
+                    tone="strong"
+                    lineContract="singleLine"
+                  >
+                    {config.title}
+                  </AppText>
+                  <AppText
+                    variant="subtitle"
+                    tone="muted"
+                    lineContract="singleLine"
+                    style={styles.sheetSub}
+                  >
+                    {config.sub}
                   </AppText>
                 </View>
-              ))}
-            </View>
-
-            <View style={styles.sheetBody}>
-              <View style={styles.sheetModeHeader}>
-                <AppText variant="sectionTitle" tone="strong">
-                  Choisis ton expérience
-                </AppText>
-                <AppText
-                  variant="bodySecondary"
-                  tone="soft"
-                  style={styles.sheetSectionHint}
-                >
-                  Une scène courte, claire, pensée pour passer à l’action.
-                </AppText>
               </View>
 
-              <View style={styles.sheetOptions}>
-                <SheetOptionCard
-                  title={
-                    config.guidedRoute
-                      ? "Scène guidée"
-                      : "Scène guidée — bientôt"
-                  }
-                  subtitle={
-                    config.guidedRoute
-                      ? "Entre dans la situation, écoute et réponds comme sur place."
-                      : "Le mémo Shopping reste disponible pendant la préparation de cette scène."
-                  }
-                  icon="IA"
-                  accent={config.accent}
-                  disabled={!config.guidedRoute}
-                  onPress={goToImmersive}
-                />
-                <SheetOptionCard
-                  title="Mémo utile"
-                  subtitle="Revois les mots et expressions utilisés couramment."
-                  icon="Aa"
-                  accent={config.accent}
-                  onPress={goToText}
-                />
+              <View style={styles.sheetMetaRow}>
+                {["Guidé", "Interactif", "Coréen réel"].map((label) => (
+                  <View
+                    key={label}
+                    style={[
+                      styles.sheetMetaPill,
+                      { borderColor: `${config.accent}26` },
+                    ]}
+                  >
+                    <AppText variant="caption" tone="muted" align="center">
+                      {label}
+                    </AppText>
+                  </View>
+                ))}
               </View>
-            </View>
 
-            <Pressable onPress={onClose} style={styles.sheetCloseButton}>
-              <AppText variant="button" tone="soft" align="center">
-                Fermer
-              </AppText>
-            </Pressable>
+              <View style={styles.sheetBody}>
+                <View style={styles.sheetModeHeader}>
+                  <AppText variant="sectionTitle" tone="strong">
+                    Choisis ton expérience
+                  </AppText>
+                  <AppText
+                    variant="bodySecondary"
+                    tone="soft"
+                    style={styles.sheetSectionHint}
+                  >
+                    Une scène courte, claire, pensée pour passer à l’action.
+                  </AppText>
+                </View>
+
+                <View style={styles.sheetOptions}>
+                  <SheetOptionCard
+                    title={
+                      config.guidedRoute
+                        ? "Scène guidée"
+                        : "Scène guidée — bientôt"
+                    }
+                    subtitle={
+                      config.guidedRoute
+                        ? "Entre dans la situation, écoute et réponds comme sur place."
+                        : "Le mémo Shopping reste disponible pendant la préparation de cette scène."
+                    }
+                    icon="IA"
+                    accent={config.accent}
+                    disabled={!config.guidedRoute}
+                    onPress={goToImmersive}
+                  />
+                  <SheetOptionCard
+                    title="Mémo utile"
+                    subtitle="Revois les mots et expressions utilisés couramment."
+                    icon="Aa"
+                    accent={config.accent}
+                    onPress={goToText}
+                  />
+                </View>
+              </View>
+
+              <Pressable onPress={onClose} style={styles.sheetCloseButton}>
+                <AppText variant="button" tone="soft" align="center">
+                  Fermer
+                </AppText>
+              </Pressable>
             </ScrollView>
           </BlurView>
         </Animated.View>
@@ -833,27 +846,29 @@ const styles = StyleSheet.create({
   },
 
   sheetAnimatedWrap: {
+    width: "100%",
+    alignItems: "center",
     justifyContent: "flex-end",
-    paddingHorizontal: 10,
-    paddingBottom: 8,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
 
   sheetAmbientGlow: {
     position: "absolute",
-    bottom: 305,
+    bottom: 210,
     alignSelf: "center",
-    width: 300,
-    height: 190,
+    width: 260,
+    height: 160,
     borderRadius: 999,
-    opacity: 0.72,
+    opacity: 0.62,
   },
 
   sheetWrap: {
     overflow: "hidden",
-    borderRadius: 36,
-    paddingHorizontal: 12,
-    paddingTop: 10,
-    paddingBottom: 18,
+    borderRadius: 28,
+    paddingHorizontal: 10,
+    paddingTop: 8,
+    paddingBottom: 14,
     borderWidth: 1,
     borderLeftWidth: 1,
     borderRightWidth: 1,
@@ -883,18 +898,17 @@ const styles = StyleSheet.create({
   },
 
   sheetHandle: {
-    width: 42,
+    width: 40,
     height: 4,
     backgroundColor: "rgba(255,255,255,0.22)",
     borderRadius: 999,
     alignSelf: "center",
-    marginTop: 6,
-    marginBottom: 14,
+    marginTop: 4,
+    marginBottom: 10,
   },
 
   sheetHeroFrame: {
-    minHeight: 218,
-    borderRadius: 32,
+    borderRadius: 22,
     overflow: "hidden",
     borderWidth: 1,
     backgroundColor: "rgba(255,255,255,0.04)",
@@ -910,20 +924,20 @@ const styles = StyleSheet.create({
   },
 
   sheetHeroCopy: {
-    minHeight: 218,
+    flex: 1,
     justifyContent: "flex-end",
-    paddingHorizontal: 18,
-    paddingTop: 82,
-    paddingBottom: 18,
+    paddingHorizontal: 16,
+    paddingTop: 44,
+    paddingBottom: 14,
   },
 
   sheetCloseIcon: {
     position: "absolute",
-    top: 14,
-    right: 14,
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    top: 10,
+    right: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(8,10,16,0.58)",
@@ -934,15 +948,15 @@ const styles = StyleSheet.create({
   sheetMetaRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
-    marginTop: 12,
+    gap: 7,
+    marginTop: 10,
     paddingHorizontal: 2,
   },
 
   sheetMetaPill: {
     flexGrow: 1,
-    flexBasis: 120,
-    minHeight: 34,
+    flexBasis: 96,
+    minHeight: 30,
     borderRadius: 999,
     borderWidth: 1,
     alignItems: "center",
@@ -951,8 +965,8 @@ const styles = StyleSheet.create({
   },
 
   sheetBody: {
-    paddingHorizontal: 6,
-    paddingTop: 18,
+    paddingHorizontal: 4,
+    paddingTop: 14,
   },
 
   sheetKickerRow: {
@@ -973,7 +987,7 @@ const styles = StyleSheet.create({
   },
 
   sheetModeHeader: {
-    marginBottom: 15,
+    marginBottom: 12,
   },
 
   sheetSectionHint: {
@@ -981,11 +995,11 @@ const styles = StyleSheet.create({
   },
 
   sheetOptions: {
-    gap: 12,
+    gap: 10,
   },
 
   optionCard: {
-    borderRadius: 30,
+    borderRadius: 24,
     overflow: "hidden",
   },
 
@@ -994,38 +1008,38 @@ const styles = StyleSheet.create({
   },
 
   optionBlur: {
-    minHeight: 88,
-    borderRadius: 30,
+    minHeight: 78,
+    borderRadius: 24,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.12)",
     backgroundColor: "rgba(255,255,255,0.035)",
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
-    paddingLeft: 18,
-    paddingRight: 15,
+    paddingVertical: 13,
+    paddingLeft: 16,
+    paddingRight: 13,
     position: "relative",
   },
 
   optionAccent: {
     position: "absolute",
     left: 0,
-    top: 18,
-    bottom: 18,
+    top: 15,
+    bottom: 15,
     width: 3.5,
     borderTopRightRadius: 8,
     borderBottomRightRadius: 8,
   },
 
   optionIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 18,
+    width: 42,
+    height: 42,
+    borderRadius: 16,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 14,
+    marginRight: 12,
   },
 
   optionTextBlock: {
@@ -1048,11 +1062,10 @@ const styles = StyleSheet.create({
   },
 
   sheetCloseButton: {
-    marginTop: 18,
+    marginTop: 12,
     alignSelf: "center",
     paddingHorizontal: 22,
     paddingVertical: 10,
     borderRadius: 999,
   },
-
 });

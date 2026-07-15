@@ -44,18 +44,6 @@ export const metroMissions: MetroMission[] = [
     missionKind: "complete",
   },
   {
-    id: "seoul-jamsil",
-    title: "Seoul Station -> Jamsil",
-    subtitle: "Trouver le bon trajet, verifier le temps et aller jusqu'a Jamsil.",
-    access: "premium",
-    duration: "5-7 min",
-    objective: "Demander un itineraire complet jusqu'a Jamsil.",
-    goals: ["Demander", "Transfert", "Temps", "Sortie"],
-    scenarioKey: "seoul_station_to_jamsil_full",
-    lessonId: "seoul_station_to_jamsil",
-    missionKind: "complete",
-  },
-  {
     id: "ask-exit",
     title: "Demander sa sortie",
     subtitle: "Trouve la bonne sortie.",
@@ -168,8 +156,8 @@ function createHongikCompleteLesson(lesson: MetroLesson): MetroLesson {
       extraChoices: [
         getSourceChoice(
           lesson,
-          "ia_repeat_platform_direction_short",
-          "ask_trip_after_short_platform",
+          "ia_intro_route",
+          "ask_trip",
           "ia_trip_time",
         ),
       ],
@@ -180,8 +168,8 @@ function createHongikCompleteLesson(lesson: MetroLesson): MetroLesson {
       extraChoices: [
         getSourceChoice(
           lesson,
-          "ia_repeat_platform_direction_short",
-          "ask_trip_after_short_platform",
+          "ia_intro_route",
+          "ask_trip",
           "ia_trip_time",
         ),
       ],
@@ -202,10 +190,48 @@ function createHongikCompleteLesson(lesson: MetroLesson): MetroLesson {
       stepId: "ia_repeat_transfer_info",
       keepChoiceIds: ["ask_exit_after_transfer_repeat"],
     },
-    { stepId: "ia_exit_info", keepChoiceIds: ["repeat_exit", "thank_final"] },
+    {
+      stepId: "ia_exit_info",
+      keepChoiceIds: ["repeat_exit", "ask_more_exit", "thank_final"],
+    },
     {
       stepId: "ia_repeat_exit_info",
-      keepChoiceIds: ["thank_after_exit_repeat"],
+      keepChoiceIds: [
+        "ask_landmark_after_exit_repeat",
+        "thank_after_exit_repeat",
+      ],
+    },
+    {
+      stepId: "ia_exit_landmark_info",
+      keepChoiceIds: ["repeat_landmark"],
+      extraChoices: [
+        getSourceChoice(
+          lesson,
+          "ia_exit_landmark_info",
+          "thank_after_landmark",
+          "ia_end_summary",
+        ),
+      ],
+    },
+    {
+      stepId: "ia_repeat_exit_landmark_info",
+      keepChoiceIds: [],
+      extraChoices: [
+        getSourceChoice(
+          lesson,
+          "ia_repeat_exit_landmark_info",
+          "thank_after_landmark_repeat",
+          "ia_end_summary",
+        ),
+      ],
+    },
+    {
+      stepId: "ia_end_summary",
+      keepChoiceIds: ["thank_after_summary", "repeat_summary"],
+    },
+    {
+      stepId: "ia_end_summary_short",
+      keepChoiceIds: ["thank_after_summary_short"],
     },
     { stepId: "ia_end" },
   ]);

@@ -52,7 +52,7 @@ const SCENES = [
       },
       {
         char: "Barista",
-        kr: "드시고 가세요, 아니면 포장에 드릴까요?",
+        kr: "드시고 가세요? 아니면 포장해 드릴까요?",
         fr: "Vous consommez sur place ou à emporter ?",
         side: "server",
       },
@@ -107,8 +107,8 @@ const SCENES = [
         context: "Le barista confirme la commande avant la suite.",
       },
       {
-        word: "드시고 가세요, 아니면 포장하세요?",
-        rom: "Deusigo gaseyo, animyeon pojanghaseyo?",
+        word: "드시고 가세요? 아니면 포장해 드릴까요?",
+        rom: "Deusigo gaseyo? Animyeon pojanghae deurilkkayo?",
         mean: "Sur place ou à emporter ?",
         context:
           "La question simple pour savoir si la commande est sur place ou à emporter.",

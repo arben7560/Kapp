@@ -15,8 +15,9 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
-import { ABSOLUTE_FILL } from "../../constants/layout";
+import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { ABSOLUTE_FILL } from "../../constants/layout";
 import {
   cafeDialogueData,
   type DialogueChoice,
@@ -28,7 +29,6 @@ import {
   getCafeMissionById,
   getCafeMissionScenario,
 } from "../../data/lesson/cafe/cafeMissions";
-import { useStore } from "../../_store";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
@@ -42,7 +42,7 @@ const LINE = "rgba(255,255,255,0.08)";
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
 const PURPLE = "#A855F7";
-const VIDEO_OVERSCAN_SCALE = 1.06;
+const VIDEO_OVERSCAN_SCALE = 1;
 
 // ==================== VIDEOS ====================
 const welcomeCafeReal = require("../../assets/ai/cafe/welcomeCafeReal.mp4");
@@ -185,7 +185,8 @@ export default function CafeIaScreen() {
     normalizeParam(params.mission as string | string[] | undefined) ??
     DEFAULT_CAFE_MISSION_ID;
   const currentMission =
-    getCafeMissionById(missionId) ?? getCafeMissionById(DEFAULT_CAFE_MISSION_ID);
+    getCafeMissionById(missionId) ??
+    getCafeMissionById(DEFAULT_CAFE_MISSION_ID);
   const { hasPremiumAccess, isLoading: isPaywallLoading } = usePaywall();
   const canEnterMission =
     currentMission?.access !== "premium" || hasPremiumAccess;
@@ -244,13 +245,15 @@ export default function CafeIaScreen() {
 
   useEffect(() => {
     if (!canEnterMission) return;
-    if (currentNode?.type === "ia" && currentVideoSource) {
+    if (currentNode?.type === "ia") {
       setDisplayedVideoSource(currentVideoSource);
+    } else {
+      setDisplayedVideoSource(null);
     }
   }, [canEnterMission, currentNode, currentVideoSource]);
 
   const avatarFrameHeight = Math.min(
-    responsive.contentWidth * 0.95,
+    responsive.contentWidth * 1.1,
     screenWidth * 0.9,
     screenHeight * 0.54,
     420,
@@ -314,12 +317,17 @@ export default function CafeIaScreen() {
   useEffect(() => {
     if (!canEnterMission) return;
     if (!currentNode) return;
-    if (!displayedVideoSource) return;
 
     let isCancelled = false;
 
     async function updateVideoSource() {
       try {
+        if (!displayedVideoSource) {
+          player.pause();
+          await player.replaceAsync(null);
+          return;
+        }
+
         await player.replaceAsync(displayedVideoSource);
 
         if (isCancelled) return;
@@ -535,7 +543,12 @@ export default function CafeIaScreen() {
             onPress={() => router.back()}
             style={styles.backBtn}
           >
-            <AppText variant="button" tone="strong" script="latin" style={styles.backTxt}>
+            <AppText
+              variant="button"
+              tone="strong"
+              script="latin"
+              style={styles.backTxt}
+            >
               ✕
             </AppText>
           </Pressable>
