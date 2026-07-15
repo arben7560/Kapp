@@ -1,7 +1,7 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
 
-import { AppFontFamily, SeoulMidnightGlass } from "../../constants/theme";
+import { StatusBadge } from "../ui/status-badge";
+import { SeoulMidnightGlass } from "../../constants/theme";
 import type { MissionAccess } from "../../lib/immersion/missions";
 
 type MissionAccessBadgeProps = {
@@ -28,31 +28,14 @@ export function MissionAccessBadge({
       : "rgba(255,255,255,0.07)";
 
   return (
-    <View style={[styles.badge, { borderColor, backgroundColor }]}>
-      <Text
-        style={[
-          styles.badgeText,
-          { color: isPremium ? SeoulMidnightGlass.colors.premiumGold : accent },
-        ]}
-      >
-        {isPremium ? "PREMIUM" : "GRATUIT"}
-      </Text>
-    </View>
+    <StatusBadge
+      label={isPremium ? "PREMIUM" : "GRATUIT"}
+      tone={isPremium ? "premium" : "accent"}
+      appearance="soft"
+      size="compact"
+      accentColor={accent}
+      borderColor={borderColor}
+      backgroundColor={backgroundColor}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  badge: {
-    minHeight: 22,
-    borderRadius: SeoulMidnightGlass.radii.pill,
-    borderWidth: 1,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    justifyContent: "center",
-  },
-  badgeText: {
-    fontSize: 10.5,
-    fontFamily: AppFontFamily.outfit.medium,
-    letterSpacing: 1,
-  },
-});

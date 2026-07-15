@@ -10,11 +10,11 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   Vibration,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AnimatedAppText, AppText } from "../../../components/app-text";
 import { useVocAudio } from "../../../hooks/useVocAudio";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 
@@ -466,13 +466,13 @@ export default function KDramaCulture() {
           {/* HEADER NAV */}
           <View style={styles.topNav}>
             <Pressable onPress={() => router.back()} style={styles.backCircle}>
-              <Text style={styles.backArrow}>‹</Text>
+              <AppText variant="screenTitle" lineContract="singleLine" style={styles.backArrow}>‹</AppText>
             </Pressable>
             <View>
-              <Text style={[styles.navEyebrow, { color: activeScene.accent }]}>
+              <AppText variant="sectionLabel" style={[styles.navEyebrow, { color: activeScene.accent }]}>
                 SÉOUL IMMERSION
-              </Text>
-              <Text style={styles.navTitle}>K-Drama Culture</Text>
+              </AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>K-Drama Culture</AppText>
             </View>
           </View>
 
@@ -490,14 +490,14 @@ export default function KDramaCulture() {
                   },
                 ]}
               >
-                <Text
+                <AppText variant="label" lineContract="singleLine"
                   style={[
                     styles.selectorText,
                     activeScene.id === scene.id && { color: scene.accent },
                   ]}
                 >
                   {scene.tab}
-                </Text>
+                </AppText>
               </Pressable>
             ))}
           </View>
@@ -526,13 +526,17 @@ export default function KDramaCulture() {
               />
 
               <View style={styles.sceneMetaRow}>
-                <Text style={[styles.sceneSub, { color: activeScene.accent }]}>
+                <AppText
+                  variant="koreanSecondary"
+                  script="korean"
+                  style={[styles.sceneSub, { color: activeScene.accent }]}
+                >
                   {activeScene.koreanTitle}
-                </Text>
+                </AppText>
               </View>
 
-              <Text style={styles.sceneTitle}>{activeScene.title}</Text>
-              <Text style={styles.sceneDesc}>{activeScene.description}</Text>
+              <AppText accessibilityRole="header" variant="sceneTitle" style={styles.sceneTitle}>{activeScene.title}</AppText>
+              <AppText variant="body" style={styles.sceneDesc}>{activeScene.description}</AppText>
 
               {/* DIALOGUE BUBBLES */}
               <Pressable onPress={advanceDialogue} style={styles.dialogueBox}>
@@ -556,16 +560,16 @@ export default function KDramaCulture() {
                           isActive && { borderColor: activeScene.accent },
                         ]}
                       >
-                        <Text
+                        <AppText variant="label"
                           style={[
                             styles.charName,
                             { color: activeScene.accent },
                           ]}
                         >
                           {d.char}
-                        </Text>
-                        <Text style={styles.krText}>{d.kr}</Text>
-                        <Text style={styles.frText}>{d.fr}</Text>
+                        </AppText>
+                        <AppText variant="koreanSecondary" script="korean" style={styles.krText}>{d.kr}</AppText>
+                        <AppText variant="bodySecondary" tone="muted" style={styles.frText}>{d.fr}</AppText>
                       </Pressable>
                     );
                   })}
@@ -578,11 +582,11 @@ export default function KDramaCulture() {
                       styles.typingBubble,
                     ]}
                   >
-                    <Text
+                    <AppText variant="label"
                       style={[styles.charName, { color: activeScene.accent }]}
                     >
                       {activeScene.dialogue[visibleMessages]?.char}
-                    </Text>
+                    </AppText>
 
                     <View style={styles.typingDots}>
                       <View
@@ -607,7 +611,7 @@ export default function KDramaCulture() {
                   </View>
                 )}
 
-                <Animated.Text
+                <AnimatedAppText variant="caption"
                   style={[
                     styles.tapHint,
                     shouldHighlightHint && {
@@ -632,7 +636,7 @@ export default function KDramaCulture() {
                     : isTyping
                       ? "Réponse en cours..."
                       : "Toucher pour continuer"}
-                </Animated.Text>
+                </AnimatedAppText>
               </Pressable>
             </BlurView>
           </Animated.View>
@@ -640,7 +644,7 @@ export default function KDramaCulture() {
           {/* TOOLBOX - EXPRESSIONS */}
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <Text style={styles.toolboxTitle}>DRAMA TOOLBOX</Text>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>DRAMA TOOLBOX</AppText>
               <View
                 style={[
                   styles.toolboxLine,
@@ -685,15 +689,15 @@ export default function KDramaCulture() {
                       <View style={styles.expContent}>
                         <View style={styles.expTopRow}>
                           <View style={{ flex: 1 }}>
-                            <Text style={styles.expWord}>{exp.word}</Text>
-                            <Text
+                            <AppText variant="koreanPrimary" script="korean" style={styles.expWord}>{exp.word}</AppText>
+                            <AppText variant="caption"
                               style={[
                                 styles.expRom,
                                 { color: activeScene.accent },
                               ]}
                             >
                               {exp.rom}
-                            </Text>
+                            </AppText>
                           </View>
 
                           <View
@@ -705,20 +709,20 @@ export default function KDramaCulture() {
                               },
                             ]}
                           >
-                            <Text
+                            <AppText variant="caption" lineContract="singleLine"
                               style={[
                                 styles.listenIcon,
                                 { color: activeScene.accent },
                               ]}
                             >
                               {isActive ? "●" : "▶"}
-                            </Text>
-                            <Text style={styles.listenText}>ÉCOUTER</Text>
+                            </AppText>
+                            <AppText variant="label" lineContract="singleLine" style={styles.listenText}>ÉCOUTER</AppText>
                           </View>
                         </View>
 
-                        <Text style={styles.expMean}>{exp.mean}</Text>
-                        <Text style={styles.expContext}>{exp.context}</Text>
+                        <AppText variant="bodyStrong" style={styles.expMean}>{exp.mean}</AppText>
+                        <AppText variant="bodySecondary" tone="muted" style={styles.expContext}>{exp.context}</AppText>
                       </View>
                     </BlurView>
                   </Pressable>
@@ -763,10 +767,9 @@ const styles = StyleSheet.create({
   backArrow: { color: "#fff", fontSize: 24, marginTop: -2 },
   navEyebrow: {
     fontSize: 10,
-    fontWeight: "900",
     letterSpacing: 2,
   },
-  navTitle: { color: "#fff", fontSize: 14, fontWeight: "600", opacity: 0.8 },
+  navTitle: { color: "#fff", fontSize: 14, opacity: 0.8 },
 
   header: {
     flexDirection: "row",
@@ -778,13 +781,11 @@ const styles = StyleSheet.create({
   backBtn: { flexDirection: "row", alignItems: "center" },
   backText: {
     color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
     fontSize: 12,
     letterSpacing: 1,
   },
   headerTitle: {
     color: COLORS.pink,
-    fontFamily: "Outfit_900Black",
     fontSize: 14,
     letterSpacing: 2,
   },
@@ -804,7 +805,6 @@ const styles = StyleSheet.create({
   },
   selectorText: {
     color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
     fontSize: 13,
   },
 
@@ -824,7 +824,6 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   sceneSub: {
-    fontFamily: "NotoSansKR_700Bold",
     fontSize: 14,
     letterSpacing: 1,
   },
@@ -836,14 +835,12 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.04)",
   },
   livePillText: {
-    fontFamily: "Outfit_700Bold",
     fontSize: 9,
     letterSpacing: 1.5,
   },
 
   sceneTitle: {
     color: COLORS.txt,
-    fontFamily: "Outfit_900Black",
     fontSize: 34,
     marginBottom: 8,
   },
@@ -863,14 +860,12 @@ const styles = StyleSheet.create({
     marginBottom: 22,
   },
   moodLabel: {
-    fontFamily: "Outfit_700Bold",
     fontSize: 9,
     letterSpacing: 1.6,
     marginBottom: 4,
   },
   moodText: {
     color: COLORS.txt,
-    fontFamily: "Outfit_700Bold",
     fontSize: 13,
   },
 
@@ -894,14 +889,12 @@ const styles = StyleSheet.create({
   },
   charName: {
     fontSize: 10,
-    fontFamily: "Outfit_700Bold",
     marginBottom: 6,
     letterSpacing: 1,
     textTransform: "uppercase",
   },
   krText: {
     color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
     fontSize: 18,
     lineHeight: 26,
     marginBottom: 4,
@@ -909,7 +902,6 @@ const styles = StyleSheet.create({
   frText: {
     color: COLORS.muted,
     fontSize: 13,
-    fontFamily: "Outfit_500Medium",
   },
   typingBubble: {
     minWidth: 92,
@@ -930,7 +922,6 @@ const styles = StyleSheet.create({
   tapHint: {
     alignSelf: "center",
     color: "rgba(255,255,255,0.42)",
-    fontFamily: "Outfit_700Bold",
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: "uppercase",
@@ -953,21 +944,18 @@ const styles = StyleSheet.create({
     width: 4,
   },
   immersionLabel: {
-    fontFamily: "Outfit_700Bold",
     fontSize: 10,
     letterSpacing: 2,
     marginBottom: 8,
   },
   immersionText: {
     color: COLORS.txt,
-    fontFamily: "Outfit_700Bold",
     fontSize: 15,
     lineHeight: 20,
     marginBottom: 8,
   },
   realLifeText: {
     color: COLORS.muted,
-    fontFamily: "Outfit_500Medium",
     fontSize: 12,
     lineHeight: 17,
   },
@@ -981,7 +969,6 @@ const styles = StyleSheet.create({
   },
   toolboxTitle: {
     color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
     fontSize: 12,
     letterSpacing: 3,
   },
@@ -1011,17 +998,14 @@ const styles = StyleSheet.create({
   },
   expWord: {
     color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
     fontSize: 24,
     marginBottom: 2,
   },
   expRom: {
-    fontFamily: "Outfit_700Bold",
     fontSize: 12,
   },
   expMean: {
     color: COLORS.txt,
-    fontFamily: "Outfit_700Bold",
     fontSize: 16,
     marginBottom: 4,
   },
@@ -1041,11 +1025,9 @@ const styles = StyleSheet.create({
   },
   listenIcon: {
     fontSize: 9,
-    fontFamily: "Outfit_700Bold",
   },
   listenText: {
     color: "rgba(255,255,255,0.78)",
-    fontFamily: "Outfit_700Bold",
     fontSize: 9,
     letterSpacing: 1,
   },

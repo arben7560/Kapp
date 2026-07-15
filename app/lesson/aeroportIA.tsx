@@ -7,7 +7,6 @@ import {
     Pressable,
     ScrollView,
     StyleSheet,
-    Text,
     useWindowDimensions,
     View,
 } from "react-native";
@@ -17,6 +16,7 @@ import {
 } from "react-native-safe-area-context";
 
 import { ABSOLUTE_FILL } from "../../constants/layout";
+import { AppText } from "../../components/app-text";
 import { aeroportDialogueData } from "../../data/lesson/aeroport/aeroport";
 import {
   applyAeroportMissionToScenario,
@@ -31,21 +31,10 @@ import { buildProgressId } from "../../lib/progressIds";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
-const TXT = "rgba(255,255,255,0.98)";
-const MUTED = "rgba(255,255,255,0.64)";
-const SOFT = "rgba(255,255,255,0.48)";
-
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
 const PURPLE = "#A855F7";
 const VIDEO_OVERSCAN_SCALE = 1.06;
-
-const fonts = {
-  bold: "Outfit_500Medium",
-  black: "Outfit_500Medium",
-  medium: "Outfit_400Regular",
-  kr: "NotoSansKR_400Regular",
-};
 
 // ==================== VIDEOS ====================
 const iaWelcome = require("../../assets/ai/aeroport/ia_welcome.mp4");
@@ -569,7 +558,9 @@ export default function AeroportIaScreen() {
           ]}
         >
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
-            <Text style={styles.backTxt}>x</Text>
+            <AppText variant="button" tone="strong" script="latin" style={styles.backTxt}>
+              x
+            </AppText>
           </Pressable>
         </View>
 
@@ -599,17 +590,14 @@ export default function AeroportIaScreen() {
                         ]}
                       />
 
-                      <Text
-                        style={[
-                          styles.stepLabel,
-                          active && {
-                            color: TXT,
-                            fontFamily: fonts.bold,
-                          },
-                        ]}
+                      <AppText
+                        variant={active ? "bodyStrong" : "bodySecondary"}
+                        tone={active ? "strong" : "muted"}
+                        script="latin"
+                        style={styles.stepLabel}
                       >
                         {s}
-                      </Text>
+                      </AppText>
                     </View>
                   );
                 })}
@@ -671,7 +659,12 @@ export default function AeroportIaScreen() {
                   shouldCollapseTranscript && styles.aiCardCollapsed,
                 ]}
               >
-                <Text
+                <AppText
+                  variant="koreanSecondary"
+                  tone="strong"
+                  script="korean"
+                  accessibilityLanguage="ko-KR"
+                  align="center"
                   style={[
                     styles.aiKr,
                     isStartChoiceNode && styles.aiIntroText,
@@ -679,18 +672,32 @@ export default function AeroportIaScreen() {
                   ]}
                 >
                   {displayedKoreanText}
-                </Text>
+                </AppText>
 
                 {shouldShowFrench ? (
-                  <Text style={styles.aiFr}>{transcriptFrench}</Text>
+                  <AppText
+                    variant="bodySecondary"
+                    tone="muted"
+                    script="latin"
+                    align="center"
+                    style={styles.aiFr}
+                  >
+                    {transcriptFrench}
+                  </AppText>
                 ) : null}
 
                 {isReviewableTranscript ? (
-                  <Text style={styles.transcriptHint}>
+                  <AppText
+                    variant="caption"
+                    tone="soft"
+                    script="latin"
+                    align="center"
+                    style={styles.transcriptHint}
+                  >
                     {isTranscriptOpen
                       ? "Appuyer pour refermer"
                       : "Appuyer pour revoir"}
-                  </Text>
+                  </AppText>
                 ) : null}
               </Pressable>
             </View>
@@ -711,17 +718,43 @@ export default function AeroportIaScreen() {
                 { maxWidth: responsive.maxWidth },
               ]}
             >
-              <Text style={styles.sectionTitle}>Ta reponse</Text>
+              <AppText
+                variant="sectionTitle"
+                tone="strong"
+                script="latin"
+                style={styles.sectionTitle}
+              >
+                Ta reponse
+              </AppText>
 
               {isSceneEnded ? (
                 <View style={styles.endCard}>
-                  <Text style={styles.endTitle}>Scene terminee</Text>
+                  <AppText
+                    variant="sectionTitle"
+                    tone="strong"
+                    script="latin"
+                    style={styles.endTitle}
+                  >
+                    Scene terminee
+                  </AppText>
 
-                  <Text style={styles.endSubtitle}>
+                  <AppText
+                    variant="bodySecondary"
+                    tone="muted"
+                    script="latin"
+                    style={styles.endSubtitle}
+                  >
                     Tu peux rejouer cette scene ou revenir au menu.
-                  </Text>
+                  </AppText>
 
-                  <Text style={styles.endSubtitle}>Serie conservee.</Text>
+                  <AppText
+                    variant="bodySecondary"
+                    tone="muted"
+                    script="latin"
+                    style={styles.endSubtitle}
+                  >
+                    Serie conservee.
+                  </AppText>
 
                   <View style={styles.endActions}>
                     <Pressable
@@ -739,7 +772,15 @@ export default function AeroportIaScreen() {
                         end={{ x: 1, y: 0 }}
                         style={styles.endActionPrimaryInner}
                       >
-                        <Text style={styles.endActionPrimaryText}>Rejouer</Text>
+                        <AppText
+                          variant="button"
+                          tone="strong"
+                          script="latin"
+                          align="center"
+                          style={styles.endActionPrimaryText}
+                        >
+                          Rejouer
+                        </AppText>
                       </LinearGradient>
                     </Pressable>
 
@@ -750,7 +791,15 @@ export default function AeroportIaScreen() {
                         { opacity: pressed ? 0.9 : 1 },
                       ]}
                     >
-                      <Text style={styles.endActionSecondaryText}>Retour</Text>
+                      <AppText
+                        variant="button"
+                        tone="strong"
+                        script="latin"
+                        align="center"
+                        style={styles.endActionSecondaryText}
+                      >
+                        Retour
+                      </AppText>
                     </Pressable>
                   </View>
                 </View>
@@ -786,8 +835,23 @@ export default function AeroportIaScreen() {
                           ]}
                         />
 
-                        <Text style={styles.choiceKr}>{choice.korean}</Text>
-                        <Text style={styles.choiceFr}>{choice.label}</Text>
+                        <AppText
+                          variant="koreanSecondary"
+                          tone="strong"
+                          script="korean"
+                          accessibilityLanguage="ko-KR"
+                          style={styles.choiceKr}
+                        >
+                          {choice.korean}
+                        </AppText>
+                        <AppText
+                          variant="bodySecondary"
+                          tone="muted"
+                          script="latin"
+                          style={styles.choiceFr}
+                        >
+                          {choice.label}
+                        </AppText>
                       </Pressable>
                     );
                   })}
@@ -797,14 +861,25 @@ export default function AeroportIaScreen() {
                   <View style={styles.waitingPulseRow}>
                     <View style={styles.waitingDot} />
 
-                    <Text style={styles.waitingTxt}>
+                    <AppText
+                      variant="body"
+                      tone="strong"
+                      script="latin"
+                      style={styles.waitingTxt}
+                    >
                       Ecoute de l&apos;interlocuteur...
-                    </Text>
+                    </AppText>
                   </View>
 
-                  <Text style={styles.waitingSub}>
+                  <AppText
+                    variant="bodySecondary"
+                    tone="soft"
+                    script="latin"
+                    align="center"
+                    style={styles.waitingSub}
+                  >
                     La scene continue automatiquement.
-                  </Text>
+                  </AppText>
                 </View>
               )}
             </View>
@@ -865,7 +940,6 @@ const styles = StyleSheet.create({
   },
 
   backTxt: {
-    color: TXT,
     fontSize: 18,
   },
 
@@ -892,14 +966,11 @@ const styles = StyleSheet.create({
   aiIntroText: {
     fontSize: 15,
     lineHeight: 21,
-    fontFamily: fonts.medium,
     marginBottom: 0,
   },
 
   stepLabel: {
-    color: MUTED,
     fontSize: 12,
-    fontFamily: fonts.medium,
   },
 
   videoContainer: {
@@ -940,11 +1011,8 @@ const styles = StyleSheet.create({
   },
 
   transcriptHint: {
-    color: SOFT,
     fontSize: 12,
     lineHeight: 17,
-    textAlign: "center",
-    fontFamily: fonts.medium,
     marginTop: 2,
   },
 
@@ -972,20 +1040,14 @@ const styles = StyleSheet.create({
   },
 
   aiKr: {
-    color: TXT,
     fontSize: 19,
     lineHeight: 31,
-    fontFamily: fonts.kr,
-    textAlign: "center",
     marginBottom: 10,
   },
 
   aiFr: {
-    color: MUTED,
     fontSize: 14,
     lineHeight: 21,
-    textAlign: "center",
-    fontStyle: "italic",
   },
 
   interactionSection: {
@@ -995,9 +1057,7 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    color: TXT,
     fontSize: 18,
-    fontFamily: fonts.black,
     marginBottom: 14,
     marginLeft: 4,
   },
@@ -1030,15 +1090,12 @@ const styles = StyleSheet.create({
   },
 
   choiceKr: {
-    color: TXT,
     fontSize: 16,
     lineHeight: 22,
-    fontFamily: fonts.bold,
     marginBottom: 6,
   },
 
   choiceFr: {
-    color: MUTED,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -1070,15 +1127,11 @@ const styles = StyleSheet.create({
   },
 
   waitingTxt: {
-    color: TXT,
     fontSize: 15,
-    fontFamily: fonts.medium,
   },
 
   waitingSub: {
-    color: SOFT,
     fontSize: 13,
-    textAlign: "center",
   },
 
   endCard: {
@@ -1090,14 +1143,11 @@ const styles = StyleSheet.create({
   },
 
   endTitle: {
-    color: TXT,
     fontSize: 18,
-    fontFamily: fonts.black,
     marginBottom: 6,
   },
 
   endSubtitle: {
-    color: MUTED,
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 16,
@@ -1119,9 +1169,7 @@ const styles = StyleSheet.create({
   },
 
   endActionPrimaryText: {
-    color: "white",
     fontSize: 14,
-    fontFamily: fonts.bold,
   },
 
   endActionSecondary: {
@@ -1135,8 +1183,6 @@ const styles = StyleSheet.create({
   },
 
   endActionSecondaryText: {
-    color: TXT,
     fontSize: 14,
-    fontFamily: fonts.bold,
   },
 });

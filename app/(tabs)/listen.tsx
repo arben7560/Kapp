@@ -8,10 +8,10 @@ import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
 import { useStore } from "../../_store";
+import { AppText } from "../../components/app-text";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { buildProgressId } from "../../lib/progressIds";
 
@@ -478,7 +478,9 @@ export default function ListenScreen() {
         <View>
           <View style={styles.sentenceBox}>
             {picked.length === 0 ? (
-              <Text style={styles.placeholder}>Construis la phrase ici</Text>
+              <AppText variant="body" tone="soft" style={styles.placeholder}>
+                Construis la phrase ici
+              </AppText>
             ) : (
               picked.map((wordIndex) => (
                 <Pressable
@@ -491,7 +493,15 @@ export default function ListenScreen() {
                   onPress={() => removeOrderWord(wordIndex)}
                   style={styles.wordSelected}
                 >
-                  <Text style={styles.wordText}>{item.words[wordIndex]}</Text>
+                  <AppText
+                    variant="koreanSecondary"
+                    tone="strong"
+                    script="korean"
+                    accessibilityLanguage="ko"
+                    style={styles.wordText}
+                  >
+                    {item.words[wordIndex]}
+                  </AppText>
                 </Pressable>
               ))
             )}
@@ -516,11 +526,15 @@ export default function ListenScreen() {
                   onPress={() => pickOrderWord(wordIndex)}
                   style={[styles.wordOption, used && styles.disabledOption]}
                 >
-                  <Text
+                  <AppText
+                    variant="koreanSecondary"
+                    tone={used ? "soft" : "strong"}
+                    script="korean"
+                    accessibilityLanguage="ko"
                     style={[styles.optionText, used && styles.disabledText]}
                   >
                     {word}
-                  </Text>
+                  </AppText>
                 </Pressable>
               );
             })}
@@ -533,9 +547,25 @@ export default function ListenScreen() {
       return (
         <View>
           <View style={styles.gapSentence}>
-            <Text style={styles.koreanInline}>{item.before}</Text>
+            <AppText
+              variant="koreanPrimary"
+              tone="strong"
+              script="korean"
+              accessibilityLanguage="ko"
+              style={styles.koreanInline}
+            >
+              {item.before}
+            </AppText>
             <View style={styles.blank} />
-            <Text style={styles.koreanInline}>{item.after}</Text>
+            <AppText
+              variant="koreanPrimary"
+              tone="strong"
+              script="korean"
+              accessibilityLanguage="ko"
+              style={styles.koreanInline}
+            >
+              {item.after}
+            </AppText>
           </View>
 
           <View style={styles.choiceStack}>
@@ -597,8 +627,16 @@ export default function ListenScreen() {
           </Pressable>
 
           <View style={styles.headerTextWrap}>
-            <Text style={styles.kicker}>SÉOUL IMMERSION</Text>
-            <Text style={styles.headerTitle}>Écoute active</Text>
+            <AppText variant="sectionLabel" tone="brand" style={styles.kicker}>
+              SÉOUL IMMERSION
+            </AppText>
+            <AppText
+              variant="sectionTitle"
+              tone="strong"
+              style={styles.headerTitle}
+            >
+              Écoute active
+            </AppText>
           </View>
 
           <Pressable
@@ -620,7 +658,9 @@ export default function ListenScreen() {
         >
           <View style={styles.modePill}>
             <Ionicons name="volume-high" size={16} color={COLORS.purple} />
-            <Text style={styles.modeText}>MODE ÉCOUTE</Text>
+            <AppText variant="label" tone="strong" style={styles.modeText}>
+              MODE ÉCOUTE
+            </AppText>
           </View>
 
           <View style={styles.modeSwitcherWrap}>
@@ -635,8 +675,20 @@ export default function ListenScreen() {
             </Pressable>
 
             <View style={styles.modeCenterPill}>
-              <Text style={styles.modeCenterMini}>ENTRAÎNEMENT</Text>
-              <Text style={styles.modeCenterLabel}>{meta.mini}</Text>
+              <AppText
+                variant="label"
+                tone="soft"
+                style={styles.modeCenterMini}
+              >
+                ENTRAÎNEMENT
+              </AppText>
+              <AppText
+                variant="bodyStrong"
+                tone="strong"
+                style={styles.modeCenterLabel}
+              >
+                {meta.mini}
+              </AppText>
             </View>
 
             <Pressable
@@ -676,21 +728,44 @@ export default function ListenScreen() {
           <View style={styles.card}>
             <View style={styles.cardTop}>
               <View style={styles.cardTopTitleWrap}>
-                <Text style={styles.theme}>{item.theme}</Text>
-                <Text style={styles.title}>{item.title}</Text>
+                <AppText
+                  variant="sectionLabel"
+                  tone="brand"
+                  style={styles.theme}
+                >
+                  {item.theme}
+                </AppText>
+                <AppText
+                  variant="sectionTitle"
+                  tone="strong"
+                  style={styles.title}
+                >
+                  {item.title}
+                </AppText>
               </View>
-              <Text style={styles.counter}>
+              <AppText
+                variant="caption"
+                tone="soft"
+                align="end"
+                style={styles.counter}
+              >
                 {String(exerciseIndex + 1).padStart(2, "0")} /{" "}
                 {String(exercises.length).padStart(2, "0")}
-              </Text>
+              </AppText>
             </View>
 
             <View style={styles.skillRow}>
-              <Text style={styles.skillPill}>{meta.mini}</Text>
-              <Text style={styles.skillText}>{meta.skill}</Text>
+              <AppText variant="label" tone="strong" style={styles.skillPill}>
+                {meta.mini}
+              </AppText>
+              <AppText variant="caption" tone="muted" style={styles.skillText}>
+                {meta.skill}
+              </AppText>
             </View>
 
-            <Text style={styles.instruction}>{item.instruction}</Text>
+            <AppText variant="body" tone="muted" style={styles.instruction}>
+              {item.instruction}
+            </AppText>
 
             <Pressable
               accessibilityRole="button"
@@ -700,10 +775,19 @@ export default function ListenScreen() {
               style={styles.listenButton}
             >
               <Ionicons name="play" size={18} color={COLORS.text} />
-              <Text style={styles.listenText}>Écouter</Text>
+              <AppText variant="button" tone="strong" style={styles.listenText}>
+                Écouter
+              </AppText>
             </Pressable>
 
-            <Text style={styles.audioHint}>{hint}</Text>
+            <AppText
+              variant="caption"
+              tone="soft"
+              align="center"
+              style={styles.audioHint}
+            >
+              {hint}
+            </AppText>
 
             {renderChoices()}
 
@@ -715,12 +799,32 @@ export default function ListenScreen() {
                 accessibilityLabel={`${isCorrect ? "Correct" : "A revoir"}. Reponse attendue : ${getExpectedAnswer()}. ${item.explanation ?? ""}`}
                 style={[styles.feedback, isCorrect ? styles.good : styles.bad]}
               >
-                <Text style={styles.feedbackTitle}>
+                <AppText
+                  variant="bodyStrong"
+                  tone="strong"
+                  style={styles.feedbackTitle}
+                >
                   {isCorrect ? "Correct" : "À revoir"}
-                </Text>
-                <Text style={styles.expectedLabel}>Réponse attendue</Text>
-                <Text style={styles.expectedText}>{getExpectedAnswer()}</Text>
-                <Text style={styles.feedbackText}>{item.explanation}</Text>
+                </AppText>
+                <AppText
+                  variant="label"
+                  tone="strong"
+                  style={styles.expectedLabel}
+                >
+                  Réponse attendue
+                </AppText>
+                <AppText
+                  variant="koreanSecondary"
+                  tone="accent"
+                  script="korean"
+                  accessibilityLanguage="ko"
+                  style={styles.expectedText}
+                >
+                  {getExpectedAnswer()}
+                </AppText>
+                <AppText variant="body" tone="muted" style={styles.feedbackText}>
+                  {item.explanation}
+                </AppText>
               </View>
             )}
 
@@ -732,7 +836,13 @@ export default function ListenScreen() {
                 onPress={resetAnswer}
                 style={[styles.actionButton, styles.secondaryButton]}
               >
-                <Text style={styles.secondaryText}>Réessayer</Text>
+                <AppText
+                  variant="button"
+                  tone="muted"
+                  style={styles.secondaryText}
+                >
+                  Réessayer
+                </AppText>
               </Pressable>
 
               {!checked ? (
@@ -749,7 +859,9 @@ export default function ListenScreen() {
                     !canCheck && styles.disabledButton,
                   ]}
                 >
-                  <Text style={styles.actionText}>Valider</Text>
+                  <AppText variant="button" tone="strong" style={styles.actionText}>
+                    Valider
+                  </AppText>
                 </Pressable>
               ) : (
                 <Pressable
@@ -763,9 +875,9 @@ export default function ListenScreen() {
                   onPress={isCorrect ? goNext : resetAnswer}
                   style={styles.actionButton}
                 >
-                  <Text style={styles.actionText}>
+                  <AppText variant="button" tone="strong" style={styles.actionText}>
                     {isCorrect ? "Suivant" : "Corriger"}
-                  </Text>
+                  </AppText>
                 </Pressable>
               )}
             </View>
@@ -773,17 +885,29 @@ export default function ListenScreen() {
             {!!dailyMessage && (
               <View style={styles.streakToast}>
                 <Ionicons name="flame" size={16} color={COLORS.green} />
-                <Text style={styles.streakToastText}>{dailyMessage}</Text>
+                <AppText
+                  variant="caption"
+                  tone="accent"
+                  style={styles.streakToastText}
+                >
+                  {dailyMessage}
+                </AppText>
               </View>
             )}
           </View>
 
           <View style={styles.footerNote}>
-            <Text style={styles.footerTitle}>Objectif</Text>
-            <Text style={styles.footerText}>
+            <AppText
+              variant="sectionLabel"
+              tone="brand"
+              style={styles.footerTitle}
+            >
+              Objectif
+            </AppText>
+            <AppText variant="body" tone="muted" style={styles.footerText}>
               Comprendre avant de lire. La traduction n’apparaît qu’après
               validation.
-            </Text>
+            </AppText>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -836,7 +960,16 @@ function ChoiceButton({
         wrong && styles.choiceWrong,
       ]}
     >
-      <Text style={styles.optionText}>{label}</Text>
+      <AppText
+        variant="koreanSecondary"
+        tone="strong"
+        script="korean"
+        accessibilityLanguage="ko"
+        align="center"
+        style={styles.optionText}
+      >
+        {label}
+      </AppText>
     </Pressable>
   );
 }
@@ -878,13 +1011,12 @@ const styles = StyleSheet.create({
   kicker: {
     color: COLORS.red,
     fontSize: 11,
-    fontWeight: "800",
     letterSpacing: 3.8,
   },
   headerTitle: {
     color: COLORS.text,
     fontSize: 21,
-    fontWeight: "800",
+    lineHeight: 27,
     marginTop: 3,
   },
   content: {
@@ -909,13 +1041,12 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     letterSpacing: 2.5,
     fontSize: 10,
-    fontWeight: "800",
   },
   modeSwitcherWrap: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 18,
+    gap: 12,
     marginBottom: 28,
   },
   arrowButton: {
@@ -929,7 +1060,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   modeCenterPill: {
-    minWidth: 158,
+    flex: 1,
+    minWidth: 0,
+    maxWidth: 158,
     minHeight: 54,
     borderRadius: 23,
     paddingHorizontal: 16,
@@ -943,7 +1076,6 @@ const styles = StyleSheet.create({
   modeCenterMini: {
     color: COLORS.faint,
     fontSize: 9,
-    fontWeight: "800",
     letterSpacing: 1.8,
     textTransform: "uppercase",
     marginBottom: 1,
@@ -951,7 +1083,7 @@ const styles = StyleSheet.create({
   modeCenterLabel: {
     color: COLORS.text,
     fontSize: 16,
-    fontWeight: "800",
+    lineHeight: 22,
   },
   progressRow: {
     flexDirection: "row",
@@ -995,19 +1127,17 @@ const styles = StyleSheet.create({
     color: COLORS.red,
     fontSize: 13,
     letterSpacing: 3,
-    fontWeight: "800",
     textTransform: "uppercase",
   },
   title: {
     color: COLORS.text,
     fontSize: 28,
-    fontWeight: "800",
+    lineHeight: 34,
     marginTop: 7,
   },
   counter: {
     color: COLORS.faint,
     fontSize: 13,
-    fontWeight: "700",
     paddingTop: 4,
     minWidth: 48,
     textAlign: "right",
@@ -1021,7 +1151,6 @@ const styles = StyleSheet.create({
   skillPill: {
     color: COLORS.text,
     fontSize: 12,
-    fontWeight: "800",
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 999,
@@ -1031,7 +1160,6 @@ const styles = StyleSheet.create({
   skillText: {
     color: COLORS.muted,
     fontSize: 13,
-    fontWeight: "600",
   },
   instruction: {
     color: COLORS.muted,
@@ -1041,7 +1169,8 @@ const styles = StyleSheet.create({
   },
   listenButton: {
     marginTop: 22,
-    height: 56,
+    minHeight: 56,
+    paddingVertical: 14,
     borderRadius: 28,
     backgroundColor: COLORS.redSoft,
     borderWidth: 1,
@@ -1054,7 +1183,6 @@ const styles = StyleSheet.create({
   listenText: {
     color: COLORS.text,
     fontSize: 14,
-    fontWeight: "800",
     letterSpacing: 2,
     textTransform: "uppercase",
   },
@@ -1093,7 +1221,7 @@ const styles = StyleSheet.create({
   optionText: {
     color: COLORS.text,
     fontSize: 20,
-    fontWeight: "700",
+    lineHeight: 30,
     textAlign: "center",
   },
   gapSentence: {
@@ -1113,7 +1241,6 @@ const styles = StyleSheet.create({
   koreanInline: {
     color: COLORS.text,
     fontSize: 24,
-    fontWeight: "800",
   },
   blank: {
     width: 82,
@@ -1140,7 +1267,6 @@ const styles = StyleSheet.create({
   placeholder: {
     color: COLORS.faint,
     fontSize: 15,
-    fontWeight: "600",
   },
   wordGrid: {
     flexDirection: "row",
@@ -1167,7 +1293,7 @@ const styles = StyleSheet.create({
   wordText: {
     color: COLORS.text,
     fontSize: 18,
-    fontWeight: "800",
+    lineHeight: 26,
   },
   disabledOption: {
     opacity: 0.26,
@@ -1192,20 +1318,17 @@ const styles = StyleSheet.create({
   feedbackTitle: {
     color: COLORS.text,
     fontSize: 15,
-    fontWeight: "900",
     marginBottom: 4,
   },
   expectedLabel: {
     color: COLORS.text,
     fontSize: 13,
-    fontWeight: "900",
     marginTop: 6,
     marginBottom: 3,
   },
   expectedText: {
     color: COLORS.green,
     fontSize: 15,
-    fontWeight: "900",
     lineHeight: 20,
     marginBottom: 6,
   },
@@ -1230,7 +1353,6 @@ const styles = StyleSheet.create({
   streakToastText: {
     color: COLORS.green,
     fontSize: 12,
-    fontWeight: "900",
     letterSpacing: 0.6,
   },
   actionRow: {
@@ -1240,7 +1362,9 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    height: 52,
+    minHeight: 52,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
     borderRadius: 18,
     backgroundColor: COLORS.red,
     alignItems: "center",
@@ -1254,14 +1378,12 @@ const styles = StyleSheet.create({
   actionText: {
     color: COLORS.text,
     fontSize: 14,
-    fontWeight: "900",
     letterSpacing: 1.4,
     textTransform: "uppercase",
   },
   secondaryText: {
     color: COLORS.muted,
     fontSize: 14,
-    fontWeight: "800",
   },
   disabledButton: {
     opacity: 0.35,
@@ -1277,7 +1399,6 @@ const styles = StyleSheet.create({
   footerTitle: {
     color: COLORS.red,
     fontSize: 12,
-    fontWeight: "900",
     letterSpacing: 3,
     textTransform: "uppercase",
     marginBottom: 8,

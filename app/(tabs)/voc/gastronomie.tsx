@@ -15,11 +15,11 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   Vibration,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AnimatedAppText, AppText } from "../../../components/app-text";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 
 type AudioAsset = number;
@@ -708,13 +708,13 @@ export default function GastronomyImmersion() {
         >
           <View style={styles.topNav}>
             <Pressable onPress={() => router.back()} style={styles.backCircle}>
-              <Text style={styles.backArrow}>‹</Text>
+              <AppText variant="screenTitle" lineContract="singleLine" style={styles.backArrow}>‹</AppText>
             </Pressable>
             <View>
-              <Text style={[styles.navEyebrow, { color: activeScene.accent }]}>
+              <AppText variant="sectionLabel" style={[styles.navEyebrow, { color: activeScene.accent }]}>
                 SÉOUL IMMERSION
-              </Text>
-              <Text style={styles.navTitle}>Gastronomie</Text>
+              </AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>Gastronomie</AppText>
             </View>
           </View>
 
@@ -731,7 +731,7 @@ export default function GastronomyImmersion() {
                   },
                 ]}
               >
-                <Text
+                <AppText variant="label" lineContract="singleLine"
                   style={[
                     styles.tabText,
                     activeScene.id === scene.id && {
@@ -740,7 +740,7 @@ export default function GastronomyImmersion() {
                   ]}
                 >
                   {scene.title}
-                </Text>
+                </AppText>
               </Pressable>
             ))}
           </View>
@@ -765,13 +765,13 @@ export default function GastronomyImmersion() {
               />
 
               <View style={styles.cardHeader}>
-                <Text style={[styles.krLabel, { color: activeScene.accent }]}>
+                <AppText variant="koreanPrimary" script="korean" style={[styles.krLabel, { color: activeScene.accent }]}>
                   {activeScene.koreanTitle}
-                </Text>
-                <Text style={styles.sceneMainTitle}>{activeScene.title}</Text>
+                </AppText>
+                <AppText accessibilityRole="header" variant="sceneTitle" style={styles.sceneMainTitle}>{activeScene.title}</AppText>
               </View>
 
-              <Text style={styles.sceneDesc}>{activeScene.description}</Text>
+              <AppText variant="body" style={styles.sceneDesc}>{activeScene.description}</AppText>
 
               <View style={styles.dialogueList}>
                 {activeScene.dialogue
@@ -799,16 +799,16 @@ export default function GastronomyImmersion() {
                           },
                         ]}
                       >
-                        <Text
+                        <AppText variant="label"
                           style={[
                             styles.bubbleChar,
                             { color: activeScene.accent },
                           ]}
                         >
                           {chat.char}
-                        </Text>
-                        <Text style={styles.bubbleKr}>{chat.kr}</Text>
-                        <Text style={styles.bubbleFr}>{chat.fr}</Text>
+                        </AppText>
+                        <AppText variant="koreanSecondary" script="korean" style={styles.bubbleKr}>{chat.kr}</AppText>
+                        <AppText variant="bodySecondary" tone="muted" style={styles.bubbleFr}>{chat.fr}</AppText>
                       </Pressable>
                     );
                   })}
@@ -821,11 +821,11 @@ export default function GastronomyImmersion() {
                       styles.typingBubble,
                     ]}
                   >
-                    <Text
+                    <AppText variant="label"
                       style={[styles.bubbleChar, { color: activeScene.accent }]}
                     >
                       {activeScene.dialogue[visibleMessages]?.char}
-                    </Text>
+                    </AppText>
 
                     <View style={styles.typingDots}>
                       <View
@@ -851,7 +851,7 @@ export default function GastronomyImmersion() {
                 )}
 
                 <Pressable onPress={advanceDialogue} disabled={isTyping}>
-                  <Animated.Text
+                  <AnimatedAppText variant="caption"
                     style={[
                       styles.tapHint,
                       shouldHighlightHint && {
@@ -876,7 +876,7 @@ export default function GastronomyImmersion() {
                       : isTyping
                         ? "Réponse en cours..."
                         : "Toucher pour continuer"}
-                  </Animated.Text>
+                  </AnimatedAppText>
                 </Pressable>
               </View>
             </BlurView>
@@ -884,7 +884,7 @@ export default function GastronomyImmersion() {
 
           <View style={styles.toolbox}>
             <View style={styles.toolboxTitleRow}>
-              <Text style={styles.toolboxTitle}>GOURMET TOOLBOX</Text>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>GOURMET TOOLBOX</AppText>
               <View
                 style={[
                   styles.toolboxLine,
@@ -930,15 +930,15 @@ export default function GastronomyImmersion() {
                       <View style={styles.vocabContent}>
                         <View style={styles.vocabTopRow}>
                           <View style={{ flex: 1 }}>
-                            <Text style={styles.vocabKr}>{exp.word}</Text>
-                            <Text
+                            <AppText variant="koreanPrimary" script="korean" style={styles.vocabKr}>{exp.word}</AppText>
+                            <AppText variant="caption"
                               style={[
                                 styles.vocabRom,
                                 { color: activeScene.accent },
                               ]}
                             >
                               {exp.rom}
-                            </Text>
+                            </AppText>
                           </View>
 
                           <View
@@ -950,20 +950,20 @@ export default function GastronomyImmersion() {
                               },
                             ]}
                           >
-                            <Text
+                            <AppText variant="caption" lineContract="singleLine"
                               style={[
                                 styles.listenIcon,
                                 { color: activeScene.accent },
                               ]}
                             >
                               {isActive ? "●" : "▶"}
-                            </Text>
-                            <Text style={styles.listenText}>ÉCOUTER</Text>
+                            </AppText>
+                            <AppText variant="label" lineContract="singleLine" style={styles.listenText}>ÉCOUTER</AppText>
                           </View>
                         </View>
 
-                        <Text style={styles.vocabMean}>{exp.mean}</Text>
-                        <Text style={styles.vocabCtx}>{exp.context}</Text>
+                        <AppText variant="bodyStrong" style={styles.vocabMean}>{exp.mean}</AppText>
+                        <AppText variant="bodySecondary" tone="muted" style={styles.vocabCtx}>{exp.context}</AppText>
                       </View>
                     </BlurView>
                   </Pressable>
@@ -1008,13 +1008,11 @@ const styles = StyleSheet.create({
   backArrow: { color: "#fff", fontSize: 24, marginTop: -2 },
   navEyebrow: {
     fontSize: 10,
-    fontFamily: "Outfit_500Medium",
     letterSpacing: 2,
   },
   navTitle: {
     color: "#fff",
     fontSize: 14,
-    fontFamily: "Outfit_500Medium",
     opacity: 0.8,
   },
 
@@ -1027,7 +1025,6 @@ const styles = StyleSheet.create({
   backBtn: { flexDirection: "row", alignItems: "center" },
   backText: {
     color: COLORS.muted,
-    fontFamily: "Outfit_500Medium",
     fontSize: 11,
     letterSpacing: 2,
   },
@@ -1042,7 +1039,6 @@ const styles = StyleSheet.create({
   badgeText: {
     color: COLORS.muted,
     fontSize: 9,
-    fontFamily: "Outfit_500Medium",
     letterSpacing: 1,
   },
 
@@ -1057,7 +1053,6 @@ const styles = StyleSheet.create({
   },
   tabText: {
     color: COLORS.muted,
-    fontFamily: "Outfit_500Medium",
     fontSize: 11,
   },
 
@@ -1070,14 +1065,12 @@ const styles = StyleSheet.create({
   },
   cardHeader: { marginBottom: 15 },
   krLabel: {
-    fontFamily: "NotoSansKR_400Regular",
     fontSize: 14,
     letterSpacing: 1,
     marginBottom: 2,
   },
   sceneMainTitle: {
     color: COLORS.txt,
-    fontFamily: "Outfit_500Medium",
     fontSize: 34,
   },
   sceneDesc: {
@@ -1108,14 +1101,12 @@ const styles = StyleSheet.create({
   },
   bubbleChar: {
     fontSize: 10,
-    fontFamily: "Outfit_500Medium",
     marginBottom: 6,
     letterSpacing: 1,
     textTransform: "uppercase",
   },
   bubbleKr: {
     color: COLORS.txt,
-    fontFamily: "NotoSansKR_400Regular",
     fontSize: 18,
     lineHeight: 26,
     marginBottom: 4,
@@ -1123,7 +1114,6 @@ const styles = StyleSheet.create({
   bubbleFr: {
     color: COLORS.muted,
     fontSize: 13,
-    fontFamily: "Outfit_400Regular",
   },
   typingBubble: {
     minWidth: 92,
@@ -1144,7 +1134,6 @@ const styles = StyleSheet.create({
   tapHint: {
     alignSelf: "center",
     color: "rgba(255,255,255,0.42)",
-    fontFamily: "Outfit_500Medium",
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: "uppercase",
@@ -1160,7 +1149,6 @@ const styles = StyleSheet.create({
   },
   toolboxTitle: {
     color: COLORS.muted,
-    fontFamily: "Outfit_500Medium",
     fontSize: 11,
     letterSpacing: 3,
   },
@@ -1190,18 +1178,15 @@ const styles = StyleSheet.create({
   },
   vocabKr: {
     color: COLORS.txt,
-    fontFamily: "NotoSansKR_400Regular",
     fontSize: 24,
     marginBottom: 2,
   },
   vocabRom: {
-    fontFamily: "Outfit_500Medium",
     fontSize: 12,
     textTransform: "uppercase",
   },
   vocabMean: {
     color: COLORS.txt,
-    fontFamily: "Outfit_500Medium",
     fontSize: 16,
     marginBottom: 4,
   },
@@ -1221,11 +1206,9 @@ const styles = StyleSheet.create({
   },
   listenIcon: {
     fontSize: 9,
-    fontFamily: "Outfit_500Medium",
   },
   listenText: {
     color: "rgba(255,255,255,0.78)",
-    fontFamily: "Outfit_500Medium",
     fontSize: 9,
     letterSpacing: 1,
   },

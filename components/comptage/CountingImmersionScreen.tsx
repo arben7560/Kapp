@@ -10,7 +10,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   Vibration,
   View,
 } from "react-native";
@@ -24,6 +23,7 @@ import {
   trackToolboxOpened,
 } from "../../lib/immersionStreak";
 import { buildProgressId } from "../../lib/progressIds";
+import { AnimatedAppText, AppText } from "../app-text";
 
 type AudioAsset = number;
 
@@ -66,8 +66,6 @@ const BACKGROUND_SOURCE = require("../../assets/images/comptage.png");
 
 const COLORS = {
   bg: "#020306",
-  txt: "rgba(255,255,255,0.96)",
-  muted: "rgba(255,255,255,0.60)",
 };
 
 export default function CountingImmersionScreen({
@@ -222,16 +220,33 @@ export default function CountingImmersionScreen({
         >
           <View style={styles.header}>
             <Pressable onPress={() => router.back()} style={styles.backBtn}>
-              <Text style={styles.backArrow}>‹</Text>
-              <Text style={styles.backText}>{backLabel}</Text>
+              <AppText
+                variant="screenTitle"
+                lineContract="singleLine"
+                style={styles.backArrow}
+              >
+                ‹
+              </AppText>
+              <AppText
+                variant="sectionLabel"
+                tone="muted"
+                lineContract="twoLines"
+              >
+                {backLabel}
+              </AppText>
             </Pressable>
 
             <View
               style={[styles.badge, { borderColor: activeScene.accent }]}
             >
-              <Text style={[styles.badgeText, { color: activeScene.accent }]}>
+              <AppText
+                variant="label"
+                align="center"
+                lineContract="twoLines"
+                style={{ color: activeScene.accent }}
+              >
                 {badgeLabel}
-              </Text>
+              </AppText>
             </View>
           </View>
 
@@ -251,16 +266,19 @@ export default function CountingImmersionScreen({
                   },
                 ]}
               >
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    activeScene.id === scene.id && {
-                      color: activeScene.accent,
-                    },
-                  ]}
+                <AppText
+                  variant="label"
+                  tone="muted"
+                  align="center"
+                  lineContract="twoLines"
+                  style={
+                    activeScene.id === scene.id
+                      ? { color: activeScene.accent }
+                      : undefined
+                  }
                 >
                   {scene.title}
-                </Text>
+                </AppText>
               </Pressable>
             ))}
           </View>
@@ -285,11 +303,25 @@ export default function CountingImmersionScreen({
               />
 
               <View style={styles.stageInfo}>
-                <Text style={[styles.krTitle, { color: activeScene.accent }]}>
+                <AppText
+                  variant="label"
+                  script="korean"
+                  lineContract="twoLines"
+                  style={[styles.krTitle, { color: activeScene.accent }]}
+                >
                   {activeScene.koreanTitle}
-                </Text>
-                <Text style={styles.mainTitle}>{activeScene.title}</Text>
-                <Text style={styles.mainSub}>{activeScene.description}</Text>
+                </AppText>
+                <AppText variant="sceneTitle" lineContract="fluid">
+                  {activeScene.title}
+                </AppText>
+                <AppText
+                  variant="bodySecondary"
+                  tone="muted"
+                  lineContract="fluid"
+                  style={styles.mainSub}
+                >
+                  {activeScene.description}
+                </AppText>
               </View>
 
               <Pressable onPress={advanceDialogue} style={styles.scriptBox}>
@@ -307,22 +339,41 @@ export default function CountingImmersionScreen({
                         isActive && { borderColor: activeScene.accent },
                       ]}
                     >
-                      <Text
+                      <AppText
+                        variant="sectionLabel"
+                        lineContract="singleLine"
                         style={[styles.charTag, { color: activeScene.accent }]}
                       >
                         {line.char}
-                      </Text>
-                      <Text style={styles.krScript}>{line.kr}</Text>
-                      <Text style={styles.frScript}>{line.fr}</Text>
+                      </AppText>
+                      <AppText
+                        variant="koreanSecondary"
+                        script="korean"
+                        lineContract="fluid"
+                        style={styles.krScript}
+                      >
+                        {line.kr}
+                      </AppText>
+                      <AppText
+                        variant="caption"
+                        tone="muted"
+                        lineContract="fluid"
+                      >
+                        {line.fr}
+                      </AppText>
                     </Pressable>
                   );
                 })}
 
                 {isTyping && (
                   <View style={[styles.bubble, styles.bubbleL, styles.typingBubble]}>
-                    <Text style={[styles.charTag, { color: activeScene.accent }]}>
+                    <AppText
+                      variant="sectionLabel"
+                      lineContract="singleLine"
+                      style={[styles.charTag, { color: activeScene.accent }]}
+                    >
                       {activeScene.dialogue[visibleMessages]?.char}
-                    </Text>
+                    </AppText>
 
                     <View style={styles.typingDots}>
                       <View
@@ -338,7 +389,11 @@ export default function CountingImmersionScreen({
                   </View>
                 )}
 
-                <Animated.Text
+                <AnimatedAppText
+                  variant="sectionLabel"
+                  tone="soft"
+                  align="center"
+                  lineContract="twoLines"
                   style={[
                     styles.tapHint,
                     shouldHighlightHint && {
@@ -363,14 +418,20 @@ export default function CountingImmersionScreen({
                     : isTyping
                       ? "Réponse en cours..."
                       : "Toucher pour continuer"}
-                </Animated.Text>
+                </AnimatedAppText>
               </Pressable>
             </BlurView>
           </Animated.View>
 
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <Text style={styles.toolboxTitle}>{toolboxTitle}</Text>
+              <AppText
+                variant="sectionLabel"
+                tone="muted"
+                lineContract="fluid"
+              >
+                {toolboxTitle}
+              </AppText>
               <View
                 style={[styles.toolboxLine, { backgroundColor: activeScene.accent }]}
               />
@@ -410,12 +471,21 @@ export default function CountingImmersionScreen({
                       <View style={styles.vocabInner}>
                         <View style={styles.vocabTopRow}>
                           <View style={{ flex: 1 }}>
-                            <Text style={styles.vocabWord}>{exp.word}</Text>
-                            <Text
-                              style={[styles.vocabRom, { color: activeScene.accent }]}
+                            <AppText
+                              variant="koreanPrimary"
+                              script="korean"
+                              lineContract="fluid"
+                              style={styles.vocabWord}
+                            >
+                              {exp.word}
+                            </AppText>
+                            <AppText
+                              variant="sectionLabel"
+                              lineContract="twoLines"
+                              style={{ color: activeScene.accent }}
                             >
                               {exp.rom}
-                            </Text>
+                            </AppText>
                           </View>
 
                           <View
@@ -427,17 +497,37 @@ export default function CountingImmersionScreen({
                               },
                             ]}
                           >
-                            <Text
-                              style={[styles.listenIcon, { color: activeScene.accent }]}
+                            <AppText
+                              variant="label"
+                              lineContract="singleLine"
+                              style={{ color: activeScene.accent }}
                             >
                               {isActive ? "●" : "▶"}
-                            </Text>
-                            <Text style={styles.listenText}>ÉCOUTER</Text>
+                            </AppText>
+                            <AppText
+                              variant="label"
+                              tone="muted"
+                              lineContract="fluid"
+                            >
+                              ÉCOUTER
+                            </AppText>
                           </View>
                         </View>
 
-                        <Text style={styles.vocabMean}>{exp.mean}</Text>
-                        <Text style={styles.vocabCtx}>{exp.context}</Text>
+                        <AppText
+                          variant="bodyStrong"
+                          lineContract="fluid"
+                          style={styles.vocabMean}
+                        >
+                          {exp.mean}
+                        </AppText>
+                        <AppText
+                          variant="bodySecondary"
+                          tone="muted"
+                          lineContract="fluid"
+                        >
+                          {exp.context}
+                        </AppText>
                       </View>
                     </BlurView>
                   </Pressable>
@@ -467,23 +557,12 @@ const styles = StyleSheet.create({
     marginVertical: 15,
   },
   backBtn: { flexDirection: "row", alignItems: "center" },
-  backArrow: { color: COLORS.txt, fontSize: 32, marginRight: 5 },
-  backText: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-    letterSpacing: 2,
-  },
+  backArrow: { marginRight: 5 },
   badge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
     borderWidth: 1,
-  },
-  badgeText: {
-    fontSize: 9,
-    fontFamily: "Outfit_700Bold",
-    letterSpacing: 1,
   },
 
   tabContainer: { flexDirection: "row", gap: 10, marginBottom: 25 },
@@ -495,11 +574,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.05)",
     alignItems: "center",
   },
-  tabLabel: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-  },
 
   stageCard: {
     borderRadius: 32,
@@ -509,20 +583,8 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.1)",
   },
   stageInfo: { marginBottom: 30 },
-  krTitle: {
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 14,
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  mainTitle: {
-    color: COLORS.txt,
-    fontFamily: "Outfit_900Black",
-    fontSize: 34,
-  },
+  krTitle: { marginBottom: 4 },
   mainSub: {
-    color: COLORS.muted,
-    fontSize: 13,
     fontStyle: "italic",
     marginTop: 8,
   },
@@ -545,25 +607,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.1)",
     borderBottomRightRadius: 4,
   },
-  charTag: {
-    fontSize: 9,
-    fontFamily: "Outfit_700Bold",
-    textTransform: "uppercase",
-    letterSpacing: 1.5,
-    marginBottom: 6,
-  },
-  krScript: {
-    color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 18,
-    lineHeight: 25,
-    marginBottom: 4,
-  },
-  frScript: {
-    color: COLORS.muted,
-    fontSize: 12,
-    fontFamily: "Outfit_500Medium",
-  },
+  charTag: { marginBottom: 6 },
+  krScript: { marginBottom: 4 },
   typingBubble: {
     minWidth: 110,
   },
@@ -581,11 +626,6 @@ const styles = StyleSheet.create({
   },
   tapHint: {
     alignSelf: "center",
-    color: "rgba(255,255,255,0.42)",
-    fontFamily: "Outfit_700Bold",
-    fontSize: 10,
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
     marginTop: 4,
   },
 
@@ -595,12 +635,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 15,
     marginBottom: 20,
-  },
-  toolboxTitle: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-    letterSpacing: 3,
   },
   toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
 
@@ -626,28 +660,8 @@ const styles = StyleSheet.create({
     gap: 14,
     marginBottom: 10,
   },
-  vocabWord: {
-    color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 24,
-    marginBottom: 2,
-  },
-  vocabRom: {
-    fontFamily: "Outfit_700Bold",
-    fontSize: 12,
-    textTransform: "uppercase",
-  },
-  vocabMean: {
-    color: COLORS.txt,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  vocabCtx: {
-    color: COLORS.muted,
-    fontSize: 12,
-    lineHeight: 18,
-  },
+  vocabWord: { marginBottom: 2 },
+  vocabMean: { marginBottom: 4 },
   listenPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -656,15 +670,5 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
-  },
-  listenIcon: {
-    fontSize: 9,
-    fontFamily: "Outfit_700Bold",
-  },
-  listenText: {
-    color: "rgba(255,255,255,0.78)",
-    fontFamily: "Outfit_700Bold",
-    fontSize: 9,
-    letterSpacing: 1,
   },
 });

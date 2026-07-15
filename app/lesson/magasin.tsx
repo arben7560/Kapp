@@ -2,11 +2,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import * as Speech from "expo-speech";
 import React, { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
+
+import { AppMixedText, AppText } from "@/components/app-text";
 
 const BG0 = "#070812";
-const TXT = "rgba(255,255,255,0.92)";
-const MUTED = "rgba(255,255,255,0.65)";
 const LINE = "rgba(255,255,255,0.12)";
 const CARD = "rgba(255,255,255,0.06)";
 const CYAN = "rgba(34,211,238,0.50)";
@@ -36,6 +36,8 @@ function Pill({
 }) {
   return (
     <Pressable
+      accessibilityRole={onPress ? "tab" : undefined}
+      accessibilityState={onPress ? { selected: active } : undefined}
       onPress={onPress}
       style={({ pressed }) => ({
         opacity: pressed ? 0.92 : 1,
@@ -47,9 +49,14 @@ function Pill({
         backgroundColor: active ? CYAN_BG : "rgba(255,255,255,0.04)",
       })}
     >
-      <Text style={{ color: TXT, fontWeight: "900", fontSize: 13 }}>
+      <AppText
+        variant="button"
+        tone="strong"
+        align="center"
+        lineContract="singleLine"
+      >
         {label}
-      </Text>
+      </AppText>
     </Pressable>
   );
 }
@@ -73,6 +80,8 @@ function Card({ children }: { children: React.ReactNode }) {
 function AudioButton({ kr }: { kr: string }) {
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Écouter ${kr}`}
       onPress={() => speakKR(kr)}
       style={({ pressed }) => ({
         opacity: pressed ? 0.9 : 1,
@@ -84,9 +93,14 @@ function AudioButton({ kr }: { kr: string }) {
         backgroundColor: PURPLE_BG,
       })}
     >
-      <Text style={{ color: TXT, fontWeight: "900", fontSize: 12 }}>
+      <AppText
+        variant="caption"
+        tone="strong"
+        align="center"
+        lineContract="singleLine"
+      >
         🔊 Écouter
-      </Text>
+      </AppText>
     </Pressable>
   );
 }
@@ -122,23 +136,35 @@ function VocabRow({
         }}
       >
         <View style={{ flex: 1 }}>
-          <Text style={{ color: TXT, fontSize: 22, fontWeight: "900" }}>
+          <AppText
+            variant="koreanPrimary"
+            script="korean"
+            tone="strong"
+            accessibilityLanguage="ko-KR"
+          >
             {kr}
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 4 }}>{roman}</Text>
-          <Text style={{ color: MUTED, marginTop: 4 }}>• {level}</Text>
+          </AppText>
+          <AppText
+            variant="bodySecondary"
+            tone="muted"
+            style={{ marginTop: 4 }}
+          >
+            {roman}
+          </AppText>
+          <AppText variant="caption" tone="muted" style={{ marginTop: 4 }}>
+            • {level}
+          </AppText>
         </View>
 
         <View style={{ alignItems: "flex-end", gap: 8 }}>
-          <Text
-            style={{
-              color: "rgba(255,255,255,0.75)",
-              fontWeight: "800",
-              marginTop: 4,
-            }}
+          <AppText
+            variant="bodyStrong"
+            tone="muted"
+            align="end"
+            style={{ marginTop: 4 }}
           >
             {fr}
-          </Text>
+          </AppText>
           <AudioButton kr={kr} />
         </View>
       </View>
@@ -174,21 +200,24 @@ function LineBlock({
         }}
       >
         <View style={{ flex: 1 }}>
-          <Text
-            style={{
-              color: "rgba(34,211,238,0.9)",
-              fontWeight: "900",
-              marginBottom: 8,
-            }}
+          <AppText
+            variant="bodyStrong"
+            tone="accent"
+            style={{ marginBottom: 8 }}
           >
             {speaker}
-          </Text>
-          <Text style={{ color: TXT, fontSize: 18, fontWeight: "900" }}>
+          </AppText>
+          <AppText
+            variant="koreanSecondary"
+            script="korean"
+            tone="strong"
+            accessibilityLanguage="ko-KR"
+          >
             {kr}
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>
+          </AppText>
+          <AppText variant="body" tone="muted" style={{ marginTop: 6 }}>
             {fr}
-          </Text>
+          </AppText>
         </View>
         <AudioButton kr={kr} />
       </View>
@@ -204,12 +233,12 @@ export default function ShopLesson() {
       return (
         <>
           <Card>
-            <Text style={{ color: TXT, fontSize: 20, fontWeight: "900" }}>
+            <AppText variant="sectionTitle" tone="strong">
               🛍️ Ce que dit souvent le vendeur
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 8, lineHeight: 20 }}>
+            </AppText>
+            <AppText variant="body" tone="muted" style={{ marginTop: 8 }}>
               Les phrases fréquentes dans une boutique à Séoul.
-            </Text>
+            </AppText>
           </Card>
 
           <View style={{ height: 14 }} />
@@ -252,13 +281,13 @@ export default function ShopLesson() {
       return (
         <>
           <Card>
-            <Text style={{ color: TXT, fontSize: 20, fontWeight: "900" }}>
+            <AppText variant="sectionTitle" tone="strong">
               🙋 Ce que dit souvent le client
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 8, lineHeight: 20 }}>
+            </AppText>
+            <AppText variant="body" tone="muted" style={{ marginTop: 8 }}>
               Les phrases les plus utiles pour demander une taille, essayer et
               parler tax free.
-            </Text>
+            </AppText>
           </Card>
 
           <View style={{ height: 14 }} />
@@ -301,13 +330,13 @@ export default function ShopLesson() {
       return (
         <>
           <Card>
-            <Text style={{ color: TXT, fontSize: 20, fontWeight: "900" }}>
+            <AppText variant="sectionTitle" tone="strong">
               🔗 Connecteurs naturels
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 8, lineHeight: 20 }}>
+            </AppText>
+            <AppText variant="body" tone="muted" style={{ marginTop: 8 }}>
               Pour enchaîner taille, couleur, essayage et tax free plus
               naturellement.
-            </Text>
+            </AppText>
           </Card>
 
           <View style={{ height: 14 }} />
@@ -321,32 +350,54 @@ export default function ShopLesson() {
           <View style={{ height: 10 }} />
 
           <Card>
-            <Text style={{ color: TXT, fontWeight: "900", fontSize: 18 }}>
+            <AppText variant="cardTitle" tone="strong">
               Exemples utiles
-            </Text>
+            </AppText>
 
-            <Text style={{ color: MUTED, marginTop: 10 }}>
-              M 사이즈하고 검정색 있어요?
-            </Text>
-            <Text style={{ color: "rgba(255,255,255,0.82)", marginTop: 4 }}>
+            <AppMixedText
+              variant="koreanSecondary"
+              tone="muted"
+              style={{ marginTop: 10 }}
+              segments={[
+                { text: "M ", script: "latin" },
+                {
+                  text: "사이즈하고 검정색 있어요?",
+                  script: "korean",
+                  accessibilityLanguage: "ko-KR",
+                },
+              ]}
+            />
+            <AppText variant="body" tone="muted" style={{ marginTop: 4 }}>
               Vous avez du M et en noir ?
-            </Text>
+            </AppText>
             <AudioButton kr="M 사이즈하고 검정색 있어요?" />
 
-            <Text style={{ color: MUTED, marginTop: 12 }}>
+            <AppText
+              variant="koreanSecondary"
+              script="korean"
+              tone="muted"
+              accessibilityLanguage="ko-KR"
+              style={{ marginTop: 12 }}
+            >
               그럼 이거 입어볼게요.
-            </Text>
-            <Text style={{ color: "rgba(255,255,255,0.82)", marginTop: 4 }}>
+            </AppText>
+            <AppText variant="body" tone="muted" style={{ marginTop: 4 }}>
               Alors je vais essayer celui-ci.
-            </Text>
+            </AppText>
             <AudioButton kr="그럼 이거 입어볼게요." />
 
-            <Text style={{ color: MUTED, marginTop: 12 }}>
+            <AppText
+              variant="koreanSecondary"
+              script="korean"
+              tone="muted"
+              accessibilityLanguage="ko-KR"
+              style={{ marginTop: 12 }}
+            >
               혹시 택스프리 가능해요?
-            </Text>
-            <Text style={{ color: "rgba(255,255,255,0.82)", marginTop: 4 }}>
+            </AppText>
+            <AppText variant="body" tone="muted" style={{ marginTop: 4 }}>
               Est-ce que le tax free est possible ?
-            </Text>
+            </AppText>
             <AudioButton kr="혹시 택스프리 가능해요?" />
           </Card>
         </>
@@ -357,20 +408,20 @@ export default function ShopLesson() {
       return (
         <>
           <Card>
-            <Text style={{ color: TXT, fontSize: 20, fontWeight: "900" }}>
+            <AppText variant="sectionTitle" tone="strong">
               💬 Mini-dialogues immersifs
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 8, lineHeight: 20 }}>
+            </AppText>
+            <AppText variant="body" tone="muted" style={{ marginTop: 8 }}>
               De petites scènes réalistes en boutique.
-            </Text>
+            </AppText>
           </Card>
 
           <View style={{ height: 14 }} />
 
           <Card>
-            <Text style={{ color: "rgba(34,211,238,0.9)", fontWeight: "900" }}>
+            <AppText variant="bodyStrong" tone="accent">
               Dialogue 1 — taille et essayage
-            </Text>
+            </AppText>
 
             <View style={{ height: 10 }} />
 
@@ -395,9 +446,9 @@ export default function ShopLesson() {
           <View style={{ height: 12 }} />
 
           <Card>
-            <Text style={{ color: "rgba(34,211,238,0.9)", fontWeight: "900" }}>
+            <AppText variant="bodyStrong" tone="accent">
               Dialogue 2 — tax free
-            </Text>
+            </AppText>
 
             <View style={{ height: 10 }} />
 
@@ -425,12 +476,12 @@ export default function ShopLesson() {
     return (
       <>
         <Card>
-          <Text style={{ color: TXT, fontSize: 20, fontWeight: "900" }}>
+          <AppText variant="sectionTitle" tone="strong">
             🧠 Mini-quiz
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 8, lineHeight: 20 }}>
+          </AppText>
+          <AppText variant="body" tone="muted" style={{ marginTop: 8 }}>
             Petites vérifications rapides pour ancrer le contenu.
-          </Text>
+          </AppText>
         </Card>
 
         <View style={{ height: 14 }} />
@@ -455,7 +506,10 @@ export default function ShopLesson() {
   }, [tab]);
 
   return (
-    <LinearGradient colors={[BG0, "#0b0b1d", "#0b0f22"]} style={{ flex: 1 }}>
+    <LinearGradient
+      colors={[BG0, "#0b0b1d", "#0b0f22"]}
+      style={{ flex: 1, overflow: "hidden" }}
+    >
       <View
         pointerEvents="none"
         style={{
@@ -482,20 +536,31 @@ export default function ShopLesson() {
       />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
-        <Pressable onPress={() => router.back()}>
-          <Text style={{ color: MUTED, fontWeight: "800" }}>← Retour</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Retour"
+          onPress={() => router.back()}
+          style={{ minHeight: 44, justifyContent: "center" }}
+        >
+          <AppText variant="link" tone="muted" lineContract="singleLine">
+            ← Retour
+          </AppText>
         </Pressable>
 
         <View style={{ height: 14 }} />
 
-        <Text style={{ color: TXT, fontSize: 32, fontWeight: "900" }}>
+        <AppText
+          accessibilityRole="header"
+          variant="sceneTitle"
+          tone="strong"
+        >
           Magasin — taille, essayage, détaxe
-        </Text>
+        </AppText>
 
-        <Text style={{ color: MUTED, marginTop: 8, lineHeight: 22 }}>
+        <AppText variant="body" tone="muted" style={{ marginTop: 8 }}>
           Vendeur, client, connecteurs naturels, mini-dialogues et petit quiz
           pour gérer une situation réelle en boutique.
-        </Text>
+        </AppText>
 
         <View style={{ height: 14 }} />
 
@@ -518,22 +583,35 @@ export default function ShopLesson() {
             alignSelf: "flex-start",
           }}
         >
-          <Text style={{ color: TXT, fontWeight: "800" }}>
-            Situations fréquentes : 사이즈 • 피팅룸 • 색 • 택스프리
-          </Text>
+          <AppMixedText
+            variant="bodyStrong"
+            tone="strong"
+            segments={[
+              {
+                text: "Situations fréquentes : ",
+                script: "latin",
+                accessibilityLanguage: "fr-FR",
+              },
+              {
+                text: "사이즈 • 피팅룸 • 색 • 택스프리",
+                script: "korean",
+                accessibilityLanguage: "ko-KR",
+              },
+            ]}
+          />
         </View>
 
         <View style={{ height: 18 }} />
 
         <Card>
-          <Text style={{ color: TXT, fontSize: 22, fontWeight: "900" }}>
+          <AppText variant="sectionTitle" tone="strong">
             🛍️ Mode immersif
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 8, lineHeight: 20 }}>
+          </AppText>
+          <AppText variant="body" tone="muted" style={{ marginTop: 8 }}>
             Apprends comme si tu étais dans une boutique à Séoul : phrases du
             vendeur → réponses client → connecteurs naturels → mini-dialogues →
             mini-quiz.
-          </Text>
+          </AppText>
 
           <View style={{ height: 14 }} />
 

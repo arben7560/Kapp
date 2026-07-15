@@ -1,7 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { Compass, MessageCircleMore, Settings } from "lucide-react-native";
 import { router, useFocusEffect } from "expo-router";
+import { Compass, MessageCircleMore, Settings } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef } from "react";
 import {
   Animated,
@@ -10,13 +10,13 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
+  View,
   type StyleProp,
   type ViewStyle,
-  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
+import { AppText } from "../../components/app-text";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import type { DailyStreakState } from "../../lib/dailyStreak";
@@ -34,15 +34,6 @@ const HUB_BACKGROUND_DARKNESS = 0.58;
 
 const CYAN = "#67E8F9";
 const PINK = "#F472B6";
-
-const fonts = {
-  light: "Outfit_300Light",
-  regular: "Outfit_400Regular",
-  medium: "Outfit_500Medium",
-  semibold: "Outfit_600SemiBold",
-  bold: "Outfit_700Bold",
-  krBold: "NotoSansKR_700Bold",
-};
 
 const ABSOLUTE_FILL = {
   position: "absolute" as const,
@@ -186,8 +177,8 @@ export default function Home() {
     gridColumns,
     responsive.gridGap,
   );
-  const heroTextWidth = Math.max(260, responsive.contentWidth);
-  const heroSubtitleWidth = Math.min(430, Math.max(240, heroTextWidth - 44));
+  const heroTextWidth = Math.max(0, responsive.contentWidth - 8);
+  const heroSubtitleWidth = Math.min(430, heroTextWidth);
   const currentTrack = progress.learningTrack;
   const activeSeq =
     (currentTrack ? RESUME_SEQUENCES[currentTrack] : undefined) ??
@@ -274,7 +265,11 @@ export default function Home() {
           aria-disabled={true}
           hitSlop={8}
           disabled
-          style={styles.settingsTrigger}
+          style={[
+            styles.settingsTrigger,
+            { right: responsive.horizontalPadding },
+            responsive.isCompact && styles.settingsTriggerCompact,
+          ]}
         >
           <BlurView intensity={80} tint="dark" style={styles.settingsBlur}>
             <Settings
@@ -292,154 +287,192 @@ export default function Home() {
             { paddingHorizontal: responsive.horizontalPadding },
           ]}
         >
-          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
-          {/* TOP HEADER */}
-          <View style={styles.header}>
-            <View style={styles.headerIdentity}>
-              <View style={styles.brandGroup}>
-                <Text style={styles.headerCityKr}>서울</Text>
-                <Text style={styles.headerCityEn}>SEOUL</Text>
-              </View>
-
-              <View style={styles.headerDivider} />
-
-              <View style={styles.statusGroup}>
-                <View style={styles.liveIndicatorRow}>
-                  <Animated.View
-                    style={[styles.liveDot, { opacity: pulseAnim }]}
-                  />
-                  <Text style={styles.statusText}>IMMERSION ACTIVE</Text>
+          <View
+            style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
+          >
+            {/* TOP HEADER */}
+            <View
+              style={[styles.header, responsive.isCompact && styles.headerCompact]}
+            >
+              <View style={styles.headerIdentity}>
+                <View style={styles.brandGroup}>
+                  <AppText variant="koreanPrimary" script="korean" lineContract="singleLine" style={styles.headerCityKr}>서울</AppText>
+                  <AppText variant="sectionLabel" lineContract="singleLine" style={styles.headerCityEn}>SEOUL</AppText>
                 </View>
-                <Text style={styles.locationText}>KOREA STANDARD TIME</Text>
+
+                <View
+                  style={[
+                    styles.headerDivider,
+                    responsive.isCompact && styles.headerDividerCompact,
+                  ]}
+                />
+
+                <View style={styles.statusGroup}>
+                  <View style={styles.liveIndicatorRow}>
+                    <Animated.View
+                      style={[styles.liveDot, { opacity: pulseAnim }]}
+                    />
+                    <AppText variant="caption" lineContract="singleLine" style={styles.statusText}>IMMERSION ACTIVE</AppText>
+                  </View>
+                  <AppText variant="caption" lineContract="singleLine" style={styles.locationText}>KOREA STANDARD TIME</AppText>
+                </View>
               </View>
             </View>
 
-          </View>
+            {/* HERO - SEOUL IMMERSION */}
+            <View
+              style={[
+                styles.heroBlock,
+                responsive.isCompact && styles.heroBlockCompact,
+              ]}
+            >
+              <View
+                style={[
+                  styles.heroWrap,
+                  responsive.isCompact && styles.heroWrapCompact,
+                ]}
+              >
+                <View style={styles.heroContent}>
+                  <AppText variant="sectionLabel" style={styles.heroLabel}>SÉOUL IMMERSION</AppText>
 
-          {/* HERO - SEOUL IMMERSION */}
-          <View style={styles.heroBlock}>
-            <View style={styles.heroWrap}>
-              <View style={styles.heroContent}>
-                <Text style={styles.heroLabel}>SÉOUL IMMERSION</Text>
-
-                <View style={styles.heroSeoulTitleWrap}>
-                  <Text
+                  <View
                     style={[
-                      styles.heroSeoulShadow,
-                      { maxWidth: heroTextWidth },
+                      styles.heroSeoulTitleWrap,
+                      responsive.isCompact && styles.heroSeoulTitleWrapCompact,
                     ]}
                   >
-                    어서 오세요.
-                  </Text>
-                  <Text
-                    style={[styles.heroSeoulTitle, { maxWidth: heroTextWidth }]}
+                    <AppText variant="koreanHero" script="korean" lineContract="singleLine"
+                      style={[
+                        styles.heroSeoulShadow,
+                        responsive.isCompact && styles.heroSeoulTextCompact,
+                        { maxWidth: heroTextWidth },
+                      ]}
+                    >
+                      어서 오세요.
+                    </AppText>
+                    <AppText variant="koreanHero" script="korean" lineContract="singleLine"
+                      style={[
+                        styles.heroSeoulTitle,
+                        responsive.isCompact && styles.heroSeoulTextCompact,
+                        { maxWidth: heroTextWidth },
+                      ]}
+                    >
+                      어서 오세요.
+                    </AppText>
+                  </View>
+
+                  <AppText accessibilityRole="header" variant="display"
+                    style={[
+                      styles.heroTitle,
+                      responsive.isCompact && styles.heroTitleCompact,
+                    ]}
                   >
-                    어서 오세요.
-                  </Text>
+                    Entre dans la ville.
+                  </AppText>
+
+                  <AppText variant="subtitle"
+                    style={[
+                      styles.heroSubtitle,
+                      { maxWidth: heroSubtitleWidth },
+                    ]}
+                  >
+                    Apprends le coréen comme si tu y étais déjà.
+                  </AppText>
+
+                  <LinearGradient
+                    colors={[CYAN, PINK]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.heroLine}
+                  />
                 </View>
+              </View>
+            </View>
 
-                <Text style={styles.heroTitle}>Entre dans la ville.</Text>
+            {/* LIST CONTENT */}
+            <AnimatedFragment index={0}>
+              <MainActionCard
+                sequence={activeSeq}
+                narrative={activeSeqNarrative}
+                progress={activeSeqProgress}
+                onPress={() => openSequence(activeSeq)}
+              />
+            </AnimatedFragment>
 
-                <Text
-                  style={[styles.heroSubtitle, { maxWidth: heroSubtitleWidth }]}
-                >
-                  Apprends le coréen comme si tu y étais déjà.
-                </Text>
+            <DailyStreakCard
+              streak={streak}
+              onPress={() => router.push("/streak")}
+            />
 
+            <View style={styles.sectionDivider}>
+              <AppText variant="sectionTitle" style={styles.sectionTitle}>{"POINTS D'ENTRÉE"}</AppText>
+              <View style={styles.titleLineWrap}>
+                <View style={styles.titleLine} />
                 <LinearGradient
-                  colors={[CYAN, PINK]}
+                  colors={["transparent", CYAN, PINK]}
                   start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.heroLine}
+                  end={{ x: 0.5, y: 0 }}
+                  style={styles.titleLineGlow}
                 />
               </View>
             </View>
-          </View>
 
-          {/* LIST CONTENT */}
-          <AnimatedFragment index={0}>
-            <MainActionCard
-              sequence={activeSeq}
-              narrative={activeSeqNarrative}
-              progress={activeSeqProgress}
-              onPress={() => openSequence(activeSeq)}
-            />
-          </AnimatedFragment>
-
-          <DailyStreakCard
-            streak={streak}
-            onPress={() => router.push("/streak")}
-          />
-
-          <View style={styles.sectionDivider}>
-            <Text style={styles.sectionTitle}>{"POINTS D'ENTRÉE"}</Text>
-            <View style={styles.titleLineWrap}>
-              <View style={styles.titleLine} />
-              <LinearGradient
-                colors={["transparent", CYAN, PINK]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0.5, y: 0 }}
-                style={styles.titleLineGlow}
-              />
+            <View
+              style={[
+                styles.grid,
+                gridColumns > 1 && styles.gridWide,
+                { gap: responsive.gridGap },
+              ]}
+            >
+              {pedagogicalSequences.map((seq, i) => (
+                <AnimatedFragment
+                  key={seq.trackKey}
+                  index={i + 1}
+                  style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
+                >
+                  <SequenceCard
+                    item={seq}
+                    isActive={seq.trackKey === currentTrack}
+                    onPress={() => openSequence(seq)}
+                  />
+                </AnimatedFragment>
+              ))}
             </View>
-          </View>
 
-          <View
-            style={[
-              styles.grid,
-              gridColumns > 1 && styles.gridWide,
-              { gap: responsive.gridGap },
-            ]}
-          >
-            {pedagogicalSequences.map((seq, i) => (
-              <AnimatedFragment
-                key={seq.trackKey}
-                index={i + 1}
-                style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
-              >
-                <SequenceCard
-                  item={seq}
-                  isActive={seq.trackKey === currentTrack}
-                  onPress={() => openSequence(seq)}
+            <View style={styles.sectionDivider}>
+              <AppText variant="sectionTitle" style={styles.sectionTitle}>IMMERSION</AppText>
+              <View style={styles.titleLineWrap}>
+                <View style={styles.titleLine} />
+                <LinearGradient
+                  colors={["transparent", "#8B5CF6", PINK]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0.5, y: 0 }}
+                  style={styles.titleLineGlow}
                 />
-              </AnimatedFragment>
-            ))}
-          </View>
-
-          <View style={styles.sectionDivider}>
-            <Text style={styles.sectionTitle}>IMMERSION</Text>
-            <View style={styles.titleLineWrap}>
-              <View style={styles.titleLine} />
-              <LinearGradient
-                colors={["transparent", "#8B5CF6", PINK]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0.5, y: 0 }}
-                style={styles.titleLineGlow}
-              />
+              </View>
             </View>
-          </View>
 
-          <View
-            style={[
-              styles.grid,
-              gridColumns > 1 && styles.gridWide,
-              { gap: responsive.gridGap },
-            ]}
-          >
-            {immersionSequences.map((seq, i) => (
-              <AnimatedFragment
-                key={seq.trackKey}
-                index={i + 1 + pedagogicalSequences.length}
-                style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
-              >
-                <SequenceCard
-                  item={seq}
-                  isActive={seq.trackKey === currentTrack}
-                  onPress={() => openSequence(seq)}
-                />
-              </AnimatedFragment>
-            ))}
-          </View>
+            <View
+              style={[
+                styles.grid,
+                gridColumns > 1 && styles.gridWide,
+                { gap: responsive.gridGap },
+              ]}
+            >
+              {immersionSequences.map((seq, i) => (
+                <AnimatedFragment
+                  key={seq.trackKey}
+                  index={i + 1 + pedagogicalSequences.length}
+                  style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
+                >
+                  <SequenceCard
+                    item={seq}
+                    isActive={seq.trackKey === currentTrack}
+                    onPress={() => openSequence(seq)}
+                  />
+                </AnimatedFragment>
+              ))}
+            </View>
           </View>
         </ScrollView>
       </ImageBackground>
@@ -536,9 +569,9 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
     >
       <BlurView intensity={60} tint="dark" style={styles.mainCard}>
         <View style={styles.cardContent}>
-          <Text style={styles.cardKicker}>REPRENDRE LA SÉQUENCE</Text>
-          <Text style={styles.cardTitle}>{displayLabel}</Text>
-          <Text style={styles.cardNarrative}>{narrative}</Text>
+          <AppText variant="sectionLabel" style={styles.cardKicker}>REPRENDRE LA SÉQUENCE</AppText>
+          <AppText variant="cardTitle" style={styles.cardTitle}>{displayLabel}</AppText>
+          <AppText variant="bodySecondary" tone="muted" style={styles.cardNarrative}>{narrative}</AppText>
           <View style={styles.progressContainer}>
             <View style={styles.progressTrack}>
               <View
@@ -551,9 +584,9 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
                 ]}
               />
             </View>
-            <Text style={styles.progressText}>
+            <AppText variant="caption" style={styles.progressText}>
               {Math.round(progress * 100)}% {"d'immersion"}
-            </Text>
+            </AppText>
           </View>
         </View>
       </BlurView>
@@ -603,15 +636,15 @@ function DailyStreakCard({
 
         <View style={styles.streakTopRow}>
           <View style={styles.streakCounterBlock}>
-            <Text style={styles.streakKicker}>SÉRIE QUOTIDIENNE</Text>
+            <AppText variant="sectionLabel" style={styles.streakKicker}>SÉRIE QUOTIDIENNE</AppText>
             <View style={styles.streakNumberRow}>
               <View style={styles.streakSymbol}>
-                <Text style={styles.streakSymbolText}>ST</Text>
+                <AppText variant="caption" style={styles.streakSymbolText}>ST</AppText>
               </View>
-              <Text style={styles.streakNumber}>{currentStreak}</Text>
-              <Text style={styles.streakUnit}>
+              <AppText variant="numericValue" style={styles.streakNumber}>{currentStreak}</AppText>
+              <AppText variant="caption" style={styles.streakUnit}>
                 {currentStreak > 1 ? "jours" : "jour"}
-              </Text>
+              </AppText>
             </View>
           </View>
 
@@ -621,46 +654,46 @@ function DailyStreakCard({
               isValidated && styles.streakStatusValidated,
             ]}
           >
-            <Text
+            <AppText variant="label"
               style={[
                 styles.streakStatusText,
                 isValidated && styles.streakStatusTextValidated,
               ]}
             >
               {statusLabel}
-            </Text>
+            </AppText>
           </View>
         </View>
 
         <View style={styles.streakMessageBox}>
-          <Text style={styles.streakMessageTitle}>
+          <AppText variant="sectionTitle" style={styles.streakMessageTitle}>
             {isValidated ? "Objectif du jour atteint" : "Objectif du jour"}
-          </Text>
-          <Text style={styles.streakGoal}>{helperText}</Text>
+          </AppText>
+          <AppText variant="bodySecondary" tone="muted" style={styles.streakGoal}>{helperText}</AppText>
         </View>
 
         <View style={styles.streakMetrics}>
           <View style={styles.streakMetricCard}>
-            <Text style={styles.streakMetricValue}>{longestStreak} j</Text>
-            <Text style={styles.streakMetricLabel}>Record</Text>
+            <AppText variant="bodyStrong" style={styles.streakMetricValue}>{longestStreak} j</AppText>
+            <AppText variant="caption" tone="muted" style={styles.streakMetricLabel}>Record</AppText>
           </View>
           <View style={styles.streakMetricCard}>
-            <Text style={styles.streakMetricValue}>{freezesAvailable}</Text>
-            <Text style={styles.streakMetricLabel}>Freezes</Text>
+            <AppText variant="bodyStrong" style={styles.streakMetricValue}>{freezesAvailable}</AppText>
+            <AppText variant="caption" tone="muted" style={styles.streakMetricLabel}>Freezes</AppText>
           </View>
           <View style={styles.streakMetricCard}>
-            <Text style={styles.streakMetricValue}>
+            <AppText variant="bodyStrong" style={styles.streakMetricValue}>
               {isValidated ? "OK" : "1"}
-            </Text>
-            <Text style={styles.streakMetricLabel}>
+            </AppText>
+            <AppText variant="caption" tone="muted" style={styles.streakMetricLabel}>
               {isValidated ? "Valide" : "activité"}
-            </Text>
+            </AppText>
           </View>
         </View>
 
-        <Text style={styles.streakOpenHint}>
+        <AppText variant="caption" tone="soft" style={styles.streakOpenHint}>
           Voir le calendrier et les badges
-        </Text>
+        </AppText>
       </BlurView>
     </Pressable>
   );
@@ -705,7 +738,7 @@ function SequenceIconGlyph({ icon, color }: { icon: string; color: string }) {
   }
 
   return (
-    <Text
+    <AppText variant="cardTitle"
       style={[
         styles.seqIcon,
         {
@@ -715,7 +748,7 @@ function SequenceIconGlyph({ icon, color }: { icon: string; color: string }) {
       ]}
     >
       {icon}
-    </Text>
+    </AppText>
   );
 }
 
@@ -820,12 +853,12 @@ function SequenceCard({ item, isActive, onPress }: any) {
         <View style={styles.seqDividerLine} />
 
         <View style={styles.seqText}>
-          <Text style={styles.seqPlace}>{item.place}</Text>
-          <Text style={styles.seqTitle}>{item.title}</Text>
-          <Text style={styles.seqSub}>{item.narrative}</Text>
+          <AppText variant="sectionLabel" style={styles.seqPlace}>{item.place}</AppText>
+          <AppText variant="cardTitle" style={styles.seqTitle}>{item.title}</AppText>
+          <AppText variant="bodySecondary" tone="muted" style={styles.seqSub}>{item.narrative}</AppText>
         </View>
 
-        <Text
+        <AppText variant="sectionTitle" lineContract="singleLine"
           style={[
             styles.seqArrow,
             isActive && {
@@ -836,7 +869,7 @@ function SequenceCard({ item, isActive, onPress }: any) {
           ]}
         >
           ›
-        </Text>
+        </AppText>
 
         {isComingSoon && (
           <View pointerEvents="none" style={styles.comingSoonOverlay}>
@@ -850,9 +883,9 @@ function SequenceCard({ item, isActive, onPress }: any) {
                 },
               ]}
             >
-              <Text style={[styles.comingSoonText, { color: item.color }]}>
+              <AppText variant="caption" style={[styles.comingSoonText, { color: item.color }]}>
                 PROCHAINEMENT
-              </Text>
+              </AppText>
             </View>
           </View>
         )}
@@ -902,17 +935,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     position: "relative",
   },
-  headerIdentity: { flexDirection: "row", alignItems: "center" },
+  headerCompact: {
+    marginBottom: 16,
+  },
+  headerIdentity: {
+    flexDirection: "row",
+    alignItems: "center",
+    maxWidth: "100%",
+  },
   brandGroup: { alignItems: "flex-start" },
   headerCityKr: {
     fontSize: 17.5,
-    fontFamily: fonts.krBold,
     color: TXT,
     letterSpacing: -0.5,
   },
   headerCityEn: {
     fontSize: 9.8,
-    fontFamily: fonts.medium,
     color: "rgba(255,255,255,0.65)",
     letterSpacing: 4,
     marginTop: -3,
@@ -923,7 +961,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.18)",
     marginHorizontal: 18,
   },
-  statusGroup: { justifyContent: "center" },
+  headerDividerCompact: {
+    marginHorizontal: 10,
+  },
+  statusGroup: { justifyContent: "center", flexShrink: 1 },
   liveIndicatorRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -938,20 +979,17 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: "#E0F2FE",
-    fontFamily: fonts.medium,
     fontSize: 9.5,
     letterSpacing: 1.6,
   },
   locationText: {
     color: "rgba(224, 242, 254, 0.55)",
-    fontFamily: fonts.regular,
     fontSize: 8.2,
     letterSpacing: 0.6,
   },
   settingsTrigger: {
     position: "absolute",
     top: 17,
-    right: 24,
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -959,6 +997,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.12)",
     zIndex: 50,
+  },
+  settingsTriggerCompact: {
+    display: "none",
   },
   settingsBlur: {
     flex: 1,
@@ -968,12 +1009,18 @@ const styles = StyleSheet.create({
 
   // HERO - SEOUL IMMERSION
   heroBlock: {
-    marginBottom: 40,
+    marginBottom: 20,
+  },
+  heroBlockCompact: {
+    marginBottom: 12,
   },
   heroWrap: {
-    height: 300,
+    minHeight: 300,
     justifyContent: "center",
     position: "relative",
+  },
+  heroWrapCompact: {
+    minHeight: 250,
   },
   heroContent: {
     paddingHorizontal: 4,
@@ -982,20 +1029,20 @@ const styles = StyleSheet.create({
   },
   heroLabel: {
     fontSize: 9,
-    fontFamily: fonts.medium,
     color: "rgba(255,255,255,0.70)",
     letterSpacing: 3,
-    marginBottom: 8,
     textAlign: "center",
   },
 
   heroSeoulTitleWrap: {
-    position: "absolute",
-    top: 18,
-    left: -4,
-    height: 115,
+    position: "relative",
+    marginTop: 4,
+    minHeight: 115,
     justifyContent: "center",
     alignItems: "flex-start",
+  },
+  heroSeoulTitleWrapCompact: {
+    minHeight: 88,
   },
   heroSeoulShadow: {
     position: "absolute",
@@ -1003,31 +1050,35 @@ const styles = StyleSheet.create({
     top: 4,
     fontSize: 60,
     lineHeight: 108,
-    fontFamily: fonts.krBold,
     color: "rgba(103,232,249,0.16)",
     ...textGlow("rgba(199,184,255,0.30)", 26),
   },
   heroSeoulTitle: {
     fontSize: 60,
     lineHeight: 108,
-    fontFamily: fonts.krBold,
     color: "rgba(215,247,255,0.84)",
     ...textGlow("rgba(103,232,249,0.38)", 18),
   },
+  heroSeoulTextCompact: {
+    fontSize: 48,
+    lineHeight: 70,
+  },
 
   heroTitle: {
-    fontSize: 21,
-    fontFamily: fonts.regular,
+    fontSize: 24,
     color: "#FFFFFF",
     opacity: 0.9,
-    marginTop: 120,
+    marginTop: 0,
     marginBottom: 6,
     letterSpacing: -0.4,
     textAlign: "center",
   },
+  heroTitleCompact: {
+    fontSize: 22,
+    lineHeight: 28,
+  },
   heroSubtitle: {
-    fontSize: 13,
-    fontFamily: fonts.light,
+    fontSize: 15,
     color: "rgba(255,255,255,0.65)",
     lineHeight: 22,
     marginBottom: 18,
@@ -1058,20 +1109,17 @@ const styles = StyleSheet.create({
   cardContent: {},
   cardKicker: {
     fontSize: 10,
-    fontFamily: fonts.medium,
     color: SOFT,
     letterSpacing: 1.5,
     marginBottom: 8,
   },
   cardTitle: {
     fontSize: 28,
-    fontFamily: fonts.regular,
     color: TXT,
     marginBottom: 8,
   },
   cardNarrative: {
     fontSize: 15,
-    fontFamily: fonts.light,
     color: MUTED,
     lineHeight: 22,
     marginBottom: 24,
@@ -1083,7 +1131,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   progressFill: { height: "100%", borderRadius: 2 },
-  progressText: { fontSize: 12, fontFamily: fonts.light, color: SOFT },
+  progressText: { fontSize: 12, color: SOFT },
 
   streakCard: {
     borderRadius: 22,
@@ -1107,6 +1155,7 @@ const styles = StyleSheet.create({
   },
   streakTopRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "flex-start",
     justifyContent: "space-between",
     gap: 14,
@@ -1117,7 +1166,6 @@ const styles = StyleSheet.create({
   streakKicker: {
     color: "rgba(241,245,249,0.48)",
     fontSize: 9,
-    fontFamily: fonts.bold,
     letterSpacing: 1.5,
     marginBottom: 5,
   },
@@ -1140,20 +1188,17 @@ const styles = StyleSheet.create({
   streakSymbolText: {
     color: CYAN,
     fontSize: 10,
-    fontFamily: fonts.bold,
     letterSpacing: 0.8,
   },
   streakNumber: {
     color: TXT,
     fontSize: 42,
-    fontFamily: fonts.bold,
     lineHeight: 46,
     letterSpacing: -1,
   },
   streakUnit: {
     color: "rgba(241,245,249,0.72)",
     fontSize: 14,
-    fontFamily: fonts.bold,
     paddingBottom: 7,
   },
   streakStatus: {
@@ -1171,7 +1216,6 @@ const styles = StyleSheet.create({
   streakStatusText: {
     color: "rgba(241,245,249,0.55)",
     fontSize: 9,
-    fontFamily: fonts.bold,
     letterSpacing: 1,
     textTransform: "uppercase",
   },
@@ -1190,22 +1234,22 @@ const styles = StyleSheet.create({
   streakMessageTitle: {
     color: TXT,
     fontSize: 13,
-    fontFamily: fonts.bold,
     marginBottom: 4,
   },
   streakGoal: {
     color: MUTED,
     fontSize: 12,
     lineHeight: 17,
-    fontFamily: fonts.medium,
   },
   streakMetrics: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 10,
     marginTop: 12,
   },
   streakMetricCard: {
     flex: 1,
+    minWidth: 68,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
@@ -1215,18 +1259,15 @@ const styles = StyleSheet.create({
   },
   streakMetricValue: {
     color: TXT,
-    fontFamily: fonts.bold,
     fontSize: 15,
   },
   streakMetricLabel: {
     color: "rgba(241,245,249,0.50)",
-    fontFamily: fonts.medium,
     fontSize: 10,
     marginTop: 3,
   },
   streakOpenHint: {
     color: "rgba(103,232,249,0.72)",
-    fontFamily: fonts.bold,
     fontSize: 11,
     marginTop: 12,
     textAlign: "center",
@@ -1242,7 +1283,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 12,
-    fontFamily: fonts.medium,
     color: "rgba(241,245,249,0.48)",
     letterSpacing: 3,
   },
@@ -1339,7 +1379,6 @@ const styles = StyleSheet.create({
   },
   seqIcon: {
     fontSize: 21,
-    fontFamily: fonts.regular,
     letterSpacing: 0,
   },
   seqDividerLine: {
@@ -1350,10 +1389,10 @@ const styles = StyleSheet.create({
   },
   seqText: {
     flex: 1,
+    minWidth: 0,
   },
   seqPlace: {
     fontSize: 7.8,
-    fontFamily: fonts.medium,
     color: "rgba(241,245,249,0.34)",
     letterSpacing: 1.45,
     marginBottom: 4,
@@ -1362,13 +1401,11 @@ const styles = StyleSheet.create({
   seqTitle: {
     fontSize: 18,
     lineHeight: 22,
-    fontFamily: fonts.regular,
     color: TXT,
     letterSpacing: 0,
   },
   seqSub: {
     fontSize: 13,
-    fontFamily: fonts.light,
     color: "rgba(241,245,249,0.62)",
     marginTop: 2,
     lineHeight: 18,
@@ -1376,7 +1413,6 @@ const styles = StyleSheet.create({
   seqArrow: {
     color: "rgba(255,255,255,0.36)",
     fontSize: 28,
-    fontFamily: fonts.regular,
     opacity: 0.52,
     marginLeft: 8,
   },
@@ -1397,7 +1433,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   comingSoonText: {
-    fontFamily: fonts.medium,
     fontSize: 9,
     letterSpacing: 1.4,
   },

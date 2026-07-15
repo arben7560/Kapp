@@ -13,6 +13,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
+    "web:font-fallback": "node ./scripts/start-font-fallback.mjs",
+    "validate:ui": "node ./scripts/validate-ui-contracts.mjs",
     "lint": "expo lint"
   },
   "dependencies": {

@@ -14,9 +14,8 @@ import {
 } from "@expo-google-fonts/noto-sans-kr";
 import * as SplashScreen from "expo-splash-screen";
 import React from "react";
-import { Text, TextInput } from "react-native";
 import { StoreProvider } from "../_store";
-import { AppFontFamily } from "../constants/theme";
+import { AppTextProvider } from "../components/app-text";
 import { useImmersionActiveTime } from "../hooks/useImmersionActiveTime";
 import { DailyStreakProvider } from "../lib/DailyStreakProvider";
 import { PaywallProvider } from "../lib/paywall/PaywallProvider";
@@ -24,52 +23,8 @@ import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard"
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
-const DEFAULT_TEXT_STYLE = { fontFamily: AppFontFamily.outfit.regular };
-const DEFAULT_FONT_PATCH_KEY = "__kAppDefaultOutfitFontPatched";
-
-type TextLikeComponent = {
-  defaultProps?: { style?: unknown };
-  render?: (
-    this: unknown,
-    ...args: unknown[]
-  ) => React.ReactElement<{ style?: unknown }>;
-};
-
-function installDefaultOutfitFont() {
-  const globalRef = globalThis as typeof globalThis & {
-    [DEFAULT_FONT_PATCH_KEY]?: boolean;
-  };
-
-  if (globalRef[DEFAULT_FONT_PATCH_KEY]) return;
-
-  globalRef[DEFAULT_FONT_PATCH_KEY] = true;
-
-  [Text, TextInput].forEach((Component) => {
-    const component = Component as TextLikeComponent;
-    const render = component.render;
-
-    if (typeof render !== "function") {
-      component.defaultProps = {
-        ...component.defaultProps,
-        style: [DEFAULT_TEXT_STYLE, component.defaultProps?.style],
-      };
-      return;
-    }
-
-    component.render = function renderWithDefaultOutfitFont(
-      this: unknown,
-      ...args: unknown[]
-    ) {
-      const origin = render.apply(this, args);
-
-      return React.cloneElement(origin, {
-        style: [DEFAULT_TEXT_STYLE, origin.props.style],
-      });
-    };
-  });
-}
-
-installDefaultOutfitFont();
+const forceFontFallback =
+  process.env.EXPO_PUBLIC_FORCE_FONT_FALLBACK === "1";
 
 /*const SCREEN_CAPTURE_PROTECTION_KEY = "k-app-global-protection";
 
@@ -128,39 +83,50 @@ export default function RootLayout() {
 
   useImmersionActiveTime();
 
-  React.useEffect(() => {
-    if (!fontError) return;
+  const customFontsAvailable =
+    fontsLoaded && !fontError && !forceFontFallback;
+  const appReady = fontsLoaded || !!fontError || forceFontFallback;
 
-    console.warn("App fonts could not be loaded; falling back to system fonts.", fontError);
+  React.useEffect(() => {
+    if (!fontError && !forceFontFallback) return;
+
+    console.warn(
+      forceFontFallback
+        ? "App font fallback forced for visual validation."
+        : "App fonts could not be loaded; falling back to system fonts.",
+      fontError ?? "EXPO_PUBLIC_FORCE_FONT_FALLBACK=1",
+    );
   }, [fontError]);
 
   React.useEffect(() => {
-    if (!fontsLoaded && !fontError) return;
+    if (!appReady) return;
 
     void SplashScreen.hideAsync().catch(() => {});
-  }, [fontsLoaded, fontError]);
+  }, [appReady]);
 
-  if (!fontsLoaded && !fontError) {
+  if (!appReady) {
     return null;
   }
 
   return (
-    <StoreProvider>
-      <DailyStreakProvider>
-        <PaywallProvider>
-          <SubscriptionAccessGuard />
-          {/* <ScreenCaptureProtection /> */}
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="onboarding" />
-            <Stack.Screen name="premium" />
-            <Stack.Screen name="streak" />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="listen/teacherIA" />
-            <Stack.Screen name="listen/teacherIARealtime" />
-          </Stack>
-        </PaywallProvider>
-      </DailyStreakProvider>
-    </StoreProvider>
+    <AppTextProvider customFontsAvailable={customFontsAvailable}>
+      <StoreProvider>
+        <DailyStreakProvider>
+          <PaywallProvider>
+            <SubscriptionAccessGuard />
+            {/* <ScreenCaptureProtection /> */}
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="onboarding" />
+              <Stack.Screen name="premium" />
+              <Stack.Screen name="streak" />
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="listen/teacherIA" />
+              <Stack.Screen name="listen/teacherIARealtime" />
+            </Stack>
+          </PaywallProvider>
+        </DailyStreakProvider>
+      </StoreProvider>
+    </AppTextProvider>
   );
 }

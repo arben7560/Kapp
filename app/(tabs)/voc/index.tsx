@@ -3,47 +3,32 @@ import { router } from "expo-router";
 import React, { useEffect, useMemo } from "react";
 import {
   Animated,
-  Dimensions,
   Easing,
   ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
+  View,
   type StyleProp,
   type ViewStyle,
-  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppText } from "../../../components/app-text";
+import { HubHero } from "../../../components/hub/HubHero";
+import { SectionHeader } from "../../../components/hub/SectionHeader";
 import { ModuleCard } from "../../../components/ModuleCard";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
-import { AppFontFamily, SeoulMidnightGlass } from "../../../constants/theme";
+import { SeoulMidnightGlass } from "../../../constants/theme";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vocabulaire.png");
-const { width } = Dimensions.get("window");
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — SEOUL MIDNIGHT GLASS
 // ──────────────────────────────────────────────
 const BG_DEEP = SeoulMidnightGlass.colors.bgDeep;
 const TXT = SeoulMidnightGlass.colors.text;
-const SOFT = SeoulMidnightGlass.colors.soft;
-const LINE_SOFT = SeoulMidnightGlass.colors.lineSoft;
-
-const PINK = SeoulMidnightGlass.colors.pink;
 const AMBER = "#F6C27A";
-
-const HERO_CIRCLE = width * 0.76;
-
-const fonts = {
-  light: AppFontFamily.outfit.light,
-  regular: AppFontFamily.outfit.regular,
-  bold: AppFontFamily.outfit.bold,
-  black: AppFontFamily.outfit.black,
-  medium: AppFontFamily.outfit.medium,
-  kr: AppFontFamily.korean.bold,
-};
 
 const THEMES = [
   {
@@ -162,45 +147,52 @@ export default function VocabHub() {
             { paddingHorizontal: responsive.horizontalPadding },
           ]}
         >
-          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
-          <UnifiedNavHeader />
-
-          <UnifiedHeroHeader
-            korean="어휘"
-            title="Scènes guidées"
-            subtitle={`"Chaque mot devient une scène."`}
-            accent={AMBER}
-          />
-
-          <UnifiedSectionHeader title="COLLECTIONS THÉMATIQUES" />
-
           <View
-            style={[
-              styles.grid,
-              gridColumns > 1 && styles.gridWide,
-              { gap: responsive.gridGap },
-            ]}
+            style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
           >
-            {THEMES.map((theme, i) => (
-              <AnimatedFragment
-                key={theme.id}
-                index={i}
-                style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
-              >
-                <ModuleCard
-                  title={theme.title}
-                  subtitle={theme.sub}
-                  href={theme.route}
-                  accentColor={theme.color}
-                  icon={theme.title.charAt(0)}
-                  requiresPremium={theme.isLocked}
-                  metaLabel="COLLECTION VOCAB"
-                  accessibilityContext="cette collection de vocabulaire"
-                  visualVariant="legacyGlass"
-                />
-              </AnimatedFragment>
-            ))}
-          </View>
+            <UnifiedNavHeader />
+
+            <HubHero
+              korean="어휘"
+              title="Scènes guidées"
+              subtitle={`"Chaque mot devient une scène."`}
+              badgeLabel="IMMERSION NIVEAU 1"
+              accentColor={AMBER}
+              layeredGlow={false}
+              badgeBlurIntensity={50}
+              style={styles.hero}
+              koreanStyle={styles.heroKorean}
+            />
+
+            <SectionHeader title="COLLECTIONS THÉMATIQUES" />
+
+            <View
+              style={[
+                styles.grid,
+                gridColumns > 1 && styles.gridWide,
+                { gap: responsive.gridGap },
+              ]}
+            >
+              {THEMES.map((theme, i) => (
+                <AnimatedFragment
+                  key={theme.id}
+                  index={i}
+                  style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
+                >
+                  <ModuleCard
+                    title={theme.title}
+                    subtitle={theme.sub}
+                    href={theme.route}
+                    accentColor={theme.color}
+                    icon={theme.title.charAt(0)}
+                    requiresPremium={theme.isLocked}
+                    metaLabel="COLLECTION VOCAB"
+                    accessibilityContext="cette collection de vocabulaire"
+                    visualVariant="legacyGlass"
+                  />
+                </AnimatedFragment>
+              ))}
+            </View>
           </View>
         </ScrollView>
       </ImageBackground>
@@ -221,8 +213,12 @@ function UnifiedNavHeader() {
         onPress={() => router.back()}
         style={styles.backBtn}
       >
-        <Text style={styles.backArrow}>‹</Text>
-        <Text style={styles.backText}>SÉOUL IMMERSION</Text>
+        <AppText aria-hidden variant="screenTitle" style={styles.backArrow}>
+          ‹
+        </AppText>
+        <AppText variant="caption" style={styles.backText}>
+          SÉOUL IMMERSION
+        </AppText>
       </Pressable>
 
       <Pressable
@@ -236,60 +232,6 @@ function UnifiedNavHeader() {
       >
         <View style={styles.settingsOrb} />
       </Pressable>
-    </View>
-  );
-}
-
-// ──────────────────────────────────────────────
-// HERO / HEADER UNIFIÉ
-// ──────────────────────────────────────────────
-function UnifiedHeroHeader({
-  korean,
-  title,
-  subtitle,
-  accent,
-}: {
-  korean: string;
-  title: string;
-  subtitle: string;
-  accent: string;
-}) {
-  return (
-    <View style={styles.heroBlock}>
-      <Text style={styles.heroEyebrow}>SÉOUL IMMERSION</Text>
-
-      <View style={styles.heroVisualWrap}>
-        <Text
-          style={[
-            styles.heroKorean,
-            {
-              textShadowColor: accent,
-            },
-          ]}
-        >
-          {korean}
-        </Text>
-
-        <Text style={styles.heroTitle}>{title}</Text>
-
-        <BlurView intensity={50} tint="dark" style={styles.heroBadge}>
-          <Text style={styles.heroBadgeText}>IMMERSION NIVEAU 1</Text>
-        </BlurView>
-
-        <Text style={styles.heroQuote}>{subtitle}</Text>
-      </View>
-    </View>
-  );
-}
-
-// ──────────────────────────────────────────────
-// SECTION HEADER
-// ──────────────────────────────────────────────
-function UnifiedSectionHeader({ title }: { title: string }) {
-  return (
-    <View style={styles.sectionDivider}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <View style={styles.titleLine} />
     </View>
   );
 }
@@ -395,7 +337,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 14,
+    marginBottom: 0,
   },
 
   backBtn: {
@@ -412,7 +354,6 @@ const styles = StyleSheet.create({
 
   backText: {
     color: "rgba(255,255,255,0.92)",
-    fontFamily: fonts.bold,
     fontSize: 12,
     letterSpacing: 2.3,
   },
@@ -437,171 +378,12 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
 
-  heroBlock: {
-    marginTop: 34,
-    alignItems: "center",
-  },
-
-  heroEyebrow: {
-    color: PINK,
-    fontFamily: fonts.bold,
-    fontSize: 12,
-    letterSpacing: 5.5,
-    textAlign: "center",
-    marginBottom: 28,
-    opacity: 0.9,
-  },
-
-  heroVisualWrap: {
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    minHeight: 344,
-    position: "relative",
-  },
-
-  heroCirclePink: {
-    position: "absolute",
-    width: HERO_CIRCLE,
-    height: HERO_CIRCLE,
-    borderRadius: HERO_CIRCLE / 2,
-    left: -20,
-    top: 2,
-    opacity: 0.12,
-  },
-
-  heroCircleCyan: {
-    position: "absolute",
-    width: HERO_CIRCLE,
-    height: HERO_CIRCLE,
-    borderRadius: HERO_CIRCLE / 2,
-    right: -20,
-    top: 2,
-    opacity: 0.1,
-  },
-
-  heroCircleGlass: {
-    position: "absolute",
-    width: HERO_CIRCLE,
-    height: HERO_CIRCLE,
-    borderRadius: HERO_CIRCLE / 2,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
-  },
-
-  heroLine: {
-    position: "absolute",
-    top: 84,
-    left: 56,
-    right: 56,
-    height: 1,
-    backgroundColor: "rgba(246,194,122,0.35)",
+  hero: {
+    marginTop: 0,
   },
 
   heroKorean: {
-    fontSize: 74,
-    fontFamily: fonts.kr,
     color: "rgba(255,248,236,0.98)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 18,
-    marginBottom: 2,
-  },
-
-  heroTitle: {
-    marginTop: 4,
-    fontSize: 34,
-    lineHeight: 40,
-    fontFamily: fonts.medium,
-    color: "rgba(255,255,255,0.96)",
-    letterSpacing: -0.7,
-    textAlign: "center",
-  },
-
-  heroBadge: {
-    marginTop: 18,
-    paddingHorizontal: 28,
-    paddingVertical: 10,
-    borderRadius: 999,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.16)",
-  },
-
-  heroBadgeText: {
-    color: "rgba(255,255,255,0.66)",
-    fontFamily: fonts.bold,
-    fontSize: 11,
-    letterSpacing: 3,
-  },
-
-  heroQuote: {
-    marginTop: 30,
-    maxWidth: "82%",
-    textAlign: "center",
-    fontSize: 15,
-    lineHeight: 23,
-    color: "rgba(255,255,255,0.72)",
-    fontFamily: fonts.medium,
-    fontStyle: "italic",
-  },
-
-  tabRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 18,
-    marginTop: -2,
-    marginBottom: 28,
-  },
-
-  activeTab: {
-    minWidth: 116,
-    paddingHorizontal: 20,
-    paddingVertical: 11,
-    borderRadius: 22,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  tabText: {
-    color: TXT,
-    fontFamily: fonts.bold,
-    fontSize: 12,
-  },
-
-  inactiveTab: {
-    paddingHorizontal: 6,
-    paddingVertical: 8,
-  },
-
-  inactiveTabText: {
-    color: SOFT,
-    fontFamily: fonts.bold,
-    fontSize: 12,
-  },
-
-  sectionDivider: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    marginBottom: 18,
-  },
-
-  sectionTitle: {
-    fontSize: 11,
-    fontFamily: fonts.medium,
-    color: SOFT,
-    letterSpacing: 3,
-  },
-
-  titleLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: LINE_SOFT,
   },
 
   grid: {

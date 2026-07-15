@@ -5,16 +5,16 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
+import { AppText } from "../../components/app-text";
 import { MissionAccessBadge } from "../../components/immersion/MissionAccessBadge";
 import { MissionLaunchModal } from "../../components/immersion/MissionLaunchModal";
 import { ABSOLUTE_FILL } from "../../constants/layout";
-import { AppFontFamily, SeoulMidnightGlass } from "../../constants/theme";
+import { SeoulMidnightGlass } from "../../constants/theme";
 import {
   metroMissions,
   type MetroMission,
@@ -32,7 +32,6 @@ const SOFT = "rgba(255,255,255,0.46)";
 const LINE = "rgba(255,255,255,0.10)";
 const CYAN = "#22D3EE";
 const GOLD = SeoulMidnightGlass.colors.premiumGold;
-const fonts = AppFontFamily.outfit;
 
 function normalizeMode(rawMode: string | string[] | undefined) {
   const value = Array.isArray(rawMode) ? rawMode[0] : rawMode;
@@ -97,11 +96,11 @@ export default function MetroMissionsScreen() {
           ]}
         >
           <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <Text style={styles.backText}>x</Text>
+            <AppText variant="sectionTitle" lineContract="singleLine" style={styles.backText}>x</AppText>
           </Pressable>
           <View style={styles.headerCopy}>
-            <Text style={styles.kicker}>{"MISSIONS D'IMMERSION"}</Text>
-            <Text style={styles.title}>Métro</Text>
+            <AppText variant="sectionLabel" style={styles.kicker}>{"MISSIONS D'IMMERSION"}</AppText>
+            <AppText accessibilityRole="header" variant="screenTitle" style={styles.title}>Métro</AppText>
           </View>
         </View>
 
@@ -112,11 +111,11 @@ export default function MetroMissionsScreen() {
           ]}
         >
           <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
-          <Text style={styles.intro}>
+          <AppText variant="body" tone="muted" style={styles.intro}>
             {
               "Lance un vrai trajet dans Séoul, ou entraîne une compétence précise avec une mini-mission."
             }
-          </Text>
+          </AppText>
 
           <MissionSection
             title="Missions complètes"
@@ -186,8 +185,8 @@ function MissionSection({
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        <Text style={styles.sectionSubtitle}>{subtitle}</Text>
+        <AppText variant="sectionTitle" style={styles.sectionTitle}>{title}</AppText>
+        <AppText variant="bodySecondary" tone="muted" style={styles.sectionSubtitle}>{subtitle}</AppText>
       </View>
 
       <View
@@ -235,17 +234,17 @@ function MissionSection({
                   accent={CYAN}
                   featured={featured}
                 />
-                <Text
+                <AppText variant="caption" lineContract="singleLine"
                   style={[
                     styles.cardArrow,
                     isLocked && styles.cardArrowPremium,
                   ]}
                 >
                   {isLocked ? "Premium" : "Ouvrir"}
-                </Text>
+                </AppText>
               </View>
-              <Text style={styles.missionTitle}>{mission.title}</Text>
-              <Text style={styles.missionSubtitle}>{mission.subtitle}</Text>
+              <AppText variant="cardTitle" style={styles.missionTitle}>{mission.title}</AppText>
+              <AppText variant="bodySecondary" tone="muted" style={styles.missionSubtitle}>{mission.subtitle}</AppText>
             </Pressable>
           );
         })}
@@ -279,20 +278,18 @@ const styles = StyleSheet.create({
     borderColor: LINE,
     backgroundColor: "rgba(255,255,255,0.06)",
   },
-  backText: { color: TXT, fontSize: 18, fontFamily: fonts.bold },
+  backText: { color: TXT, fontSize: 18},
   headerCopy: { flex: 1 },
   kicker: {
     color: CYAN,
     fontSize: 11,
-    fontFamily: fonts.bold,
     letterSpacing: 2.5,
   },
-  title: { color: TXT, fontSize: 34, fontFamily: fonts.bold, marginTop: 4 },
+  title: { color: TXT, fontSize: 34, marginTop: 4 },
   content: { paddingTop: 14, paddingBottom: 42 },
   intro: {
     color: MUTED,
     fontSize: 15,
-    fontFamily: fonts.regular,
     lineHeight: 22,
     marginBottom: 18,
   },
@@ -301,13 +298,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: TXT,
     fontSize: 20,
-    fontFamily: fonts.medium,
     lineHeight: 26,
   },
   sectionSubtitle: {
     color: MUTED,
     fontSize: 13,
-    fontFamily: fonts.regular,
     lineHeight: 19,
     marginTop: 4,
   },
@@ -346,20 +341,17 @@ const styles = StyleSheet.create({
   cardArrow: {
     color: SOFT,
     fontSize: SeoulMidnightGlass.cta.fontSize,
-    fontFamily: fonts.medium,
     letterSpacing: SeoulMidnightGlass.cta.letterSpacing,
   },
   cardArrowPremium: { color: GOLD },
   missionTitle: {
     color: TXT,
     fontSize: 21,
-    fontFamily: fonts.medium,
     lineHeight: 27,
   },
   missionSubtitle: {
     color: MUTED,
     fontSize: 14,
-    fontFamily: fonts.regular,
     lineHeight: 20,
     marginTop: 7,
   },

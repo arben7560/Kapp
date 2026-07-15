@@ -2,19 +2,24 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  type PressableProps,
+  StyleSheet,
+  View,
+} from "react-native";
 
+import { AppText } from "./app-text";
+import { StatusBadge } from "./ui/status-badge";
 import { ABSOLUTE_FILL } from "../constants/layout";
-import { AppFontFamily, SeoulMidnightGlass } from "../constants/theme";
+import { SeoulMidnightGlass } from "../constants/theme";
 import { usePaywall } from "../lib/paywall/PaywallProvider";
 
 const colors = SeoulMidnightGlass.colors;
-const fonts = AppFontFamily;
 
-export type ModuleCardProps = {
+type ModuleCardBaseProps = {
   title: string;
   subtitle: string;
-  href: string;
   accentColor: string;
   icon: string;
   metaLabel: string;
@@ -26,10 +31,24 @@ export type ModuleCardProps = {
   visualVariant?: "default" | "legacyGlass";
 };
 
+type ModuleCardLinkInteraction = {
+  href: string;
+  onPress?: never;
+};
+
+type ModuleCardActionInteraction = {
+  href?: never;
+  onPress: NonNullable<PressableProps["onPress"]>;
+};
+
+export type ModuleCardProps = ModuleCardBaseProps &
+  (ModuleCardLinkInteraction | ModuleCardActionInteraction);
+
 export function ModuleCard({
   title,
   subtitle,
   href,
+  onPress,
   accentColor,
   icon,
   metaLabel,
@@ -41,6 +60,7 @@ export function ModuleCard({
   visualVariant = "default",
 }: ModuleCardProps) {
   const { hasPremiumAccess } = usePaywall();
+  const isAction = onPress !== undefined;
   const isLegacyGlass = visualVariant === "legacyGlass";
   const isLocked = requiresPremium && !hasPremiumAccess;
   const targetHref = isLocked ? "/premium" : href;
@@ -70,22 +90,22 @@ export function ModuleCard({
     .filter(Boolean)
     .join(". ");
 
-  return (
-    <Link href={targetHref as any} asChild>
-      <Pressable
-        accessibilityRole="link"
-        accessibilityLabel={accessibilityLabel}
-        accessibilityHint={actionLabel}
-        accessibilityState={selected ? { selected: true } : undefined}
-        aria-selected={selected || undefined}
-        hitSlop={6}
-        style={({ pressed }) => [
-          styles.cardPressable,
-          isLegacyGlass && styles.legacyCardPressable,
-          selected && styles.selectedCard,
-          pressed && styles.pressedCard,
-        ]}
-      >
+  const card = (
+    <Pressable
+      accessibilityRole={isAction ? "button" : "link"}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={actionLabel}
+      accessibilityState={selected ? { selected: true } : undefined}
+      aria-selected={selected || undefined}
+      hitSlop={6}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.cardPressable,
+        isLegacyGlass && styles.legacyCardPressable,
+        selected && styles.selectedCard,
+        pressed && styles.pressedCard,
+      ]}
+    >
         <BlurView
           intensity={isLegacyGlass ? 30 : 40}
           tint="dark"
@@ -178,11 +198,17 @@ export function ModuleCard({
                 style={styles.cardIconLight}
               />
 
-              <Text
+              <AppText
+                variant="cardTitle"
+                script={iconScript}
+                align="center"
+                typographyOverride={{
+                  fontSize: 21,
+                  lineHeight: 24,
+                  letterSpacing: 0,
+                }}
                 style={[
                   styles.cardIcon,
-                  isLegacyGlass && styles.legacyCardIcon,
-                  iconScript === "korean" && styles.cardIconKorean,
                   {
                     color: activeColor,
                     textShadowColor: activeColor,
@@ -190,58 +216,75 @@ export function ModuleCard({
                 ]}
               >
                 {icon}
-              </Text>
+              </AppText>
             </View>
           </View>
 
           <View style={styles.cardDividerLine} />
 
-          {requiresPremium && (
-            <View
-              style={[
-                styles.premiumTag,
-                isLegacyGlass && styles.legacyPremiumTag,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.premiumTagText,
-                  isLegacyGlass && styles.legacyPremiumTagText,
-                ]}
+          <View style={styles.cardTextContent}>
+            <View style={styles.cardHeaderRow}>
+              <AppText
+                variant="sectionLabel"
+                tone={requiresPremium ? "premium" : "soft"}
+                typographyOverride={
+                  isLegacyGlass
+                    ? { fontSize: 7.8, lineHeight: 11, letterSpacing: 2.1 }
+                    : { fontSize: 10, lineHeight: 13, letterSpacing: 1.5 }
+                }
+                style={styles.cardMeta}
               >
-                {isLegacyGlass ? "PREMIUM 🔒" : "PREMIUM"}
-              </Text>
-            </View>
-          )}
+                {requiresPremium ? "MODULE PREMIUM" : metaLabel}
+              </AppText>
 
-          <View
-            style={[
-              styles.cardTextContent,
-              requiresPremium &&
-                !isLegacyGlass &&
-                styles.cardTextContentWithTag,
-            ]}
-          >
-            <Text
-              style={[
-                styles.cardMeta,
-                isLegacyGlass && styles.legacyCardMeta,
-                requiresPremium && styles.cardMetaPremium,
-              ]}
-            >
-              {requiresPremium ? "MODULE PREMIUM" : metaLabel}
-            </Text>
-            <Text
-              style={[styles.cardTitle, isLegacyGlass && styles.legacyCardTitle]}
-            >
+              {requiresPremium ? (
+                <StatusBadge
+                  label={isLegacyGlass ? "PREMIUM 🔒" : "PREMIUM"}
+                  tone="premium"
+                  appearance="solid"
+                  size="compact"
+                  style={[
+                    styles.premiumTag,
+                    isLegacyGlass && styles.legacyPremiumTag,
+                  ]}
+                  typographyOverride={
+                    isLegacyGlass
+                      ? { fontSize: 8, lineHeight: 11, letterSpacing: 0.5 }
+                      : undefined
+                  }
+                />
+              ) : null}
+            </View>
+
+            <AppText variant="cardTitle" lineContract="twoLines">
               {title}
-            </Text>
-            <Text style={[styles.cardSub, isLegacyGlass && styles.legacyCardSub]}>
+            </AppText>
+            <AppText
+              variant="bodySecondary"
+              tone="muted"
+              lineContract="threeLines"
+              style={styles.cardSub}
+            >
               {displayedSubtitle}
-            </Text>
+            </AppText>
           </View>
 
-          <Text
+          <AppText
+            variant="caption"
+            tone={
+              isLocked || (isLegacyGlass && requiresPremium)
+                ? "premium"
+                : "soft"
+            }
+            typographyOverride={
+              isLegacyGlass
+                ? { fontSize: 22, lineHeight: 24, letterSpacing: 0 }
+                : {
+                    fontSize: SeoulMidnightGlass.cta.fontSize,
+                    lineHeight: 16,
+                    letterSpacing: SeoulMidnightGlass.cta.letterSpacing,
+                  }
+            }
             style={[
               styles.cardAction,
               isLegacyGlass && styles.legacyCardAction,
@@ -252,16 +295,23 @@ export function ModuleCard({
                 styles.legacyCardActionPremium,
             ]}
           >
-              {isLegacyGlass
-                ? requiresPremium
-                  ? "✧"
-                  : "›"
+            {isLegacyGlass
+              ? requiresPremium
+                ? "✧"
+                : "›"
               : isLocked
                 ? "Premium"
                 : "Ouvrir"}
-          </Text>
+          </AppText>
         </BlurView>
-      </Pressable>
+    </Pressable>
+  );
+
+  if (isAction) return card;
+
+  return (
+    <Link href={targetHref as any} asChild>
+      {card}
     </Link>
   );
 }
@@ -409,17 +459,8 @@ const styles = StyleSheet.create({
     borderRadius: SeoulMidnightGlass.radii.icon,
   },
   cardIcon: {
-    fontSize: 21,
-    fontFamily: fonts.outfit.regular,
-    letterSpacing: 0,
     textShadowRadius: 10,
     textShadowOffset: { width: 0, height: 0 },
-  },
-  legacyCardIcon: {
-    letterSpacing: 0,
-  },
-  cardIconKorean: {
-    fontFamily: fonts.korean.bold,
   },
   cardDividerLine: {
     width: 1,
@@ -428,91 +469,40 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   premiumTag: {
-    position: "absolute",
-    top: 9,
-    right: 14,
-    minHeight: SeoulMidnightGlass.badge.minHeight,
-    borderRadius: SeoulMidnightGlass.radii.pill,
-    backgroundColor: colors.premiumGold,
-    paddingHorizontal: SeoulMidnightGlass.spacing.badgePaddingX,
-    paddingVertical: SeoulMidnightGlass.spacing.badgePaddingY,
-    justifyContent: "center",
+    flexShrink: 0,
   },
   legacyPremiumTag: {
-    top: 10,
-    right: 18,
-    minHeight: 0,
     borderRadius: 4,
     paddingHorizontal: 7,
     paddingVertical: 2,
-  },
-  premiumTagText: {
-    color: colors.premiumInk,
-    fontFamily: fonts.outfit.semibold,
-    fontSize: SeoulMidnightGlass.badge.fontSize,
-    letterSpacing: SeoulMidnightGlass.badge.letterSpacing,
-  },
-  legacyPremiumTagText: {
-    fontSize: 8,
-    letterSpacing: 0.5,
   },
   cardTextContent: {
     flex: 1,
     minWidth: 0,
     paddingRight: 10,
   },
-  cardTextContentWithTag: {
-    paddingRight: 76,
-  },
-  cardMeta: {
-    fontSize: 10,
-    fontFamily: fonts.outfit.medium,
-    color: "rgba(255,255,255,0.44)",
-    letterSpacing: 1.5,
+  cardHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 6,
     marginBottom: 4,
   },
-  legacyCardMeta: {
-    fontSize: 7.8,
-    fontFamily: fonts.outfit.medium,
-    letterSpacing: 2.1,
-  },
-  cardMetaPremium: {
-    color: "rgba(253,224,71,0.78)",
-  },
-  cardTitle: {
-    color: colors.text,
-    fontSize: 18,
-    lineHeight: 22,
-    fontFamily: fonts.outfit.regular,
-  },
-  legacyCardTitle: {
-    fontFamily: fonts.outfit.regular,
+  cardMeta: {
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: 76,
   },
   cardSub: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontFamily: fonts.outfit.light,
-    color: colors.muted,
     marginTop: 2,
-  },
-  legacyCardSub: {
-    fontFamily: fonts.outfit.light,
   },
   cardAction: {
     alignSelf: "flex-end",
     flexShrink: 0,
     marginLeft: 6,
-    color: colors.soft,
-    fontSize: SeoulMidnightGlass.cta.fontSize,
-    fontFamily: fonts.outfit.regular,
-    letterSpacing: SeoulMidnightGlass.cta.letterSpacing,
     opacity: 0.82,
   },
   legacyCardAction: {
-    color: colors.soft,
-    fontSize: 22,
-    fontFamily: fonts.outfit.regular,
-    letterSpacing: 0,
     opacity: 0.3,
     marginLeft: 8,
   },

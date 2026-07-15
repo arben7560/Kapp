@@ -1,5 +1,7 @@
 import React from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, View } from "react-native";
+
+import { AppText } from "../app-text";
 
 type CafeAvatarProps = {
   speaking?: boolean;
@@ -12,7 +14,7 @@ export default function CafeAvatar({
   compact = false,
   immersive = false,
 }: CafeAvatarProps) {
-  const pulse = React.useRef(new Animated.Value(0)).current;
+  const [pulse] = React.useState(() => new Animated.Value(0));
 
   React.useEffect(() => {
     if (!speaking) {
@@ -53,7 +55,13 @@ export default function CafeAvatar({
       ]}
     >
       <View style={styles.face}>
-        <Text style={styles.emoji}>☕</Text>
+        <AppText
+          accessibilityLabel="Café"
+          variant="display"
+          align="center"
+        >
+          ☕
+        </AppText>
       </View>
       {speaking && <View style={styles.speakingDot} />}
     </Animated.View>
@@ -76,9 +84,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(251,146,60,0.18)",
-  },
-  emoji: {
-    fontSize: 46,
   },
   speakingDot: {
     position: "absolute",

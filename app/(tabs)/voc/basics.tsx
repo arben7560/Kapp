@@ -14,11 +14,11 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   Vibration,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AnimatedAppText, AppText } from "../../../components/app-text";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 
 type AudioAsset = number;
@@ -633,13 +633,13 @@ export default function FirstStepsImmersion() {
         >
           <View style={styles.topNav}>
             <Pressable onPress={() => router.back()} style={styles.backCircle}>
-              <Text style={styles.backArrow}>‹</Text>
+              <AppText variant="screenTitle" lineContract="singleLine" style={styles.backArrow}>‹</AppText>
             </Pressable>
             <View>
-              <Text style={[styles.navEyebrow, { color: activeScene.accent }]}>
+              <AppText variant="sectionLabel" style={[styles.navEyebrow, { color: activeScene.accent }]}>
                 SÉOUL IMMERSION
-              </Text>
-              <Text style={styles.navTitle}>Premiers Pas</Text>
+              </AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>Premiers Pas</AppText>
             </View>
           </View>
 
@@ -656,7 +656,7 @@ export default function FirstStepsImmersion() {
                   },
                 ]}
               >
-                <Text
+                <AppText variant="label" lineContract="singleLine"
                   style={[
                     styles.tabLabel,
                     activeScene.id === scene.id && {
@@ -665,7 +665,7 @@ export default function FirstStepsImmersion() {
                   ]}
                 >
                   {scene.title}
-                </Text>
+                </AppText>
               </Pressable>
             ))}
           </View>
@@ -690,15 +690,15 @@ export default function FirstStepsImmersion() {
               />
 
               <View style={styles.cardInfo}>
-                <Text
+                <AppText variant="koreanSecondary" script="korean"
                   style={[styles.krCategory, { color: activeScene.accent }]}
                 >
                   {activeScene.koreanTitle}
-                </Text>
-                <Text style={styles.sceneTitle}>{activeScene.title}</Text>
-                <Text style={styles.sceneSubtitle}>
+                </AppText>
+                <AppText accessibilityRole="header" variant="sceneTitle" style={styles.sceneTitle}>{activeScene.title}</AppText>
+                <AppText variant="subtitle" style={styles.sceneSubtitle}>
                   {activeScene.description}
-                </Text>
+                </AppText>
               </View>
 
               <View style={styles.chatArea}>
@@ -724,16 +724,16 @@ export default function FirstStepsImmersion() {
                           },
                         ]}
                       >
-                        <Text
+                        <AppText variant="label"
                           style={[
                             styles.msgChar,
                             { color: activeScene.accent },
                           ]}
                         >
                           {line.char}
-                        </Text>
-                        <Text style={styles.msgKr}>{line.kr}</Text>
-                        <Text style={styles.msgFr}>{line.fr}</Text>
+                        </AppText>
+                        <AppText variant="koreanSecondary" script="korean" style={styles.msgKr}>{line.kr}</AppText>
+                        <AppText variant="bodySecondary" tone="muted" style={styles.msgFr}>{line.fr}</AppText>
                       </Pressable>
                     );
                   })}
@@ -742,11 +742,11 @@ export default function FirstStepsImmersion() {
                   <View
                     style={[styles.msgBox, styles.msgLeft, styles.typingBubble]}
                   >
-                    <Text
+                    <AppText variant="label"
                       style={[styles.msgChar, { color: activeScene.accent }]}
                     >
                       {activeScene.dialogue[visibleMessages]?.char}
-                    </Text>
+                    </AppText>
 
                     <View style={styles.typingDots}>
                       <View
@@ -772,7 +772,7 @@ export default function FirstStepsImmersion() {
                 )}
 
                 <Pressable onPress={advanceDialogue} disabled={isTyping}>
-                  <Animated.Text
+                  <AnimatedAppText variant="caption"
                     style={[
                       styles.tapHint,
                       shouldHighlightHint && {
@@ -797,7 +797,7 @@ export default function FirstStepsImmersion() {
                       : isTyping
                         ? "Réponse en cours..."
                         : "Toucher pour continuer"}
-                  </Animated.Text>
+                  </AnimatedAppText>
                 </Pressable>
               </View>
             </BlurView>
@@ -805,7 +805,7 @@ export default function FirstStepsImmersion() {
 
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <Text style={styles.toolboxTitle}>FOUNDATION TOOLBOX</Text>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>FOUNDATION TOOLBOX</AppText>
               <View
                 style={[
                   styles.toolboxLine,
@@ -848,15 +848,15 @@ export default function FirstStepsImmersion() {
 
                       <View style={styles.expTopRow}>
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.expWord}>{exp.word}</Text>
-                          <Text
+                          <AppText variant="koreanPrimary" script="korean" style={styles.expWord}>{exp.word}</AppText>
+                          <AppText variant="caption"
                             style={[
                               styles.expRom,
                               { color: activeScene.accent },
                             ]}
                           >
                             {exp.rom}
-                          </Text>
+                          </AppText>
                         </View>
 
                         <View
@@ -868,20 +868,20 @@ export default function FirstStepsImmersion() {
                             },
                           ]}
                         >
-                          <Text
+                          <AppText variant="caption" lineContract="singleLine"
                             style={[
                               styles.listenIcon,
                               { color: activeScene.accent },
                             ]}
                           >
                             {isActive ? "●" : "▶"}
-                          </Text>
-                          <Text style={styles.listenText}>ÉCOUTER</Text>
+                          </AppText>
+                          <AppText variant="label" lineContract="singleLine" style={styles.listenText}>ÉCOUTER</AppText>
                         </View>
                       </View>
 
-                      <Text style={styles.expMean}>{exp.mean}</Text>
-                      <Text style={styles.expCtx}>{exp.context}</Text>
+                      <AppText variant="bodyStrong" style={styles.expMean}>{exp.mean}</AppText>
+                      <AppText variant="bodySecondary" tone="muted" style={styles.expCtx}>{exp.context}</AppText>
                     </BlurView>
                   </Pressable>
                 );
@@ -922,10 +922,9 @@ const styles = StyleSheet.create({
   backArrow: { color: "#fff", fontSize: 24, marginTop: -2 },
   navEyebrow: {
     fontSize: 10,
-    fontWeight: "900",
     letterSpacing: 2,
   },
-  navTitle: { color: "#fff", fontSize: 14, fontWeight: "600", opacity: 0.8 },
+  navTitle: { color: "#fff", fontSize: 14, opacity: 0.8 },
 
   header: {
     flexDirection: "row",
@@ -936,7 +935,6 @@ const styles = StyleSheet.create({
   backBtn: { flexDirection: "row", alignItems: "center" },
   backText: {
     color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
     fontSize: 11,
     letterSpacing: 2,
   },
@@ -951,7 +949,6 @@ const styles = StyleSheet.create({
   levelText: {
     color: COLORS.muted,
     fontSize: 9,
-    fontFamily: "Outfit_700Bold",
   },
 
   tabBar: { flexDirection: "row", gap: 10, marginBottom: 25 },
@@ -965,7 +962,6 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
     fontSize: 12,
   },
 
@@ -978,14 +974,12 @@ const styles = StyleSheet.create({
   },
   cardInfo: { marginBottom: 30 },
   krCategory: {
-    fontFamily: "NotoSansKR_700Bold",
     fontSize: 14,
     letterSpacing: 1,
     marginBottom: 4,
   },
   sceneTitle: {
     color: COLORS.txt,
-    fontFamily: "Outfit_900Black",
     fontSize: 34,
   },
   sceneSubtitle: {
@@ -1016,14 +1010,12 @@ const styles = StyleSheet.create({
   },
   msgChar: {
     fontSize: 9,
-    fontFamily: "Outfit_700Bold",
     textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: 6,
   },
   msgKr: {
     color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
     fontSize: 18,
     lineHeight: 25,
     marginBottom: 5,
@@ -1031,7 +1023,6 @@ const styles = StyleSheet.create({
   msgFr: {
     color: COLORS.muted,
     fontSize: 12,
-    fontFamily: "Outfit_500Medium",
   },
   typingBubble: {
     minWidth: 92,
@@ -1052,7 +1043,6 @@ const styles = StyleSheet.create({
   tapHint: {
     alignSelf: "center",
     color: "rgba(255,255,255,0.42)",
-    fontFamily: "Outfit_700Bold",
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: "uppercase",
@@ -1068,7 +1058,6 @@ const styles = StyleSheet.create({
   },
   toolboxTitle: {
     color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
     fontSize: 11,
     letterSpacing: 3,
   },
@@ -1098,18 +1087,15 @@ const styles = StyleSheet.create({
   },
   expWord: {
     color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
     fontSize: 22,
     marginBottom: 2,
   },
   expRom: {
-    fontFamily: "Outfit_700Bold",
     fontSize: 11,
     textTransform: "uppercase",
   },
   expMean: {
     color: COLORS.txt,
-    fontFamily: "Outfit_700Bold",
     fontSize: 16,
     marginBottom: 4,
   },
@@ -1130,11 +1116,9 @@ const styles = StyleSheet.create({
   },
   listenIcon: {
     fontSize: 9,
-    fontFamily: "Outfit_700Bold",
   },
   listenText: {
     color: "rgba(255, 255, 255, 0.78)",
-    fontFamily: "Outfit_700Bold",
     fontSize: 9,
     letterSpacing: 1,
   },

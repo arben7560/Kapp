@@ -8,11 +8,11 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   Vibration,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppText } from "../components/app-text";
 import { useDailyStreak } from "../lib/DailyStreakProvider";
 import {
   STREAK_BADGE_MILESTONES,
@@ -63,7 +63,14 @@ export default function StreakScreen() {
           <Pressable onPress={() => router.back()} style={styles.iconButton}>
             <Ionicons name="chevron-back" size={24} color={COLORS.text} />
           </Pressable>
-          <Text style={styles.headerTitle}>Streak</Text>
+          <AppText
+            variant="sectionLabel"
+            tone="strong"
+            align="center"
+            style={styles.headerTitle}
+          >
+            Streak
+          </AppText>
           <View style={styles.iconButtonGhost} />
         </View>
 
@@ -80,16 +87,28 @@ export default function StreakScreen() {
               style={StyleSheet.absoluteFill}
             />
             <View style={styles.heroAccent} />
-            <Text style={styles.kicker}>HABITUDE QUOTIDIENNE</Text>
-            <Text style={styles.bigNumber}>{currentStreak}</Text>
-            <Text style={styles.heroTitle}>
+            <AppText variant="sectionLabel" tone="accent" style={styles.kicker}>
+              HABITUDE QUOTIDIENNE
+            </AppText>
+            <AppText
+              variant="numericValue"
+              tone="strong"
+              style={styles.bigNumber}
+            >
+              {currentStreak}
+            </AppText>
+            <AppText
+              variant="sectionTitle"
+              tone="strong"
+              style={styles.heroTitle}
+            >
               {currentStreak > 1 ? "jours de suite" : "jour de suite"}
-            </Text>
-            <Text style={styles.heroText}>
+            </AppText>
+            <AppText variant="body" tone="muted" style={styles.heroText}>
               {isTodayCompleted
                 ? "Jour valide. Ta série est conservée."
                 : "Une petite activité suffit pour conserver ta série."}
-            </Text>
+            </AppText>
           </BlurView>
 
           <View style={styles.statsGrid}>
@@ -106,21 +125,45 @@ export default function StreakScreen() {
 
           <BlurView intensity={42} tint="dark" style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Calendrier</Text>
-              <Text style={styles.sectionCaption}>Derniers {CALENDAR_DAYS} jours</Text>
+              <AppText
+                variant="bodyStrong"
+                tone="strong"
+                style={styles.sectionTitle}
+              >
+                Calendrier
+              </AppText>
+              <AppText
+                variant="caption"
+                tone="soft"
+                style={styles.sectionCaption}
+              >
+                Derniers {CALENDAR_DAYS} jours
+              </AppText>
             </View>
             <CalendarGrid streak={streak} />
           </BlurView>
 
           <BlurView intensity={42} tint="dark" style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Streak Freeze</Text>
-              <Text style={styles.sectionCaption}>Protection douce</Text>
+              <AppText
+                variant="bodyStrong"
+                tone="strong"
+                style={styles.sectionTitle}
+              >
+                Streak Freeze
+              </AppText>
+              <AppText
+                variant="caption"
+                tone="soft"
+                style={styles.sectionCaption}
+              >
+                Protection douce
+              </AppText>
             </View>
-            <Text style={styles.bodyText}>
+            <AppText variant="body" tone="muted" style={styles.bodyText}>
               Un freeze protège une journée manquée. Si tu rates une seule
               journée, il peut garder la série vivante.
-            </Text>
+            </AppText>
             <View style={styles.actionRow}>
               <Pressable
                 disabled={isLoading || (streak?.freezesAvailable ?? 0) <= 0}
@@ -134,7 +177,9 @@ export default function StreakScreen() {
                   (streak?.freezesAvailable ?? 0) <= 0 && styles.buttonDisabled,
                 ]}
               >
-                <Text style={styles.actionText}>Utiliser un freeze</Text>
+                <AppText variant="button" tone="inverse" style={styles.actionText}>
+                  Utiliser un freeze
+                </AppText>
               </Pressable>
               <Pressable
                 disabled={isLoading}
@@ -147,15 +192,33 @@ export default function StreakScreen() {
                   pressed && styles.buttonPressed,
                 ]}
               >
-                <Text style={styles.secondaryText}>Ajouter un joker</Text>
+                <AppText
+                  variant="button"
+                  tone="strong"
+                  style={styles.secondaryText}
+                >
+                  Ajouter un joker
+                </AppText>
               </Pressable>
             </View>
           </BlurView>
 
           <BlurView intensity={42} tint="dark" style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Badges</Text>
-              <Text style={styles.sectionCaption}>Paliers non punitifs</Text>
+              <AppText
+                variant="bodyStrong"
+                tone="strong"
+                style={styles.sectionTitle}
+              >
+                Badges
+              </AppText>
+              <AppText
+                variant="caption"
+                tone="soft"
+                style={styles.sectionCaption}
+              >
+                Paliers non punitifs
+              </AppText>
             </View>
             <View style={styles.badgeGrid}>
               {STREAK_BADGE_MILESTONES.map((milestone) => {
@@ -165,15 +228,25 @@ export default function StreakScreen() {
                     key={milestone}
                     style={[styles.badgeCard, unlocked && styles.badgeUnlocked]}
                   >
-                    <Text
+                    <AppText
+                      variant="sectionTitle"
+                      tone={unlocked ? "premium" : "muted"}
+                      align="center"
                       style={[
                         styles.badgeValue,
                         unlocked && styles.badgeValueUnlocked,
                       ]}
                     >
                       {milestone}
-                    </Text>
-                    <Text style={styles.badgeLabel}>jours</Text>
+                    </AppText>
+                    <AppText
+                      variant="caption"
+                      tone="muted"
+                      align="center"
+                      style={styles.badgeLabel}
+                    >
+                      jours
+                    </AppText>
                   </View>
                 );
               })}
@@ -188,8 +261,22 @@ export default function StreakScreen() {
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <BlurView intensity={34} tint="dark" style={styles.statCard}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <AppText
+        variant="sectionTitle"
+        tone="strong"
+        align="center"
+        style={styles.statValue}
+      >
+        {value}
+      </AppText>
+      <AppText
+        variant="caption"
+        tone="soft"
+        align="center"
+        style={styles.statLabel}
+      >
+        {label}
+      </AppText>
     </BlurView>
   );
 }
@@ -221,14 +308,17 @@ function CalendarGrid({ streak }: { streak: DailyStreakState | null }) {
               isToday && styles.calendarToday,
             ]}
           >
-            <Text
+            <AppText
+              variant="caption"
+              tone={completed || frozen ? "strong" : "soft"}
+              align="center"
               style={[
                 styles.calendarText,
                 (completed || frozen) && styles.calendarTextActive,
               ]}
             >
               {date.slice(-2)}
-            </Text>
+            </AppText>
           </View>
         );
       })}
@@ -283,7 +373,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: COLORS.text,
     fontSize: 12,
-    fontWeight: "900",
     letterSpacing: 3,
     textTransform: "uppercase",
   },
@@ -313,7 +402,6 @@ const styles = StyleSheet.create({
   kicker: {
     color: COLORS.cyan,
     fontSize: 11,
-    fontWeight: "900",
     letterSpacing: 2.2,
     textShadowColor: "rgba(103,232,249,0.38)",
     textShadowRadius: 12,
@@ -321,13 +409,12 @@ const styles = StyleSheet.create({
   bigNumber: {
     color: COLORS.text,
     fontSize: 76,
-    fontWeight: "900",
     lineHeight: 86,
     marginTop: 8,
     textShadowColor: "rgba(103,232,249,0.18)",
     textShadowRadius: 18,
   },
-  heroTitle: { color: COLORS.text, fontSize: 23, fontWeight: "900" },
+  heroTitle: { color: COLORS.text, fontSize: 23, lineHeight: 29 },
   heroText: { color: COLORS.muted, fontSize: 15, lineHeight: 22, marginTop: 8 },
   statsGrid: { flexDirection: "row", gap: 10, marginTop: 14 },
   statCard: {
@@ -339,7 +426,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     padding: 14,
   },
-  statValue: { color: COLORS.text, fontSize: 18, fontWeight: "900" },
+  statValue: { color: COLORS.text, fontSize: 18, lineHeight: 24 },
   statLabel: { color: COLORS.soft, fontSize: 11, marginTop: 4 },
   section: {
     backgroundColor: COLORS.card,
@@ -353,22 +440,25 @@ const styles = StyleSheet.create({
   sectionHeader: {
     alignItems: "flex-start",
     flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
     justifyContent: "space-between",
     marginBottom: 12,
   },
-  sectionTitle: { color: COLORS.text, fontSize: 16, fontWeight: "900" },
-  sectionCaption: { color: COLORS.soft, fontSize: 11, fontWeight: "700" },
+  sectionTitle: { color: COLORS.text, fontSize: 16, lineHeight: 22 },
+  sectionCaption: { color: COLORS.soft, fontSize: 11 },
   bodyText: { color: COLORS.muted, fontSize: 14, lineHeight: 20 },
-  calendarGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  calendarGrid: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   calendarDay: {
     alignItems: "center",
     backgroundColor: "rgba(255,255,255,0.045)",
     borderColor: "rgba(255,255,255,0.08)",
     borderRadius: 10,
     borderWidth: 1,
-    height: 34,
+    minHeight: 34,
+    paddingVertical: 5,
     justifyContent: "center",
-    width: "12.2%",
+    width: "11.5%",
   },
   calendarCompleted: {
     backgroundColor: "rgba(103,232,249,0.18)",
@@ -386,7 +476,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   calendarText: { color: "rgba(241,245,249,0.42)", fontSize: 11 },
-  calendarTextActive: { color: COLORS.text, fontWeight: "900" },
+  calendarTextActive: { color: COLORS.text },
   actionRow: { gap: 10, marginTop: 14 },
   actionButton: {
     alignItems: "center",
@@ -394,11 +484,13 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: "center",
     minHeight: 50,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
     shadowColor: COLORS.cyan,
     shadowOpacity: 0.26,
     shadowRadius: 16,
   },
-  actionText: { color: "#020306", fontSize: 14, fontWeight: "900" },
+  actionText: { color: "#020306", fontSize: 14 },
   secondaryButton: {
     alignItems: "center",
     backgroundColor: "rgba(255,255,255,0.055)",
@@ -407,8 +499,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: "center",
     minHeight: 50,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
   },
-  secondaryText: { color: COLORS.text, fontSize: 14, fontWeight: "900" },
+  secondaryText: { color: COLORS.text, fontSize: 14 },
   buttonPressed: { opacity: 0.86, transform: [{ scale: 0.99 }] },
   buttonDisabled: { opacity: 0.45 },
   badgeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
@@ -428,7 +522,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 12,
   },
-  badgeValue: { color: COLORS.muted, fontSize: 22, fontWeight: "900" },
+  badgeValue: { color: COLORS.muted, fontSize: 22, lineHeight: 28 },
   badgeValueUnlocked: { color: COLORS.gold },
   badgeLabel: { color: COLORS.muted, fontSize: 11, marginTop: 2 },
 });

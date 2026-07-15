@@ -1,19 +1,14 @@
-import { StyleSheet } from "react-native";
 import CountingImmersionScreen from "../../../components/comptage/CountingImmersionScreen";
 
-const BACKGROUND_SOURCE = require("../../../assets/images/comptage.png");
+const COLORS = {
+  nativeCyan: "#22D3EE",
+  indigoDeep: "#4F46E5",
+  softViolet: "#A78BFA",
+};
 
 // ----------------------------------------------
 // DESIGN SYSTEM — NATIVE ROOTS EDITION
 // ----------------------------------------------
-const COLORS = {
-  bg: "#020306",
-  nativeCyan: "#22D3EE",
-  indigoDeep: "#4F46E5",
-  softViolet: "#A78BFA",
-  txt: "rgba(255,255,255,0.96)",
-  muted: "rgba(255,255,255,0.60)",
-};
 
 const CAFE_AUDIO = {
   message1: require("../../../assets/audio/comptage/nombres de bases/au-cafe/cafe-bulle-1.mp3"),
@@ -313,145 +308,3 @@ export default function NativeNumbersImmersion() {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  bg: { flex: 1 },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.85)",
-  },
-  scroll: { paddingHorizontal: 22, paddingBottom: 60 },
-
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginVertical: 15,
-  },
-  backBtn: { flexDirection: "row", alignItems: "center" },
-  backArrow: { color: COLORS.txt, fontSize: 32, marginRight: 5 },
-  backText: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-    letterSpacing: 2,
-  },
-  badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-  },
-  badgeText: { color: COLORS.muted, fontSize: 9, fontFamily: "Outfit_700Bold" },
-
-  tabContainer: { flexDirection: "row", gap: 10, marginBottom: 25 },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
-    alignItems: "center",
-  },
-  tabLabel: { color: COLORS.muted, fontFamily: "Outfit_700Bold", fontSize: 11 },
-
-  glassCard: {
-    borderRadius: 32,
-    padding: 25,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-  },
-  cardInfo: { marginBottom: 30 },
-  krCategory: {
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 14,
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  mainTitle: { color: COLORS.txt, fontFamily: "Outfit_900Black", fontSize: 34 },
-  mainDesc: {
-    color: COLORS.muted,
-    fontSize: 14,
-    fontStyle: "italic",
-    marginTop: 8,
-  },
-
-  chatSection: { gap: 28 },
-  bubble: { maxWidth: "88%", padding: 16, borderRadius: 24 },
-  bubbleL: {
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderBottomLeftRadius: 4,
-  },
-  bubbleR: {
-    alignSelf: "flex-end",
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderBottomRightRadius: 4,
-  },
-  bubbleName: {
-    fontSize: 10,
-    fontFamily: "Outfit_700Bold",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 6,
-  },
-  bubbleKr: {
-    color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 18,
-    lineHeight: 25,
-    marginBottom: 4,
-  },
-  bubbleFr: {
-    color: COLORS.muted,
-    fontSize: 13,
-    fontFamily: "Outfit_500Medium",
-  },
-
-  toolbox: { marginTop: 40 },
-  toolboxHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 15,
-    marginBottom: 20,
-  },
-  toolboxTitle: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 12,
-    letterSpacing: 3,
-  },
-  toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
-
-  expGrid: { gap: 14 },
-  expCard: {
-    borderRadius: 24,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
-  },
-  expAccent: { position: "absolute", left: 0, top: 0, bottom: 0, width: 4 },
-  expBody: { padding: 20 },
-  expWord: {
-    color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 24,
-    marginBottom: 2,
-  },
-  expRom: {
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-    marginBottom: 8,
-    textTransform: "uppercase",
-  },
-  expMean: {
-    color: COLORS.txt,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  expCtx: { color: COLORS.muted, fontSize: 12, lineHeight: 18 },
-});

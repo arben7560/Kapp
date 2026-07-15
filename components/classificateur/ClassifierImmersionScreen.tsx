@@ -10,7 +10,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   Vibration,
   View,
 } from "react-native";
@@ -23,6 +22,7 @@ import {
   trackToolboxOpened,
 } from "../../lib/immersionStreak";
 import { buildProgressId } from "../../lib/progressIds";
+import { AnimatedAppText, AppText } from "../app-text";
 
 type DialogueLine = {
   char: string;
@@ -60,8 +60,6 @@ type Props = {
 
 const COLORS = {
   bg: "#020306",
-  txt: "rgba(255,255,255,0.96)",
-  muted: "rgba(255,255,255,0.60)",
 };
 
 export default function ClassifierImmersionScreen({
@@ -202,8 +200,20 @@ export default function ClassifierImmersionScreen({
         >
           <View style={styles.header}>
             <Pressable onPress={() => router.back()} style={styles.backBtn}>
-              <Text style={styles.backArrow}>‹</Text>
-              <Text style={styles.backText}>{backLabel}</Text>
+              <AppText
+                variant="screenTitle"
+                lineContract="singleLine"
+                style={styles.backArrow}
+              >
+                ‹
+              </AppText>
+              <AppText
+                variant="sectionLabel"
+                tone="muted"
+                lineContract="twoLines"
+              >
+                {backLabel}
+              </AppText>
             </Pressable>
 
             <View
@@ -214,16 +224,19 @@ export default function ClassifierImmersionScreen({
                   : { borderColor: activeScene.accent },
               ]}
             >
-              <Text
-                style={[
-                  styles.typeBadgeText,
+              <AppText
+                variant="label"
+                tone={badgeVariant === "solid" ? "inverse" : "default"}
+                align="center"
+                lineContract="twoLines"
+                style={
                   badgeVariant === "solid"
-                    ? styles.solidBadgeText
-                    : { color: activeScene.accent },
-                ]}
+                    ? undefined
+                    : { color: activeScene.accent }
+                }
               >
                 {badgeLabel}
-              </Text>
+              </AppText>
             </View>
           </View>
 
@@ -243,16 +256,19 @@ export default function ClassifierImmersionScreen({
                   },
                 ]}
               >
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    activeScene.id === scene.id && {
-                      color: activeScene.accent,
-                    },
-                  ]}
+                <AppText
+                  variant="label"
+                  tone="muted"
+                  align="center"
+                  lineContract="twoLines"
+                  style={
+                    activeScene.id === scene.id
+                      ? { color: activeScene.accent }
+                      : undefined
+                  }
                 >
                   {scene.title}
-                </Text>
+                </AppText>
               </Pressable>
             ))}
           </View>
@@ -277,11 +293,25 @@ export default function ClassifierImmersionScreen({
               />
 
               <View style={styles.cardInfo}>
-                <Text style={[styles.krBadge, { color: activeScene.accent }]}>
+                <AppText
+                  variant="label"
+                  script="korean"
+                  lineContract="twoLines"
+                  style={[styles.krBadge, { color: activeScene.accent }]}
+                >
                   {activeScene.koreanTitle}
-                </Text>
-                <Text style={styles.sceneTitle}>{activeScene.title}</Text>
-                <Text style={styles.sceneDesc}>{activeScene.description}</Text>
+                </AppText>
+                <AppText variant="sceneTitle" lineContract="fluid">
+                  {activeScene.title}
+                </AppText>
+                <AppText
+                  variant="bodySecondary"
+                  tone="muted"
+                  lineContract="fluid"
+                  style={styles.sceneDesc}
+                >
+                  {activeScene.description}
+                </AppText>
               </View>
 
               <Pressable onPress={advanceDialogue} style={styles.chatSection}>
@@ -299,22 +329,41 @@ export default function ClassifierImmersionScreen({
                         isActive && { borderColor: activeScene.accent },
                       ]}
                     >
-                      <Text
+                      <AppText
+                        variant="sectionLabel"
+                        lineContract="singleLine"
                         style={[styles.charName, { color: activeScene.accent }]}
                       >
                         {line.char}
-                      </Text>
-                      <Text style={styles.krText}>{line.kr}</Text>
-                      <Text style={styles.frText}>{line.fr}</Text>
+                      </AppText>
+                      <AppText
+                        variant="koreanSecondary"
+                        script="korean"
+                        lineContract="fluid"
+                        style={styles.krText}
+                      >
+                        {line.kr}
+                      </AppText>
+                      <AppText
+                        variant="caption"
+                        tone="muted"
+                        lineContract="fluid"
+                      >
+                        {line.fr}
+                      </AppText>
                     </Pressable>
                   );
                 })}
 
                 {isTyping && (
                   <View style={[styles.bubble, styles.bubbleL, styles.typingBubble]}>
-                    <Text style={[styles.charName, { color: activeScene.accent }]}>
+                    <AppText
+                      variant="sectionLabel"
+                      lineContract="singleLine"
+                      style={[styles.charName, { color: activeScene.accent }]}
+                    >
                       {activeScene.dialogue[visibleMessages]?.char}
-                    </Text>
+                    </AppText>
                     <View style={styles.typingDots}>
                       <View style={[styles.dot, { backgroundColor: activeScene.accent }]} />
                       <View style={[styles.dot, { backgroundColor: activeScene.accent }]} />
@@ -323,7 +372,11 @@ export default function ClassifierImmersionScreen({
                   </View>
                 )}
 
-                <Animated.Text
+                <AnimatedAppText
+                  variant="sectionLabel"
+                  tone="soft"
+                  align="center"
+                  lineContract="twoLines"
                   style={[
                     styles.tapHint,
                     shouldHighlightHint && {
@@ -348,14 +401,20 @@ export default function ClassifierImmersionScreen({
                     : isTyping
                       ? "Réponse en cours..."
                       : "Toucher pour continuer"}
-                </Animated.Text>
+                </AnimatedAppText>
               </Pressable>
             </BlurView>
           </Animated.View>
 
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <Text style={styles.toolboxTitle}>{toolboxTitle}</Text>
+              <AppText
+                variant="sectionLabel"
+                tone="muted"
+                lineContract="fluid"
+              >
+                {toolboxTitle}
+              </AppText>
               <View
                 style={[styles.toolboxLine, { backgroundColor: activeScene.accent }]}
               />
@@ -390,12 +449,35 @@ export default function ClassifierImmersionScreen({
                         ]}
                       />
                       <View style={styles.expContent}>
-                        <Text style={styles.expKr}>{exp.word}</Text>
-                        <Text style={[styles.expRom, { color: activeScene.accent }]}>
+                        <AppText
+                          variant="koreanPrimary"
+                          script="korean"
+                          lineContract="fluid"
+                          style={styles.expKr}
+                        >
+                          {exp.word}
+                        </AppText>
+                        <AppText
+                          variant="sectionLabel"
+                          lineContract="twoLines"
+                          style={{ color: activeScene.accent }}
+                        >
                           {exp.rom}
-                        </Text>
-                        <Text style={styles.expMean}>{exp.mean}</Text>
-                        <Text style={styles.expCtx}>{exp.context}</Text>
+                        </AppText>
+                        <AppText
+                          variant="bodyStrong"
+                          lineContract="fluid"
+                          style={styles.expMean}
+                        >
+                          {exp.mean}
+                        </AppText>
+                        <AppText
+                          variant="bodySecondary"
+                          tone="muted"
+                          lineContract="fluid"
+                        >
+                          {exp.context}
+                        </AppText>
                       </View>
                     </BlurView>
                   </Pressable>
@@ -424,27 +506,12 @@ const styles = StyleSheet.create({
     marginVertical: 15,
   },
   backBtn: { flexDirection: "row", alignItems: "center" },
-  backArrow: { color: COLORS.txt, fontSize: 32, marginRight: 5 },
-  backText: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-    letterSpacing: 2,
-  },
+  backArrow: { marginRight: 5 },
   typeBadge: {
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 6,
     borderWidth: 1,
-  },
-  typeBadgeText: {
-    fontSize: 9,
-    fontFamily: "Outfit_700Bold",
-    letterSpacing: 1,
-  },
-  solidBadgeText: {
-    color: "#000",
-    fontFamily: "Outfit_900Black",
   },
   tabContainer: { flexDirection: "row", gap: 10, marginBottom: 25 },
   tab: {
@@ -455,11 +522,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.05)",
     alignItems: "center",
   },
-  tabLabel: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-  },
   mainCard: {
     borderRadius: 32,
     padding: 25,
@@ -468,20 +530,8 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.12)",
   },
   cardInfo: { marginBottom: 30 },
-  krBadge: {
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 14,
-    letterSpacing: 1.5,
-    marginBottom: 4,
-  },
-  sceneTitle: {
-    color: COLORS.txt,
-    fontFamily: "Outfit_900Black",
-    fontSize: 34,
-  },
+  krBadge: { marginBottom: 4 },
   sceneDesc: {
-    color: COLORS.muted,
-    fontSize: 14,
     fontStyle: "italic",
     marginTop: 5,
   },
@@ -503,25 +553,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.12)",
     borderBottomRightRadius: 4,
   },
-  charName: {
-    fontSize: 10,
-    fontFamily: "Outfit_700Bold",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 6,
-  },
-  krText: {
-    color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 18,
-    lineHeight: 26,
-    marginBottom: 4,
-  },
-  frText: {
-    color: COLORS.muted,
-    fontSize: 13,
-    fontFamily: "Outfit_500Medium",
-  },
+  charName: { marginBottom: 6 },
+  krText: { marginBottom: 4 },
   typingBubble: {
     minWidth: 110,
   },
@@ -539,11 +572,6 @@ const styles = StyleSheet.create({
   },
   tapHint: {
     alignSelf: "center",
-    color: "rgba(255,255,255,0.42)",
-    fontFamily: "Outfit_700Bold",
-    fontSize: 10,
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
     marginTop: 4,
   },
   toolbox: { marginTop: 40 },
@@ -552,12 +580,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 15,
     marginBottom: 20,
-  },
-  toolboxTitle: {
-    color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 11,
-    letterSpacing: 3,
   },
   toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
   grid: { gap: 14 },
@@ -570,23 +592,6 @@ const styles = StyleSheet.create({
   },
   expAccent: { position: "absolute", left: 0, top: 0, bottom: 0, width: 4 },
   expContent: { padding: 20 },
-  expKr: {
-    color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
-    fontSize: 24,
-    marginBottom: 2,
-  },
-  expRom: {
-    fontFamily: "Outfit_700Bold",
-    fontSize: 12,
-    marginBottom: 10,
-    textTransform: "uppercase",
-  },
-  expMean: {
-    color: COLORS.txt,
-    fontFamily: "Outfit_700Bold",
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  expCtx: { color: COLORS.muted, fontSize: 12, lineHeight: 18 },
+  expKr: { marginBottom: 2 },
+  expMean: { marginBottom: 4 },
 });

@@ -1,4 +1,6 @@
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+
+import { AppText } from "../app-text";
 
 export type ChoiceItem = {
   id: string;
@@ -44,27 +46,25 @@ export default function ChoiceChips({
               opacity: disabled && !selected ? 0.65 : 1,
             }}
           >
-            <Text
+            <AppText
+              variant="bodyStrong"
+              tone="strong"
               style={{
-                color: "rgba(255,255,255,0.96)",
-                fontSize: 15,
-                fontWeight: "800",
                 marginBottom: choice.korean ? 4 : 0,
               }}
             >
               {choice.label}
-            </Text>
+            </AppText>
 
             {!!choice.korean && (
-              <Text
-                style={{
-                  color: "rgba(255,255,255,0.70)",
-                  fontSize: 13,
-                  lineHeight: 18,
-                }}
+              <AppText
+                variant="bodySecondary"
+                tone="muted"
+                script="korean"
+                accessibilityLanguage="ko"
               >
                 {choice.korean}
-              </Text>
+              </AppText>
             )}
           </Pressable>
         );

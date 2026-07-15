@@ -10,11 +10,11 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   Vibration,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppText } from "../../components/app-text";
 
 import { metroLessons } from "../../data/lesson/metroLessons";
 
@@ -303,11 +303,11 @@ export default function MetroLesson() {
         <ScrollView contentContainerStyle={styles.scroll}>
           <View style={styles.header}>
             <Pressable onPress={() => router.back()} style={styles.backBtn}>
-              <Text style={styles.backArrow}>‹</Text>
-              <Text style={styles.backText}>RETOUR</Text>
+              <AppText variant="screenTitle" lineContract="singleLine" style={styles.backArrow}>‹</AppText>
+              <AppText variant="sectionLabel" lineContract="singleLine" style={styles.backText}>RETOUR</AppText>
             </Pressable>
 
-            <Text style={styles.headerTitle}>METRO IMMERSION</Text>
+            <AppText variant="sectionLabel" lineContract="singleLine" style={styles.headerTitle}>METRO IMMERSION</AppText>
           </View>
 
           <View style={styles.selectorRow}>
@@ -323,20 +323,20 @@ export default function MetroLesson() {
                   },
                 ]}
               >
-                <Text
+                <AppText variant="label" lineContract="singleLine"
                   style={[
                     styles.selectorText,
                     activeScene.id === scene.id && { color: scene.accent },
                   ]}
                 >
                   {scene.tab}
-                </Text>
+                </AppText>
               </Pressable>
             ))}
           </View>
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <Text style={styles.toolboxTitle}>METRO TOOLBOX</Text>
+              <AppText variant="sectionLabel" style={styles.toolboxTitle}>METRO TOOLBOX</AppText>
               <View
                 style={[
                   styles.toolboxLine,
@@ -381,15 +381,15 @@ export default function MetroLesson() {
                       <View style={styles.expContent}>
                         <View style={styles.expTopRow}>
                           <View style={{ flex: 1 }}>
-                            <Text style={styles.expWord}>{exp.word}</Text>
-                            <Text
+                            <AppText variant="koreanPrimary" script="korean" style={styles.expWord}>{exp.word}</AppText>
+                            <AppText variant="caption"
                               style={[
                                 styles.expRom,
                                 { color: activeScene.accent },
                               ]}
                             >
                               {exp.rom}
-                            </Text>
+                            </AppText>
                           </View>
 
                           <View
@@ -401,20 +401,20 @@ export default function MetroLesson() {
                               },
                             ]}
                           >
-                            <Text
+                            <AppText variant="caption" lineContract="singleLine"
                               style={[
                                 styles.listenIcon,
                                 { color: activeScene.accent },
                               ]}
                             >
                               {isActive ? "●" : "▶"}
-                            </Text>
-                            <Text style={styles.listenText}>ÉCOUTER</Text>
+                            </AppText>
+                            <AppText variant="label" lineContract="singleLine" style={styles.listenText}>ÉCOUTER</AppText>
                           </View>
                         </View>
 
-                        <Text style={styles.expMean}>{exp.mean}</Text>
-                        <Text style={styles.expContext}>{exp.context}</Text>
+                        <AppText variant="bodyStrong" style={styles.expMean}>{exp.mean}</AppText>
+                        <AppText variant="bodySecondary" tone="muted" style={styles.expContext}>{exp.context}</AppText>
                       </View>
                     </BlurView>
                   </Pressable>
@@ -451,13 +451,11 @@ const styles = StyleSheet.create({
   backArrow: { color: COLORS.txt, fontSize: 32, marginRight: 5 },
   backText: {
     color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
     fontSize: 12,
     letterSpacing: 1,
   },
   headerTitle: {
     color: COLORS.pink,
-    fontFamily: "Outfit_900Black",
     fontSize: 14,
     letterSpacing: 2,
   },
@@ -477,7 +475,6 @@ const styles = StyleSheet.create({
   },
   selectorText: {
     color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
     fontSize: 13,
   },
 
@@ -491,7 +488,6 @@ const styles = StyleSheet.create({
   },
   toolboxTitle: {
     color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
     fontSize: 12,
     letterSpacing: 3,
   },
@@ -521,17 +517,14 @@ const styles = StyleSheet.create({
   },
   expWord: {
     color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
     fontSize: 24,
     marginBottom: 2,
   },
   expRom: {
-    fontFamily: "Outfit_700Bold",
     fontSize: 12,
   },
   expMean: {
     color: COLORS.txt,
-    fontFamily: "Outfit_700Bold",
     fontSize: 16,
     marginBottom: 4,
   },
@@ -551,11 +544,9 @@ const styles = StyleSheet.create({
   },
   listenIcon: {
     fontSize: 9,
-    fontFamily: "Outfit_700Bold",
   },
   listenText: {
     color: "rgba(255,255,255,0.78)",
-    fontFamily: "Outfit_700Bold",
     fontSize: 9,
     letterSpacing: 1,
   },

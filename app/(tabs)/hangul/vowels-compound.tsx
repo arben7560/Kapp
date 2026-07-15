@@ -9,12 +9,12 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   Vibration,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../../_store";
+import { AppText } from "../../../components/app-text";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.png");
 
@@ -678,8 +678,8 @@ export default function CompoundVowelsImmersion() {
         >
           <View style={styles.header}>
             <Pressable onPress={() => router.back()} style={styles.backBtn}>
-              <Text style={styles.backArrow}>‹</Text>
-              <Text style={styles.backText}>COMPLEXITÉ</Text>
+              <AppText variant="screenTitle" lineContract="singleLine" style={styles.backArrow}>‹</AppText>
+              <AppText variant="sectionLabel" lineContract="singleLine" style={styles.backText}>COMPLEXITÉ</AppText>
             </Pressable>
 
             <Pressable
@@ -692,9 +692,9 @@ export default function CompoundVowelsImmersion() {
                 ambientMode && styles.premiumToggleActive,
               ]}
             >
-              <Text style={styles.premiumToggleText}>
+              <AppText variant="label" style={styles.premiumToggleText}>
                 {ambientMode ? "✨ MODE CALME" : "🔇 FOCUS"}
-              </Text>
+              </AppText>
             </Pressable>
           </View>
 
@@ -712,14 +712,14 @@ export default function CompoundVowelsImmersion() {
                 />
               </View>
 
-              <Text style={styles.progressText}>
+              <AppText variant="caption" lineContract="singleLine" style={styles.progressText}>
                 {currentCompleted}/{totalToComplete}
-              </Text>
+              </AppText>
             </View>
 
-            <Text style={[styles.eyebrow, { color: activeScene.accent }]}>
+            <AppText variant="sectionLabel" style={[styles.eyebrow, { color: activeScene.accent }]}>
               SÉOUL IMMERSION
-            </Text>
+            </AppText>
           </View>
 
           <View style={styles.tabBar}>
@@ -735,14 +735,14 @@ export default function CompoundVowelsImmersion() {
                   },
                 ]}
               >
-                <Text
+                <AppText variant="label" lineContract="singleLine"
                   style={[
                     styles.tabLabel,
                     activeScene.id === scene.id && { color: scene.accent },
                   ]}
                 >
                   {scene.title}
-                </Text>
+                </AppText>
               </Pressable>
             ))}
           </View>
@@ -754,7 +754,7 @@ export default function CompoundVowelsImmersion() {
             }}
           >
             <BlurView intensity={70} tint="dark" style={styles.mainCard}>
-              <Text style={styles.toolboxSceneTitle}>{activeScene.title}</Text>
+              <AppText accessibilityRole="header" variant="sceneTitle" lineContract="twoLines" style={styles.toolboxSceneTitle}>{activeScene.title}</AppText>
 
               <View
                 style={[
@@ -762,16 +762,16 @@ export default function CompoundVowelsImmersion() {
                   { borderColor: `${activeScene.accent}30` },
                 ]}
               >
-                <Text style={styles.hookText}>
+                <AppText variant="bodyStrong" style={styles.hookText}>
                   💡 {activeScene.curiosityHook}
-                </Text>
+                </AppText>
               </View>
 
-              <Text style={[styles.krTitle, { color: activeScene.accent }]}>
+              <AppText variant="koreanPrimary" script="korean" style={[styles.krTitle, { color: activeScene.accent }]}>
                 {activeScene.koreanTitle}
-              </Text>
+              </AppText>
 
-              <Text style={styles.sceneDesc}>{activeScene.description}</Text>
+              <AppText variant="body" style={styles.sceneDesc}>{activeScene.description}</AppText>
 
               <View
                 style={[
@@ -779,16 +779,16 @@ export default function CompoundVowelsImmersion() {
                   { borderLeftColor: activeScene.accent },
                 ]}
               >
-                <Text style={styles.instructionText}>
+                <AppText variant="body" style={styles.instructionText}>
                   {activeScene.instruction}
-                </Text>
+                </AppText>
               </View>
             </BlurView>
           </Animated.View>
 
           <View style={styles.grid}>
             <View style={styles.toolboxHeader}>
-              <Text style={styles.sectionTitle}>COMPOUND TOOLBOX</Text>
+              <AppText variant="sectionTitle" style={styles.sectionTitle}>COMPOUND TOOLBOX</AppText>
             </View>
 
             {activeScene.expressions.map((exp) => (
@@ -808,7 +808,7 @@ export default function CompoundVowelsImmersion() {
                   ]}
                 >
                   <View style={styles.expCardMain}>
-                    <Text
+                    <AppText variant="koreanPrimary" script="korean"
                       style={[
                         styles.expWord,
                         {
@@ -819,14 +819,14 @@ export default function CompoundVowelsImmersion() {
                       ]}
                     >
                       {exp.word}
-                    </Text>
+                    </AppText>
 
                     <View style={styles.expCardRight}>
                       {exp.strokeSteps && (
                         <View style={styles.strokeBadge}>
-                          <Text style={styles.strokeText}>
+                          <AppText variant="caption" style={styles.strokeText}>
                             {exp.strokeSteps} TRAITS
-                          </Text>
+                          </AppText>
                         </View>
                       )}
 
@@ -836,31 +836,31 @@ export default function CompoundVowelsImmersion() {
                           { backgroundColor: `${activeScene.accent}20` },
                         ]}
                       >
-                        <Text
+                        <AppText variant="caption"
                           style={[
                             styles.romText,
                             { color: activeScene.accent },
                           ]}
                         >
                           {exp.rom}
-                        </Text>
+                        </AppText>
                       </View>
                     </View>
                   </View>
 
                   {completedItems[exp.id] && (
                     <View style={styles.expDetail}>
-                      <Text
+                      <AppText variant="caption"
                         style={[
                           styles.expSymbolic,
                           { color: activeScene.accent },
                         ]}
                       >
                         {exp.symbolic || "Composition syllabique"}
-                      </Text>
+                      </AppText>
 
-                      <Text style={styles.expMean}>{exp.mean}</Text>
-                      <Text style={styles.expCtx}>{exp.context}</Text>
+                      <AppText variant="bodyStrong" style={styles.expMean}>{exp.mean}</AppText>
+                      <AppText variant="bodySecondary" tone="muted" style={styles.expCtx}>{exp.context}</AppText>
                     </View>
                   )}
                 </BlurView>
@@ -872,14 +872,14 @@ export default function CompoundVowelsImmersion() {
             !showTeaser[activeScene.id] &&
             !masteredScenes[activeScene.id] && (
               <Pressable onPress={startQuiz} style={styles.teaserBox}>
-                <Text style={styles.teaserText}>
+                <AppText variant="body" style={styles.teaserText}>
                   ✨ Tous les éléments sont découverts. Teste maintenant ta
                   reconnaissance.
-                </Text>
+                </AppText>
 
-                <Text style={[styles.teaserBtn, { color: activeScene.accent }]}>
+                <AppText variant="button" style={[styles.teaserBtn, { color: activeScene.accent }]}>
                   DÉMARRER LE DÉFI →
-                </Text>
+                </AppText>
               </Pressable>
             )}
 
@@ -907,7 +907,7 @@ export default function CompoundVowelsImmersion() {
               }}
               style={styles.teaserBox}
             >
-              <Text style={styles.teaserText}>
+              <AppText variant="body" style={styles.teaserText}>
                 ✨{" "}
                 {shouldSuggestNextSection
                   ? hasSkippedPrerequisites
@@ -918,15 +918,15 @@ export default function CompoundVowelsImmersion() {
                       ? `Tu as terminé les 3 thèmes, mais ${failedScenesToRetry.length} thèmes doivent encore être corrigés : ${failedScenesToRetry.map((scene) => `"${scene.title}"`).join(", ")}. Reprends "${failedSceneToRetry?.title}" d'abord.`
                       : `Bien, maintenant il ne te reste plus qu'à corriger le thème "${failedSceneToRetry?.title}" pour débloquer la suite.`
                   : activeScene.teaser}
-              </Text>
+              </AppText>
 
-              <Text style={[styles.teaserBtn, { color: activeScene.accent }]}>
+              <AppText variant="button" style={[styles.teaserBtn, { color: activeScene.accent }]}>
                 {shouldSuggestNextSection
                   ? `PASSER À ${NEXT_HANGUL_LABEL} →`
                   : shouldRetryBeforeNextSection
                     ? `RECOMMENCER ${failedSceneToRetry?.title.toUpperCase()} →`
                   : "DÉBLOQUER LA SUITE →"}
-              </Text>
+              </AppText>
             </Pressable>
           )}
         </ScrollView>
@@ -941,20 +941,20 @@ export default function CompoundVowelsImmersion() {
             >
               {!quizComplete ? (
                 <>
-                  <Text style={styles.quizTitle}>
+                  <AppText variant="sectionTitle" style={styles.quizTitle}>
                     {getQuizTitle(currentQuestion)}
-                  </Text>
+                  </AppText>
 
                   <View style={styles.quizQBox}>
-                    <Text
+                    <AppText variant="koreanPrimary" script="korean"
                       style={[styles.quizChar, { color: activeScene.accent }]}
                     >
                       {currentQuestion?.expression.word}
-                    </Text>
+                    </AppText>
 
-                    <Text style={styles.quizInstruction}>
+                    <AppText variant="body" style={styles.quizInstruction}>
                       {currentQuestion?.prompt}
-                    </Text>
+                    </AppText>
                   </View>
 
                   <View style={styles.optionsGrid}>
@@ -970,7 +970,7 @@ export default function CompoundVowelsImmersion() {
                               : styles.optWrong),
                         ]}
                       >
-                        <Text style={styles.optText}>{opt}</Text>
+                        <AppText variant="bodyStrong" style={styles.optText}>{opt}</AppText>
                       </Pressable>
                     ))}
                   </View>
@@ -992,11 +992,11 @@ export default function CompoundVowelsImmersion() {
                       ]}
                     />
 
-                    <Text style={styles.resultLabelText}>
+                    <AppText variant="sectionLabel" style={styles.resultLabelText}>
                       {quizQuestions.length - quizScore <= 1
                         ? "SÉQUENCE VALIDÉE"
                         : "SÉQUENCE À REVOIR"}
-                    </Text>
+                    </AppText>
                   </View>
 
                   <View style={styles.resultMedalWrap}>
@@ -1023,26 +1023,26 @@ export default function CompoundVowelsImmersion() {
                           { borderColor: `${activeScene.accent}66` },
                         ]}
                       >
-                        <Text style={styles.resultScoreBig}>{quizScore}</Text>
-                        <Text style={styles.resultScoreTotal}>
+                        <AppText variant="numericValue" style={styles.resultScoreBig}>{quizScore}</AppText>
+                        <AppText variant="sectionTitle" style={styles.resultScoreTotal}>
                           /{quizQuestions.length}
-                        </Text>
+                        </AppText>
                       </View>
                     </LinearGradient>
                   </View>
 
-                  <Text
+                  <AppText accessibilityRole="header" variant="sceneTitle"
                     style={[
                       styles.resultTitle,
                       quizScore <= 1 && styles.resultTitleSmall,
                     ]}
                   >
                     {getQuizResultMessage(quizScore, quizQuestions.length)}
-                  </Text>
+                  </AppText>
 
-                  <Text style={styles.resultSubtitle}>
+                  <AppText variant="bodySecondary" tone="muted" style={styles.resultSubtitle}>
                     {getQuizResultSubtitle(quizScore, quizQuestions.length)}
-                  </Text>
+                  </AppText>
 
                   <View style={styles.resultProgressTrack}>
                     <View
@@ -1056,9 +1056,9 @@ export default function CompoundVowelsImmersion() {
                     />
                   </View>
 
-                  <Text style={styles.resultScore}>
+                  <AppText variant="bodyStrong" style={styles.resultScore}>
                     {quizScore} / {quizQuestions.length} réponses correctes
-                  </Text>
+                  </AppText>
 
                   <Pressable
                     onPress={() => {
@@ -1079,11 +1079,11 @@ export default function CompoundVowelsImmersion() {
                       end={{ x: 1, y: 1 }}
                       style={styles.closeBtnGradient}
                     >
-                      <Text style={styles.closeBtnText}>
+                      <AppText variant="button" style={styles.closeBtnText}>
                         {quizQuestions.length - quizScore <= 1
                           ? "CONTINUER L'IMMERSION"
                           : "RECOMMENCER LA SÉQUENCE"}
-                      </Text>
+                      </AppText>
                     </LinearGradient>
                   </Pressable>
                 </View>
@@ -1111,7 +1111,6 @@ const styles = StyleSheet.create({
   backArrow: { color: COLORS.txt, fontSize: 32, marginRight: 5 },
   backText: {
     color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
     fontSize: 11,
     letterSpacing: 2,
   },
@@ -1130,7 +1129,6 @@ const styles = StyleSheet.create({
   premiumToggleText: {
     color: "#FFF",
     fontSize: 10,
-    fontFamily: "Outfit_700Bold",
   },
 
   heroIntro: { marginBottom: 25 },
@@ -1146,11 +1144,9 @@ const styles = StyleSheet.create({
   progressText: {
     color: COLORS.muted,
     fontSize: 11,
-    fontFamily: "Outfit_700Bold",
   },
   eyebrow: {
     fontSize: 10,
-    fontFamily: "Outfit_700Bold",
     letterSpacing: 2.5,
     marginBottom: 6,
   },
@@ -1166,7 +1162,6 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 12,
-    fontFamily: "Outfit_700Bold",
     color: COLORS.muted,
   },
 
@@ -1179,7 +1174,6 @@ const styles = StyleSheet.create({
   },
   toolboxSceneTitle: {
     color: COLORS.txt,
-    fontFamily: "Outfit_900Black",
     fontSize: 34,
     marginBottom: 14,
   },
@@ -1194,10 +1188,8 @@ const styles = StyleSheet.create({
     color: COLORS.muted,
     fontSize: 14,
     lineHeight: 21,
-    fontFamily: "Outfit_500Medium",
   },
   krTitle: {
-    fontFamily: "NotoSansKR_700Bold",
     fontSize: 13,
     letterSpacing: 3,
     marginBottom: 12,
@@ -1213,7 +1205,6 @@ const styles = StyleSheet.create({
   instructionText: {
     color: COLORS.txt,
     fontSize: 15,
-    fontFamily: "Outfit_500Medium",
     fontStyle: "italic",
     lineHeight: 21,
   },
@@ -1222,7 +1213,6 @@ const styles = StyleSheet.create({
   toolboxHeader: { marginBottom: 8 },
   sectionTitle: {
     color: "rgba(255,255,255,0.4)",
-    fontFamily: "Outfit_700Bold",
     fontSize: 12,
     letterSpacing: 3,
   },
@@ -1241,7 +1231,6 @@ const styles = StyleSheet.create({
   },
   expWord: {
     color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
     fontSize: 28,
     marginBottom: 2,
   },
@@ -1255,11 +1244,9 @@ const styles = StyleSheet.create({
   strokeText: {
     color: "rgba(255,255,255,0.4)",
     fontSize: 9,
-    fontFamily: "Outfit_700Bold",
   },
   romBox: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12 },
   romText: {
-    fontFamily: "Outfit_700Bold",
     fontSize: 12,
     textTransform: "uppercase",
   },
@@ -1271,7 +1258,6 @@ const styles = StyleSheet.create({
   },
   expSymbolic: {
     fontSize: 11,
-    fontFamily: "Outfit_700Bold",
     marginTop: 18,
     textTransform: "uppercase",
     letterSpacing: 1,
@@ -1279,7 +1265,6 @@ const styles = StyleSheet.create({
   },
   expMean: {
     color: COLORS.txt,
-    fontFamily: "Outfit_700Bold",
     fontSize: 16,
     marginTop: 6,
     marginBottom: 4,
@@ -1306,11 +1291,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textAlign: "center",
     marginBottom: 12,
-    fontFamily: "Outfit_500Medium",
     lineHeight: 21,
   },
   teaserBtn: {
-    fontFamily: "Outfit_700Bold",
     fontSize: 13,
     letterSpacing: 1,
   },
@@ -1336,7 +1319,6 @@ const styles = StyleSheet.create({
   quizTitle: {
     color: "rgba(255,255,255,0.3)",
     fontSize: 11,
-    fontFamily: "Outfit_700Bold",
     textAlign: "center",
     letterSpacing: 4,
     marginBottom: 25,
@@ -1344,7 +1326,6 @@ const styles = StyleSheet.create({
   quizQBox: { alignItems: "center", marginBottom: 35 },
   quizChar: {
     color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
     fontSize: 48,
     marginBottom: 2,
   },
@@ -1366,7 +1347,6 @@ const styles = StyleSheet.create({
   optText: {
     color: COLORS.txt,
     fontSize: 20,
-    fontFamily: "Outfit_700Bold",
     textAlign: "center",
   },
   optCorrect: {
@@ -1411,7 +1391,6 @@ const styles = StyleSheet.create({
   },
   resultLabelText: {
     color: "rgba(255,255,255,0.58)",
-    fontFamily: "Outfit_700Bold",
     fontSize: 10,
     letterSpacing: 2,
   },
@@ -1451,20 +1430,17 @@ const styles = StyleSheet.create({
   },
   resultScoreBig: {
     color: COLORS.pureWhite,
-    fontFamily: "Outfit_900Black",
     fontSize: 42,
     letterSpacing: -1,
   },
   resultScoreTotal: {
     color: "rgba(255,255,255,0.45)",
-    fontFamily: "Outfit_700Bold",
     fontSize: 18,
     marginTop: 14,
   },
   resultTitle: {
     color: COLORS.pureWhite,
     fontSize: 24,
-    fontFamily: "Outfit_900Black",
     letterSpacing: -0.6,
     textAlign: "center",
     marginBottom: 10,
@@ -1477,7 +1453,6 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.62)",
     fontSize: 14,
     lineHeight: 21,
-    fontFamily: "Outfit_500Medium",
     textAlign: "center",
     maxWidth: 310,
     marginBottom: 22,
@@ -1498,7 +1473,6 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.50)",
     fontSize: 13,
     marginBottom: 28,
-    fontFamily: "Outfit_700Bold",
     letterSpacing: 0.5,
   },
   closeBtn: {
@@ -1520,7 +1494,6 @@ const styles = StyleSheet.create({
   },
   closeBtnText: {
     color: "#020306",
-    fontFamily: "Outfit_900Black",
     fontSize: 12,
     letterSpacing: 1.8,
   },

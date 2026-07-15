@@ -10,11 +10,11 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   Vibration,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AnimatedAppText, AppText } from "../../../components/app-text";
 import { useVocAudio } from "../../../hooks/useVocAudio";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 
@@ -460,13 +460,13 @@ export default function RomanceDating() {
           {/* HEADER */}
           <View style={styles.topNav}>
             <Pressable onPress={() => router.back()} style={styles.backCircle}>
-              <Text style={styles.backArrow}>‹</Text>
+              <AppText variant="screenTitle" lineContract="singleLine" style={styles.backArrow}>‹</AppText>
             </Pressable>
             <View>
-              <Text style={[styles.navEyebrow, { color: activeScene.accent }]}>
+              <AppText variant="sectionLabel" style={[styles.navEyebrow, { color: activeScene.accent }]}>
                 SÉOUL IMMERSION
-              </Text>
-              <Text style={styles.navTitle}>Romance & Dating</Text>
+              </AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>Romance & Dating</AppText>
             </View>
           </View>
 
@@ -484,14 +484,14 @@ export default function RomanceDating() {
                   },
                 ]}
               >
-                <Text
+                <AppText variant="label" lineContract="singleLine"
                   style={[
                     styles.tabText,
                     activeScene.id === scene.id && { color: scene.accent },
                   ]}
                 >
                   {scene.koreanTitle}
-                </Text>
+                </AppText>
               </Pressable>
             ))}
           </View>
@@ -515,13 +515,13 @@ export default function RomanceDating() {
                 colors={[`${activeScene.accent}30`, "transparent"]}
                 style={ABSOLUTE_FILL}
               />
-              <Text
+              <AppText variant="sectionLabel"
                 style={[styles.sceneCategory, { color: activeScene.accent }]}
               >
                 {activeScene.koreanTitle}
-              </Text>
-              <Text style={styles.sceneTitle}>{activeScene.title}</Text>
-              <Text style={styles.sceneDesc}>{activeScene.description}</Text>
+              </AppText>
+              <AppText accessibilityRole="header" variant="sceneTitle" style={styles.sceneTitle}>{activeScene.title}</AppText>
+              <AppText variant="body" style={styles.sceneDesc}>{activeScene.description}</AppText>
 
               <Pressable onPress={advanceDialogue} style={styles.chatContainer}>
                 {activeScene.dialogue
@@ -544,16 +544,16 @@ export default function RomanceDating() {
                           isActive && { borderColor: activeScene.accent },
                         ]}
                       >
-                        <Text
+                        <AppText variant="label"
                           style={[
                             styles.charLabel,
                             { color: activeScene.accent },
                           ]}
                         >
                           {chat.char}
-                        </Text>
-                        <Text style={styles.krText}>{chat.kr}</Text>
-                        <Text style={styles.frText}>{chat.fr}</Text>
+                        </AppText>
+                        <AppText variant="koreanSecondary" script="korean" style={styles.krText}>{chat.kr}</AppText>
+                        <AppText variant="bodySecondary" tone="muted" style={styles.frText}>{chat.fr}</AppText>
                       </Pressable>
                     );
                   })}
@@ -566,11 +566,11 @@ export default function RomanceDating() {
                       styles.typingBubble,
                     ]}
                   >
-                    <Text
+                    <AppText variant="label"
                       style={[styles.charLabel, { color: activeScene.accent }]}
                     >
                       {activeScene.dialogue[visibleMessages]?.char}
-                    </Text>
+                    </AppText>
 
                     <View style={styles.typingDots}>
                       <View
@@ -595,7 +595,7 @@ export default function RomanceDating() {
                   </View>
                 )}
 
-                <Animated.Text
+                <AnimatedAppText variant="caption"
                   style={[
                     styles.tapHint,
                     shouldHighlightHint && {
@@ -620,7 +620,7 @@ export default function RomanceDating() {
                     : isTyping
                       ? "Réponse en cours..."
                       : "Toucher pour continuer"}
-                </Animated.Text>
+                </AnimatedAppText>
               </Pressable>
             </BlurView>
           </Animated.View>
@@ -628,7 +628,7 @@ export default function RomanceDating() {
           {/* ROMANCE TOOLBOX */}
           <View style={styles.toolbox}>
             <View style={styles.toolboxTitleRow}>
-              <Text style={styles.toolboxTitle}>DATING TOOLBOX</Text>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>DATING TOOLBOX</AppText>
               <View
                 style={[
                   styles.toolboxLine,
@@ -673,15 +673,15 @@ export default function RomanceDating() {
                       <View style={styles.vocabContent}>
                         <View style={styles.vocabTopRow}>
                           <View style={{ flex: 1 }}>
-                            <Text style={styles.vocabKr}>{exp.word}</Text>
-                            <Text
+                            <AppText variant="koreanPrimary" script="korean" style={styles.vocabKr}>{exp.word}</AppText>
+                            <AppText variant="caption"
                               style={[
                                 styles.vocabRom,
                                 { color: activeScene.accent },
                               ]}
                             >
                               {exp.rom}
-                            </Text>
+                            </AppText>
                           </View>
 
                           <View
@@ -693,20 +693,20 @@ export default function RomanceDating() {
                               },
                             ]}
                           >
-                            <Text
+                            <AppText variant="caption" lineContract="singleLine"
                               style={[
                                 styles.listenIcon,
                                 { color: activeScene.accent },
                               ]}
                             >
                               {isActive ? "●" : "▶"}
-                            </Text>
-                            <Text style={styles.listenText}>ÉCOUTER</Text>
+                            </AppText>
+                            <AppText variant="label" lineContract="singleLine" style={styles.listenText}>ÉCOUTER</AppText>
                           </View>
                         </View>
 
-                        <Text style={styles.vocabMean}>{exp.mean}</Text>
-                        <Text style={styles.vocabCtx}>{exp.context}</Text>
+                        <AppText variant="bodyStrong" style={styles.vocabMean}>{exp.mean}</AppText>
+                        <AppText variant="bodySecondary" tone="muted" style={styles.vocabCtx}>{exp.context}</AppText>
                       </View>
                     </BlurView>
                   </Pressable>
@@ -751,10 +751,9 @@ const styles = StyleSheet.create({
   backArrow: { color: "#fff", fontSize: 24, marginTop: -2 },
   navEyebrow: {
     fontSize: 10,
-    fontWeight: "900",
     letterSpacing: 2,
   },
-  navTitle: { color: "#fff", fontSize: 14, fontWeight: "600", opacity: 0.8 },
+  navTitle: { color: "#fff", fontSize: 14, opacity: 0.8 },
 
   sceneTabs: {
     flexDirection: "row",
@@ -777,7 +776,6 @@ const styles = StyleSheet.create({
   },
   tabText: {
     color: COLORS.muted,
-    fontFamily: "NotoSansKR_700Bold",
     fontSize: 13,
     textAlign: "center",
   },
@@ -790,13 +788,11 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.12)",
   },
   sceneCategory: {
-    fontFamily: "NotoSansKR_700Bold",
     fontSize: 14,
     marginBottom: 4,
   },
   sceneTitle: {
     color: COLORS.txt,
-    fontFamily: "Outfit_900Black",
     fontSize: 32,
     marginBottom: 10,
   },
@@ -828,19 +824,17 @@ const styles = StyleSheet.create({
   },
   charLabel: {
     fontSize: 10,
-    fontFamily: "Outfit_700Bold",
     marginBottom: 6,
     letterSpacing: 0.5,
     textTransform: "uppercase",
   },
   krText: {
     color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
     fontSize: 17,
     lineHeight: 24,
     marginBottom: 4,
   },
-  frText: { color: COLORS.muted, fontSize: 12, fontFamily: "Outfit_500Medium" },
+  frText: { color: COLORS.muted, fontSize: 12},
 
   typingBubble: {
     minWidth: 92,
@@ -861,7 +855,6 @@ const styles = StyleSheet.create({
   tapHint: {
     alignSelf: "center",
     color: "rgba(255,255,255,0.42)",
-    fontFamily: "Outfit_700Bold",
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: "uppercase",
@@ -877,7 +870,6 @@ const styles = StyleSheet.create({
   },
   toolboxTitle: {
     color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
     fontSize: 11,
     letterSpacing: 3,
   },
@@ -907,18 +899,15 @@ const styles = StyleSheet.create({
   },
   vocabKr: {
     color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
     fontSize: 24,
     marginBottom: 2,
   },
   vocabRom: {
     fontSize: 12,
-    fontFamily: "Outfit_700Bold",
     textTransform: "uppercase",
   },
   vocabMean: {
     color: COLORS.txt,
-    fontFamily: "Outfit_700Bold",
     fontSize: 16,
     marginBottom: 4,
   },
@@ -934,11 +923,9 @@ const styles = StyleSheet.create({
   },
   listenIcon: {
     fontSize: 9,
-    fontFamily: "Outfit_700Bold",
   },
   listenText: {
     color: "rgba(255,255,255,0.78)",
-    fontFamily: "Outfit_700Bold",
     fontSize: 9,
     letterSpacing: 1,
   },

@@ -15,11 +15,11 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   Vibration,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AnimatedAppText, AppText } from "../../../components/app-text";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 
 type AudioAsset = number;
@@ -685,13 +685,13 @@ export default function TransportCity() {
         >
           <View style={styles.topNav}>
             <Pressable onPress={() => router.back()} style={styles.backCircle}>
-              <Text style={styles.backArrow}>‹</Text>
+              <AppText variant="screenTitle" lineContract="singleLine" style={styles.backArrow}>‹</AppText>
             </Pressable>
             <View>
-              <Text style={[styles.navEyebrow, { color: activeScene.accent }]}>
+              <AppText variant="sectionLabel" style={[styles.navEyebrow, { color: activeScene.accent }]}>
                 SÉOUL IMMERSION
-              </Text>
-              <Text style={styles.navTitle}>Transport & Ville</Text>
+              </AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>Transport & Ville</AppText>
             </View>
           </View>
 
@@ -711,7 +711,7 @@ export default function TransportCity() {
                     },
                   ]}
                 >
-                  <Text
+                  <AppText variant="label" lineContract="singleLine"
                     style={[
                       styles.tabLabel,
                       isActive && {
@@ -720,7 +720,7 @@ export default function TransportCity() {
                     ]}
                   >
                     {scene.title}
-                  </Text>
+                  </AppText>
                 </Pressable>
               );
             })}
@@ -746,12 +746,12 @@ export default function TransportCity() {
               />
 
               <View style={styles.cardInfo}>
-                <Text style={[styles.krBadge, { color: activeScene.accent }]}>
+                <AppText variant="caption" script="korean" style={[styles.krBadge, { color: activeScene.accent }]}>
                   {activeScene.koreanTitle}
-                </Text>
+                </AppText>
 
-                <Text style={styles.sceneMainTitle}>{activeScene.title}</Text>
-                <Text style={styles.sceneSub}>{activeScene.description}</Text>
+                <AppText accessibilityRole="header" variant="sceneTitle" style={styles.sceneMainTitle}>{activeScene.title}</AppText>
+                <AppText variant="subtitle" style={styles.sceneSub}>{activeScene.description}</AppText>
               </View>
 
               <View style={styles.dialogueList}>
@@ -775,17 +775,17 @@ export default function TransportCity() {
                           isActive && { borderColor: activeScene.accent },
                         ]}
                       >
-                        <Text
+                        <AppText variant="label"
                           style={[
                             styles.bubbleChar,
                             { color: activeScene.accent },
                           ]}
                         >
                           {line.char}
-                        </Text>
+                        </AppText>
 
-                        <Text style={styles.bubbleKr}>{line.kr}</Text>
-                        <Text style={styles.bubbleFr}>{line.fr}</Text>
+                        <AppText variant="koreanSecondary" script="korean" style={styles.bubbleKr}>{line.kr}</AppText>
+                        <AppText variant="bodySecondary" tone="muted" style={styles.bubbleFr}>{line.fr}</AppText>
                       </Pressable>
                     );
                   })}
@@ -798,11 +798,11 @@ export default function TransportCity() {
                       styles.typingBubble,
                     ]}
                   >
-                    <Text
+                    <AppText variant="label"
                       style={[styles.bubbleChar, { color: activeScene.accent }]}
                     >
                       {activeScene.dialogue[visibleMessages]?.char}
-                    </Text>
+                    </AppText>
 
                     <View style={styles.typingDots}>
                       <View
@@ -828,7 +828,7 @@ export default function TransportCity() {
                 )}
 
                 <Pressable onPress={advanceDialogue} disabled={isTyping}>
-                  <Animated.Text
+                  <AnimatedAppText variant="caption"
                     style={[
                       styles.tapHint,
                       shouldHighlightHint && {
@@ -853,7 +853,7 @@ export default function TransportCity() {
                       : isTyping
                         ? "Réponse en cours..."
                         : "Toucher pour continuer"}
-                  </Animated.Text>
+                  </AnimatedAppText>
                 </Pressable>
               </View>
             </BlurView>
@@ -861,7 +861,7 @@ export default function TransportCity() {
 
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <Text style={styles.toolboxTitle}>URBAN TOOLBOX</Text>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>URBAN TOOLBOX</AppText>
 
               <View
                 style={[
@@ -907,16 +907,16 @@ export default function TransportCity() {
 
                       <View style={styles.vocabTopRow}>
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.vocabKr}>{exp.word}</Text>
+                          <AppText variant="koreanPrimary" script="korean" style={styles.vocabKr}>{exp.word}</AppText>
 
-                          <Text
+                          <AppText variant="caption"
                             style={[
                               styles.vocabRom,
                               { color: activeScene.accent },
                             ]}
                           >
                             {exp.rom}
-                          </Text>
+                          </AppText>
                         </View>
 
                         <View
@@ -928,20 +928,20 @@ export default function TransportCity() {
                             },
                           ]}
                         >
-                          <Text
+                          <AppText variant="caption" lineContract="singleLine"
                             style={[
                               styles.listenIcon,
                               { color: activeScene.accent },
                             ]}
                           >
                             {isActive ? "●" : "▶"}
-                          </Text>
-                          <Text style={styles.listenText}>ÉCOUTER</Text>
+                          </AppText>
+                          <AppText variant="label" lineContract="singleLine" style={styles.listenText}>ÉCOUTER</AppText>
                         </View>
                       </View>
 
-                      <Text style={styles.vocabMean}>{exp.mean}</Text>
-                      <Text style={styles.vocabCtx}>{exp.context}</Text>
+                      <AppText variant="bodyStrong" style={styles.vocabMean}>{exp.mean}</AppText>
+                      <AppText variant="bodySecondary" tone="muted" style={styles.vocabCtx}>{exp.context}</AppText>
                     </BlurView>
                   </Pressable>
                 );
@@ -987,10 +987,9 @@ const styles = StyleSheet.create({
   backArrow: { color: "#fff", fontSize: 24, marginTop: -2 },
   navEyebrow: {
     fontSize: 10,
-    fontWeight: "900",
     letterSpacing: 2,
   },
-  navTitle: { color: "#fff", fontSize: 14, fontWeight: "600", opacity: 0.8 },
+  navTitle: { color: "#fff", fontSize: 14, opacity: 0.8 },
 
   header: {
     flexDirection: "row",
@@ -1006,7 +1005,6 @@ const styles = StyleSheet.create({
 
   backText: {
     color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
     fontSize: 11,
     letterSpacing: 2,
   },
@@ -1030,7 +1028,6 @@ const styles = StyleSheet.create({
   gpsText: {
     color: COLORS.muted,
     fontSize: 9,
-    fontFamily: "Outfit_700Bold",
   },
 
   tabBar: {
@@ -1050,7 +1047,6 @@ const styles = StyleSheet.create({
 
   tabLabel: {
     color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
     fontSize: 12,
   },
 
@@ -1067,7 +1063,6 @@ const styles = StyleSheet.create({
   },
 
   krBadge: {
-    fontFamily: "NotoSansKR_700Bold",
     fontSize: 14,
     letterSpacing: 1,
     marginBottom: 4,
@@ -1075,7 +1070,6 @@ const styles = StyleSheet.create({
 
   sceneMainTitle: {
     color: COLORS.txt,
-    fontFamily: "Outfit_900Black",
     fontSize: 34,
   },
 
@@ -1111,7 +1105,6 @@ const styles = StyleSheet.create({
 
   bubbleChar: {
     fontSize: 10,
-    fontFamily: "Outfit_700Bold",
     textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: 6,
@@ -1119,7 +1112,6 @@ const styles = StyleSheet.create({
 
   bubbleKr: {
     color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
     fontSize: 18,
     lineHeight: 26,
     marginBottom: 4,
@@ -1128,7 +1120,6 @@ const styles = StyleSheet.create({
   bubbleFr: {
     color: COLORS.muted,
     fontSize: 13,
-    fontFamily: "Outfit_500Medium",
   },
 
   typingBubble: {
@@ -1153,7 +1144,6 @@ const styles = StyleSheet.create({
   tapHint: {
     alignSelf: "center",
     color: "rgba(255,255,255,0.42)",
-    fontFamily: "Outfit_700Bold",
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: "uppercase",
@@ -1173,7 +1163,6 @@ const styles = StyleSheet.create({
 
   toolboxTitle: {
     color: COLORS.muted,
-    fontFamily: "Outfit_700Bold",
     fontSize: 12,
     letterSpacing: 3,
   },
@@ -1217,20 +1206,17 @@ const styles = StyleSheet.create({
 
   vocabKr: {
     color: COLORS.txt,
-    fontFamily: "NotoSansKR_700Bold",
     fontSize: 24,
     marginBottom: 2,
   },
 
   vocabRom: {
-    fontFamily: "Outfit_700Bold",
     fontSize: 12,
     textTransform: "uppercase",
   },
 
   vocabMean: {
     color: COLORS.txt,
-    fontFamily: "Outfit_700Bold",
     fontSize: 16,
     marginBottom: 4,
   },
@@ -1253,12 +1239,10 @@ const styles = StyleSheet.create({
 
   listenIcon: {
     fontSize: 9,
-    fontFamily: "Outfit_700Bold",
   },
 
   listenText: {
     color: "rgba(255,255,255,0.78)",
-    fontFamily: "Outfit_700Bold",
     fontSize: 9,
     letterSpacing: 1,
   },

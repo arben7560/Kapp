@@ -1,7 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Animated,
   Image,
@@ -11,31 +11,24 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { AppText } from "../../components/app-text";
+import { ModuleCard } from "../../components/ModuleCard";
+import { StatusBadge } from "../../components/ui/status-badge";
 import { ABSOLUTE_FILL } from "../../constants/layout";
 
 const BACKGROUND_SOURCE = require("../../assets/images/speak.png");
 const SPEAK_BACKGROUND_DARKNESS = 0.72;
 
 const BG_DEEP = "#020306";
-const TXT = "rgba(255,255,255,0.98)";
-const MUTED = "rgba(255,255,255,0.72)";
-const SOFT = "rgba(255,255,255,0.45)";
-
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
 const ORANGE = "#FB923C";
 
-const fonts = {
-  bold: "Outfit_700Bold",
-  black: "Outfit_900Black",
-  medium: "Outfit_500Medium",
-  kr: "NotoSansKR_700Bold",
-};
 const ASSETS = {
   cafe: require("../../assets/images/cafeIA.png"),
   metro: require("../../assets/images/metroIA.png"),
@@ -44,14 +37,26 @@ const ASSETS = {
   shopping: require("../../assets/images/shopping.png"),
 };
 type ThemeKey = "cafe" | "metro" | "restaurant" | "airport" | "shopping";
+type TextLessonRoute =
+  | "/lesson/cafe"
+  | "/lesson/metro"
+  | "/lesson/restaurant"
+  | "/lesson/airport"
+  | "/lesson/magasin";
+type GuidedLessonRoute =
+  | "/lesson/cafeMissions"
+  | "/lesson/metroMissions"
+  | "/lesson/restaurantMissions"
+  | "/lesson/aeroportMissions";
 
 type ThemeConfig = {
   title: string;
   sub: string;
+  icon: string;
   image: ImageSourcePropType;
   accent: string;
-  textRoute: string;
-  guidedRoute: string;
+  textRoute: TextLessonRoute;
+  guidedRoute?: GuidedLessonRoute;
   guidedParams?: Record<string, string>;
   realRoute?: string;
   realParams?: Record<string, string>;
@@ -61,6 +66,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
   cafe: {
     title: "Le Café",
     sub: "Hongdae • 14:00",
+    icon: "CF",
     image: ASSETS.cafe,
     accent: PINK,
     textRoute: "/lesson/cafe",
@@ -72,6 +78,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
   metro: {
     title: "Le Métro",
     sub: "Ligne 2 • Gangnam",
+    icon: "M2",
     image: ASSETS.metro,
     accent: CYAN,
     textRoute: "/lesson/metro",
@@ -81,6 +88,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
   restaurant: {
     title: "Restaurant",
     sub: "Itaewon • Dîner",
+    icon: "RS",
     image: ASSETS.restaurant,
     accent: ORANGE,
     textRoute: "/lesson/restaurant",
@@ -90,6 +98,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
   airport: {
     title: "L’aéroport",
     sub: "Incheon • Arrivée",
+    icon: "ICN",
     image: ASSETS.airport,
     accent: CYAN,
     textRoute: "/lesson/airport",
@@ -99,21 +108,19 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
   shopping: {
     title: "Shopping",
     sub: "Jamsil • Boutique",
+    icon: "SH",
     image: ASSETS.shopping,
     accent: PINK,
-    textRoute: "/lesson/shopping",
-    guidedRoute: "/lesson/shoppingIA",
-    guidedParams: { mode: "guided" },
+    textRoute: "/lesson/magasin",
   },
 };
 
 export default function SpeakScreen() {
   const [sheetVisible, setSheetVisible] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<ThemeKey | null>(null);
-  const [paywallVisible, setPaywallVisible] = useState(false);
 
-  const screenEntryScale = useRef(new Animated.Value(1.05)).current;
-  const screenEntryOpacity = useRef(new Animated.Value(0)).current;
+  const [screenEntryScale] = useState(() => new Animated.Value(1.05));
+  const [screenEntryOpacity] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     Animated.parallel([
@@ -141,6 +148,8 @@ export default function SpeakScreen() {
       <ImageBackground
         source={BACKGROUND_SOURCE}
         style={styles.bgImage}
+        imageStyle={styles.bgImageAsset}
+        resizeMode="cover"
         blurRadius={2}
       >
         <BlurView intensity={55} tint="dark" style={styles.bgBlur} />
@@ -158,33 +167,77 @@ export default function SpeakScreen() {
             contentContainerStyle={styles.scrollContent}
           >
             <View style={styles.heroBlock}>
-              <Text style={styles.heroEyebrow}>SÉOUL IMMERSION</Text>
+              <AppText
+                variant="sectionLabel"
+                tone="brand"
+                align="center"
+                lineContract="singleLine"
+                style={styles.heroEyebrow}
+              >
+                SÉOUL IMMERSION
+              </AppText>
 
               <View style={styles.heroVisualWrap}>
                 <View style={styles.krHeroWrap}>
-                  <Text style={[styles.krHero, styles.krHeroGlowOuter]}>
+                  <AppText
+                    accessible={false}
+                    variant="koreanHero"
+                    script="korean"
+                    align="center"
+                    style={[styles.krHero, styles.krHeroGlowOuter]}
+                  >
                     대화
-                  </Text>
-                  <Text style={[styles.krHero, styles.krHeroGlowInner]}>
+                  </AppText>
+                  <AppText
+                    accessible={false}
+                    variant="koreanHero"
+                    script="korean"
+                    align="center"
+                    style={[styles.krHero, styles.krHeroGlowInner]}
+                  >
                     대화
-                  </Text>
-                  <Text style={styles.krHero}>대화</Text>
+                  </AppText>
+                  <AppText
+                    accessibilityLanguage="ko-KR"
+                    variant="koreanHero"
+                    script="korean"
+                    align="center"
+                    style={styles.krHero}
+                  >
+                    대화
+                  </AppText>
                 </View>
 
-                {/* <Text style={styles.heroTitle}>Interactions</Text> */}
-
                 <BlurView intensity={18} tint="dark" style={styles.levelPill}>
-                  <Text style={styles.levelText}>IMMERSION ACTIVE</Text>
+                  <AppText
+                    variant="label"
+                    tone="muted"
+                    align="center"
+                    lineContract="singleLine"
+                  >
+                    IMMERSION ACTIVE
+                  </AppText>
                 </BlurView>
 
-                <Text style={styles.heroQuote}>
+                <AppText
+                  variant="subtitle"
+                  tone="muted"
+                  align="center"
+                  style={styles.heroQuote}
+                >
                   Choisir un lieu, vivre une situation, parler coréen.
-                </Text>
+                </AppText>
               </View>
             </View>
 
             <View style={styles.sectionDivider}>
-              <Text style={styles.sectionLabel}>SÉQUENCES DISPONIBLES</Text>
+              <AppText
+                variant="sectionLabel"
+                tone="soft"
+                style={styles.sectionDividerLabel}
+              >
+                SÉQUENCES DISPONIBLES
+              </AppText>
               <View style={styles.dividerLine} />
             </View>
 
@@ -198,10 +251,6 @@ export default function SpeakScreen() {
           selectedTheme={selectedTheme}
         />
 
-        <PaywallModal
-          visible={paywallVisible}
-          onClose={() => setPaywallVisible(false)}
-        />
       </ImageBackground>
     </SafeAreaView>
   );
@@ -215,56 +264,18 @@ function Scenes({
   return (
     <View style={styles.scenesGrid}>
       {(Object.keys(THEME_CONFIG) as ThemeKey[]).map((key) => (
-        <ThemeCard
+        <ModuleCard
           key={key}
-          config={THEME_CONFIG[key]}
+          title={THEME_CONFIG[key].title}
+          subtitle={THEME_CONFIG[key].sub}
+          icon={THEME_CONFIG[key].icon}
+          accentColor={THEME_CONFIG[key].accent}
+          metaLabel="SCÈNE IMMERSIVE"
+          accessibilityContext={`les options de la scène ${THEME_CONFIG[key].title}`}
           onPress={() => onSelectTheme(key)}
         />
       ))}
     </View>
-  );
-}
-
-function ThemeCard({
-  config,
-  onPress,
-}: {
-  config: ThemeConfig;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.themeCard,
-        {
-          shadowColor: config.accent,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
-        },
-      ]}
-    >
-      <View style={styles.cinemaVignette}>
-        <Image
-          source={config.image}
-          style={styles.vignetteImage}
-          resizeMode="contain"
-        />
-
-        <View style={styles.vignetteContent}>
-          <View
-            style={[styles.vignetteAccent, { backgroundColor: config.accent }]}
-          />
-          <View>
-            <Text style={styles.vignetteTitle}>{config.title}</Text>
-            <Text style={styles.vignetteSub}>{config.sub}</Text>
-          </View>
-        </View>
-
-        <View style={styles.vignettePlay}>
-          <Text style={styles.playIcon}>›</Text>
-        </View>
-      </View>
-    </Pressable>
   );
 }
 
@@ -280,46 +291,62 @@ function ThemeModeSheet({
   onClose: () => void;
   selectedTheme: ThemeKey | null;
 }) {
-  const translateY = useRef(new Animated.Value(80)).current;
-  const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const [translateY] = useState(() => new Animated.Value(80));
+  const [backdropOpacity] = useState(() => new Animated.Value(0));
   const [mounted, setMounted] = useState(visible);
+  const { height: windowHeight } = useWindowDimensions();
 
   useEffect(() => {
     if (visible && selectedTheme) {
-      setMounted(true);
-      translateY.setValue(80);
-      backdropOpacity.setValue(0);
+      let stopEntryAnimation = () => {};
+      const mountTimer = setTimeout(() => {
+        setMounted(true);
+        translateY.setValue(80);
+        backdropOpacity.setValue(0);
 
-      Animated.parallel([
-        Animated.timing(backdropOpacity, {
-          toValue: 1,
-          duration: 220,
-          useNativeDriver: true,
-        }),
-        Animated.spring(translateY, {
-          toValue: 0,
-          friction: 10,
-          tension: 58,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else if (mounted) {
-      Animated.parallel([
-        Animated.timing(backdropOpacity, {
-          toValue: 0,
-          duration: 180,
-          useNativeDriver: true,
-        }),
-        Animated.timing(translateY, {
-          toValue: 80,
-          duration: 220,
-          useNativeDriver: true,
-        }),
-      ]).start(({ finished }) => {
-        if (finished) setMounted(false);
-      });
+        const entryAnimation = Animated.parallel([
+          Animated.timing(backdropOpacity, {
+            toValue: 1,
+            duration: 220,
+            useNativeDriver: true,
+          }),
+          Animated.spring(translateY, {
+            toValue: 0,
+            friction: 10,
+            tension: 58,
+            useNativeDriver: true,
+          }),
+        ]);
+
+        stopEntryAnimation = () => entryAnimation.stop();
+        entryAnimation.start();
+      }, 0);
+
+      return () => {
+        clearTimeout(mountTimer);
+        stopEntryAnimation();
+      };
     }
-  }, [visible, selectedTheme, mounted, translateY, backdropOpacity]);
+
+    const closeAnimation = Animated.parallel([
+      Animated.timing(backdropOpacity, {
+        toValue: 0,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: 80,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+    ]);
+
+    closeAnimation.start(({ finished }) => {
+      if (finished) setMounted(false);
+    });
+
+    return () => closeAnimation.stop();
+  }, [visible, selectedTheme, translateY, backdropOpacity]);
 
   if (!mounted || !selectedTheme) return null;
 
@@ -327,21 +354,23 @@ function ThemeModeSheet({
 
   const goToText = () => {
     onClose();
-    router.push(config.textRoute as any);
+    router.push(config.textRoute);
   };
 
   const goToImmersive = () => {
+    if (!config.guidedRoute) return;
+
     onClose();
 
     if (config.guidedParams) {
       router.push({
-        pathname: config.guidedRoute as any,
+        pathname: config.guidedRoute,
         params: config.guidedParams,
       });
       return;
     }
 
-    router.push(config.guidedRoute as any);
+    router.push(config.guidedRoute);
   };
 
   return (
@@ -375,7 +404,11 @@ function ThemeModeSheet({
             ]}
           />
 
-          <BlurView intensity={94} tint="dark" style={styles.sheetWrap}>
+          <BlurView
+            intensity={94}
+            tint="dark"
+            style={[styles.sheetWrap, { maxHeight: Math.max(280, windowHeight - 24) }]}
+          >
             <LinearGradient
               colors={[
                 "rgba(255,255,255,0.12)",
@@ -401,6 +434,12 @@ function ThemeModeSheet({
             <View style={styles.sheetTopSpecular} />
             <View style={styles.sheetHandle} />
 
+            <ScrollView
+              style={styles.sheetScroll}
+              contentContainerStyle={styles.sheetScrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
             <View
               style={[
                 styles.sheetHeroFrame,
@@ -434,7 +473,14 @@ function ThemeModeSheet({
               />
 
               <Pressable onPress={onClose} style={styles.sheetCloseIcon}>
-                <Text style={styles.sheetCloseIconText}>×</Text>
+                <AppText
+                  variant="sectionTitle"
+                  tone="muted"
+                  align="center"
+                  accessibilityLabel="Fermer"
+                >
+                  ×
+                </AppText>
               </Pressable>
 
               <View style={styles.sheetHeroCopy}>
@@ -445,11 +491,27 @@ function ThemeModeSheet({
                       { backgroundColor: config.accent },
                     ]}
                   />
-                  <Text style={styles.sheetKicker}>SCÈNE IMMERSIVE</Text>
+                  <AppText
+                    variant="sectionLabel"
+                    tone="muted"
+                  >
+                    SCÈNE IMMERSIVE
+                  </AppText>
                 </View>
 
-                <Text style={styles.sheetTitle}>{config.title}</Text>
-                <Text style={styles.sheetSub}>{config.sub}</Text>
+                <AppText
+                  variant="sceneTitle"
+                  tone="strong"
+                >
+                  {config.title}
+                </AppText>
+                <AppText
+                  variant="subtitle"
+                  tone="muted"
+                  style={styles.sheetSub}
+                >
+                  {config.sub}
+                </AppText>
               </View>
             </View>
 
@@ -462,28 +524,46 @@ function ThemeModeSheet({
                     { borderColor: `${config.accent}26` },
                   ]}
                 >
-                  <Text style={styles.sheetMetaText}>{label}</Text>
+                  <AppText
+                    variant="caption"
+                    tone="muted"
+                    align="center"
+                  >
+                    {label}
+                  </AppText>
                 </View>
               ))}
             </View>
 
             <View style={styles.sheetBody}>
               <View style={styles.sheetModeHeader}>
-                <Text style={styles.sheetSectionTitle}>
+                <AppText variant="sectionTitle" tone="strong">
                   Choisis ton expérience
-                </Text>
-                <Text style={styles.sheetSectionHint}>
+                </AppText>
+                <AppText
+                  variant="bodySecondary"
+                  tone="soft"
+                  style={styles.sheetSectionHint}
+                >
                   Une scène courte, claire, pensée pour passer à l’action.
-                </Text>
+                </AppText>
               </View>
 
               <View style={styles.sheetOptions}>
                 <SheetOptionCard
-                  title="Scène guidée "
-                  subtitle="Entre dans la situation, écoute et réponds comme sur place."
+                  title={
+                    config.guidedRoute
+                      ? "Scène guidée"
+                      : "Scène guidée — bientôt"
+                  }
+                  subtitle={
+                    config.guidedRoute
+                      ? "Entre dans la situation, écoute et réponds comme sur place."
+                      : "Le mémo Shopping reste disponible pendant la préparation de cette scène."
+                  }
                   icon="IA"
                   accent={config.accent}
-                  recommended
+                  disabled={!config.guidedRoute}
                   onPress={goToImmersive}
                 />
                 <SheetOptionCard
@@ -496,67 +576,12 @@ function ThemeModeSheet({
               </View>
             </View>
 
-            {/* Ancien header de modale conservé pendant la refonte :
-            <View style={styles.sheetHeader}>
-              <View style={[styles.sheetImageFrame, { borderColor: `${config.accent}40` }]}>
-                <Image
-                  source={config.image}
-                  style={styles.sheetHeroImg}
-                  resizeMode="cover"
-                />
-                <LinearGradient
-                  colors={["transparent", "rgba(0,0,0,0.38)"]}
-                  style={StyleSheet.absoluteFill}
-                />
-              </View>
-
-              <View style={styles.sheetHeaderInfo}>
-                <View style={styles.sheetKickerRow}>
-                  <View
-                    style={[
-                      styles.sheetStatusDot,
-                      { backgroundColor: config.accent },
-                    ]}
-                  />
-                  <Text style={styles.sheetKicker}>SCÈNE ACTIVE</Text>
-                </View>
-
-                <Text style={styles.sheetTitle}>{config.title}</Text>
-                <Text style={styles.sheetSub}>{config.sub}</Text>
-              </View>
-            </View>
-
-            <View style={styles.sheetModeHeader}>
-              <Text style={styles.sheetSectionTitle}>Choisis ton mode</Text>
-              <Text style={styles.sheetSectionHint}>
-                Sélectionne ton niveau d’immersion.
-              </Text>
-            </View>
-
-            <View style={styles.sheetOptions}>
-              <SheetOptionCard
-                title="Version texte"
-                subtitle="Lire, revoir et mémoriser à ton rythme."
-                icon="Aa"
-                accent={config.accent}
-                onPress={goToText}
-              />
-
-              <SheetOptionCard
-                title="Simulation immersive"
-                subtitle="Parler dans une vraie situation coréenne interactive."
-                icon="IA"
-                accent={config.accent}
-                recommended
-                locked
-                onPress={goToImmersive}
-              />
-            </View>
-            */}
-
             <Pressable onPress={onClose} style={styles.sheetCloseButton}>
-              <Text style={styles.sheetCloseText}>Fermer</Text>
+              <AppText variant="button" tone="soft" align="center">
+                Fermer
+              </AppText>
             </Pressable>
+            </ScrollView>
           </BlurView>
         </Animated.View>
       </View>
@@ -569,19 +594,17 @@ function SheetOptionCard({
   subtitle,
   icon,
   accent,
-  recommended,
-  locked,
+  disabled,
   onPress,
 }: {
   title: string;
   subtitle: string;
   icon: string;
   accent: string;
-  recommended?: boolean;
-  locked?: boolean;
+  disabled?: boolean;
   onPress: () => void;
 }) {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const [scaleAnim] = useState(() => new Animated.Value(1));
 
   const pressIn = () => {
     Animated.spring(scaleAnim, {
@@ -602,9 +625,21 @@ function SheetOptionCard({
   };
 
   return (
-    <Pressable onPress={onPress} onPressIn={pressIn} onPressOut={pressOut}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !!disabled }}
+      aria-disabled={disabled || undefined}
+      disabled={disabled}
+      onPress={onPress}
+      onPressIn={pressIn}
+      onPressOut={pressOut}
+    >
       <Animated.View
-        style={[styles.optionCard, { transform: [{ scale: scaleAnim }] }]}
+        style={[
+          styles.optionCard,
+          disabled && styles.optionCardDisabled,
+          { transform: [{ scale: scaleAnim }] },
+        ]}
       >
         <BlurView intensity={76} tint="dark" style={styles.optionBlur}>
           <LinearGradient
@@ -637,25 +672,48 @@ function SheetOptionCard({
               },
             ]}
           >
-            <Text style={styles.optionIconText}>{icon}</Text>
+            <AppText
+              variant="label"
+              tone="strong"
+              align="center"
+              lineContract="singleLine"
+            >
+              {icon}
+            </AppText>
           </View>
 
           <View style={styles.optionTextBlock}>
             <View style={styles.optionTitleRow}>
-              <Text style={styles.optionTitle}>{title}</Text>
+              <AppText
+                variant="cardTitle"
+                tone="strong"
+                lineContract="twoLines"
+              >
+                {title}
+              </AppText>
 
-              {locked ? (
-                <View style={styles.lockedBadge}>
-                  <Text style={styles.lockedText}>PREMIUM</Text>
-                </View>
+              {disabled ? (
+                <StatusBadge
+                  label="BIENTÔT"
+                  size="compact"
+                  appearance="glass"
+                />
               ) : null}
             </View>
 
-            <Text style={styles.optionSub}>{subtitle}</Text>
+            <AppText
+              variant="bodySecondary"
+              tone="muted"
+              lineContract="twoLines"
+            >
+              {subtitle}
+            </AppText>
           </View>
 
           <View style={styles.optionArrowWrap}>
-            <Text style={styles.optionArrow}>›</Text>
+            <AppText variant="sectionTitle" tone="soft" align="end">
+              ›
+            </AppText>
           </View>
         </BlurView>
       </Animated.View>
@@ -663,77 +721,10 @@ function SheetOptionCard({
   );
 }
 
-// ──────────────────────────────────────────────
-// PAYWALL
-// ──────────────────────────────────────────────
-function PaywallModal({
-  visible,
-  onClose,
-}: {
-  visible: boolean;
-  onClose: () => void;
-}) {
-  if (!visible) return null;
-
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <View style={styles.paywallRoot}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-
-        <BlurView intensity={95} tint="dark" style={styles.paywallWrap}>
-          <View style={styles.sheetHandle} />
-
-          <View style={styles.paywallHero}>
-            <Text style={styles.paywallTitle}>IMMERSION RÉELLE</Text>
-            <Text style={styles.paywallSubtitle}>
-              Accède aux situations complètes de Séoul{"\n"}
-              et parle sans réfléchir.
-            </Text>
-          </View>
-
-          <View style={styles.paywallFeatures}>
-            <PaywallItem text="Dialogues dynamiques en temps réel" />
-            <PaywallItem text="Réponses naturelles sans assistance" />
-            <PaywallItem text="Scènes complètes : café, métro, restaurant" />
-            <PaywallItem text="Progression immersive continue" />
-          </View>
-
-          <Pressable style={styles.paywallCTA}>
-            <LinearGradient
-              colors={[PINK, CYAN]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <Text style={styles.paywallCTAText}>Continuer l’immersion</Text>
-          </Pressable>
-
-          <Pressable onPress={onClose}>
-            <Text style={styles.paywallClose}>Plus tard</Text>
-          </Pressable>
-        </BlurView>
-      </View>
-    </Modal>
-  );
-}
-
-function PaywallItem({ text }: { text: string }) {
-  return (
-    <View style={styles.paywallItem}>
-      <View style={styles.paywallDot} />
-      <Text style={styles.paywallItemText}>{text}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG_DEEP },
-  bgImage: { flex: 1 },
+  bgImage: { flex: 1, overflow: "hidden" },
+  bgImageAsset: { width: "100%", height: "100%" },
 
   scrollContent: { paddingHorizontal: 22, paddingTop: 10, paddingBottom: 100 },
   heroBlock: {
@@ -742,11 +733,6 @@ const styles = StyleSheet.create({
   },
 
   heroEyebrow: {
-    color: PINK,
-    fontFamily: fonts.bold,
-    fontSize: 12,
-    letterSpacing: 5.5,
-    textAlign: "center",
     marginBottom: 48,
     opacity: 0.9,
   },
@@ -766,8 +752,6 @@ const styles = StyleSheet.create({
   },
 
   krHero: {
-    fontSize: 74,
-    fontFamily: fonts.kr,
     color: "rgba(245,252,255,0.98)",
     textShadowColor: "rgba(56,189,248,0.92)",
     textShadowOffset: { width: 0, height: 0 },
@@ -791,16 +775,6 @@ const styles = StyleSheet.create({
     textShadowRadius: 18,
   },
 
-  heroTitle: {
-    marginTop: 4,
-    fontSize: 34,
-    lineHeight: 40,
-    fontFamily: fonts.medium,
-    color: "rgba(255,255,255,0.96)",
-    letterSpacing: -0.7,
-    textAlign: "center",
-  },
-
   levelPill: {
     marginTop: 18,
     paddingHorizontal: 28,
@@ -811,21 +785,9 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.16)",
   },
 
-  levelText: {
-    color: "rgba(255,255,255,0.66)",
-    fontSize: 11,
-    fontFamily: fonts.bold,
-    letterSpacing: 3,
-  },
-
   heroQuote: {
     marginTop: 30,
     maxWidth: "82%",
-    fontSize: 15,
-    lineHeight: 23,
-    fontFamily: fonts.medium,
-    color: "rgba(255,255,255,0.72)",
-    textAlign: "center",
     fontStyle: "italic",
   },
 
@@ -846,11 +808,8 @@ const styles = StyleSheet.create({
     gap: 15,
   },
 
-  sectionLabel: {
-    color: SOFT,
-    fontSize: 11,
-    fontFamily: fonts.bold,
-    letterSpacing: 2,
+  sectionDividerLabel: {
+    flexShrink: 1,
   },
 
   dividerLine: {
@@ -860,77 +819,6 @@ const styles = StyleSheet.create({
   },
 
   scenesGrid: { gap: 20 },
-  themeCard: {
-    borderRadius: 32,
-    overflow: "visible",
-    position: "relative",
-
-    // Ombre portée externe dirigée vers la droite et le bas.
-    // La couleur est injectée dynamiquement depuis config.accent,
-    // donc elle reprend le même ton que le trait vertical de chaque card.
-    shadowOffset: { width: 12, height: 13 },
-    shadowOpacity: 0.56,
-    shadowRadius: 8,
-    elevation: 12,
-  },
-
-  cinemaVignette: {
-    width: "100%",
-    aspectRatio: 16 / 9,
-    borderRadius: 32,
-    overflow: "hidden",
-    backgroundColor: "#050508",
-    position: "relative",
-  },
-
-  vignetteImage: {
-    ...StyleSheet.absoluteFillObject,
-    width: "100%",
-    height: "100%",
-    opacity: 0.9,
-  },
-
-  vignetteContent: {
-    position: "absolute",
-    bottom: 18,
-    left: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-
-  vignetteAccent: { width: 4, height: 32, borderRadius: 2 },
-
-  vignetteTitle: {
-    color: "white",
-    fontSize: 22,
-    fontFamily: fonts.bold,
-  },
-
-  vignetteSub: {
-    color: "rgba(255,255,255,0.6)",
-    fontSize: 13,
-  },
-
-  vignettePlay: {
-    position: "absolute",
-    top: 18,
-    right: 18,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
-  },
-
-  playIcon: {
-    color: "white",
-    fontSize: 18,
-    lineHeight: 20,
-  },
 
   // ──────────────────────────────────────────────
   // REFINED SHEET
@@ -976,6 +864,14 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(7,9,14,0.78)",
   },
 
+  sheetScroll: {
+    flexShrink: 1,
+  },
+
+  sheetScrollContent: {
+    paddingBottom: 2,
+  },
+
   sheetTopSpecular: {
     position: "absolute",
     top: 0,
@@ -997,7 +893,7 @@ const styles = StyleSheet.create({
   },
 
   sheetHeroFrame: {
-    height: 218,
+    minHeight: 218,
     borderRadius: 32,
     overflow: "hidden",
     borderWidth: 1,
@@ -1014,10 +910,11 @@ const styles = StyleSheet.create({
   },
 
   sheetHeroCopy: {
-    position: "absolute",
-    left: 18,
-    right: 74,
-    bottom: 18,
+    minHeight: 218,
+    justifyContent: "flex-end",
+    paddingHorizontal: 18,
+    paddingTop: 82,
+    paddingBottom: 18,
   },
 
   sheetCloseIcon: {
@@ -1034,22 +931,17 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.16)",
   },
 
-  sheetCloseIconText: {
-    color: "rgba(255,255,255,0.82)",
-    fontSize: 20,
-    lineHeight: 22,
-    fontFamily: fonts.medium,
-  },
-
   sheetMetaRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
     marginTop: 12,
     paddingHorizontal: 2,
   },
 
   sheetMetaPill: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 120,
     minHeight: 34,
     borderRadius: 999,
     borderWidth: 1,
@@ -1058,37 +950,9 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.035)",
   },
 
-  sheetMetaText: {
-    color: "rgba(255,255,255,0.64)",
-    fontSize: 11.5,
-    fontFamily: fonts.bold,
-    letterSpacing: 0.2,
-  },
-
   sheetBody: {
     paddingHorizontal: 6,
     paddingTop: 18,
-  },
-
-  sheetHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 22,
-  },
-
-  sheetImageFrame: {
-    width: 82,
-    height: 62,
-    borderRadius: 22,
-    overflow: "hidden",
-    borderWidth: 1,
-    backgroundColor: "rgba(255,255,255,0.04)",
-    marginRight: 16,
-  },
-
-  sheetHeaderInfo: {
-    flex: 1,
-    justifyContent: "center",
   },
 
   sheetKickerRow: {
@@ -1104,43 +968,16 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
 
-  sheetKicker: {
-    color: "rgba(255,255,255,0.68)",
-    fontSize: 10.5,
-    fontFamily: fonts.bold,
-    letterSpacing: 1.9,
-  },
-
-  sheetTitle: {
-    color: TXT,
-    fontSize: 34,
-    fontFamily: fonts.black,
-    letterSpacing: -0.9,
-  },
-
   sheetSub: {
-    color: "rgba(255,255,255,0.76)",
-    fontSize: 14.5,
     marginTop: 2,
-    fontFamily: fonts.medium,
   },
 
   sheetModeHeader: {
     marginBottom: 15,
   },
 
-  sheetSectionTitle: {
-    color: TXT,
-    fontSize: 19,
-    fontFamily: fonts.black,
-    letterSpacing: -0.45,
-  },
-
   sheetSectionHint: {
-    color: SOFT,
-    fontSize: 13.8,
     marginTop: 4,
-    fontFamily: fonts.medium,
   },
 
   sheetOptions: {
@@ -1150,6 +987,10 @@ const styles = StyleSheet.create({
   optionCard: {
     borderRadius: 30,
     overflow: "hidden",
+  },
+
+  optionCardDisabled: {
+    opacity: 0.5,
   },
 
   optionBlur: {
@@ -1187,13 +1028,6 @@ const styles = StyleSheet.create({
     marginRight: 14,
   },
 
-  optionIconText: {
-    color: TXT,
-    fontSize: 13,
-    fontFamily: fonts.bold,
-    letterSpacing: 0.2,
-  },
-
   optionTextBlock: {
     flex: 1,
     paddingRight: 10,
@@ -1207,61 +1041,10 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
 
-  optionTitle: {
-    color: TXT,
-    fontSize: 17,
-    fontFamily: fonts.bold,
-    letterSpacing: -0.25,
-  },
-
-  optionSub: {
-    color: MUTED,
-    fontSize: 13.5,
-    lineHeight: 19,
-    fontFamily: fonts.medium,
-  },
-
   optionArrowWrap: {
     width: 24,
     alignItems: "flex-end",
     justifyContent: "center",
-  },
-
-  optionArrow: {
-    color: "rgba(255,255,255,0.48)",
-    fontSize: 27,
-    fontWeight: "300",
-  },
-
-  recommendedBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
-    borderWidth: 1,
-    backgroundColor: "rgba(255,255,255,0.035)",
-  },
-
-  recommendedText: {
-    color: "rgba(255,255,255,0.72)",
-    fontSize: 8.8,
-    fontFamily: fonts.bold,
-    letterSpacing: 0.9,
-  },
-
-  lockedBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    backgroundColor: "rgba(255,255,255,0.035)",
-  },
-
-  lockedText: {
-    color: "rgba(255,255,255,0.58)",
-    fontSize: 8.8,
-    fontFamily: fonts.bold,
-    letterSpacing: 0.9,
   },
 
   sheetCloseButton: {
@@ -1272,91 +1055,4 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
 
-  sheetCloseText: {
-    color: "rgba(255,255,255,0.48)",
-    fontSize: 13.5,
-    fontFamily: fonts.bold,
-    letterSpacing: 0.2,
-  },
-
-  // ──────────────────────────────────────────────
-  // PAYWALL
-  // ──────────────────────────────────────────────
-  paywallRoot: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "rgba(0,0,0,0.7)",
-  },
-
-  paywallWrap: {
-    borderTopLeftRadius: 40,
-    borderTopRightRadius: 40,
-    padding: 24,
-    paddingBottom: 40,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.2)",
-  },
-
-  paywallHero: {
-    alignItems: "center",
-    marginBottom: 30,
-  },
-
-  paywallTitle: {
-    color: "white",
-    fontSize: 22,
-    fontFamily: fonts.bold,
-    letterSpacing: 1,
-  },
-
-  paywallSubtitle: {
-    color: MUTED,
-    textAlign: "center",
-    marginTop: 10,
-    fontSize: 14,
-  },
-
-  paywallFeatures: {
-    gap: 14,
-    marginBottom: 30,
-  },
-
-  paywallItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-
-  paywallDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: PINK,
-  },
-
-  paywallItemText: {
-    color: TXT,
-    fontSize: 14,
-  },
-
-  paywallCTA: {
-    height: 54,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-    marginBottom: 14,
-  },
-
-  paywallCTAText: {
-    color: "white",
-    fontSize: 15,
-    fontFamily: fonts.bold,
-  },
-
-  paywallClose: {
-    textAlign: "center",
-    color: SOFT,
-    fontSize: 13,
-  },
 });

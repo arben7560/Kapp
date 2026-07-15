@@ -7,16 +7,16 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppText } from "../components/app-text";
+import { ActionButton } from "../components/ui/action-button";
 import {
   DEV_UNLOCK_ALL,
   PAYWALL_COPY,
   PREMIUM_SUBSCRIPTION_OFFERS,
 } from "../lib/paywall/config";
-import { AppFontFamily } from "../constants/theme";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { usePaywall } from "../lib/paywall/PaywallProvider";
 
@@ -31,7 +31,6 @@ const COLORS = {
   gold: "#fbbf24",
   cyan: "#22d3ee",
 };
-const fonts = AppFontFamily.outfit;
 
 const FEATURES = [
   "Tous les modules actuels debloques",
@@ -99,7 +98,7 @@ export default function PremiumScreen() {
           <Pressable onPress={() => router.back()} style={styles.iconButton}>
             <Ionicons name="chevron-back" size={24} color={COLORS.text} />
           </Pressable>
-          <Text style={styles.headerTitle}>Premium</Text>
+          <AppText variant="sectionLabel" style={styles.headerTitle}>Premium</AppText>
           <View style={styles.iconButtonGhost} />
         </View>
 
@@ -113,11 +112,11 @@ export default function PremiumScreen() {
           <View style={styles.heroCard}>
             <View style={styles.badge}>
               <Ionicons name="sparkles" size={15} color={COLORS.gold} />
-              <Text style={styles.badgeText}>ACCES TOTAL</Text>
+              <AppText variant="label" style={styles.badgeText}>ACCES TOTAL</AppText>
             </View>
 
-            <Text style={styles.title}>{PAYWALL_COPY.title}</Text>
-            <Text style={styles.subtitle}>{PAYWALL_COPY.subtitle}</Text>
+            <AppText accessibilityRole="header" variant="screenTitle" style={styles.title}>{PAYWALL_COPY.title}</AppText>
+            <AppText variant="subtitle" tone="muted" style={styles.subtitle}>{PAYWALL_COPY.subtitle}</AppText>
 
             <View style={styles.offers}>
               {PREMIUM_SUBSCRIPTION_OFFERS.map((offer) => (
@@ -138,12 +137,12 @@ export default function PremiumScreen() {
                     <>
                       <View style={styles.offerHeader}>
                         <View style={styles.offerTitleWrap}>
-                          <Text style={styles.offerTitle}>{offer.title}</Text>
+                          <AppText variant="cardTitle" style={styles.offerTitle}>{offer.title}</AppText>
                           {offer.id === highlightedOfferId && (
                             <View style={styles.savingBadge}>
-                              <Text style={styles.savingBadgeText}>
+                              <AppText variant="caption" style={styles.savingBadgeText}>
                                 Economisez 17%
-                              </Text>
+                              </AppText>
                             </View>
                           )}
                         </View>
@@ -163,10 +162,10 @@ export default function PremiumScreen() {
                         />
                       </View>
 
-                      <Text style={styles.price}>
+                      <AppText variant="numericValue" style={styles.price}>
                         {displayPrices[offer.id]}
-                      </Text>
-                      <Text style={styles.priceCaption}>{offer.caption}</Text>
+                      </AppText>
+                      <AppText variant="bodySecondary" tone="muted" style={styles.priceCaption}>{offer.caption}</AppText>
                     </>
                   )}
                 </Pressable>
@@ -175,9 +174,9 @@ export default function PremiumScreen() {
 
             {DEV_UNLOCK_ALL && (
               <View style={styles.devBox}>
-                <Text style={styles.devText}>
+                <AppText variant="caption" style={styles.devText}>
                   Mode developpeur actif : tout est debloque sans achat.
-                </Text>
+                </AppText>
               </View>
             )}
 
@@ -188,11 +187,11 @@ export default function PremiumScreen() {
                   size={18}
                   color={COLORS.cyan}
                 />
-                <Text style={styles.activeText}>
+                <AppText variant="bodyStrong" style={styles.activeText}>
                   {isDeveloperUnlocked
                     ? "Acces complet active en developpement."
                     : "Ton abonnement Premium est actif."}
-                </Text>
+                </AppText>
               </View>
             )}
           </View>
@@ -201,72 +200,59 @@ export default function PremiumScreen() {
             {FEATURES.map((feature) => (
               <View key={feature} style={styles.featureRow}>
                 <Ionicons name="checkmark" size={18} color={COLORS.cyan} />
-                <Text style={styles.featureText}>{feature}</Text>
+                <AppText variant="body" style={styles.featureText}>{feature}</AppText>
               </View>
             ))}
           </View>
 
           {!!error && (
             <View style={styles.errorCard}>
-              <Text style={styles.errorTitle}>Impossible de continuer</Text>
-              <Text style={styles.errorText}>{error.message}</Text>
+              <AppText variant="bodyStrong" style={styles.errorTitle}>Impossible de continuer</AppText>
+              <AppText variant="bodySecondary" style={styles.errorText}>{error.message}</AppText>
             </View>
           )}
 
-          <Pressable
+          <ActionButton
+            label={hasPremiumAccess ? "Premium actif" : "Continuer"}
+            size="large"
+            accentColor={COLORS.pink}
+            labelColor={COLORS.text}
             disabled={!canSubscribe}
+            loading={isPurchasing}
+            loadingIndicatorColor={COLORS.text}
             onPress={() => selectedOffer && subscribe(selectedOffer.id)}
-            style={({ pressed }) => [
-              styles.primaryButton,
-              !canSubscribe && styles.buttonDisabled,
-              pressed && canSubscribe && styles.buttonPressed,
-            ]}
-          >
-            {isPurchasing ? (
-              <ActivityIndicator color={COLORS.text} />
-            ) : (
-              <Text style={styles.primaryButtonText}>
-                {hasPremiumAccess ? "Premium actif" : "Continuer"}
-              </Text>
-            )}
-          </Pressable>
+            style={styles.primaryAction}
+          />
 
           {!hasPremiumAccess && selectedOffer && (
-            <Text style={styles.selectedPlanText}>
+            <AppText variant="caption" style={styles.selectedPlanText}>
               Offre selectionnee : {selectedOffer.title}
-            </Text>
+            </AppText>
           )}
 
-          <Pressable
+          <ActionButton
+            label={PAYWALL_COPY.restore}
+            variant="secondary"
+            size="large"
             disabled={busy}
+            loading={isRestoring}
+            loadingIndicatorColor={COLORS.text}
             onPress={restorePurchases}
-            style={({ pressed }) => [
-              styles.secondaryButton,
-              busy && styles.buttonDisabled,
-              pressed && !busy && styles.buttonPressed,
-            ]}
-          >
-            {isRestoring ? (
-              <ActivityIndicator color={COLORS.text} />
-            ) : (
-              <Text style={styles.secondaryButtonText}>
-                {PAYWALL_COPY.restore}
-              </Text>
-            )}
-          </Pressable>
+            style={styles.secondaryAction}
+          />
 
-          <Pressable
+          <ActionButton
+            label={PAYWALL_COPY.manage}
+            variant="ghost"
             onPress={openSubscriptionManagement}
-            style={styles.textButton}
-          >
-            <Text style={styles.textButtonText}>{PAYWALL_COPY.manage}</Text>
-          </Pressable>
+            style={styles.manageAction}
+          />
 
-          <Text style={styles.legalText}>
+          <AppText variant="caption" tone="soft" style={styles.legalText}>
             {
               "Le paiement est traite par l'App Store ou Google Play. Le renouvellement et l'expiration de l'abonnement sont geres par ton compte Store."
             }
-          </Text>
+          </AppText>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -309,7 +295,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: COLORS.text,
     fontSize: 18,
-    fontFamily: fonts.black,
   },
   content: {
     paddingTop: 20,
@@ -337,21 +322,18 @@ const styles = StyleSheet.create({
   badgeText: {
     color: COLORS.text,
     fontSize: 11,
-    fontFamily: fonts.bold,
     letterSpacing: 1.8,
   },
   title: {
     color: COLORS.text,
     fontSize: 34,
     lineHeight: 40,
-    fontFamily: fonts.black,
     marginTop: 18,
   },
   subtitle: {
     color: COLORS.muted,
     fontSize: 16,
     lineHeight: 23,
-    fontFamily: fonts.medium,
     marginTop: 10,
   },
   offers: {
@@ -388,7 +370,6 @@ const styles = StyleSheet.create({
   offerTitle: {
     color: COLORS.muted,
     fontSize: 13,
-    fontFamily: fonts.bold,
     textTransform: "uppercase",
   },
   savingBadge: {
@@ -403,20 +384,17 @@ const styles = StyleSheet.create({
   savingBadgeText: {
     color: COLORS.gold,
     fontSize: 11,
-    fontFamily: fonts.bold,
     textTransform: "uppercase",
   },
   price: {
     color: COLORS.text,
     fontSize: 28,
-    fontFamily: fonts.black,
     marginTop: 5,
   },
   priceCaption: {
     color: COLORS.faint,
     fontSize: 12,
     lineHeight: 18,
-    fontFamily: fonts.medium,
     marginTop: 5,
   },
   devBox: {
@@ -430,7 +408,6 @@ const styles = StyleSheet.create({
   devText: {
     color: COLORS.text,
     fontSize: 13,
-    fontFamily: fonts.bold,
   },
   activeBox: {
     marginTop: 14,
@@ -441,7 +418,6 @@ const styles = StyleSheet.create({
   activeText: {
     flex: 1,
     color: COLORS.text,
-    fontFamily: fonts.bold,
   },
   featuresCard: {
     marginTop: 16,
@@ -462,7 +438,6 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontSize: 15,
     lineHeight: 21,
-    fontFamily: fonts.bold,
   },
   errorCard: {
     marginTop: 16,
@@ -475,81 +450,36 @@ const styles = StyleSheet.create({
   errorTitle: {
     color: COLORS.text,
     fontSize: 14,
-    fontFamily: fonts.bold,
   },
   errorText: {
     color: COLORS.muted,
     lineHeight: 19,
-    fontFamily: fonts.medium,
     marginTop: 4,
   },
-  primaryButton: {
+  primaryAction: {
     marginTop: 18,
-    height: 56,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: COLORS.pink,
-  },
-  primaryButtonSecondary: {
-    marginTop: 12,
-    backgroundColor: "rgba(255,255,255,0.13)",
-    borderWidth: 1,
-    borderColor: "rgba(255,99,132,0.28)",
-  },
-  primaryButtonText: {
-    color: COLORS.text,
-    fontSize: 15,
-    fontFamily: fonts.bold,
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
+    minHeight: 56,
   },
   selectedPlanText: {
     color: COLORS.muted,
     fontSize: 13,
-    fontFamily: fonts.bold,
     marginTop: 10,
     textAlign: "center",
   },
-  secondaryButton: {
+  secondaryAction: {
     marginTop: 12,
-    height: 52,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: COLORS.line,
-    backgroundColor: "rgba(255,255,255,0.07)",
   },
-  secondaryButtonText: {
-    color: COLORS.text,
-    fontSize: 14,
-    fontFamily: fonts.bold,
-  },
-  textButton: {
-    alignItems: "center",
-    paddingVertical: 16,
-  },
-  textButtonText: {
-    color: COLORS.muted,
-    fontFamily: fonts.bold,
-  },
-  buttonPressed: {
-    opacity: 0.86,
-    transform: [{ scale: 0.99 }],
+  manageAction: {
+    marginTop: 4,
   },
   planPressed: {
     opacity: 0.92,
     transform: [{ scale: 0.99 }],
   },
-  buttonDisabled: {
-    opacity: 0.55,
-  },
   legalText: {
     color: COLORS.faint,
     fontSize: 12,
     lineHeight: 18,
-    fontFamily: fonts.medium,
     textAlign: "center",
     marginTop: 8,
   },

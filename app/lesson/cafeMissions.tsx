@@ -6,16 +6,16 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
+import { AppText } from "../../components/app-text";
 import { MissionAccessBadge } from "../../components/immersion/MissionAccessBadge";
 import { MissionLaunchModal } from "../../components/immersion/MissionLaunchModal";
 import { ABSOLUTE_FILL } from "../../constants/layout";
-import { AppFontFamily, SeoulMidnightGlass } from "../../constants/theme";
+import { SeoulMidnightGlass } from "../../constants/theme";
 import {
   cafeMissions,
   type CafeMission,
@@ -34,7 +34,6 @@ const LINE = "rgba(255,255,255,0.10)";
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
 const GOLD = SeoulMidnightGlass.colors.premiumGold;
-const fonts = AppFontFamily.outfit;
 
 function normalizeMode(rawMode: string | string[] | undefined) {
   const value = Array.isArray(rawMode) ? rawMode[0] : rawMode;
@@ -104,11 +103,11 @@ export default function CafeMissionsScreen() {
           ]}
         >
           <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <Text style={styles.backText}>x</Text>
+            <AppText variant="sectionTitle" lineContract="singleLine" style={styles.backText}>x</AppText>
           </Pressable>
           <View style={styles.headerCopy}>
-            <Text style={styles.kicker}>{"MISSIONS D'IMMERSION"}</Text>
-            <Text style={styles.title}>Café</Text>
+            <AppText variant="sectionLabel" style={styles.kicker}>{"MISSIONS D'IMMERSION"}</AppText>
+            <AppText accessibilityRole="header" variant="screenTitle" style={styles.title}>Café</AppText>
           </View>
         </View>
 
@@ -119,11 +118,11 @@ export default function CafeMissionsScreen() {
           ]}
         >
           <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
-          <Text style={styles.intro}>
+          <AppText variant="body" tone="muted" style={styles.intro}>
             {
               "Choisis une mission complète. Une fois lancée, elle reste jouable jusqu'à la fin."
             }
-          </Text>
+          </AppText>
 
           <View
             style={[
@@ -176,18 +175,18 @@ export default function CafeMissionsScreen() {
 
                   <View style={styles.cardTop}>
                     <MissionAccessBadge access={mission.access} accent={CYAN} />
-                    <Text
+                    <AppText variant="caption" lineContract="singleLine"
                       style={[
                         styles.cardArrow,
                         isLocked && styles.cardArrowPremium,
                       ]}
                     >
                       {isLocked ? "Premium" : "Ouvrir"}
-                    </Text>
+                    </AppText>
                   </View>
 
-                  <Text style={styles.missionTitle}>{mission.title}</Text>
-                  <Text style={styles.missionSubtitle}>{mission.subtitle}</Text>
+                  <AppText variant="cardTitle" style={styles.missionTitle}>{mission.title}</AppText>
+                  <AppText variant="bodySecondary" tone="muted" style={styles.missionSubtitle}>{mission.subtitle}</AppText>
                 </Pressable>
               );
             })}
@@ -244,7 +243,6 @@ const styles = StyleSheet.create({
   backText: {
     color: TXT,
     fontSize: 18,
-    fontFamily: fonts.bold,
   },
   headerCopy: {
     flex: 1,
@@ -252,13 +250,11 @@ const styles = StyleSheet.create({
   kicker: {
     color: PINK,
     fontSize: 11,
-    fontFamily: fonts.bold,
     letterSpacing: 2.5,
   },
   title: {
     color: TXT,
     fontSize: 34,
-    fontFamily: fonts.bold,
     marginTop: 4,
   },
   content: {
@@ -268,7 +264,6 @@ const styles = StyleSheet.create({
   intro: {
     color: MUTED,
     fontSize: 15,
-    fontFamily: fonts.regular,
     lineHeight: 22,
     marginBottom: 18,
   },
@@ -305,7 +300,6 @@ const styles = StyleSheet.create({
   cardArrow: {
     color: SOFT,
     fontSize: SeoulMidnightGlass.cta.fontSize,
-    fontFamily: fonts.medium,
     letterSpacing: SeoulMidnightGlass.cta.letterSpacing,
   },
   cardArrowPremium: {
@@ -315,12 +309,10 @@ const styles = StyleSheet.create({
     color: TXT,
     fontSize: 21,
     lineHeight: 27,
-    fontFamily: fonts.medium,
   },
   missionSubtitle: {
     color: MUTED,
     fontSize: 14,
-    fontFamily: fonts.regular,
     lineHeight: 20,
     marginTop: 7,
   },

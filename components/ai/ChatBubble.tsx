@@ -1,14 +1,24 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+
+import type { AppTextScript } from "../../constants/theme";
+import { AppText } from "../app-text";
 
 type Props = {
   role: "ai" | "user" | "system";
   text: string;
   subtext?: string;
   badge?: string;
+  script?: AppTextScript;
 };
 
-export default function ChatBubble({ role, text, subtext, badge }: Props) {
+export default function ChatBubble({
+  role,
+  text,
+  subtext,
+  badge,
+  script = "latin",
+}: Props) {
   const isAI = role === "ai";
   const isUser = role === "user";
   const isSystem = role === "system";
@@ -40,41 +50,36 @@ export default function ChatBubble({ role, text, subtext, badge }: Props) {
         }}
       >
         {!!badge && (
-          <Text
+          <AppText
+            variant="label"
+            tone="muted"
             style={{
-              color: "rgba(255,255,255,0.58)",
-              fontSize: 11,
-              fontWeight: "800",
               marginBottom: 6,
-              textTransform: "uppercase",
-              letterSpacing: 0.4,
             }}
           >
             {badge}
-          </Text>
+          </AppText>
         )}
 
-        <Text
-          style={{
-            color: "rgba(255,255,255,0.95)",
-            fontSize: 15,
-            lineHeight: 22,
-          }}
+        <AppText
+          variant="body"
+          tone="strong"
+          script={script}
+          accessibilityLanguage={script === "korean" ? "ko" : undefined}
         >
           {text}
-        </Text>
+        </AppText>
 
         {!!subtext && (
-          <Text
+          <AppText
+            variant="caption"
+            tone="muted"
             style={{
-              color: "rgba(255,255,255,0.62)",
-              fontSize: 12,
-              lineHeight: 18,
               marginTop: 6,
             }}
           >
             {subtext}
-          </Text>
+          </AppText>
         )}
       </View>
     </View>
