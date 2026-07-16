@@ -60,6 +60,8 @@ type Props = {
   badgeLabel: string;
   toolboxTitle: string;
   completionPrefix?: string;
+  fallbackToSpeechOnAudioError?: boolean;
+  stopAudioOnDialogueChange?: boolean;
 };
 
 const BACKGROUND_SOURCE = require("../../assets/images/comptage.png");
@@ -74,6 +76,8 @@ export default function CountingImmersionScreen({
   badgeLabel,
   toolboxTitle,
   completionPrefix = "numbers",
+  fallbackToSpeechOnAudioError = false,
+  stopAudioOnDialogueChange = false,
 }: Props) {
   const { complete } = useStore();
   const [activeScene, setActiveScene] = useState(scenes[0]);
@@ -139,14 +143,7 @@ export default function CountingImmersionScreen({
     };
   }, [tapHintPulse, stopAudio]);
 
-  const playOrSpeak = (audio: AudioAsset | undefined, text: string, id: string) => {
-    Speech.stop();
-
-    if (audio) {
-      playAudio(audio, id);
-      return;
-    }
-
+  const speakFallback = (text: string, id: string) => {
     stopAudio();
     setSelectedWord(id);
     Vibration.vibrate(8);
@@ -162,8 +159,31 @@ export default function CountingImmersionScreen({
     });
   };
 
+  const playOrSpeak = (audio: AudioAsset | undefined, text: string, id: string) => {
+    Speech.stop();
+
+    if (audio) {
+      playAudio(
+        audio,
+        id,
+        fallbackToSpeechOnAudioError
+          ? () => speakFallback(text, id)
+          : undefined,
+      );
+      return;
+    }
+
+    speakFallback(text, id);
+  };
+
   const advanceDialogue = () => {
     if (isTyping) return;
+
+    if (stopAudioOnDialogueChange) {
+      Speech.stop();
+      stopAudio();
+      setSelectedWord(null);
+    }
 
     if (visibleMessages >= activeScene.dialogue.length) {
       if (!completedSceneIdsRef.current.has(activeScene.id)) {

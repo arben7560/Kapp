@@ -37,7 +37,7 @@ const withSceneAudio = (scenes: any[], audioSets: CountingAudioSet[]) =>
 const HIERARCHIE_AUDIO = {
   messages: [
     require("../../../assets/audio/comptage/age/hierarchie/hierarchie-bulle-1.mp3"),
-    null,
+    require("../../../assets/audio/comptage/age/hierarchie/hierarchie-bulle-2.mp3"),
     require("../../../assets/audio/comptage/age/hierarchie/hierarchie-bulle-3.mp3"),
     require("../../../assets/audio/comptage/age/hierarchie/hierarchie-bulle-4.mp3"),
   ],
@@ -54,7 +54,7 @@ const HIERARCHIE_AUDIO = {
 const SYSTEM_AUDIO = {
   messages: [
     require("../../../assets/audio/comptage/age/system/system-bulle-1.mp3"),
-    null,
+    require("../../../assets/audio/comptage/age/system/system-bulle-2.mp3"),
     require("../../../assets/audio/comptage/age/system/system-bulle-3.mp3"),
     require("../../../assets/audio/comptage/age/system/system-bulle-4.mp3"),
   ],
@@ -70,10 +70,10 @@ const SYSTEM_AUDIO = {
 
 const MAJORITE_AUDIO = {
   messages: [
-    null,
-    null,
+    require("../../../assets/audio/comptage/age/majorité/majorité-bulle-1.mp3"),
+    require("../../../assets/audio/comptage/age/majorité/majorité-bulle-2.mp3"),
     require("../../../assets/audio/comptage/age/majorité/majorité-bulle-3.mp3"),
-    null,
+    require("../../../assets/audio/comptage/age/majorité/majorité-bulle-4.mp3"),
   ],
   toolbox: [
     require("../../../assets/audio/comptage/age/majorité/toolbox/majorité-toolbox-1.mp3"),
@@ -308,6 +308,8 @@ export default function AgeLifeImmersion() {
       backLabel="CYCLE DE VIE"
       badgeLabel="SOCIO-KOREAN"
       toolboxTitle="LIFE TOOLBOX"
+      fallbackToSpeechOnAudioError
+      stopAudioOnDialogueChange
     />
   );
 }

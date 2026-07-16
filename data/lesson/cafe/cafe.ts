@@ -1,9 +1,12 @@
+import type { CafeOrderProduct } from "../../../lib/cafeOrderState";
+
 export interface DialogueChoice {
   id: string;
   label: string;
   korean: string;
   romanization?: string;
   nextNodeId: string;
+  orderProduct?: CafeOrderProduct;
 }
 
 export interface DialogueNode {
@@ -23,12 +26,24 @@ export interface DialogueScenario {
 }
 
 const welcomeCafeVideo = require("../../../assets/ai/cafe/welcomeCafe.mp4");
+const orderConfirmationJuiceVideo = require("../../../assets/ai/cafe/orderConfirmationJuice.mp4");
 const orderConfirmationCakeVideo = require("../../../assets/ai/cafe/orderConfirmationCake.mp4");
+const orderConfirmationVideo = require("../../../assets/ai/cafe/orderConfirmation.mp4");
 const pricePaimentChooseVideo = require("../../../assets/ai/cafe/pricePaimentChoose.mp4");
 const byCardReceiptVideo = require("../../../assets/ai/cafe/byCardReceipt.mp4");
 const byCashReceiptVideo = require("../../../assets/ai/cafe/byCashReceipt.mp4");
 const jingdonbelVideo = require("../../../assets/ai/cafe/jingdonbel.mp4");
 const takeOutThanksVideo = require("../../../assets/ai/cafe/takeOutThanks.mp4");
+
+export const genericOrderConfirmationNode = {
+  type: "ia" as const,
+  korean: "네, 알겠습니다. 드시고 가세요? 아니면 포장해 드릴까요?",
+  french: "Très bien. Vous consommez sur place ou à emporter ?",
+  romanization:
+    "Ne, algetseumnida. Deusigo gaseyo? Animyeon pojanghae deurilkkayo?",
+  videoSource: orderConfirmationVideo,
+};
+
 export const cafeDialogueData = {
   scenarioTitle: "Commande au café à Séoul",
   scenarioDescription: "Deux expériences différentes pour mieux apprendre.",
@@ -88,6 +103,7 @@ export const cafeDialogueData = {
           "Très bien, je vérifie. Deux américanos glacés et un jus d’orange, c’est bien ça ? Vous consommez sur place ou à emporter ?",
         romanization:
           "Ne, hwaginhae deurilgeyo. Aiseu amerikano du janirang orenji juseu han jan majeusijyo? Deusigo gaseyo? Animyeon pojanghae deurilkkayo?",
+        videoSource: orderConfirmationJuiceVideo,
         nextNodeId: "ped_choice2_drink",
       },
 

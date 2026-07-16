@@ -1,4 +1,9 @@
-import type { DialogueChoice, DialogueScenario } from "./cafe";
+import {
+  genericOrderConfirmationNode,
+  type DialogueChoice,
+  type DialogueScenario,
+} from "./cafe";
+import { CAFE_PILOT_PRODUCT_CHOICES } from "./cafePilotOrder";
 import type { ImmersionMission } from "../../../lib/immersion/missions";
 
 export type CafeMissionScenarioKey =
@@ -85,6 +90,30 @@ function keepChoices(
   );
 }
 
+function replacePilotProductChoices(scenario: DialogueScenario) {
+  const node = scenario.nodes.ped_choice1;
+  if (!node?.choices) return;
+
+  const repeatChoice = node.choices.find(
+    (choice) => choice.id === "repeat_ped1",
+  );
+
+  node.choices = [
+    ...CAFE_PILOT_PRODUCT_CHOICES.map((choice) => ({ ...choice })),
+    ...(repeatChoice ? [repeatChoice] : []),
+  ];
+}
+
+function applyGenericOrderConfirmation(
+  scenario: DialogueScenario,
+  nodeId: string,
+) {
+  const node = scenario.nodes[nodeId];
+  if (!node) return;
+
+  Object.assign(node, genericOrderConfirmationNode);
+}
+
 export function getCafeMissionScenario(
   scenario: DialogueScenario,
   scenarioKey: CafeMissionScenarioKey,
@@ -125,11 +154,16 @@ export function getCafeMissionScenario(
       break;
 
     case "order_takeout":
+      replacePilotProductChoices(missionScenario);
+      applyGenericOrderConfirmation(missionScenario, "ped_confirm");
+      applyGenericOrderConfirmation(missionScenario, "ped_confirm_alt");
       keepChoices(missionScenario, "ped_choice2_drink", [
+        "ped_here_drink",
         "ped_takeout_drink",
         "repeat_ped2_drink",
       ]);
       keepChoices(missionScenario, "ped_choice2_cake", [
+        "ped_here_cake",
         "ped_takeout_cake",
         "repeat_ped2_cake",
       ]);

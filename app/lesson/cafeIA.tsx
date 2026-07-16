@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -17,6 +17,7 @@ import {
 
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { GuidedSpeechTurn } from "../../components/GuidedSpeechTurn";
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import {
   cafeDialogueData,
@@ -29,7 +30,19 @@ import {
   getCafeMissionById,
   getCafeMissionScenario,
 } from "../../data/lesson/cafe/cafeMissions";
+import { useKoreanSpeechRecognition } from "../../hooks/useKoreanSpeechRecognition";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
+import {
+  CAFE_SPEECH_PILOT_MISSION_ID,
+  getCafeSpeechContextualStrings,
+  matchCafeSpeechIntent,
+  recordCafeSpeechRecoveryEvent,
+} from "../../lib/cafeSpeechIntents";
+import {
+  applyCafeOrderProductSelection,
+  EMPTY_CAFE_ORDER_STATE,
+  type CafeOrderState,
+} from "../../lib/cafeOrderState";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { buildProgressId } from "../../lib/progressIds";
@@ -187,6 +200,9 @@ export default function CafeIaScreen() {
   const currentMission =
     getCafeMissionById(missionId) ??
     getCafeMissionById(DEFAULT_CAFE_MISSION_ID);
+  const isCafeSpeechPilot =
+    mode === "guided" &&
+    currentMission?.id === CAFE_SPEECH_PILOT_MISSION_ID;
   const { hasPremiumAccess, isLoading: isPaywallLoading } = usePaywall();
   const canEnterMission =
     currentMission?.access !== "premium" || hasPremiumAccess;
@@ -200,10 +216,18 @@ export default function CafeIaScreen() {
   const [currentNodeId, setCurrentNodeId] = useState(
     cafeDialogueData.pedagogical.startNodeId,
   );
+  const [orderState, setOrderState] = useState<CafeOrderState>(
+    EMPTY_CAFE_ORDER_STATE,
+  );
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isSceneEnded, setIsSceneEnded] = useState(false);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
+  const [showSpeechChoices, setShowSpeechChoices] = useState(false);
+  const [speechFeedback, setSpeechFeedback] = useState<string | null>(null);
+  const [speechUiNodeId, setSpeechUiNodeId] = useState<string | null>(null);
+  const [pendingSpeechChoice, setPendingSpeechChoice] =
+    useState<DialogueChoice | null>(null);
 
   const [lastIaTranscript, setLastIaTranscript] = useState<{
     korean: string;
@@ -279,6 +303,7 @@ export default function CafeIaScreen() {
 
   useEffect(() => {
     setCurrentNodeId(currentScenario.startNodeId);
+    setOrderState(EMPTY_CAFE_ORDER_STATE);
     setSelectedChoiceId(null);
     setIsTransitioning(false);
     setIsSceneEnded(false);
@@ -429,31 +454,126 @@ export default function CafeIaScreen() {
     return () => clearTimeout(t);
   }, [currentNodeId]);
 
-  const handleChoice = (choice: DialogueChoice) => {
-    if (isTransitioning || isSceneEnded) return;
+  const handleChoice = useCallback(
+    (choice: DialogueChoice, transitionDelay = 320) => {
+      if (isTransitioning || isSceneEnded) return;
 
-    setIsTransitioning(true);
-    setSelectedChoiceId(choice.id);
+      setIsTransitioning(true);
+      setSelectedChoiceId(choice.id);
+      setOrderState((state) =>
+        applyCafeOrderProductSelection(state, choice),
+      );
 
-    setTimeout(() => {
-      if (!mountedRef.current) return;
-      setCurrentNodeId(choice.nextNodeId);
-      setSelectedChoiceId(null);
-      setIsTransitioning(false);
-    }, 320);
-  };
+      setTimeout(() => {
+        if (!mountedRef.current) return;
+        setCurrentNodeId(choice.nextNodeId);
+        setSelectedChoiceId(null);
+        setIsTransitioning(false);
+      }, transitionDelay);
+    },
+    [isSceneEnded, isTransitioning],
+  );
+
+  const isUserChoice = currentNode?.type === "user_choice";
+  const speechChoices = useMemo(
+    () => (isUserChoice ? currentNode.choices || [] : []),
+    [currentNode, isUserChoice],
+  );
+  const speechContextualStrings = useMemo(
+    () => getCafeSpeechContextualStrings(speechChoices),
+    [speechChoices],
+  );
+
+  const handleSpeechTranscript = useCallback(
+    (transcript: string) => {
+      if (!isCafeSpeechPilot || currentNode?.type !== "user_choice") return;
+
+      const result = matchCafeSpeechIntent(
+        transcript,
+        currentNode.choices || [],
+      );
+
+      if (result.reason === "matched") {
+        if (result.recoveryEvent) {
+          recordCafeSpeechRecoveryEvent(currentNode.id, result.recoveryEvent);
+        }
+        setSpeechUiNodeId(currentNode.id);
+        setSpeechFeedback(result.feedback);
+        setPendingSpeechChoice(null);
+        handleChoice(result.choice, result.feedback ? 1800 : 320);
+        return;
+      }
+
+      setSpeechUiNodeId(currentNode.id);
+      setSpeechFeedback(result.feedback);
+      setPendingSpeechChoice(
+        result.reason === "uncertain" ? result.choice : null,
+      );
+    },
+    [currentNode, handleChoice, isCafeSpeechPilot],
+  );
+
+  const {
+    state: speechState,
+    startListening,
+    stopListening,
+    cancel: cancelSpeechRecognition,
+  } = useKoreanSpeechRecognition({
+    onFinalTranscript: handleSpeechTranscript,
+  });
+
+  useEffect(() => {
+    cancelSpeechRecognition();
+  }, [cancelSpeechRecognition, currentNodeId, currentScenario]);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => cancelSpeechRecognition();
+    }, [cancelSpeechRecognition]),
+  );
+
+  const handleStartSpeech = useCallback(() => {
+    setSpeechUiNodeId(currentNodeId);
+    setShowSpeechChoices(false);
+    setSpeechFeedback(null);
+    setPendingSpeechChoice(null);
+    void startListening({ contextualStrings: speechContextualStrings });
+  }, [currentNodeId, speechContextualStrings, startListening]);
+
+  const handleNeedHelp = useCallback(() => {
+    cancelSpeechRecognition();
+    setSpeechUiNodeId(currentNodeId);
+    setShowSpeechChoices(true);
+    setPendingSpeechChoice(null);
+  }, [cancelSpeechRecognition, currentNodeId]);
+
+  const handleConfirmSpeechIntent = useCallback(() => {
+    if (!pendingSpeechChoice || speechUiNodeId !== currentNodeId) return;
+
+    const confirmedChoice = pendingSpeechChoice;
+    setSpeechFeedback(null);
+    setPendingSpeechChoice(null);
+    handleChoice(confirmedChoice);
+  }, [currentNodeId, handleChoice, pendingSpeechChoice, speechUiNodeId]);
 
   const handleRestart = () => {
+    cancelSpeechRecognition();
     setCurrentNodeId(currentScenario.startNodeId);
+    setOrderState(EMPTY_CAFE_ORDER_STATE);
     setSelectedChoiceId(null);
     setIsTransitioning(false);
     setIsSceneEnded(false);
     setIsTranscriptOpen(false);
     setLastIaTranscript(null);
+    setPendingSpeechChoice(null);
     hasAdvancedFromVideoRef.current = false;
     hasReportedMissionCompleteRef.current = false;
   };
-  const isUserChoice = currentNode?.type === "user_choice";
+
+  const handleExit = useCallback(() => {
+    cancelSpeechRecognition();
+    router.back();
+  }, [cancelSpeechRecognition]);
 
   const isReviewableTranscript =
     currentNode?.type === "user_choice" && !!lastIaTranscript;
@@ -479,6 +599,80 @@ export default function CafeIaScreen() {
 
   const shouldShowPremiumSuggestion =
     currentMission?.access === "free" && (!hasPremiumAccess || __DEV__);
+  const speechUiMatchesCurrentNode = speechUiNodeId === currentNodeId;
+  const displayedSpeechFeedback = speechUiMatchesCurrentNode
+    ? speechFeedback
+    : null;
+  const displayedConfirmationLabel =
+    speechUiMatchesCurrentNode && pendingSpeechChoice
+      ? pendingSpeechChoice.label
+          .replace(/[.!?]+$/u, "")
+          .toLocaleLowerCase("fr-FR")
+      : null;
+  const shouldShowSpeechChoices =
+    speechUiMatchesCurrentNode && showSpeechChoices;
+
+  const currentChoicesGrid = isUserChoice ? (
+    <View style={styles.choicesGrid}>
+      {currentNode.choices?.map((choice) => {
+        const isSelected =
+          selectedChoiceId === choice.id ||
+          (isTransitioning && orderState.product === choice.orderProduct);
+        const accent = mode === "real" ? CYAN : PURPLE;
+
+        return (
+          <Pressable
+            key={choice.id}
+            accessibilityRole="button"
+            accessibilityLabel={`${choice.korean}. ${choice.label}`}
+            accessibilityState={{ selected: isSelected }}
+            aria-selected={isSelected}
+            hitSlop={6}
+            onPress={() => handleChoice(choice)}
+            style={({ pressed }) => [
+              styles.choiceBtn,
+              isSelected && {
+                borderColor: accent,
+                backgroundColor: "rgba(255,255,255,0.08)",
+              },
+              pressed && { opacity: 0.92 },
+            ]}
+          >
+            <View
+              pointerEvents="none"
+              style={[
+                styles.choiceGlow,
+                {
+                  backgroundColor:
+                    mode === "real"
+                      ? "rgba(34,211,238,0.08)"
+                      : "rgba(168,85,247,0.10)",
+                },
+              ]}
+            />
+
+            <AppText
+              variant="koreanSecondary"
+              tone="strong"
+              script="korean"
+              accessibilityLanguage="ko-KR"
+              style={styles.choiceKr}
+            >
+              {choice.korean}
+            </AppText>
+            <AppText
+              variant="bodySecondary"
+              tone="muted"
+              script="latin"
+              style={styles.choiceFr}
+            >
+              {choice.label}
+            </AppText>
+          </Pressable>
+        );
+      })}
+    </View>
+  ) : null;
 
   if (!isPaywallLoading && !canEnterMission) {
     return null;
@@ -540,7 +734,7 @@ export default function CafeIaScreen() {
             accessibilityRole="button"
             accessibilityLabel="Retour"
             hitSlop={8}
-            onPress={() => router.back()}
+            onPress={handleExit}
             style={styles.backBtn}
           >
             <AppText
@@ -807,7 +1001,7 @@ export default function CafeIaScreen() {
                       accessibilityRole="button"
                       accessibilityLabel="Retour"
                       hitSlop={6}
-                      onPress={() => router.back()}
+                      onPress={handleExit}
                       style={({ pressed }) => [
                         styles.endActionSecondary,
                         { opacity: pressed ? 0.9 : 1 },
@@ -849,63 +1043,27 @@ export default function CafeIaScreen() {
                   ) : null}
                 </View>
               ) : isUserChoice ? (
-                <View style={styles.choicesGrid}>
-                  {currentNode?.choices?.map((choice) => {
-                    const isSelected = selectedChoiceId === choice.id;
-                    const accent = mode === "real" ? CYAN : PURPLE;
-
-                    return (
-                      <Pressable
-                        key={choice.id}
-                        accessibilityRole="button"
-                        accessibilityLabel={`${choice.korean}. ${choice.label}`}
-                        accessibilityState={{ selected: isSelected }}
-                        aria-selected={isSelected}
-                        hitSlop={6}
-                        onPress={() => handleChoice(choice)}
-                        style={({ pressed }) => [
-                          styles.choiceBtn,
-                          isSelected && {
-                            borderColor: accent,
-                            backgroundColor: "rgba(255,255,255,0.08)",
-                          },
-                          pressed && { opacity: 0.92 },
-                        ]}
-                      >
-                        <View
-                          pointerEvents="none"
-                          style={[
-                            styles.choiceGlow,
-                            {
-                              backgroundColor:
-                                mode === "real"
-                                  ? "rgba(34,211,238,0.08)"
-                                  : "rgba(168,85,247,0.10)",
-                            },
-                          ]}
-                        />
-
-                        <AppText
-                          variant="koreanSecondary"
-                          tone="strong"
-                          script="korean"
-                          accessibilityLanguage="ko-KR"
-                          style={styles.choiceKr}
-                        >
-                          {choice.korean}
-                        </AppText>
-                        <AppText
-                          variant="bodySecondary"
-                          tone="muted"
-                          script="latin"
-                          style={styles.choiceFr}
-                        >
-                          {choice.label}
-                        </AppText>
-                      </Pressable>
-                    );
-                  })}
-                </View>
+                isCafeSpeechPilot ? (
+                  <GuidedSpeechTurn
+                    accent={PURPLE}
+                    confirmationLabel={displayedConfirmationLabel}
+                    feedback={displayedSpeechFeedback}
+                    intentionLabels={speechChoices.map(
+                      (choice) => choice.label,
+                    )}
+                    onConfirm={handleConfirmSpeechIntent}
+                    onHelp={handleNeedHelp}
+                    onRetry={handleStartSpeech}
+                    onStart={handleStartSpeech}
+                    onStop={stopListening}
+                    showChoices={shouldShowSpeechChoices}
+                    speechState={speechState}
+                  >
+                    {currentChoicesGrid}
+                  </GuidedSpeechTurn>
+                ) : (
+                  currentChoicesGrid
+                )
               ) : (
                 <View style={styles.waitingCard}>
                   <View style={styles.waitingPulseRow}>

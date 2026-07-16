@@ -41,7 +41,7 @@ export function useVocAudio(setSelectedAudio: SetSelectedAudio) {
   }, [cleanupAudioListener]);
 
   const playAudio = useCallback(
-    (audioSource?: AudioAsset, id?: string) => {
+    (audioSource?: AudioAsset, id?: string, onError?: () => void) => {
       if (!audioSource) return;
 
       try {
@@ -65,6 +65,23 @@ export function useVocAudio(setSelectedAudio: SetSelectedAudio) {
           "playbackStatusUpdate",
           (status) => {
             const currentId = activeAudioIdRef.current;
+
+            if (status.error && onError && playerRef.current === player) {
+              cleanupAudioListener();
+
+              try {
+                player.remove();
+              } catch {
+                // Player may already be released after a native playback error.
+              }
+
+              playerRef.current = null;
+              activeAudioIdRef.current = null;
+              setSelectedAudio(null);
+              onError?.();
+              return;
+            }
+
             const statusAny = status as any;
 
             const didFinish =
@@ -103,8 +120,12 @@ export function useVocAudio(setSelectedAudio: SetSelectedAudio) {
         player.seekTo(0);
         player.play();
       } catch {
+        if (onError) {
+          stopAudio();
+        }
         setSelectedAudio(null);
         activeAudioIdRef.current = null;
+        onError?.();
       }
     },
     [cleanupAudioListener, setSelectedAudio, stopAudio],

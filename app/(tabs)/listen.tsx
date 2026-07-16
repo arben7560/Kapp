@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AccessibilityInfo,
   ImageBackground,
@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { useVocAudio } from "../../hooks/useVocAudio";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { buildProgressId } from "../../lib/progressIds";
 
@@ -64,6 +65,34 @@ type OrderExercise = BaseExercise & {
 };
 
 type ListenExercise = ChoiceExercise | GapExercise | OrderExercise;
+
+const LISTEN_AUDIO_BY_ID: Partial<Record<string, number>> = {
+  "cafe-dictation-01": require("../../assets/audio/listen/cafe-dictation-01.mp3"),
+  "cafe-dictation-02": require("../../assets/audio/listen/cafe-dictation-02.mp3"),
+  "metro-dictation-03": require("../../assets/audio/listen/metro-dictation-03.mp3"),
+  "shop-dictation-04": require("../../assets/audio/listen/shop-dictation-04.mp3"),
+  "hotel-dictation-05": require("../../assets/audio/listen/hotel-dictation-05.mp3"),
+  "bbq-situation-01": require("../../assets/audio/listen/bbq-situation-01.mp3"),
+  "cafe-situation-02": require("../../assets/audio/listen/cafe-situation-02.mp3"),
+  "metro-situation-03": require("../../assets/audio/listen/metro-situation-03.mp3"),
+  "shop-situation-04": require("../../assets/audio/listen/shop-situation-04.mp3"),
+  "street-situation-05": require("../../assets/audio/listen/street-situation-05.mp3"),
+  "restaurant-gap-01": require("../../assets/audio/listen/restaurant-gap-01.mp3"),
+  "cafe-gap-02": require("../../assets/audio/listen/cafe-gap-02.mp3"),
+  "shop-gap-03": require("../../assets/audio/listen/shop-gap-03.mp3"),
+  "metro-gap-04": require("../../assets/audio/listen/metro-gap-04.mp3"),
+  "hotel-gap-05": require("../../assets/audio/listen/hotel-gap-05.mp3"),
+  "metro-order-01": require("../../assets/audio/listen/metro-order-01.mp3"),
+  "cafe-order-02": require("../../assets/audio/listen/cafe-order-02.mp3"),
+  "shop-order-03": require("../../assets/audio/listen/shop-order-03.mp3"),
+  "restaurant-order-04": require("../../assets/audio/listen/restaurant-order-04.mp3"),
+  "street-order-05": require("../../assets/audio/listen/street-order-05.mp3"),
+  "cafe-reaction-01": require("../../assets/audio/listen/cafe-reaction-01.mp3"),
+  "restaurant-reaction-02": require("../../assets/audio/listen/restaurant-reaction-02.mp3"),
+  "shop-reaction-03": require("../../assets/audio/listen/shop-reaction-03.mp3"),
+  "hotel-reaction-04": require("../../assets/audio/listen/hotel-reaction-04.mp3"),
+  "street-reaction-05": require("../../assets/audio/listen/street-reaction-05.mp3"),
+};
 
 const TRAINING_ORDER: ExerciseKind[] = [
   "dictation",
@@ -369,12 +398,18 @@ export default function ListenScreen() {
   const [picked, setPicked] = useState<number[]>([]);
   const [checked, setChecked] = useState(false);
   const [dailyMessage, setDailyMessage] = useState<string | null>(null);
-  const [hint, setHint] = useState("Audio IA à brancher");
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const { playAudio: playMp3, stopAudio } = useVocAudio(setPlayingAudioId);
 
   const trainingKind = TRAINING_ORDER[trainingIndex];
   const exercises = EXERCISES_BY_KIND[trainingKind];
   const item = exercises[exerciseIndex];
   const meta = KIND_LABEL[trainingKind];
+  const audioSource = LISTEN_AUDIO_BY_ID[item.id];
+
+  useEffect(() => {
+    return stopAudio;
+  }, [item.id, stopAudio]);
 
   const canCheck = useMemo(() => {
     if (item.kind === "order") return picked.length === item.words.length;
@@ -406,7 +441,6 @@ export default function ListenScreen() {
     setSelected(null);
     setPicked([]);
     setChecked(false);
-    setHint("Audio IA à brancher");
   };
 
   const goNext = () => {
@@ -459,7 +493,8 @@ export default function ListenScreen() {
   };
 
   const playAudio = () => {
-    setHint("Audio IA à brancher");
+    if (!audioSource) return;
+    playMp3(audioSource, item.id);
   };
 
   const pickOrderWord = (wordIndex: number) => {
@@ -770,9 +805,15 @@ export default function ListenScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Ecouter l'audio de la question"
+              accessibilityState={{ disabled: !audioSource }}
+              aria-disabled={!audioSource}
               hitSlop={6}
+              disabled={!audioSource}
               onPress={playAudio}
-              style={styles.listenButton}
+              style={[
+                styles.listenButton,
+                !audioSource && styles.disabledButton,
+              ]}
             >
               <Ionicons name="play" size={18} color={COLORS.text} />
               <AppText variant="button" tone="strong" style={styles.listenText}>
@@ -786,7 +827,11 @@ export default function ListenScreen() {
               align="center"
               style={styles.audioHint}
             >
-              {hint}
+              {audioSource
+                ? playingAudioId === item.id
+                  ? "Lecture en cours"
+                  : "Prêt à écouter"
+                : "Fichier MP3 correspondant manquant"}
             </AppText>
 
             {renderChoices()}
