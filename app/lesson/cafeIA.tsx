@@ -3,7 +3,6 @@ import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Image,
   ImageBackground,
   Pressable,
   ScrollView,
@@ -41,8 +40,8 @@ import {
 } from "../../lib/cafeConversationMemory";
 import {
   CAFE_SPEECH_PILOT_MISSION_ID,
+  getCafeSpeechAttemptPedagogy,
   getCafeSpeechContextualStrings,
-  getCafeSpeechIntentPedagogy,
   matchCafeSpeechIntent,
   recordCafeSpeechRecoveryEvent,
 } from "../../lib/cafeSpeechIntents";
@@ -75,8 +74,8 @@ const byCashReceiptReal = require("../../assets/ai/cafe/byCashReceiptReal.mp4");
 const byCardReceiptReal = require("../../assets/ai/cafe/byCardReceiptReal.mp4");
 const takeOutThanksReal = require("../../assets/ai/cafe/takeOutThanksReal.mp4");
 const jingdonbelReal = require("../../assets/ai/cafe/jingdonbelReal.mp4");
+const cafeIdleVideo = require("../../assets/ai/cafe/welcomeCafe.mp4");
 const cafeBackground = require("../../assets/images/cafe.png");
-const cafeAvatar = require("../../assets/images/avatarIA.png");
 
 type ModeType = "guided" | "real";
 
@@ -196,9 +195,6 @@ function getAutoAdvanceDelay(node: DialogueNodeWithVideo, mode: ModeType) {
 // ==================== MAIN ====================
 export default function CafeIaScreen() {
   const { complete } = useStore();
-  const [displayedVideoSource, setDisplayedVideoSource] = useState<
-    number | null
-  >(null);
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const responsive = useResponsiveLayout({ maxWidth: 760 });
@@ -222,6 +218,7 @@ export default function CafeIaScreen() {
   const iaAutoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasAdvancedFromVideoRef = useRef(false);
   const hasReportedMissionCompleteRef = useRef(false);
+  const loadedAvatarVideoSourceRef = useRef<number>(cafeIdleVideo);
 
   const [currentNodeId, setCurrentNodeId] = useState(
     cafeDialogueData.pedagogical.startNodeId,
@@ -270,24 +267,21 @@ export default function CafeIaScreen() {
     (currentNode?.videoSource ? [currentNode.videoSource] : []);
 
   const currentVideoSource = videoSources.length > 0 ? videoSources[0] : null;
+  const isAvatarSpeaking =
+    currentNode?.type === "ia" && Boolean(currentVideoSource) && !isSceneEnded;
+  const displayedVideoSource = isAvatarSpeaking
+    ? currentVideoSource
+    : cafeIdleVideo;
 
-  const player = useVideoPlayer(null, (playerInstance) => {
+  const player = useVideoPlayer(cafeIdleVideo, (playerInstance) => {
     playerInstance.loop = false;
+    playerInstance.pause();
   });
 
   useEffect(() => {
     if (isPaywallLoading || canEnterMission) return;
     router.replace("/premium");
   }, [canEnterMission, isPaywallLoading]);
-
-  useEffect(() => {
-    if (!canEnterMission) return;
-    if (currentNode?.type === "ia") {
-      setDisplayedVideoSource(currentVideoSource);
-    } else {
-      setDisplayedVideoSource(null);
-    }
-  }, [canEnterMission, currentNode, currentVideoSource]);
 
   const avatarFrameHeight = Math.min(
     responsive.contentWidth * 1.1,
@@ -357,29 +351,28 @@ export default function CafeIaScreen() {
 
   useEffect(() => {
     if (!canEnterMission) return;
-    if (!currentNode) return;
 
     let isCancelled = false;
 
     async function updateVideoSource() {
       try {
-        if (!displayedVideoSource) {
-          player.pause();
-          await player.replaceAsync(null);
-          return;
-        }
+        if (!isAvatarSpeaking) player.pause();
 
-        await player.replaceAsync(displayedVideoSource);
+        if (loadedAvatarVideoSourceRef.current !== displayedVideoSource) {
+          await player.replaceAsync(displayedVideoSource);
+          loadedAvatarVideoSourceRef.current = displayedVideoSource;
+        }
 
         if (isCancelled) return;
 
-        if (currentNode?.type === "ia" && currentVideoSource) {
+        if (isAvatarSpeaking) {
           player.play();
         } else {
+          player.currentTime = 0;
           player.pause();
         }
       } catch {
-        // ignore
+        if (!isCancelled) player.pause();
       }
     }
 
@@ -389,10 +382,8 @@ export default function CafeIaScreen() {
       isCancelled = true;
     };
   }, [
-    currentNode,
-    currentNodeId,
-    currentVideoSource,
     displayedVideoSource,
+    isAvatarSpeaking,
     canEnterMission,
     player,
   ]);
@@ -516,9 +507,11 @@ export default function CafeIaScreen() {
           stepLabel: CAFE_STEPS[progressIndex] ?? "Conversation",
           recordedTranscript: transcript,
           result,
-          intent: result.choice
-            ? getCafeSpeechIntentPedagogy(result.choice.id)
-            : null,
+          intent: getCafeSpeechAttemptPedagogy(
+            result,
+            currentNode.choices || [],
+            transcript,
+          ),
         }),
       );
 
@@ -852,29 +845,18 @@ export default function CafeIaScreen() {
                   style={StyleSheet.absoluteFill}
                 />
 
-                {displayedVideoSource ? (
-                  <VideoView
-                    accessible
-                    accessibilityRole="image"
-                    accessibilityLabel="Video de l'interlocuteur cafe"
-                    player={player}
-                    style={[styles.video, { height: avatarVideoHeight }]}
-                    contentFit="cover"
-                    surfaceType="textureView"
-                    useExoShutter={false}
-                    nativeControls={false}
-                    allowsPictureInPicture={false}
-                  />
-                ) : (
-                  <Image
-                    accessible
-                    accessibilityRole="image"
-                    accessibilityLabel="Interlocutrice du cafe"
-                    source={cafeAvatar}
-                    resizeMode="cover"
-                    style={styles.avatarFallbackImage}
-                  />
-                )}
+                <VideoView
+                  accessible
+                  accessibilityRole="image"
+                  accessibilityLabel="Video de l'interlocuteur cafe"
+                  player={player}
+                  style={[styles.video, { height: avatarVideoHeight }]}
+                  contentFit="cover"
+                  surfaceType="textureView"
+                  useExoShutter={false}
+                  nativeControls={false}
+                  allowsPictureInPicture={false}
+                />
 
                 <LinearGradient
                   colors={[
@@ -1205,7 +1187,6 @@ const styles = StyleSheet.create({
   },
 
   backTxt: {
-    fontSize: 18,
   },
 
   stepsContainer: {
@@ -1229,7 +1210,6 @@ const styles = StyleSheet.create({
   },
 
   stepLabel: {
-    fontSize: 12,
   },
 
   videoContainer: {
@@ -1251,12 +1231,6 @@ const styles = StyleSheet.create({
     transform: [{ scale: VIDEO_OVERSCAN_SCALE }],
   },
 
-  avatarFallbackImage: {
-    ...ABSOLUTE_FILL,
-    width: "100%",
-    height: "100%",
-  },
-
   videoOverlay: {
     position: "absolute",
     bottom: 0,
@@ -1269,15 +1243,10 @@ const styles = StyleSheet.create({
   },
 
   aiDotsText: {
-    fontSize: 24,
-    lineHeight: 28,
     marginBottom: 4,
-    letterSpacing: 2,
   },
 
   transcriptHint: {
-    fontSize: 12,
-    lineHeight: 17,
     marginTop: 2,
   },
 
@@ -1305,20 +1274,14 @@ const styles = StyleSheet.create({
   },
 
   aiIntroText: {
-    fontSize: 15,
-    lineHeight: 21,
     marginBottom: 0,
   },
 
   aiKr: {
-    fontSize: 21,
-    lineHeight: 31,
     marginBottom: 10,
   },
 
   aiFr: {
-    fontSize: 14,
-    lineHeight: 21,
   },
 
   interactionSection: {
@@ -1328,7 +1291,6 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    fontSize: 18,
     marginBottom: 14,
     marginLeft: 4,
   },
@@ -1356,14 +1318,10 @@ const styles = StyleSheet.create({
   },
 
   choiceKr: {
-    fontSize: 16,
-    lineHeight: 22,
     marginBottom: 6,
   },
 
   choiceFr: {
-    fontSize: 13,
-    lineHeight: 18,
   },
 
   waitingCard: {
@@ -1393,11 +1351,9 @@ const styles = StyleSheet.create({
   },
 
   waitingTxt: {
-    fontSize: 15,
   },
 
   waitingSub: {
-    fontSize: 13,
   },
 
   endCard: {
@@ -1409,13 +1365,10 @@ const styles = StyleSheet.create({
   },
 
   endTitle: {
-    fontSize: 18,
     marginBottom: 6,
   },
 
   endSubtitle: {
-    fontSize: 14,
-    lineHeight: 20,
     marginBottom: 16,
   },
 
@@ -1435,7 +1388,6 @@ const styles = StyleSheet.create({
   },
 
   endActionPrimaryText: {
-    fontSize: 14,
   },
 
   endActionSecondary: {
@@ -1449,7 +1401,6 @@ const styles = StyleSheet.create({
   },
 
   endActionSecondaryText: {
-    fontSize: 14,
   },
 
   endPremiumLink: {
@@ -1464,6 +1415,5 @@ const styles = StyleSheet.create({
   },
 
   endPremiumLinkText: {
-    fontSize: 13,
   },
 });

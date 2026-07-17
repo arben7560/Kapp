@@ -199,14 +199,9 @@ export function ModuleCard({
               />
 
               <AppText
-                variant="cardTitle"
+                variant="symbol"
                 script={iconScript}
                 align="center"
-                typographyOverride={{
-                  fontSize: 21,
-                  lineHeight: 24,
-                  letterSpacing: 0,
-                }}
                 style={[
                   styles.cardIcon,
                   {
@@ -227,11 +222,6 @@ export function ModuleCard({
               <AppText
                 variant="sectionLabel"
                 tone={requiresPremium ? "premium" : "soft"}
-                typographyOverride={
-                  isLegacyGlass
-                    ? { fontSize: 7.8, lineHeight: 11, letterSpacing: 2.1 }
-                    : { fontSize: 10, lineHeight: 13, letterSpacing: 1.5 }
-                }
                 style={styles.cardMeta}
               >
                 {requiresPremium ? "MODULE PREMIUM" : metaLabel}
@@ -247,11 +237,6 @@ export function ModuleCard({
                     styles.premiumTag,
                     isLegacyGlass && styles.legacyPremiumTag,
                   ]}
-                  typographyOverride={
-                    isLegacyGlass
-                      ? { fontSize: 8, lineHeight: 11, letterSpacing: 0.5 }
-                      : undefined
-                  }
                 />
               ) : null}
             </View>
@@ -270,20 +255,11 @@ export function ModuleCard({
           </View>
 
           <AppText
-            variant="caption"
+            variant={isLegacyGlass ? "symbol" : "caption"}
             tone={
               isLocked || (isLegacyGlass && requiresPremium)
                 ? "premium"
                 : "soft"
-            }
-            typographyOverride={
-              isLegacyGlass
-                ? { fontSize: 22, lineHeight: 24, letterSpacing: 0 }
-                : {
-                    fontSize: SeoulMidnightGlass.cta.fontSize,
-                    lineHeight: 16,
-                    letterSpacing: SeoulMidnightGlass.cta.letterSpacing,
-                  }
             }
             style={[
               styles.cardAction,

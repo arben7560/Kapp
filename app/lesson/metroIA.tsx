@@ -1096,7 +1096,6 @@ const styles = StyleSheet.create({
   },
 
   backTxt: {
-    fontSize: 18,
   },
 
   stepsContainer: {
@@ -1120,13 +1119,10 @@ const styles = StyleSheet.create({
   },
 
   aiIntroText: {
-    fontSize: 15,
-    lineHeight: 21,
     marginBottom: 0,
   },
 
   stepLabel: {
-    fontSize: 12,
   },
 
   videoContainer: {
@@ -1160,15 +1156,10 @@ const styles = StyleSheet.create({
   },
 
   aiDotsText: {
-    fontSize: 24,
-    lineHeight: 28,
     marginBottom: 4,
-    letterSpacing: 2,
   },
 
   transcriptHint: {
-    fontSize: 12,
-    lineHeight: 17,
     marginTop: 2,
   },
 
@@ -1196,14 +1187,10 @@ const styles = StyleSheet.create({
   },
 
   aiKr: {
-    fontSize: 19,
-    lineHeight: 31,
     marginBottom: 10,
   },
 
   aiFr: {
-    fontSize: 14,
-    lineHeight: 21,
   },
 
   interactionSection: {
@@ -1213,7 +1200,6 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    fontSize: 18,
     marginBottom: 14,
     marginLeft: 4,
   },
@@ -1246,14 +1232,10 @@ const styles = StyleSheet.create({
   },
 
   choiceKr: {
-    fontSize: 16,
-    lineHeight: 22,
     marginBottom: 6,
   },
 
   choiceFr: {
-    fontSize: 13,
-    lineHeight: 18,
   },
 
   waitingCard: {
@@ -1283,11 +1265,9 @@ const styles = StyleSheet.create({
   },
 
   waitingTxt: {
-    fontSize: 15,
   },
 
   waitingSub: {
-    fontSize: 13,
   },
 
   endCard: {
@@ -1299,13 +1279,10 @@ const styles = StyleSheet.create({
   },
 
   endTitle: {
-    fontSize: 18,
     marginBottom: 6,
   },
 
   endSubtitle: {
-    fontSize: 14,
-    lineHeight: 20,
     marginBottom: 16,
   },
 
@@ -1325,7 +1302,6 @@ const styles = StyleSheet.create({
   },
 
   endActionPrimaryText: {
-    fontSize: 14,
   },
 
   endActionSecondary: {
@@ -1339,6 +1315,5 @@ const styles = StyleSheet.create({
   },
 
   endActionSecondaryText: {
-    fontSize: 14,
   },
 });

@@ -12,9 +12,9 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { AppMixedText, AppText } from "../../../components/app-text";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 
@@ -23,8 +23,6 @@ const BACKGROUND_SOURCE = require("../../../assets/images/seoul-hub-bg.jpg");
 // --- DESIGN SYSTEM ---
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
-const AMBER = "#FFB347";
-const TXT = "rgba(255,255,255,0.98)";
 const MUTED = "rgba(255,255,255,0.60)";
 
 // --- DATA ---
@@ -144,16 +142,16 @@ export default function HealthCyber() {
                 onPress={() => router.back()}
                 style={styles.backCircle}
               >
-                <Text style={styles.backArrow}>‹</Text>
+                <AppText variant="symbol" style={styles.backArrow}>‹</AppText>
               </Pressable>
               <View>
-                <Text style={styles.navEyebrow}>SÉOUL IMMERSION</Text>
-                <Text style={styles.navTitle}>Vitalité & Soins</Text>
+                <AppText variant="sectionLabel" style={styles.navEyebrow}>SÉOUL IMMERSION</AppText>
+                <AppText variant="cardTitle" style={styles.navTitle}>Vitalité & Soins</AppText>
               </View>
             </View>
 
             <View style={styles.heroSection}>
-              <Text style={styles.heroTitle}>Santé</Text>
+              <AppText variant="screenTitle" style={styles.heroTitle}>Santé</AppText>
               <View style={styles.neonBar} />
             </View>
 
@@ -168,11 +166,11 @@ export default function HealthCyber() {
                 <View style={styles.cardHeader}>
                   <View style={styles.liveTag}>
                     <View style={styles.liveDot} />
-                    <Text style={styles.liveText}>BIOMETRIC SCAN</Text>
+                    <AppText variant="label" style={styles.liveText}>BIOMETRIC SCAN</AppText>
                   </View>
-                  <Text style={styles.counterText}>
+                  <AppText variant="caption" style={styles.counterText}>
                     {wordIndex + 1} / {ESSENTIALS.length}
-                  </Text>
+                  </AppText>
                 </View>
 
                 <View style={styles.cardBody}>
@@ -181,7 +179,7 @@ export default function HealthCyber() {
                     onPress={() => animateChange(-1)}
                   >
                     <BlurView intensity={20} style={styles.navBtnBlur}>
-                      <Text style={styles.navBtnText}>‹</Text>
+                      <AppText variant="symbol" style={styles.navBtnText}>‹</AppText>
                     </BlurView>
                   </Pressable>
 
@@ -194,9 +192,9 @@ export default function HealthCyber() {
                       },
                     ]}
                   >
-                    <Text style={styles.krBig}>{currentWord.kr}</Text>
-                    <Text style={styles.romanBig}>{currentWord.roman}</Text>
-                    <Text style={styles.frBig}>{currentWord.fr}</Text>
+                    <AppText variant="koreanPrimary" script="korean" style={styles.krBig}>{currentWord.kr}</AppText>
+                    <AppText variant="caption" style={styles.romanBig}>{currentWord.roman}</AppText>
+                    <AppText variant="cardTitle" style={styles.frBig}>{currentWord.fr}</AppText>
                   </Animated.View>
 
                   <Pressable
@@ -204,7 +202,7 @@ export default function HealthCyber() {
                     onPress={() => animateChange(1)}
                   >
                     <BlurView intensity={20} style={styles.navBtnBlur}>
-                      <Text style={styles.navBtnText}>›</Text>
+                      <AppText variant="symbol" style={styles.navBtnText}>›</AppText>
                     </BlurView>
                   </Pressable>
                 </View>
@@ -225,9 +223,9 @@ export default function HealthCyber() {
                     end={{ x: 1, y: 1 }}
                     style={styles.playGradient}
                   >
-                    <Text style={styles.playBtnText}>
+                    <AppText variant="button" style={styles.playBtnText}>
                       ANALYSER LA PRONONCIATION
-                    </Text>
+                    </AppText>
                   </LinearGradient>
                 </Pressable>
               </BlurView>
@@ -236,16 +234,22 @@ export default function HealthCyber() {
             {/* --- INSIGHT CARD --- */}
             <BlurView intensity={20} tint="dark" style={styles.insightCard}>
               <View style={[styles.insightAccent, { backgroundColor: PINK }]} />
-              <Text style={styles.insightTitle}>Protocole Verbal</Text>
-              <Text style={styles.insightText}>
-                Utilisez la particule de sujet "가/이" suivie de "아파요"
-                (afayo) pour indiquer une douleur. Exemple: "머리(tête) + 가 +
-                아파요".
-              </Text>
+              <AppText variant="sectionTitle" style={styles.insightTitle}>Protocole Verbal</AppText>
+              <AppMixedText variant="body" style={styles.insightText} segments={[
+                { text: "Utilisez la particule de sujet \"", script: "latin" },
+                { text: "가/이", script: "korean" },
+                { text: "\" suivie de \"", script: "latin" },
+                { text: "아파요", script: "korean" },
+                { text: "\" (afayo) pour indiquer une douleur. Exemple: \"", script: "latin" },
+                { text: "머리", script: "korean" },
+                { text: "(tête) + ", script: "latin" },
+                { text: "가 + 아파요", script: "korean" },
+                { text: "\".", script: "latin" },
+              ]} />
             </BlurView>
 
             {/* --- PHRASES SECTION --- */}
-            <Text style={styles.sectionLabel}>SYMPTÔMES & RÉPONSES</Text>
+            <AppText variant="sectionLabel" style={styles.sectionLabel}>SYMPTÔMES & RÉPONSES</AppText>
             {PHRASES.map((item) => (
               <Pressable
                 key={item.id}
@@ -263,22 +267,22 @@ export default function HealthCyber() {
                     ]}
                   />
                   <View style={styles.phraseTextContainer}>
-                    <Text style={styles.phraseKr}>{item.kr}</Text>
-                    <Text style={styles.phraseFr}>{item.fr}</Text>
+                    <AppText variant="koreanSecondary" script="korean" style={styles.phraseKr}>{item.kr}</AppText>
+                    <AppText variant="bodySecondary" style={styles.phraseFr}>{item.fr}</AppText>
                   </View>
                   <View
                     style={[styles.miniPlayIcon, { borderColor: item.accent }]}
                   >
-                    <Text style={{ color: item.accent, fontSize: 10 }}>▶</Text>
+                    <AppText variant="body" style={{ color: item.accent}}>▶</AppText>
                   </View>
                 </BlurView>
               </Pressable>
             ))}
 
             {/* --- MINI QUIZ SECTION --- */}
-            <Text style={styles.sectionLabel}>TEST DE DIAGNOSTIC</Text>
+            <AppText variant="sectionLabel" style={styles.sectionLabel}>TEST DE DIAGNOSTIC</AppText>
             <BlurView intensity={25} tint="dark" style={styles.quizCard}>
-              <Text style={styles.quizPrompt}>{QUIZ_ITEMS[1].prompt}</Text>
+              <AppText variant="bodyStrong" style={styles.quizPrompt}>{QUIZ_ITEMS[1].prompt}</AppText>
               <View style={styles.choiceRow}>
                 {QUIZ_ITEMS[1].choices.map((choice, i) => (
                   <Pressable
@@ -289,7 +293,7 @@ export default function HealthCyber() {
                       speakKo(choice);
                     }}
                   >
-                    <Text style={styles.choiceText}>{choice}</Text>
+                    <AppText variant="body" style={styles.choiceText}>{choice}</AppText>
                   </Pressable>
                 ))}
               </View>
@@ -324,22 +328,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
   },
-  backArrow: { color: "#fff", fontSize: 24, marginTop: -2 },
+  backArrow: { color: "#fff", marginTop: -2 },
   navEyebrow: {
     color: PINK,
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 2,
   },
-  navTitle: { color: "#fff", fontSize: 14, fontWeight: "600", opacity: 0.8 },
+  navTitle: { color: "#fff", opacity: 0.8 },
 
   // Hero
   heroSection: { marginBottom: 35 },
   heroTitle: {
     color: "#fff",
-    fontSize: 50,
-    fontWeight: "900",
-    letterSpacing: -2,
   },
   neonBar: {
     width: 50,
@@ -376,8 +374,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: PINK },
-  liveText: { color: "#fff", fontSize: 9, fontWeight: "900", letterSpacing: 1 },
-  counterText: { color: MUTED, fontSize: 11, fontWeight: "700" },
+  liveText: { color: "#fff"},
+  counterText: { color: MUTED},
 
   cardBody: {
     flexDirection: "row",
@@ -394,24 +392,19 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.1)",
   },
   navBtnBlur: { flex: 1, alignItems: "center", justifyContent: "center" },
-  navBtnText: { color: "#fff", fontSize: 24, fontWeight: "300" },
+  navBtnText: { color: "#fff"},
 
   wordContent: { flex: 1, alignItems: "center" },
   krBig: {
     color: "#fff",
-    fontSize: 56,
-    fontWeight: "800",
     textShadowColor: PINK,
     textShadowRadius: 15,
   },
   romanBig: {
     color: PINK,
-    fontSize: 16,
-    fontWeight: "700",
     marginTop: 4,
-    letterSpacing: 1.5,
   },
-  frBig: { color: MUTED, fontSize: 15, marginTop: 4 },
+  frBig: { color: MUTED, marginTop: 4 },
 
   bigPlayBtn: {
     height: 58,
@@ -422,9 +415,6 @@ const styles = StyleSheet.create({
   playGradient: { flex: 1, alignItems: "center", justifyContent: "center" },
   playBtnText: {
     color: "#fff",
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 1.2,
   },
 
   // Insight Card
@@ -447,19 +437,13 @@ const styles = StyleSheet.create({
   },
   insightTitle: {
     color: PINK,
-    fontSize: 14,
-    fontWeight: "900",
     marginBottom: 8,
-    letterSpacing: 0.5,
   },
-  insightText: { color: MUTED, fontSize: 14, lineHeight: 22 },
+  insightText: { color: MUTED},
 
   // Phrases
   sectionLabel: {
     color: "rgba(255,255,255,0.3)",
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 2,
     marginBottom: 15,
   },
   phraseItem: {
@@ -478,8 +462,8 @@ const styles = StyleSheet.create({
     left: 0,
   },
   phraseTextContainer: { flex: 1, marginLeft: 10 },
-  phraseKr: { color: "#fff", fontSize: 16, fontWeight: "700" },
-  phraseFr: { color: MUTED, fontSize: 13, marginTop: 3 },
+  phraseKr: { color: "#fff"},
+  phraseFr: { color: MUTED, marginTop: 3 },
   miniPlayIcon: {
     width: 30,
     height: 30,
@@ -500,8 +484,6 @@ const styles = StyleSheet.create({
   },
   quizPrompt: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
     marginBottom: 20,
   },
   choiceRow: { flexDirection: "row", gap: 12 },
@@ -514,5 +496,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.1)",
   },
-  choiceText: { color: PINK, fontWeight: "800" },
+  choiceText: { color: PINK},
 });

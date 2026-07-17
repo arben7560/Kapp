@@ -9,10 +9,7 @@ import {
   View,
 } from "react-native";
 
-import {
-  AppText,
-  type AppTextTypographyOverride,
-} from "@/components/app-text";
+import { AppText } from "@/components/app-text";
 import { SeoulMidnightGlass } from "@/constants/theme";
 
 const colors = SeoulMidnightGlass.colors;
@@ -33,7 +30,6 @@ export type StatusBadgeProps = Omit<ViewProps, "children" | "style"> & {
   blurIntensity?: number;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
-  typographyOverride?: AppTextTypographyOverride;
 };
 
 function colorWithAlpha(color: string, alpha: string, fallback: string) {
@@ -52,7 +48,6 @@ export function StatusBadge({
   blurIntensity,
   style,
   textStyle,
-  typographyOverride,
   ...viewProps
 }: StatusBadgeProps) {
   const activeColor = tone === "premium" ? colors.premiumGold : accentColor;
@@ -100,16 +95,6 @@ export function StatusBadge({
     <AppText
       variant="label"
       align="center"
-      typographyOverride={
-        typographyOverride ??
-        (size === "compact"
-          ? { fontSize: 10, lineHeight: 13, letterSpacing: 1 }
-          : {
-              fontSize: SeoulMidnightGlass.badge.fontSize,
-              lineHeight: 15,
-              letterSpacing: SeoulMidnightGlass.badge.letterSpacing,
-            })
-      }
       style={[
         { color: resolvedTextColor },
         textStyle,

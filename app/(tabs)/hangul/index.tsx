@@ -320,14 +320,10 @@ const styles = StyleSheet.create({
 
   backArrow: {
     color: TXT,
-    fontSize: 28,
-    lineHeight: 28,
   },
 
   backText: {
     color: "rgba(255,255,255,0.92)",
-    fontSize: 12,
-    letterSpacing: 2.3,
   },
 
   settingsShell: {

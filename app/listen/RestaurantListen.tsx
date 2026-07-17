@@ -1,6 +1,8 @@
 import { router } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import { AppText } from "../../components/app-text";
 
 export default function RestaurantListenScreen() {
   return (
@@ -12,19 +14,19 @@ export default function RestaurantListenScreen() {
           paddingHorizontal: 24,
         }}
       >
-        <Text style={{ color: "#fff", fontSize: 28, fontWeight: "900" }}>
+        <AppText accessibilityRole="header" variant="screenTitle" style={{ color: "#fff" }}>
           Ecoute restaurant
-        </Text>
-        <Text
+        </AppText>
+        <AppText
+          variant="body"
+          tone="muted"
           style={{
             color: "rgba(255,255,255,0.68)",
-            fontSize: 16,
-            lineHeight: 24,
             marginTop: 12,
           }}
         >
           Cette scene d&apos;ecoute arrive bientot.
-        </Text>
+        </AppText>
         <Pressable
           onPress={() => router.back()}
           style={{
@@ -37,7 +39,7 @@ export default function RestaurantListenScreen() {
             paddingVertical: 12,
           }}
         >
-          <Text style={{ color: "#fff", fontWeight: "800" }}>Retour</Text>
+          <AppText variant="button" style={{ color: "#fff" }}>Retour</AppText>
         </Pressable>
       </View>
     </SafeAreaView>

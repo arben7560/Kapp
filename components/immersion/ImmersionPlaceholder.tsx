@@ -1,6 +1,8 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
+
+import { AppText } from "../app-text";
 
 type ImmersionPlaceholderProps = {
   title: string;
@@ -24,19 +26,19 @@ export function ImmersionPlaceholder({
       <ScrollView contentContainerStyle={styles.content}>
         <Image source={imageSource} style={styles.image} resizeMode="cover" />
 
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.description}>{description}</Text>
+        <AppText accessibilityRole="header" variant="screenTitle" style={styles.title}>{title}</AppText>
+        <AppText variant="body" tone="muted" style={styles.description}>{description}</AppText>
 
         <View style={styles.panel}>
-          <Text style={styles.panelTitle}>Scène en préparation</Text>
-          <Text style={styles.panelText}>
+          <AppText variant="sectionTitle" style={styles.panelTitle}>Scène en préparation</AppText>
+          <AppText variant="bodySecondary" tone="muted" style={styles.panelText}>
             Cette capsule existe dans le hub Immersion, mais son scénario
-            interactif n'est pas encore branché.
-          </Text>
+            interactif n&apos;est pas encore branché.
+          </AppText>
         </View>
 
         <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>Retour</Text>
+          <AppText variant="button" align="center" style={styles.backButtonText}>Retour</AppText>
         </Pressable>
       </ScrollView>
     </LinearGradient>
@@ -59,14 +61,9 @@ const styles = StyleSheet.create({
   },
   title: {
     color: TXT,
-    fontSize: 28,
-    fontWeight: "900",
-    lineHeight: 34,
   },
   description: {
     color: MUTED,
-    fontSize: 16,
-    lineHeight: 24,
     marginTop: 10,
   },
   panel: {
@@ -79,13 +76,9 @@ const styles = StyleSheet.create({
   },
   panelTitle: {
     color: TXT,
-    fontSize: 17,
-    fontWeight: "900",
   },
   panelText: {
     color: MUTED,
-    fontSize: 14,
-    lineHeight: 21,
     marginTop: 8,
   },
   backButton: {
@@ -99,7 +92,5 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     color: TXT,
-    fontSize: 15,
-    fontWeight: "900",
   },
 });

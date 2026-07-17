@@ -1171,14 +1171,11 @@ const styles = StyleSheet.create({
 
   backArrow: {
     color: COLORS.txt,
-    fontSize: 32,
     marginRight: 5,
   },
 
   backText: {
     color: COLORS.muted,
-    fontSize: 11,
-    letterSpacing: 2,
   },
 
   premiumToggle: {
@@ -1196,7 +1193,6 @@ const styles = StyleSheet.create({
 
   premiumToggleText: {
     color: "#FFF",
-    fontSize: 10,
   },
 
   heroIntro: {
@@ -1224,19 +1220,14 @@ const styles = StyleSheet.create({
 
   progressText: {
     color: COLORS.muted,
-    fontSize: 11,
   },
 
   eyebrow: {
-    fontSize: 10,
-    letterSpacing: 2.5,
     marginBottom: 6,
   },
 
   heroTitle: {
     color: COLORS.txt,
-    fontSize: 35,
-    letterSpacing: -1.2,
   },
 
   tabBar: {
@@ -1279,20 +1270,14 @@ const styles = StyleSheet.create({
 
   hookText: {
     color: COLORS.muted,
-    fontSize: 13,
-    lineHeight: 20,
   },
 
   krTitle: {
-    fontSize: 13,
-    letterSpacing: 3,
     marginBottom: 12,
   },
 
   sceneDesc: {
     color: COLORS.muted,
-    fontSize: 13,
-    lineHeight: 20,
     fontStyle: "italic",
     marginBottom: 20,
   },
@@ -1304,8 +1289,6 @@ const styles = StyleSheet.create({
 
   instructionText: {
     color: COLORS.txt,
-    fontSize: 14,
-    lineHeight: 20,
     fontStyle: "italic",
   },
 
@@ -1320,15 +1303,11 @@ const styles = StyleSheet.create({
 
   toolboxSceneTitle: {
     color: COLORS.txt,
-    fontSize: 30,
-    lineHeight: 36,
     marginBottom: 14,
   },
 
   sectionTitle: {
     color: "rgba(255,255,255,0.4)",
-    fontSize: 12,
-    letterSpacing: 3,
   },
 
   cardWrapper: {
@@ -1351,7 +1330,6 @@ const styles = StyleSheet.create({
 
   expWord: {
     color: COLORS.txt,
-    fontSize: 24,
     marginBottom: 2,
   },
 
@@ -1370,7 +1348,6 @@ const styles = StyleSheet.create({
 
   strokeText: {
     color: "rgba(255,255,255,0.4)",
-    fontSize: 9,
   },
 
   romBox: {
@@ -1380,8 +1357,6 @@ const styles = StyleSheet.create({
   },
 
   romText: {
-    fontSize: 12,
-    textTransform: "uppercase",
   },
 
   expDetail: {
@@ -1393,24 +1368,18 @@ const styles = StyleSheet.create({
 
   expSymbolic: {
     color: COLORS.pink,
-    fontSize: 11,
     marginTop: 18,
-    textTransform: "uppercase",
-    letterSpacing: 1,
   },
 
   expMean: {
     color: COLORS.txt,
-    fontSize: 16,
     marginTop: 6,
     marginBottom: 4,
   },
 
   expCtx: {
     color: COLORS.muted,
-    fontSize: 12,
     marginTop: 6,
-    lineHeight: 18,
   },
 
   teaserBox: {
@@ -1425,14 +1394,11 @@ const styles = StyleSheet.create({
 
   teaserText: {
     color: COLORS.muted,
-    fontSize: 15,
     textAlign: "center",
     marginBottom: 12,
   },
 
   teaserBtn: {
-    fontSize: 13,
-    letterSpacing: 1,
   },
 
   quizOverlay: {
@@ -1460,9 +1426,7 @@ const styles = StyleSheet.create({
 
   quizTitle: {
     color: "rgba(255,255,255,0.3)",
-    fontSize: 11,
     textAlign: "center",
-    letterSpacing: 4,
     marginBottom: 25,
   },
 
@@ -1473,13 +1437,11 @@ const styles = StyleSheet.create({
 
   quizChar: {
     color: COLORS.txt,
-    fontSize: 24,
     marginBottom: 2,
   },
 
   quizInstruction: {
     color: COLORS.muted,
-    fontSize: 14,
     fontStyle: "italic",
     marginTop: 12,
     textAlign: "center",
@@ -1499,7 +1461,6 @@ const styles = StyleSheet.create({
 
   optText: {
     color: COLORS.txt,
-    fontSize: 20,
     textAlign: "center",
   },
 
@@ -1550,8 +1511,6 @@ const styles = StyleSheet.create({
 
   resultLabelText: {
     color: "rgba(255,255,255,0.58)",
-    fontSize: 10,
-    letterSpacing: 2,
   },
 
   resultMedalWrap: {
@@ -1594,33 +1553,24 @@ const styles = StyleSheet.create({
 
   resultScoreBig: {
     color: COLORS.pureWhite,
-    fontSize: 42,
-    letterSpacing: -1,
   },
 
   resultScoreTotal: {
     color: "rgba(255,255,255,0.45)",
-    fontSize: 18,
     marginTop: 14,
   },
 
   resultTitle: {
     color: COLORS.pureWhite,
-    fontSize: 24,
-    letterSpacing: -0.6,
     textAlign: "center",
     marginBottom: 10,
-    textTransform: "uppercase",
   },
 
   resultTitleSmall: {
-    fontSize: 20,
   },
 
   resultSubtitle: {
     color: "rgba(255,255,255,0.62)",
-    fontSize: 14,
-    lineHeight: 21,
     textAlign: "center",
     maxWidth: 310,
     marginBottom: 22,
@@ -1642,9 +1592,7 @@ const styles = StyleSheet.create({
 
   resultScore: {
     color: "rgba(255,255,255,0.50)",
-    fontSize: 13,
     marginBottom: 28,
-    letterSpacing: 0.5,
   },
 
   closeBtn: {
@@ -1668,7 +1616,5 @@ const styles = StyleSheet.create({
 
   closeBtnText: {
     color: "#020306",
-    fontSize: 12,
-    letterSpacing: 1.8,
   },
 });

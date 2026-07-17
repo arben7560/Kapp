@@ -120,7 +120,7 @@ const infrastructureEntries = ["app/_layout.tsx", "app/(tabs)/_layout.tsx"];
 const nativeTextExceptions = new Map([
   [
     "components/app-text.tsx",
-    "wrapper central AppText et runs internes accessibles de AppMixedText",
+    "wrapper central AppText et runs internes accessibles par script",
   ],
 ]);
 
@@ -426,8 +426,8 @@ function validateNoNativeText(relativePath) {
       `${relativePath} doit importer uniquement Text comme primitive textuelle native`,
     );
     assert(
-      directNativeTextLines.length === 2,
-      `${relativePath} doit limiter Text natif au wrapper AppText et aux runs AppMixedText ` +
+      directNativeTextLines.length === 3,
+      `${relativePath} doit limiter Text natif au wrapper AppText, aux runs Hangul dynamiques et aux runs AppMixedText ` +
         `(trouvé lignes ${directNativeTextLines.join(", ") || "aucune"})`,
     );
   }
@@ -452,10 +452,9 @@ function validateNoDirectTypography(relativePath) {
   if (!relativePath.startsWith("app/") && !relativePath.startsWith("components/")) return;
 
   const parsed = parseSource(relativePath);
-  const forbiddenKeys = new Map([
-    ["fontFamily", []],
-    ["fontWeight", []],
-  ]);
+  const forbiddenKeys = new Map(
+    protectedTypographyKeys.map((key) => [key, []]),
+  );
   const hardCodedFonts = [];
 
   const visit = (node) => {
@@ -557,10 +556,12 @@ function validateTypographyTokens() {
   const requiredVariants = [
     "display",
     "screenTitle",
+    "featureTitle",
     "sectionTitle",
     "body",
     "button",
     "caption",
+    "symbol",
     "koreanPrimary",
     "koreanSecondary",
   ];
@@ -814,7 +815,10 @@ function validateAppTextImplementation() {
   );
   assert(source.includes("AppTypography"), "AppText doit résoudre ses métriques via AppTypography");
   assert(source.includes("AppTextLineContracts"), "AppText doit résoudre les contrats lineContract");
-  assert(source.includes("typographyOverride"), "AppText doit exposer l'override explicite typographyOverride");
+  assert(
+    !source.includes("typographyOverride"),
+    "AppText ne doit plus exposer de contournement des tokens typographiques",
+  );
   const parsed = parseSource(appTextPath);
   const protectedKeysNode = findVariableInitializer(
     parsed,
@@ -851,6 +855,11 @@ function validateAppTextImplementation() {
     /safeSegmentStyle\s*=\s*sanitizeTextStyle\(segment\.style\)/.test(source),
     "AppMixedText doit assainir les styles de ses segments",
   );
+  assert(
+    source.includes("renderScriptAwareChildren") &&
+      source.includes("KOREAN_CHARACTER_PATTERN"),
+    "AppText doit conserver Noto Sans KR pour les runs Hangul dynamiques",
+  );
 
   let implementationStyle = null;
   let restSpreadIndex = -1;
@@ -863,7 +872,7 @@ function validateAppTextImplementation() {
       const style = jsxAttribute(node, "style");
       if (style?.initializer && ts.isJsxExpression(style.initializer)) {
         const styleText = style.initializer.expression?.getText(parsed) ?? "";
-        if (styleText.includes("baseStyle") && styleText.includes("typographyOverride")) {
+        if (styleText.includes("baseStyle") && styleText.includes("safeStyle")) {
           implementationStyle = styleText;
           node.attributes.properties.forEach((attribute, index) => {
             if (!ts.isJsxSpreadAttribute(attribute)) return;
@@ -879,7 +888,7 @@ function validateAppTextImplementation() {
   visit(parsed);
   assert(
     implementationStyle !== null,
-    "AppText doit appliquer typographyOverride explicitement après son style tokenisé",
+    "AppText doit appliquer son style sûr après son style tokenisé",
   );
   assert(
     restSpreadIndex >= 0 && linePropsSpreadIndex > restSpreadIndex,
@@ -935,11 +944,30 @@ const activeEntryFiles = [
   ...infrastructureEntries,
 ];
 const activeDependencyGraph = collectLocalDependencyGraph(activeEntryFiles);
+const allRouteFiles = Object.values(routeGroups).flatMap((routes) =>
+  routes.map(([, file]) => file),
+);
+const completeUiDependencyGraph = collectLocalDependencyGraph([
+  ...allRouteFiles,
+  ...infrastructureEntries,
+]);
+
+const typographyRouteExceptions = new Map([
+  [
+    "app/listen/teacherIA.tsx",
+    "alias de redirection pur sans interface rendue",
+  ],
+]);
 
 validateRouteReferences(activeDependencyGraph);
 
-for (const [route, file] of activeRoutes) {
-  assert(routeUsesAppText(file), `${route} -> ${file} ne passe pas par AppText`);
+for (const [lifecycle, routes] of Object.entries(routeGroups)) {
+  for (const [route, file] of routes) {
+    assert(
+      typographyRouteExceptions.has(file) || routeUsesAppText(file),
+      `${lifecycle} ${route} -> ${file} ne passe pas par AppText`,
+    );
+  }
 }
 
 const counters = {
@@ -947,7 +975,7 @@ const counters = {
   lineContracts: 0,
   mixedTextElements: 0,
 };
-for (const file of [...activeDependencyGraph].sort()) {
+for (const file of [...completeUiDependencyGraph].sort()) {
   validateNoNativeText(file);
   validateNoDirectTypography(file);
   validateAppTextUsage(file, knownLineContracts, counters);
@@ -993,7 +1021,8 @@ if (errors.length) {
   for (const error of errors) console.error(`- ${error}`);
   console.error(
     `\nPérimètre contrôlé: ${activeRoutes.length} routes actives, ` +
-      `${activeDependencyGraph.size} fichiers dans leur graphe local.`,
+      `${prototypeRoutes.length} prototypes, ${compatibilityRoutes.length} alias, ` +
+      `${completeUiDependencyGraph.size} fichiers dans le graphe UI complet.`,
   );
   process.exit(1);
 }
@@ -1001,6 +1030,6 @@ if (errors.length) {
 console.log(
   `Contrats UI valides: ${activeRoutes.length} routes actives, ` +
     `${prototypeRoutes.length} prototypes, ${compatibilityRoutes.length} alias, ` +
-    `${activeDependencyGraph.size} fichiers UI/dépendances, ` +
+    `${completeUiDependencyGraph.size} fichiers UI/dépendances, ` +
     `${counters.lineContracts} lineContract et ${counters.mixedTextElements} AppMixedText.`,
 );

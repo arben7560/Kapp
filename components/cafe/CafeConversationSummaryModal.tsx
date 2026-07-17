@@ -68,7 +68,11 @@ function ImperfectionCard({
       </AppText>
 
       <AppText variant="caption" tone="soft" script="latin">
-        Intention comprise
+        {item.resultType === "not-understood"
+          ? "Intention probable"
+          : item.resultType === "ambiguous"
+            ? "Intentions détectées"
+            : "Intention comprise"}
       </AppText>
       <AppText variant="bodySecondary" tone="strong" script="latin">
         {item.detectedIntent ?? "Intention non déterminée"}

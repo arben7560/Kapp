@@ -1,7 +1,8 @@
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { useStore } from "../../_store";
+import { AppText } from "../../components/app-text";
 
 const BG0 = "#070812";
 const TXT = "rgba(255,255,255,0.92)";
@@ -31,14 +32,12 @@ export default function Review() {
   return (
     <LinearGradient colors={[BG0, "#0b0b1d", "#0b0f22"]} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
-        <Text
-          style={{ color: TXT, fontSize: 22, fontWeight: "900", marginTop: 8 }}
-        >
+        <AppText accessibilityRole="header" variant="screenTitle" style={{ color: TXT, marginTop: 8 }}>
           Carnet
-        </Text>
-        <Text style={{ color: MUTED, marginTop: 6 }}>
+        </AppText>
+        <AppText variant="subtitle" tone="muted" style={{ color: MUTED, marginTop: 6 }}>
           Révision intelligente (prototype)
-        </Text>
+        </AppText>
 
         <View style={{ height: 14 }} />
 
@@ -52,11 +51,11 @@ export default function Review() {
             marginBottom: 14,
           }}
         >
-          <Text style={{ color: TXT, fontWeight: "900" }}>Stats</Text>
-          <Text style={{ color: MUTED, marginTop: 6 }}>
+          <AppText variant="sectionTitle" style={{ color: TXT }}>Stats</AppText>
+          <AppText variant="bodySecondary" tone="muted" style={{ color: MUTED, marginTop: 6 }}>
             Missions validées : {done.length}
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 2 }}>XP : {progress.xp}</Text>
+          </AppText>
+          <AppText variant="bodySecondary" tone="muted" style={{ color: MUTED, marginTop: 2 }}>XP : {progress.xp}</AppText>
         </View>
 
         <View
@@ -69,12 +68,12 @@ export default function Review() {
             marginBottom: 14,
           }}
         >
-          <Text style={{ color: TXT, fontWeight: "900", fontSize: 16 }}>
+          <AppText variant="sectionTitle" style={{ color: TXT }}>
             Réviser maintenant (2 min)
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 6 }}>
+          </AppText>
+          <AppText variant="bodySecondary" tone="muted" style={{ color: MUTED, marginTop: 6 }}>
             3 chunks utiles à répéter.
-          </Text>
+          </AppText>
 
           <View style={{ height: 12 }} />
 
@@ -92,20 +91,20 @@ export default function Review() {
                   marginBottom: 10,
                 }}
               >
-                <Text style={{ color: TXT, fontWeight: "900" }}>{s.title}</Text>
-                <Text
+                <AppText variant="cardTitle" style={{ color: TXT }}>{s.title}</AppText>
+                <AppText
+                  variant="koreanSecondary"
+                  script="korean"
                   style={{
                     color: TXT,
                     marginTop: 6,
-                    fontSize: 18,
-                    fontWeight: "900",
                   }}
                 >
                   {s.chunk}
-                </Text>
-                <Text style={{ color: MUTED, marginTop: 6 }}>
+                </AppText>
+                <AppText variant="bodySecondary" tone="muted" style={{ color: MUTED, marginTop: 6 }}>
                   {isDone ? "Déjà validé ✅" : "Pas encore validé"}
-                </Text>
+                </AppText>
 
                 {!isDone && (
                   <>
@@ -122,9 +121,9 @@ export default function Review() {
                         alignItems: "center",
                       })}
                     >
-                      <Text style={{ color: TXT, fontWeight: "900" }}>
+                      <AppText variant="button" align="center" style={{ color: TXT }}>
                         Marquer comme validé
-                      </Text>
+                      </AppText>
                     </Pressable>
                   </>
                 )}

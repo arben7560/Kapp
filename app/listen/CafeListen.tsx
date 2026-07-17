@@ -1,8 +1,9 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Pressable, ScrollView, Text, View } from "react-native";
+import { Animated, Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppText } from "../../components/app-text";
 import CafeAvatar from "../../components/ai/CafeAvatar";
 import { useStore } from "../../_store";
 import { CAFE_SESSION, type ListenExercise } from "../../data/listen/cafe";
@@ -79,15 +80,13 @@ function SmallPill({
         ...palette,
       }}
     >
-      <Text
+      <AppText variant="label"
         style={{
           color: TXT,
-          fontSize: 13,
-          fontWeight: "800",
         }}
       >
         {label}
-      </Text>
+      </AppText>
     </View>
   );
 }
@@ -138,16 +137,13 @@ function ChoiceButton({
         ...style,
       })}
     >
-      <Text
+      <AppText variant="bodyStrong"
         style={{
           color: TXT,
-          fontSize: 16,
-          lineHeight: 22,
-          fontWeight: "800",
         }}
       >
         {label}
-      </Text>
+      </AppText>
     </Pressable>
   );
 }
@@ -188,9 +184,9 @@ function ActionButton({
         ...palette,
       })}
     >
-      <Text style={{ color: TXT, fontSize: 14, fontWeight: "900" }}>
+      <AppText variant="button" style={{ color: TXT }}>
         {label}
-      </Text>
+      </AppText>
     </Pressable>
   );
 }
@@ -359,27 +355,24 @@ export default function CafeListenScreen() {
                 ]}
                 style={{ padding: 20 }}
               >
-                <Text
+                <AppText variant="screenTitle"
                   style={{
                     color: TXT,
-                    fontSize: 28,
-                    fontWeight: "900",
                     textAlign: "center",
                   }}
                 >
                   Session terminée 🎉
-                </Text>
+                </AppText>
 
-                <Text
+                <AppText variant="bodySecondary"
                   style={{
                     color: MUTED,
                     textAlign: "center",
                     marginTop: 10,
-                    lineHeight: 22,
                   }}
                 >
                   Tu as terminé la scène Café.
-                </Text>
+                </AppText>
 
                 <View style={{ height: 16 }} />
 
@@ -394,28 +387,25 @@ export default function CafeListenScreen() {
                     backgroundColor: CYAN_BG,
                   }}
                 >
-                  <Text
+                  <AppText variant="bodyStrong"
                     style={{
                       color: TXT,
-                      fontWeight: "900",
-                      fontSize: 15,
                     }}
                   >
                     Score : {score} / {session.length}
-                  </Text>
+                  </AppText>
                 </View>
 
                 <View style={{ height: 12 }} />
 
-                <Text
+                <AppText variant="bodySecondary"
                   style={{
                     color: MUTED,
                     textAlign: "center",
-                    lineHeight: 21,
                   }}
                 >
                   Erreurs à revoir : {wrongExercises.length}
-                </Text>
+                </AppText>
 
                 <View style={{ height: 18 }} />
 
@@ -472,7 +462,7 @@ export default function CafeListenScreen() {
               marginBottom: 10,
             }}
           >
-            <Text style={{ color: MUTED, fontWeight: "800" }}>← Retour</Text>
+            <AppText variant="button" style={{ color: MUTED }}>← Retour</AppText>
           </Pressable>
 
           <View
@@ -484,15 +474,13 @@ export default function CafeListenScreen() {
             }}
           >
             <SmallPill label={progressLabel} active tone="purple" />
-            <Text
+            <AppText variant="label"
               style={{
                 color: MUTED,
-                fontSize: 13,
-                fontWeight: "700",
               }}
             >
               {exercise.place}
-            </Text>
+            </AppText>
           </View>
 
           <View
@@ -588,26 +576,23 @@ export default function CafeListenScreen() {
                   </View>
                 </View>
 
-                <Text
+                <AppText variant="sectionTitle"
                   style={{
                     color: TXT,
-                    fontSize: 20,
-                    fontWeight: "900",
                     marginTop: 14,
                   }}
                 >
                   {exercise.speaker}
-                </Text>
+                </AppText>
 
-                <Text
+                <AppText variant="bodySecondary"
                   style={{
                     color: MUTED,
-                    fontSize: 14,
                     marginTop: 4,
                   }}
                 >
                   {exercise.place}
-                </Text>
+                </AppText>
               </View>
 
               <View style={{ height: 14 }} />
@@ -629,16 +614,13 @@ export default function CafeListenScreen() {
                     marginBottom: 10,
                   }}
                 >
-                  <Text
+                  <AppText variant="sectionLabel"
                     style={{
                       color: SOFT,
-                      fontSize: 12,
-                      fontWeight: "900",
-                      letterSpacing: 1,
                     }}
                   >
                     {exercise.speaker.toUpperCase()}
-                  </Text>
+                  </AppText>
 
                   <View
                     style={{
@@ -660,41 +642,32 @@ export default function CafeListenScreen() {
                             : PINK_BG,
                     }}
                   >
-                    <Text
+                    <AppText variant="caption"
                       style={{
                         color: TXT,
-                        fontSize: 12,
-                        fontWeight: "800",
                       }}
                     >
                       {exercise.category}
-                    </Text>
+                    </AppText>
                   </View>
                 </View>
 
-                <Text
+                <AppText variant="label"
                   style={{
                     color: "rgba(255,255,255,0.48)",
-                    fontSize: 11,
-                    fontWeight: "900",
-                    textTransform: "uppercase",
-                    letterSpacing: 0.8,
                     marginBottom: 6,
                   }}
                 >
                   Phrase entendue
-                </Text>
+                </AppText>
 
-                <Text
+                <AppText variant="koreanSecondary" script="korean"
                   style={{
                     color: TXT,
-                    fontSize: 17,
-                    lineHeight: 24,
-                    fontWeight: "900",
                   }}
                 >
                   {exercise.audio}
-                </Text>
+                </AppText>
 
                 <View style={{ height: 12 }} />
 
@@ -723,15 +696,13 @@ export default function CafeListenScreen() {
                     justifyContent: "center",
                   })}
                 >
-                  <Text
+                  <AppText variant="button"
                     style={{
                       color: TXT,
-                      fontSize: 14,
-                      fontWeight: "800",
                     }}
                   >
                     {speaking ? "🔊 Lecture..." : "🔊 Réécouter"}
-                  </Text>
+                  </AppText>
                 </Pressable>
               </View>
             </LinearGradient>
@@ -749,28 +720,23 @@ export default function CafeListenScreen() {
               padding: 16,
             }}
           >
-            <Text
+            <AppText variant="sectionTitle"
               style={{
                 color: TXT,
-                fontSize: 18,
-                lineHeight: 24,
-                fontWeight: "900",
               }}
             >
               {exercise.question}
-            </Text>
+            </AppText>
 
-            <Text
+            <AppText variant="body"
               style={{
                 color: MUTED,
-                fontSize: 15,
-                lineHeight: 22,
                 marginTop: 8,
                 marginBottom: 14,
               }}
             >
               Choisis la réponse qui te semble correcte pour cette phrase.
-            </Text>
+            </AppText>
 
             <View style={{ gap: 12 }}>
               {(exercise.answers ?? []).map((answer) => (
@@ -803,79 +769,68 @@ export default function CafeListenScreen() {
                   padding: 14,
                 }}
               >
-                <Text
+                <AppText variant="bodyStrong"
                   style={{
                     color: TXT,
-                    fontSize: 15,
-                    fontWeight: "900",
                   }}
                 >
                   {result.ok ? "✅ Correct" : "❌ Pas tout à fait"}
-                </Text>
+                </AppText>
 
-                <Text
+                <AppText variant="label"
                   style={{
                     color: TXT,
                     marginTop: 12,
-                    fontSize: 13,
-                    fontWeight: "900",
                   }}
                 >
                   Sens naturel
-                </Text>
-                <Text
+                </AppText>
+                <AppText variant="bodySecondary"
                   style={{
                     color: MUTED,
                     marginTop: 4,
-                    lineHeight: 20,
                   }}
                 >
                   {exercise.translation}
-                </Text>
+                </AppText>
 
-                <Text
+                <AppText variant="label"
                   style={{
                     color: TXT,
                     marginTop: 12,
-                    fontSize: 13,
-                    fontWeight: "900",
                   }}
                 >
                   Réponse attendue
-                </Text>
-                <Text
+                </AppText>
+                <AppText variant="bodySecondary"
                   style={{
                     color: MUTED,
                     marginTop: 4,
-                    lineHeight: 20,
                   }}
                 >
                   {Array.isArray(exercise.correct)
                     ? exercise.correct.join(" / ")
                     : exercise.correct}
-                </Text>
+                </AppText>
 
                 {!!exercise.hint && (
                   <>
-                    <Text
+                    <AppText variant="label"
                       style={{
                         color: TXT,
                         marginTop: 12,
-                        fontSize: 13,
-                        fontWeight: "900",
                       }}
                     >
                       Indice
-                    </Text>
-                    <Text
+                    </AppText>
+                    <AppText variant="bodySecondary"
                       style={{
                         color: MUTED,
                         marginTop: 4,
-                        lineHeight: 20,
                       }}
                     >
                       {exercise.hint}
-                    </Text>
+                    </AppText>
                   </>
                 )}
 
@@ -913,17 +868,15 @@ export default function CafeListenScreen() {
               paddingVertical: 12,
             }}
           >
-            <Text
+            <AppText variant="bodyStrong"
               style={{
                 color: SOFT,
                 textAlign: "center",
-                lineHeight: 20,
-                fontWeight: "700",
               }}
             >
               Astuce : écoute d’abord la phrase globalement, puis associe le bon
               sens.
-            </Text>
+            </AppText>
           </View>
         </ScrollView>
       </SafeAreaView>

@@ -11,9 +11,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { AppText } from "../../../components/app-text";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 
@@ -147,17 +147,17 @@ export default function MeteoCyberScreen() {
                 }}
                 style={styles.backCircle}
               >
-                <Text style={styles.backArrow}>‹</Text>
+                <AppText variant="symbol" style={styles.backArrow}>‹</AppText>
               </Pressable>
               <View>
-                <Text style={styles.navEyebrow}>SÉOUL IMMERSION</Text>
-                <Text style={styles.navTitle}>{"Centre d'apprentissage"}</Text>
+                <AppText variant="sectionLabel" style={styles.navEyebrow}>SÉOUL IMMERSION</AppText>
+                <AppText variant="cardTitle" style={styles.navTitle}>{"Centre d'apprentissage"}</AppText>
               </View>
             </View>
 
             {/* Hero Title */}
             <View style={styles.heroSection}>
-              <Text style={styles.heroTitle}>Météo</Text>
+              <AppText variant="screenTitle" style={styles.heroTitle}>Météo</AppText>
               <View style={styles.neonBar} />
             </View>
 
@@ -172,11 +172,11 @@ export default function MeteoCyberScreen() {
                 <View style={styles.cardHeader}>
                   <View style={styles.liveTag}>
                     <View style={styles.liveDot} />
-                    <Text style={styles.liveText}>IMMERSIVE AUDIO</Text>
+                    <AppText variant="label" style={styles.liveText}>IMMERSIVE AUDIO</AppText>
                   </View>
-                  <Text style={styles.counterText}>
+                  <AppText variant="caption" style={styles.counterText}>
                     {wordIndex + 1} / {WORDS.length}
-                  </Text>
+                  </AppText>
                 </View>
 
                 <View style={styles.cardBody}>
@@ -189,12 +189,12 @@ export default function MeteoCyberScreen() {
                       },
                     ]}
                   >
-                    <Text style={styles.krBig}>{currentWord.kr}</Text>
-                    <Text style={styles.romanBig}>
+                    <AppText variant="koreanPrimary" script="korean" style={styles.krBig}>{currentWord.kr}</AppText>
+                    <AppText variant="caption" style={styles.romanBig}>
                       {currentWord.roman.toUpperCase()}
-                    </Text>
+                    </AppText>
                     <View style={styles.translationBadge}>
-                      <Text style={styles.frBig}>{currentWord.fr}</Text>
+                      <AppText variant="cardTitle" style={styles.frBig}>{currentWord.fr}</AppText>
                     </View>
                   </Animated.View>
                 </View>
@@ -205,7 +205,7 @@ export default function MeteoCyberScreen() {
                     style={styles.navBtnSmall}
                     onPress={() => animateChange(-1)}
                   >
-                    <Text style={styles.navBtnIcon}>‹</Text>
+                    <AppText variant="symbol" style={styles.navBtnIcon}>‹</AppText>
                   </Pressable>
 
                   <Pressable
@@ -225,7 +225,7 @@ export default function MeteoCyberScreen() {
                       style={styles.playGradient}
                     >
                       <AudioVisualizer />
-                      <Text style={styles.playBtnText}>ÉCOUTER</Text>
+                      <AppText variant="button" style={styles.playBtnText}>ÉCOUTER</AppText>
                     </LinearGradient>
                   </Pressable>
 
@@ -233,14 +233,14 @@ export default function MeteoCyberScreen() {
                     style={styles.navBtnSmall}
                     onPress={() => animateChange(1)}
                   >
-                    <Text style={styles.navBtnIcon}>›</Text>
+                    <AppText variant="symbol" style={styles.navBtnIcon}>›</AppText>
                   </Pressable>
                 </View>
               </BlurView>
             </View>
 
             {/* List of phrases */}
-            <Text style={styles.sectionLabel}>EXPRESSIONS USUELLES</Text>
+            <AppText variant="sectionLabel" style={styles.sectionLabel}>EXPRESSIONS USUELLES</AppText>
             {PHRASES.map((item) => (
               <Pressable
                 key={item.id}
@@ -261,13 +261,13 @@ export default function MeteoCyberScreen() {
                     ]}
                   />
                   <View style={styles.phraseTextContainer}>
-                    <Text style={styles.phraseKr}>{item.kr}</Text>
-                    <Text style={styles.phraseFr}>{item.fr}</Text>
+                    <AppText variant="koreanSecondary" script="korean" style={styles.phraseKr}>{item.kr}</AppText>
+                    <AppText variant="bodySecondary" style={styles.phraseFr}>{item.fr}</AppText>
                   </View>
                   <View
                     style={[styles.miniPlayIcon, { borderColor: item.accent }]}
                   >
-                    <Text style={{ color: item.accent, fontSize: 10 }}>▶</Text>
+                    <AppText variant="label" style={{ color: item.accent}}>▶</AppText>
                   </View>
                 </BlurView>
               </Pressable>
@@ -302,22 +302,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
   },
-  backArrow: { color: "#fff", fontSize: 24, marginTop: -2 },
+  backArrow: { color: "#fff", marginTop: -2 },
   navEyebrow: {
     color: PINK,
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 2,
   },
-  navTitle: { color: "#fff", fontSize: 14, fontWeight: "600", opacity: 0.8 },
+  navTitle: { color: "#fff", opacity: 0.8 },
 
   // Hero Section
   heroSection: { marginBottom: 32 },
   heroTitle: {
     color: "#fff",
-    fontSize: 50,
-    fontWeight: "900",
-    letterSpacing: -1.5,
   },
   neonBar: {
     width: 45,
@@ -354,24 +348,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#10B981" },
-  liveText: { color: "#fff", fontSize: 9, fontWeight: "800", letterSpacing: 1 },
-  counterText: { color: MUTED, fontSize: 12, fontWeight: "700" },
+  liveText: { color: "#fff"},
+  counterText: { color: MUTED},
 
   cardBody: { alignItems: "center", justifyContent: "center", minHeight: 180 },
   wordContent: { alignItems: "center" },
   krBig: {
     color: "#fff",
-    fontSize: 74,
-    fontWeight: "800",
     textShadowColor: "rgba(34, 211, 238, 0.35)",
     textShadowRadius: 15,
   },
   romanBig: {
     color: CYAN,
-    fontSize: 14,
-    fontWeight: "800",
     marginTop: 6,
-    letterSpacing: 4,
   },
   translationBadge: {
     marginTop: 18,
@@ -380,7 +369,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 10,
   },
-  frBig: { color: TXT_PRIMARY, fontSize: 16, fontWeight: "500", opacity: 0.9 },
+  frBig: { color: TXT_PRIMARY, opacity: 0.9 },
 
   // Action Buttons
   actionRow: {
@@ -399,7 +388,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.1)",
   },
-  navBtnIcon: { color: "#fff", fontSize: 24, fontWeight: "300" },
+  navBtnIcon: { color: "#fff"},
   mainPlayBtn: {
     flex: 1,
     height: 56,
@@ -416,9 +405,6 @@ const styles = StyleSheet.create({
   },
   playBtnText: {
     color: "#fff",
-    fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 1.2,
   },
   waveContainer: { flexDirection: "row", gap: 3, alignItems: "center" },
   waveBar: { width: 3, backgroundColor: "#fff", borderRadius: 2, opacity: 0.9 },
@@ -426,9 +412,6 @@ const styles = StyleSheet.create({
   // Phrases List Style
   sectionLabel: {
     color: MUTED,
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 2,
     marginBottom: 16,
     marginLeft: 4,
   },
@@ -448,8 +431,8 @@ const styles = StyleSheet.create({
     left: 0,
   },
   phraseTextContainer: { flex: 1, marginLeft: 12 },
-  phraseKr: { color: "#fff", fontSize: 17, fontWeight: "700" },
-  phraseFr: { color: TXT_SECONDARY, fontSize: 14, marginTop: 4 },
+  phraseKr: { color: "#fff"},
+  phraseFr: { color: TXT_SECONDARY, marginTop: 4 },
   miniPlayIcon: {
     width: 32,
     height: 32,

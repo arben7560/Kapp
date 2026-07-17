@@ -12,9 +12,9 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { AppMixedText, AppText } from "../../../components/app-text";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 
@@ -24,7 +24,6 @@ const BACKGROUND_SOURCE = require("../../../assets/images/seoul-hub-bg.jpg");
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
 const AMBER = "#FFB347";
-const TXT = "rgba(255,255,255,0.98)";
 const MUTED = "rgba(255,255,255,0.60)";
 
 // --- DATA ---
@@ -168,16 +167,16 @@ export default function BuildingsCyber() {
                 onPress={() => router.back()}
                 style={styles.backCircle}
               >
-                <Text style={styles.backArrow}>‹</Text>
+                <AppText variant="symbol" style={styles.backArrow}>‹</AppText>
               </Pressable>
               <View>
-                <Text style={styles.navEyebrow}>SÉOUL IMMERSION</Text>
-                <Text style={styles.navTitle}>Exploration</Text>
+                <AppText variant="sectionLabel" style={styles.navEyebrow}>SÉOUL IMMERSION</AppText>
+                <AppText variant="cardTitle" style={styles.navTitle}>Exploration</AppText>
               </View>
             </View>
 
             <View style={styles.heroSection}>
-              <Text style={styles.heroTitle}>Lieux</Text>
+              <AppText variant="screenTitle" style={styles.heroTitle}>Lieux</AppText>
               <View style={styles.neonBar} />
             </View>
 
@@ -192,11 +191,11 @@ export default function BuildingsCyber() {
                 <View style={styles.cardHeader}>
                   <View style={styles.liveTag}>
                     <View style={styles.liveDot} />
-                    <Text style={styles.liveText}>URBAN SCANNER</Text>
+                    <AppText variant="label" style={styles.liveText}>URBAN SCANNER</AppText>
                   </View>
-                  <Text style={styles.counterText}>
+                  <AppText variant="caption" style={styles.counterText}>
                     {wordIndex + 1} / {ESSENTIALS.length}
-                  </Text>
+                  </AppText>
                 </View>
 
                 <View style={styles.cardBody}>
@@ -205,7 +204,7 @@ export default function BuildingsCyber() {
                     onPress={() => animateChange(-1)}
                   >
                     <BlurView intensity={20} style={styles.navBtnBlur}>
-                      <Text style={styles.navBtnText}>‹</Text>
+                      <AppText variant="symbol" style={styles.navBtnText}>‹</AppText>
                     </BlurView>
                   </Pressable>
 
@@ -234,9 +233,9 @@ export default function BuildingsCyber() {
                         },
                       ]}
                     >
-                      <Text style={styles.krBig}>{currentWord.kr}</Text>
-                      <Text style={styles.romanBig}>{currentWord.roman}</Text>
-                      <Text style={styles.frBig}>{currentWord.fr}</Text>
+                      <AppText variant="koreanPrimary" script="korean" style={styles.krBig}>{currentWord.kr}</AppText>
+                      <AppText variant="caption" style={styles.romanBig}>{currentWord.roman}</AppText>
+                      <AppText variant="cardTitle" style={styles.frBig}>{currentWord.fr}</AppText>
                     </Animated.View>
                   </View>
 
@@ -245,7 +244,7 @@ export default function BuildingsCyber() {
                     onPress={() => animateChange(1)}
                   >
                     <BlurView intensity={20} style={styles.navBtnBlur}>
-                      <Text style={styles.navBtnText}>›</Text>
+                      <AppText variant="symbol" style={styles.navBtnText}>›</AppText>
                     </BlurView>
                   </Pressable>
                 </View>
@@ -267,7 +266,7 @@ export default function BuildingsCyber() {
                     end={{ x: 1, y: 0 }}
                     style={styles.playGradient}
                   >
-                    <Text style={styles.playBtnText}>DÉCODER LE LIEU</Text>
+                    <AppText variant="button" style={styles.playBtnText}>DÉCODER LE LIEU</AppText>
                     <View style={styles.btnGlow} />
                   </LinearGradient>
                 </Pressable>
@@ -279,16 +278,18 @@ export default function BuildingsCyber() {
               <View
                 style={[styles.insightAccent, { backgroundColor: AMBER }]}
               />
-              <Text style={styles.insightTitle}>Astuce Urbaine</Text>
-              <Text style={styles.insightText}>
-                À Séoul, les numéros d'étages sont cruciaux. "1층" est souvent
-                le niveau de la rue, mais attention aux "지하" (sous-sols) très
-                animés.
-              </Text>
+              <AppText variant="sectionTitle" style={styles.insightTitle}>Astuce Urbaine</AppText>
+              <AppMixedText variant="body" style={styles.insightText} segments={[
+                { text: "À Séoul, les numéros d'étages sont cruciaux. \"", script: "latin" },
+                { text: "1층", script: "korean" },
+                { text: "\" est souvent le niveau de la rue, mais attention aux \"", script: "latin" },
+                { text: "지하", script: "korean" },
+                { text: "\" (sous-sols) très animés.", script: "latin" },
+              ]} />
             </BlurView>
 
             {/* --- PHRASES SECTION --- */}
-            <Text style={styles.sectionLabel}>CONTEXTE RÉEL</Text>
+            <AppText variant="sectionLabel" style={styles.sectionLabel}>CONTEXTE RÉEL</AppText>
             {PHRASES.map((item) => (
               <Pressable
                 key={item.id}
@@ -306,13 +307,13 @@ export default function BuildingsCyber() {
                     ]}
                   />
                   <View style={styles.phraseTextContainer}>
-                    <Text style={styles.phraseKr}>{item.kr}</Text>
-                    <Text style={styles.phraseFr}>{item.fr}</Text>
+                    <AppText variant="koreanSecondary" script="korean" style={styles.phraseKr}>{item.kr}</AppText>
+                    <AppText variant="bodySecondary" style={styles.phraseFr}>{item.fr}</AppText>
                   </View>
                   <View
                     style={[styles.miniPlayIcon, { borderColor: item.accent }]}
                   >
-                    <Text style={{ color: item.accent, fontSize: 10 }}>▶</Text>
+                    <AppText variant="label" style={{ color: item.accent}}>▶</AppText>
                   </View>
                 </BlurView>
               </Pressable>
@@ -347,22 +348,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
   },
-  backArrow: { color: "#fff", fontSize: 24, marginTop: -2 },
+  backArrow: { color: "#fff", marginTop: -2 },
   navEyebrow: {
     color: PINK,
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 2,
   },
-  navTitle: { color: "#fff", fontSize: 14, fontWeight: "600", opacity: 0.8 },
+  navTitle: { color: "#fff", opacity: 0.8 },
 
   // Hero
   heroSection: { marginBottom: 35 },
   heroTitle: {
     color: "#fff",
-    fontSize: 50,
-    fontWeight: "900",
-    letterSpacing: -2,
   },
   neonBar: {
     width: 50,
@@ -401,8 +396,8 @@ const styles = StyleSheet.create({
     borderColor: "rgba(34,211,238,0.3)",
   },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: CYAN },
-  liveText: { color: CYAN, fontSize: 9, fontWeight: "900", letterSpacing: 1 },
-  counterText: { color: MUTED, fontSize: 11, fontWeight: "700" },
+  liveText: { color: CYAN},
+  counterText: { color: MUTED},
 
   cardBody: {
     flexDirection: "row",
@@ -456,24 +451,19 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.1)",
   },
   navBtnBlur: { flex: 1, alignItems: "center", justifyContent: "center" },
-  navBtnText: { color: "#fff", fontSize: 24, fontWeight: "300" },
+  navBtnText: { color: "#fff"},
 
   wordContent: { alignItems: "center" },
   krBig: {
     color: "#fff",
-    fontSize: 56,
-    fontWeight: "800",
     textShadowColor: "rgba(34,211,238,0.5)",
     textShadowRadius: 20,
   },
   romanBig: {
     color: CYAN,
-    fontSize: 16,
-    fontWeight: "700",
     marginTop: 4,
-    letterSpacing: 2,
   },
-  frBig: { color: MUTED, fontSize: 15, marginTop: 4, fontStyle: "italic" },
+  frBig: { color: MUTED, marginTop: 4, fontStyle: "italic" },
 
   // HARMONIZED CTA
   bigPlayBtn: {
@@ -495,9 +485,6 @@ const styles = StyleSheet.create({
   },
   playBtnText: {
     color: "#fff",
-    fontSize: 13,
-    fontWeight: "900",
-    letterSpacing: 2,
     zIndex: 2,
   },
   btnGlow: {
@@ -529,19 +516,13 @@ const styles = StyleSheet.create({
   },
   insightTitle: {
     color: AMBER,
-    fontSize: 14,
-    fontWeight: "900",
     marginBottom: 8,
-    letterSpacing: 0.5,
   },
-  insightText: { color: MUTED, fontSize: 14, lineHeight: 22 },
+  insightText: { color: MUTED},
 
   // Phrases
   sectionLabel: {
     color: "rgba(255,255,255,0.3)",
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 2,
     marginBottom: 15,
   },
   phraseItem: {
@@ -560,8 +541,8 @@ const styles = StyleSheet.create({
     left: 0,
   },
   phraseTextContainer: { flex: 1, marginLeft: 12 },
-  phraseKr: { color: "#fff", fontSize: 17, fontWeight: "700" },
-  phraseFr: { color: MUTED, fontSize: 13, marginTop: 3 },
+  phraseKr: { color: "#fff"},
+  phraseFr: { color: MUTED, marginTop: 3 },
   miniPlayIcon: {
     width: 34,
     height: 34,

@@ -516,7 +516,7 @@ export default function NightlifeImmersion() {
               />
 
               <View style={styles.cardHeader}>
-                <AppText variant="koreanPrimary" script="korean"
+                <AppText variant="koreanSecondary" script="korean" lineContract="singleLine"
                   style={[styles.koreanHeader, { color: activeScene.accent }]}
                 >
                   {activeScene.koreanTitle}
@@ -758,12 +758,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
   },
-  backArrow: { color: "#fff", fontSize: 24, marginTop: -2 },
+  backArrow: { color: "#fff", marginTop: -2 },
   navEyebrow: {
-    fontSize: 10,
-    letterSpacing: 2,
   },
-  navTitle: { color: "#fff", fontSize: 14, opacity: 0.8 },
+  navTitle: { color: "#fff", opacity: 0.8 },
 
   header: {
     flexDirection: "row",
@@ -774,8 +772,6 @@ const styles = StyleSheet.create({
   backBtn: { flexDirection: "row", alignItems: "center" },
   backText: {
     color: COLORS.muted,
-    fontSize: 11,
-    letterSpacing: 2,
   },
   neonBadge: {
     paddingHorizontal: 12,
@@ -784,8 +780,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   neonBadgeText: {
-    fontSize: 10,
-    letterSpacing: 1,
   },
 
   tabContainer: {
@@ -808,7 +802,6 @@ const styles = StyleSheet.create({
   },
   tabText: {
     color: COLORS.muted,
-    fontSize: 13,
     textAlign: "center",
   },
 
@@ -821,16 +814,13 @@ const styles = StyleSheet.create({
   },
   cardHeader: { marginBottom: 12 },
   koreanHeader: {
-    fontSize: 14,
-    letterSpacing: 1,
+    marginBottom: 2,
   },
   sceneTitle: {
     color: COLORS.txt,
-    fontSize: 34,
   },
   sceneDesc: {
     color: COLORS.muted,
-    fontSize: 14,
     fontStyle: "italic",
     marginBottom: 30,
   },
@@ -854,20 +844,14 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 2,
   },
   sender: {
-    fontSize: 10,
     marginBottom: 5,
-    letterSpacing: 1,
-    textTransform: "uppercase",
   },
   krTxt: {
     color: COLORS.txt,
-    fontSize: 18,
-    lineHeight: 24,
     marginBottom: 5,
   },
   frTxt: {
     color: COLORS.muted,
-    fontSize: 13,
   },
   typingMsg: {
     minWidth: 92,
@@ -888,9 +872,6 @@ const styles = StyleSheet.create({
   tapHint: {
     alignSelf: "center",
     color: "rgba(255,255,255,0.42)",
-    fontSize: 10,
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
     marginTop: 4,
   },
 
@@ -903,8 +884,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.04)",
   },
   cultureHintText: {
-    fontSize: 11,
-    lineHeight: 16,
   },
 
   toolbox: { marginTop: 40 },
@@ -916,8 +895,6 @@ const styles = StyleSheet.create({
   },
   toolboxTitle: {
     color: COLORS.muted,
-    fontSize: 12,
-    letterSpacing: 3,
   },
   toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
 
@@ -939,19 +916,15 @@ const styles = StyleSheet.create({
   },
   expWord: {
     color: COLORS.txt,
-    fontSize: 24,
     marginBottom: 2,
   },
   expRom: {
-    fontSize: 12,
-    textTransform: "uppercase",
   },
   expMean: {
     color: COLORS.txt,
-    fontSize: 16,
     marginBottom: 4,
   },
-  expCtx: { color: COLORS.muted, fontSize: 12, lineHeight: 18 },
+  expCtx: { color: COLORS.muted},
   listenPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -962,11 +935,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   listenIcon: {
-    fontSize: 9,
   },
   listenText: {
     color: "rgba(255,255,255,0.78)",
-    fontSize: 9,
-    letterSpacing: 1,
   },
 });

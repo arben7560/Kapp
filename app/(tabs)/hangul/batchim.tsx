@@ -1230,11 +1230,9 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   backBtn: { flexDirection: "row", alignItems: "center" },
-  backArrow: { color: COLORS.txt, fontSize: 32, marginRight: 5 },
+  backArrow: { color: COLORS.txt, marginRight: 5 },
   backText: {
     color: COLORS.muted,
-    fontSize: 11,
-    letterSpacing: 2,
   },
 
   premiumToggle: {
@@ -1250,7 +1248,6 @@ const styles = StyleSheet.create({
   },
   premiumToggleText: {
     color: "#FFF",
-    fontSize: 10,
   },
 
   heroIntro: { marginBottom: 25 },
@@ -1265,11 +1262,8 @@ const styles = StyleSheet.create({
   miniProgressFill: { height: "100%", borderRadius: 2 },
   progressText: {
     color: COLORS.muted,
-    fontSize: 11,
   },
   eyebrow: {
-    fontSize: 10,
-    letterSpacing: 2.5,
     marginBottom: 6,
   },
 
@@ -1283,7 +1277,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.05)",
   },
   tabLabel: {
-    fontSize: 12,
     color: COLORS.muted,
   },
 
@@ -1296,7 +1289,6 @@ const styles = StyleSheet.create({
   },
   toolboxSceneTitle: {
     color: COLORS.txt,
-    fontSize: 34,
     marginBottom: 14,
   },
   hookBanner: {
@@ -1308,35 +1300,25 @@ const styles = StyleSheet.create({
   },
   hookText: {
     color: COLORS.muted,
-    fontSize: 14,
-    lineHeight: 21,
   },
   krTitle: {
-    fontSize: 13,
-    letterSpacing: 3,
     marginBottom: 12,
   },
   sceneDesc: {
     color: COLORS.muted,
-    fontSize: 14,
     fontStyle: "italic",
     marginBottom: 22,
-    lineHeight: 20,
   },
   instructionBox: { paddingLeft: 18, borderLeftWidth: 4 },
   instructionText: {
     color: COLORS.txt,
-    fontSize: 15,
     fontStyle: "italic",
-    lineHeight: 21,
   },
 
   grid: { marginTop: 35, gap: 18 },
   toolboxHeader: { marginBottom: 8 },
   sectionTitle: {
     color: "rgba(255,255,255,0.4)",
-    fontSize: 12,
-    letterSpacing: 3,
   },
   cardWrapper: { width: "100%" },
   expCard: {
@@ -1353,7 +1335,6 @@ const styles = StyleSheet.create({
   },
   expWord: {
     color: COLORS.txt,
-    fontSize: 28,
     marginBottom: 2,
   },
   contrastWordRow: {
@@ -1373,7 +1354,6 @@ const styles = StyleSheet.create({
   },
   contrastSlash: {
     color: "rgba(255,255,255,0.38)",
-    fontSize: 18,
   },
   expCardRight: { flexDirection: "row", alignItems: "center", gap: 12 },
   strokeBadge: {
@@ -1384,12 +1364,9 @@ const styles = StyleSheet.create({
   },
   strokeText: {
     color: "rgba(255,255,255,0.4)",
-    fontSize: 9,
   },
   romBox: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12 },
   romText: {
-    fontSize: 12,
-    textTransform: "uppercase",
   },
   expDetail: {
     padding: 22,
@@ -1398,23 +1375,16 @@ const styles = StyleSheet.create({
     borderTopColor: "rgba(255,255,255,0.05)",
   },
   expSymbolic: {
-    fontSize: 11,
     marginTop: 18,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    lineHeight: 16,
   },
   expMean: {
     color: COLORS.txt,
-    fontSize: 16,
     marginTop: 6,
     marginBottom: 4,
   },
   expCtx: {
     color: COLORS.muted,
-    fontSize: 12,
     marginTop: 6,
-    lineHeight: 18,
   },
 
   teaserBox: {
@@ -1429,14 +1399,10 @@ const styles = StyleSheet.create({
   },
   teaserText: {
     color: COLORS.muted,
-    fontSize: 15,
     textAlign: "center",
     marginBottom: 12,
-    lineHeight: 21,
   },
   teaserBtn: {
-    fontSize: 13,
-    letterSpacing: 1,
   },
 
   quizOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: "flex-end" },
@@ -1459,21 +1425,17 @@ const styles = StyleSheet.create({
   },
   quizTitle: {
     color: "rgba(255,255,255,0.3)",
-    fontSize: 11,
     textAlign: "center",
-    letterSpacing: 4,
     marginBottom: 25,
   },
   quizQBox: { alignItems: "center", marginBottom: 35 },
   quizChar: {
     color: COLORS.txt,
-    fontSize: 48,
     marginBottom: 2,
     textAlign: "center",
   },
   quizInstruction: {
     color: COLORS.muted,
-    fontSize: 14,
     fontStyle: "italic",
     marginTop: 12,
     textAlign: "center",
@@ -1488,7 +1450,6 @@ const styles = StyleSheet.create({
   },
   optText: {
     color: COLORS.txt,
-    fontSize: 20,
     textAlign: "center",
   },
   optCorrect: {
@@ -1532,8 +1493,6 @@ const styles = StyleSheet.create({
   },
   resultLabelText: {
     color: "rgba(255,255,255,0.58)",
-    fontSize: 10,
-    letterSpacing: 2,
   },
   resultMedalWrap: {
     width: 118,
@@ -1571,29 +1530,20 @@ const styles = StyleSheet.create({
   },
   resultScoreBig: {
     color: COLORS.pureWhite,
-    fontSize: 42,
-    letterSpacing: -1,
   },
   resultScoreTotal: {
     color: "rgba(255,255,255,0.45)",
-    fontSize: 18,
     marginTop: 14,
   },
   resultTitle: {
     color: COLORS.pureWhite,
-    fontSize: 24,
-    letterSpacing: -0.6,
     textAlign: "center",
     marginBottom: 10,
-    textTransform: "uppercase",
   },
   resultTitleSmall: {
-    fontSize: 20,
   },
   resultSubtitle: {
     color: "rgba(255,255,255,0.62)",
-    fontSize: 14,
-    lineHeight: 21,
     textAlign: "center",
     maxWidth: 310,
     marginBottom: 22,
@@ -1612,9 +1562,7 @@ const styles = StyleSheet.create({
   },
   resultScore: {
     color: "rgba(255,255,255,0.50)",
-    fontSize: 13,
     marginBottom: 28,
-    letterSpacing: 0.5,
   },
   closeBtn: {
     width: "88%",
@@ -1635,7 +1583,5 @@ const styles = StyleSheet.create({
   },
   closeBtnText: {
     color: "#020306",
-    fontSize: 12,
-    letterSpacing: 1.8,
   },
 });

@@ -315,9 +315,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   eyebrow: {
-    fontSize: 11,
-    lineHeight: 15,
-    letterSpacing: 1.3,
     marginBottom: 2,
   },
   intentionRow: {
@@ -333,8 +330,6 @@ const styles = StyleSheet.create({
   },
   intentionText: {
     flex: 1,
-    fontSize: 14,
-    lineHeight: 20,
   },
   statusCard: {
     borderRadius: 20,
@@ -356,8 +351,6 @@ const styles = StyleSheet.create({
   },
   statusLabel: {
     flex: 1,
-    fontSize: 14,
-    lineHeight: 19,
   },
   transcriptBlock: {
     borderTopWidth: 1,
@@ -365,14 +358,9 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   transcriptEyebrow: {
-    fontSize: 10,
-    lineHeight: 14,
-    letterSpacing: 1.2,
     marginBottom: 5,
   },
   transcriptText: {
-    fontSize: 18,
-    lineHeight: 27,
   },
   feedbackCard: {
     borderRadius: 14,
@@ -383,8 +371,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   feedbackText: {
-    fontSize: 13,
-    lineHeight: 19,
   },
   actions: {
     flexDirection: "row",
@@ -402,8 +388,6 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: "#08080D",
-    fontSize: 14,
-    lineHeight: 19,
   },
   helpButton: {
     flex: 1,
@@ -419,8 +403,6 @@ const styles = StyleSheet.create({
     gap: 7,
   },
   helpButtonText: {
-    fontSize: 14,
-    lineHeight: 19,
   },
   disabledButton: {
     opacity: 0.55,
@@ -433,9 +415,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   helpChoicesLabel: {
-    fontSize: 11,
-    lineHeight: 15,
-    letterSpacing: 1.2,
     marginLeft: 4,
   },
 });

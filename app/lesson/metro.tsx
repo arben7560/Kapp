@@ -448,16 +448,12 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   backBtn: { flexDirection: "row", alignItems: "center" },
-  backArrow: { color: COLORS.txt, fontSize: 32, marginRight: 5 },
+  backArrow: { color: COLORS.txt, marginRight: 5 },
   backText: {
     color: COLORS.muted,
-    fontSize: 12,
-    letterSpacing: 1,
   },
   headerTitle: {
     color: COLORS.pink,
-    fontSize: 14,
-    letterSpacing: 2,
   },
 
   selectorRow: {
@@ -475,7 +471,6 @@ const styles = StyleSheet.create({
   },
   selectorText: {
     color: COLORS.muted,
-    fontSize: 13,
   },
 
   toolbox: { marginTop: 40 },
@@ -488,8 +483,6 @@ const styles = StyleSheet.create({
   },
   toolboxTitle: {
     color: COLORS.muted,
-    fontSize: 12,
-    letterSpacing: 3,
   },
   toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
 
@@ -517,21 +510,16 @@ const styles = StyleSheet.create({
   },
   expWord: {
     color: COLORS.txt,
-    fontSize: 24,
     marginBottom: 2,
   },
   expRom: {
-    fontSize: 12,
   },
   expMean: {
     color: COLORS.txt,
-    fontSize: 16,
     marginBottom: 4,
   },
   expContext: {
     color: COLORS.muted,
-    fontSize: 12,
-    lineHeight: 18,
   },
   listenPill: {
     flexDirection: "row",
@@ -543,11 +531,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   listenIcon: {
-    fontSize: 9,
   },
   listenText: {
     color: "rgba(255,255,255,0.78)",
-    fontSize: 9,
-    letterSpacing: 1,
   },
 });

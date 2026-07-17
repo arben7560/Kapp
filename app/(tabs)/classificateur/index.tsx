@@ -284,13 +284,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   backArrow: {
-    fontSize: 28,
-    lineHeight: 28,
   },
   backLabel: {
-    fontSize: 12,
-    lineHeight: 16,
-    letterSpacing: 2.3,
   },
   settingsButton: {
     width: 56,

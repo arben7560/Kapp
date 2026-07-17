@@ -74,7 +74,6 @@ export function ActionButton({
         <AppText
           variant="button"
           align="center"
-          typographyOverride={{ textTransform: "uppercase" }}
           style={{ color: resolvedLabelColor }}
         >
           {label}

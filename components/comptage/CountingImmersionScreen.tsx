@@ -324,9 +324,9 @@ export default function CountingImmersionScreen({
 
               <View style={styles.stageInfo}>
                 <AppText
-                  variant="label"
+                  variant="koreanSecondary"
                   script="korean"
-                  lineContract="twoLines"
+                  lineContract="singleLine"
                   style={[styles.krTitle, { color: activeScene.accent }]}
                 >
                   {activeScene.koreanTitle}
@@ -603,7 +603,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.1)",
   },
   stageInfo: { marginBottom: 30 },
-  krTitle: { marginBottom: 4 },
+  krTitle: { marginBottom: 2 },
   mainSub: {
     fontStyle: "italic",
     marginTop: 8,

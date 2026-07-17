@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { AppTypography } from "../../constants/theme";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import type { DailyStreakState } from "../../lib/dailyStreak";
@@ -52,41 +53,6 @@ function textGlow(color: string, radius: number) {
 }
 
 const HANGUL_PROGRESS_TOTAL = 20;
-
-const TYPOGRAPHY = {
-  headerCityKr: { fontSize: 18, lineHeight: 24, letterSpacing: -0.2 },
-  headerCityEn: { fontSize: 9, lineHeight: 12, letterSpacing: 2.4 },
-  status: { fontSize: 9, lineHeight: 12, letterSpacing: 1.1 },
-  location: { fontSize: 8, lineHeight: 11, letterSpacing: 0.5 },
-  heroLabel: { fontSize: 10, lineHeight: 14, letterSpacing: 2.2 },
-  heroSubtitle: { fontSize: 15, lineHeight: 23, letterSpacing: 0 },
-  cardKicker: { fontSize: 10, lineHeight: 14, letterSpacing: 1.6 },
-  cardTitle: { fontSize: 28, lineHeight: 34, letterSpacing: -0.35 },
-  cardNarrative: { fontSize: 15, lineHeight: 22, letterSpacing: 0 },
-  progress: { fontSize: 12, lineHeight: 16, letterSpacing: 0.1 },
-  streakKicker: { fontSize: 10, lineHeight: 14, letterSpacing: 1.5 },
-  streakSymbol: { fontSize: 10, lineHeight: 14, letterSpacing: 0.6 },
-  streakNumber: { fontSize: 42, lineHeight: 46, letterSpacing: -0.8 },
-  streakUnit: { fontSize: 14, lineHeight: 18, letterSpacing: 0 },
-  streakStatus: {
-    fontSize: 10,
-    lineHeight: 14,
-    letterSpacing: 0.7,
-    textTransform: "uppercase",
-  },
-  streakMessageTitle: { fontSize: 14, lineHeight: 19, letterSpacing: 0 },
-  streakGoal: { fontSize: 13, lineHeight: 19, letterSpacing: 0 },
-  streakMetricValue: { fontSize: 15, lineHeight: 20, letterSpacing: 0 },
-  streakMetricLabel: { fontSize: 11, lineHeight: 15, letterSpacing: 0.1 },
-  streakOpenHint: { fontSize: 12, lineHeight: 17, letterSpacing: 0.1 },
-  sectionTitle: { fontSize: 12, lineHeight: 16, letterSpacing: 1.8 },
-  sequenceIcon: { fontSize: 21, lineHeight: 24, letterSpacing: 0 },
-  sequencePlace: { fontSize: 9, lineHeight: 12, letterSpacing: 1.1 },
-  sequenceTitle: { fontSize: 18, lineHeight: 23, letterSpacing: -0.1 },
-  sequenceSub: { fontSize: 13, lineHeight: 19, letterSpacing: 0 },
-  sequenceArrow: { fontSize: 26, lineHeight: 30, letterSpacing: 0 },
-  comingSoon: { fontSize: 9.5, lineHeight: 13, letterSpacing: 1 },
-} as const;
 
 const SEQUENCES: any[] = [
   {
@@ -214,16 +180,12 @@ export default function Home() {
   );
   const heroTextWidth = Math.max(0, responsive.contentWidth - 8);
   const heroSubtitleWidth = Math.min(430, heroTextWidth);
-  const heroSeoulTypography = responsive.isCompact
-    ? { fontSize: 48, lineHeight: 58, letterSpacing: -0.2 }
-    : responsive.isTablet || responsive.isDesktop
-      ? { fontSize: 72, lineHeight: 82, letterSpacing: -0.3 }
-      : { fontSize: 64, lineHeight: 74, letterSpacing: -0.25 };
-  const heroTitleTypography = responsive.isCompact
-    ? { fontSize: 34, lineHeight: 40, letterSpacing: -0.5 }
-    : responsive.isTablet || responsive.isDesktop
-      ? { fontSize: 46, lineHeight: 52, letterSpacing: -0.7 }
-      : { fontSize: 40, lineHeight: 46, letterSpacing: -0.6 };
+  const heroSeoulVariant = responsive.isCompact
+    ? "display"
+    : responsive.screenClass === "phone"
+      ? "koreanPhraseHero"
+      : "koreanHero";
+  const heroTitleVariant = responsive.isCompact ? "screenTitle" : "display";
   const currentTrack = progress.learningTrack;
   const activeSeq =
     (currentTrack ? RESUME_SEQUENCES[currentTrack] : undefined) ??
@@ -348,7 +310,6 @@ export default function Home() {
                     variant="koreanPrimary"
                     script="korean"
                     lineContract="singleLine"
-                    typographyOverride={TYPOGRAPHY.headerCityKr}
                     style={styles.headerCityKr}
                   >
                     서울
@@ -356,7 +317,6 @@ export default function Home() {
                   <AppText
                     variant="sectionLabel"
                     lineContract="singleLine"
-                    typographyOverride={TYPOGRAPHY.headerCityEn}
                     style={styles.headerCityEn}
                   >
                     SEOUL
@@ -378,7 +338,6 @@ export default function Home() {
                     <AppText
                       variant="caption"
                       lineContract="singleLine"
-                      typographyOverride={TYPOGRAPHY.status}
                       style={styles.statusText}
                     >
                       IMMERSION ACTIVE
@@ -387,7 +346,6 @@ export default function Home() {
                   <AppText
                     variant="caption"
                     lineContract="singleLine"
-                    typographyOverride={TYPOGRAPHY.location}
                     style={styles.locationText}
                   >
                     KOREA STANDARD TIME
@@ -412,7 +370,6 @@ export default function Home() {
                 <View style={styles.heroContent}>
                   <AppText
                     variant="sectionLabel"
-                    typographyOverride={TYPOGRAPHY.heroLabel}
                     style={styles.heroLabel}
                   >
                     SÉOUL IMMERSION
@@ -425,10 +382,9 @@ export default function Home() {
                     ]}
                   >
                     <AppText
-                      variant="koreanHero"
+                      variant={heroSeoulVariant}
                       script="korean"
                       lineContract="singleLine"
-                      typographyOverride={heroSeoulTypography}
                       style={[
                         styles.heroSeoulShadow,
                         {
@@ -437,7 +393,7 @@ export default function Home() {
                           transform: [
                             {
                               translateY:
-                                1 - heroSeoulTypography.lineHeight / 2,
+                                1 - AppTypography[heroSeoulVariant].lineHeight / 2,
                             },
                           ],
                         },
@@ -446,10 +402,9 @@ export default function Home() {
                       어서 오세요.
                     </AppText>
                     <AppText
-                      variant="koreanHero"
+                      variant={heroSeoulVariant}
                       script="korean"
                       lineContract="singleLine"
-                      typographyOverride={heroSeoulTypography}
                       style={[
                         styles.heroSeoulTitle,
                         { maxWidth: heroTextWidth },
@@ -461,8 +416,7 @@ export default function Home() {
 
                   <AppText
                     accessibilityRole="header"
-                    variant="screenTitle"
-                    typographyOverride={heroTitleTypography}
+                    variant={heroTitleVariant}
                     style={styles.heroTitle}
                   >
                     Entre dans la ville.
@@ -470,7 +424,6 @@ export default function Home() {
 
                   <AppText
                     variant="subtitle"
-                    typographyOverride={TYPOGRAPHY.heroSubtitle}
                     style={[
                       styles.heroSubtitle,
                       { maxWidth: heroSubtitleWidth },
@@ -506,8 +459,7 @@ export default function Home() {
 
             <View style={styles.sectionDivider}>
               <AppText
-                variant="sectionTitle"
-                typographyOverride={TYPOGRAPHY.sectionTitle}
+                variant="sectionLabel"
                 style={styles.sectionTitle}
               >
                 {"POINTS D'ENTRÉE"}
@@ -547,8 +499,7 @@ export default function Home() {
 
             <View style={styles.sectionDivider}>
               <AppText
-                variant="sectionTitle"
-                typographyOverride={TYPOGRAPHY.sectionTitle}
+                variant="sectionLabel"
                 style={styles.sectionTitle}
               >
                 IMMERSION
@@ -683,14 +634,12 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
         <View style={styles.cardContent}>
           <AppText
             variant="sectionLabel"
-            typographyOverride={TYPOGRAPHY.cardKicker}
             style={styles.cardKicker}
           >
             REPRENDRE LA SÉQUENCE
           </AppText>
           <AppText
-            variant="screenTitle"
-            typographyOverride={TYPOGRAPHY.cardTitle}
+            variant="featureTitle"
             style={styles.cardTitle}
           >
             {displayLabel}
@@ -698,7 +647,6 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
           <AppText
             variant="bodySecondary"
             tone="muted"
-            typographyOverride={TYPOGRAPHY.cardNarrative}
             style={styles.cardNarrative}
           >
             {narrative}
@@ -717,7 +665,6 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
             </View>
             <AppText
               variant="caption"
-              typographyOverride={TYPOGRAPHY.progress}
               style={styles.progressText}
             >
               {Math.round(progress * 100)}% {"d'immersion"}
@@ -773,7 +720,6 @@ function DailyStreakCard({
           <View style={styles.streakCounterBlock}>
             <AppText
               variant="sectionLabel"
-              typographyOverride={TYPOGRAPHY.streakKicker}
               style={styles.streakKicker}
             >
               SÉRIE QUOTIDIENNE
@@ -782,7 +728,6 @@ function DailyStreakCard({
               <View style={styles.streakSymbol}>
                 <AppText
                   variant="caption"
-                  typographyOverride={TYPOGRAPHY.streakSymbol}
                   style={styles.streakSymbolText}
                 >
                   ST
@@ -790,14 +735,12 @@ function DailyStreakCard({
               </View>
               <AppText
                 variant="numericValue"
-                typographyOverride={TYPOGRAPHY.streakNumber}
                 style={styles.streakNumber}
               >
                 {currentStreak}
               </AppText>
               <AppText
                 variant="caption"
-                typographyOverride={TYPOGRAPHY.streakUnit}
                 style={styles.streakUnit}
               >
                 {currentStreak > 1 ? "jours" : "jour"}
@@ -813,7 +756,6 @@ function DailyStreakCard({
           >
             <AppText
               variant="label"
-              typographyOverride={TYPOGRAPHY.streakStatus}
               style={[
                 styles.streakStatusText,
                 isValidated && styles.streakStatusTextValidated,
@@ -827,7 +769,6 @@ function DailyStreakCard({
         <View style={styles.streakMessageBox}>
           <AppText
             variant="bodyStrong"
-            typographyOverride={TYPOGRAPHY.streakMessageTitle}
             style={styles.streakMessageTitle}
           >
             {isValidated ? "Objectif du jour atteint" : "Objectif du jour"}
@@ -835,7 +776,6 @@ function DailyStreakCard({
           <AppText
             variant="bodySecondary"
             tone="muted"
-            typographyOverride={TYPOGRAPHY.streakGoal}
             style={styles.streakGoal}
           >
             {helperText}
@@ -846,7 +786,6 @@ function DailyStreakCard({
           <View style={styles.streakMetricCard}>
             <AppText
               variant="bodyStrong"
-              typographyOverride={TYPOGRAPHY.streakMetricValue}
               style={styles.streakMetricValue}
             >
               {longestStreak} j
@@ -854,7 +793,6 @@ function DailyStreakCard({
             <AppText
               variant="caption"
               tone="muted"
-              typographyOverride={TYPOGRAPHY.streakMetricLabel}
               style={styles.streakMetricLabel}
             >
               Record
@@ -863,7 +801,6 @@ function DailyStreakCard({
           <View style={styles.streakMetricCard}>
             <AppText
               variant="bodyStrong"
-              typographyOverride={TYPOGRAPHY.streakMetricValue}
               style={styles.streakMetricValue}
             >
               {freezesAvailable}
@@ -871,7 +808,6 @@ function DailyStreakCard({
             <AppText
               variant="caption"
               tone="muted"
-              typographyOverride={TYPOGRAPHY.streakMetricLabel}
               style={styles.streakMetricLabel}
             >
               Freezes
@@ -880,7 +816,6 @@ function DailyStreakCard({
           <View style={styles.streakMetricCard}>
             <AppText
               variant="bodyStrong"
-              typographyOverride={TYPOGRAPHY.streakMetricValue}
               style={styles.streakMetricValue}
             >
               {isValidated ? "OK" : "1"}
@@ -888,7 +823,6 @@ function DailyStreakCard({
             <AppText
               variant="caption"
               tone="muted"
-              typographyOverride={TYPOGRAPHY.streakMetricLabel}
               style={styles.streakMetricLabel}
             >
               {isValidated ? "Valide" : "activité"}
@@ -899,7 +833,6 @@ function DailyStreakCard({
         <AppText
           variant="caption"
           tone="soft"
-          typographyOverride={TYPOGRAPHY.streakOpenHint}
           style={styles.streakOpenHint}
         >
           Voir le calendrier et les badges
@@ -949,8 +882,7 @@ function SequenceIconGlyph({ icon, color }: { icon: string; color: string }) {
 
   return (
     <AppText
-      variant="cardTitle"
-      typographyOverride={TYPOGRAPHY.sequenceIcon}
+      variant="symbol"
       style={[
         styles.seqIcon,
         {
@@ -1067,14 +999,12 @@ function SequenceCard({ item, isActive, onPress }: any) {
         <View style={styles.seqText}>
           <AppText
             variant="sectionLabel"
-            typographyOverride={TYPOGRAPHY.sequencePlace}
             style={styles.seqPlace}
           >
             {item.place}
           </AppText>
           <AppText
             variant="cardTitle"
-            typographyOverride={TYPOGRAPHY.sequenceTitle}
             style={styles.seqTitle}
           >
             {item.title}
@@ -1082,7 +1012,6 @@ function SequenceCard({ item, isActive, onPress }: any) {
           <AppText
             variant="bodySecondary"
             tone="muted"
-            typographyOverride={TYPOGRAPHY.sequenceSub}
             style={styles.seqSub}
           >
             {item.narrative}
@@ -1090,9 +1019,8 @@ function SequenceCard({ item, isActive, onPress }: any) {
         </View>
 
         <AppText
-          variant="sectionTitle"
+          variant="symbol"
           lineContract="singleLine"
-          typographyOverride={TYPOGRAPHY.sequenceArrow}
           style={[
             styles.seqArrow,
             isActive && {
@@ -1118,8 +1046,7 @@ function SequenceCard({ item, isActive, onPress }: any) {
               ]}
             >
               <AppText
-                variant="caption"
-                typographyOverride={TYPOGRAPHY.comingSoon}
+                variant="label"
                 style={[styles.comingSoonText, { color: item.color }]}
               >
                 PROCHAINEMENT

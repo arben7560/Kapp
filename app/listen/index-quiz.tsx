@@ -1,7 +1,8 @@
 import * as Speech from "expo-speech";
 import React, { useEffect, useRef, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, TextInput, View } from "react-native";
 import { useStore } from "../../_store";
+import { AppText } from "../../components/app-text";
 import { isCorrect } from "../../lib/answerCheck";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { buildProgressId } from "../../lib/progressIds";
@@ -103,7 +104,7 @@ export default function ListeningScreen() {
   if (!exercise) {
     return (
       <View style={{ padding: 20 }}>
-        <Text>Session terminée 🎉</Text>
+        <AppText accessibilityRole="header" variant="sectionTitle">Session terminée 🎉</AppText>
       </View>
     );
   }
@@ -111,10 +112,10 @@ export default function ListeningScreen() {
   return (
     <View style={{ padding: 20 }}>
       <Pressable onPress={playAudio}>
-        <Text style={{ fontSize: 22 }}>🔊 Écouter</Text>
+        <AppText variant="button">🔊 Écouter</AppText>
       </Pressable>
 
-      <Text style={{ marginTop: 20 }}>{exercise.question}</Text>
+      <AppText variant="bodyStrong" style={{ marginTop: 20 }}>{exercise.question}</AppText>
 
       {exercise.type === "choice" &&
         exercise.answers?.map((a) => (
@@ -127,7 +128,7 @@ export default function ListeningScreen() {
               borderWidth: 1,
             }}
           >
-            <Text>{a}</Text>
+            <AppText variant="body">{a}</AppText>
           </Pressable>
         ))}
 
@@ -152,12 +153,12 @@ export default function ListeningScreen() {
               borderWidth: 1,
             }}
           >
-            <Text>Valider</Text>
+            <AppText variant="button">Valider</AppText>
           </Pressable>
         </>
       )}
 
-      {result && <Text style={{ marginTop: 20 }}>{result}</Text>}
+      {result && <AppText variant="bodyStrong" style={{ marginTop: 20 }}>{result}</AppText>}
     </View>
   );
 }

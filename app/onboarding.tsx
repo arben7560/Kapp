@@ -1054,8 +1054,6 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: TXT_SOFT,
-    fontSize: 10.5,
-    letterSpacing: 1.8,
   },
   arrivalCenter: {
     flex: 1,
@@ -1068,22 +1066,15 @@ const styles = StyleSheet.create({
   },
   koreanLine: {
     color: "rgba(255,255,255,0.85)",
-    fontSize: 22,
-    letterSpacing: 1.5,
     textAlign: "center",
     marginBottom: 12,
   },
   bigTitle: {
     color: TXT,
-    fontSize: 36,
-    lineHeight: 44,
-    letterSpacing: -1,
     textAlign: "center",
   },
   subtitle: {
     color: "rgba(255,255,255,0.68)",
-    fontSize: 15,
-    lineHeight: 24,
     textAlign: "center",
     marginTop: 14,
     maxWidth: 290,
@@ -1105,20 +1096,13 @@ const styles = StyleSheet.create({
   },
   heroEyebrow: {
     color: TXT_SOFT,
-    fontSize: 10.5,
-    letterSpacing: 2.2,
     marginBottom: 10,
   },
   heroTitle: {
     color: TXT,
-    fontSize: 21,
-    lineHeight: 28,
-    letterSpacing: -0.4,
   },
   heroText: {
     color: "rgba(255,255,255,0.60)",
-    fontSize: 14,
-    lineHeight: 22,
     marginTop: 12,
   },
   bottomCtaArea: {
@@ -1146,8 +1130,6 @@ const styles = StyleSheet.create({
   },
   primaryText: {
     color: "#FFFFFF",
-    fontSize: 15,
-    letterSpacing: 0.6,
     textAlign: "center",
   },
   sectionHead: {
@@ -1160,28 +1142,19 @@ const styles = StyleSheet.create({
   },
   sectionEyebrow: {
     color: TXT_SOFT,
-    fontSize: 10.5,
-    letterSpacing: 2,
     marginBottom: 6,
   },
   sectionTitle: {
     color: TXT,
-    fontSize: 28,
-    lineHeight: 34,
-    letterSpacing: -0.6,
   },
   sectionTitleScene: {
     maxWidth: 320,
   },
   sectionTitleCompact: {
-    fontSize: 25,
-    lineHeight: 31,
     maxWidth: 300,
   },
   sectionText: {
     color: "rgba(255,255,255,0.65)",
-    fontSize: 14,
-    lineHeight: 22,
     marginTop: 6,
   },
   pathGrid: {
@@ -1231,29 +1204,18 @@ const styles = StyleSheet.create({
   },
   pathIconText: {
     color: TXT,
-    fontSize: 14,
-    lineHeight: 18,
     textAlign: "center",
   },
   pathStep: {
-    fontSize: 9.5,
-    letterSpacing: 1.5,
     marginLeft: 10,
   },
   pathTitle: {
     color: TXT,
-    fontSize: 17,
-    lineHeight: 22,
-    letterSpacing: -0.3,
   },
   pathTitleCompact: {
-    fontSize: 15,
-    lineHeight: 19,
   },
   pathText: {
     color: "rgba(255,255,255,0.52)",
-    fontSize: 12,
-    lineHeight: 17,
     marginTop: 6,
   },
   pathTextCompact: {
@@ -1271,12 +1233,8 @@ const styles = StyleSheet.create({
   },
   pathAction: {
     color: TXT_SOFT,
-    fontSize: 12.5,
-    letterSpacing: 0.4,
   },
   pathArrow: {
-    fontSize: 15,
-    lineHeight: 18,
   },
   subSectionHead: {
     marginBottom: 14,
@@ -1286,14 +1244,10 @@ const styles = StyleSheet.create({
   },
   subSectionEyebrow: {
     color: TXT_SOFT,
-    fontSize: 10,
-    letterSpacing: 2,
     marginBottom: 4,
   },
   subSectionTitle: {
     color: TXT,
-    fontSize: 18,
-    letterSpacing: -0.3,
   },
   scroll: {
     flex: 1,
@@ -1377,8 +1331,6 @@ const styles = StyleSheet.create({
   },
   sceneEyebrow: {
     color: "rgba(255,255,255,0.45)",
-    fontSize: 9.5,
-    letterSpacing: 1.6,
   },
   selectedPill: {
     borderRadius: 999,
@@ -1389,17 +1341,12 @@ const styles = StyleSheet.create({
   },
   selectedPillText: {
     color: TXT,
-    fontSize: 8,
-    letterSpacing: 1,
   },
   sceneTitleText: {
     color: TXT,
-    fontSize: 19,
-    letterSpacing: -0.3,
   },
   sceneSubtitle: {
     color: "rgba(255,255,255,0.58)",
-    fontSize: 13,
     marginTop: 2,
   },
   radioWrap: {
@@ -1424,8 +1371,6 @@ const styles = StyleSheet.create({
   },
   discreetActionText: {
     color: "rgba(255,255,255,0.45)",
-    fontSize: 13,
-    letterSpacing: 0.2,
   },
   modeList: {
     gap: 12,
@@ -1466,12 +1411,9 @@ const styles = StyleSheet.create({
   },
   modeTitle: {
     color: TXT,
-    fontSize: 17,
-    letterSpacing: -0.2,
   },
   modeSubtitle: {
     color: "rgba(255,255,255,0.52)",
-    fontSize: 13,
     marginTop: 2,
   },
   signatureBadge: {
@@ -1485,8 +1427,6 @@ const styles = StyleSheet.create({
   },
   signatureText: {
     color: PINK,
-    fontSize: 9,
-    letterSpacing: 1.2,
   },
   modeActiveRing: {
     position: "absolute",
@@ -1508,13 +1448,10 @@ const styles = StyleSheet.create({
   },
   previewEyebrow: {
     color: "rgba(255,255,255,0.40)",
-    fontSize: 9.5,
-    letterSpacing: 1.8,
     marginBottom: 4,
   },
   previewTitle: {
     color: TXT,
-    fontSize: 15,
   },
   bottomBar: {
     flexDirection: "row",
@@ -1540,8 +1477,6 @@ const styles = StyleSheet.create({
   },
   secondaryText: {
     color: "rgba(255,255,255,0.55)",
-    fontSize: 15,
-    letterSpacing: 0.2,
   },
   primaryInlineWrap: {
     flex: 1,
@@ -1581,18 +1516,13 @@ const styles = StyleSheet.create({
   },
   transitionEyebrow: {
     color: PINK,
-    fontSize: 11,
-    letterSpacing: 3,
     marginBottom: 12,
   },
   transitionTitle: {
     color: TXT,
-    fontSize: 32,
-    letterSpacing: -0.8,
   },
   transitionText: {
     color: TXT_SOFT,
-    fontSize: 16,
     marginTop: 8,
     textAlign: "center",
   },

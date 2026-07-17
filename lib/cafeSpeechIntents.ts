@@ -118,6 +118,12 @@ export type CafeSpeechIntentMatch =
       feedback: string;
     };
 
+export type CafeSpeechAttemptPedagogy = Readonly<{
+  intentId: string;
+  detectedIntent: string;
+  canonicalFormulation: string;
+}>;
+
 const AMBIGUOUS_PRODUCT_FEEDBACK =
   "J’ai reconnu plusieurs produits. Choisis une seule commande dans cette scène.";
 const AMBIGUOUS_CONSUMPTION_FEEDBACK =
@@ -910,6 +916,73 @@ const UNAVAILABLE_PRODUCT_MARKERS = [
   "샌드위치",
   "카푸치노",
   "에스프레소",
+] as const;
+
+const CAFE_CONTEXTUAL_EXPRESSIONS = [
+  {
+    id: "hearing-aid-request",
+    aliases: ["보청기"],
+    detectedIntent: "Demander un appareil auditif",
+    explanation:
+      "« 보청기 » signifie « appareil auditif » ; avec 주세요, tu demandes qu’on t’en donne un",
+  },
+  {
+    id: "water-request",
+    aliases: ["물"],
+    detectedIntent: "Demander de l’eau",
+    explanation: "« 물 주세요 » signifie « Donnez-moi de l’eau, s’il vous plaît »",
+  },
+  {
+    id: "menu-request",
+    aliases: ["메뉴"],
+    detectedIntent: "Demander le menu",
+    explanation: "« 메뉴 주세요 » sert à demander le menu",
+  },
+  {
+    id: "restroom-question",
+    aliases: ["화장실"],
+    detectedIntent: "Demander où sont les toilettes",
+    explanation: "« 화장실 » désigne les toilettes",
+  },
+  {
+    id: "wifi-question",
+    aliases: ["와이파이", "비밀번호"],
+    detectedIntent: "Demander le Wi-Fi ou son mot de passe",
+    explanation: "ta phrase concerne le Wi-Fi du café",
+  },
+  {
+    id: "straw-request",
+    aliases: ["빨대"],
+    detectedIntent: "Demander une paille",
+    explanation: "« 빨대 » signifie « paille »",
+  },
+  {
+    id: "napkin-request",
+    aliases: ["냅킨", "휴지"],
+    detectedIntent: "Demander une serviette",
+    explanation: "ta phrase sert à demander une serviette ou du papier",
+  },
+] as const;
+
+const CAFE_UNAVAILABLE_PRODUCTS = [
+  {
+    id: "sandwich-order",
+    aliases: ["샌드위치"],
+    detectedIntent: "Commander un sandwich",
+    explanation: "« 샌드위치 » signifie « sandwich »",
+  },
+  {
+    id: "cappuccino-order",
+    aliases: ["카푸치노"],
+    detectedIntent: "Commander un cappuccino",
+    explanation: "« 카푸치노 » signifie « cappuccino »",
+  },
+  {
+    id: "espresso-order",
+    aliases: ["에스프레소"],
+    detectedIntent: "Commander un espresso",
+    explanation: "« 에스프레소 » signifie « espresso »",
+  },
 ] as const;
 
 export function normalizeKoreanSpeech(value: string) {
@@ -1925,10 +1998,218 @@ function joinFrenchOptions(options: readonly string[]) {
   return `${options.slice(0, -1).join(", ")} ou ${options.at(-1)}`;
 }
 
+type CafeConversationStepContext = Readonly<{
+  id: string;
+  expectation: string;
+  topic: string;
+  examples: readonly string[];
+}>;
+
+type CafeContextualResponseAnalysis = Readonly<{
+  intentId: string;
+  detectedIntent: string;
+  canonicalFormulation: string;
+  feedback: string;
+}>;
+
+function getCafeConversationStepContext(
+  choices: readonly CafeSpeechChoice[],
+): CafeConversationStepContext {
+  const definitions = getAvailableIntentDefinitions(choices).filter(
+    ({ id }) => id !== "repeat",
+  );
+  const definitionIds = new Set(definitions.map(({ id }) => id));
+  const choiceExamples = choices
+    .filter((choice) => findIntentDefinition(choice.id)?.id !== "repeat")
+    .map(({ korean }) => korean.trim())
+    .filter(Boolean);
+  const canonicalExamples = definitions.map(({ canonical }) => canonical);
+  const examples = Array.from(
+    new Set(canonicalExamples.length > 0 ? canonicalExamples : choiceExamples),
+  ).slice(0, 2);
+
+  if (isProductOrderNode(choices)) {
+    return {
+      id: "product-order",
+      expectation:
+        "le serveur attend le produit que tu souhaites commander parmi ceux proposés",
+      topic: "produit à commander",
+      examples,
+    };
+  }
+  if (definitionIds.has("eat-here") || definitionIds.has("takeout")) {
+    return {
+      id: "consumption-mode",
+      expectation:
+        "le serveur attend si tu consommeras sur place ou si tu veux emporter la commande",
+      topic: "consommation sur place ou à emporter",
+      examples,
+    };
+  }
+  if (
+    definitionIds.has("card-payment") ||
+    definitionIds.has("cash-payment")
+  ) {
+    return {
+      id: "payment-method",
+      expectation:
+        "le serveur attend maintenant ton moyen de paiement, par carte ou en espèces",
+      topic: "moyen de paiement",
+      examples,
+    };
+  }
+  if (
+    definitionIds.has("receipt-yes") ||
+    definitionIds.has("receipt-no")
+  ) {
+    return {
+      id: "receipt-choice",
+      expectation:
+        "le serveur te demande uniquement si tu souhaites recevoir le reçu",
+      topic: "acceptation ou refus du reçu",
+      examples,
+    };
+  }
+
+  return {
+    id: "current-choice",
+    expectation: `le serveur attend que tu ${joinFrenchOptions(
+      definitions.map(({ helpLabel }) => helpLabel),
+    )}`,
+    topic: "réponse proposée à cette étape",
+    examples,
+  };
+}
+
+function formatCafeExamples(examples: readonly string[]) {
+  if (examples.length === 0) return "une des formulations proposées à l’écran";
+  if (examples.length === 1) return `« ${examples[0]} »`;
+  return `« ${examples[0]} » ou « ${examples[1]} »`;
+}
+
+function findDetectedCafeIntent(normalizedTranscript: string) {
+  const exactMatches = CAFE_SPEECH_INTENTS.filter((definition) =>
+    matchesExplicitVariant(normalizedTranscript, [
+      definition.canonical,
+      ...definition.validVariants,
+      ...definition.recoverableGrammarErrors.flatMap(({ variants }) =>
+        variants,
+      ),
+    ]),
+  );
+  if (exactMatches.length === 1) return exactMatches[0];
+
+  const contextualMatches = CAFE_SPEECH_INTENTS.filter((definition) =>
+    containsAnyToken(normalizedTranscript, definition.fuzzyKeywords) &&
+    !isDefinitionBlocked(normalizedTranscript, definition) &&
+    getContextSignals(normalizedTranscript, definition).length > 0,
+  );
+  return contextualMatches.length === 1 ? contextualMatches[0] : undefined;
+}
+
+function findBlockedCafeIntent(normalizedTranscript: string) {
+  const matches = CAFE_SPEECH_INTENTS.filter(
+    (definition) =>
+      containsAnyToken(normalizedTranscript, definition.fuzzyKeywords) &&
+      isDefinitionBlocked(normalizedTranscript, definition),
+  );
+  return matches.length === 1 ? matches[0] : undefined;
+}
+
+function findCafeKnownExpression(normalizedTranscript: string) {
+  return [...CAFE_CONTEXTUAL_EXPRESSIONS, ...CAFE_UNAVAILABLE_PRODUCTS].find(
+    ({ aliases }) =>
+      aliases.some((alias) => includesNormalized(normalizedTranscript, alias)),
+  );
+}
+
+function getRequestedCafeObject(transcript: string) {
+  const requestMatch = transcript
+    .trim()
+    .replace(/[.!?…]+$/u, "")
+    .match(/^(.+?)(?:을|를|은|는)?\s*(?:주세요|줘요|줘|부탁드려요|부탁해요)$/u);
+  return requestMatch?.[1]?.trim() || null;
+}
+
+function buildCafeContextualResponseAnalysis(
+  transcript: string,
+  choices: readonly CafeSpeechChoice[],
+  detectedIntentHint?: CafeSpeechIntentDefinition,
+): CafeContextualResponseAnalysis {
+  const spokenPhrase = transcript.trim() || "(aucune phrase reconnue)";
+  const normalizedTranscript = normalizeKoreanSpeech(transcript);
+  const context = getCafeConversationStepContext(choices);
+  const examples = formatCafeExamples(context.examples);
+  const availableIntentIds = new Set(
+    getAvailableIntentDefinitions(choices).map(({ id }) => id),
+  );
+  const detectedIntent =
+    detectedIntentHint ?? findDetectedCafeIntent(normalizedTranscript);
+
+  if (detectedIntent) {
+    const isAvailableNow = availableIntentIds.has(detectedIntent.id);
+    return {
+      intentId: detectedIntent.id,
+      detectedIntent: detectedIntent.meaning,
+      canonicalFormulation:
+        context.examples[0] ?? detectedIntent.canonical,
+      feedback: isAvailableNow
+        ? `Tu as dit « ${spokenPhrase} » et ton intention semble être : ${detectedIntent.confirmationLabel}. Cette intention convient à cette étape, mais la formulation n’a pas été reconnue comme suffisamment claire ou naturelle. Essaie plutôt ${examples} ; tu es proche de la bonne réponse.`
+        : `Tu as dit « ${spokenPhrase} ». ${detectedIntent.meaning}. Cette intention est correcte en soi, mais elle arrive au mauvais moment : ${context.expectation}. Ici, tu pouvais répondre par exemple ${examples}.`,
+    };
+  }
+
+  const blockedIntent = findBlockedCafeIntent(normalizedTranscript);
+  if (blockedIntent) {
+    return {
+      intentId: `negated:${blockedIntent.id}`,
+      detectedIntent: `Nier ou refuser l’intention « ${blockedIntent.confirmationLabel} »`,
+      canonicalFormulation:
+        context.examples[0] ?? blockedIntent.canonical,
+      feedback: `Tu as dit « ${spokenPhrase} ». J’ai reconnu l’idée de « ${blockedIntent.confirmationLabel} », mais elle est accompagnée d’une négation ou d’un refus ; la phrase ne permet donc pas de sélectionner cette option. À cette étape, ${context.expectation}. Pour répondre clairement et positivement, essaie plutôt ${examples}.`,
+    };
+  }
+
+  const knownExpression = findCafeKnownExpression(normalizedTranscript);
+  if (knownExpression) {
+    return {
+      intentId: knownExpression.id,
+      detectedIntent: knownExpression.detectedIntent,
+      canonicalFormulation: context.examples[0] ?? "",
+      feedback: `Tu as dit « ${spokenPhrase} » : ${knownExpression.explanation}. Ta phrase est compréhensible, mais elle ne répond pas à la question actuelle : ${context.expectation}. Ici, tu pouvais répondre par exemple ${examples}.`,
+    };
+  }
+
+  const requestedObject = getRequestedCafeObject(transcript);
+  if (requestedObject) {
+    return {
+      intentId: `request:${normalizeKoreanSpeech(requestedObject)}`,
+      detectedIntent: `Demander « ${requestedObject} » avec 주세요`,
+      canonicalFormulation: context.examples[0] ?? "",
+      feedback: `Tu as dit « ${spokenPhrase} » et utilisé 주세요, la structure polie pour demander qu’on te donne « ${requestedObject} ». La construction est compréhensible, mais elle ne répond pas à cette étape : ${context.expectation}. Essaie plutôt ${examples}.`,
+    };
+  }
+
+  return {
+    intentId: `context-mismatch:${context.id}:${normalizedTranscript || "empty"}`,
+    detectedIntent: `Réponse sans indication claire de ${context.topic}`,
+    canonicalFormulation: context.examples[0] ?? "",
+    feedback: `Tu as dit « ${spokenPhrase} ». Je n’y ai pas identifié d’indication claire de ${context.topic}, alors que ${context.expectation}. Pour poursuivre naturellement la conversation, tu pouvais répondre ${examples} ; reformule tranquillement avec l’une de ces intentions.`,
+  };
+}
+
 function buildCafeOutOfScopeFeedback(
   choices: readonly CafeSpeechChoice[],
   detectedIntent?: CafeSpeechIntentDefinition,
+  transcript?: string,
 ) {
+  if (transcript) {
+    return buildCafeContextualResponseAnalysis(
+      transcript,
+      choices,
+      detectedIntent,
+    ).feedback;
+  }
   if (isProductOrderNode(choices)) return UNAVAILABLE_PRODUCT_FEEDBACK;
 
   const availableInstructions = getAvailableIntentDefinitions(choices)
@@ -2335,6 +2616,7 @@ export function matchCafeSpeechIntent(
     feedback: buildCafeOutOfScopeFeedback(
       choices,
       detectedDefinitions.length === 1 ? detectedDefinitions[0] : undefined,
+      transcript,
     ),
   };
 }
@@ -2364,4 +2646,19 @@ export function getCafeSpeechIntentPedagogy(choiceId: string) {
         canonicalFormulation: definition.canonical,
       }
     : null;
+}
+
+export function getCafeSpeechAttemptPedagogy(
+  result: CafeSpeechIntentMatch,
+  choices: readonly CafeSpeechChoice[],
+  transcript: string,
+): CafeSpeechAttemptPedagogy | null {
+  if (result.choice) return getCafeSpeechIntentPedagogy(result.choice.id);
+
+  const analysis = buildCafeContextualResponseAnalysis(transcript, choices);
+  return {
+    intentId: analysis.intentId,
+    detectedIntent: analysis.detectedIntent,
+    canonicalFormulation: analysis.canonicalFormulation,
+  };
 }

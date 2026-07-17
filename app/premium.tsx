@@ -109,7 +109,12 @@ export default function PremiumScreen() {
           ]}
         >
           <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
-          <View style={styles.heroCard}>
+          <View
+            style={[
+              styles.heroCard,
+              responsive.isCompact && styles.heroCardCompact,
+            ]}
+          >
             <View style={styles.badge}>
               <Ionicons name="sparkles" size={15} color={COLORS.gold} />
               <AppText variant="label" style={styles.badgeText}>ACCES TOTAL</AppText>
@@ -126,6 +131,7 @@ export default function PremiumScreen() {
                   onPress={() => setSelectedOfferId(offer.id)}
                   style={({ pressed }) => [
                     styles.priceBox,
+                    responsive.isCompact && styles.priceBoxCompact,
                     offer.id === highlightedOfferId && styles.priceBoxFeatured,
                     offer.id === selectedOfferId && styles.priceBoxSelected,
                     pressed && !busy && !hasPremiumAccess && styles.planPressed,
@@ -162,7 +168,16 @@ export default function PremiumScreen() {
                         />
                       </View>
 
-                      <AppText variant="numericValue" style={styles.price}>
+                      <AppText
+                        variant={
+                          responsive.isCompact
+                            ? "priceCompact"
+                            : responsive.screenClass === "phone"
+                              ? "priceValue"
+                              : "numericValue"
+                        }
+                        style={styles.price}
+                      >
                         {displayPrices[offer.id]}
                       </AppText>
                       <AppText variant="bodySecondary" tone="muted" style={styles.priceCaption}>{offer.caption}</AppText>
@@ -294,7 +309,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: COLORS.text,
-    fontSize: 18,
   },
   content: {
     paddingTop: 20,
@@ -306,6 +320,9 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,99,132,0.24)",
     backgroundColor: COLORS.card,
     padding: 22,
+  },
+  heroCardCompact: {
+    padding: 18,
   },
   badge: {
     alignSelf: "flex-start",
@@ -321,19 +338,13 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: COLORS.text,
-    fontSize: 11,
-    letterSpacing: 1.8,
   },
   title: {
     color: COLORS.text,
-    fontSize: 34,
-    lineHeight: 40,
     marginTop: 18,
   },
   subtitle: {
     color: COLORS.muted,
-    fontSize: 16,
-    lineHeight: 23,
     marginTop: 10,
   },
   offers: {
@@ -348,6 +359,9 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.22)",
     padding: 16,
     justifyContent: "center",
+  },
+  priceBoxCompact: {
+    padding: 14,
   },
   priceBoxFeatured: {
     borderColor: "rgba(251,191,36,0.42)",
@@ -369,8 +383,6 @@ const styles = StyleSheet.create({
   },
   offerTitle: {
     color: COLORS.muted,
-    fontSize: 13,
-    textTransform: "uppercase",
   },
   savingBadge: {
     alignSelf: "flex-start",
@@ -383,18 +395,13 @@ const styles = StyleSheet.create({
   },
   savingBadgeText: {
     color: COLORS.gold,
-    fontSize: 11,
-    textTransform: "uppercase",
   },
   price: {
     color: COLORS.text,
-    fontSize: 28,
     marginTop: 5,
   },
   priceCaption: {
     color: COLORS.faint,
-    fontSize: 12,
-    lineHeight: 18,
     marginTop: 5,
   },
   devBox: {
@@ -407,7 +414,6 @@ const styles = StyleSheet.create({
   },
   devText: {
     color: COLORS.text,
-    fontSize: 13,
   },
   activeBox: {
     marginTop: 14,
@@ -436,8 +442,6 @@ const styles = StyleSheet.create({
   featureText: {
     flex: 1,
     color: COLORS.text,
-    fontSize: 15,
-    lineHeight: 21,
   },
   errorCard: {
     marginTop: 16,
@@ -449,11 +453,9 @@ const styles = StyleSheet.create({
   },
   errorTitle: {
     color: COLORS.text,
-    fontSize: 14,
   },
   errorText: {
     color: COLORS.muted,
-    lineHeight: 19,
     marginTop: 4,
   },
   primaryAction: {
@@ -462,7 +464,6 @@ const styles = StyleSheet.create({
   },
   selectedPlanText: {
     color: COLORS.muted,
-    fontSize: 13,
     marginTop: 10,
     textAlign: "center",
   },
@@ -478,8 +479,6 @@ const styles = StyleSheet.create({
   },
   legalText: {
     color: COLORS.faint,
-    fontSize: 12,
-    lineHeight: 18,
     textAlign: "center",
     marginTop: 8,
   },

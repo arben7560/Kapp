@@ -287,11 +287,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 
-  backArrow: { color: SOFT, fontSize: 28 },
+  backArrow: { color: SOFT},
   backText: {
     color: SOFT,
-    fontSize: 11,
-    letterSpacing: 2,
   },
 
   settingsIcon: {

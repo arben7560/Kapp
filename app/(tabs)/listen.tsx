@@ -1055,13 +1055,9 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: COLORS.red,
-    fontSize: 11,
-    letterSpacing: 3.8,
   },
   headerTitle: {
     color: COLORS.text,
-    fontSize: 21,
-    lineHeight: 27,
     marginTop: 3,
   },
   content: {
@@ -1084,8 +1080,6 @@ const styles = StyleSheet.create({
   },
   modeText: {
     color: COLORS.text,
-    letterSpacing: 2.5,
-    fontSize: 10,
   },
   modeSwitcherWrap: {
     flexDirection: "row",
@@ -1120,15 +1114,10 @@ const styles = StyleSheet.create({
   },
   modeCenterMini: {
     color: COLORS.faint,
-    fontSize: 9,
-    letterSpacing: 1.8,
-    textTransform: "uppercase",
     marginBottom: 1,
   },
   modeCenterLabel: {
     color: COLORS.text,
-    fontSize: 16,
-    lineHeight: 22,
   },
   progressRow: {
     flexDirection: "row",
@@ -1170,19 +1159,13 @@ const styles = StyleSheet.create({
   },
   theme: {
     color: COLORS.red,
-    fontSize: 13,
-    letterSpacing: 3,
-    textTransform: "uppercase",
   },
   title: {
     color: COLORS.text,
-    fontSize: 28,
-    lineHeight: 34,
     marginTop: 7,
   },
   counter: {
     color: COLORS.faint,
-    fontSize: 13,
     paddingTop: 4,
     minWidth: 48,
     textAlign: "right",
@@ -1195,7 +1178,6 @@ const styles = StyleSheet.create({
   },
   skillPill: {
     color: COLORS.text,
-    fontSize: 12,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 999,
@@ -1204,12 +1186,9 @@ const styles = StyleSheet.create({
   },
   skillText: {
     color: COLORS.muted,
-    fontSize: 13,
   },
   instruction: {
     color: COLORS.muted,
-    fontSize: 17,
-    lineHeight: 25,
     marginTop: 18,
   },
   listenButton: {
@@ -1227,13 +1206,9 @@ const styles = StyleSheet.create({
   },
   listenText: {
     color: COLORS.text,
-    fontSize: 14,
-    letterSpacing: 2,
-    textTransform: "uppercase",
   },
   audioHint: {
     color: COLORS.faint,
-    fontSize: 12,
     textAlign: "center",
     marginTop: 10,
     marginBottom: 18,
@@ -1265,8 +1240,6 @@ const styles = StyleSheet.create({
   },
   optionText: {
     color: COLORS.text,
-    fontSize: 20,
-    lineHeight: 30,
     textAlign: "center",
   },
   gapSentence: {
@@ -1285,7 +1258,6 @@ const styles = StyleSheet.create({
   },
   koreanInline: {
     color: COLORS.text,
-    fontSize: 24,
   },
   blank: {
     width: 82,
@@ -1311,7 +1283,6 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     color: COLORS.faint,
-    fontSize: 15,
   },
   wordGrid: {
     flexDirection: "row",
@@ -1337,8 +1308,6 @@ const styles = StyleSheet.create({
   },
   wordText: {
     color: COLORS.text,
-    fontSize: 18,
-    lineHeight: 26,
   },
   disabledOption: {
     opacity: 0.26,
@@ -1362,25 +1331,19 @@ const styles = StyleSheet.create({
   },
   feedbackTitle: {
     color: COLORS.text,
-    fontSize: 15,
     marginBottom: 4,
   },
   expectedLabel: {
     color: COLORS.text,
-    fontSize: 13,
     marginTop: 6,
     marginBottom: 3,
   },
   expectedText: {
     color: COLORS.green,
-    fontSize: 15,
-    lineHeight: 20,
     marginBottom: 6,
   },
   feedbackText: {
     color: COLORS.muted,
-    fontSize: 14,
-    lineHeight: 20,
   },
   streakToast: {
     alignItems: "center",
@@ -1397,8 +1360,6 @@ const styles = StyleSheet.create({
   },
   streakToastText: {
     color: COLORS.green,
-    fontSize: 12,
-    letterSpacing: 0.6,
   },
   actionRow: {
     flexDirection: "row",
@@ -1422,13 +1383,9 @@ const styles = StyleSheet.create({
   },
   actionText: {
     color: COLORS.text,
-    fontSize: 14,
-    letterSpacing: 1.4,
-    textTransform: "uppercase",
   },
   secondaryText: {
     color: COLORS.muted,
-    fontSize: 14,
   },
   disabledButton: {
     opacity: 0.35,
@@ -1443,14 +1400,9 @@ const styles = StyleSheet.create({
   },
   footerTitle: {
     color: COLORS.red,
-    fontSize: 12,
-    letterSpacing: 3,
-    textTransform: "uppercase",
     marginBottom: 8,
   },
   footerText: {
     color: COLORS.muted,
-    fontSize: 14,
-    lineHeight: 21,
   },
 });

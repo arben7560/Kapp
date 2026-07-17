@@ -6,9 +6,9 @@ import {
   Pressable,
   SafeAreaView,
   ScrollView,
-  Text,
   View,
 } from "react-native";
+import { AppText } from "../../components/app-text";
 
 const BG0 = "#070812";
 const CARD = "rgba(255,255,255,0.06)";
@@ -103,9 +103,9 @@ function Pill({
         backgroundColor: toneMap[tone].bg,
       }}
     >
-      <Text style={{ color: TXT, fontSize: 12, fontWeight: "800" }}>
+      <AppText variant="caption" style={{ color: TXT}}>
         {children}
-      </Text>
+      </AppText>
     </View>
   );
 }
@@ -175,9 +175,9 @@ function ChoiceCard({
         marginTop: 10,
       }}
     >
-      <Text style={{ color: TXT, fontWeight: "800", lineHeight: 21 }}>
+      <AppText variant="bodyStrong" style={{ color: TXT}}>
         {label}
-      </Text>
+      </AppText>
     </Pressable>
   );
 }
@@ -202,15 +202,15 @@ function FocusCard({
         padding: 14,
       }}
     >
-      <Text style={{ color: MUTED, fontSize: 12, fontWeight: "800" }}>
+      <AppText variant="caption" style={{ color: MUTED}}>
         {label}
-      </Text>
-      <Text
-        style={{ color: TXT, fontSize: 22, fontWeight: "900", marginTop: 8 }}
+      </AppText>
+      <AppText variant="koreanPrimary" script="korean"
+        style={{ color: TXT, marginTop: 8 }}
       >
         {value}
-      </Text>
-      <Text style={{ color: MUTED, marginTop: 8, lineHeight: 20 }}>{hint}</Text>
+      </AppText>
+      <AppText variant="bodySecondary" style={{ color: MUTED, marginTop: 8}}>{hint}</AppText>
     </View>
   );
 }
@@ -490,7 +490,7 @@ export default function GangnamRainRunScreen() {
                 backgroundColor: "rgba(255,255,255,0.04)",
               }}
             >
-              <Text style={{ color: TXT, fontWeight: "900" }}>← Retour</Text>
+              <AppText variant="button" style={{ color: TXT}}>← Retour</AppText>
             </Pressable>
 
             <Pill tone="cyan">Capsule signature</Pill>
@@ -542,20 +542,19 @@ export default function GangnamRainRunScreen() {
                 <Pill tone="green">observation réelle</Pill>
               </View>
 
-              <Text style={{ color: TXT, fontSize: 26, fontWeight: "900" }}>
+              <AppText variant="screenTitle" style={{ color: TXT}}>
                 🚇 Gangnam Rain Run
-              </Text>
+              </AppText>
 
-              <Text
+              <AppText variant="body"
                 style={{
                   color: "rgba(255,255,255,0.80)",
                   marginTop: 8,
-                  lineHeight: 21,
                 }}
               >
                 Sors du métro, traverse la pluie, lis la ville et rejoins ton
                 amie sans basculer dans un simple exercice.
-              </Text>
+              </AppText>
             </View>
           </View>
 
@@ -564,16 +563,16 @@ export default function GangnamRainRunScreen() {
           {step === 0 ? (
             <>
               <Card>
-                <Text style={{ color: TXT, fontSize: 18, fontWeight: "900" }}>
+                <AppText variant="sectionTitle" style={{ color: TXT}}>
                   Une capsule pensée pour être vécue
-                </Text>
+                </AppText>
 
-                <Text style={{ color: MUTED, marginTop: 10, lineHeight: 22 }}>
+                <AppText variant="bodySecondary" style={{ color: MUTED, marginTop: 10}}>
                   Cette capsule ne t’apprend pas à demander ton chemin. Elle
                   t’apprend à lire Gangnam de nuit : ses sorties, sa pluie, ses
                   niveaux souterrains, ses convenience stores et ses ruelles
                   BBQ.
-                </Text>
+                </AppText>
 
                 <View
                   style={{
@@ -599,20 +598,20 @@ export default function GangnamRainRunScreen() {
                     backgroundColor: "rgba(255,255,255,0.92)",
                   }}
                 >
-                  <Text style={{ textAlign: "center", fontWeight: "900" }}>
+                  <AppText variant="button" style={{ textAlign: "center"}}>
                     Commencer l’expérience
-                  </Text>
+                  </AppText>
                 </Pressable>
               </Card>
 
               {score > 0 && (
                 <Card>
-                  <Text style={{ color: TXT, fontSize: 17, fontWeight: "900" }}>
+                  <AppText variant="sectionTitle" style={{ color: TXT}}>
                     Dernière performance
-                  </Text>
-                  <Text style={{ color: MUTED, marginTop: 8 }}>
+                  </AppText>
+                  <AppText variant="bodySecondary" style={{ color: MUTED, marginTop: 8 }}>
                     Tu avais reconnu {score}/5 détails clés de la capsule.
-                  </Text>
+                  </AppText>
 
                   <Pressable
                     onPress={replayAll}
@@ -625,15 +624,14 @@ export default function GangnamRainRunScreen() {
                       backgroundColor: "rgba(255,255,255,0.04)",
                     }}
                   >
-                    <Text
+                    <AppText variant="button"
                       style={{
                         color: TXT,
                         textAlign: "center",
-                        fontWeight: "900",
                       }}
                     >
                       Rejouer depuis le début
-                    </Text>
+                    </AppText>
                   </Pressable>
                 </Card>
               )}
@@ -650,14 +648,14 @@ export default function GangnamRainRunScreen() {
                   }}
                 >
                   <View style={{ flex: 1 }}>
-                    <Text
-                      style={{ color: TXT, fontSize: 19, fontWeight: "900" }}
+                    <AppText variant="sectionTitle"
+                      style={{ color: TXT}}
                     >
                       {currentStep?.title}
-                    </Text>
-                    <Text style={{ color: MUTED, marginTop: 4 }}>
+                    </AppText>
+                    <AppText variant="bodySecondary" style={{ color: MUTED, marginTop: 4 }}>
                       {currentStep?.subtitle}
-                    </Text>
+                    </AppText>
                   </View>
 
                   <Pill tone="cyan">Étape {step}/5</Pill>
@@ -669,20 +667,18 @@ export default function GangnamRainRunScreen() {
 
                 <View style={{ marginTop: 16 }}>
                   {currentStep?.beats.slice(0, beatIndex).map((line, idx) => (
-                    <Text
+                    <AppText variant="body"
                       key={`${currentStep.id}_${idx}`}
                       style={{
                         color:
                           idx === beatIndex - 1
                             ? TXT
                             : "rgba(255,255,255,0.78)",
-                        fontSize: 16,
-                        lineHeight: 24,
                         marginTop: idx === 0 ? 0 : 12,
                       }}
                     >
                       {line}
-                    </Text>
+                    </AppText>
                   ))}
                 </View>
 
@@ -696,13 +692,13 @@ export default function GangnamRainRunScreen() {
               <View style={{ height: 16 }} />
 
               <Card>
-                <Text style={{ color: TXT, fontSize: 17, fontWeight: "900" }}>
+                <AppText variant="sectionTitle" style={{ color: TXT}}>
                   🎯 Mini lecture du réel
-                </Text>
+                </AppText>
 
-                <Text style={{ color: MUTED, marginTop: 8, lineHeight: 21 }}>
+                <AppText variant="bodySecondary" style={{ color: MUTED, marginTop: 8}}>
                   {currentStep?.question}
-                </Text>
+                </AppText>
 
                 {currentStep?.options.map((opt, idx) => (
                   <ChoiceCard
@@ -728,15 +724,14 @@ export default function GangnamRainRunScreen() {
                       opacity: selected === null ? 0.5 : 1,
                     }}
                   >
-                    <Text
+                    <AppText variant="button"
                       style={{
                         color: TXT,
                         textAlign: "center",
-                        fontWeight: "900",
                       }}
                     >
                       Vérifier
-                    </Text>
+                    </AppText>
                   </Pressable>
 
                   <Pressable
@@ -753,15 +748,14 @@ export default function GangnamRainRunScreen() {
                       backgroundColor: "rgba(255,255,255,0.04)",
                     }}
                   >
-                    <Text
+                    <AppText variant="button"
                       style={{
                         color: TXT,
                         textAlign: "center",
-                        fontWeight: "900",
                       }}
                     >
                       Rechoisir
-                    </Text>
+                    </AppText>
                   </Pressable>
                 </View>
 
@@ -780,22 +774,22 @@ export default function GangnamRainRunScreen() {
                       padding: 14,
                     }}
                   >
-                    <Text style={{ color: TXT, fontWeight: "900" }}>
+                    <AppText variant="bodyStrong" style={{ color: TXT}}>
                       {currentStep.options[selected].correct
                         ? "Bien vu"
                         : "Presque"}
-                    </Text>
-                    <Text
-                      style={{ color: MUTED, marginTop: 8, lineHeight: 21 }}
+                    </AppText>
+                    <AppText variant="bodySecondary"
+                      style={{ color: MUTED, marginTop: 8}}
                     >
                       {currentStep.options[selected].explain}
-                    </Text>
+                    </AppText>
 
-                    <Text
-                      style={{ color: TXT, marginTop: 10, fontWeight: "800" }}
+                    <AppText variant="bodyStrong"
+                      style={{ color: TXT, marginTop: 10}}
                     >
                       {currentStep.resultTitle}
-                    </Text>
+                    </AppText>
                   </View>
                 )}
 
@@ -811,9 +805,9 @@ export default function GangnamRainRunScreen() {
                       backgroundColor: "rgba(255,255,255,0.92)",
                     }}
                   >
-                    <Text style={{ textAlign: "center", fontWeight: "900" }}>
+                    <AppText variant="button" style={{ textAlign: "center"}}>
                       {step < 5 ? "Étape suivante" : "Voir le débrief final"}
-                    </Text>
+                    </AppText>
                   </Pressable>
                 )}
               </Card>
@@ -823,11 +817,11 @@ export default function GangnamRainRunScreen() {
                   <View style={{ height: 16 }} />
 
                   <Card>
-                    <Text
-                      style={{ color: TXT, fontSize: 18, fontWeight: "900" }}
+                    <AppText variant="sectionTitle"
+                      style={{ color: TXT}}
                     >
                       ✨ Débrief premium
-                    </Text>
+                    </AppText>
 
                     <View style={{ marginTop: 14, gap: 10 }}>
                       <View
@@ -839,22 +833,20 @@ export default function GangnamRainRunScreen() {
                           padding: 14,
                         }}
                       >
-                        <Text
+                        <AppText variant="caption"
                           style={{
                             color: MUTED,
-                            fontSize: 12,
-                            fontWeight: "800",
                           }}
                         >
                           Ce que tu as vécu
-                        </Text>
-                        <Text
-                          style={{ color: TXT, marginTop: 8, lineHeight: 22 }}
+                        </AppText>
+                        <AppText variant="body"
+                          style={{ color: TXT, marginTop: 8}}
                         >
                           Tu es sorti de Gangnam Station sous la pluie, tu as
                           redescendu vers le niveau -1, acheté un parapluie,
                           puis traversé les ruelles jusqu’au BBQ.
-                        </Text>
+                        </AppText>
                       </View>
 
                       <View
@@ -866,20 +858,18 @@ export default function GangnamRainRunScreen() {
                           padding: 14,
                         }}
                       >
-                        <Text
+                        <AppText variant="caption"
                           style={{
                             color: MUTED,
-                            fontSize: 12,
-                            fontWeight: "800",
                           }}
                         >
                           Ce que tu as remarqué
-                        </Text>
-                        <Text
-                          style={{ color: TXT, marginTop: 8, lineHeight: 22 }}
+                        </AppText>
+                        <AppText variant="koreanSecondary" script="korean"
+                          style={{ color: TXT, marginTop: 8}}
                         >
                           5번 출구, 우산, 지하 -1, 봉투 필요하세요?, 삼겹살.
-                        </Text>
+                        </AppText>
                       </View>
 
                       <View
@@ -891,24 +881,22 @@ export default function GangnamRainRunScreen() {
                           padding: 14,
                         }}
                       >
-                        <Text
+                        <AppText variant="caption"
                           style={{
                             color: MUTED,
-                            fontSize: 12,
-                            fontWeight: "800",
                           }}
                         >
                           Ce que tu as compris du réel coréen
-                        </Text>
-                        <Text
-                          style={{ color: TXT, marginTop: 8, lineHeight: 22 }}
+                        </AppText>
+                        <AppText variant="body"
+                          style={{ color: TXT, marginTop: 8}}
                         >
                           À Gangnam, les sorties numérotées structurent
                           l’espace, les niveaux souterrains sont pratiques, les
                           interactions en caisse restent minimales, et la vraie
                           vie du soir se prolonge souvent dans les ruelles
                           derrière les grands axes.
-                        </Text>
+                        </AppText>
                       </View>
                     </View>
 
@@ -936,15 +924,14 @@ export default function GangnamRainRunScreen() {
                         backgroundColor: "rgba(255,255,255,0.04)",
                       }}
                     >
-                      <Text
+                      <AppText variant="button"
                         style={{
                           color: TXT,
                           textAlign: "center",
-                          fontWeight: "900",
                         }}
                       >
                         Rejouer la capsule
-                      </Text>
+                      </AppText>
                     </Pressable>
                   </Card>
                 </>

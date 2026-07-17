@@ -12,9 +12,9 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { AppText } from "../../../components/app-text";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 
@@ -24,7 +24,6 @@ const BACKGROUND_SOURCE = require("../../../assets/images/seoul-hub-bg.jpg");
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
 const PURPLE = "#A855F7";
-const TXT = "rgba(255,255,255,0.98)";
 const MUTED = "rgba(255,255,255,0.60)";
 
 // --- DATA ---
@@ -160,16 +159,16 @@ export default function EmotionCyber() {
                 onPress={() => router.back()}
                 style={styles.backCircle}
               >
-                <Text style={styles.backArrow}>‹</Text>
+                <AppText variant="symbol" style={styles.backArrow}>‹</AppText>
               </Pressable>
               <View>
-                <Text style={styles.navEyebrow}>SÉOUL IMMERSION</Text>
-                <Text style={styles.navTitle}>Neural Mood Map</Text>
+                <AppText variant="sectionLabel" style={styles.navEyebrow}>SÉOUL IMMERSION</AppText>
+                <AppText variant="cardTitle" style={styles.navTitle}>Neural Mood Map</AppText>
               </View>
             </View>
 
             <View style={styles.heroSection}>
-              <Text style={styles.heroTitle}>Émotions</Text>
+              <AppText variant="screenTitle" style={styles.heroTitle}>Émotions</AppText>
               <View style={styles.neonBar} />
             </View>
 
@@ -184,11 +183,11 @@ export default function EmotionCyber() {
                 <View style={styles.cardHeader}>
                   <View style={styles.liveTag}>
                     <View style={styles.liveDot} />
-                    <Text style={styles.liveText}>EMOTIVE SCANNER</Text>
+                    <AppText variant="label" style={styles.liveText}>EMOTIVE SCANNER</AppText>
                   </View>
-                  <Text style={styles.counterText}>
+                  <AppText variant="caption" style={styles.counterText}>
                     {wordIndex + 1} / {MOOD_ESSENTIALS.length}
-                  </Text>
+                  </AppText>
                 </View>
 
                 <View style={styles.cardBody}>
@@ -197,7 +196,7 @@ export default function EmotionCyber() {
                     onPress={() => animateChange(-1)}
                   >
                     <BlurView intensity={20} style={styles.navBtnBlur}>
-                      <Text style={styles.navBtnText}>‹</Text>
+                      <AppText variant="symbol" style={styles.navBtnText}>‹</AppText>
                     </BlurView>
                   </Pressable>
 
@@ -210,9 +209,9 @@ export default function EmotionCyber() {
                       },
                     ]}
                   >
-                    <Text style={styles.krBig}>{currentMood.kr}</Text>
-                    <Text style={styles.romanBig}>{currentMood.roman}</Text>
-                    <Text style={styles.frBig}>{currentMood.fr}</Text>
+                    <AppText variant="koreanPrimary" script="korean" style={styles.krBig}>{currentMood.kr}</AppText>
+                    <AppText variant="caption" style={styles.romanBig}>{currentMood.roman}</AppText>
+                    <AppText variant="cardTitle" style={styles.frBig}>{currentMood.fr}</AppText>
                   </Animated.View>
 
                   <Pressable
@@ -220,7 +219,7 @@ export default function EmotionCyber() {
                     onPress={() => animateChange(1)}
                   >
                     <BlurView intensity={20} style={styles.navBtnBlur}>
-                      <Text style={styles.navBtnText}>›</Text>
+                      <AppText variant="symbol" style={styles.navBtnText}>›</AppText>
                     </BlurView>
                   </Pressable>
                 </View>
@@ -241,7 +240,7 @@ export default function EmotionCyber() {
                     end={{ x: 1, y: 1 }}
                     style={styles.playGradient}
                   >
-                    <Text style={styles.playBtnText}>ÉCOUTER LA NUANCE</Text>
+                    <AppText variant="button" style={styles.playBtnText}>ÉCOUTER LA NUANCE</AppText>
                   </LinearGradient>
                 </Pressable>
               </BlurView>
@@ -250,22 +249,22 @@ export default function EmotionCyber() {
             {/* --- TAGS PILLS --- */}
             <View style={styles.pillsRow}>
               <View style={[styles.pill, { borderColor: PINK }]}>
-                <Text style={[styles.pillText, { color: PINK }]}>Premium</Text>
+                <AppText variant="label" style={[styles.pillText, { color: PINK }]}>Premium</AppText>
               </View>
               <View style={[styles.pill, { borderColor: CYAN }]}>
-                <Text style={[styles.pillText, { color: CYAN }]}>
+                <AppText variant="label" style={[styles.pillText, { color: CYAN }]}>
                   Oral Naturel
-                </Text>
+                </AppText>
               </View>
               <View style={[styles.pill, { borderColor: PURPLE }]}>
-                <Text style={[styles.pillText, { color: PURPLE }]}>
+                <AppText variant="label" style={[styles.pillText, { color: PURPLE }]}>
                   Introspectif
-                </Text>
+                </AppText>
               </View>
             </View>
 
             {/* --- PERSONALITY SECTION --- */}
-            <Text style={styles.sectionLabel}>PERSONNALITÉ & TENDANCES</Text>
+            <AppText variant="sectionLabel" style={styles.sectionLabel}>PERSONNALITÉ & TENDANCES</AppText>
             {PERSONALITY.map((item) => (
               <Pressable
                 key={item.id}
@@ -283,22 +282,22 @@ export default function EmotionCyber() {
                     ]}
                   />
                   <View style={styles.phraseTextContainer}>
-                    <Text style={styles.phraseKr}>{item.kr}</Text>
-                    <Text style={styles.phraseFr}>{item.fr}</Text>
+                    <AppText variant="koreanSecondary" script="korean" style={styles.phraseKr}>{item.kr}</AppText>
+                    <AppText variant="bodySecondary" style={styles.phraseFr}>{item.fr}</AppText>
                   </View>
                   <View
                     style={[styles.miniPlayIcon, { borderColor: item.accent }]}
                   >
-                    <Text style={{ color: item.accent, fontSize: 10 }}>▶</Text>
+                    <AppText variant="bodySecondary" style={{ color: item.accent}}>▶</AppText>
                   </View>
                 </BlurView>
               </Pressable>
             ))}
 
             {/* --- CONTEXT PHRASES SECTION --- */}
-            <Text style={[styles.sectionLabel, { marginTop: 20 }]}>
+            <AppText variant="sectionLabel" style={[styles.sectionLabel, { marginTop: 20 }]}>
               MINI PHRASES RÉELLES
-            </Text>
+            </AppText>
             {CONTEXT_PHRASES.map((item) => (
               <Pressable
                 key={item.id}
@@ -316,10 +315,10 @@ export default function EmotionCyber() {
                     ]}
                   />
                   <View style={styles.phraseTextContainer}>
-                    <Text style={[styles.phraseKr, { fontSize: 15 }]}>
+                    <AppText variant="koreanSecondary" script="korean" style={styles.phraseKr}>
                       {item.kr}
-                    </Text>
-                    <Text style={styles.phraseFr}>{item.fr}</Text>
+                    </AppText>
+                    <AppText variant="bodySecondary" style={styles.phraseFr}>{item.fr}</AppText>
                   </View>
                 </BlurView>
               </Pressable>
@@ -354,22 +353,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
   },
-  backArrow: { color: "#fff", fontSize: 24, marginTop: -2 },
+  backArrow: { color: "#fff", marginTop: -2 },
   navEyebrow: {
     color: PINK,
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 2,
   },
-  navTitle: { color: "#fff", fontSize: 14, fontWeight: "600", opacity: 0.8 },
+  navTitle: { color: "#fff", opacity: 0.8 },
 
   // Hero
   heroSection: { marginBottom: 35 },
   heroTitle: {
     color: "#fff",
-    fontSize: 50,
-    fontWeight: "900",
-    letterSpacing: -2,
   },
   neonBar: {
     width: 50,
@@ -406,8 +399,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: PURPLE },
-  liveText: { color: "#fff", fontSize: 9, fontWeight: "900", letterSpacing: 1 },
-  counterText: { color: MUTED, fontSize: 11, fontWeight: "700" },
+  liveText: { color: "#fff"},
+  counterText: { color: MUTED},
 
   cardBody: {
     flexDirection: "row",
@@ -424,25 +417,20 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.1)",
   },
   navBtnBlur: { flex: 1, alignItems: "center", justifyContent: "center" },
-  navBtnText: { color: "#fff", fontSize: 24, fontWeight: "300" },
+  navBtnText: { color: "#fff"},
 
   wordContent: { flex: 1, alignItems: "center" },
   krBig: {
     color: "#fff",
-    fontSize: 42,
-    fontWeight: "800",
     textShadowColor: PURPLE,
     textShadowRadius: 15,
     textAlign: "center",
   },
   romanBig: {
     color: PURPLE,
-    fontSize: 16,
-    fontWeight: "700",
     marginTop: 6,
-    letterSpacing: 1.5,
   },
-  frBig: { color: MUTED, fontSize: 15, marginTop: 4, textAlign: "center" },
+  frBig: { color: MUTED, marginTop: 4, textAlign: "center" },
 
   bigPlayBtn: {
     height: 58,
@@ -453,9 +441,6 @@ const styles = StyleSheet.create({
   playGradient: { flex: 1, alignItems: "center", justifyContent: "center" },
   playBtnText: {
     color: "#fff",
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 1.5,
   },
 
   // Pills
@@ -472,14 +457,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: "rgba(255,255,255,0.03)",
   },
-  pillText: { fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
+  pillText: { },
 
   // Phrases
   sectionLabel: {
     color: "rgba(255,255,255,0.3)",
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 2,
     marginBottom: 15,
   },
   phraseItem: {
@@ -498,8 +480,8 @@ const styles = StyleSheet.create({
     left: 0,
   },
   phraseTextContainer: { flex: 1, marginLeft: 10 },
-  phraseKr: { color: "#fff", fontSize: 16, fontWeight: "700" },
-  phraseFr: { color: MUTED, fontSize: 13, marginTop: 3 },
+  phraseKr: { color: "#fff"},
+  phraseFr: { color: MUTED, marginTop: 3 },
   miniPlayIcon: {
     width: 30,
     height: 30,

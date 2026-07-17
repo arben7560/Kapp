@@ -12,6 +12,7 @@ import {
 import { AppText } from "@/components/app-text";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { SeoulMidnightGlass } from "@/constants/theme";
+import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 
 export type HubHeroProps = {
   korean: string;
@@ -43,6 +44,10 @@ export function HubHero({
   koreanStyle,
 }: HubHeroProps) {
   const pulse = useMemo(() => new Animated.Value(0), []);
+  const responsive = useResponsiveLayout();
+  const koreanVariant = responsive.isCompact
+    ? "koreanHeroCompact"
+    : "koreanHero";
 
   useEffect(() => {
     if (!animateGlow) return;
@@ -86,11 +91,6 @@ export function HubHero({
         variant="sectionLabel"
         tone="brand"
         align="center"
-        typographyOverride={{
-          fontSize: 12,
-          lineHeight: 16,
-          letterSpacing: 5.5,
-        }}
         style={styles.eyebrow}
       >
         {eyebrow}
@@ -111,7 +111,7 @@ export function HubHero({
               <AppText
                 accessible={false}
                 importantForAccessibility="no-hide-descendants"
-                variant="koreanHero"
+                variant={koreanVariant}
                 script="korean"
                 align="center"
                 style={[styles.korean, styles.outerGlow, koreanStyle]}
@@ -121,7 +121,7 @@ export function HubHero({
               <AppText
                 accessible={false}
                 importantForAccessibility="no-hide-descendants"
-                variant="koreanHero"
+                variant={koreanVariant}
                 script="korean"
                 align="center"
                 style={[styles.korean, styles.innerGlow, koreanStyle]}
@@ -133,7 +133,7 @@ export function HubHero({
 
           <AppText
             accessibilityLanguage="ko-KR"
-            variant="koreanHero"
+            variant={koreanVariant}
             script="korean"
             align="center"
             style={[
@@ -186,9 +186,8 @@ const styles = StyleSheet.create({
   },
   content: {
     width: "100%",
-    minHeight: 320,
+    paddingBottom: 52,
     alignItems: "center",
-    justifyContent: "flex-start",
     position: "relative",
   },
   koreanWrap: {

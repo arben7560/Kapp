@@ -12,9 +12,9 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { AppMixedText, AppText } from "../../../components/app-text";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 
@@ -24,7 +24,6 @@ const BACKGROUND_SOURCE = require("../../../assets/images/seoul-hub-bg.jpg");
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
 const AMBER = "#FFB347";
-const TXT = "rgba(255,255,255,0.98)";
 const MUTED = "rgba(255,255,255,0.60)";
 
 // --- DATA ---
@@ -161,16 +160,16 @@ export default function FamilyCyber() {
                 onPress={() => router.back()}
                 style={styles.backCircle}
               >
-                <Text style={styles.backArrow}>‹</Text>
+                <AppText variant="symbol" style={styles.backArrow}>‹</AppText>
               </Pressable>
               <View>
-                <Text style={styles.navEyebrow}>SÉOUL IMMERSION</Text>
-                <Text style={styles.navTitle}>Relations & Liens</Text>
+                <AppText variant="sectionLabel" style={styles.navEyebrow}>SÉOUL IMMERSION</AppText>
+                <AppText variant="cardTitle" style={styles.navTitle}>Relations & Liens</AppText>
               </View>
             </View>
 
             <View style={styles.heroSection}>
-              <Text style={styles.heroTitle}>Famille</Text>
+              <AppText variant="screenTitle" style={styles.heroTitle}>Famille</AppText>
               <View style={styles.neonBar} />
             </View>
 
@@ -185,11 +184,11 @@ export default function FamilyCyber() {
                 <View style={styles.cardHeader}>
                   <View style={styles.liveTag}>
                     <View style={styles.liveDot} />
-                    <Text style={styles.liveText}>FAMILY SCANNER</Text>
+                    <AppText variant="label" style={styles.liveText}>FAMILY SCANNER</AppText>
                   </View>
-                  <Text style={styles.counterText}>
+                  <AppText variant="caption" style={styles.counterText}>
                     {wordIndex + 1} / {ESSENTIALS.length}
-                  </Text>
+                  </AppText>
                 </View>
 
                 <View style={styles.cardBody}>
@@ -198,7 +197,7 @@ export default function FamilyCyber() {
                     onPress={() => animateChange(-1)}
                   >
                     <BlurView intensity={20} style={styles.navBtnBlur}>
-                      <Text style={styles.navBtnText}>‹</Text>
+                      <AppText variant="symbol" style={styles.navBtnText}>‹</AppText>
                     </BlurView>
                   </Pressable>
 
@@ -211,9 +210,9 @@ export default function FamilyCyber() {
                       },
                     ]}
                   >
-                    <Text style={styles.krBig}>{currentWord.kr}</Text>
-                    <Text style={styles.romanBig}>{currentWord.roman}</Text>
-                    <Text style={styles.frBig}>{currentWord.fr}</Text>
+                    <AppText variant="koreanPrimary" script="korean" style={styles.krBig}>{currentWord.kr}</AppText>
+                    <AppText variant="caption" style={styles.romanBig}>{currentWord.roman}</AppText>
+                    <AppText variant="cardTitle" style={styles.frBig}>{currentWord.fr}</AppText>
                   </Animated.View>
 
                   <Pressable
@@ -221,7 +220,7 @@ export default function FamilyCyber() {
                     onPress={() => animateChange(1)}
                   >
                     <BlurView intensity={20} style={styles.navBtnBlur}>
-                      <Text style={styles.navBtnText}>›</Text>
+                      <AppText variant="symbol" style={styles.navBtnText}>›</AppText>
                     </BlurView>
                   </Pressable>
                 </View>
@@ -242,7 +241,7 @@ export default function FamilyCyber() {
                     end={{ x: 1, y: 1 }}
                     style={styles.playGradient}
                   >
-                    <Text style={styles.playBtnText}>ÉCOUTER ET RÉPÉTER</Text>
+                    <AppText variant="button" style={styles.playBtnText}>ÉCOUTER ET RÉPÉTER</AppText>
                   </LinearGradient>
                 </Pressable>
               </BlurView>
@@ -253,16 +252,22 @@ export default function FamilyCyber() {
               <View
                 style={[styles.insightAccent, { backgroundColor: AMBER }]}
               />
-              <Text style={styles.insightTitle}>💡 Nuance culturelle</Text>
-              <Text style={styles.insightText}>
-                Les termes comme 오빠 ou 형 dépendent de votre genre. Pas de
-                panique : concentrez-vous d'abord sur 부모님 (parents) et 동생
-                (cadet).
-              </Text>
+              <AppText variant="sectionTitle" style={styles.insightTitle}>💡 Nuance culturelle</AppText>
+              <AppMixedText variant="body" style={styles.insightText} segments={[
+                { text: "Les termes comme ", script: "latin" },
+                { text: "오빠", script: "korean" },
+                { text: " ou ", script: "latin" },
+                { text: "형", script: "korean" },
+                { text: " dépendent de votre genre. Pas de panique : concentrez-vous d'abord sur ", script: "latin" },
+                { text: "부모님", script: "korean" },
+                { text: " (parents) et ", script: "latin" },
+                { text: "동생", script: "korean" },
+                { text: " (cadet).", script: "latin" },
+              ]} />
             </BlurView>
 
             {/* --- PHRASES SECTION --- */}
-            <Text style={styles.sectionLabel}>CONVERSATION</Text>
+            <AppText variant="sectionLabel" style={styles.sectionLabel}>CONVERSATION</AppText>
             {PHRASES.map((item) => (
               <Pressable
                 key={item.id}
@@ -280,22 +285,22 @@ export default function FamilyCyber() {
                     ]}
                   />
                   <View style={styles.phraseTextContainer}>
-                    <Text style={styles.phraseKr}>{item.kr}</Text>
-                    <Text style={styles.phraseFr}>{item.fr}</Text>
+                    <AppText variant="koreanSecondary" script="korean" style={styles.phraseKr}>{item.kr}</AppText>
+                    <AppText variant="bodySecondary" style={styles.phraseFr}>{item.fr}</AppText>
                   </View>
                   <View
                     style={[styles.miniPlayIcon, { borderColor: item.accent }]}
                   >
-                    <Text style={{ color: item.accent, fontSize: 10 }}>▶</Text>
+                    <AppText variant="button" style={{ color: item.accent}}>▶</AppText>
                   </View>
                 </BlurView>
               </Pressable>
             ))}
 
             {/* --- MINI QUIZ SECTION --- */}
-            <Text style={styles.sectionLabel}>TEST D'ÉCOUTE</Text>
+            <AppText variant="sectionLabel" style={styles.sectionLabel}>{"TEST D'ÉCOUTE"}</AppText>
             <BlurView intensity={25} tint="dark" style={styles.quizCard}>
-              <Text style={styles.quizPrompt}>{currentQuiz.prompt}</Text>
+              <AppText variant="bodyStrong" style={styles.quizPrompt}>{currentQuiz.prompt}</AppText>
 
               <Pressable
                 style={styles.quizListenBtn}
@@ -304,7 +309,7 @@ export default function FamilyCyber() {
                   speakKo(currentQuiz.say);
                 }}
               >
-                <Text style={styles.quizListenText}>🔊 ÉCOUTER LE MOT</Text>
+                <AppText variant="button" style={styles.quizListenText}>🔊 ÉCOUTER LE MOT</AppText>
               </Pressable>
 
               <View style={styles.choiceColumn}>
@@ -324,14 +329,15 @@ export default function FamilyCyber() {
                     }}
                     disabled={showAnswer}
                   >
-                    <Text
+                    <AppText
+                      variant="body"
                       style={[
                         styles.choiceText,
                         selectedChoice === i && { color: "#fff" },
                       ]}
                     >
                       {choice}
-                    </Text>
+                    </AppText>
                   </Pressable>
                 ))}
               </View>
@@ -345,11 +351,11 @@ export default function FamilyCyber() {
                   onPress={() => setShowAnswer(true)}
                   disabled={selectedChoice === null}
                 >
-                  <Text style={styles.verifyBtnText}>VÉRIFIER</Text>
+                  <AppText variant="button" style={styles.verifyBtnText}>VÉRIFIER</AppText>
                 </Pressable>
               ) : (
                 <View style={styles.answerArea}>
-                  <Text style={styles.explainText}>{currentQuiz.explain}</Text>
+                  <AppText variant="bodySecondary" style={styles.explainText}>{currentQuiz.explain}</AppText>
                   <Pressable
                     style={styles.nextBtn}
                     onPress={() => {
@@ -358,7 +364,7 @@ export default function FamilyCyber() {
                       setShowAnswer(false);
                     }}
                   >
-                    <Text style={styles.nextBtnText}>SUIVANT ➡️</Text>
+                    <AppText variant="button" style={styles.nextBtnText}>SUIVANT ➡️</AppText>
                   </Pressable>
                 </View>
               )}
@@ -393,22 +399,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
   },
-  backArrow: { color: "#fff", fontSize: 24, marginTop: -2 },
+  backArrow: { color: "#fff", marginTop: -2 },
   navEyebrow: {
     color: PINK,
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 2,
   },
-  navTitle: { color: "#fff", fontSize: 14, fontWeight: "600", opacity: 0.8 },
+  navTitle: { color: "#fff", opacity: 0.8 },
 
   // Hero
   heroSection: { marginBottom: 35 },
   heroTitle: {
     color: "#fff",
-    fontSize: 50,
-    fontWeight: "900",
-    letterSpacing: -2,
   },
   neonBar: {
     width: 50,
@@ -445,8 +445,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: CYAN },
-  liveText: { color: "#fff", fontSize: 9, fontWeight: "900", letterSpacing: 1 },
-  counterText: { color: MUTED, fontSize: 11, fontWeight: "700" },
+  liveText: { color: "#fff"},
+  counterText: { color: MUTED},
 
   cardBody: {
     flexDirection: "row",
@@ -463,24 +463,19 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.1)",
   },
   navBtnBlur: { flex: 1, alignItems: "center", justifyContent: "center" },
-  navBtnText: { color: "#fff", fontSize: 24, fontWeight: "300" },
+  navBtnText: { color: "#fff"},
 
   wordContent: { flex: 1, alignItems: "center" },
   krBig: {
     color: "#fff",
-    fontSize: 52,
-    fontWeight: "800",
     textShadowColor: CYAN,
     textShadowRadius: 15,
   },
   romanBig: {
     color: CYAN,
-    fontSize: 16,
-    fontWeight: "700",
     marginTop: 4,
-    letterSpacing: 1.5,
   },
-  frBig: { color: MUTED, fontSize: 15, marginTop: 4 },
+  frBig: { color: MUTED, marginTop: 4 },
 
   bigPlayBtn: {
     height: 58,
@@ -491,9 +486,6 @@ const styles = StyleSheet.create({
   playGradient: { flex: 1, alignItems: "center", justifyContent: "center" },
   playBtnText: {
     color: "#fff",
-    fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 1.5,
   },
 
   // Insight Card
@@ -516,19 +508,13 @@ const styles = StyleSheet.create({
   },
   insightTitle: {
     color: AMBER,
-    fontSize: 14,
-    fontWeight: "900",
     marginBottom: 8,
-    letterSpacing: 0.5,
   },
-  insightText: { color: MUTED, fontSize: 14, lineHeight: 22 },
+  insightText: { color: MUTED},
 
   // Phrases
   sectionLabel: {
     color: "rgba(255,255,255,0.3)",
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 2,
     marginBottom: 15,
   },
   phraseItem: {
@@ -547,8 +533,8 @@ const styles = StyleSheet.create({
     left: 0,
   },
   phraseTextContainer: { flex: 1, marginLeft: 10 },
-  phraseKr: { color: "#fff", fontSize: 16, fontWeight: "700" },
-  phraseFr: { color: MUTED, fontSize: 13, marginTop: 3 },
+  phraseKr: { color: "#fff"},
+  phraseFr: { color: MUTED, marginTop: 3 },
   miniPlayIcon: {
     width: 30,
     height: 30,
@@ -569,8 +555,6 @@ const styles = StyleSheet.create({
   },
   quizPrompt: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
     marginBottom: 15,
   },
   quizListenBtn: {
@@ -582,7 +566,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
   },
-  quizListenText: { color: "#fff", fontSize: 12, fontWeight: "800" },
+  quizListenText: { color: "#fff"},
   choiceColumn: { gap: 10, marginBottom: 20 },
   choiceBtn: {
     paddingVertical: 14,
@@ -600,18 +584,17 @@ const styles = StyleSheet.create({
     borderColor: CYAN,
     backgroundColor: "rgba(34,211,238,0.1)",
   },
-  choiceText: { color: MUTED, fontWeight: "700", fontSize: 15 },
+  choiceText: { color: MUTED},
   verifyBtn: {
     backgroundColor: CYAN,
     paddingVertical: 15,
     borderRadius: 15,
     alignItems: "center",
   },
-  verifyBtnText: { color: "#000", fontWeight: "900", letterSpacing: 1 },
+  verifyBtnText: { color: "#000"},
   answerArea: { marginTop: 10 },
   explainText: {
     color: MUTED,
-    fontSize: 14,
     marginBottom: 15,
     fontStyle: "italic",
   },
@@ -621,5 +604,5 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
   },
-  nextBtnText: { color: "#fff", fontWeight: "800" },
+  nextBtnText: { color: "#fff"},
 });

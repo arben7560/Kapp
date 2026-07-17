@@ -1,7 +1,8 @@
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, View } from "react-native";
 import { useStore } from "../../_store";
+import { AppMixedText, AppText } from "../../components/app-text";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 
 const BG0 = "#070812";
@@ -17,14 +18,12 @@ export default function Profile() {
   return (
     <LinearGradient colors={[BG0, "#0b0b1d", "#0b0f22"]} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
-        <Text
-          style={{ color: TXT, fontSize: 22, fontWeight: "900", marginTop: 8 }}
-        >
+        <AppText accessibilityRole="header" variant="screenTitle" style={{ color: TXT, marginTop: 8 }}>
           Profil
-        </Text>
-        <Text style={{ color: MUTED, marginTop: 6 }}>
+        </AppText>
+        <AppText variant="subtitle" tone="muted" style={{ color: MUTED, marginTop: 6 }}>
           Objectifs, premium, debug
-        </Text>
+        </AppText>
 
         <View style={{ height: 14 }} />
 
@@ -38,25 +37,32 @@ export default function Profile() {
             marginBottom: 14,
           }}
         >
-          <Text style={{ color: TXT, fontWeight: "900", fontSize: 16 }}>
+          <AppText variant="sectionTitle" style={{ color: TXT }}>
             Stats
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 6 }}>XP : {progress.xp}</Text>
-          <Text style={{ color: MUTED, marginTop: 2 }}>
+          </AppText>
+          <AppText variant="bodySecondary" tone="muted" style={{ color: MUTED, marginTop: 6 }}>XP : {progress.xp}</AppText>
+          <AppText variant="bodySecondary" tone="muted" style={{ color: MUTED, marginTop: 2 }}>
             Streak : {streak?.currentStreak ?? 0} jours
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 2 }}>
+          </AppText>
+          <AppText variant="bodySecondary" tone="muted" style={{ color: MUTED, marginTop: 2 }}>
             Record : {streak?.longestStreak ?? 0} jours
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 2 }}>
+          </AppText>
+          <AppText variant="bodySecondary" tone="muted" style={{ color: MUTED, marginTop: 2 }}>
             Jour valide : {streak?.isTodayCompleted ? "Oui" : "Non"}
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 2 }}>
-            Hangul : niveau {progress.hangulLevel}/4
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 2 }}>
+          </AppText>
+          <AppMixedText
+            variant="bodySecondary"
+            tone="muted"
+            style={{ color: MUTED, marginTop: 2 }}
+            segments={[
+              { text: "Hangul : niveau ", script: "latin" },
+              { text: progress.hangulLevel, script: "latin" },
+              { text: "/4", script: "latin" },
+            ]}
+          />
+          <AppText variant="bodySecondary" tone="muted" style={{ color: MUTED, marginTop: 2 }}>
             Premium : {progress.isPremium ? "Actif" : "Non"}
-          </Text>
+          </AppText>
         </View>
 
         <View
@@ -69,12 +75,12 @@ export default function Profile() {
             marginBottom: 14,
           }}
         >
-          <Text style={{ color: TXT, fontWeight: "900", fontSize: 16 }}>
+          <AppText variant="sectionTitle" style={{ color: TXT }}>
             Premium
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 6 }}>
+          </AppText>
+          <AppText variant="bodySecondary" tone="muted" style={{ color: MUTED, marginTop: 6 }}>
             Debloque dialogues avances + prononciation intensive.
-          </Text>
+          </AppText>
 
           <View style={{ height: 12 }} />
 
@@ -90,11 +96,11 @@ export default function Profile() {
               alignItems: "center",
             })}
           >
-            <Text style={{ color: TXT, fontWeight: "900" }}>
+            <AppText variant="button" align="center" style={{ color: TXT }}>
               {progress.isPremium
                 ? "Desactiver Premium (prototype)"
                 : "Activer Premium (prototype)"}
-            </Text>
+            </AppText>
           </Pressable>
         </View>
 
@@ -107,12 +113,12 @@ export default function Profile() {
             padding: 14,
           }}
         >
-          <Text style={{ color: TXT, fontWeight: "900", fontSize: 16 }}>
+          <AppText variant="sectionTitle" style={{ color: TXT }}>
             Outils
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 6 }}>
+          </AppText>
+          <AppText variant="bodySecondary" tone="muted" style={{ color: MUTED, marginTop: 6 }}>
             Prototype pour tester vite.
-          </Text>
+          </AppText>
 
           <View style={{ height: 12 }} />
 
@@ -147,7 +153,7 @@ export default function Profile() {
               alignItems: "center",
             })}
           >
-            <Text style={{ color: TXT, fontWeight: "900" }}>Reinitialiser</Text>
+            <AppText variant="button" align="center" style={{ color: TXT }}>Reinitialiser</AppText>
           </Pressable>
         </View>
       </ScrollView>

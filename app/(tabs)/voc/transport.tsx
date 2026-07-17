@@ -746,7 +746,7 @@ export default function TransportCity() {
               />
 
               <View style={styles.cardInfo}>
-                <AppText variant="caption" script="korean" style={[styles.krBadge, { color: activeScene.accent }]}>
+                <AppText variant="koreanSecondary" script="korean" lineContract="singleLine" style={[styles.krBadge, { color: activeScene.accent }]}>
                   {activeScene.koreanTitle}
                 </AppText>
 
@@ -984,12 +984,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
   },
-  backArrow: { color: "#fff", fontSize: 24, marginTop: -2 },
+  backArrow: { color: "#fff", marginTop: -2 },
   navEyebrow: {
-    fontSize: 10,
-    letterSpacing: 2,
   },
-  navTitle: { color: "#fff", fontSize: 14, opacity: 0.8 },
+  navTitle: { color: "#fff", opacity: 0.8 },
 
   header: {
     flexDirection: "row",
@@ -1005,8 +1003,6 @@ const styles = StyleSheet.create({
 
   backText: {
     color: COLORS.muted,
-    fontSize: 11,
-    letterSpacing: 2,
   },
 
   gpsIcon: {
@@ -1027,7 +1023,6 @@ const styles = StyleSheet.create({
 
   gpsText: {
     color: COLORS.muted,
-    fontSize: 9,
   },
 
   tabBar: {
@@ -1047,7 +1042,6 @@ const styles = StyleSheet.create({
 
   tabLabel: {
     color: COLORS.muted,
-    fontSize: 12,
   },
 
   glassCard: {
@@ -1063,22 +1057,17 @@ const styles = StyleSheet.create({
   },
 
   krBadge: {
-    fontSize: 14,
-    letterSpacing: 1,
-    marginBottom: 4,
+    marginBottom: 2,
   },
 
   sceneMainTitle: {
     color: COLORS.txt,
-    fontSize: 34,
   },
 
   sceneSub: {
     color: COLORS.muted,
-    fontSize: 14,
     fontStyle: "italic",
     marginTop: 8,
-    lineHeight: 20,
   },
 
   dialogueList: { gap: 16 },
@@ -1104,22 +1093,16 @@ const styles = StyleSheet.create({
   },
 
   bubbleChar: {
-    fontSize: 10,
-    textTransform: "uppercase",
-    letterSpacing: 1,
     marginBottom: 6,
   },
 
   bubbleKr: {
     color: COLORS.txt,
-    fontSize: 18,
-    lineHeight: 26,
     marginBottom: 4,
   },
 
   bubbleFr: {
     color: COLORS.muted,
-    fontSize: 13,
   },
 
   typingBubble: {
@@ -1144,9 +1127,6 @@ const styles = StyleSheet.create({
   tapHint: {
     alignSelf: "center",
     color: "rgba(255,255,255,0.42)",
-    fontSize: 10,
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
     marginTop: 4,
   },
 
@@ -1163,8 +1143,6 @@ const styles = StyleSheet.create({
 
   toolboxTitle: {
     color: COLORS.muted,
-    fontSize: 12,
-    letterSpacing: 3,
   },
 
   toolboxLine: {
@@ -1206,25 +1184,19 @@ const styles = StyleSheet.create({
 
   vocabKr: {
     color: COLORS.txt,
-    fontSize: 24,
     marginBottom: 2,
   },
 
   vocabRom: {
-    fontSize: 12,
-    textTransform: "uppercase",
   },
 
   vocabMean: {
     color: COLORS.txt,
-    fontSize: 16,
     marginBottom: 4,
   },
 
   vocabCtx: {
     color: COLORS.muted,
-    fontSize: 12,
-    lineHeight: 18,
   },
 
   listenPill: {
@@ -1238,12 +1210,9 @@ const styles = StyleSheet.create({
   },
 
   listenIcon: {
-    fontSize: 9,
   },
 
   listenText: {
     color: "rgba(255,255,255,0.78)",
-    fontSize: 9,
-    letterSpacing: 1,
   },
 });

@@ -515,7 +515,7 @@ export default function RomanceDating() {
                 colors={[`${activeScene.accent}30`, "transparent"]}
                 style={ABSOLUTE_FILL}
               />
-              <AppText variant="sectionLabel"
+              <AppText variant="koreanSecondary" script="korean" lineContract="singleLine"
                 style={[styles.sceneCategory, { color: activeScene.accent }]}
               >
                 {activeScene.koreanTitle}
@@ -748,12 +748,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
   },
-  backArrow: { color: "#fff", fontSize: 24, marginTop: -2 },
+  backArrow: { color: "#fff", marginTop: -2 },
   navEyebrow: {
-    fontSize: 10,
-    letterSpacing: 2,
   },
-  navTitle: { color: "#fff", fontSize: 14, opacity: 0.8 },
+  navTitle: { color: "#fff", opacity: 0.8 },
 
   sceneTabs: {
     flexDirection: "row",
@@ -776,7 +774,6 @@ const styles = StyleSheet.create({
   },
   tabText: {
     color: COLORS.muted,
-    fontSize: 13,
     textAlign: "center",
   },
 
@@ -788,19 +785,15 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.12)",
   },
   sceneCategory: {
-    fontSize: 14,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   sceneTitle: {
     color: COLORS.txt,
-    fontSize: 32,
     marginBottom: 10,
   },
   sceneDesc: {
     color: COLORS.muted,
-    fontSize: 14,
     fontStyle: "italic",
-    lineHeight: 20,
     marginBottom: 30,
   },
 
@@ -823,18 +816,13 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 4,
   },
   charLabel: {
-    fontSize: 10,
     marginBottom: 6,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
   },
   krText: {
     color: COLORS.txt,
-    fontSize: 17,
-    lineHeight: 24,
     marginBottom: 4,
   },
-  frText: { color: COLORS.muted, fontSize: 12},
+  frText: { color: COLORS.muted},
 
   typingBubble: {
     minWidth: 92,
@@ -855,9 +843,6 @@ const styles = StyleSheet.create({
   tapHint: {
     alignSelf: "center",
     color: "rgba(255,255,255,0.42)",
-    fontSize: 10,
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
     marginTop: 4,
   },
 
@@ -870,8 +855,6 @@ const styles = StyleSheet.create({
   },
   toolboxTitle: {
     color: COLORS.muted,
-    fontSize: 11,
-    letterSpacing: 3,
   },
   toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
 
@@ -899,19 +882,15 @@ const styles = StyleSheet.create({
   },
   vocabKr: {
     color: COLORS.txt,
-    fontSize: 24,
     marginBottom: 2,
   },
   vocabRom: {
-    fontSize: 12,
-    textTransform: "uppercase",
   },
   vocabMean: {
     color: COLORS.txt,
-    fontSize: 16,
     marginBottom: 4,
   },
-  vocabCtx: { color: COLORS.muted, fontSize: 12, lineHeight: 18 },
+  vocabCtx: { color: COLORS.muted},
   listenPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -922,11 +901,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   listenIcon: {
-    fontSize: 9,
   },
   listenText: {
     color: "rgba(255,255,255,0.78)",
-    fontSize: 9,
-    letterSpacing: 1,
   },
 });

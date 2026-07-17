@@ -1,7 +1,8 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
+import { AppText } from "../../components/app-text";
 import { getScene, Step } from "../../data/immersionScenes";
 
 const BG0 = "#070812";
@@ -52,17 +53,14 @@ function Bubble({
           padding: 12,
         }}
       >
-        <Text
+        <AppText variant="koreanSecondary" script="korean"
           style={{
             color: TXT,
-            fontWeight: "900",
-            fontSize: 16,
-            lineHeight: 22,
           }}
         >
           {kr}
-        </Text>
-        <Text style={{ color: MUTED, marginTop: 6, lineHeight: 20 }}>{fr}</Text>
+        </AppText>
+        <AppText variant="bodySecondary" style={{ color: MUTED, marginTop: 6}}>{fr}</AppText>
       </View>
     </View>
   );
@@ -94,19 +92,16 @@ function ChoiceButton({
     >
       <View style={{ flexDirection: "row", gap: 10, alignItems: "flex-start" }}>
         <View style={{ flex: 1 }}>
-          <Text
+          <AppText variant="koreanSecondary" script="korean"
             style={{
               color: TXT,
-              fontWeight: "900",
-              fontSize: 15,
-              lineHeight: 21,
             }}
           >
             {kr}
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 6, lineHeight: 19 }}>
+          </AppText>
+          <AppText variant="bodySecondary" style={{ color: MUTED, marginTop: 6}}>
             {fr}
-          </Text>
+          </AppText>
         </View>
 
         {!!tone && (
@@ -120,9 +115,9 @@ function ChoiceButton({
               backgroundColor: "rgba(124,58,237,0.12)",
             }}
           >
-            <Text style={{ color: TXT, fontWeight: "900", fontSize: 12 }}>
+            <AppText variant="label" style={{ color: TXT}}>
               {tone}
-            </Text>
+            </AppText>
           </View>
         )}
       </View>
@@ -225,12 +220,12 @@ export default function ImmersionScene() {
     return (
       <LinearGradient colors={[BG0, "#0b0b1d", "#0b0f22"]} style={{ flex: 1 }}>
         <View style={{ padding: 16 }}>
-          <Text style={{ color: TXT, fontSize: 18, fontWeight: "900" }}>
+          <AppText variant="sectionTitle" style={{ color: TXT}}>
             Scène introuvable
-          </Text>
-          <Text style={{ color: MUTED, marginTop: 8 }}>
+          </AppText>
+          <AppText variant="button" style={{ color: MUTED, marginTop: 8 }}>
             Retourne à Immersion.
-          </Text>
+          </AppText>
           <View style={{ height: 12 }} />
           <Pressable
             onPress={() => router.back()}
@@ -243,7 +238,7 @@ export default function ImmersionScene() {
               alignItems: "center",
             }}
           >
-            <Text style={{ color: TXT, fontWeight: "900" }}>Retour</Text>
+            <AppText variant="button" style={{ color: TXT}}>Retour</AppText>
           </Pressable>
         </View>
       </LinearGradient>
@@ -253,10 +248,10 @@ export default function ImmersionScene() {
   return (
     <LinearGradient colors={[BG0, "#0b0b1d", "#0b0f22"]} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 140 }}>
-        <Text style={{ color: TXT, fontSize: 22, fontWeight: "900" }}>
+        <AppText variant="screenTitle" style={{ color: TXT}}>
           {scene.title}
-        </Text>
-        <Text style={{ color: MUTED, marginTop: 6 }}>{scene.vibe}</Text>
+        </AppText>
+        <AppText variant="bodySecondary" style={{ color: MUTED, marginTop: 6 }}>{scene.vibe}</AppText>
 
         <View style={{ height: 14 }} />
 
@@ -284,21 +279,21 @@ export default function ImmersionScene() {
                 backgroundColor: "rgba(34,211,238,0.10)",
               }}
             >
-              <Text style={{ color: TXT, fontSize: 18, fontWeight: "900" }}>
+              <AppText variant="koreanSecondary" script="korean" style={{ color: TXT}}>
                 {it.summaryKr}
-              </Text>
-              <Text style={{ color: MUTED, marginTop: 6 }}>{it.summaryFr}</Text>
+              </AppText>
+              <AppText variant="bodySecondary" style={{ color: MUTED, marginTop: 6 }}>{it.summaryFr}</AppText>
 
               <View style={{ height: 10 }} />
-              <Text style={{ color: TXT, fontWeight: "900" }}>
+              <AppText variant="sectionTitle" style={{ color: TXT}}>
                 Phrases clés
-              </Text>
+              </AppText>
               <View style={{ height: 8 }} />
 
               {it.keyPhrases.map((p, j) => (
                 <View key={j} style={{ marginBottom: 8 }}>
-                  <Text style={{ color: TXT, fontWeight: "900" }}>{p.kr}</Text>
-                  <Text style={{ color: MUTED }}>{p.fr}</Text>
+                  <AppText variant="koreanSecondary" script="korean" style={{ color: TXT}}>{p.kr}</AppText>
+                  <AppText variant="bodySecondary" style={{ color: MUTED }}>{p.fr}</AppText>
                 </View>
               ))}
 
@@ -315,7 +310,7 @@ export default function ImmersionScene() {
                     backgroundColor: CARD,
                   }}
                 >
-                  <Text style={{ color: TXT, fontWeight: "900" }}>Rejouer</Text>
+                  <AppText variant="button" style={{ color: TXT}}>Rejouer</AppText>
                 </Pressable>
 
                 <Pressable
@@ -329,7 +324,7 @@ export default function ImmersionScene() {
                     backgroundColor: CARD,
                   }}
                 >
-                  <Text style={{ color: TXT, fontWeight: "900" }}>Retour</Text>
+                  <AppText variant="button" style={{ color: TXT}}>Retour</AppText>
                 </Pressable>
               </View>
             </View>
@@ -350,12 +345,12 @@ export default function ImmersionScene() {
               padding: 14,
             }}
           >
-            <Text style={{ color: TXT, fontSize: 16, fontWeight: "900" }}>
+            <AppText variant="koreanSecondary" script="korean" style={{ color: TXT}}>
               {current.promptKr}
-            </Text>
-            <Text style={{ color: MUTED, marginTop: 6 }}>
+            </AppText>
+            <AppText variant="bodySecondary" style={{ color: MUTED, marginTop: 6 }}>
               {current.promptFr}
-            </Text>
+            </AppText>
 
             <View style={{ height: 12 }} />
 
@@ -416,7 +411,7 @@ export default function ImmersionScene() {
               alignItems: "center",
             })}
           >
-            <Text style={{ color: TXT, fontWeight: "900" }}>Continuer</Text>
+            <AppText variant="button" style={{ color: TXT}}>Continuer</AppText>
           </Pressable>
         )}
       </ScrollView>

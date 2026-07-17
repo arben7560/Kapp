@@ -206,19 +206,15 @@ const styles = StyleSheet.create({
     borderColor: LINE,
     backgroundColor: "rgba(255,255,255,0.06)",
   },
-  backText: { color: TXT, fontSize: 18},
+  backText: { color: TXT},
   headerCopy: { flex: 1 },
   kicker: {
     color: ORANGE,
-    fontSize: 11,
-    letterSpacing: 2.5,
   },
-  title: { color: TXT, fontSize: 34, marginTop: 4 },
+  title: { color: TXT, marginTop: 4 },
   content: { paddingTop: 14, paddingBottom: 42 },
   intro: {
     color: MUTED,
-    fontSize: 15,
-    lineHeight: 22,
     marginBottom: 18,
   },
   missionStack: { gap: 14 },
@@ -246,19 +242,13 @@ const styles = StyleSheet.create({
   },
   cardArrow: {
     color: SOFT,
-    fontSize: SeoulMidnightGlass.cta.fontSize,
-    letterSpacing: SeoulMidnightGlass.cta.letterSpacing,
   },
   cardArrowPremium: { color: GOLD },
   missionTitle: {
     color: TXT,
-    fontSize: 21,
-    lineHeight: 27,
   },
   missionSubtitle: {
     color: MUTED,
-    fontSize: 14,
-    lineHeight: 20,
     marginTop: 7,
   },
 });

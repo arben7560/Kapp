@@ -22,8 +22,8 @@ import {
   CAFE_SPEECH_PILOT_MISSION_ID,
   getCafeSyllableDistance,
   getCafeSyllableDistanceDetails,
+  getCafeSpeechAttemptPedagogy,
   getCafeSpeechContextualStrings,
-  getCafeSpeechIntentPedagogy,
   matchCafeSpeechIntent,
   normalizeKoreanSpeech,
 } from "../lib/cafeSpeechIntents.ts";
@@ -700,13 +700,55 @@ test("cheesecake avec un produit étranger ne force pas la branche dessert", () 
 test("une commande hors périmètre ne sélectionne aucune branche", () => {
   for (const transcript of ["카푸치노 주세요.", "아메리카노는 안 주세요."]) {
     const result = matchCafeSpeechIntent(transcript, orderChoices);
-    assert.deepEqual(result, {
-      reason: "out-of-scope",
-      choice: null,
-      feedback:
-        "Cette réponse ne correspond à aucune commande disponible ici. Choisis americano, jus d’orange, latte ou cheesecake.",
-    });
+    assert.equal(result.reason, "out-of-scope");
+    assert.equal(result.choice, null);
+    assert.match(result.feedback, new RegExp(transcript.replace(/[.]/gu, "")));
+    assert.match(result.feedback, /produit|commande|americano/u);
   }
+});
+
+test("un objet hors contexte reçoit une explication sémantique liée à l’étape", () => {
+  const transcript = "보청기 주세요";
+  const choices = [eatHere, takeout, repeat];
+  const result = matchCafeSpeechIntent(transcript, choices);
+
+  assert.equal(result.reason, "out-of-scope");
+  assert.equal(result.choice, null);
+  assert.match(result.feedback, /보청기/u);
+  assert.match(result.feedback, /appareil auditif/u);
+  assert.match(result.feedback, /sur place ou.*emporter/u);
+  assert.match(result.feedback, /먹고 갈게요/u);
+  assert.match(result.feedback, /포장해 주세요/u);
+
+  assert.deepEqual(
+    getCafeSpeechAttemptPedagogy(result, choices, transcript),
+    {
+      intentId: "hearing-aid-request",
+      detectedIntent: "Demander un appareil auditif",
+      canonicalFormulation: "먹고 갈게요.",
+    },
+  );
+});
+
+test("une intention correcte donnée trop tôt est expliquée comme telle", () => {
+  const transcript = "카드로 할게요.";
+  const result = matchCafeSpeechIntent(transcript, [eatHere, takeout, repeat]);
+
+  assert.equal(result.reason, "out-of-scope");
+  assert.match(result.feedback, /paiement par carte/u);
+  assert.match(result.feedback, /correcte en soi/u);
+  assert.match(result.feedback, /mauvais moment/u);
+  assert.match(result.feedback, /sur place ou.*emporter/u);
+});
+
+test("une demande inconnue avec 주세요 reçoit une analyse grammaticale utile", () => {
+  const result = matchCafeSpeechIntent("우산 주세요.", [eatHere, takeout, repeat]);
+
+  assert.equal(result.reason, "out-of-scope");
+  assert.match(result.feedback, /우산/u);
+  assert.match(result.feedback, /주세요/u);
+  assert.match(result.feedback, /structure polie/u);
+  assert.match(result.feedback, /먹고 갈게요|포장해 주세요/u);
 });
 
 test("les variantes naturelles de paiement en espèces sélectionnent le DialogueChoice existant", () => {
@@ -1637,9 +1679,7 @@ function rememberCafeAttempt(
     stepLabel,
     recordedTranscript: transcript,
     result,
-    intent: result.choice
-      ? getCafeSpeechIntentPedagogy(result.choice.id)
-      : null,
+    intent: getCafeSpeechAttemptPedagogy(result, choices, transcript),
   });
 }
 
@@ -1738,6 +1778,29 @@ test("une correction grammaticale reste comprise et apparaît dans À améliorer
     summary.improvements[0].canonicalFormulation,
     "아메리카노 한 잔 주세요.",
   );
+});
+
+test("le bilan conserve l’intention probable et la reformulation contextuelle", () => {
+  const memory = rememberCafeAttempt(createCafeConversationMemory(), {
+    nodeId: "ped_choice2_drink",
+    stepIndex: 1,
+    stepLabel: "Choix",
+    transcript: "보청기 주세요",
+    choices: [eatHere, takeout, repeat],
+  });
+  const summary = buildCafeConversationSummary(memory);
+
+  assert.equal(summary.improvements.length, 1);
+  assert.equal(
+    summary.improvements[0].detectedIntent,
+    "Demander un appareil auditif",
+  );
+  assert.equal(
+    summary.improvements[0].canonicalFormulation,
+    "먹고 갈게요.",
+  );
+  assert.match(summary.improvements[0].explanation, /appareil auditif/u);
+  assert.match(summary.improvements[0].explanation, /sur place ou.*emporter/u);
 });
 
 test("plusieurs imperfections différentes restent séparées dans le bilan", () => {

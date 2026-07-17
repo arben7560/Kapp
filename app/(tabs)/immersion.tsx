@@ -1,17 +1,15 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router, type Href } from "expo-router";
 import React from "react";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, View } from "react-native";
+
+import { AppText } from "../../components/app-text";
 
 const BG0 = "#070812";
 const CARD = "rgba(255,255,255,0.06)";
 const LINE = "rgba(255,255,255,0.10)";
 const TXT = "rgba(255,255,255,0.92)";
 const MUTED = "rgba(255,255,255,0.60)";
-const CYAN = "rgba(34,211,238,0.55)";
-const CYAN_BG = "rgba(34,211,238,0.12)";
-const PURPLE = "rgba(124,58,237,0.55)";
-const PURPLE_BG = "rgba(124,58,237,0.12)";
 
 function CapsuleCard({
   emoji,
@@ -54,30 +52,29 @@ function CapsuleCard({
           resizeMode="cover"
         />
       ) : (
-        <Text style={{ fontSize: 34 }}>{emoji}</Text>
+        <AppText variant="screenTitle">{emoji}</AppText>
       )}
 
-      <Text
+      <AppText
+        variant="sectionTitle"
         style={{
           color: TXT,
-          fontSize: 22,
-          fontWeight: "800",
           marginTop: imageSource ? 0 : 12,
         }}
       >
         {title}
-      </Text>
+      </AppText>
 
-      <Text
+      <AppText
+        variant="body"
+        tone="muted"
         style={{
           color: MUTED,
           marginTop: 10,
-          fontSize: 15,
-          lineHeight: 22,
         }}
       >
         {mood}
-      </Text>
+      </AppText>
 
       <View
         style={{
@@ -99,9 +96,9 @@ function CapsuleCard({
               backgroundColor: "rgba(255,255,255,0.05)",
             }}
           >
-            <Text style={{ color: MUTED, fontSize: 12, fontWeight: "700" }}>
+            <AppText variant="caption" tone="muted" style={{ color: MUTED }}>
               {t}
-            </Text>
+            </AppText>
           </View>
         ))}
       </View>
@@ -113,28 +110,28 @@ export default function ImmersionScreen() {
   return (
     <LinearGradient colors={[BG0, "#0b0f22", "#0e132d"]} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 120 }}>
-        <Text
+        <AppText
+          accessibilityRole="header"
+          variant="screenTitle"
           style={{
             color: TXT,
-            fontSize: 34,
-            fontWeight: "900",
             marginTop: 10,
           }}
         >
           Immersion Séoul
-        </Text>
+        </AppText>
 
-        <Text
+        <AppText
+          variant="subtitle"
+          tone="muted"
           style={{
             color: MUTED,
             marginTop: 10,
-            fontSize: 16,
-            lineHeight: 24,
           }}
         >
           Explore la ville comme si tu y étais. Observe les lieux, ressens
           l’ambiance et comprends les codes du réel.
-        </Text>
+        </AppText>
 
         <View style={{ height: 36 }} />
 

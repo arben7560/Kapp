@@ -30,6 +30,11 @@ import {
  */
 const AppFontsAvailableContext = React.createContext(false);
 
+const KOREAN_CHARACTER_PATTERN =
+  /[\u1100-\u11ff\u3130-\u318f\ua960-\ua97f\uac00-\ud7af\ud7b0-\ud7ff]/u;
+const KOREAN_RUN_PATTERN =
+  /([\u1100-\u11ff\u3130-\u318f\ua960-\ua97f\uac00-\ud7af\ud7b0-\ud7ff]+)/u;
+
 export type AppTextProviderProps = React.PropsWithChildren<{
   customFontsAvailable: boolean;
 }>;
@@ -54,18 +59,7 @@ const PROTECTED_TYPOGRAPHY_STYLE_KEYS = [
   'textTransform',
 ] as const satisfies readonly (keyof TextStyle)[];
 
-export type AppTextTypographyOverride = Partial<
-  Pick<
-    TextStyle,
-    (typeof PROTECTED_TYPOGRAPHY_STYLE_KEYS)[number]
-  >
->;
-
-/**
- * Typography owned by a semantic token cannot be changed through `style`.
- * Call sites that genuinely need a transitional metric must name that intent
- * through `typographyOverride` instead.
- */
+/** Typography owned by a semantic token cannot be changed through `style`. */
 export type AppTextStyle = Omit<
   TextStyle,
   (typeof PROTECTED_TYPOGRAPHY_STYLE_KEYS)[number]
@@ -84,7 +78,6 @@ export type AppTextProps = Omit<
   align?: AppTextAlignment;
   lineContract?: AppTextLineContract;
   style?: StyleProp<TextStyle>;
-  typographyOverride?: AppTextTypographyOverride;
 };
 
 function sanitizeTextStyle(
@@ -124,6 +117,45 @@ function resolveFontStyle(
   };
 }
 
+/**
+ * Dynamic data can contain a French/Korean mix that cannot be identified at
+ * the call site. Keep the parent metrics authoritative and switch only Hangul
+ * runs to Noto Sans KR, exactly like AppMixedText does for explicit segments.
+ */
+function renderScriptAwareChildren(
+  children: React.ReactNode,
+  parentScript: AppTextScript,
+  fontRole: AppFontRole,
+  customFontsAvailable: boolean,
+) {
+  if (parentScript === 'korean') return children;
+
+  return React.Children.map(children, (child) => {
+    if (typeof child !== 'string' && typeof child !== 'number') return child;
+
+    const value = String(child);
+    if (!KOREAN_CHARACTER_PATTERN.test(value)) return child;
+
+    return value.split(KOREAN_RUN_PATTERN).map((run, index) => {
+      if (!run || !KOREAN_CHARACTER_PATTERN.test(run)) return run;
+
+      return (
+        <Text
+          key={`korean-run-${index}`}
+          accessibilityLanguage="ko-KR"
+          style={resolveFontStyle(
+            'korean',
+            fontRole,
+            customFontsAvailable,
+          )}
+        >
+          {run}
+        </Text>
+      );
+    });
+  });
+}
+
 export const AppText = React.forwardRef<
   React.ComponentRef<typeof Text>,
   AppTextProps
@@ -134,7 +166,6 @@ export const AppText = React.forwardRef<
     script,
     style,
     tone = 'default',
-    typographyOverride,
     variant = 'body',
     ...rest
   },
@@ -164,14 +195,22 @@ export const AppText = React.forwardRef<
   };
 
   const safeStyle = sanitizeTextStyle(style);
+  const renderedChildren = renderScriptAwareChildren(
+    rest.children,
+    resolvedScript,
+    token.fontRole,
+    customFontsAvailable,
+  );
 
   return (
     <Text
       ref={ref}
       {...rest}
       {...lineProps}
-      style={[baseStyle, safeStyle, typographyOverride]}
-    />
+      style={[baseStyle, safeStyle]}
+    >
+      {renderedChildren}
+    </Text>
   );
 });
 
