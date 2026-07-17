@@ -8,6 +8,12 @@ import {
   EMPTY_CAFE_ORDER_STATE,
 } from "../lib/cafeOrderState.ts";
 import {
+  buildCafeConversationSummary,
+  createCafeConversationMemory,
+  groupCafeImperfections,
+  recordCafeSpeechAttempt,
+} from "../lib/cafeConversationMemory.ts";
+import {
   buildCafeUnavailableFeedback,
   CAFE_SPEECH_INTENTS,
   CAFE_SPEECH_LINGUISTIC_RULES,
@@ -17,6 +23,7 @@ import {
   getCafeSyllableDistance,
   getCafeSyllableDistanceDetails,
   getCafeSpeechContextualStrings,
+  getCafeSpeechIntentPedagogy,
   matchCafeSpeechIntent,
   normalizeKoreanSpeech,
 } from "../lib/cafeSpeechIntents.ts";
@@ -1617,6 +1624,258 @@ test("arrêt manuel traite la dernière transcription", () => {
 
   assert.equal(processing.status, "processing");
   assert.equal(recognized.status, "recognized");
+});
+
+function rememberCafeAttempt(
+  memory,
+  { nodeId, stepIndex, stepLabel, transcript, choices },
+) {
+  const result = matchCafeSpeechIntent(transcript, choices);
+  return recordCafeSpeechAttempt(memory, {
+    nodeId,
+    stepIndex,
+    stepLabel,
+    recordedTranscript: transcript,
+    result,
+    intent: result.choice
+      ? getCafeSpeechIntentPedagogy(result.choice.id)
+      : null,
+  });
+}
+
+test("le bilan d’une mission sans erreur ne transforme aucune réussite en erreur", () => {
+  let memory = createCafeConversationMemory();
+  memory = rememberCafeAttempt(memory, {
+    nodeId: "ped_choice1",
+    stepIndex: 1,
+    stepLabel: "Choix",
+    transcript: "아메리카노 한 잔 주세요.",
+    choices: orderChoices,
+  });
+  memory = rememberCafeAttempt(memory, {
+    nodeId: "ped_choice2_drink",
+    stepIndex: 1,
+    stepLabel: "Choix",
+    transcript: "포장해 주세요.",
+    choices: [eatHere, takeout, repeat],
+  });
+  memory = rememberCafeAttempt(memory, {
+    nodeId: "ped_choice3_takeout",
+    stepIndex: 2,
+    stepLabel: "Paiement",
+    transcript: "카드로 할게요.",
+    choices: [card, cash, repeat],
+  });
+  memory = rememberCafeAttempt(memory, {
+    nodeId: "ped_receipt_choice_takeout",
+    stepIndex: 2,
+    stepLabel: "Paiement",
+    transcript: "아니요, 괜찮아요.",
+    choices: [receiptYes, receiptNo],
+  });
+
+  const summary = buildCafeConversationSummary(memory);
+  assert.equal(summary.directSuccesses, 4);
+  assert.equal(summary.understoodWithCorrection, 0);
+  assert.equal(summary.notUnderstood, 0);
+  assert.deepEqual(summary.improvements, []);
+  assert.deepEqual(summary.uncertainRecognition, []);
+  assert.ok(summary.successfulPoints.includes("Produit correctement commandé"));
+  assert.ok(
+    summary.successfulPoints.includes(
+      "Choix sur place ou à emporter compris",
+    ),
+  );
+  assert.ok(
+    summary.successfulPoints.includes(
+      "Moyen de paiement correctement exprimé",
+    ),
+  );
+});
+
+test("transcription, intention détectée et formulation canonique restent distinctes", () => {
+  const memory = rememberCafeAttempt(createCafeConversationMemory(), {
+    nodeId: "ped_choice3_takeout",
+    stepIndex: 2,
+    stepLabel: "Paiement",
+    transcript: "카드로 부탁드립니다.",
+    choices: [card, cash, repeat],
+  });
+
+  assert.equal(memory.attempts.length, 1);
+  assert.equal(memory.attempts[0].resultType, "correct");
+  assert.equal(memory.attempts[0].recordedTranscript, "카드로 부탁드립니다.");
+  assert.equal(memory.attempts[0].intentId, "card-payment");
+  assert.equal(
+    memory.attempts[0].detectedIntent,
+    "Ta réponse demande un paiement par carte",
+  );
+  assert.equal(memory.attempts[0].canonicalFormulation, "카드로 할게요.");
+  assert.notEqual(
+    memory.attempts[0].recordedTranscript,
+    memory.attempts[0].canonicalFormulation,
+  );
+  assert.deepEqual(
+    buildCafeConversationSummary(memory).canonicalReferencePhrases,
+    ["카드로 할게요."],
+  );
+});
+
+test("une correction grammaticale reste comprise et apparaît dans À améliorer", () => {
+  const memory = rememberCafeAttempt(createCafeConversationMemory(), {
+    nodeId: "ped_choice1",
+    stepIndex: 1,
+    stepLabel: "Choix",
+    transcript: "아메리카노 한 조각 주세요.",
+    choices: orderChoices,
+  });
+  const summary = buildCafeConversationSummary(memory);
+
+  assert.equal(memory.attempts[0].resultType, "understood-with-grammar-correction");
+  assert.equal(summary.understoodWithCorrection, 1);
+  assert.equal(summary.improvements.length, 1);
+  assert.equal(
+    summary.improvements[0].canonicalFormulation,
+    "아메리카노 한 잔 주세요.",
+  );
+});
+
+test("plusieurs imperfections différentes restent séparées dans le bilan", () => {
+  let memory = createCafeConversationMemory();
+  memory = rememberCafeAttempt(memory, {
+    nodeId: "ped_choice1",
+    stepIndex: 1,
+    stepLabel: "Choix",
+    transcript: "아메리카노 한 조각 주세요.",
+    choices: orderChoices,
+  });
+  memory = rememberCafeAttempt(memory, {
+    nodeId: "ped_choice2_drink",
+    stepIndex: 1,
+    stepLabel: "Choix",
+    transcript: "먹고 갈게요, 포장도 해 주세요.",
+    choices: [eatHere, takeout, repeat],
+  });
+  memory = rememberCafeAttempt(memory, {
+    nodeId: "ped_choice3_takeout",
+    stepIndex: 2,
+    stepLabel: "Paiement",
+    transcript: "라떼 주세요.",
+    choices: [card, cash, repeat],
+  });
+
+  const summary = buildCafeConversationSummary(memory);
+  assert.equal(summary.improvements.length, 3);
+  assert.deepEqual(
+    summary.improvements.map(({ resultType }) => resultType),
+    [
+      "understood-with-grammar-correction",
+      "ambiguous",
+      "not-understood",
+    ],
+  );
+});
+
+test("les doublons d’une même imperfection sont regroupés", () => {
+  let memory = createCafeConversationMemory();
+  for (const transcript of [
+    "아메리카노 한 조각 주세요.",
+    "아메리카노 한 조각 주세요.",
+  ]) {
+    memory = rememberCafeAttempt(memory, {
+      nodeId: "ped_choice1",
+      stepIndex: 1,
+      stepLabel: "Choix",
+      transcript,
+      choices: orderChoices,
+    });
+  }
+
+  const groups = groupCafeImperfections(memory.attempts);
+  assert.equal(groups.length, 1);
+  assert.equal(groups[0].attemptCount, 2);
+  assert.equal(groups[0].recordedTranscripts.length, 1);
+  assert.equal(groups[0].correctedDuringScene, false);
+  assert.equal(buildCafeConversationSummary(memory).newAttempts, 1);
+});
+
+test("une erreur suivie d’une réussite est marquée corrigée pendant la scène", () => {
+  let memory = rememberCafeAttempt(createCafeConversationMemory(), {
+    nodeId: "ped_choice1",
+    stepIndex: 1,
+    stepLabel: "Choix",
+    transcript: "샌드위치 주세요.",
+    choices: orderChoices,
+  });
+  memory = rememberCafeAttempt(memory, {
+    nodeId: "ped_choice1",
+    stepIndex: 1,
+    stepLabel: "Choix",
+    transcript: "아메리카노 한 잔 주세요.",
+    choices: orderChoices,
+  });
+
+  const summary = buildCafeConversationSummary(memory);
+  assert.equal(summary.newAttempts, 1);
+  assert.equal(summary.improvements.length, 1);
+  assert.equal(summary.improvements[0].correctedDuringScene, true);
+});
+
+test("une probable erreur de transcription est séparée des fautes utilisateur", () => {
+  const memory = rememberCafeAttempt(createCafeConversationMemory(), {
+    nodeId: "ped_choice1",
+    stepIndex: 1,
+    stepLabel: "Choix",
+    transcript: "아메리카농 주세요.",
+    choices: orderChoices,
+  });
+  const summary = buildCafeConversationSummary(memory);
+
+  assert.equal(memory.attempts[0].resultType, "probable-transcription-error");
+  assert.deepEqual(summary.improvements, []);
+  assert.equal(summary.uncertainRecognition.length, 1);
+  assert.match(summary.uncertainRecognition[0].explanation, /probablement/);
+});
+
+test("une nouvelle mission reçoit une mémoire locale vide et indépendante", () => {
+  const previousMission = rememberCafeAttempt(createCafeConversationMemory(), {
+    nodeId: "ped_choice1",
+    stepIndex: 1,
+    stepLabel: "Choix",
+    transcript: "아메리카노 한 잔 주세요.",
+    choices: orderChoices,
+  });
+  const nextMission = createCafeConversationMemory();
+
+  assert.equal(previousMission.attempts.length, 1);
+  assert.equal(nextMission.attempts.length, 0);
+  assert.notEqual(previousMission, nextMission);
+});
+
+test("la modale Café expose ouverture, fermeture et lecture expo-speech", () => {
+  const modalSource = readFileSync(
+    new URL(
+      "../components/cafe/CafeConversationSummaryModal.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const runtimeSource = readFileSync(
+    new URL("../app/lesson/cafeIA.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(modalSource, /Bilan de la conversation/);
+  assert.match(modalSource, /visible=\{visible\}/);
+  assert.match(modalSource, /onRequestClose=\{handleClose\}/);
+  assert.match(modalSource, /Revoir mes phrases/);
+  assert.match(modalSource, /Phrases de référence/);
+  assert.match(modalSource, /item\.recordedTranscripts/);
+  assert.match(modalSource, /summary\.canonicalReferencePhrases/);
+  assert.match(modalSource, /Speech\.speak\(phrase/);
+  assert.match(modalSource, /language: "ko-KR"/);
+  assert.match(runtimeSource, /setIsSceneEnded\(true\);\s+setIsSummaryOpen\(true\)/);
+  assert.match(runtimeSource, /setConversationMemory\(createCafeConversationMemory\(\)\)/);
 });
 
 test("transcription vide, nouvelle tentative, changement de nœud et sortie", () => {

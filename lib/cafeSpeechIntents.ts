@@ -2354,3 +2354,14 @@ export function getCafeSpeechContextualStrings(
     new Set(contextualStrings.map((value) => value.trim()).filter(Boolean)),
   );
 }
+
+export function getCafeSpeechIntentPedagogy(choiceId: string) {
+  const definition = findIntentDefinition(choiceId);
+  return definition
+    ? {
+        intentId: definition.id,
+        detectedIntent: definition.meaning,
+        canonicalFormulation: definition.canonical,
+      }
+    : null;
+}

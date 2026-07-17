@@ -8,20 +8,27 @@ type MissionAccessBadgeProps = {
   access: MissionAccess;
   accent: string;
   featured?: boolean;
+  variant?: "access" | "vocal";
 };
 
 export function MissionAccessBadge({
   access,
   accent,
   featured = false,
+  variant = "access",
 }: MissionAccessBadgeProps) {
   const isPremium = access === "premium";
-  const borderColor = isPremium
+  const isVocal = variant === "vocal";
+  const borderColor = isVocal
+    ? `${accent}66`
+    : isPremium
     ? SeoulMidnightGlass.colors.premiumBorder
     : featured
       ? `${accent}66`
       : `${accent}55`;
-  const backgroundColor = isPremium
+  const backgroundColor = isVocal
+    ? `${accent}1A`
+    : isPremium
     ? SeoulMidnightGlass.colors.premiumSurface
     : featured
       ? `${accent}1A`
@@ -29,8 +36,8 @@ export function MissionAccessBadge({
 
   return (
     <StatusBadge
-      label={isPremium ? "PREMIUM" : "GRATUIT"}
-      tone={isPremium ? "premium" : "accent"}
+      label={isVocal ? "VOCAL" : isPremium ? "PREMIUM" : "GRATUIT"}
+      tone={isVocal ? "accent" : isPremium ? "premium" : "accent"}
       appearance="soft"
       size="compact"
       accentColor={accent}

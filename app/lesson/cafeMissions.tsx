@@ -33,6 +33,7 @@ const SOFT = "rgba(255,255,255,0.46)";
 const LINE = "rgba(255,255,255,0.10)";
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
+const VOCAL_VIOLET = "#A78BFA";
 const GOLD = SeoulMidnightGlass.colors.premiumGold;
 
 function normalizeMode(rawMode: string | string[] | undefined) {
@@ -174,7 +175,15 @@ export default function CafeMissionsScreen() {
                   />
 
                   <View style={styles.cardTop}>
-                    <MissionAccessBadge access={mission.access} accent={CYAN} />
+                    <MissionAccessBadge
+                      access={mission.access}
+                      accent={
+                        mission.id === "order-takeout" ? VOCAL_VIOLET : CYAN
+                      }
+                      variant={
+                        mission.id === "order-takeout" ? "vocal" : "access"
+                      }
+                    />
                     <AppText variant="caption" lineContract="singleLine"
                       style={[
                         styles.cardArrow,

@@ -3,6 +3,7 @@ import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Image,
   ImageBackground,
   Pressable,
   ScrollView,
@@ -17,6 +18,7 @@ import {
 
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { CafeConversationSummaryModal } from "../../components/cafe/CafeConversationSummaryModal";
 import { GuidedSpeechTurn } from "../../components/GuidedSpeechTurn";
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import {
@@ -33,8 +35,14 @@ import {
 import { useKoreanSpeechRecognition } from "../../hooks/useKoreanSpeechRecognition";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import {
+  createCafeConversationMemory,
+  markCafeSpeechNodeCorrected,
+  recordCafeSpeechAttempt,
+} from "../../lib/cafeConversationMemory";
+import {
   CAFE_SPEECH_PILOT_MISSION_ID,
   getCafeSpeechContextualStrings,
+  getCafeSpeechIntentPedagogy,
   matchCafeSpeechIntent,
   recordCafeSpeechRecoveryEvent,
 } from "../../lib/cafeSpeechIntents";
@@ -56,6 +64,7 @@ const PINK = "#F472B6";
 const CYAN = "#22D3EE";
 const PURPLE = "#A855F7";
 const VIDEO_OVERSCAN_SCALE = 1;
+const CAFE_STEPS = ["Accueil", "Choix", "Paiement", "Final"] as const;
 
 // ==================== VIDEOS ====================
 const welcomeCafeReal = require("../../assets/ai/cafe/welcomeCafeReal.mp4");
@@ -67,6 +76,7 @@ const byCardReceiptReal = require("../../assets/ai/cafe/byCardReceiptReal.mp4");
 const takeOutThanksReal = require("../../assets/ai/cafe/takeOutThanksReal.mp4");
 const jingdonbelReal = require("../../assets/ai/cafe/jingdonbelReal.mp4");
 const cafeBackground = require("../../assets/images/cafe.png");
+const cafeAvatar = require("../../assets/images/avatarIA.png");
 
 type ModeType = "guided" | "real";
 
@@ -228,6 +238,10 @@ export default function CafeIaScreen() {
   const [speechUiNodeId, setSpeechUiNodeId] = useState<string | null>(null);
   const [pendingSpeechChoice, setPendingSpeechChoice] =
     useState<DialogueChoice | null>(null);
+  const [conversationMemory, setConversationMemory] = useState(
+    createCafeConversationMemory,
+  );
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
 
   const [lastIaTranscript, setLastIaTranscript] = useState<{
     korean: string;
@@ -250,7 +264,6 @@ export default function CafeIaScreen() {
     | undefined;
 
   const progressIndex = getProgressIndex(currentNodeId);
-  const steps = ["Accueil", "Choix", "Paiement", "Final"];
 
   const videoSources =
     currentNode?.videoSources ||
@@ -298,6 +311,7 @@ export default function CafeIaScreen() {
       setCurrentNodeId(node.nextNodeId);
     } else {
       setIsSceneEnded(true);
+      setIsSummaryOpen(true);
     }
   }, []);
 
@@ -309,6 +323,8 @@ export default function CafeIaScreen() {
     setIsSceneEnded(false);
     setIsTranscriptOpen(false);
     setLastIaTranscript(null);
+    setConversationMemory(createCafeConversationMemory());
+    setIsSummaryOpen(false);
     hasAdvancedFromVideoRef.current = false;
     hasReportedMissionCompleteRef.current = false;
   }, [currentScenario]);
@@ -493,6 +509,19 @@ export default function CafeIaScreen() {
         currentNode.choices || [],
       );
 
+      setConversationMemory((memory) =>
+        recordCafeSpeechAttempt(memory, {
+          nodeId: currentNode.id,
+          stepIndex: progressIndex,
+          stepLabel: CAFE_STEPS[progressIndex] ?? "Conversation",
+          recordedTranscript: transcript,
+          result,
+          intent: result.choice
+            ? getCafeSpeechIntentPedagogy(result.choice.id)
+            : null,
+        }),
+      );
+
       if (result.reason === "matched") {
         if (result.recoveryEvent) {
           recordCafeSpeechRecoveryEvent(currentNode.id, result.recoveryEvent);
@@ -510,7 +539,7 @@ export default function CafeIaScreen() {
         result.reason === "uncertain" ? result.choice : null,
       );
     },
-    [currentNode, handleChoice, isCafeSpeechPilot],
+    [currentNode, handleChoice, isCafeSpeechPilot, progressIndex],
   );
 
   const {
@@ -551,6 +580,18 @@ export default function CafeIaScreen() {
     if (!pendingSpeechChoice || speechUiNodeId !== currentNodeId) return;
 
     const confirmedChoice = pendingSpeechChoice;
+    setConversationMemory((memory) => {
+      const latestAttempt = [...memory.attempts]
+        .reverse()
+        .find(({ nodeId }) => nodeId === currentNodeId);
+      return latestAttempt
+        ? markCafeSpeechNodeCorrected(
+            memory,
+            currentNodeId,
+            latestAttempt.id,
+          )
+        : memory;
+    });
     setSpeechFeedback(null);
     setPendingSpeechChoice(null);
     handleChoice(confirmedChoice);
@@ -566,6 +607,8 @@ export default function CafeIaScreen() {
     setIsTranscriptOpen(false);
     setLastIaTranscript(null);
     setPendingSpeechChoice(null);
+    setConversationMemory(createCafeConversationMemory());
+    setIsSummaryOpen(false);
     hasAdvancedFromVideoRef.current = false;
     hasReportedMissionCompleteRef.current = false;
   };
@@ -757,7 +800,7 @@ export default function CafeIaScreen() {
           >
             <View style={[styles.topInner, { maxWidth: responsive.maxWidth }]}>
               <View style={styles.stepsContainer}>
-                {steps.map((s, i) => {
+                {CAFE_STEPS.map((s, i) => {
                   const active = i === progressIndex;
                   const done = i <= progressIndex;
                   const accent = mode === "real" ? CYAN : PURPLE;
@@ -823,17 +866,14 @@ export default function CafeIaScreen() {
                     allowsPictureInPicture={false}
                   />
                 ) : (
-                  <View style={styles.videoFallback}>
-                    <AppText
-                      variant="display"
-                      tone="strong"
-                      script="latin"
-                      align="center"
-                      style={styles.videoFallbackEmoji}
-                    >
-                      👩‍🍳
-                    </AppText>
-                  </View>
+                  <Image
+                    accessible
+                    accessibilityRole="image"
+                    accessibilityLabel="Interlocutrice du cafe"
+                    source={cafeAvatar}
+                    resizeMode="cover"
+                    style={styles.avatarFallbackImage}
+                  />
                 )}
 
                 <LinearGradient
@@ -1093,6 +1133,14 @@ export default function CafeIaScreen() {
           </ScrollView>
         </View>
       </SafeAreaView>
+      {isCafeSpeechPilot ? (
+        <CafeConversationSummaryModal
+          memory={conversationMemory}
+          visible={isSummaryOpen}
+          onClose={() => setIsSummaryOpen(false)}
+          onFinish={handleExit}
+        />
+      ) : null}
       {/*
         Fermeture du background précédent :
         </LinearGradient>
@@ -1203,15 +1251,10 @@ const styles = StyleSheet.create({
     transform: [{ scale: VIDEO_OVERSCAN_SCALE }],
   },
 
-  videoFallback: {
-    flex: 1,
-    backgroundColor: "#0F1220",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  videoFallbackEmoji: {
-    fontSize: 56,
+  avatarFallbackImage: {
+    ...ABSOLUTE_FILL,
+    width: "100%",
+    height: "100%",
   },
 
   videoOverlay: {

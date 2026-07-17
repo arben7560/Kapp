@@ -1,10 +1,10 @@
+import type { ImmersionMission } from "../../../lib/immersion/missions";
 import {
   genericOrderConfirmationNode,
   type DialogueChoice,
   type DialogueScenario,
 } from "./cafe";
 import { CAFE_PILOT_PRODUCT_CHOICES } from "./cafePilotOrder";
-import type { ImmersionMission } from "../../../lib/immersion/missions";
 
 export type CafeMissionScenarioKey =
   | "order_simple"
@@ -31,7 +31,7 @@ export const cafeMissions: CafeMission[] = [
   },
   {
     id: "order-dessert",
-    title: "Commander cafe + dessert",
+    title: "Commander un café + dessert",
     subtitle: "Ajoute un dessert a ta commande.",
     access: "premium",
     duration: "3-5 min",
@@ -42,7 +42,7 @@ export const cafeMissions: CafeMission[] = [
   },
   {
     id: "order-takeout",
-    title: "Commander a emporter",
+    title: "Commander à emporter",
     subtitle: "Demande l'option a emporter.",
     access: "premium",
     duration: "3-5 min",
@@ -122,7 +122,10 @@ export function getCafeMissionScenario(
 
   switch (scenarioKey) {
     case "order_simple":
-      keepChoices(missionScenario, "ped_choice1", ["ped_order1", "repeat_ped1"]);
+      keepChoices(missionScenario, "ped_choice1", [
+        "ped_order1",
+        "repeat_ped1",
+      ]);
       keepChoices(missionScenario, "ped_choice2_drink", [
         "ped_here_drink",
         "repeat_ped2_drink",
@@ -138,7 +141,10 @@ export function getCafeMissionScenario(
       break;
 
     case "order_dessert":
-      keepChoices(missionScenario, "ped_choice1", ["ped_order2", "repeat_ped1"]);
+      keepChoices(missionScenario, "ped_choice1", [
+        "ped_order2",
+        "repeat_ped1",
+      ]);
       keepChoices(missionScenario, "ped_choice2_cake", [
         "ped_here_cake",
         "repeat_ped2_cake",
