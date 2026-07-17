@@ -15,6 +15,7 @@
     "web": "expo start --web",
     "web:font-fallback": "node ./scripts/start-font-fallback.mjs",
     "test:cafe-speech": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-cafe-speech.mjs",
+    "test:metro-speech": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-metro-speech.mjs",
     "validate:ui": "node ./scripts/validate-ui-contracts.mjs",
     "lint": "expo lint"
   },

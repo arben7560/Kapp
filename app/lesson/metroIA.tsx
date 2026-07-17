@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -17,6 +17,8 @@ import {
 
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { GuidedSpeechTurn } from "../../components/GuidedSpeechTurn";
+import { MetroConversationSummaryModal } from "../../components/metro/MetroConversationSummaryModal";
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import { metroLessons } from "../../data/lesson/metro/metro";
 import {
@@ -24,10 +26,22 @@ import {
   getMetroMissionById,
   getMetroMissionLesson,
 } from "../../data/lesson/metro/metroMissions";
+import { useKoreanSpeechRecognition } from "../../hooks/useKoreanSpeechRecognition";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { completeDailyActivity } from "../../lib/dailyStreak";
+import {
+  createMetroConversationMemory,
+  recordMetroAudioReplay,
+  recordMetroHelpRequest,
+  recordMetroSpeechAttempt,
+} from "../../lib/metroConversationMemory";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { buildProgressId } from "../../lib/progressIds";
+import {
+  getMetroSpeechContextualStrings,
+  matchMetroSpeechIntent,
+  METRO_SPEECH_PILOT_MISSION_ID,
+} from "../../lib/metroSpeechIntents";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -214,6 +228,18 @@ function getMetroIntroVideoSource(lessonId: string): number | null {
   return getMetroVideosForLesson(lessonId).ia_intro_route ?? null;
 }
 
+function getScenarioInitialVideoSource(scenario: DialogueScenario) {
+  const intro = getMetroIntroVideoSource(scenario.id);
+  if (intro) return intro;
+
+  for (const node of Object.values(scenario.nodes)) {
+    const source = node.videoSources?.[0] ?? node.videoSource;
+    if (source) return source;
+  }
+
+  return null;
+}
+
 function attachMetroVideosToNode(
   nodeId: string,
   lessonId: string,
@@ -314,9 +340,6 @@ function buildMetroScenario(lesson: MetroLesson): DialogueScenario {
 // ==================== MAIN ====================
 export default function MetroIaScreen() {
   const { complete } = useStore();
-  const [displayedVideoSource, setDisplayedVideoSource] = useState<
-    number | null
-  >(null);
 
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
@@ -329,6 +352,9 @@ export default function MetroIaScreen() {
   const currentMission =
     getMetroMissionById(missionId) ??
     getMetroMissionById(DEFAULT_METRO_MISSION_ID);
+  const isMetroSpeechPilot =
+    mode === "guided" &&
+    currentMission?.id === METRO_SPEECH_PILOT_MISSION_ID;
   const { hasPremiumAccess, isLoading: isPaywallLoading } = usePaywall();
   const canEnterMission =
     currentMission?.access !== "premium" || hasPremiumAccess;
@@ -338,6 +364,7 @@ export default function MetroIaScreen() {
   const iaAutoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasAdvancedFromVideoRef = useRef(false);
   const hasReportedMissionCompleteRef = useRef(false);
+  const speechAttemptCountRef = useRef<Record<string, number>>({});
 
   const metroScenario = useMemo(() => {
     const lesson =
@@ -348,11 +375,36 @@ export default function MetroIaScreen() {
     return buildMetroScenario(lesson as MetroLesson);
   }, [currentMission]);
 
+  const initialVideoSource = useMemo(
+    () => getScenarioInitialVideoSource(metroScenario),
+    [metroScenario],
+  );
+  const loadedVideoSourceRef = useRef<number | null>(initialVideoSource);
+  const videoLoadRef = useRef<{
+    source: number;
+    promise: Promise<void>;
+  } | null>(null);
+
+  const [displayedVideoSource, setDisplayedVideoSource] = useState<
+    number | null
+  >(() => initialVideoSource);
+
   const [currentNodeId, setCurrentNodeId] = useState(metroScenario.startNodeId);
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isSceneEnded, setIsSceneEnded] = useState(false);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
+  const [showSpeechChoices, setShowSpeechChoices] = useState(false);
+  const [speechFeedback, setSpeechFeedback] = useState<string | null>(null);
+  const [speechUiNodeId, setSpeechUiNodeId] = useState<string | null>(null);
+  const [pendingSpeechChoice, setPendingSpeechChoice] =
+    useState<DialogueChoice | null>(null);
+  const [lastIaVideoSource, setLastIaVideoSource] = useState<number | null>(null);
+  const [isReplayingLastIa, setIsReplayingLastIa] = useState(false);
+  const [conversationMemory, setConversationMemory] = useState(
+    createMetroConversationMemory,
+  );
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
 
   const currentScenario = useMemo(() => {
     return metroScenario;
@@ -368,8 +420,10 @@ export default function MetroIaScreen() {
     (currentNode?.videoSource ? [currentNode.videoSource] : []);
 
   const currentVideoSource = videoSources.length > 0 ? videoSources[0] : null;
+  const isAvatarSpeaking =
+    currentNode?.type === "ia" && Boolean(currentVideoSource) && !isSceneEnded;
 
-  const player = useVideoPlayer(null, (playerInstance) => {
+  const player = useVideoPlayer(initialVideoSource, (playerInstance) => {
     playerInstance.loop = false;
   });
 
@@ -378,21 +432,6 @@ export default function MetroIaScreen() {
     router.replace("/premium");
   }, [canEnterMission, isPaywallLoading]);
 
-  useEffect(() => {
-    if (!canEnterMission) return;
-    if (currentNode?.type === "ia") {
-      setDisplayedVideoSource(currentVideoSource);
-    } else if (currentNodeId !== currentScenario.startNodeId) {
-      setDisplayedVideoSource(null);
-    }
-  }, [
-    canEnterMission,
-    currentNode,
-    currentNodeId,
-    currentScenario.startNodeId,
-    currentVideoSource,
-  ]);
-
   const avatarVideoHeight = Math.min(
     responsive.contentWidth * 1.2,
     screenWidth * 1,
@@ -400,24 +439,48 @@ export default function MetroIaScreen() {
     420,
   );
 
-  const avatarFrameHeight = avatarVideoHeight - 40;
+  const avatarFrameHeight = avatarVideoHeight;
+  const avatarFrameWidth = Math.min(
+    responsive.contentWidth * 0.88,
+    avatarVideoHeight * 0.8,
+  );
 
   const goToNextNode = useCallback((node?: DialogueNode) => {
     if (!node || !mountedRef.current) return;
 
+    if (node.type === "ia") {
+      const source = node.videoSources?.[0] ?? node.videoSource ?? null;
+      if (source) setLastIaVideoSource(source);
+    }
+
     if (node.nextNodeId) {
+      const nextNode = currentScenario.nodes[node.nextNodeId];
+      const nextVideo =
+        nextNode?.videoSources?.[0] ?? nextNode?.videoSource ?? null;
+      if (nextVideo) setDisplayedVideoSource(nextVideo);
       setCurrentNodeId(node.nextNodeId);
     } else {
       setIsSceneEnded(true);
+      if (isMetroSpeechPilot) setIsSummaryOpen(true);
     }
-  }, []);
+  }, [currentScenario, isMetroSpeechPilot]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Route parameters select a new mission and require one atomic local reset.
     setCurrentNodeId(currentScenario.startNodeId);
-    setDisplayedVideoSource(getMetroIntroVideoSource(currentScenario.id));
+    setDisplayedVideoSource(getScenarioInitialVideoSource(currentScenario));
     setSelectedChoiceId(null);
     setIsTransitioning(false);
     setIsSceneEnded(false);
+    setShowSpeechChoices(false);
+    setSpeechFeedback(null);
+    setSpeechUiNodeId(null);
+    setPendingSpeechChoice(null);
+    setLastIaVideoSource(null);
+    setIsReplayingLastIa(false);
+    setConversationMemory(createMetroConversationMemory());
+    setIsSummaryOpen(false);
+    speechAttemptCountRef.current = {};
     hasAdvancedFromVideoRef.current = false;
     hasReportedMissionCompleteRef.current = false;
   }, [currentScenario]);
@@ -444,7 +507,13 @@ export default function MetroIaScreen() {
 
   useEffect(() => {
     hasAdvancedFromVideoRef.current = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Node-scoped transcript and speech UI must not leak into the next turn.
     setIsTranscriptOpen(false);
+    setShowSpeechChoices(false);
+    setSpeechFeedback(null);
+    setSpeechUiNodeId(null);
+    setPendingSpeechChoice(null);
+    setIsReplayingLastIa(false);
 
     if (iaAutoTimerRef.current) {
       clearTimeout(iaAutoTimerRef.current);
@@ -452,9 +521,9 @@ export default function MetroIaScreen() {
     }
   }, [currentNodeId]);
 
+  /* eslint-disable react-hooks/immutability -- expo-video exposes an imperative player handle by design. */
   useEffect(() => {
     if (!canEnterMission) return;
-    if (!currentNode) return;
 
     let isCancelled = false;
 
@@ -462,21 +531,39 @@ export default function MetroIaScreen() {
       try {
         if (!displayedVideoSource) {
           player.pause();
-          await player.replaceAsync(null);
           return;
         }
 
-        await player.replaceAsync(displayedVideoSource);
+        player.pause();
+
+        if (loadedVideoSourceRef.current !== displayedVideoSource) {
+          if (videoLoadRef.current?.source !== displayedVideoSource) {
+            const source = displayedVideoSource;
+            const promise = player.replaceAsync(source).then(() => {
+              loadedVideoSourceRef.current = source;
+            });
+            videoLoadRef.current = { source, promise };
+            const clearPendingLoad = () => {
+              if (videoLoadRef.current?.promise === promise) {
+                videoLoadRef.current = null;
+              }
+            };
+            void promise.then(clearPendingLoad, clearPendingLoad);
+          }
+
+          await videoLoadRef.current.promise;
+        }
 
         if (isCancelled) return;
 
-        if (currentNode?.type === "ia" && currentVideoSource) {
+        if (isAvatarSpeaking || isReplayingLastIa) {
+          player.currentTime = 0;
           player.play();
         } else {
-          player.pause();
+          if (player.currentTime <= 0.01) player.currentTime = 0.12;
         }
       } catch {
-        // ignore
+        if (!isCancelled) player.pause();
       }
     }
 
@@ -486,10 +573,9 @@ export default function MetroIaScreen() {
       isCancelled = true;
     };
   }, [
-    currentNode,
-    currentNodeId,
-    currentVideoSource,
     displayedVideoSource,
+    isAvatarSpeaking,
+    isReplayingLastIa,
     canEnterMission,
     player,
   ]);
@@ -515,6 +601,8 @@ export default function MetroIaScreen() {
       if (isNearEnd) {
         hasAdvancedFromVideoRef.current = true;
         clearInterval(interval);
+        player.pause();
+        player.currentTime = Math.max(0, duration - 0.08);
         goToNextNode(currentNode);
       }
     }, 120);
@@ -529,6 +617,23 @@ export default function MetroIaScreen() {
     player,
     goToNextNode,
   ]);
+
+  useEffect(() => {
+    if (!isReplayingLastIa) return;
+
+    const interval = setInterval(() => {
+      if (!mountedRef.current) return;
+      const duration = player.duration ?? 0;
+      if (duration <= 0 || player.currentTime < duration - 0.08) return;
+
+      player.pause();
+      player.currentTime = Math.max(0, duration - 0.08);
+      setIsReplayingLastIa(false);
+    }, 120);
+
+    return () => clearInterval(interval);
+  }, [isReplayingLastIa, player]);
+  /* eslint-enable react-hooks/immutability */
 
   useEffect(() => {
     if (!canEnterMission) return;
@@ -568,8 +673,8 @@ export default function MetroIaScreen() {
     return () => clearTimeout(t);
   }, [currentNodeId]);
 
-  const handleChoice = (choice: DialogueChoice) => {
-    if (isTransitioning || isSceneEnded) return;
+  const handleChoice = useCallback((choice: DialogueChoice, delay = 320) => {
+    if (isTransitioning || isSceneEnded || isReplayingLastIa) return;
 
     setIsTransitioning(true);
     setSelectedChoiceId(choice.id);
@@ -577,21 +682,157 @@ export default function MetroIaScreen() {
     setTimeout(() => {
       if (!mountedRef.current) return;
 
+      const nextNode = currentScenario.nodes[choice.nextNodeId];
+      const nextVideo =
+        nextNode?.videoSources?.[0] ?? nextNode?.videoSource ?? null;
+      if (nextVideo) setDisplayedVideoSource(nextVideo);
       setCurrentNodeId(choice.nextNodeId);
       setSelectedChoiceId(null);
       setIsTransitioning(false);
-    }, 320);
-  };
+    }, delay);
+  }, [currentScenario, isReplayingLastIa, isSceneEnded, isTransitioning]);
+
+  const isUserChoice = currentNode?.type === "user_choice";
+  const speechChoices = useMemo(
+    () => (isUserChoice ? currentNode.choices || [] : []),
+    [currentNode, isUserChoice],
+  );
+  const speechContextualStrings = useMemo(
+    () => getMetroSpeechContextualStrings(speechChoices),
+    [speechChoices],
+  );
+
+  const handleSpeechTranscript = useCallback(
+    (transcript: string) => {
+      if (!isMetroSpeechPilot || currentNode?.type !== "user_choice") return;
+
+      const attemptNumber =
+        (speechAttemptCountRef.current[currentNode.id] ?? 0) + 1;
+      speechAttemptCountRef.current[currentNode.id] = attemptNumber;
+      const result = matchMetroSpeechIntent(
+        transcript,
+        currentNode.choices || [],
+        attemptNumber,
+      );
+
+      setConversationMemory((memory) =>
+        recordMetroSpeechAttempt(memory, {
+          nodeId: currentNode.id,
+          transcript,
+          result,
+        }),
+      );
+
+      setSpeechUiNodeId(currentNode.id);
+      setSpeechFeedback(result.feedback);
+
+      if (result.reason === "matched" && result.choice) {
+        setPendingSpeechChoice(null);
+        handleChoice(result.choice, result.feedback ? 1750 : 320);
+        return;
+      }
+
+      setPendingSpeechChoice(
+        result.reason === "uncertain" ? result.choice : null,
+      );
+    },
+    [currentNode, handleChoice, isMetroSpeechPilot],
+  );
+
+  const {
+    state: speechState,
+    startListening,
+    stopListening,
+    cancel: cancelSpeechRecognition,
+  } = useKoreanSpeechRecognition({
+    onFinalTranscript: handleSpeechTranscript,
+  });
+
+  useEffect(() => {
+    cancelSpeechRecognition();
+  }, [cancelSpeechRecognition, currentNodeId, currentScenario]);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => cancelSpeechRecognition();
+    }, [cancelSpeechRecognition]),
+  );
+
+  const handleStartSpeech = useCallback(() => {
+    if (
+      !isMetroSpeechPilot ||
+      currentNode?.type !== "user_choice" ||
+      isTransitioning ||
+      isReplayingLastIa
+    ) {
+      return;
+    }
+
+    setSpeechUiNodeId(currentNodeId);
+    setShowSpeechChoices(false);
+    setSpeechFeedback(null);
+    setPendingSpeechChoice(null);
+    void startListening({ contextualStrings: speechContextualStrings });
+  }, [
+    currentNode,
+    currentNodeId,
+    isMetroSpeechPilot,
+    isReplayingLastIa,
+    isTransitioning,
+    speechContextualStrings,
+    startListening,
+  ]);
+
+  const handleNeedHelp = useCallback(() => {
+    cancelSpeechRecognition();
+    setSpeechUiNodeId(currentNodeId);
+    setShowSpeechChoices(true);
+    setPendingSpeechChoice(null);
+    setConversationMemory(recordMetroHelpRequest);
+  }, [cancelSpeechRecognition, currentNodeId]);
+
+  const handleConfirmSpeechIntent = useCallback(() => {
+    if (!pendingSpeechChoice || speechUiNodeId !== currentNodeId) return;
+
+    const confirmedChoice = pendingSpeechChoice;
+    setSpeechFeedback(null);
+    setPendingSpeechChoice(null);
+    handleChoice(confirmedChoice);
+  }, [currentNodeId, handleChoice, pendingSpeechChoice, speechUiNodeId]);
+
+  const handleReplayLastIa = useCallback(() => {
+    if (!lastIaVideoSource || currentNode?.type !== "user_choice") return;
+
+    cancelSpeechRecognition();
+    setDisplayedVideoSource(lastIaVideoSource);
+    setIsReplayingLastIa(true);
+    setConversationMemory(recordMetroAudioReplay);
+  }, [cancelSpeechRecognition, currentNode, lastIaVideoSource]);
 
   const handleRestart = () => {
+    cancelSpeechRecognition();
     setCurrentNodeId(currentScenario.startNodeId);
-    setDisplayedVideoSource(getMetroIntroVideoSource(currentScenario.id));
+    setDisplayedVideoSource(getScenarioInitialVideoSource(currentScenario));
     setSelectedChoiceId(null);
     setIsTransitioning(false);
     setIsSceneEnded(false);
+    setShowSpeechChoices(false);
+    setSpeechFeedback(null);
+    setSpeechUiNodeId(null);
+    setPendingSpeechChoice(null);
+    setLastIaVideoSource(null);
+    setIsReplayingLastIa(false);
+    setConversationMemory(createMetroConversationMemory());
+    setIsSummaryOpen(false);
+    speechAttemptCountRef.current = {};
     hasAdvancedFromVideoRef.current = false;
     hasReportedMissionCompleteRef.current = false;
   };
+
+  const handleExit = useCallback(() => {
+    cancelSpeechRecognition();
+    router.back();
+  }, [cancelSpeechRecognition]);
 
   const isStartChoiceNode = currentNodeId === "start";
 
@@ -606,7 +847,75 @@ export default function MetroIaScreen() {
 
   const shouldShowFrench =
     !shouldCollapseTranscript && !isStartChoiceNode && !!currentNode?.french;
-  const isUserChoice = currentNode?.type === "user_choice";
+  const displayedSpeechFeedback =
+    speechUiNodeId === currentNodeId ? speechFeedback : null;
+  const displayedConfirmationLabel =
+    speechUiNodeId === currentNodeId && pendingSpeechChoice
+      ? "la direction vers Gangnam"
+      : null;
+  const shouldShowSpeechChoices =
+    showSpeechChoices ||
+    speechState.status === "permission-denied" ||
+    speechState.status === "unavailable";
+  const currentChoicesGrid = (
+    <View style={styles.choicesGrid}>
+      {currentNode?.choices?.map((choice) => {
+        const isSelected = selectedChoiceId === choice.id;
+        const accent = mode === "real" ? CYAN : PURPLE;
+
+        return (
+          <Pressable
+            key={choice.id}
+            accessibilityRole="button"
+            accessibilityLabel={`${choice.korean}. ${choice.label}`}
+            accessibilityState={{ selected: isSelected }}
+            aria-selected={isSelected}
+            hitSlop={6}
+            onPress={() => handleChoice(choice)}
+            style={({ pressed }) => [
+              styles.choiceBtn,
+              isSelected && {
+                borderColor: accent,
+                backgroundColor: "rgba(5,5,8,0.92)",
+              },
+              pressed && { opacity: 0.92 },
+            ]}
+          >
+            <View
+              pointerEvents="none"
+              style={[
+                styles.choiceGlow,
+                {
+                  backgroundColor:
+                    mode === "real"
+                      ? "rgba(34,211,238,0.08)"
+                      : "rgba(168,85,247,0.10)",
+                },
+              ]}
+            />
+
+            <AppText
+              variant="koreanSecondary"
+              tone="strong"
+              script="korean"
+              accessibilityLanguage="ko-KR"
+              style={styles.choiceKr}
+            >
+              {choice.korean}
+            </AppText>
+            <AppText
+              variant="bodySecondary"
+              tone="muted"
+              script="latin"
+              style={styles.choiceFr}
+            >
+              {choice.label}
+            </AppText>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
 
   if (!isPaywallLoading && !canEnterMission) {
     return null;
@@ -668,7 +977,7 @@ export default function MetroIaScreen() {
             accessibilityRole="button"
             accessibilityLabel="Retour"
             hitSlop={8}
-            onPress={() => router.back()}
+            onPress={handleExit}
             style={styles.backBtn}
           >
             <AppText
@@ -726,6 +1035,7 @@ export default function MetroIaScreen() {
                   styles.videoContainer,
                   {
                     height: avatarFrameHeight,
+                    width: avatarFrameWidth,
                     borderColor:
                       mode === "real"
                         ? "rgba(34,211,238,0.40)"
@@ -925,7 +1235,7 @@ export default function MetroIaScreen() {
                       accessibilityRole="button"
                       accessibilityLabel="Retour"
                       hitSlop={6}
-                      onPress={() => router.back()}
+                      onPress={handleExit}
                       style={({ pressed }) => [
                         styles.endActionSecondary,
                         { opacity: pressed ? 0.9 : 1 },
@@ -944,63 +1254,62 @@ export default function MetroIaScreen() {
                   </View>
                 </View>
               ) : isUserChoice ? (
-                <View style={styles.choicesGrid}>
-                  {currentNode?.choices?.map((choice) => {
-                    const isSelected = selectedChoiceId === choice.id;
-                    const accent = mode === "real" ? CYAN : PURPLE;
-
-                    return (
+                isMetroSpeechPilot ? (
+                  <View style={styles.speechTurnBlock}>
+                    {lastIaVideoSource ? (
                       <Pressable
-                        key={choice.id}
                         accessibilityRole="button"
-                        accessibilityLabel={`${choice.korean}. ${choice.label}`}
-                        accessibilityState={{ selected: isSelected }}
-                        aria-selected={isSelected}
-                        hitSlop={6}
-                        onPress={() => handleChoice(choice)}
+                        accessibilityLabel="Réécouter la dernière intervention"
+                        accessibilityState={{ disabled: isReplayingLastIa }}
+                        aria-disabled={isReplayingLastIa}
+                        disabled={isReplayingLastIa}
+                        onPress={handleReplayLastIa}
                         style={({ pressed }) => [
-                          styles.choiceBtn,
-                          isSelected && {
-                            borderColor: accent,
-                            backgroundColor: "rgba(5,5,8,0.92)",
-                          },
-                          pressed && { opacity: 0.92 },
+                          styles.replayButton,
+                          pressed && { opacity: 0.88 },
+                          isReplayingLastIa && { opacity: 0.55 },
                         ]}
                       >
-                        <View
-                          pointerEvents="none"
-                          style={[
-                            styles.choiceGlow,
-                            {
-                              backgroundColor:
-                                mode === "real"
-                                  ? "rgba(34,211,238,0.08)"
-                                  : "rgba(168,85,247,0.10)",
-                            },
-                          ]}
-                        />
-
                         <AppText
-                          variant="koreanSecondary"
+                          variant="button"
                           tone="strong"
-                          script="korean"
-                          accessibilityLanguage="ko-KR"
-                          style={styles.choiceKr}
-                        >
-                          {choice.korean}
-                        </AppText>
-                        <AppText
-                          variant="bodySecondary"
-                          tone="muted"
                           script="latin"
-                          style={styles.choiceFr}
+                          align="center"
                         >
-                          {choice.label}
+                          {isReplayingLastIa
+                            ? "Lecture en cours…"
+                            : "Réécouter l’interlocuteur"}
                         </AppText>
                       </Pressable>
-                    );
-                  })}
-                </View>
+                    ) : null}
+
+                    <GuidedSpeechTurn
+                      accent={PURPLE}
+                      confirmationLabel={displayedConfirmationLabel}
+                      feedback={displayedSpeechFeedback}
+                      interactionDisabled={isReplayingLastIa || isTransitioning}
+                      interactionDisabledLabel={
+                        isReplayingLastIa ? "Écoute l’interlocuteur…" : undefined
+                      }
+                      intentionLabels={speechChoices.map((choice) =>
+                        choice.id === "choose_hongik_direction"
+                          ? "Demander de quel côté prendre le train vers Gangnam"
+                          : choice.label,
+                      )}
+                      onConfirm={handleConfirmSpeechIntent}
+                      onHelp={handleNeedHelp}
+                      onRetry={handleStartSpeech}
+                      onStart={handleStartSpeech}
+                      onStop={stopListening}
+                      showChoices={shouldShowSpeechChoices}
+                      speechState={speechState}
+                    >
+                      {currentChoicesGrid}
+                    </GuidedSpeechTurn>
+                  </View>
+                ) : (
+                  currentChoicesGrid
+                )
               ) : (
                 <View style={styles.waitingCard}>
                   <View style={styles.waitingPulseRow}>
@@ -1035,6 +1344,11 @@ export default function MetroIaScreen() {
         Fermeture du background précédent :
         </LinearGradient>
       */}
+      <MetroConversationSummaryModal
+        memory={conversationMemory}
+        onClose={() => setIsSummaryOpen(false)}
+        visible={isMetroSpeechPilot && isSummaryOpen}
+      />
     </ImageBackground>
   );
 }
@@ -1206,6 +1520,21 @@ const styles = StyleSheet.create({
 
   choicesGrid: {
     gap: 12,
+  },
+
+  speechTurnBlock: {
+    gap: 12,
+  },
+
+  replayButton: {
+    minHeight: 46,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    paddingHorizontal: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   choiceBtn: {

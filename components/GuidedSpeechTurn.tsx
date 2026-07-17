@@ -10,6 +10,8 @@ type GuidedSpeechTurnProps = {
   confirmationLabel: string | null;
   feedback: string | null;
   intentionLabels: readonly string[];
+  interactionDisabled?: boolean;
+  interactionDisabledLabel?: string;
   onConfirm: () => void;
   onHelp: () => void;
   onRetry: () => void;
@@ -50,6 +52,8 @@ export function GuidedSpeechTurn({
   confirmationLabel,
   feedback,
   intentionLabels,
+  interactionDisabled = false,
+  interactionDisabledLabel,
   onConfirm,
   onHelp,
   onRetry,
@@ -61,16 +65,17 @@ export function GuidedSpeechTurn({
 }: GuidedSpeechTurnProps) {
   const isListening = speechState.status === "listening";
   const isBusy =
+    interactionDisabled ||
     speechState.status === "requesting-permission" ||
     speechState.status === "starting" ||
     speechState.status === "processing";
   const canRetry =
     speechState.status !== "idle" && !isListening && !isBusy;
-  const primaryLabel = isListening
+  const primaryLabel = interactionDisabledLabel || (isListening
     ? "Arrêter"
     : canRetry
       ? "Recommencer"
-      : "Parler";
+      : "Parler");
   const primaryIcon = isListening ? "stop" : "mic";
   const displayedFeedback = feedback || speechState.message;
   const needsConfirmation = confirmationLabel !== null;
@@ -258,10 +263,14 @@ export function GuidedSpeechTurn({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Besoin d’aide"
+            accessibilityState={{ disabled: interactionDisabled }}
+            aria-disabled={interactionDisabled}
+            disabled={interactionDisabled}
             hitSlop={6}
             onPress={onHelp}
             style={({ pressed }) => [
               styles.helpButton,
+              interactionDisabled && styles.disabledButton,
               pressed && styles.pressedButton,
             ]}
           >

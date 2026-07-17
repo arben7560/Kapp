@@ -81,12 +81,12 @@ export const metroMissions: MetroMission[] = [
   },
   {
     id: "ask-direction",
-    title: "Confirmer la direction",
-    subtitle: "Verifie le bon sens avant de monter.",
+    title: "Direction vers Gangnam",
+    subtitle: "Demande de quel côté prendre la ligne 2.",
     access: "premium",
     duration: "3-5 min",
-    objective: "Confirmer uniquement la direction a prendre.",
-    goals: ["Direction", "Ligne", "Merci"],
+    objective: "Demander oralement la direction de Gangnam.",
+    goals: ["Gangnam", "Direction", "Merci"],
     scenarioKey: "ask_direction",
     lessonId: "hongik_to_gangnam",
     missionKind: "mini",
@@ -583,30 +583,23 @@ function createAskTimeLesson(): MetroLesson {
 
 function createAskDirectionLesson(): MetroLesson {
   const hongikLesson = getMetroLessonById("hongik_to_gangnam");
-  const myeongdongLesson = getMetroLessonById("myeongdong_to_itaewon");
 
   return createMiniLesson({
     id: "ask_direction",
-    title: "Confirmer la direction",
-    shortTitle: "Direction",
+    title: "Direction vers Gangnam",
+    shortTitle: "Vers Gangnam",
     situation:
-      "Vous etes dans le metro. Vous voulez seulement confirmer la bonne direction avant de monter.",
-    objective: "Verifier le bon quai ou le bon sens de ligne.",
-    startText: "Choisissez le trajet pour lequel confirmer la direction.",
+      "Vous êtes à Hongik University. Avant de monter, demandez de quel côté prendre la ligne 2 vers Gangnam.",
+    objective: "Demander oralement la direction de Gangnam en une phrase courte.",
+    startText:
+      "Vous êtes à Hongik University et cherchez le quai vers Gangnam. Demandez de quel côté prendre le train.",
     choices: [
       {
         id: "choose_hongik_direction",
-        label: "Hongik vers Gangnam",
+        label: "Demander la direction de Gangnam",
         korean: "강남 방향은 어느 쪽이에요?",
         romanization: "Gangnam banghyang-eun eoneu jjog-ieyo?",
         nextId: "ask_direction_hongik_ia_platform_direction",
-      },
-      {
-        id: "choose_myeongdong_direction",
-        label: "Myeongdong vers Itaewon",
-        korean: "이태원 가려면 어느 방향으로 타야 하나요?",
-        romanization: "Itaewon garyeomyeon eoneu banghyang-euro taya hanayo?",
-        nextId: "ask_direction_myeongdong_ia_line4_direction",
       },
     ],
     steps: [
@@ -628,53 +621,6 @@ function createAskDirectionLesson(): MetroLesson {
             createThankChoice(
               "thank_after_direction_repeat",
               "ask_direction_hongik_ia_end",
-            ),
-          ],
-        },
-        { stepId: "ia_end" },
-      ]),
-      ...buildMiniRouteSteps(myeongdongLesson, "ask_direction_myeongdong", [
-        {
-          stepId: "ia_line4_direction",
-          keepChoiceIds: ["repeat_line4_direction"],
-          extraChoices: [
-            getSourceChoice(
-              myeongdongLesson,
-              "ia_transfer_station",
-              "ask_line6_direction",
-              "ask_direction_myeongdong_ia_line6_direction",
-            ),
-          ],
-        },
-        {
-          stepId: "ia_repeat_line4_direction",
-          keepChoiceIds: [],
-          extraChoices: [
-            getSourceChoice(
-              myeongdongLesson,
-              "ia_transfer_station",
-              "ask_line6_direction",
-              "ask_direction_myeongdong_ia_line6_direction",
-            ),
-          ],
-        },
-        {
-          stepId: "ia_line6_direction",
-          keepChoiceIds: ["repeat_line6_direction"],
-          extraChoices: [
-            createThankChoice(
-              "thank_after_direction",
-              "ask_direction_myeongdong_ia_end",
-            ),
-          ],
-        },
-        {
-          stepId: "ia_repeat_line6_direction",
-          keepChoiceIds: [],
-          extraChoices: [
-            createThankChoice(
-              "thank_after_direction_repeat",
-              "ask_direction_myeongdong_ia_end",
             ),
           ],
         },
