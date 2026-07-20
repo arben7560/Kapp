@@ -132,7 +132,7 @@ export default function HangulAssessmentScreen() {
                 <AppText variant="body">Reconnaissance visuelle · écoute · assemblage · lecture inédite · batchim · liaison</AppText>
                 {saved ? <AppText variant="bodySecondary" tone="muted">Meilleur résultat : {saved.bestScore}/{saved.total} · {saved.attempts} tentative(s)</AppText> : null}
                 {!curriculumReady && missingModule ? <AppText variant="bodySecondary" style={styles.warning}>Étape requise : maîtrise d’abord « {missingModule.title} ».</AppText> : null}
-                <Pressable onPress={start} style={styles.button}><AppText variant="button" style={styles.buttonText}>{curriculumReady ? "COMMENCER SANS AIDE LATINE" : `OUVRIR ${missingModule?.title.toUpperCase()}`}</AppText></Pressable>
+                <Pressable onPress={start} style={styles.button}><AppText variant="button" style={styles.buttonText}>{curriculumReady ? "Commencer sans aide latine" : `Ouvrir ${missingModule?.title}`}</AppText></Pressable>
               </BlurView>
             ) : finished ? (
               <BlurView intensity={55} tint="dark" style={styles.card}>

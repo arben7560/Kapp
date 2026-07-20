@@ -566,7 +566,7 @@ export default function ShopLesson() {
 
         <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
           <Pill label="Magasin" active />
-          <Pill label="Shopping" />
+          <Pill label="Magasin" />
           <Pill label="Séoul réel" />
         </View>
 

@@ -60,7 +60,7 @@ const URGENCE_AUDIO = {
 const SCENES = [
   {
     id: "pharmacy",
-    title: "La Pharmacie",
+    title: "La pharmacie",
     koreanTitle: "약국 (Yak-guk)",
     description: "Demander conseil pour des symptômes courants.",
     accent: COLORS.safetyGreen,
@@ -128,7 +128,7 @@ const SCENES = [
   },
   {
     id: "hospital",
-    title: "L'Hôpital",
+    title: "L’hôpital",
     koreanTitle: "병원 (Byeong-won)",
     description: "Expliquer une douleur pendant une consultation.",
     accent: COLORS.medicalBlue,
@@ -402,7 +402,7 @@ export default function HealthEmergency() {
               <AppText variant="sectionLabel" style={[styles.navEyebrow, { color: activeScene.accent }]}>
                 SÉOUL IMMERSION
               </AppText>
-              <AppText variant="cardTitle" style={styles.navTitle}>Urgence & Santé</AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>Urgences et santé</AppText>
             </View>
           </View>
 
@@ -593,7 +593,7 @@ export default function HealthEmergency() {
 
           <View style={styles.toolbox}>
             <View style={styles.toolboxTitleBox}>
-              <AppText variant="sectionTitle" style={styles.toolboxTitle}>MEDICAL TOOLBOX</AppText>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>Expressions clés</AppText>
               <View
                 style={[
                   styles.toolboxLine,

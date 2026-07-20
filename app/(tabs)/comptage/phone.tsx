@@ -88,9 +88,9 @@ const MESSAGERIE_AUDIO = {
 const SCENES = withSceneAudio([
   {
     id: "exchange",
-    title: "L'Échange",
-    koreanTitle: "연락처 교환 (Contact Exchange)",
-    description: "Échanger son numéro lors d'une rencontre de networking.",
+    title: "L’échange",
+    koreanTitle: "연락처 교환 (Échange de contacts)",
+    description: "Échanger son numéro lors d'une rencontre de réseautage.",
     accent: COLORS.techCyan,
     image:
       "https://images.unsplash.com/photo-1556740734-7f9a2b7a0f4d?auto=format&fit=crop&w=800&q=80",
@@ -158,8 +158,8 @@ const SCENES = withSceneAudio([
   },
   {
     id: "call",
-    title: "Au Téléphone",
-    koreanTitle: "전화 통화 (Phone Call)",
+    title: "Au téléphone",
+    koreanTitle: "전화 통화 (Appel téléphonique)",
     description: "Répondre à un appel formel ou laisser un message.",
     accent: COLORS.silver,
     image:
@@ -229,7 +229,7 @@ const SCENES = withSceneAudio([
   {
     id: "messaging",
     title: "Messagerie",
-    koreanTitle: "문자 / 카톡 (Texting)",
+    koreanTitle: "문자 / 카톡 (Messages)",
     description: "Codes de la messagerie instantanée coréenne.",
     accent: COLORS.kakaoYellow,
     image:
@@ -303,7 +303,7 @@ export default function PhoneContactImmersion() {
       scenes={SCENES}
       backLabel="SÉOUL CONNECTÉ"
       badgeLabel="5G ACTIVE"
-      toolboxTitle="CONTACT TOOLBOX"
+      toolboxTitle="Expressions clés"
     />
   );
 }

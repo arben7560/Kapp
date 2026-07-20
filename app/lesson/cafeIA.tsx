@@ -850,7 +850,7 @@ export default function CafeIaScreen() {
                 <VideoView
                   accessible
                   accessibilityRole="image"
-                  accessibilityLabel="Video de l'interlocuteur cafe"
+                  accessibilityLabel="Vidéo de l’interlocutrice du café"
                   player={player}
                   style={[styles.video, { height: avatarVideoHeight }]}
                   contentFit="cover"
@@ -970,7 +970,7 @@ export default function CafeIaScreen() {
                     script="latin"
                     style={styles.endTitle}
                   >
-                    Scène terminée
+                    Mission terminée
                   </AppText>
                   <AppText
                     variant="bodySecondary"
@@ -978,7 +978,7 @@ export default function CafeIaScreen() {
                     script="latin"
                     style={styles.endSubtitle}
                   >
-                    Tu peux rejouer cette scène ou revenir au menu.
+                    Tu peux rejouer cette mission ou revenir au menu.
                   </AppText>
 
                   <AppText
@@ -987,13 +987,13 @@ export default function CafeIaScreen() {
                     script="latin"
                     style={styles.endSubtitle}
                   >
-                    Serie conservee.
+                    Série conservée.
                   </AppText>
 
                   <View style={styles.endActions}>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Rejouer la scene"
+                      accessibilityLabel="Rejouer la mission"
                       hitSlop={6}
                       onPress={handleRestart}
                       style={({ pressed }) => [
@@ -1046,7 +1046,7 @@ export default function CafeIaScreen() {
                   {shouldShowPremiumSuggestion ? (
                     <Pressable
                       accessibilityRole="link"
-                      accessibilityLabel="Debloquer toutes les missions"
+                      accessibilityLabel="Débloquer toutes les missions"
                       hitSlop={6}
                       onPress={() => router.push("/premium")}
                       style={({ pressed }) => [
@@ -1061,7 +1061,7 @@ export default function CafeIaScreen() {
                         align="center"
                         style={styles.endPremiumLinkText}
                       >
-                        Debloquer toutes les missions
+                        Débloquer toutes les missions
                       </AppText>
                     </Pressable>
                   ) : null}

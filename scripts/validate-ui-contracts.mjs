@@ -30,6 +30,8 @@ const activeRoutes = [
   ["/hangul/vowels-compound", "app/(tabs)/hangul/vowels-compound.tsx"],
   ["/hangul/consonants-tense", "app/(tabs)/hangul/consonants-tense.tsx"],
   ["/hangul/batchim", "app/(tabs)/hangul/batchim.tsx"],
+  ["/hangul/assessment", "app/(tabs)/hangul/assessment.tsx"],
+  ["/hangul/bridge", "app/(tabs)/hangul/bridge.tsx"],
   ["/voc", "app/(tabs)/voc/index.tsx"],
   ["/voc/gastronomie", "app/(tabs)/voc/gastronomie.tsx"],
   ["/voc/basics", "app/(tabs)/voc/basics.tsx"],
@@ -124,17 +126,14 @@ const nativeTextExceptions = new Map([
   ],
 ]);
 
-// This is a visible, disabled "prochainement" card, not an active navigation
-// target. Every other reference from the active graph to a prototype is an
-// error. Keeping the exception next to the contract makes it reviewable.
-const prototypeReferenceExceptions = new Map([
-  [
-    "app/(tabs)/index.tsx::/classificateur",
-    "carte désactivée isComingSoon sur le hub principal",
-  ],
-]);
+// Active routes must not reference prototype routes.
+const prototypeReferenceExceptions = new Map();
 
 const nonNavigationRouteReferenceFiles = new Map([
+  [
+    "app/_layout.tsx",
+    "inventaire de routes masquées en release; la seule navigation va vers l'accueil",
+  ],
   [
     "lib/paywall/config.ts",
     "inventaire d'accès Premium; ce Set ne déclenche aucune navigation",
@@ -1001,13 +1000,18 @@ assert(
   "Le mémo Shopping doit pointer vers /lesson/magasin",
 );
 
-const homeSource = read("app/(tabs)/index.tsx");
-assert(
-  /route:\s*["']\/classificateur["'][\s\S]{0,240}?isComingSoon:\s*true/.test(
-    homeSource,
-  ),
-  "L'exception /classificateur n'est sûre que tant que sa carte reste isComingSoon",
-);
+const rootLayoutSource = read("app/_layout.tsx");
+for (const [prototypeRoute] of prototypeRoutes) {
+  const coveredByPrefix =
+    (prototypeRoute.startsWith("/classificateur/") &&
+      rootLayoutSource.includes('"/classificateur"')) ||
+    (prototypeRoute.startsWith("/immersion/") &&
+      rootLayoutSource.includes('"/immersion"'));
+  assert(
+    coveredByPrefix || rootLayoutSource.includes(JSON.stringify(prototypeRoute)),
+    `${prototypeRoute} n'est pas masquée par le garde de release`,
+  );
+}
 
 for (const removedRoute of ["app/(tabs)/explore.tsx", "app/modal.tsx"]) {
   assert(

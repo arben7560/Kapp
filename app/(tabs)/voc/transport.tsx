@@ -117,7 +117,7 @@ const STREET_AUDIO = {
 const SCENES: Scene[] = [
   {
     id: "subway",
-    title: "Le Métro",
+    title: "Le métro",
     koreanTitle: "지하철 (Ji-ha-cheol)",
     description: "Naviguer dans le métro de Séoul et changer de ligne.",
     accent: COLORS.metroGreen,
@@ -220,7 +220,7 @@ const SCENES: Scene[] = [
   },
   {
     id: "taxi",
-    title: "Le Taxi",
+    title: "Le taxi",
     koreanTitle: "택시 (Taek-si)",
     description:
       "Donner des instructions précises au chauffeur à la tombée de la nuit.",
@@ -324,7 +324,7 @@ const SCENES: Scene[] = [
   },
   {
     id: "street",
-    title: "Dans la Rue",
+    title: "Dans la rue",
     koreanTitle: "길 찾고 있어요 (Gil-eul Chat-go isseoyo)",
     description:
       "S'orienter et demander son chemin dans les ruelles de Bukchon.",
@@ -691,7 +691,7 @@ export default function TransportCity() {
               <AppText variant="sectionLabel" style={[styles.navEyebrow, { color: activeScene.accent }]}>
                 SÉOUL IMMERSION
               </AppText>
-              <AppText variant="cardTitle" style={styles.navTitle}>Transport & Ville</AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>Transports et ville</AppText>
             </View>
           </View>
 
@@ -861,7 +861,7 @@ export default function TransportCity() {
 
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <AppText variant="sectionTitle" style={styles.toolboxTitle}>URBAN TOOLBOX</AppText>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>Expressions clés</AppText>
 
               <View
                 style={[

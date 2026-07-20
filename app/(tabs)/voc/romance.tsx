@@ -64,7 +64,7 @@ const COUPLE_AUDIO = {
 const SCENES = [
   {
     id: "sogeting",
-    title: "Le Sogeting",
+    title: "Le sogeting",
     koreanTitle: "Le rendez-vous",
     description: "Le premier rendez-vous arrangé dans un café chic de Gangnam.",
     accent: COLORS.romance,
@@ -143,7 +143,7 @@ const SCENES = [
   },
   {
     id: "sseom",
-    title: "Le 'Some'",
+    title: "Le sseom",
     koreanTitle: "Premiers flirts",
     description: "Flirt et tension au bord du fleuve Han à minuit.",
     accent: COLORS.lavender,
@@ -222,7 +222,7 @@ const SCENES = [
   },
   {
     id: "couple",
-    title: "Le Couple",
+    title: "Le couple",
     koreanTitle: "Le couple",
     description: "Promesse d'éternité à la N Seoul Tower.",
     accent: COLORS.heart,
@@ -466,7 +466,7 @@ export default function RomanceDating() {
               <AppText variant="sectionLabel" style={[styles.navEyebrow, { color: activeScene.accent }]}>
                 SÉOUL IMMERSION
               </AppText>
-              <AppText variant="cardTitle" style={styles.navTitle}>Romance & Dating</AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>Rencontres</AppText>
             </View>
           </View>
 
@@ -628,7 +628,7 @@ export default function RomanceDating() {
           {/* ROMANCE TOOLBOX */}
           <View style={styles.toolbox}>
             <View style={styles.toolboxTitleRow}>
-              <AppText variant="sectionTitle" style={styles.toolboxTitle}>DATING TOOLBOX</AppText>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>Expressions clés</AppText>
               <View
                 style={[
                   styles.toolboxLine,

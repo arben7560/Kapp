@@ -64,7 +64,7 @@ const NUIT_AUDIO = {
 const SCENES = [
   {
     id: "pocha",
-    title: "Le Pocha",
+    title: "Le pocha",
     koreanTitle: "포장마차",
     description: "Sous la tente orange, entre soju et anju.",
     cultureHint: "On sert souvent le verre des autres avant le sien.",
@@ -144,7 +144,7 @@ const SCENES = [
   },
   {
     id: "noraebang",
-    title: "Le Noraebang",
+    title: "Le noraebang",
     koreanTitle: "노래방",
     description: "Libérer le stress dans une salle de karaoké privée.",
     cultureHint: "Le tambourin fait presque partie du rituel.",
@@ -224,7 +224,7 @@ const SCENES = [
   },
   {
     id: "after",
-    title: "Le '2-cha'",
+    title: "Le 2-cha",
     koreanTitle: "2차 가자!",
     description: "Deuxième étape : on change de lieu pour continuer.",
     cultureHint:
@@ -463,7 +463,7 @@ export default function NightlifeImmersion() {
               <AppText variant="sectionLabel" style={[styles.navEyebrow, { color: activeScene.accent }]}>
                 SÉOUL IMMERSION
               </AppText>
-              <AppText variant="cardTitle" style={styles.navTitle}>Vie Nocturne</AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>Vie nocturne</AppText>
             </View>
           </View>
 
@@ -638,7 +638,7 @@ export default function NightlifeImmersion() {
           {/* NIGHTLIFE TOOLBOX */}
           <View style={styles.toolbox}>
             <View style={styles.toolboxTitleRow}>
-              <AppText variant="sectionTitle" style={styles.toolboxTitle}>NIGHTLIFE TOOLBOX</AppText>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>Expressions clés</AppText>
               <View
                 style={[
                   styles.toolboxLine,

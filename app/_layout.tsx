@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Redirect, Stack, usePathname } from "expo-router";
 import { useFonts } from "expo-font";
 import {
   Outfit_300Light,
@@ -25,6 +25,43 @@ void SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const forceFontFallback =
   process.env.EXPO_PUBLIC_FORCE_FONT_FALLBACK === "1";
+
+const RELEASE_HIDDEN_PATHS = new Set([
+  "/profile",
+  "/review",
+  "/assimilation",
+  "/listen/CafeListen",
+  "/listen/MetroListen",
+  "/listen/RestaurantListen",
+  "/listen/index-quiz",
+  "/lesson/health",
+  "/lesson/help",
+  "/lesson/hotel",
+  "/lesson/late",
+  "/lesson/taxi",
+  "/voc/emotion",
+  "/voc/famille",
+  "/voc/health",
+  "/voc/lieux",
+  "/voc/meteo",
+  "/voc/objets",
+  "/voc/voyage",
+]);
+const RELEASE_HIDDEN_PREFIXES = ["/classificateur", "/immersion"] as const;
+
+function ReleaseRouteGuard({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isHidden =
+    RELEASE_HIDDEN_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    ) || RELEASE_HIDDEN_PATHS.has(pathname);
+
+  if (isHidden) {
+    return <Redirect href="/" />;
+  }
+
+  return children;
+}
 
 /*const SCREEN_CAPTURE_PROTECTION_KEY = "k-app-global-protection";
 
@@ -115,15 +152,17 @@ export default function RootLayout() {
           <PaywallProvider>
             <SubscriptionAccessGuard />
             {/* <ScreenCaptureProtection /> */}
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="onboarding" />
-              <Stack.Screen name="premium" />
-              <Stack.Screen name="streak" />
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="listen/teacherIA" />
-              <Stack.Screen name="listen/teacherIARealtime" />
-            </Stack>
+            <ReleaseRouteGuard>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="onboarding" />
+                <Stack.Screen name="premium" />
+                <Stack.Screen name="streak" />
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="listen/teacherIA" />
+                <Stack.Screen name="listen/teacherIARealtime" />
+              </Stack>
+            </ReleaseRouteGuard>
           </PaywallProvider>
         </DailyStreakProvider>
       </StoreProvider>

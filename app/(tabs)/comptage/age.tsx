@@ -88,7 +88,7 @@ const MAJORITE_AUDIO = {
 const SCENES = withSceneAudio([
   {
     id: "introduction",
-    title: "La Hiérarchie",
+    title: "La hiérarchie",
     koreanTitle: "나이가 어떻게 되세요? (Nai-ga...)",
     description: "Déterminer l'âge pour ajuster son niveau de politesse.",
     accent: COLORS.amber,
@@ -157,7 +157,7 @@ const SCENES = withSceneAudio([
   },
   {
     id: "system",
-    title: "Âge Coréen vs Mondial",
+    title: "Âge coréen et âge international",
     koreanTitle: "만 나이 (Man Nai)",
     description:
       "Comprendre la règle civile et administrative généralisée en 2023.",
@@ -230,7 +230,7 @@ const SCENES = withSceneAudio([
   },
   {
     id: "majority",
-    title: "La Majorité",
+    title: "La majorité",
     koreanTitle: "성인 (Seong-in)",
     description:
       "Distinguer la majorité civile à 19 ans révolus de la règle d'achat d'alcool, fixée au 1er janvier de l'année des 19 ans.",
@@ -306,8 +306,8 @@ export default function AgeLifeImmersion() {
     <CountingImmersionScreen
       scenes={SCENES}
       backLabel="CYCLE DE VIE"
-      badgeLabel="SOCIO-KOREAN"
-      toolboxTitle="LIFE TOOLBOX"
+      badgeLabel="USAGES SOCIAUX"
+      toolboxTitle="Expressions clés"
       fallbackToSpeechOnAudioError
       stopAudioOnDialogueChange
     />

@@ -88,7 +88,7 @@ const AUBE_AUDIO = {
 const SCENES = withSceneAudio([
   {
     id: "appointment",
-    title: "Le Rendez-vous",
+    title: "Le rendez-vous",
     koreanTitle: "약속 시간 (Yaksok Sigan)",
     description: "Fixer l'heure exacte d'une rencontre à la station Gangnam.",
     accent: COLORS.electricPurple,
@@ -157,7 +157,7 @@ const SCENES = withSceneAudio([
   },
   {
     id: "last-train",
-    title: "Le Dernier Métro",
+    title: "Le dernier métro",
     koreanTitle: "막차 시간 (Mak-cha)",
     description: "Vérifier l'heure du dernier train pour ne pas rester bloqué.",
     accent: COLORS.nightBlue,
@@ -226,7 +226,7 @@ const SCENES = withSceneAudio([
   },
   {
     id: "early-bird",
-    title: "L'Aube à Séoul",
+    title: "L’aube à Séoul",
     koreanTitle: "새벽 (Saebyeok)",
     description: "Se lever tôt pour voir le lever du soleil sur le fleuve Han.",
     accent: COLORS.twilightPink,
@@ -300,8 +300,8 @@ export default function TimeImmersion() {
     <CountingImmersionScreen
       scenes={SCENES}
       backLabel="SYSTÈME MIXTE"
-      badgeLabel="REAL-TIME"
-      toolboxTitle="TIME TOOLBOX"
+      badgeLabel="HEURE RÉELLE"
+      toolboxTitle="Expressions clés"
     />
   );
 }

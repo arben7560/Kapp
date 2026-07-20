@@ -302,7 +302,7 @@ export function GuidedSpeechTurn({
             script="latin"
             style={styles.helpChoicesLabel}
           >
-            CHOIX EXISTANTS
+            RÉPONSES PROPOSÉES
           </AppText>
           {children}
         </View>

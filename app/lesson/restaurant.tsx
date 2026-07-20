@@ -217,7 +217,7 @@ const buildScenes = (): Scene[] => {
     {
       id: "ai",
       tab: "Serveur",
-      title: "Côté Serveur",
+      title: "Côté serveur",
       koreanTitle: "식당 안내",
       description: restaurantDialogueData.scenarioDescription,
       accent: COLORS.cyan,
@@ -233,7 +233,7 @@ const buildScenes = (): Scene[] => {
     {
       id: "user",
       tab: "Client",
-      title: "Côté Client",
+      title: "Côté client",
       koreanTitle: "손님 선택",
       description: restaurantDialogueData.scenarioTitle,
       accent: COLORS.pink,
@@ -333,7 +333,7 @@ export default function RestaurantLesson() {
               <AppText variant="sectionLabel" lineContract="singleLine" style={styles.backText}>RETOUR</AppText>
             </Pressable>
 
-            <AppText variant="sectionLabel" lineContract="singleLine" style={styles.headerTitle}>RESTAURANT IMMERSION</AppText>
+            <AppText variant="sectionLabel" lineContract="singleLine" style={styles.headerTitle}>RESTAURANT</AppText>
           </View>
 
           <View style={styles.selectorRow}>
@@ -363,7 +363,7 @@ export default function RestaurantLesson() {
 
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <AppText variant="sectionLabel" style={styles.toolboxTitle}>RESTAURANT TOOLBOX</AppText>
+              <AppText variant="sectionLabel" style={styles.toolboxTitle}>Expressions clés</AppText>
               <View
                 style={[
                   styles.toolboxLine,

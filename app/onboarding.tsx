@@ -34,7 +34,7 @@ const STEP_DURATION = 760;
 const ONBOARDING_KEY = "kapp_onboarding_completed";
 type Step = "arrival" | "scene" | "mode" | "transition";
 type SceneKey = "cafe" | "metro" | "restaurant";
-type ModeKey = "text" | "guided" | "real";
+type ModeKey = "text" | "guided";
 
 type SceneOption = {
   key: SceneKey;
@@ -57,7 +57,7 @@ const SCENES: SceneOption[] = [
   {
     key: "cafe",
     eyebrow: "HONGDAE",
-    title: "Le Café",
+    title: "Café",
     subtitle: "Commander comme un local",
     accent: PINK,
     image: CAFE_IMAGE,
@@ -65,7 +65,7 @@ const SCENES: SceneOption[] = [
   {
     key: "metro",
     eyebrow: "LIGNE 2",
-    title: "Le Métro",
+    title: "Métro",
     subtitle: "Te déplacer dans Séoul",
     accent: CYAN,
     image: METRO_IMAGE,
@@ -73,7 +73,7 @@ const SCENES: SceneOption[] = [
   {
     key: "restaurant",
     eyebrow: "ITAEWON",
-    title: "Le Restaurant",
+    title: "Restaurant",
     subtitle: "Dîner et échanger",
     accent: GOLD,
     image: RESTAURANT_IMAGE,
@@ -83,21 +83,15 @@ const SCENES: SceneOption[] = [
 const MODES: ModeOption[] = [
   {
     key: "text",
-    title: "Texte",
-    subtitle: "Lire et comprendre",
+    title: "Expressions utiles",
+    subtitle: "Revois les mots et expressions utilisés couramment",
     accent: "rgba(255,255,255,0.85)",
   },
   {
     key: "guided",
-    title: "Guidé",
-    subtitle: "Avancer avec aide",
+    title: "Scène guidée",
+    subtitle: "Entre dans la situation, écoute et réponds comme sur place",
     accent: CYAN,
-  },
-  {
-    key: "real",
-    title: "Réel",
-    subtitle: "Répondre naturellement",
-    accent: PINK,
     highlighted: true,
   },
 ];
@@ -105,18 +99,15 @@ const MODES: ModeOption[] = [
 const ROUTES: Record<SceneKey, Record<ModeKey, string>> = {
   cafe: {
     text: "/lesson/cafe",
-    guided: "/lesson/cafeIA",
-    real: "/lesson/cafeIA",
+    guided: "/lesson/cafeMissions",
   },
   metro: {
     text: "/lesson/metro",
-    guided: "/lesson/metroIA",
-    real: "/lesson/metroIA",
+    guided: "/lesson/metroMissions",
   },
   restaurant: {
     text: "/lesson/restaurant",
-    guided: "/lesson/restaurantIA",
-    real: "/lesson/restaurantIA",
+    guided: "/lesson/restaurantMissions",
   },
 };
 
@@ -392,7 +383,7 @@ export default function OnboardingScreen() {
                       style={StyleSheet.absoluteFill}
                     />
 
-                    <AppText variant="sectionLabel" style={styles.heroEyebrow}>IMMERSION LIVE</AppText>
+                    <AppText variant="sectionLabel" style={styles.heroEyebrow}>IMMERSION</AppText>
                     <AppText variant="sceneTitle" style={styles.heroTitle}>
                       La ville s’ouvre devant toi
                     </AppText>
@@ -407,8 +398,8 @@ export default function OnboardingScreen() {
               <View style={styles.bottomCtaArea}>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Commencer l'experience"
-                  accessibilityHint="Ouvre le choix de la scene de depart"
+                  accessibilityLabel="Commencer l’expérience"
+                  accessibilityHint="Ouvre le choix de la scène de départ"
                   hitSlop={6}
                   style={styles.primaryWrap}
                   onPress={() => goToStep("scene")}
@@ -462,7 +453,7 @@ export default function OnboardingScreen() {
                 isCompactScreen && styles.sectionHeadCompact,
               ]}
             >
-              <AppText variant="sectionLabel" style={styles.sectionEyebrow}>START HERE</AppText>
+              <AppText variant="sectionLabel" style={styles.sectionEyebrow}>POUR COMMENCER</AppText>
               <AppText accessibilityRole="header" variant="screenTitle"
                 style={[
                   styles.sectionTitle,
@@ -533,7 +524,7 @@ export default function OnboardingScreen() {
                       isCompactScreen && styles.pathTextCompact,
                     ]}
                   >
-                    Hangul , vocabulaires et autres
+                    Hangul, vocabulaire et autres parcours
                   </AppText>
 
                   <View
@@ -550,7 +541,7 @@ export default function OnboardingScreen() {
 
               <View
                 accessibilityRole="summary"
-                accessibilityLabel="Immersion directe. Choisis une scene cafe, metro ou restaurant"
+                accessibilityLabel="Conversation. Choisis une scène Café, Métro ou Restaurant"
                 style={styles.pathPress}
               >
                 <BlurView
@@ -583,7 +574,7 @@ export default function OnboardingScreen() {
                       <AppText variant="sectionTitle" style={styles.pathIconText}>●</AppText>
                     </View>
                     <AppText variant="sectionLabel" style={[styles.pathStep, { color: PINK }]}>
-                      IMMERSION
+                      CONVERSATION
                     </AppText>
                   </View>
 
@@ -623,7 +614,7 @@ export default function OnboardingScreen() {
                 isCompactScreen && styles.subSectionHeadCompact,
               ]}
             >
-              <AppText variant="sectionLabel" style={styles.subSectionEyebrow}>IMMERSION DIRECTE</AppText>
+              <AppText variant="sectionLabel" style={styles.subSectionEyebrow}>CONVERSATION</AppText>
               <AppText variant="sectionTitle" style={styles.subSectionTitle}>Choisis une scène</AppText>
             </View>
 
@@ -767,7 +758,7 @@ export default function OnboardingScreen() {
 
               <Pressable
                 accessibilityRole="link"
-                accessibilityLabel="Voir plus de scenes"
+                  accessibilityLabel="Voir plus de scènes"
                 hitSlop={8}
                 style={styles.discreetAction}
                 onPress={openMoreScenes}
@@ -782,7 +773,7 @@ export default function OnboardingScreen() {
             <View style={[styles.bottomBar, styles.bottomBarContained]}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Retour a l'ecran de bienvenue"
+                accessibilityLabel="Retour à l’écran de bienvenue"
                 hitSlop={6}
                 style={styles.secondaryButton}
                 onPress={() => goToStep("arrival")}
@@ -834,7 +825,7 @@ export default function OnboardingScreen() {
               <View style={styles.topRow}>
                 <View style={styles.badge}>
                   <View style={[styles.badgeDot, { backgroundColor: CYAN }]} />
-                  <AppText variant="label" lineContract="singleLine" style={styles.badgeText}>MODE D’IMMERSION</AppText>
+                  <AppText variant="label" lineContract="singleLine" style={styles.badgeText}>CONVERSATION</AppText>
                 </View>
               </View>
 
@@ -846,7 +837,7 @@ export default function OnboardingScreen() {
               >
                 <AppText variant="sectionLabel" style={styles.sectionEyebrow}>SCÈNE CHOISIE</AppText>
                 <AppText accessibilityRole="header" variant="screenTitle" style={styles.sectionTitle}>{selectedSceneData.title}</AppText>
-                <AppText variant="body" style={styles.sectionText}>Choisis ton niveau d’aide.</AppText>
+                <AppText variant="body" style={styles.sectionText}>Choisis ton approche.</AppText>
               </View>
 
               <View style={styles.modeList}>
@@ -953,7 +944,7 @@ export default function OnboardingScreen() {
               <View style={styles.bottomBar}>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Retour au choix de scene"
+                  accessibilityLabel="Retour au choix de scène"
                   hitSlop={6}
                   style={styles.secondaryButton}
                   onPress={() => goToStep("scene")}
@@ -963,7 +954,7 @@ export default function OnboardingScreen() {
 
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Commencer la scene choisie"
+                  accessibilityLabel="Commencer la scène choisie"
                   hitSlop={6}
                   style={styles.primaryInlineWrap}
                   onPress={finishOnboarding}

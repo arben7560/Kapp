@@ -79,7 +79,7 @@ const INTERVIEW_AUDIO = {
 const SCENES = [
   {
     id: "meeting",
-    title: "La Réunion",
+    title: "La réunion",
     koreanTitle: "회의 (Hoeui)",
     description:
       "Donner son avis, demander une explication et participer avec respect.",
@@ -192,7 +192,7 @@ const SCENES = [
   },
   {
     id: "message",
-    title: "Le Message Pro",
+    title: "Le message professionnel",
     koreanTitle: "업무 메일",
     description:
       "Demander, confirmer et répondre avec une formule professionnelle.",
@@ -306,7 +306,7 @@ const SCENES = [
   },
   {
     id: "interview",
-    title: "L’Entretien",
+    title: "L’entretien",
     koreanTitle: "면접 (Myeonjeop)",
     description:
       "Se présenter, répondre avec confiance et laisser une bonne impression.",
@@ -337,7 +337,7 @@ const SCENES = [
       {
         char: "Moi",
         kr: "경력이 있고, 한국어와 비즈니스에 관심이 많습니다.",
-        fr: "J'ai de l'expérience professionnelle et je m'intéresse beaucoup au coréen et au business.",
+        fr: "J'ai de l'expérience professionnelle et je m'intéresse beaucoup au coréen et au monde des affaires.",
         side: "me",
         audio: INTERVIEW_AUDIO.message4,
       },
@@ -576,7 +576,7 @@ export default function BusinessImmersion() {
               <AppText variant="sectionLabel" style={[styles.navEyebrow, { color: activeScene.accent }]}>
                 SÉOUL IMMERSION
               </AppText>
-              <AppText variant="cardTitle" style={styles.navTitle}>Business</AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>Vie professionnelle</AppText>
             </View>
           </View>
 
@@ -739,7 +739,7 @@ export default function BusinessImmersion() {
 
           <View style={styles.toolbox}>
             <View style={styles.toolboxTitleRow}>
-              <AppText variant="sectionTitle" style={styles.toolboxTitle}>BUSINESS TOOLBOX</AppText>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>Expressions clés</AppText>
               <View
                 style={[
                   styles.toolboxLine,

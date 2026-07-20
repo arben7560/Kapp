@@ -100,7 +100,7 @@ export default function MetroMissionsScreen() {
             <AppText variant="sectionTitle" lineContract="singleLine" style={styles.backText}>x</AppText>
           </Pressable>
           <View style={styles.headerCopy}>
-            <AppText variant="sectionLabel" style={styles.kicker}>{"MISSIONS D'IMMERSION"}</AppText>
+            <AppText variant="sectionLabel" style={styles.kicker}>MISSIONS</AppText>
             <AppText accessibilityRole="header" variant="screenTitle" style={styles.title}>Métro</AppText>
           </View>
         </View>

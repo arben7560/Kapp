@@ -94,8 +94,8 @@ const SCENES = withSceneAudio(
   [
     {
       id: "shopping",
-      title: "Le Shopping",
-      koreanTitle: "쇼핑 (Shopping)",
+      title: "Le magasin",
+      koreanTitle: "쇼핑 (Magasin)",
       description: "Négocier et comprendre les prix élevés en Won.",
       accent: COLORS.sinoNeon,
       image:
@@ -164,7 +164,7 @@ const SCENES = withSceneAudio(
     },
     {
       id: "appointment",
-      title: "Le Rendez-vous",
+      title: "Le rendez-vous",
       koreanTitle: "약속 (Yaksok)",
       description: "Préciser les dates et les minutes d'une rencontre.",
       accent: COLORS.cobalt,
@@ -303,9 +303,9 @@ export default function SinoNumbersImmersion() {
   return (
     <CountingImmersionScreen
       scenes={SCENES}
-      backLabel="SYSTÈME SINO"
+      backLabel="SYSTÈME SINO-CORÉEN"
       badgeLabel="OFFICIEL"
-      toolboxTitle="SINO-KOREAN TOOLBOX"
+      toolboxTitle="Expressions clés"
     />
   );
 }

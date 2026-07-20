@@ -87,7 +87,7 @@ function LockedPreviewPaywallProvider({
     setError({
       code: "native-iap-disabled",
       message:
-        "Apercu du paywall actif. Pour tester un achat reel, utilise un dev client reconstruit et passe ENABLE_NATIVE_IAP a true.",
+        "Impossible de finaliser cette action pour le moment. Réessaie plus tard.",
     });
   }, []);
 

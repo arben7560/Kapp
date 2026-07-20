@@ -86,7 +86,7 @@ export function MissionLaunchModal({
 
       <DialogActions style={styles.actions}>
         <ActionButton
-          label="Commencer l'immersion"
+          label="Commencer la mission"
           size="large"
           accentColor={accent}
           onPress={onStart}

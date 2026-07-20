@@ -13,7 +13,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../components/app-text";
 import { ActionButton } from "../components/ui/action-button";
 import {
-  DEV_UNLOCK_ALL,
   PAYWALL_COPY,
   PREMIUM_SUBSCRIPTION_OFFERS,
 } from "../lib/paywall/config";
@@ -33,10 +32,10 @@ const COLORS = {
 };
 
 const FEATURES = [
-  "Tous les modules actuels debloques",
-  "Tous les exercices et programmes Premium",
-  "Toutes les futures fonctionnalites Premium incluses",
-  "Restaurable sur tes appareils via ton compte Store",
+  "Tous les parcours disponibles débloqués",
+  "Exercices et programmes Premium inclus",
+  "Toutes les missions Premium disponibles",
+  "Achats restaurables via ton compte App Store ou Google Play",
 ];
 
 const isAnnualOffer = (offer: (typeof PREMIUM_SUBSCRIPTION_OFFERS)[number]) => {
@@ -54,7 +53,6 @@ export default function PremiumScreen() {
     displayPrices,
     error,
     hasPremiumAccess,
-    isDeveloperUnlocked,
     isLoading,
     isPurchasing,
     isRestoring,
@@ -117,7 +115,7 @@ export default function PremiumScreen() {
           >
             <View style={styles.badge}>
               <Ionicons name="sparkles" size={15} color={COLORS.gold} />
-              <AppText variant="label" style={styles.badgeText}>ACCES TOTAL</AppText>
+              <AppText variant="label" style={styles.badgeText}>ACCÈS TOTAL</AppText>
             </View>
 
             <AppText accessibilityRole="header" variant="screenTitle" style={styles.title}>{PAYWALL_COPY.title}</AppText>
@@ -147,7 +145,7 @@ export default function PremiumScreen() {
                           {offer.id === highlightedOfferId && (
                             <View style={styles.savingBadge}>
                               <AppText variant="caption" style={styles.savingBadgeText}>
-                                Economisez 17%
+                                Économisez 17 %
                               </AppText>
                             </View>
                           )}
@@ -187,14 +185,6 @@ export default function PremiumScreen() {
               ))}
             </View>
 
-            {DEV_UNLOCK_ALL && (
-              <View style={styles.devBox}>
-                <AppText variant="caption" style={styles.devText}>
-                  Mode developpeur actif : tout est debloque sans achat.
-                </AppText>
-              </View>
-            )}
-
             {hasPremiumAccess && (
               <View style={styles.activeBox}>
                 <Ionicons
@@ -203,9 +193,7 @@ export default function PremiumScreen() {
                   color={COLORS.cyan}
                 />
                 <AppText variant="bodyStrong" style={styles.activeText}>
-                  {isDeveloperUnlocked
-                    ? "Acces complet active en developpement."
-                    : "Ton abonnement Premium est actif."}
+                  L’accès Premium est actif.
                 </AppText>
               </View>
             )}
@@ -241,7 +229,7 @@ export default function PremiumScreen() {
 
           {!hasPremiumAccess && selectedOffer && (
             <AppText variant="caption" style={styles.selectedPlanText}>
-              Offre selectionnee : {selectedOffer.title}
+              Offre sélectionnée : {selectedOffer.title}
             </AppText>
           )}
 
@@ -265,7 +253,7 @@ export default function PremiumScreen() {
 
           <AppText variant="caption" tone="soft" style={styles.legalText}>
             {
-              "Le paiement est traite par l'App Store ou Google Play. Le renouvellement et l'expiration de l'abonnement sont geres par ton compte Store."
+              "Le paiement est traité par l’App Store ou Google Play. Le renouvellement et l’expiration de l’abonnement sont gérés par le compte associé."
             }
           </AppText>
           </View>
@@ -403,17 +391,6 @@ const styles = StyleSheet.create({
   priceCaption: {
     color: COLORS.faint,
     marginTop: 5,
-  },
-  devBox: {
-    marginTop: 14,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "rgba(34,211,238,0.3)",
-    backgroundColor: "rgba(34,211,238,0.1)",
-    padding: 12,
-  },
-  devText: {
-    color: COLORS.text,
   },
   activeBox: {
     marginTop: 14,

@@ -129,7 +129,7 @@ export default function HangulHub() {
             korean="한글"
             title="Hangul"
             subtitle={`"Apprendre l'alphabet pour lire l'âme de la ville."`}
-            badgeLabel={`IMMERSION NIVEAU ${displayLevel}`}
+            badgeLabel={`NIVEAU ${displayLevel}`}
             accentColor={CYAN}
             animateGlow
           />
@@ -156,13 +156,13 @@ export default function HangulHub() {
               >
                 <ModuleCard
                   title={module.title}
-                  subtitle={requirement ? `À faire après ${requirement.title}` : completed ? `Maîtrisé · ${module.sub}` : module.sub}
+                  subtitle={requirement ? `À commencer après ${requirement.title}` : completed ? `Terminé · ${module.sub}` : module.sub}
                   icon={module.icon}
                   onPress={() => router.push((requirement?.route ?? module.href) as never)}
                   accentColor={module.color ?? CYAN}
                   requiresPremium={module.isLocked}
-                  metaLabel="PARCOURS HANGUL"
-                  accessibilityContext="ce module Hangul"
+                  metaLabel="ÉTAPE HANGUL"
+                  accessibilityContext="cette étape Hangul"
                   iconScript="korean"
                   visualVariant="legacyGlass"
                 />
@@ -198,17 +198,6 @@ function UnifiedNavHeader() {
         </AppText>
       </Pressable>
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Paramètres"
-        accessibilityState={{ disabled: true }}
-        aria-disabled={true}
-        hitSlop={8}
-        disabled
-        style={styles.settingsShell}
-      >
-        <View style={styles.settingsOrb} />
-      </Pressable>
     </View>
   );
 }
@@ -333,26 +322,6 @@ const styles = StyleSheet.create({
 
   backText: {
     color: "rgba(255,255,255,0.92)",
-  },
-
-  settingsShell: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.04)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-  },
-
-  settingsOrb: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1.4,
-    borderColor: "rgba(255,255,255,0.30)",
-    opacity: 0.7,
   },
 
   // GRID

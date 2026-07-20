@@ -88,7 +88,7 @@ const PREMIERE_FOIS_AUDIO = {
 const SCENES = withSceneAudio([
   {
     id: "ranking",
-    title: "Le Classement",
+    title: "Le classement",
     koreanTitle: "순위 (Sun-wi)",
     description: "Annoncer les résultats d'une compétition ou d'un examen.",
     accent: COLORS.neonBlue,
@@ -157,7 +157,7 @@ const SCENES = withSceneAudio([
   },
   {
     id: "family",
-    title: "La Fratrie",
+    title: "La fratrie",
     koreanTitle: "형제 순서 (Hyeongje)",
     description: "Expliquer son ordre de naissance dans la famille.",
     accent: COLORS.indigo,
@@ -228,7 +228,7 @@ const SCENES = withSceneAudio([
   },
   {
     id: "experience",
-    title: "La Première Fois",
+    title: "La première fois",
     koreanTitle: "처음 (Cheo-eum)",
     description: "Parler d'une expérience inédite ou répétée.",
     accent: COLORS.sapphire,
@@ -301,9 +301,9 @@ export default function OrdinalsImmersion() {
   return (
     <CountingImmersionScreen
       scenes={SCENES}
-      backLabel="HIÉRARCHIE & RANG"
-      badgeLabel="TOP RANK"
-      toolboxTitle="ORDINAL TOOLBOX"
+      backLabel="HIÉRARCHIE ET RANG"
+      badgeLabel="CLASSEMENT"
+      toolboxTitle="Expressions clés"
     />
   );
 }

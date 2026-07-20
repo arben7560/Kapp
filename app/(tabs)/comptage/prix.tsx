@@ -88,7 +88,7 @@ const CONVENIENCE_AUDIO = {
 const SCENES = withSceneAudio([
   {
     id: "department-store",
-    title: "Le Grand Magasin",
+    title: "Le grand magasin",
     koreanTitle: "백화점 (Baek-hwa-jeom)",
     description: "Gérer des montants élevés dans les boutiques de luxe.",
     accent: COLORS.luxuryCyan,
@@ -157,9 +157,9 @@ const SCENES = withSceneAudio([
   },
   {
     id: "market",
-    title: "Marché Traditionnel",
+    title: "Marché traditionnel",
     koreanTitle: "전통 시장 (Sijang)",
-    description: "L'art de la négociation et du 'Service' (cadeau).",
+    description: "L'art de la négociation et du service offert.",
     accent: COLORS.marketRed,
     image:
       "https://images.unsplash.com/photo-1547970810-dc1eac37d174?auto=format&fit=crop&w=800&q=80",
@@ -227,7 +227,7 @@ const SCENES = withSceneAudio([
   },
   {
     id: "convenience",
-    title: "La Supérette",
+    title: "La supérette",
     koreanTitle: "편의점 (Pyeon-ui-jeom)",
     description: "Achats rapides, reçus et offres '1+1'.",
     accent: COLORS.wonGold,
@@ -300,9 +300,9 @@ export default function ShoppingImmersion() {
   return (
     <CountingImmersionScreen
       scenes={SCENES}
-      backLabel="SÉOUL SHOPPING"
+      backLabel="MAGASIN À SÉOUL"
       badgeLabel="₩ KRW"
-      toolboxTitle="SHOPPING TOOLBOX"
+      toolboxTitle="Expressions clés"
     />
   );
 }

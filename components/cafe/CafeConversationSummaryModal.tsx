@@ -298,7 +298,7 @@ export function CafeConversationSummaryModal({
                       ))
                     ) : (
                       <AppText variant="bodySecondary" tone="muted" script="latin">
-                        Aucun doute lié au moteur vocal.
+                        Aucune difficulté de reconnaissance.
                       </AppText>
                     )}
                   </View>

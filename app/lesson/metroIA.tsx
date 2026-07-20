@@ -1069,7 +1069,7 @@ export default function MetroIaScreen() {
                 <VideoView
                   accessible
                   accessibilityRole="image"
-                  accessibilityLabel="Video de l'interlocuteur metro"
+                  accessibilityLabel="Vidéo de l’interlocuteur du métro"
                   player={player}
                   style={[styles.video, { height: avatarVideoHeight }]}
                   contentFit="cover"
@@ -1191,7 +1191,7 @@ export default function MetroIaScreen() {
                     script="latin"
                     style={styles.endTitle}
                   >
-                    Scène terminée
+                    Mission terminée
                   </AppText>
 
                   <AppText
@@ -1200,7 +1200,7 @@ export default function MetroIaScreen() {
                     script="latin"
                     style={styles.endSubtitle}
                   >
-                    Tu peux rejouer cette scène ou revenir au menu.
+                    Tu peux rejouer cette mission ou revenir au menu.
                   </AppText>
 
                   <AppText
@@ -1209,13 +1209,13 @@ export default function MetroIaScreen() {
                     script="latin"
                     style={styles.endSubtitle}
                   >
-                    Serie conservee.
+                    Série conservée.
                   </AppText>
 
                   <View style={styles.endActions}>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Rejouer la scene"
+                      accessibilityLabel="Rejouer la mission"
                       hitSlop={6}
                       onPress={handleRestart}
                       style={({ pressed }) => [

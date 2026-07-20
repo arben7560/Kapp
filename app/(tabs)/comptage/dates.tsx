@@ -90,7 +90,7 @@ const SCENES = withSceneAudio(
   [
     {
       id: "birthday",
-      title: "L'Anniversaire",
+      title: "L’anniversaire",
       koreanTitle: "생일 날짜 (Saeng-il Nal-jja)",
       description:
         "Donner sa date de naissance complète (Année / Mois / Jour).",
@@ -161,8 +161,8 @@ const SCENES = withSceneAudio(
     },
     {
       id: "travel",
-      title: "Le Voyage",
-      koreanTitle: "여행 계획 (Travel Plan)",
+      title: "Le voyage",
+      koreanTitle: "여행 계획 (Projet de voyage)",
       description: "Planifier les dates d'arrivée et de départ d'un séjour.",
       accent: COLORS.twilight,
       image:
@@ -230,8 +230,8 @@ const SCENES = withSceneAudio(
     },
     {
       id: "weekly",
-      title: "La Semaine",
-      koreanTitle: "요일 (Days of the week)",
+      title: "La semaine",
+      koreanTitle: "요일 (Jours de la semaine)",
       description: "Maîtriser les 7 jours de la semaine et leurs éléments.",
       accent: COLORS.deepIndigo,
       image:
@@ -305,9 +305,9 @@ export default function DatesCalendarImmersion() {
   return (
     <CountingImmersionScreen
       scenes={SCENES}
-      backLabel="SÉOUL TEMPOREL"
-      badgeLabel="APRIL 2026"
-      toolboxTitle="CALENDAR TOOLBOX"
+      backLabel="DATES À SÉOUL"
+      badgeLabel="AVRIL 2026"
+      toolboxTitle="Expressions clés"
     />
   );
 }

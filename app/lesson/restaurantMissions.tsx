@@ -94,7 +94,7 @@ export default function RestaurantMissionsScreen() {
             <AppText variant="sectionTitle" lineContract="singleLine" style={styles.backText}>x</AppText>
           </Pressable>
           <View style={styles.headerCopy}>
-            <AppText variant="sectionLabel" style={styles.kicker}>{"MISSIONS D'IMMERSION"}</AppText>
+            <AppText variant="sectionLabel" style={styles.kicker}>MISSIONS</AppText>
             <AppText accessibilityRole="header" variant="screenTitle" style={styles.title}>Restaurant</AppText>
           </View>
         </View>
@@ -107,7 +107,7 @@ export default function RestaurantMissionsScreen() {
         >
           <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
           <AppText variant="body" tone="muted" style={styles.intro}>
-            Choisis une mission complète. Le paywall apparaît avant la scène.
+            Choisis une mission complète avant d’entrer dans la scène.
           </AppText>
           <View
             style={[

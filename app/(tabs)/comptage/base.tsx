@@ -53,7 +53,7 @@ const ANNIVERSAIRE_AUDIO = {
 const SCENES = [
   {
     id: "cafe",
-    title: "Au Café",
+    title: "Au café",
     koreanTitle: "카페에서 (Café-eseo)",
     description: "Compter les articles lors d'une commande de groupe.",
     accent: COLORS.nativeCyan,
@@ -219,7 +219,7 @@ const SCENES = [
   },
   {
     id: "birthday",
-    title: "L'Anniversaire",
+    title: "L’anniversaire",
     koreanTitle: "생일 (Saeng-il)",
     description: "Exprimer l'âge lors d'une fête entre amis.",
     accent: COLORS.indigoDeep,
@@ -303,8 +303,8 @@ export default function NativeNumbersImmersion() {
     <CountingImmersionScreen
       scenes={SCENES}
       backLabel="SYSTÈME NATIF"
-      badgeLabel="PURE KOREAN"
-      toolboxTitle="NUMERIC TOOLBOX"
+      badgeLabel="CORÉEN NATIF"
+      toolboxTitle="Expressions clés"
     />
   );
 }

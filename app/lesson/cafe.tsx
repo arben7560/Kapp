@@ -31,9 +31,9 @@ const CAFE_IMAGE = require("../../assets/images/cafe.png");
 const SCENES = [
   {
     id: "server",
-    tab: "Serveur",
-    title: "Côté Barista",
-    koreanTitle: "AI 바리스타",
+    tab: "Barista",
+    title: "Côté barista",
+    koreanTitle: "바리스타 표현",
     description: "Les phrases utiles que le barista peut employer au café.",
     accent: COLORS.gold,
     image: CAFE_IMAGE,
@@ -123,9 +123,9 @@ const SCENES = [
   },
   {
     id: "client",
-    tab: "Clients",
-    title: "Côté Client",
-    koreanTitle: "사용자 선택",
+    tab: "Client",
+    title: "Côté client",
+    koreanTitle: "손님 표현",
     description: "Les phrases utiles pour commander et répondre au café.",
     accent: COLORS.pink,
     image: CAFE_IMAGE,
@@ -226,13 +226,13 @@ const SCENES = [
         word: "네, 먹고 갈게요.",
         rom: "Ne, meokgo galgeyo.",
         mean: "Oui, je consomme sur place",
-        context: "Choix utilisateur pour rester au café.",
+        context: "Pour indiquer que tu restes au café.",
       },
       {
         word: "포장해 주세요.",
         rom: "Pojanghae juseyo.",
         mean: "À emporter, s'il vous plaît",
-        context: "Choix utilisateur pour l'option takeout.",
+        context: "Pour demander une commande à emporter.",
       },
       {
         word: "테이크아웃이요.",
@@ -250,7 +250,7 @@ const SCENES = [
         word: "아니요, 괜찮아요.",
         rom: "Aniyo, gwaenchanayo.",
         mean: "Non, merci / ça va",
-        context: "Réponse utilisateur quand le reçu n'est pas nécessaire.",
+        context: "Pour refuser poliment le reçu.",
       },
     ],
   },
@@ -339,7 +339,7 @@ export default function CafeLesson() {
               <AppText variant="sectionLabel" lineContract="singleLine" style={styles.backText}>RETOUR</AppText>
             </Pressable>
 
-            <AppText variant="sectionLabel" lineContract="singleLine" style={styles.headerTitle}>CAFE IMMERSION</AppText>
+            <AppText variant="sectionLabel" lineContract="singleLine" style={styles.headerTitle}>CAFÉ</AppText>
           </View>
 
           <View style={styles.selectorRow}>
@@ -368,7 +368,7 @@ export default function CafeLesson() {
           </View>
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <AppText variant="sectionLabel" style={styles.toolboxTitle}>CAFE TOOLBOX</AppText>
+              <AppText variant="sectionLabel" style={styles.toolboxTitle}>Expressions clés</AppText>
               <View
                 style={[
                   styles.toolboxLine,

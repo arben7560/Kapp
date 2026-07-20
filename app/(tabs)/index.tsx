@@ -1,7 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
-import { Compass, MessageCircleMore, Settings } from "lucide-react-native";
+import { Compass, MessageCircleMore } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef } from "react";
 import {
   Animated,
@@ -57,7 +57,7 @@ const HANGUL_PROGRESS_TOTAL = HANGUL_PROGRESS_IDS.length;
 
 const SEQUENCES: any[] = [
   {
-    title: "L'alphabet Coréen",
+    title: "Hangul",
     label: "Hangul",
     color: CYAN,
     route: "/hangul",
@@ -67,17 +67,17 @@ const SEQUENCES: any[] = [
     type: "pedagogical",
   },
   {
-    title: "Scènes interactives",
-    label: "Restaurant",
+    title: "Vocabulaire",
+    label: "Vocabulaire",
     color: "#F59E0B",
     route: "/voc",
     trackKey: "vocab",
-    place: "ITAEWON • DINER",
-    narrative: "Apprends le vocabulaire selon le contexte",
+    place: "SÉOUL • VOCABULAIRE",
+    narrative: "Apprends le vocabulaire selon le contexte.",
     type: "pedagogical",
   },
   {
-    title: "Les nombres coréens",
+    title: "Comptage",
     label: "Comptage",
     color: CYAN,
     route: "/comptage",
@@ -87,29 +87,18 @@ const SEQUENCES: any[] = [
     type: "pedagogical",
   },
   {
-    title: "Compter le monde réel",
-    label: "Classificateurs",
-    color: "#34D399",
-    route: "/classificateur",
-    trackKey: "classifier",
-    isComingSoon: true,
-    place: "MARCHÉ • QUANTITÉS",
-    narrative: "Donne une forme aux objets et aux personnes.",
-    type: "pedagogical",
-  },
-  {
-    title: "Apprends en immersion",
-    label: "Le Métro",
+    title: "Conversation",
+    label: "Conversation",
     color: PINK,
     route: "/speak",
     trackKey: "dialogs",
-    place: "LIGNE 2 • SE DÉPLACER",
-    narrative: "Navigue dans le flux de la capitale.",
+    place: "SÉOUL • CONVERSATION",
+    narrative: "Parle dans des situations du quotidien.",
     type: "immersion",
   },
   {
-    title: "Développe ton écoute",
-    label: "Listen",
+    title: "Écoute",
+    label: "Écoute",
     color: "#8B5CF6",
     route: "/listen",
     trackKey: "listen",
@@ -122,7 +111,7 @@ const SEQUENCES: any[] = [
 const RESUME_SEQUENCES: Record<string, any> = {
   aeroport_ia: {
     title: "Mission aéroport",
-    label: "Aéroport",
+    label: "Mission aéroport",
     color: CYAN,
     route: "/lesson/aeroportMissions",
     routeParams: { mode: "guided" },
@@ -133,7 +122,7 @@ const RESUME_SEQUENCES: Record<string, any> = {
   },
   cafe_ia: {
     title: "Mission café",
-    label: "Café",
+    label: "Mission café",
     color: PINK,
     route: "/lesson/cafeMissions",
     routeParams: { mode: "guided" },
@@ -144,7 +133,7 @@ const RESUME_SEQUENCES: Record<string, any> = {
   },
   metro_ia: {
     title: "Mission métro",
-    label: "Le Métro",
+    label: "Mission métro",
     color: CYAN,
     route: "/lesson/metroMissions",
     routeParams: { mode: "guided" },
@@ -155,12 +144,12 @@ const RESUME_SEQUENCES: Record<string, any> = {
   },
   restaurant_ia: {
     title: "Mission restaurant",
-    label: "Restaurant",
+    label: "Mission restaurant",
     color: "#F59E0B",
     route: "/lesson/restaurantMissions",
     routeParams: { mode: "guided" },
     trackKey: "restaurant_ia",
-    place: "ITAEWON - DINER",
+    place: "ITAEWON - DÎNER",
     narrative: "Reprends ta dernière mission restaurant.",
     type: "immersion",
   },
@@ -194,7 +183,7 @@ export default function Home() {
     SEQUENCES[0];
   const activeSeqProgress = getSequenceProgress(activeSeq.trackKey, progress);
   const activeSeqNarrative =
-    activeSeq.trackKey === "hangul" && activeSeqProgress > 0
+    activeSeq.trackKey === "hangul" && (activeSeqProgress ?? 0) > 0
       ? "Reprends ta session Hangul."
       : activeSeq.narrative;
 
@@ -266,28 +255,6 @@ export default function Home() {
         <View style={styles.topFade} />
         <View style={styles.bottomFade} />
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Parametres"
-          accessibilityState={{ disabled: true }}
-          aria-disabled={true}
-          hitSlop={8}
-          disabled
-          style={[
-            styles.settingsTrigger,
-            { right: responsive.horizontalPadding },
-            responsive.isCompact && styles.settingsTriggerCompact,
-          ]}
-        >
-          <BlurView intensity={80} tint="dark" style={styles.settingsBlur}>
-            <Settings
-              size={24}
-              strokeWidth={3}
-              color="rgba(241,245,249,0.82)"
-            />
-          </BlurView>
-        </Pressable>
-
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
@@ -320,7 +287,7 @@ export default function Home() {
                     lineContract="singleLine"
                     style={styles.headerCityEn}
                   >
-                    SEOUL
+                    SÉOUL
                   </AppText>
                 </View>
 
@@ -349,7 +316,7 @@ export default function Home() {
                     lineContract="singleLine"
                     style={styles.locationText}
                   >
-                    KOREA STANDARD TIME
+                    HEURE DE SÉOUL
                   </AppText>
                 </View>
               </View>
@@ -463,7 +430,7 @@ export default function Home() {
                 variant="sectionLabel"
                 style={styles.sectionTitle}
               >
-                {"POINTS D'ENTRÉE"}
+                PARCOURS
               </AppText>
               <View style={styles.titleLineWrap}>
                 <View style={styles.titleLine} />
@@ -613,13 +580,13 @@ function AnimatedFragment({
 }
 
 function MainActionCard({ sequence, narrative, progress, onPress }: any) {
-  const displayLabel =
-    sequence.trackKey === "numbers" ? "Les nombres" : sequence.label;
+  const displayLabel = sequence.label;
+  const isMission = sequence.trackKey.endsWith("_ia");
 
   return (
     <Pressable
       accessibilityRole="link"
-      accessibilityLabel={`Reprendre la sequence ${displayLabel}. ${narrative}`}
+      accessibilityLabel={`Reprendre ${isMission ? "la mission" : "le parcours"} ${displayLabel}. ${narrative}`}
       accessibilityHint="Ouvre le parcours actif"
       hitSlop={6}
       onPress={onPress}
@@ -637,7 +604,7 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
             variant="sectionLabel"
             style={styles.cardKicker}
           >
-            REPRENDRE LA SÉQUENCE
+            {isMission ? "REPRENDRE LA MISSION" : "REPRENDRE LE PARCOURS"}
           </AppText>
           <AppText
             variant="featureTitle"
@@ -652,25 +619,24 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
           >
             {narrative}
           </AppText>
-          <View style={styles.progressContainer}>
-            <View style={styles.progressTrack}>
-              <View
-                style={[
-                  styles.progressFill,
-                  {
-                    width: `${progress * 100}%`,
-                    backgroundColor: sequence.color,
-                  },
-                ]}
-              />
+          {typeof progress === "number" ? (
+            <View style={styles.progressContainer}>
+              <View style={styles.progressTrack}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    {
+                      width: `${progress * 100}%`,
+                      backgroundColor: sequence.color,
+                    },
+                  ]}
+                />
+              </View>
+              <AppText variant="caption" style={styles.progressText}>
+                {Math.round(progress * 100)} % du parcours
+              </AppText>
             </View>
-            <AppText
-              variant="caption"
-              style={styles.progressText}
-            >
-              {Math.round(progress * 100)}% {"d'immersion"}
-            </AppText>
-          </View>
+          ) : null}
         </View>
       </BlurView>
     </Pressable>
@@ -688,7 +654,7 @@ function DailyStreakCard({
   const longestStreak = streak?.longestStreak ?? 0;
   const isValidated = streak?.isTodayCompleted ?? false;
   const freezesAvailable = streak?.freezesAvailable ?? 0;
-  const statusLabel = isValidated ? "Jour valide" : "À faire";
+  const statusLabel = isValidated ? "Terminé" : "À commencer";
   const helperText = isValidated
     ? "Ta série est conservée. Les autres activités du jour restent du bonus."
     : "Termine une activité aujourd'hui pour conserver ta série.";
@@ -696,10 +662,10 @@ function DailyStreakCard({
   return (
     <Pressable
       accessibilityRole="link"
-      accessibilityLabel={`Serie quotidienne. ${currentStreak} ${currentStreak > 1 ? "jours" : "jour"}. ${statusLabel}`}
+      accessibilityLabel={`Série quotidienne. ${currentStreak} ${currentStreak > 1 ? "jours" : "jour"}. ${statusLabel}`}
       accessibilityState={{ selected: isValidated }}
       aria-selected={isValidated}
-      accessibilityHint="Ouvre le calendrier de serie"
+      accessibilityHint="Ouvre le calendrier de série"
       hitSlop={6}
       onPress={onPress}
     >
@@ -811,7 +777,7 @@ function DailyStreakCard({
               tone="muted"
               style={styles.streakMetricLabel}
             >
-              Freezes
+              Protection de série
             </AppText>
           </View>
           <View style={styles.streakMetricCard}>
@@ -826,7 +792,7 @@ function DailyStreakCard({
               tone="muted"
               style={styles.streakMetricLabel}
             >
-              {isValidated ? "Valide" : "activité"}
+              {isValidated ? "Terminée" : "activité"}
             </AppText>
           </View>
         </View>
@@ -844,7 +810,7 @@ function DailyStreakCard({
 }
 
 function getSequenceProgress(trackKey: string, progress: any) {
-  if (trackKey !== "hangul") return 0.45;
+  if (trackKey !== "hangul") return null;
 
   const completedHangulItems = HANGUL_PROGRESS_IDS.filter(
     (id) => progress.completed?.[id],
@@ -861,8 +827,6 @@ function getSequenceIcon(trackKey: string) {
       return "dialogue";
     case "numbers":
       return "123";
-    case "classifier":
-      return "○";
     case "dialogs":
       return "compass";
     case "listen":
@@ -899,22 +863,18 @@ function SequenceIconGlyph({ icon, color }: { icon: string; color: string }) {
 
 function SequenceCard({ item, isActive, onPress }: any) {
   const icon = getSequenceIcon(item.trackKey);
-  const isComingSoon = !!item.isComingSoon;
 
   return (
     <Pressable
       accessibilityRole="link"
-      accessibilityLabel={`${item.title}. ${item.narrative}${isComingSoon ? ". Prochainement" : ""}`}
-      accessibilityState={{ selected: isActive, disabled: isComingSoon }}
+      accessibilityLabel={`${item.title}. ${item.narrative}`}
+      accessibilityState={{ selected: isActive }}
       aria-selected={isActive}
-      aria-disabled={isComingSoon}
-      accessibilityHint={isComingSoon ? undefined : "Ouvre ce module"}
+      accessibilityHint="Ouvre ce parcours"
       hitSlop={6}
-      disabled={isComingSoon}
       onPress={onPress}
       style={[
         styles.seqCard,
-        isComingSoon && styles.seqCardDisabled,
         isActive && {
           borderColor: `${item.color}66`,
           boxShadow: `0px 8px 18px ${item.color}38`,
@@ -1034,27 +994,6 @@ function SequenceCard({ item, isActive, onPress }: any) {
           ›
         </AppText>
 
-        {isComingSoon && (
-          <View pointerEvents="none" style={styles.comingSoonOverlay}>
-            <View style={styles.comingSoonScrim} />
-            <View
-              style={[
-                styles.comingSoonBadge,
-                {
-                  borderColor: `${item.color}70`,
-                  backgroundColor: `${item.color}18`,
-                },
-              ]}
-            >
-              <AppText
-                variant="label"
-                style={[styles.comingSoonText, { color: item.color }]}
-              >
-                PROCHAINEMENT
-              </AppText>
-            </View>
-          </View>
-        )}
       </BlurView>
     </Pressable>
   );
@@ -1145,26 +1084,6 @@ const styles = StyleSheet.create({
   locationText: {
     color: "rgba(224, 242, 254, 0.55)",
   },
-  settingsTrigger: {
-    position: "absolute",
-    top: 17,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    zIndex: 50,
-  },
-  settingsTriggerCompact: {
-    display: "none",
-  },
-  settingsBlur: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
   // HERO - SEOUL IMMERSION
   heroBlock: {
     marginBottom: 20,
@@ -1439,9 +1358,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.09)",
     boxShadow: "0px 8px 14px rgba(0,0,0,0.28)",
   },
-  seqCardDisabled: {
-    opacity: 0.82,
-  },
   seqBlur: {
     minHeight: 78,
     flexDirection: "row",
@@ -1522,24 +1438,6 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.36)",
     opacity: 0.52,
     marginLeft: 8,
-  },
-  comingSoonOverlay: {
-    ...ABSOLUTE_FILL,
-    alignItems: "flex-end",
-    justifyContent: "center",
-    paddingRight: 14,
-  },
-  comingSoonScrim: {
-    ...ABSOLUTE_FILL,
-    backgroundColor: "rgba(2,3,6,0.88)",
-  },
-  comingSoonBadge: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  comingSoonText: {
   },
   seqRainA: {
     position: "absolute",

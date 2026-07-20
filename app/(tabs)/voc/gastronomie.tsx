@@ -217,7 +217,7 @@ const SCENES: Scene[] = [
   },
   {
     id: "street",
-    title: "Street Food",
+    title: "Cuisine de rue",
     koreanTitle: "길거리 음식",
     description: "Explorer les saveurs rapides et épicées de Myeongdong.",
     accent: COLORS.sunsetOrange,
@@ -285,7 +285,7 @@ const SCENES: Scene[] = [
         word: "떡볶이",
         rom: "Tteokbokki",
         mean: "Gâteaux de riz épicés",
-        context: "Street food coréenne emblématique.",
+        context: "Cuisine de rue coréenne emblématique.",
         audio: STREET_FOOD_AUDIO.tteokbokki,
       },
       {
@@ -320,8 +320,8 @@ const SCENES: Scene[] = [
   },
   {
     id: "cafe",
-    title: "Culture Café",
-    koreanTitle: "카페 투어 (Cafe Tour)",
+    title: "Cafés à Séoul",
+    koreanTitle: "카페 투어 (Tournée des cafés)",
     description: "Détente dans un café esthétique de Yeonnam-dong.",
     accent: COLORS.matchaGreen,
     image: require("../../../assets/images/culturecafe.png"),
@@ -884,7 +884,7 @@ export default function GastronomyImmersion() {
 
           <View style={styles.toolbox}>
             <View style={styles.toolboxTitleRow}>
-              <AppText variant="sectionTitle" style={styles.toolboxTitle}>GOURMET TOOLBOX</AppText>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>Expressions clés</AppText>
               <View
                 style={[
                   styles.toolboxLine,

@@ -566,7 +566,7 @@ export default function RestaurantIaScreen() {
                   <VideoView
                     accessible
                     accessibilityRole="image"
-                    accessibilityLabel="Video de l'interlocuteur restaurant"
+                    accessibilityLabel="Vidéo de l’interlocuteur du restaurant"
                     player={player}
                     style={[styles.video, { height: avatarVideoHeight }]}
                     contentFit="cover"
@@ -688,7 +688,7 @@ export default function RestaurantIaScreen() {
                 script="latin"
                 style={styles.sectionTitle}
               >
-                Ta reponse
+                Ta réponse
               </AppText>
 
               {isSceneEnded ? (
@@ -699,7 +699,7 @@ export default function RestaurantIaScreen() {
                     script="latin"
                     style={styles.endTitle}
                   >
-                    Scene terminee
+                    Mission terminée
                   </AppText>
                   <AppText
                     variant="bodySecondary"
@@ -707,7 +707,7 @@ export default function RestaurantIaScreen() {
                     script="latin"
                     style={styles.endSubtitle}
                   >
-                    Tu peux rejouer cette scene ou revenir au menu.
+                    Tu peux rejouer cette mission ou revenir au menu.
                   </AppText>
 
                   <AppText
@@ -716,13 +716,13 @@ export default function RestaurantIaScreen() {
                     script="latin"
                     style={styles.endSubtitle}
                   >
-                    Serie conservee.
+                    Série conservée.
                   </AppText>
 
                   <View style={styles.endActions}>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Rejouer la scene"
+                      accessibilityLabel="Rejouer la mission"
                       hitSlop={6}
                       onPress={handleRestart}
                       style={({ pressed }) => [
@@ -840,7 +840,7 @@ export default function RestaurantIaScreen() {
                       script="latin"
                       style={styles.waitingTxt}
                     >
-                      {"Ecoute de l'interlocuteur..."}
+                      {"Écoute de l’interlocuteur..."}
                     </AppText>
                   </View>
 
@@ -851,7 +851,7 @@ export default function RestaurantIaScreen() {
                     align="center"
                     style={styles.waitingSub}
                   >
-                    La scene continue automatiquement.
+                    La scène continue automatiquement.
                   </AppText>
                 </View>
               )}

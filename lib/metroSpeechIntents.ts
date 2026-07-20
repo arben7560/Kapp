@@ -399,7 +399,7 @@ export function matchMetroSpeechIntent(
     if (hasExitQuestion) {
       return help(
         "exit-confusion",
-        "Ta question porte sur une autre information. Réponds avec une option proposée au nœud courant.",
+        "Ta question porte sur une autre information. Réponds avec l’une des options affichées.",
         attemptNumber,
         "follow-up",
       );
@@ -492,7 +492,7 @@ export function matchMetroSpeechIntent(
     if (hasRelevantContentQuestion) {
       return help(
         "relevant-question",
-        "Ta question est bien liée aux indications données. Cette mini-scène n’a pas de réponse dédiée : réécoute l’interlocuteur ou demande une clarification avec « 다시 한번 말씀해 주세요 ».",
+        "Ta question est liée aux indications données. Réécoute l’interlocuteur ou demande de répéter avec « 다시 한번 말씀해 주세요 ».",
         attemptNumber,
         "follow-up",
       );
@@ -651,7 +651,7 @@ export function matchMetroSpeechIntent(
 
     return help(
       "out-of-scope",
-      "Ici, réponds à l’intervention en cours avec une intention disponible à ce nœud.",
+      "Ici, réponds à l’intervention en cours avec l’une des options affichées.",
       attemptNumber,
       "follow-up",
     );

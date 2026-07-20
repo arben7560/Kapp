@@ -349,7 +349,9 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               </Pressable>
               <Pressable onPress={() => setShowRomanization((current) => !current)} style={styles.helpToggle}>
                 <AppText variant="caption" style={{ color: showRomanization ? module.accent : "rgba(255,255,255,0.7)" }}>
-                  {showRomanization ? "AIDE LATINE ON" : "AIDE LATINE OFF"}
+                  {showRomanization
+                    ? "Aide latine · activée"
+                    : "Aide latine · désactivée"}
                 </AppText>
               </Pressable>
             </View>
@@ -394,7 +396,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                 </View>
                 <View style={[styles.stateBadge, { borderColor: `${activeScene.accent}88` }]}>
                   <AppText variant="caption" style={{ color: activeScene.accent }}>
-                    {sceneMastered ? "MAÎTRISÉ" : lesson.completedScenes[activeScene.id] ? "TERMINÉ" : "À DÉCOUVRIR"}
+                    {sceneMastered ? "MAÎTRISÉ" : lesson.completedScenes[activeScene.id] ? "TERMINÉ" : "À COMMENCER"}
                   </AppText>
                 </View>
               </View>
@@ -442,7 +444,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
 
             {allScenesMastered ? (
               <Pressable onPress={() => router.push(module.nextRoute as never)} style={styles.nextCard}>
-                <AppText variant="bodyStrong">Toutes les séquences sont maîtrisées.</AppText>
+                <AppText variant="bodyStrong">Toutes les étapes sont maîtrisées.</AppText>
                 <AppText variant="button" style={{ color: module.accent }}>PASSER À {module.nextLabel} →</AppText>
               </Pressable>
             ) : null}
@@ -524,16 +526,16 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               ) : (
                 <View style={styles.result}>
                   <AppText variant="sectionLabel" style={{ color: result.mastered ? "#4ADE80" : "#FDE047" }}>
-                    {result.mastered ? "SÉQUENCE MAÎTRISÉE" : "SÉQUENCE TERMINÉE"}
+                    {result.mastered ? "ÉTAPE MAÎTRISÉE" : "ÉTAPE TERMINÉE"}
                   </AppText>
                   <AppText variant="numericValue" style={styles.resultScore}>{result.score}/{result.total}</AppText>
                   <AppText variant="bodySecondary" align="center" tone="muted">
                     {result.mastered
                       ? "Le seuil de maîtrise est atteint. Les erreurs éventuelles ont été représentées dans cette session."
-                      : "La séquence est enregistrée, mais pas encore maîtrisée. Revois les caractères signalés puis recommence."}
+                      : "L’étape est enregistrée, mais pas encore maîtrisée. Revois les caractères signalés puis recommence."}
                   </AppText>
                   <Pressable onPress={closeResult} style={[styles.continueButton, { backgroundColor: activeScene.accent }]}>
-                    <AppText variant="button" style={styles.primaryText}>{result.mastered ? "CONTINUER" : "REVOIR LA LEÇON"}</AppText>
+                    <AppText variant="button" style={styles.primaryText}>{result.mastered ? "CONTINUER" : "REVOIR L’ÉTAPE"}</AppText>
                   </Pressable>
                 </View>
               )}

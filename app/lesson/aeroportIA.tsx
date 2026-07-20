@@ -729,7 +729,7 @@ export default function AeroportIaScreen() {
                 script="latin"
                 style={styles.sectionTitle}
               >
-                Ta reponse
+                Ta réponse
               </AppText>
 
               {isSceneEnded ? (
@@ -740,7 +740,7 @@ export default function AeroportIaScreen() {
                     script="latin"
                     style={styles.endTitle}
                   >
-                    Scene terminee
+                    Mission terminée
                   </AppText>
 
                   <AppText
@@ -749,7 +749,7 @@ export default function AeroportIaScreen() {
                     script="latin"
                     style={styles.endSubtitle}
                   >
-                    Tu peux rejouer cette scene ou revenir au menu.
+                    Tu peux rejouer cette mission ou revenir au menu.
                   </AppText>
 
                   <AppText
@@ -758,7 +758,7 @@ export default function AeroportIaScreen() {
                     script="latin"
                     style={styles.endSubtitle}
                   >
-                    Serie conservee.
+                    Série conservée.
                   </AppText>
 
                   <View style={styles.endActions}>
@@ -872,7 +872,7 @@ export default function AeroportIaScreen() {
                       script="latin"
                       style={styles.waitingTxt}
                     >
-                      Ecoute de l&apos;interlocuteur...
+                      Écoute de l&apos;interlocuteur...
                     </AppText>
                   </View>
 
@@ -883,7 +883,7 @@ export default function AeroportIaScreen() {
                     align="center"
                     style={styles.waitingSub}
                   >
-                    La scene continue automatiquement.
+                    La scène continue automatiquement.
                   </AppText>
                 </View>
               )}

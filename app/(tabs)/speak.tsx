@@ -18,7 +18,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppText } from "../../components/app-text";
 import { ModuleCard } from "../../components/ModuleCard";
-import { StatusBadge } from "../../components/ui/status-badge";
 import { ABSOLUTE_FILL } from "../../constants/layout";
 
 const BACKGROUND_SOURCE = require("../../assets/images/speak.png");
@@ -64,7 +63,7 @@ type ThemeConfig = {
 
 const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
   cafe: {
-    title: "Le Café",
+    title: "Café",
     sub: "Hongdae • 14:00",
     icon: "CF",
     image: ASSETS.cafe,
@@ -76,7 +75,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
     realParams: { mode: "real" },
   },
   metro: {
-    title: "Le Métro",
+    title: "Métro",
     sub: "Ligne 2 • Gangnam",
     icon: "M2",
     image: ASSETS.metro,
@@ -96,7 +95,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
     guidedParams: { mode: "guided" },
   },
   airport: {
-    title: "L’aéroport",
+    title: "Aéroport",
     sub: "Incheon • Arrivée",
     icon: "ICN",
     image: ASSETS.airport,
@@ -106,7 +105,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
     guidedParams: { mode: "guided" },
   },
   shopping: {
-    title: "Shopping",
+    title: "Magasin",
     sub: "Jamsil • Boutique",
     icon: "SH",
     image: ASSETS.shopping,
@@ -114,6 +113,13 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
     textRoute: "/lesson/magasin",
   },
 };
+
+const PUBLIC_THEME_KEYS: readonly ThemeKey[] = [
+  "cafe",
+  "metro",
+  "restaurant",
+  "airport",
+];
 
 export default function SpeakScreen() {
   const [sheetVisible, setSheetVisible] = useState(false);
@@ -215,7 +221,7 @@ export default function SpeakScreen() {
                     align="center"
                     lineContract="singleLine"
                   >
-                    IMMERSION ACTIVE
+                    CONVERSATION
                   </AppText>
                 </BlurView>
 
@@ -236,7 +242,7 @@ export default function SpeakScreen() {
                 tone="soft"
                 style={styles.sectionDividerLabel}
               >
-                SÉQUENCES DISPONIBLES
+                SCÈNES DISPONIBLES
               </AppText>
               <View style={styles.dividerLine} />
             </View>
@@ -262,14 +268,14 @@ function Scenes({
 }) {
   return (
     <View style={styles.scenesGrid}>
-      {(Object.keys(THEME_CONFIG) as ThemeKey[]).map((key) => (
+      {PUBLIC_THEME_KEYS.map((key) => (
         <ModuleCard
           key={key}
           title={THEME_CONFIG[key].title}
           subtitle={THEME_CONFIG[key].sub}
           icon={THEME_CONFIG[key].icon}
           accentColor={THEME_CONFIG[key].accent}
-          metaLabel="SCÈNE IMMERSIVE"
+          metaLabel="SCÈNE"
           accessibilityContext={`les options de la scène ${THEME_CONFIG[key].title}`}
           onPress={() => onSelectTheme(key)}
         />
@@ -510,7 +516,7 @@ function ThemeModeSheet({
                       tone="muted"
                       lineContract="singleLine"
                     >
-                      SCÈNE IMMERSIVE
+                      SCÈNE
                     </AppText>
                   </View>
 
@@ -533,7 +539,7 @@ function ThemeModeSheet({
               </View>
 
               <View style={styles.sheetMetaRow}>
-                {["Guidé", "Interactif", "Coréen réel"].map((label) => (
+                {["Guidé", "Interactif"].map((label) => (
                   <View
                     key={label}
                     style={[
@@ -551,7 +557,7 @@ function ThemeModeSheet({
               <View style={styles.sheetBody}>
                 <View style={styles.sheetModeHeader}>
                   <AppText variant="sectionTitle" tone="strong">
-                    Choisis ton expérience
+                    Choisis ton approche
                   </AppText>
                   <AppText
                     variant="bodySecondary"
@@ -564,23 +570,14 @@ function ThemeModeSheet({
 
                 <View style={styles.sheetOptions}>
                   <SheetOptionCard
-                    title={
-                      config.guidedRoute
-                        ? "Scène guidée"
-                        : "Scène guidée — bientôt"
-                    }
-                    subtitle={
-                      config.guidedRoute
-                        ? "Entre dans la situation, écoute et réponds comme sur place."
-                        : "Le mémo Shopping reste disponible pendant la préparation de cette scène."
-                    }
+                    title="Scène guidée"
+                    subtitle="Entre dans la situation, écoute et réponds comme sur place."
                     icon="IA"
                     accent={config.accent}
-                    disabled={!config.guidedRoute}
                     onPress={goToImmersive}
                   />
                   <SheetOptionCard
-                    title="Mémo utile"
+                    title="Expressions utiles"
                     subtitle="Revois les mots et expressions utilisés couramment."
                     icon="Aa"
                     accent={config.accent}
@@ -607,14 +604,12 @@ function SheetOptionCard({
   subtitle,
   icon,
   accent,
-  disabled,
   onPress,
 }: {
   title: string;
   subtitle: string;
   icon: string;
   accent: string;
-  disabled?: boolean;
   onPress: () => void;
 }) {
   const [scaleAnim] = useState(() => new Animated.Value(1));
@@ -640,9 +635,6 @@ function SheetOptionCard({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ disabled: !!disabled }}
-      aria-disabled={disabled || undefined}
-      disabled={disabled}
       onPress={onPress}
       onPressIn={pressIn}
       onPressOut={pressOut}
@@ -650,7 +642,6 @@ function SheetOptionCard({
       <Animated.View
         style={[
           styles.optionCard,
-          disabled && styles.optionCardDisabled,
           { transform: [{ scale: scaleAnim }] },
         ]}
       >
@@ -705,13 +696,6 @@ function SheetOptionCard({
                 {title}
               </AppText>
 
-              {disabled ? (
-                <StatusBadge
-                  label="BIENTÔT"
-                  size="compact"
-                  appearance="glass"
-                />
-              ) : null}
             </View>
 
             <AppText
@@ -1001,10 +985,6 @@ const styles = StyleSheet.create({
   optionCard: {
     borderRadius: 24,
     overflow: "hidden",
-  },
-
-  optionCardDisabled: {
-    opacity: 0.5,
   },
 
   optionBlur: {

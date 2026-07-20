@@ -65,7 +65,7 @@ const SCENES = [
   {
     id: "romance",
     tab: "Romance",
-    title: "La Confession",
+    title: "La confession",
     koreanTitle: "고백 (Gobaek)",
     description: "Une soirée pluvieuse sous un parapluie partagé.",
     mood: "Pluie • Silence • Aveu",
@@ -150,7 +150,7 @@ const SCENES = [
   {
     id: "tension",
     tab: "Tension",
-    title: "Le Duel de Regards",
+    title: "Le duel de regards",
     koreanTitle: "긴장 (Ginjang)",
     description: "Tension électrique dans l'ascenseur de l'entreprise.",
     mood: "Bureau • Pression • Silence",
@@ -234,7 +234,7 @@ const SCENES = [
   {
     id: "daily",
     tab: "Pocha",
-    title: "Le Repas au Pocha",
+    title: "Le repas au pocha",
     koreanTitle: "포장마차 (Pocha)",
     description: "Boire du soju après une longue journée.",
     mood: "Nuit • Amitié • Après-travail",
@@ -472,7 +472,7 @@ export default function KDramaCulture() {
               <AppText variant="sectionLabel" style={[styles.navEyebrow, { color: activeScene.accent }]}>
                 SÉOUL IMMERSION
               </AppText>
-              <AppText variant="cardTitle" style={styles.navTitle}>K-Drama Culture</AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>Culture des K-dramas</AppText>
             </View>
           </View>
 
@@ -645,7 +645,7 @@ export default function KDramaCulture() {
           {/* TOOLBOX - EXPRESSIONS */}
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <AppText variant="sectionTitle" style={styles.toolboxTitle}>DRAMA TOOLBOX</AppText>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>Expressions clés</AppText>
               <View
                 style={[
                   styles.toolboxLine,

@@ -259,7 +259,7 @@ const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       after: "에서 내려요.",
       options: ["홍대입구", "커피", "예약"],
       answer: "홍대입구",
-      explanation: "홍대입구에서 내려요. = Je descends à Hongdae입구.",
+      explanation: "홍대입구에서 내려요. = Je descends à Hongik University.",
     },
     {
       id: "hotel-gap-05",
@@ -411,6 +411,12 @@ export default function ListenScreen() {
     return stopAudio;
   }, [item.id, stopAudio]);
 
+  useEffect(() => {
+    if (!audioSource) {
+      console.warn(`[Listen] Source audio manquante pour l’exercice ${item.id}.`);
+    }
+  }, [audioSource, item.id]);
+
   const canCheck = useMemo(() => {
     if (item.kind === "order") return picked.length === item.words.length;
     return selected !== null;
@@ -471,8 +477,8 @@ export default function ListenScreen() {
 
     AccessibilityInfo.announceForAccessibility(
       correct
-        ? `Correct. Reponse attendue : ${expectedAnswer}.`
-        : `A revoir. Reponse attendue : ${expectedAnswer}.`,
+        ? `Correct. Réponse attendue : ${expectedAnswer}.`
+        : `À revoir. Réponse attendue : ${expectedAnswer}.`,
     );
 
     if (correct) {
@@ -480,8 +486,8 @@ export default function ListenScreen() {
       void completeDailyActivity("listen_exercise").then((state) => {
         setDailyMessage(
           state.lastCompletionResult === "completed_with_freeze"
-            ? "Freeze utilise. Serie conservee."
-            : "Serie conservee.",
+            ? "Protection de série utilisée. Série conservée."
+            : "Série conservée.",
         );
         setTimeout(
           () => scrollRef.current?.scrollToEnd({ animated: true }),
@@ -670,20 +676,11 @@ export default function ListenScreen() {
               tone="strong"
               style={styles.headerTitle}
             >
-              Écoute active
+              Écoute
             </AppText>
           </View>
 
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Parametres"
-            accessibilityState={{ disabled: true }}
-            hitSlop={6}
-            disabled
-            style={styles.roundButton}
-          >
-            <Ionicons name="settings-sharp" size={24} color={COLORS.muted} />
-          </Pressable>
+          <View style={styles.roundButton} />
         </View>
 
         <ScrollView
@@ -694,14 +691,14 @@ export default function ListenScreen() {
           <View style={styles.modePill}>
             <Ionicons name="volume-high" size={16} color={COLORS.purple} />
             <AppText variant="label" tone="strong" style={styles.modeText}>
-              MODE ÉCOUTE
+              ÉCOUTE
             </AppText>
           </View>
 
           <View style={styles.modeSwitcherWrap}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Entrainement precedent"
+              accessibilityLabel="Entraînement précédent"
               hitSlop={8}
               onPress={() => changeTraining(-1)}
               style={styles.arrowButton}
@@ -728,7 +725,7 @@ export default function ListenScreen() {
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Entrainement suivant"
+              accessibilityLabel="Entraînement suivant"
               hitSlop={8}
               onPress={() => changeTraining(1)}
               style={styles.arrowButton}
@@ -804,7 +801,7 @@ export default function ListenScreen() {
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Ecouter l'audio de la question"
+              accessibilityLabel="Écouter l’audio de la question"
               accessibilityState={{ disabled: !audioSource }}
               aria-disabled={!audioSource}
               hitSlop={6}
@@ -831,7 +828,7 @@ export default function ListenScreen() {
                 ? playingAudioId === item.id
                   ? "Lecture en cours"
                   : "Prêt à écouter"
-                : "Fichier MP3 correspondant manquant"}
+                : "Audio indisponible"}
             </AppText>
 
             {renderChoices()}
@@ -841,7 +838,7 @@ export default function ListenScreen() {
                 accessibilityLiveRegion="polite"
                 accessible
                 accessibilityRole="alert"
-                accessibilityLabel={`${isCorrect ? "Correct" : "A revoir"}. Reponse attendue : ${getExpectedAnswer()}. ${item.explanation ?? ""}`}
+                accessibilityLabel={`${isCorrect ? "Correct" : "À revoir"}. Réponse attendue : ${getExpectedAnswer()}. ${item.explanation ?? ""}`}
                 style={[styles.feedback, isCorrect ? styles.good : styles.bad]}
               >
                 <AppText
@@ -876,7 +873,7 @@ export default function ListenScreen() {
             <View style={styles.actionRow}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Reessayer cette question"
+                accessibilityLabel="Réessayer cette question"
                 hitSlop={6}
                 onPress={resetAnswer}
                 style={[styles.actionButton, styles.secondaryButton]}
@@ -893,7 +890,7 @@ export default function ListenScreen() {
               {!checked ? (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Valider la reponse"
+                  accessibilityLabel="Valider la réponse"
                   accessibilityState={{ disabled: !canCheck }}
                   aria-disabled={!canCheck}
                   hitSlop={6}
@@ -914,7 +911,7 @@ export default function ListenScreen() {
                   accessibilityLabel={
                     isCorrect
                       ? "Passer a la question suivante"
-                      : "Corriger la reponse"
+                      : "Corriger la réponse"
                   }
                   hitSlop={6}
                   onPress={isCorrect ? goNext : resetAnswer}
@@ -976,12 +973,12 @@ function ChoiceButton({
   onPress: () => void;
 }) {
   const stateLabel = correct
-    ? "Bonne reponse"
+    ? "Bonne réponse"
     : wrong
-      ? "Reponse choisie incorrecte"
+      ? "Réponse choisie incorrecte"
       : active
         ? "Selectionnee"
-        : "Non selectionnee";
+        : "Non sélectionnée";
 
   return (
     <Pressable

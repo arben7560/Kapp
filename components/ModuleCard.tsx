@@ -54,7 +54,7 @@ export function ModuleCard({
   metaLabel,
   requiresPremium = false,
   selected = false,
-  lockedSubtitle = "Débloquer ce module exclusif",
+  lockedSubtitle = "Débloquer avec Premium",
   accessibilityContext,
   iconScript = "latin",
   visualVariant = "default",
@@ -65,17 +65,12 @@ export function ModuleCard({
   const isLocked = requiresPremium && !hasPremiumAccess;
   const targetHref = isLocked ? "/premium" : href;
   const activeColor = requiresPremium ? colors.premiumGold : accentColor;
-  const displayedSubtitle =
-    isLegacyGlass && requiresPremium
-      ? lockedSubtitle
-      : isLocked
-        ? lockedSubtitle
-        : subtitle;
+  const displayedSubtitle = isLocked ? lockedSubtitle : subtitle;
   const accessLabel = isLocked
-    ? "Module premium verrouillé"
+    ? "Accès Premium verrouillé"
     : requiresPremium
-      ? "Module premium inclus"
-      : "Module gratuit";
+      ? "Accès Premium inclus"
+      : "Accès gratuit";
   const selectedLabel = selected ? "Sélectionné" : undefined;
   const actionLabel = isLocked
     ? "Ouvre l'écran Premium"
@@ -224,12 +219,12 @@ export function ModuleCard({
                 tone={requiresPremium ? "premium" : "soft"}
                 style={styles.cardMeta}
               >
-                {requiresPremium ? "MODULE PREMIUM" : metaLabel}
+                {requiresPremium ? `${metaLabel} · PREMIUM` : metaLabel}
               </AppText>
 
               {requiresPremium ? (
                 <StatusBadge
-                  label={isLegacyGlass ? "PREMIUM 🔒" : "PREMIUM"}
+                  label={isLocked ? "PREMIUM 🔒" : "PREMIUM"}
                   tone="premium"
                   appearance="solid"
                   size="compact"

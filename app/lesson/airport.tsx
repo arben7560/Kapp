@@ -51,38 +51,38 @@ const AGENT_TOOLBOX_EXPRESSIONS: Expression[] = [
   {
     word: "공항철도",
     rom: "Gonghangcheoldo",
-    mean: "AREX / train de l'aeroport",
+    mean: "AREX / train de l’aéroport",
     context: "Mot central pour rejoindre Seoul Station depuis Incheon.",
   },
   {
     word: "교통센터",
     rom: "Gyotong senteo",
     mean: "Centre de transport",
-    context: "Zone a suivre dans l'aeroport pour trouver les trains.",
+    context: "Zone à suivre dans l’aéroport pour trouver les trains.",
   },
   {
     word: "지하 1층",
     rom: "Jiha ilcheung",
     mean: "Sous-sol 1",
-    context: "Niveau ou se trouve souvent l'acces au train.",
+    context: "Niveau où se trouve souvent l’accès au train.",
   },
   {
     word: "표지판을 따라가세요",
     rom: "Pyojipaneul ttaragaseyo",
     mean: "Suivez les panneaux",
-    context: "Instruction essentielle dans un grand aeroport.",
+    context: "Instruction essentielle dans un grand aéroport.",
   },
   {
     word: "일반열차",
     rom: "Ilban yeolcha",
     mean: "Train standard",
-    context: "Train AREX avec arrets, utile avec une carte T-money.",
+    context: "Train AREX avec arrêts, utile avec une carte T-money.",
   },
   {
     word: "직통열차",
     rom: "Jiktong yeolcha",
     mean: "Train express direct",
-    context: "Option plus directe, souvent avec billet separe.",
+    context: "Option plus directe, souvent avec un billet séparé.",
   },
   {
     word: "승강장",
@@ -94,7 +94,7 @@ const AGENT_TOOLBOX_EXPRESSIONS: Expression[] = [
     word: "전광판",
     rom: "Jeongwangpan",
     mean: "Ecran d'affichage",
-    context: "Pour verifier destination, voie et heure de depart.",
+    context: "Pour vérifier la destination, la voie et l’heure de départ.",
   },
   {
     word: "서울역 방향",
@@ -106,7 +106,7 @@ const AGENT_TOOLBOX_EXPRESSIONS: Expression[] = [
     word: "약 한 시간 걸려요",
     rom: "Yak han sigan geollyeoyo",
     mean: "Cela prend environ une heure",
-    context: "Information utile sur la duree du trajet.",
+    context: "Information utile sur la durée du trajet.",
   },
 ];
 
@@ -114,13 +114,13 @@ const TRAVELER_TOOLBOX_EXPRESSIONS: Expression[] = [
   {
     word: "서울역까지 어떻게 가요?",
     rom: "Seoul-yeokkkaji eotteoke gayo?",
-    mean: "Comment aller jusqu'a Seoul Station ?",
+    mean: "Comment aller jusqu’à Seoul Station ?",
     context: "Question principale apres l'arrivee a Incheon.",
   },
   {
     word: "공항철도는 어디예요?",
     rom: "Gonghangcheoldo-neun eodiyeyo?",
-    mean: "Ou est l'AREX ?",
+    mean: "Où est l’AREX ?",
     context: "Question courte pour trouver le train.",
   },
   {
@@ -132,44 +132,44 @@ const TRAVELER_TOOLBOX_EXPRESSIONS: Expression[] = [
   {
     word: "어디에서 충전할 수 있어요?",
     rom: "Eodieseo chungjeonhal su isseoyo?",
-    mean: "Ou puis-je la recharger ?",
+    mean: "Où puis-je la recharger ?",
     context: "Pour demander ou charger la T-money.",
   },
   {
     word: "티머니로 탈 수 있어요?",
     rom: "T-money-ro tal su isseoyo?",
     mean: "Puis-je le prendre avec une T-money ?",
-    context: "Pour verifier si la carte fonctionne sur ce trajet.",
+    context: "Pour vérifier si la carte fonctionne sur ce trajet.",
   },
   {
     word: "승강장은 어디예요?",
     rom: "Seunggangjang-eun eodiyeyo?",
-    mean: "Ou est le quai ?",
+    mean: "Où est le quai ?",
     context: "Question a poser apres avoir trouve la zone train.",
   },
   {
     word: "얼마나 걸려요?",
     rom: "Eolmana geollyeoyo?",
     mean: "Combien de temps ca prend ?",
-    context: "Question simple pour la duree du trajet.",
+    context: "Question simple pour la durée du trajet.",
   },
   {
     word: "다시 말씀해 주세요",
     rom: "Dasi malsseumhae juseyo",
-    mean: "Repetez, s'il vous plait",
+    mean: "Répétez, s’il vous plaît",
     context: "Phrase de secours si l'explication est trop rapide.",
   },
   {
     word: "길을 잃었어요",
     rom: "Gireul ileosseoyo",
     mean: "Je suis perdu(e)",
-    context: "Phrase importante dans un aeroport.",
+    context: "Phrase importante dans un aéroport.",
   },
   {
     word: "감사합니다",
     rom: "Gamsahamnida",
     mean: "Merci",
-    context: "Fin naturelle et polie de l'echange.",
+    context: "Fin naturelle et polie de l’échange.",
   },
 ];
 
@@ -177,7 +177,7 @@ const SCENES: Scene[] = [
   {
     id: "agent",
     tab: "Agent",
-    title: "Cote Agent",
+    title: "Côté agent",
     koreanTitle: "공항 안내",
     description:
       "Les mots utiles que l'agent peut employer pour guider vers Seoul Station.",
@@ -188,7 +188,7 @@ const SCENES: Scene[] = [
   {
     id: "traveler",
     tab: "Voyageur",
-    title: "Cote Voyageur",
+    title: "Côté voyageur",
     koreanTitle: "여행자 질문",
     description:
       "Les phrases essentielles pour demander son chemin, acheter une T-money et prendre l'AREX.",
@@ -277,7 +277,7 @@ export default function AirportLessonScreen() {
               <AppText variant="sectionLabel" lineContract="singleLine" style={styles.backText}>RETOUR</AppText>
             </Pressable>
 
-            <AppText variant="sectionLabel" lineContract="singleLine" style={styles.headerTitle}>AIRPORT IMMERSION</AppText>
+            <AppText variant="sectionLabel" lineContract="singleLine" style={styles.headerTitle}>AÉROPORT</AppText>
           </View>
 
           <View style={styles.selectorRow}>
@@ -307,7 +307,7 @@ export default function AirportLessonScreen() {
 
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <AppText variant="sectionLabel" style={styles.toolboxTitle}>AIRPORT TOOLBOX</AppText>
+              <AppText variant="sectionLabel" style={styles.toolboxTitle}>Expressions clés</AppText>
               <View
                 style={[
                   styles.toolboxLine,

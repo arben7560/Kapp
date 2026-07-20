@@ -52,9 +52,9 @@ export function getSpeechRecognitionFailureMessage(
     case "unavailable":
       return "La reconnaissance vocale n’est pas disponible sur cet appareil ou ce navigateur. Utilise « Besoin d’aide » pour continuer.";
     case "empty":
-      return "Aucune transcription n’a été reconnue. Réessaie ou affiche les choix existants.";
+      return "Aucune parole n’a été reconnue. Réessaie ou affiche les réponses proposées.";
     case "error":
-      return "La reconnaissance vocale a rencontré une erreur système. Réessaie ou utilise les choix existants.";
+      return "La reconnaissance vocale a rencontré un problème. Réessaie ou utilise les réponses proposées.";
   }
 }
 

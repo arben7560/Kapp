@@ -4,18 +4,20 @@
 
 Le parcours publié part de `/`, passe par `/onboarding` si nécessaire, puis
 arrive sur `/(tabs)`. Les points d'entrée actifs sont Hangul, Vocabulaire,
-Comptage, Speak, Listen, Premium et Streak. Les sous-routes listées par
+Comptage, Speak, Listen, Premium et Streak. L'évaluation et la passerelle
+Hangul font partie du parcours actif. Les sous-routes listées par
 `scripts/validate-ui-contracts.mjs` font partie de ce contrat.
 
-Shopping conserve son mémo actif sur `/lesson/magasin`. Sa simulation IA
-n'existe pas encore : le choix est affiché comme indisponible et ne navigue
-plus vers les anciennes routes inexistantes `/lesson/shopping` et
-`/lesson/shoppingIA`.
+Shopping conserve son mémo sur `/lesson/magasin`, mais n'est pas affiché dans
+le hub tant que sa scène guidée n'est pas finalisée. Les anciennes routes
+inexistantes `/lesson/shopping` et `/lesson/shoppingIA` ne sont pas utilisées.
 
 ## Prototypes conservés hors navigation
 
 Ces routes restent dans le dépôt pour ne pas perdre le travail produit, mais
-ne doivent pas être reliées à un point d'entrée de production avant leur revue :
+sont redirigées vers l'accueil par le garde de release dans `app/_layout.tsx`.
+Elles ne doivent pas être reliées à un point d'entrée de production avant leur
+revue :
 
 - `/voc/emotion` : prototype de collection émotionnelle, absent du tableau
   `THEMES` du hub Vocabulaire ;
@@ -31,7 +33,7 @@ ne doivent pas être reliées à un point d'entrée de production avant leur rev
   `THEMES` du hub Vocabulaire ;
 - `/voc/voyage` : prototype de collection de voyage, absent du tableau
   `THEMES` du hub Vocabulaire ;
-- `/classificateur` et ses sous-routes : module annoncé « prochainement » ;
+- `/classificateur` et ses sous-routes : prototype conservé hors navigation ;
 - `/immersion` et `/immersion/*` : ancien prototype de capsules ;
 - `/profile`, `/review` et `/assimilation` : outils/prototypes internes ;
 - `/listen/CafeListen`, `/listen/MetroListen`, `/listen/RestaurantListen` et
@@ -79,11 +81,9 @@ Les déclarations de fontes sont limitées à ce wrapper, à `constants/theme.ts
 et à leur enregistrement dans `app/_layout.tsx`. Il n'existe aucune exception
 par route.
 
-Le contrôle des références de routes distingue deux métadonnées qui ne
-naviguent pas : la carte `/classificateur` désactivée par `isComingSoon` sur le
-hub et `PREMIUM_ROUTE_PATHS`, qui est uniquement un inventaire de droits
-d'accès. Toute autre référence issue du graphe actif vers un prototype fait
-échouer la commande.
+Le contrôle des références de routes autorise `PREMIUM_ROUTE_PATHS`, qui est
+uniquement un inventaire de droits d'accès et ne navigue pas. Toute référence
+issue du graphe actif vers un prototype fait échouer la commande.
 
 ## Matrice de validation
 

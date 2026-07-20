@@ -43,41 +43,41 @@ const MODULES = [
   },
   {
     title: "Nombres sino-coréens",
-    sub: "Système numérique officiel",
+    sub: "Système sino-coréen",
     color: "#818CF8",
     route: "/comptage/sino",
     isLocked: false,
   },
   {
-    title: "Heures & Minutes",
+    title: "Heures et minutes",
     sub: "Le défi du système mixte",
     color: "#F472B6",
     route: "/comptage/heures",
     isLocked: true,
   },
   {
-    title: "Shopping & Prix",
+    title: "Magasin et prix",
     sub: "Gérer l'argent au quotidien",
     color: "#34D399",
     route: "/comptage/prix",
     isLocked: true,
   },
   {
-    title: "Téléphone & Contact",
+    title: "Téléphone et contacts",
     sub: "Numéros, étages et bus",
     color: "#2DD4BF",
     route: "/comptage/phone",
     isLocked: true,
   },
   {
-    title: "Dates & Calendrier",
+    title: "Dates et calendrier",
     sub: "Jours, mois et années",
     color: "#FB7185",
     route: "/comptage/dates",
     isLocked: true,
   },
   {
-    title: "Âge & Vie",
+    title: "Âge et vie",
     sub: "Le système coréen unique",
     color: "#FBBF24",
     route: "/comptage/age",
@@ -142,9 +142,9 @@ export default function ComptageHub() {
 
           <HubHero
             korean="숫자"
-            title="Les nombres"
+            title="Comptage"
             subtitle={'"Comprendre le rythme numérique de la ville."'}
-            badgeLabel="IMMERSION NIVEAU 1"
+            badgeLabel="PARCOURS · NIVEAU 1"
             accentColor={CYAN}
             badgeBlurIntensity={18}
           />
@@ -172,8 +172,8 @@ export default function ComptageHub() {
                   accentColor={m.color}
                   icon={m.title.charAt(0)}
                   requiresPremium={m.isLocked}
-                  metaLabel="FONDATION NUMÉRIQUE"
-                  accessibilityContext="cette fondation numérique"
+                  metaLabel="PARCOURS DE COMPTAGE"
+                  accessibilityContext="ce parcours de comptage"
                   visualVariant="legacyGlass"
                 />
               </AnimatedItem>

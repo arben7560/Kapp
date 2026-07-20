@@ -106,7 +106,7 @@ const EXCUSER_AUDIO = {
 const SCENES: Scene[] = [
   {
     id: "greeting",
-    title: "La Rencontre",
+    title: "La rencontre",
     koreanTitle: "첫 만남 (Cheot Mannam)",
     description: "Saluer poliment et se présenter pour la première fois.",
     accent: COLORS.calmBlue,
@@ -639,7 +639,7 @@ export default function FirstStepsImmersion() {
               <AppText variant="sectionLabel" style={[styles.navEyebrow, { color: activeScene.accent }]}>
                 SÉOUL IMMERSION
               </AppText>
-              <AppText variant="cardTitle" style={styles.navTitle}>Premiers Pas</AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>Premiers pas</AppText>
             </View>
           </View>
 
@@ -805,7 +805,7 @@ export default function FirstStepsImmersion() {
 
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <AppText variant="sectionTitle" style={styles.toolboxTitle}>FOUNDATION TOOLBOX</AppText>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>Expressions clés</AppText>
               <View
                 style={[
                   styles.toolboxLine,

@@ -20,7 +20,7 @@ export const DEFAULT_CAFE_MISSION_ID = "order-simple";
 export const cafeMissions: CafeMission[] = [
   {
     id: DEFAULT_CAFE_MISSION_ID,
-    title: "Commander un cafe simple",
+    title: "Commander un café simple",
     subtitle: "Une commande courte, sur place.",
     access: "free",
     duration: "2-3 min",
@@ -32,7 +32,7 @@ export const cafeMissions: CafeMission[] = [
   {
     id: "order-dessert",
     title: "Commander un café + dessert",
-    subtitle: "Ajoute un dessert a ta commande.",
+    subtitle: "Ajoute un dessert à ta commande.",
     access: "premium",
     duration: "3-5 min",
     objective: "Commander une boisson + un dessert.",
@@ -43,12 +43,12 @@ export const cafeMissions: CafeMission[] = [
   {
     id: "order-takeout",
     title: "Commander à emporter",
-    subtitle: "Demande l'option a emporter.",
+    subtitle: "Demande l’option à emporter.",
     access: "premium",
     duration: "3-5 min",
     objective: "Commander puis repartir avec ta commande.",
-    skills: ["Commander", "A emporter", "Payer"],
-    goals: ["Commander", "Demander a emporter", "Payer"],
+    skills: ["Commander", "À emporter", "Payer"],
+    goals: ["Commander", "Demander à emporter", "Payer"],
     scenarioKey: "order_takeout",
   },
 ];

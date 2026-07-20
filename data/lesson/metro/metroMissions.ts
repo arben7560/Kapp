@@ -21,24 +21,24 @@ export const DEFAULT_METRO_MISSION_ID = "hongik-gangnam";
 export const metroMissions: MetroMission[] = [
   {
     id: DEFAULT_METRO_MISSION_ID,
-    title: "Hongik -> Gangnam",
-    subtitle: "Un trajet direct pour demander la ligne, la duree et la sortie.",
+    title: "Hongik → Gangnam",
+    subtitle: "Un trajet direct pour demander la ligne, la durée et la sortie.",
     access: "free",
     duration: "5-7 min",
-    objective: "Reussir un trajet complet jusqu'a Gangnam.",
-    goals: ["Ligne", "Quai", "Duree", "Sortie"],
+    objective: "Réussir un trajet complet jusqu’à Gangnam.",
+    goals: ["Ligne", "Quai", "Durée", "Sortie"],
     scenarioKey: "hongik_to_gangnam_full",
     lessonId: "hongik_to_gangnam",
     missionKind: "complete",
   },
   {
     id: "myeongdong-itaewon",
-    title: "Myeongdong -> Itaewon",
+    title: "Myeongdong → Itaewon",
     subtitle: "Un vrai trajet avec changement de ligne et sortie finale.",
     access: "premium",
     duration: "6-8 min",
-    objective: "Reussir tout le trajet Myeongdong vers Itaewon.",
-    goals: ["Depart", "Direction", "Correspondance", "Duree", "Sortie"],
+    objective: "Réussir tout le trajet Myeongdong vers Itaewon.",
+    goals: ["Départ", "Direction", "Correspondance", "Durée", "Sortie"],
     scenarioKey: "myeongdong_to_itaewon_full",
     lessonId: "myeongdong_to_itaewon",
     missionKind: "complete",
@@ -50,18 +50,18 @@ export const metroMissions: MetroMission[] = [
     access: "premium",
     duration: "3-5 min",
     objective: "Identifier la bonne sortie.",
-    goals: ["Sortie", "Repere", "Merci"],
+    goals: ["Sortie", "Repère", "Merci"],
     scenarioKey: "ask_exit",
     lessonId: "hongik_to_gangnam",
     missionKind: "mini",
   },
   {
     id: "ask-transfer",
-    title: "Verifier une correspondance",
-    subtitle: "Demande ou changer.",
+    title: "Vérifier une correspondance",
+    subtitle: "Demande où changer.",
     access: "premium",
     duration: "3-5 min",
-    objective: "Verifier la correspondance sans parler du reste du trajet.",
+    objective: "Vérifier la correspondance sans parler du reste du trajet.",
     goals: ["Correspondance", "Direction", "Merci"],
     scenarioKey: "ask_transfer",
     lessonId: "myeongdong_to_itaewon",
@@ -69,12 +69,12 @@ export const metroMissions: MetroMission[] = [
   },
   {
     id: "ask-time",
-    title: "Demander la duree",
-    subtitle: "Temps de trajet et nombre d'arrets.",
+    title: "Demander la durée",
+    subtitle: "Temps de trajet et nombre d’arrêts.",
     access: "premium",
     duration: "3-5 min",
-    objective: "Demander uniquement la duree ou les arrets.",
-    goals: ["Duree", "Arrets", "Merci"],
+    objective: "Demander uniquement la durée ou les arrêts.",
+    goals: ["Durée", "Arrêts", "Merci"],
     scenarioKey: "ask_time",
     lessonId: "hongik_to_gangnam",
     missionKind: "mini",
@@ -349,9 +349,9 @@ function createAskExitLesson(): MetroLesson {
     title: "Demander sa sortie",
     shortTitle: "Quelle sortie ?",
     situation:
-      "Vous etes dans le metro a Seoul. Votre objectif est simple : demander uniquement quelle sortie prendre.",
+      "Vous êtes dans le métro à Séoul. Votre objectif est simple : demander uniquement quelle sortie prendre.",
     objective:
-      "Choisir un trajet, demander la bonne sortie, verifier si besoin, puis remercier.",
+      "Choisir un trajet, demander la bonne sortie, vérifier si besoin, puis remercier.",
     startText: "Choisissez le trajet pour lequel vous voulez demander la sortie.",
     choices: [
       {
@@ -428,17 +428,17 @@ function createAskTransferLesson(): MetroLesson {
 
   return createMiniLesson({
     id: "ask_transfer",
-    title: "Verifier une correspondance",
+    title: "Vérifier une correspondance",
     shortTitle: "Correspondance",
     situation:
-      "Vous allez de Myeongdong a Itaewon. Vous voulez seulement verifier ou changer de ligne.",
+      "Vous allez de Myeongdong à Itaewon. Vous voulez seulement vérifier où changer de ligne.",
     objective:
       "Confirmer la station de correspondance et la direction de la ligne 6.",
     startText: "Demandez uniquement ou faire la correspondance.",
     choices: [
       {
         id: "ask_transfer_myeongdong",
-        label: "Verifier la correspondance vers Itaewon",
+        label: "Vérifier la correspondance vers Itaewon",
         korean: "환승은 어디서 하나요?",
         romanization: "Hwanseung-eun eodiseo hanayo?",
         nextId: "ask_transfer_myeongdong_ia_transfer_station",
@@ -498,12 +498,12 @@ function createAskTimeLesson(): MetroLesson {
 
   return createMiniLesson({
     id: "ask_time",
-    title: "Demander la duree",
-    shortTitle: "Duree",
+    title: "Demander la durée",
+    shortTitle: "Durée",
     situation:
-      "Vous connaissez deja votre destination. Vous voulez seulement demander le temps de trajet.",
-    objective: "Demander la duree ou le nombre d'arrets sans changer de sujet.",
-    startText: "Choisissez le trajet pour lequel demander la duree.",
+      "Vous connaissez déjà votre destination. Vous voulez seulement demander le temps de trajet.",
+    objective: "Demander la durée ou le nombre d’arrêts sans changer de sujet.",
+    startText: "Choisissez le trajet pour lequel demander la durée.",
     choices: [
       {
         id: "choose_hongik_time",

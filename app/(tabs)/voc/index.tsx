@@ -34,7 +34,7 @@ const THEMES = [
   {
     id: 1,
     title: "Gastronomie",
-    sub: "Restaurants et Street Food",
+    sub: "Restaurants et cuisine de rue",
     color: "#F87171",
     route: "/voc/gastronomie",
     image: {
@@ -44,7 +44,7 @@ const THEMES = [
   },
   {
     id: 2,
-    title: "Premiers Pas",
+    title: "Premiers pas",
     sub: "Salutations et survie",
     color: "#60A5FA",
     route: "/voc/basics",
@@ -55,7 +55,7 @@ const THEMES = [
   },
   {
     id: 6,
-    title: "Transport & Ville",
+    title: "Transports et ville",
     sub: "S'orienter dans Séoul",
     color: "#2DD4BF",
     route: "/voc/transport",
@@ -66,7 +66,7 @@ const THEMES = [
   },
   {
     id: 3,
-    title: "K-Drama Culture",
+    title: "Culture des K-dramas",
     sub: "Expressions cultes et argot",
     color: "#A78BFA",
     route: "/voc/kdrama",
@@ -77,7 +77,7 @@ const THEMES = [
   },
   {
     id: 4,
-    title: "Romance & Dating",
+    title: "Rencontres",
     sub: "Sentiments et rencontres",
     color: "#F472B6",
     route: "/voc/romance",
@@ -88,8 +88,8 @@ const THEMES = [
   },
   {
     id: 5,
-    title: "Vie Nocturne",
-    sub: "Sorties, Bars et Soju",
+    title: "Vie nocturne",
+    sub: "Sorties, bars et soju",
     color: "#818CF8",
     route: "/voc/nuit",
     image: {
@@ -99,7 +99,7 @@ const THEMES = [
   },
   {
     id: 7,
-    title: "Urgence & Santé",
+    title: "Urgences et santé",
     sub: "Hôpital et pharmacie",
     color: "#34D399",
     route: "/voc/sante",
@@ -110,7 +110,7 @@ const THEMES = [
   },
   {
     id: 8,
-    title: "Business",
+    title: "Vie professionnelle",
     sub: "Travail et réseautage",
     color: "#FB7185",
     route: "/voc/work",
@@ -154,9 +154,9 @@ export default function VocabHub() {
 
             <HubHero
               korean="어휘"
-              title="Scènes guidées"
+              title="Vocabulaire"
               subtitle={`"Chaque mot devient une scène."`}
-              badgeLabel="IMMERSION NIVEAU 1"
+              badgeLabel="COLLECTIONS · NIVEAU 1"
               accentColor={AMBER}
               layeredGlow={false}
               badgeBlurIntensity={50}
@@ -186,7 +186,7 @@ export default function VocabHub() {
                     accentColor={theme.color}
                     icon={theme.title.charAt(0)}
                     requiresPremium={theme.isLocked}
-                    metaLabel="COLLECTION VOCAB"
+                    metaLabel="COLLECTION DE VOCABULAIRE"
                     accessibilityContext="cette collection de vocabulaire"
                     visualVariant="legacyGlass"
                   />
@@ -221,17 +221,6 @@ function UnifiedNavHeader() {
         </AppText>
       </Pressable>
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Paramètres"
-        accessibilityState={{ disabled: true }}
-        aria-disabled={true}
-        hitSlop={8}
-        disabled
-        style={styles.settingsShell}
-      >
-        <View style={styles.settingsOrb} />
-      </Pressable>
     </View>
   );
 }
@@ -352,26 +341,6 @@ const styles = StyleSheet.create({
 
   backText: {
     color: "rgba(255,255,255,0.92)",
-  },
-
-  settingsShell: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.04)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-  },
-
-  settingsOrb: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1.4,
-    borderColor: "rgba(255,255,255,0.30)",
-    opacity: 0.7,
   },
 
   hero: {

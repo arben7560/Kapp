@@ -43,7 +43,7 @@ const ABSOLUTE_FILL = {
 };
 
 export default function StreakScreen() {
-  const { applyFreeze, grantFreeze, isLoading, streak } = useDailyStreak();
+  const { applyFreeze, isLoading, streak } = useDailyStreak();
   const currentStreak = streak?.currentStreak ?? 0;
   const longestStreak = streak?.longestStreak ?? 0;
   const isTodayCompleted = streak?.isTodayCompleted ?? false;
@@ -69,7 +69,7 @@ export default function StreakScreen() {
             align="center"
             style={styles.headerTitle}
           >
-            Streak
+            Série
           </AppText>
           <View style={styles.iconButtonGhost} />
         </View>
@@ -118,7 +118,7 @@ export default function StreakScreen() {
               value={isTodayCompleted ? "Valide" : "À faire"}
             />
             <StatCard
-              label="Freezes"
+              label="Protection de série"
               value={`${streak?.freezesAvailable ?? 0}`}
             />
           </View>
@@ -150,7 +150,7 @@ export default function StreakScreen() {
                 tone="strong"
                 style={styles.sectionTitle}
               >
-                Streak Freeze
+                Protection de série
               </AppText>
               <AppText
                 variant="caption"
@@ -161,8 +161,8 @@ export default function StreakScreen() {
               </AppText>
             </View>
             <AppText variant="body" tone="muted" style={styles.bodyText}>
-              Un freeze protège une journée manquée. Si tu rates une seule
-              journée, il peut garder la série vivante.
+              Une protection de série couvre une journée manquée. Si tu rates
+              une seule journée, elle peut conserver ta série.
             </AppText>
             <View style={styles.actionRow}>
               <Pressable
@@ -178,26 +178,7 @@ export default function StreakScreen() {
                 ]}
               >
                 <AppText variant="button" tone="inverse" style={styles.actionText}>
-                  Utiliser un freeze
-                </AppText>
-              </Pressable>
-              <Pressable
-                disabled={isLoading}
-                onPress={() => {
-                  Vibration.vibrate(8);
-                  void grantFreeze(1);
-                }}
-                style={({ pressed }) => [
-                  styles.secondaryButton,
-                  pressed && styles.buttonPressed,
-                ]}
-              >
-                <AppText
-                  variant="button"
-                  tone="strong"
-                  style={styles.secondaryText}
-                >
-                  Ajouter un joker
+                  Utiliser une protection
                 </AppText>
               </Pressable>
             </View>
@@ -484,18 +465,6 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
   },
   actionText: { color: "#020306"},
-  secondaryButton: {
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.055)",
-    borderColor: "rgba(103,232,249,0.22)",
-    borderRadius: 16,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 50,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-  },
-  secondaryText: { color: COLORS.text},
   buttonPressed: { opacity: 0.86, transform: [{ scale: 0.99 }] },
   buttonDisabled: { opacity: 0.45 },
   badgeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },

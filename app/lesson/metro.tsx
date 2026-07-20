@@ -191,7 +191,7 @@ const buildScenes = (): Scene[] => {
     {
       id: "ai",
       tab: "Agent",
-      title: "Côté Agent",
+      title: "Côté agent",
       koreanTitle: "길 안내",
       description: metroLesson.situation,
       accent: COLORS.cyan,
@@ -207,8 +207,8 @@ const buildScenes = (): Scene[] => {
     {
       id: "user",
       tab: "Voyageur",
-      title: "Côté Voyageur",
-      koreanTitle: "사용자 선택",
+      title: "Côté voyageur",
+      koreanTitle: "승객 표현",
       description: metroLesson.objective,
       accent: COLORS.pink,
       image: METRO_IMAGE,
@@ -307,7 +307,7 @@ export default function MetroLesson() {
               <AppText variant="sectionLabel" lineContract="singleLine" style={styles.backText}>RETOUR</AppText>
             </Pressable>
 
-            <AppText variant="sectionLabel" lineContract="singleLine" style={styles.headerTitle}>METRO IMMERSION</AppText>
+            <AppText variant="sectionLabel" lineContract="singleLine" style={styles.headerTitle}>MÉTRO</AppText>
           </View>
 
           <View style={styles.selectorRow}>
@@ -336,7 +336,7 @@ export default function MetroLesson() {
           </View>
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <AppText variant="sectionLabel" style={styles.toolboxTitle}>METRO TOOLBOX</AppText>
+              <AppText variant="sectionLabel" style={styles.toolboxTitle}>Expressions clés</AppText>
               <View
                 style={[
                   styles.toolboxLine,
