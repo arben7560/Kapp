@@ -4,6 +4,7 @@ import { Alert, Pressable, ScrollView, View } from "react-native";
 import { useStore } from "../../_store";
 import { AppMixedText, AppText } from "../../components/app-text";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
+import { createEmptyHangulProgress } from "../../data/hangul/types";
 
 const BG0 = "#070812";
 const TXT = "rgba(255,255,255,0.92)";
@@ -57,7 +58,7 @@ export default function Profile() {
             segments={[
               { text: "Hangul : niveau ", script: "latin" },
               { text: progress.hangulLevel, script: "latin" },
-              { text: "/4", script: "latin" },
+              { text: "/5", script: "latin" },
             ]}
           />
           <AppText variant="bodySecondary" tone="muted" style={{ color: MUTED, marginTop: 2 }}>
@@ -133,6 +134,7 @@ export default function Profile() {
                     void resetStreak();
                     setProgress({
                       completed: {},
+                      hangulProgress: createEmptyHangulProgress(),
                       hangulLevel: 1,
                       isPremium: false,
                       learningTrack: null,

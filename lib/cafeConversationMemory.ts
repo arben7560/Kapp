@@ -3,6 +3,7 @@ import type { CafeSpeechIntentMatch } from "./cafeSpeechIntents";
 export type CafeSpeechAttemptResult =
   | "correct"
   | "understood-with-grammar-correction"
+  | "word-order-error"
   | "probable-transcription-error"
   | "ambiguous"
   | "not-understood";
@@ -78,6 +79,8 @@ function classifyResult(
   result: CafeSpeechIntentMatch,
 ): CafeSpeechAttemptResult {
   switch (result.reason) {
+    case "word-order-error":
+      return "word-order-error";
     case "uncertain":
       return "probable-transcription-error";
     case "ambiguous":
@@ -176,6 +179,9 @@ export function markCafeSpeechNodeCorrected(
 }
 
 function getExplanation(attempt: CafeSpeechAttempt) {
+  if (attempt.resultType === "word-order-error") {
+    return "Attention à l’ordre des mots : 먹고 doit précéder 갈게요 dans cette expression.";
+  }
   if (attempt.resultType === "probable-transcription-error") {
     return (
       attempt.feedback ??
@@ -251,6 +257,7 @@ function getSuccessfulPoints(attempts: readonly CafeSpeechAttempt[]) {
         ({ resultType }) =>
           resultType === "correct" ||
           resultType === "understood-with-grammar-correction" ||
+          resultType === "word-order-error" ||
           resultType === "probable-transcription-error",
       )
       .map(({ intentId }) => intentId)

@@ -1,4 +1,5 @@
 import { BlurView } from "expo-blur";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -30,6 +31,7 @@ const CYAN = "#22D3EE";
 const GOLD = "#F59E0B";
 
 const STEP_DURATION = 760;
+const ONBOARDING_KEY = "kapp_onboarding_completed";
 type Step = "arrival" | "scene" | "mode" | "transition";
 type SceneKey = "cafe" | "metro" | "restaurant";
 type ModeKey = "text" | "guided" | "real";
@@ -283,6 +285,7 @@ export default function OnboardingScreen() {
 
   const finishOnboarding = async () => {
     await tap();
+    await AsyncStorage.setItem(ONBOARDING_KEY, "true");
     const targetRoute = getSceneRoute(selectedScene, selectedMode);
     const target =
       selectedMode === "text"
@@ -300,11 +303,13 @@ export default function OnboardingScreen() {
 
   const openMoreScenes = async () => {
     await tap();
+    await AsyncStorage.setItem(ONBOARDING_KEY, "true");
     router.push("/(tabs)" as any);
   };
 
   const openBasics = async () => {
     await tap();
+    await AsyncStorage.setItem(ONBOARDING_KEY, "true");
     router.replace("/(tabs)" as any);
   };
 

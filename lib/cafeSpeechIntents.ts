@@ -113,6 +113,11 @@ export type CafeSpeechIntentMatch =
       feedback: string;
     }
   | {
+      reason: "word-order-error";
+      choice: CafeSpeechChoice;
+      feedback: string;
+    }
+  | {
       reason: "ambiguous" | "out-of-scope" | "empty";
       choice: null;
       feedback: string;
@@ -132,6 +137,10 @@ const AMBIGUOUS_PAYMENT_FEEDBACK =
   "J’ai reconnu à la fois carte et espèces. Quel moyen de paiement souhaites-tu utiliser ?";
 const AMBIGUOUS_RECEIPT_FEEDBACK =
   "J’ai reconnu à la fois oui et non pour le reçu. Indique clairement si tu le souhaites.";
+const EAT_HERE_WORD_ORDER_FEEDBACK =
+  "J’ai compris que tu voulais dire “je vais manger ici”, mais l’ordre des mots est incorrect. En coréen, dis plutôt : 먹고 갈게요.";
+const AMBIGUOUS_RECEIPT_STATEMENT_FEEDBACK =
+  "J’ai compris que tu parles du reçu, mais je ne sais pas si tu l’acceptes ou le refuses. Dis plutôt “네, 영수증 주세요” ou “아니요, 괜찮아요”.";
 const UNAVAILABLE_PRODUCT_FEEDBACK =
   "Cette réponse ne correspond à aucune commande disponible ici. Choisis americano, jus d’orange, latte ou cheesecake.";
 
@@ -317,7 +326,7 @@ export const CAFE_SPEECH_LINGUISTIC_RULES = {
     coherentClassifiers: [],
     affirmativeMarkers: ["네", "요"],
     polarity: "positive",
-    allowTerseConcept: true,
+    allowTerseConcept: false,
   },
   takeout: {
     conceptTokens: ["테이크아웃", "가지고가", "가져가", "포장"],
@@ -427,6 +436,16 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
         feedback:
           "Commande comprise : americano. Pour une boisson, dis plutôt “아메리카노 한 잔 주세요.”",
       },
+      {
+        variants: ["아메리카노 한 개 주세요."],
+        feedback:
+          "Commande comprise : americano. Pour une boisson, on utilise généralement 잔 plutôt que 개 : “아메리카노 한 잔 주세요.”",
+      },
+      {
+        variants: ["아메리카노 한 주세요."],
+        feedback:
+          "Commande comprise : americano. Après 한, ajoute le classificateur 잔 : “아메리카노 한 잔 주세요.”",
+      },
     ],
     fuzzyKeywords: ["아메리카노"],
     fuzzyPredicates: ["주세요", "줘", "부탁", "주문", "할게요"],
@@ -465,6 +484,16 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
         feedback:
           "Commande comprise : jus d’orange. Pour une boisson, dis plutôt “오렌지 주스 한 잔 주세요.”",
       },
+      {
+        variants: ["오렌지 주스 한 개 주세요."],
+        feedback:
+          "Commande comprise : jus d’orange. Pour une boisson, on utilise généralement 잔 plutôt que 개 : “오렌지 주스 한 잔 주세요.”",
+      },
+      {
+        variants: ["오렌지 주스 한 주세요."],
+        feedback:
+          "Commande comprise : jus d’orange. Après 한, ajoute le classificateur 잔 : “오렌지 주스 한 잔 주세요.”",
+      },
     ],
     fuzzyKeywords: ["오렌지주스"],
     fuzzyPredicates: ["주세요", "줘", "부탁", "주문", "할게요"],
@@ -502,6 +531,16 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
         variants: ["라떼 한 조각 주세요.", "라떼 줘."],
         feedback:
           "Commande comprise : latte. Pour une boisson, dis plutôt “라떼 한 잔 주세요.”",
+      },
+      {
+        variants: ["라떼 한 개 주세요."],
+        feedback:
+          "Commande comprise : latte. Pour une boisson, on utilise généralement 잔 plutôt que 개 : “라떼 한 잔 주세요.”",
+      },
+      {
+        variants: ["라떼 한 주세요."],
+        feedback:
+          "Commande comprise : latte. Après 한, ajoute le classificateur 잔 : “라떼 한 잔 주세요.”",
       },
     ],
     fuzzyKeywords: ["라떼"],
@@ -542,6 +581,11 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
         variants: ["치즈케이크 한 잔 주세요.", "치즈케이크 줘."],
         feedback:
           "Commande comprise : cheesecake. Pour une part, dis plutôt “치즈케이크 한 조각 주세요.”",
+      },
+      {
+        variants: ["치즈케이크 한 주세요."],
+        feedback:
+          "Commande comprise : cheesecake. Après 한, ajoute le classificateur 조각 : “치즈케이크 한 조각 주세요.”",
       },
     ],
     fuzzyKeywords: ["치즈케이크"],
@@ -747,6 +791,11 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
     ],
     recoverableGrammarErrors: [
       {
+        variants: ["카드 할게요."],
+        feedback:
+          "J’ai compris que tu veux payer par carte. Avec un moyen de paiement, utilise 로 : “카드로 할게요.”",
+      },
+      {
         variants: ["카드.", "카드로 해."],
         feedback:
           "Paiement compris : carte. Plus poli : “카드로 할게요.”",
@@ -785,6 +834,11 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
       { from: "형금", to: "현금" },
     ],
     recoverableGrammarErrors: [
+      {
+        variants: ["현금 할게요.", "현금에 할게요."],
+        feedback:
+          "J’ai compris que tu veux payer en espèces. Utilise 으로, et non 에 : “현금으로 할게요.”",
+      },
       {
         variants: ["현금.", "현금으로 해."],
         feedback:
@@ -962,6 +1016,13 @@ const CAFE_CONTEXTUAL_EXPRESSIONS = [
     detectedIntent: "Demander une serviette",
     explanation: "ta phrase sert à demander une serviette ou du papier",
   },
+  {
+    id: "subway-exit-question",
+    aliases: ["출구"],
+    detectedIntent: "Demander un numéro de sortie",
+    explanation:
+      "« 몇 번 출구예요? » demande quel numéro de sortie prendre, par exemple dans le métro",
+  },
 ] as const;
 
 const CAFE_UNAVAILABLE_PRODUCTS = [
@@ -990,6 +1051,58 @@ export function normalizeKoreanSpeech(value: string) {
     .normalize("NFKC")
     .toLocaleLowerCase("ko-KR")
     .replace(/[\s\p{P}\p{S}]+/gu, "");
+}
+
+type CafeCodeSwitchReplacement = Readonly<{
+  spoken: string;
+  korean: string;
+}>;
+
+const CAFE_CODE_SWITCH_PATTERNS = [
+  { pattern: /\bamericano\b/giu, korean: "아메리카노" },
+  { pattern: /\blatte\b/giu, korean: "라떼" },
+  { pattern: /\bcheesecake\b/giu, korean: "치즈케이크" },
+  { pattern: /\b(?:orange\s+juice|jus\s+d['’]orange)\b/giu, korean: "오렌지 주스" },
+  { pattern: /\b(?:card|carte)\b/giu, korean: "카드" },
+  { pattern: /\b(?:cash|especes|espèces)\b/giu, korean: "현금" },
+  { pattern: /\b(?:pay|payer)\b/giu, korean: "결제" },
+  { pattern: /\b(?:takeout|take\s+out|takeaway)\b/giu, korean: "테이크아웃" },
+  { pattern: /(?:à|a)\s+emporter/giu, korean: "포장" },
+  { pattern: /\bsur\s+place\b/giu, korean: "여기서" },
+  { pattern: /\b(?:receipt|recu)\b|reçu/giu, korean: "영수증" },
+] as const;
+
+function normalizeCafeSpeechInput(value: string) {
+  let expanded = value.normalize("NFKC").toLocaleLowerCase("fr-FR");
+  const replacements: CafeCodeSwitchReplacement[] = [];
+
+  for (const { pattern, korean } of CAFE_CODE_SWITCH_PATTERNS) {
+    expanded = expanded.replace(pattern, (spoken) => {
+      replacements.push({ spoken, korean });
+      return korean;
+    });
+  }
+
+  return {
+    normalizedTranscript: normalizeKoreanSpeech(expanded),
+    replacements,
+  };
+}
+
+function buildCodeSwitchFeedback(
+  definition: CafeSpeechIntentDefinition,
+  replacements: readonly CafeCodeSwitchReplacement[],
+) {
+  if (replacements.length === 0) return null;
+  const substitutions = Array.from(
+    new Set(replacements.map(({ spoken, korean }) => `“${spoken}” → ${korean}`)),
+  ).join(", ");
+  return `J’ai compris le mélange de langues (${substitutions}). En coréen, dis plutôt : “${definition.canonical}”`;
+}
+
+function combineCafeFeedback(...messages: readonly (string | null | undefined)[]) {
+  const uniqueMessages = Array.from(new Set(messages.filter(Boolean)));
+  return uniqueMessages.length > 0 ? uniqueMessages.join(" ") : null;
 }
 
 function includesNormalized(value: string, token: string) {
@@ -1161,6 +1274,15 @@ function isDefinitionBlocked(
 
 function matchesExplicitVariant(value: string, variants: readonly string[]) {
   return variants.some((variant) => value === normalizeKoreanSpeech(variant));
+}
+
+function matchesEatHereWordOrderError(value: string) {
+  return /^(?:네)?(?:(?:여기서|매장에서))?갈게요먹고$/u.test(value);
+}
+
+function hasAmbiguousEatHereWordOrder(value: string) {
+  const occurrences = (token: string) => value.split(token).length - 1;
+  return occurrences("먹고") > 1 || occurrences("갈게요") > 1;
 }
 
 function findIntentDefinition(choiceId: string) {
@@ -1811,6 +1933,7 @@ type CafeSpeechSemanticCandidate = {
   concept: string | null;
   contextSignals: readonly CafeSpeechRecoverySignal[];
   hasIncoherentClassifier: boolean;
+  observedClassifier: string | null;
   isTerse: boolean;
   score: number;
 };
@@ -1933,6 +2056,10 @@ function findSemanticCandidates(
         normalizedTranscript,
         CAFE_CLASSIFIERS,
       );
+      const observedClassifier =
+        CAFE_CLASSIFIERS.find((classifier) =>
+          includesNormalized(normalizedTranscript, classifier),
+        ) ?? null;
       const hasIncoherentClassifier =
         hasAnyClassifier &&
         (rule.coherentClassifiers.length === 0 ||
@@ -1960,6 +2087,7 @@ function findSemanticCandidates(
           concept,
           contextSignals,
           hasIncoherentClassifier,
+          observedClassifier,
           isTerse,
           score,
         },
@@ -1971,6 +2099,22 @@ function findSemanticCandidates(
 function getSemanticCandidateFeedback(
   candidate: CafeSpeechSemanticCandidate,
 ) {
+  if (candidate.hasIncoherentClassifier && candidate.observedClassifier) {
+    const expectedClassifier =
+      candidate.definition.id === "cheesecake-order" ? "조각" : "잔";
+    if (
+      candidate.definition.id.endsWith("-order") &&
+      candidate.definition.id !== "repeat"
+    ) {
+      const productLabel = {
+        "americano-order": "americano",
+        "orange-juice-order": "jus d’orange",
+        "latte-order": "latte",
+        "cheesecake-order": "cheesecake",
+      }[candidate.definition.id];
+      return `Commande comprise : ${productLabel}. Le classificateur ${candidate.observedClassifier} ne convient pas ici. Utilise ${expectedClassifier} : “${candidate.definition.canonical}”`;
+    }
+  }
   if (candidate.hasIncoherentClassifier || candidate.isTerse) {
     return candidate.definition.correctionMessage;
   }
@@ -2148,6 +2292,18 @@ function buildCafeContextualResponseAnalysis(
 
   if (detectedIntent) {
     const isAvailableNow = availableIntentIds.has(detectedIntent.id);
+    if (
+      !isAvailableNow &&
+      context.id === "payment-method" &&
+      detectedIntent.id.startsWith("receipt-")
+    ) {
+      return {
+        intentId: detectedIntent.id,
+        detectedIntent: detectedIntent.meaning,
+        canonicalFormulation: context.examples[0] ?? detectedIntent.canonical,
+        feedback: `Cette phrase parle du reçu, mais ici tu dois encore choisir ton moyen de paiement. Dis plutôt ${examples}.`,
+      };
+    }
     return {
       intentId: detectedIntent.id,
       detectedIntent: detectedIntent.meaning,
@@ -2241,11 +2397,39 @@ export function recordCafeSpeechRecoveryEvent(
   return record;
 }
 
+function findCafeExplicitSelfCorrection(
+  transcript: string,
+  choices: readonly CafeSpeechChoice[],
+): CafeSpeechIntentMatch | null {
+  const segments = transcript.split(
+    /(?:…|\.{3})\s*(?:아니(?:요)?)[,\s]*/u,
+  );
+  const correctedPhrase = segments.length > 1 ? segments.at(-1)?.trim() : null;
+  if (!correctedPhrase) return null;
+
+  const correctedResult = matchCafeSpeechIntent(correctedPhrase, choices);
+  if (correctedResult.reason !== "matched") return null;
+
+  const definition = findIntentDefinition(correctedResult.choice.id);
+  if (!definition) return null;
+
+  return {
+    reason: "matched",
+    choice: correctedResult.choice,
+    feedback:
+      combineCafeFeedback(
+        `J’ai compris ton auto-correction : tu choisis finalement ${definition.confirmationLabel}. Formulation recommandée : “${definition.canonical}”`,
+        correctedResult.feedback,
+      ) ?? correctedResult.feedback,
+  };
+}
+
 export function matchCafeSpeechIntent(
   transcript: string,
   choices: readonly CafeSpeechChoice[],
 ): CafeSpeechIntentMatch {
-  const rawNormalizedTranscript = normalizeKoreanSpeech(transcript);
+  const { normalizedTranscript: rawNormalizedTranscript, replacements } =
+    normalizeCafeSpeechInput(transcript);
   if (!rawNormalizedTranscript) {
     return {
       reason: "empty",
@@ -2255,8 +2439,60 @@ export function matchCafeSpeechIntent(
   }
 
   const availableDefinitions = getAvailableIntentDefinitions(choices);
+  const explicitSelfCorrection = findCafeExplicitSelfCorrection(
+    transcript,
+    choices,
+  );
+  if (explicitSelfCorrection) return explicitSelfCorrection;
+
   const { correctedTranscript, recoveryEvents } =
     applyContextualConfusions(rawNormalizedTranscript, availableDefinitions);
+
+  const isReceiptChoice = availableDefinitions.some(({ id }) =>
+    id.startsWith("receipt-"),
+  );
+  if (
+    isReceiptChoice &&
+    /^(?:영수증|영수증이)있어요$/u.test(correctedTranscript)
+  ) {
+    return {
+      reason: "ambiguous",
+      choice: null,
+      feedback: AMBIGUOUS_RECEIPT_STATEMENT_FEEDBACK,
+    };
+  }
+
+  const eatHereDefinition = availableDefinitions.find(
+    ({ id }) => id === "eat-here",
+  );
+  const eatHereChoice = eatHereDefinition
+    ? findChoiceForDefinition(eatHereDefinition, choices)
+    : undefined;
+  if (
+    eatHereDefinition &&
+    eatHereChoice &&
+    hasAmbiguousEatHereWordOrder(correctedTranscript) &&
+    !isDefinitionBlocked(rawNormalizedTranscript, eatHereDefinition)
+  ) {
+    return {
+      reason: "ambiguous",
+      choice: null,
+      feedback:
+        "J’ai reconnu des éléments de “먹고 갈게요”, mais leur ordre reste trop ambigu. Reformule la phrase complète.",
+    };
+  }
+  if (
+    eatHereDefinition &&
+    eatHereChoice &&
+    matchesEatHereWordOrderError(correctedTranscript) &&
+    !isDefinitionBlocked(rawNormalizedTranscript, eatHereDefinition)
+  ) {
+    return {
+      reason: "word-order-error",
+      choice: eatHereChoice,
+      feedback: EAT_HERE_WORD_ORDER_FEEDBACK,
+    };
+  }
 
   const contradictionFeedback = findContradictionFeedback(
     correctedTranscript,
@@ -2352,8 +2588,11 @@ export function matchCafeSpeechIntent(
     return {
       reason: "matched",
       choice,
-      feedback: definition && recoveryEvent
-        ? buildTranscriptionFeedback(definition)
+      feedback: definition
+        ? combineCafeFeedback(
+            buildCodeSwitchFeedback(definition, replacements),
+            recoveryEvent ? buildTranscriptionFeedback(definition) : null,
+          )
         : null,
       ...(recoveryEvent ? { recoveryEvent } : {}),
     };
@@ -2395,9 +2634,10 @@ export function matchCafeSpeechIntent(
     return {
       reason: "matched",
       choice,
-      feedback: recoveryEvent
-        ? buildTranscriptionFeedback(definition)
-        : rule.feedback,
+      feedback: combineCafeFeedback(
+        buildCodeSwitchFeedback(definition, replacements),
+        recoveryEvent ? buildTranscriptionFeedback(definition) : rule.feedback,
+      ),
       ...(recoveryEvent ? { recoveryEvent } : {}),
     };
   }
@@ -2435,9 +2675,12 @@ export function matchCafeSpeechIntent(
     return {
       reason: "matched",
       choice: candidate.choice,
-      feedback: recoveryEvent
-        ? buildTranscriptionFeedback(candidate.definition)
-        : getSemanticCandidateFeedback(candidate),
+      feedback: combineCafeFeedback(
+        buildCodeSwitchFeedback(candidate.definition, replacements),
+        recoveryEvent
+          ? buildTranscriptionFeedback(candidate.definition)
+          : getSemanticCandidateFeedback(candidate),
+      ),
       ...(recoveryEvent ? { recoveryEvent } : {}),
     };
   }
@@ -2473,9 +2716,12 @@ export function matchCafeSpeechIntent(
       return {
         reason: "matched",
         choice: productMatch.choice,
-        feedback: recoveryEvent
-          ? buildTranscriptionFeedback(productMatch.definition)
-          : productMatch.feedback,
+        feedback: combineCafeFeedback(
+          buildCodeSwitchFeedback(productMatch.definition, replacements),
+          recoveryEvent
+            ? buildTranscriptionFeedback(productMatch.definition)
+            : productMatch.feedback,
+        ),
         ...(recoveryEvent ? { recoveryEvent } : {}),
       };
     }
@@ -2519,9 +2765,10 @@ export function matchCafeSpeechIntent(
       return {
         reason: "matched",
         choice,
-        feedback: recoveryEvent
-          ? buildTranscriptionFeedback(definition)
-          : null,
+        feedback: combineCafeFeedback(
+          buildCodeSwitchFeedback(definition, replacements),
+          recoveryEvent ? buildTranscriptionFeedback(definition) : null,
+        ),
         ...(recoveryEvent ? { recoveryEvent } : {}),
       };
     }

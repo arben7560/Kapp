@@ -808,6 +808,135 @@ test("sur place accepte toutes les formulations demandées", () => {
   }
 });
 
+test("sur place distingue une formulation correcte d’une inversion grammaticale", () => {
+  for (const transcript of ["먹고 갈게요", "여기서 먹고 갈게요"]) {
+    const result = assertMatched(
+      transcript,
+      [eatHere, takeout, repeat],
+      eatHere,
+    );
+    assert.equal(result.feedback, null);
+  }
+
+  const inverted = matchCafeSpeechIntent(
+    "갈게요 먹고",
+    [eatHere, takeout, repeat],
+  );
+  assert.equal(inverted.reason, "word-order-error");
+  assert.equal(inverted.choice, eatHere);
+  assert.match(inverted.feedback, /ordre des mots est incorrect/u);
+  assert.match(inverted.feedback, /먹고 갈게요/u);
+});
+
+test("les mots isolés ou trop ambigus ne valident pas automatiquement sur place", () => {
+  for (const transcript of ["먹고", "갈게요", "먹고 갈게요 갈게요"]) {
+    const result = matchCafeSpeechIntent(
+      transcript,
+      [eatHere, takeout, repeat],
+    );
+    assert.notEqual(result.reason, "matched");
+  }
+});
+
+test("les particules de moyen de paiement reçoivent un feedback ciblé", () => {
+  for (const [transcript, expectedChoice, feedbackPattern] of [
+    ["카드 할게요", card, /utilise 로.*카드로 할게요/u],
+    ["현금에 할게요", cash, /Utilise 으로, et non 에.*현금으로 할게요/u],
+  ]) {
+    const result = assertMatched(
+      transcript,
+      [card, cash, repeat],
+      expectedChoice,
+    );
+    assert.match(result.feedback, feedbackPattern);
+  }
+});
+
+test("un classificateur incorrect ou omis après 한 est expliqué précisément", () => {
+  for (const [transcript, feedbackPattern] of [
+    ["아메리카노 한 개 주세요", /잔 plutôt que 개.*아메리카노 한 잔 주세요/u],
+    ["아메리카노 한 주세요", /ajoute le classificateur 잔/u],
+  ]) {
+    const result = assertMatched(transcript, orderChoices, americano);
+    assert.match(result.feedback, feedbackPattern);
+  }
+
+  const naturalWithoutClassifier = assertMatched(
+    "아메리카노 주세요",
+    orderChoices,
+    americano,
+  );
+  assert.equal(naturalWithoutClassifier.feedback, null);
+});
+
+test("les phrases incomplètes mais univoques restent comprises avec correction", () => {
+  for (const [transcript, choices, expectedChoice, canonicalPattern] of [
+    ["아메리카노", orderChoices, americano, /아메리카노 한 잔 주세요/u],
+    ["카드로", [card, cash, repeat], card, /카드로 할게요/u],
+    ["현금으로", [card, cash, repeat], cash, /현금으로 할게요/u],
+  ]) {
+    const result = assertMatched(transcript, choices, expectedChoice);
+    assert.match(result.feedback, canonicalPattern);
+  }
+});
+
+test("une phrase sur le reçu sans décision reste ambiguë", () => {
+  const result = matchCafeSpeechIntent("영수증 있어요", [receiptYes, receiptNo]);
+  assert.equal(result.reason, "ambiguous");
+  assert.equal(result.choice, null);
+  assert.match(result.feedback, /acceptes ou le refuses/u);
+  assert.match(result.feedback, /영수증 주세요.*괜찮아요/u);
+});
+
+test("une auto-correction explicite retient le choix final sans masquer la correction", () => {
+  const corrected = assertMatched(
+    "카드… 아니, 현금으로 할게요",
+    [card, cash, repeat],
+    cash,
+  );
+  assert.match(corrected.feedback, /auto-correction/u);
+  assert.match(corrected.feedback, /현금으로 할게요/u);
+
+  const contradictory = matchCafeSpeechIntent(
+    "카드 아니 현금으로 할게요",
+    [card, cash, repeat],
+  );
+  assert.equal(contradictory.reason, "ambiguous");
+  assert.equal(contradictory.choice, null);
+});
+
+test("les mélanges français, anglais et coréen sont compris avec reformulation", () => {
+  for (const [transcript, choices, expectedChoice, koreanPattern] of [
+    ["americano 한 잔 주세요", orderChoices, americano, /아메리카노/u],
+    ["card로 할게요", [card, cash, repeat], card, /카드로 할게요/u],
+    ["현금으로 pay 할게요", [card, cash, repeat], cash, /현금으로 할게요/u],
+    ["takeout 주세요", [eatHere, takeout, repeat], takeout, /포장해 주세요/u],
+    ["sur place 먹을게요", [eatHere, takeout, repeat], eatHere, /먹고 갈게요/u],
+  ]) {
+    const result = assertMatched(transcript, choices, expectedChoice);
+    assert.match(result.feedback, /mélange de langues/u);
+    assert.match(result.feedback, koreanPattern);
+  }
+});
+
+test("une destination ou une intention d’une autre étape reçoit un feedback contextualisé", () => {
+  const exitQuestion = matchCafeSpeechIntent(
+    "몇 번 출구예요?",
+    [eatHere, takeout, repeat],
+  );
+  assert.equal(exitQuestion.reason, "out-of-scope");
+  assert.match(exitQuestion.feedback, /numéro de sortie.*métro/u);
+  assert.match(exitQuestion.feedback, /sur place ou.*emporter/u);
+
+  const prematureReceipt = matchCafeSpeechIntent(
+    "영수증 주세요",
+    [card, cash, repeat],
+  );
+  assert.equal(prematureReceipt.reason, "out-of-scope");
+  assert.match(prematureReceipt.feedback, /parle du reçu/u);
+  assert.match(prematureReceipt.feedback, /moyen de paiement/u);
+});
+
 test("드시고 갈 거예요 valide sur place avec le message personnalisé", () => {
   const result = assertMatched(
     "드시고 갈 거예요.",
@@ -1541,6 +1670,52 @@ test("le MP4 générique existe et contient une structure MP4 lisible", () => {
   assert.match(audioTrack.codec, /^[a-zA-Z0-9]{4}$/);
 });
 
+test("pricePaimentChoose est utilisé pour chaque choix carte ou espèces du Café", () => {
+  const videoUrl = new URL(
+    "../assets/ai/cafe/pricePaimentChoose.mp4",
+    import.meta.url,
+  );
+  assert.ok(statSync(videoUrl).size > 0);
+  const boxTypes = readMp4Boxes(readFileSync(videoUrl)).map(({ type }) => type);
+  assert.ok(boxTypes.includes("ftyp"));
+  assert.ok(boxTypes.includes("moov"));
+  assert.ok(boxTypes.includes("mdat"));
+
+  const dataSource = readFileSync(
+    new URL("../data/lesson/cafe/cafe.ts", import.meta.url),
+    "utf8",
+  );
+  const missionSource = readFileSync(
+    new URL("../data/lesson/cafe/cafeMissions.ts", import.meta.url),
+    "utf8",
+  );
+  const runtimeSource = readFileSync(
+    new URL("../app/lesson/cafeIA.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(dataSource, /assets\/ai\/cafe\/pricePaimentChoose\.mp4/);
+  for (const nodeId of ["ped_payment_here", "ped_payment_takeout"]) {
+    assert.match(
+      dataSource,
+      new RegExp(`${nodeId}:[\\s\\S]*?videoSource: pricePaimentChooseVideo`),
+    );
+  }
+  assert.match(runtimeSource, /assets\/ai\/cafe\/pricePaimentChoose\.mp4/);
+  for (const nodeId of ["real_payment_here", "real_payment_takeout"]) {
+    assert.match(
+      runtimeSource,
+      new RegExp(
+        `${nodeId}\\.videoSources = \\[pricePaimentChooseVideo\\]`,
+      ),
+    );
+  }
+  assert.doesNotMatch(
+    `${missionSource}\n${runtimeSource}`,
+    /pricePaimentChoose(?:Vocal|Real)/,
+  );
+});
+
 test("les confirmations du pilote partagent la réplique et le seul MP4 générique", () => {
   const dataSource = readFileSync(
     new URL("../data/lesson/cafe/cafe.ts", import.meta.url),
@@ -1778,6 +1953,49 @@ test("une correction grammaticale reste comprise et apparaît dans À améliorer
     summary.improvements[0].canonicalFormulation,
     "아메리카노 한 잔 주세요.",
   );
+});
+
+test("une inversion comprise est enregistrée comme erreur d’ordre dans le bilan", () => {
+  const memory = rememberCafeAttempt(createCafeConversationMemory(), {
+    nodeId: "ped_choice2_drink",
+    stepIndex: 1,
+    stepLabel: "Sur place ou à emporter",
+    transcript: "갈게요 먹고",
+    choices: [eatHere, takeout, repeat],
+  });
+  const summary = buildCafeConversationSummary(memory);
+
+  assert.equal(memory.attempts[0].resultType, "word-order-error");
+  assert.equal(summary.improvements.length, 1);
+  assert.equal(summary.improvements[0].canonicalFormulation, "먹고 갈게요.");
+  assert.equal(
+    summary.improvements[0].explanation,
+    "Attention à l’ordre des mots : 먹고 doit précéder 갈게요 dans cette expression.",
+  );
+});
+
+test("les nouveaux feedbacks pédagogiques sont conservés dans le bilan", () => {
+  for (const [transcript, choices, explanationPattern] of [
+    ["카드 할게요", [card, cash, repeat], /utilise 로/u],
+    ["카드… 아니, 현금으로 할게요", [card, cash, repeat], /auto-correction/u],
+    ["americano 한 잔 주세요", orderChoices, /mélange de langues/u],
+  ]) {
+    const memory = rememberCafeAttempt(createCafeConversationMemory(), {
+      nodeId: `node:${transcript}`,
+      stepIndex: 1,
+      stepLabel: "Conversation",
+      transcript,
+      choices,
+    });
+    const summary = buildCafeConversationSummary(memory);
+
+    assert.equal(
+      memory.attempts[0].resultType,
+      "understood-with-grammar-correction",
+    );
+    assert.equal(summary.improvements.length, 1);
+    assert.match(summary.improvements[0].explanation, explanationPattern);
+  }
 });
 
 test("le bilan conserve l’intention probable et la reformulation contextuelle", () => {

@@ -21,6 +21,7 @@ import { AppTypography } from "../../constants/theme";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import type { DailyStreakState } from "../../lib/dailyStreak";
+import { HANGUL_PROGRESS_IDS } from "../../data/hangul/curriculum";
 
 const BACKGROUND_SOURCE = require("../../assets/images/seoulhub.png");
 
@@ -52,7 +53,7 @@ function textGlow(color: string, radius: number) {
   };
 }
 
-const HANGUL_PROGRESS_TOTAL = 20;
+const HANGUL_PROGRESS_TOTAL = HANGUL_PROGRESS_IDS.length;
 
 const SEQUENCES: any[] = [
   {
@@ -845,8 +846,8 @@ function DailyStreakCard({
 function getSequenceProgress(trackKey: string, progress: any) {
   if (trackKey !== "hangul") return 0.45;
 
-  const completedHangulItems = Object.keys(progress.completed ?? {}).filter(
-    (id) => id.startsWith("hangul_"),
+  const completedHangulItems = HANGUL_PROGRESS_IDS.filter(
+    (id) => progress.completed?.[id],
   ).length;
 
   return Math.min(1, completedHangulItems / HANGUL_PROGRESS_TOTAL);

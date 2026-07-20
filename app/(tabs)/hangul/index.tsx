@@ -20,6 +20,7 @@ import { SectionHeader } from "../../../components/hub/SectionHeader";
 import { ModuleCard } from "../../../components/ModuleCard";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 import { SeoulMidnightGlass } from "../../../constants/theme";
+import { HANGUL_MODULES as HANGUL_CURRICULUM_MODULES } from "../../../data/hangul/curriculum";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.png");
@@ -31,7 +32,8 @@ const BG_DEEP = SeoulMidnightGlass.colors.bgDeep;
 const TXT = SeoulMidnightGlass.colors.text;
 const CYAN = SeoulMidnightGlass.colors.cyan;
 
-type HangulModule = {
+type HangulHubModule = {
+  id: string;
   title: string;
   sub: string;
   icon: string;
@@ -40,46 +42,33 @@ type HangulModule = {
   isLocked?: boolean;
 };
 
-const HANGUL_MODULES: HangulModule[] = [
+const HANGUL_MODULES: HangulHubModule[] = [
+  ...HANGUL_CURRICULUM_MODULES.map((module) => ({
+    id: module.id,
+    title: module.title,
+    sub: module.subtitle,
+    href: module.route,
+    icon: module.icon,
+    color: module.accent,
+    isLocked: false,
+  })),
   {
-    title: "Voyelles de base",
-    sub: "6 voyelles essentielles",
-    href: "/(tabs)/hangul/vowels-basic",
-    icon: "ㅏ",
-    color: "#22D3EE",
+    id: "hangul_assessment",
+    title: "Évaluation Hangul",
+    sub: "Décodage cumulatif sans romanisation",
+    href: "/(tabs)/hangul/assessment",
+    icon: "한",
+    color: "#FDE047",
     isLocked: false,
   },
   {
-    title: "Les consonnes",
-    sub: "14 signes fondamentaux",
-    href: "/(tabs)/hangul/consonants-basic",
-    icon: "ㄱ",
-    color: "#60A5FA",
+    id: "hangul_bridge",
+    title: "Passerelle de lecture",
+    sub: "Lecture guidée, vocabulaire et écoute lente",
+    href: "/(tabs)/hangul/bridge",
+    icon: "읽",
+    color: "#2DD4BF",
     isLocked: false,
-  },
-  {
-    title: "Voyelles composées",
-    sub: "Combinaisons fluides",
-    href: "/(tabs)/hangul/vowels-compound",
-    icon: "ㅘ",
-    color: "#A78BFA",
-    isLocked: true,
-  },
-  {
-    title: "Consonnes doubles",
-    sub: "L'intensité du son",
-    href: "/(tabs)/hangul/consonants-tense",
-    icon: "ㄲ",
-    color: "#F472B6",
-    isLocked: true,
-  },
-  {
-    title: "Batchim",
-    sub: "La structure finale",
-    href: "/(tabs)/hangul/batchim",
-    icon: "각",
-    color: "#34D399",
-    isLocked: true,
   },
 ];
 
@@ -99,6 +88,20 @@ export default function HangulHub() {
     responsive.gridGap,
   );
   const displayLevel = Math.max(1, progress?.hangulLevel ?? 1);
+  const assessmentPassed = !!progress.hangulProgress.assessment?.passed;
+
+  const requiredBefore = (index: number) => {
+    if (index === 0) return undefined;
+    if (index < HANGUL_CURRICULUM_MODULES.length) {
+      const previous = HANGUL_CURRICULUM_MODULES[index - 1];
+      return progress.completed[previous.id] ? undefined : { title: previous.title, route: previous.route };
+    }
+    if (index === HANGUL_CURRICULUM_MODULES.length) {
+      const missing = HANGUL_CURRICULUM_MODULES.find((module) => !progress.completed[module.id]);
+      return missing ? { title: missing.title, route: missing.route } : undefined;
+    }
+    return assessmentPassed ? undefined : { title: "l’évaluation Hangul", route: "/(tabs)/hangul/assessment" };
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -140,7 +143,12 @@ export default function HangulHub() {
               { gap: responsive.gridGap },
             ]}
           >
-            {HANGUL_MODULES.map((module, i) => (
+            {HANGUL_MODULES.map((module, i) => {
+              const requirement = requiredBefore(i);
+              const completed = module.id === "hangul_assessment"
+                ? assessmentPassed
+                : !!progress.completed[module.id];
+              return (
               <AnimatedFragment
                 key={module.href}
                 index={i}
@@ -148,9 +156,9 @@ export default function HangulHub() {
               >
                 <ModuleCard
                   title={module.title}
-                  subtitle={module.sub}
+                  subtitle={requirement ? `À faire après ${requirement.title}` : completed ? `Maîtrisé · ${module.sub}` : module.sub}
                   icon={module.icon}
-                  href={module.href}
+                  onPress={() => router.push((requirement?.route ?? module.href) as never)}
                   accentColor={module.color ?? CYAN}
                   requiresPremium={module.isLocked}
                   metaLabel="PARCOURS HANGUL"
@@ -159,7 +167,8 @@ export default function HangulHub() {
                   visualVariant="legacyGlass"
                 />
               </AnimatedFragment>
-            ))}
+              );
+            })}
           </View>
           </View>
         </ScrollView>

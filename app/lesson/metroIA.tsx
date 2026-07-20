@@ -38,6 +38,7 @@ import {
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { buildProgressId } from "../../lib/progressIds";
 import {
+  getMetroSpeechChoiceIntent,
   getMetroSpeechContextualStrings,
   matchMetroSpeechIntent,
   METRO_SPEECH_PILOT_MISSION_ID,
@@ -849,9 +850,20 @@ export default function MetroIaScreen() {
     !shouldCollapseTranscript && !isStartChoiceNode && !!currentNode?.french;
   const displayedSpeechFeedback =
     speechUiNodeId === currentNodeId ? speechFeedback : null;
+  const pendingSpeechIntent = pendingSpeechChoice
+    ? getMetroSpeechChoiceIntent(pendingSpeechChoice)
+    : null;
   const displayedConfirmationLabel =
     speechUiNodeId === currentNodeId && pendingSpeechChoice
-      ? "la direction vers Gangnam"
+      ? pendingSpeechIntent === "repeat"
+        ? "une demande de répétition"
+        : pendingSpeechIntent === "thanks"
+          ? "un remerciement"
+          : pendingSpeechIntent === "duration"
+            ? "une question sur la durée"
+            : pendingSpeechIntent === "transfer"
+              ? "une question sur la correspondance"
+              : "la direction vers Gangnam"
       : null;
   const shouldShowSpeechChoices =
     showSpeechChoices ||

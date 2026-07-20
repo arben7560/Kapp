@@ -1,0 +1,12 @@
+Starting project at C:\Users\Peposi\Documents\Kapp
+Logs: C:\Users\Peposi\Documents\Kapp\.expo\dev\logs\start.log
+🔍 [expo-iap] Config values: horizonAppId=undefined, isHorizonEnabled=false, isOnsideEnabled=false
+📦 [expo-iap] Using OpenIAP from CocoaPods
+React Compiler enabled
+Starting Metro Bundler
+
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+Waiting on http://localhost:8082
+An update for expo is available: 56.0.9 → ~56.0.16
+10 other packages may need updating. Run npx expo install --check for details.
+Logs for your project will appear below.

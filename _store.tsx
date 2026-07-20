@@ -1,5 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React from "react";
+import {
+  createEmptyHangulProgress,
+  type HangulDetailedProgress,
+} from "./data/hangul/types";
 import { trackHangulExerciseCompleted } from "./lib/immersionStreak";
 
 export type LearningTrack =
@@ -23,6 +27,7 @@ export type Progress = {
   isPremium: boolean;
   completed: Record<string, boolean>;
   hangulLevel: number;
+  hangulProgress: HangulDetailedProgress;
 };
 
 const STORE_KEY = "@k_app/pedagogical_progress_v1";
@@ -34,6 +39,7 @@ const initialProgress: Progress = {
   isPremium: false,
   completed: {},
   hangulLevel: 1,
+  hangulProgress: createEmptyHangulProgress(),
 };
 
 type StoreValue = {
@@ -43,6 +49,9 @@ type StoreValue = {
   complete: (id: string) => void;
   togglePremium: () => void;
   bumpHangul: () => void;
+  updateHangulProgress: (
+    updater: (current: HangulDetailedProgress) => HangulDetailedProgress,
+  ) => void;
   isHydrated: boolean;
 };
 
@@ -54,6 +63,16 @@ function mergeProgress(saved: Partial<Progress>): Progress {
     ...saved,
     completed: {
       ...(saved.completed ?? {}),
+    },
+    hangulProgress: {
+      ...createEmptyHangulProgress(),
+      ...(saved.hangulProgress ?? {}),
+      lessons: {
+        ...(saved.hangulProgress?.lessons ?? {}),
+      },
+      masteredCharacters: {
+        ...(saved.hangulProgress?.masteredCharacters ?? {}),
+      },
     },
   };
 }
@@ -134,10 +153,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setProgress((p) => {
       if (p.completed[id]) return p;
 
+      const nextCompleted = { ...p.completed, [id]: true };
+      const completedCoreModules = [
+        "hangul_vowels_basic",
+        "hangul_consonants_basic",
+        "hangul_consonants_tense",
+        "hangul_vowels_compound",
+        "hangul_batchim",
+      ].filter((moduleId) => nextCompleted[moduleId]).length;
+
       return {
         ...p,
-        completed: { ...p.completed, [id]: true },
+        completed: nextCompleted,
         xp: p.xp + 40,
+        hangulLevel: Math.min(5, Math.max(1, completedCoreModules)),
       };
     });
   };
@@ -149,7 +178,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const bumpHangul = () => {
     setProgress((p) => ({
       ...p,
-      hangulLevel: Math.min(4, p.hangulLevel + 1),
+      hangulLevel: Math.min(5, p.hangulLevel + 1),
+    }));
+  };
+
+  const updateHangulProgress = (
+    updater: (current: HangulDetailedProgress) => HangulDetailedProgress,
+  ) => {
+    setProgress((current) => ({
+      ...current,
+      hangulProgress: updater(current.hangulProgress),
     }));
   };
 
@@ -161,6 +199,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         complete,
         togglePremium,
         bumpHangul,
+        updateHangulProgress,
         setTrack,
         isHydrated,
       }}

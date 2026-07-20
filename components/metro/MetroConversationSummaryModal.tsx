@@ -85,6 +85,23 @@ export function MetroConversationSummaryModal({
 
             <View style={styles.card}>
               <AppText variant="bodyStrong" tone="strong" script="latin">
+                Points réussis
+              </AppText>
+              {(summary.achievements.length > 0
+                ? summary.achievements
+                : ["Continue à pratiquer les réponses courtes de la scène."]
+              ).map((item) => (
+                <View key={item} style={styles.reviewRow}>
+                  <Ionicons name="checkmark-circle" size={16} color="#A855F7" />
+                  <AppText variant="bodySecondary" tone="muted" script="latin">
+                    {item}
+                  </AppText>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.card}>
+              <AppText variant="bodyStrong" tone="strong" script="latin">
                 Phrase à retenir
               </AppText>
               <AppText

@@ -69,7 +69,7 @@ const CAFE_STEPS = ["Accueil", "Choix", "Paiement", "Final"] as const;
 const welcomeCafeReal = require("../../assets/ai/cafe/welcomeCafeReal.mp4");
 const orderConfirmationJuiceReal = require("../../assets/ai/cafe/orderConfirmationJuiceReal.mp4");
 const orderConfirmationCakeReal = require("../../assets/ai/cafe/orderConfirmationCakeReal.mp4");
-const pricePaimentChooseReal = require("../../assets/ai/cafe/pricePaimentChooseReal.mp4");
+const pricePaimentChooseVideo = require("../../assets/ai/cafe/pricePaimentChoose.mp4");
 const byCashReceiptReal = require("../../assets/ai/cafe/byCashReceiptReal.mp4");
 const byCardReceiptReal = require("../../assets/ai/cafe/byCardReceiptReal.mp4");
 const takeOutThanksReal = require("../../assets/ai/cafe/takeOutThanksReal.mp4");
@@ -159,10 +159,10 @@ function attachRealVideosToScenario(
     clonedNodes.real_confirm_alt.videoSources = [orderConfirmationCakeReal];
 
   if (clonedNodes.real_payment_here)
-    clonedNodes.real_payment_here.videoSources = [pricePaimentChooseReal];
+    clonedNodes.real_payment_here.videoSources = [pricePaimentChooseVideo];
 
   if (clonedNodes.real_payment_takeout)
-    clonedNodes.real_payment_takeout.videoSources = [pricePaimentChooseReal];
+    clonedNodes.real_payment_takeout.videoSources = [pricePaimentChooseVideo];
 
   if (clonedNodes.real_cash_done_here)
     clonedNodes.real_cash_done_here.videoSources = [byCashReceiptReal];
@@ -529,7 +529,9 @@ export default function CafeIaScreen() {
       setSpeechUiNodeId(currentNode.id);
       setSpeechFeedback(result.feedback);
       setPendingSpeechChoice(
-        result.reason === "uncertain" ? result.choice : null,
+        result.reason === "uncertain" || result.reason === "word-order-error"
+          ? result.choice
+          : null,
       );
     },
     [currentNode, handleChoice, isCafeSpeechPilot, progressIndex],

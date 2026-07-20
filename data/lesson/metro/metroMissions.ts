@@ -82,11 +82,12 @@ export const metroMissions: MetroMission[] = [
   {
     id: "ask-direction",
     title: "Direction vers Gangnam",
-    subtitle: "Demande de quel côté prendre la ligne 2.",
+    subtitle: "Demande la direction, puis précise le trajet si tu le souhaites.",
     access: "premium",
     duration: "3-5 min",
-    objective: "Demander oralement la direction de Gangnam.",
-    goals: ["Gangnam", "Direction", "Merci"],
+    objective:
+      "Demander oralement la direction de Gangnam, puis éventuellement la durée ou la correspondance.",
+    goals: ["Direction", "Durée", "Correspondance", "Merci"],
     scenarioKey: "ask_direction",
     lessonId: "hongik_to_gangnam",
     missionKind: "mini",
@@ -590,7 +591,8 @@ function createAskDirectionLesson(): MetroLesson {
     shortTitle: "Vers Gangnam",
     situation:
       "Vous êtes à Hongik University. Avant de monter, demandez de quel côté prendre la ligne 2 vers Gangnam.",
-    objective: "Demander oralement la direction de Gangnam en une phrase courte.",
+    objective:
+      "Demander la direction de Gangnam, puis préciser si besoin la durée ou la correspondance.",
     startText:
       "Vous êtes à Hongik University et cherchez le quai vers Gangnam. Demandez de quel côté prendre le train.",
     choices: [
@@ -608,6 +610,18 @@ function createAskDirectionLesson(): MetroLesson {
           stepId: "ia_platform_direction",
           keepChoiceIds: ["repeat_platform"],
           extraChoices: [
+            getSourceChoice(
+              hongikLesson,
+              "ia_intro_route",
+              "ask_trip",
+              "ask_direction_hongik_ia_trip_time",
+            ),
+            getSourceChoice(
+              hongikLesson,
+              "ia_platform_direction",
+              "ask_transfer",
+              "ask_direction_hongik_ia_transfer_info",
+            ),
             createThankChoice(
               "thank_after_direction",
               "ask_direction_hongik_ia_end",
@@ -618,9 +632,95 @@ function createAskDirectionLesson(): MetroLesson {
           stepId: "ia_repeat_platform_direction",
           keepChoiceIds: [],
           extraChoices: [
+            getSourceChoice(
+              hongikLesson,
+              "ia_platform_direction",
+              "repeat_platform",
+              "ask_direction_hongik_ia_repeat_platform_direction",
+            ),
+            getSourceChoice(
+              hongikLesson,
+              "ia_intro_route",
+              "ask_trip",
+              "ask_direction_hongik_ia_trip_time",
+            ),
+            getSourceChoice(
+              hongikLesson,
+              "ia_platform_direction",
+              "ask_transfer",
+              "ask_direction_hongik_ia_transfer_info",
+            ),
             createThankChoice(
               "thank_after_direction_repeat",
               "ask_direction_hongik_ia_end",
+            ),
+          ],
+        },
+        {
+          stepId: "ia_trip_time",
+          keepChoiceIds: ["repeat_trip", "ask_transfer_from_trip"],
+          extraChoices: [
+            createThankChoice(
+              "thank_after_trip",
+              "ask_direction_hongik_ia_end",
+            ),
+          ],
+        },
+        {
+          stepId: "ia_repeat_trip_time",
+          keepChoiceIds: ["ask_transfer_after_trip_repeat"],
+          extraChoices: [
+            getSourceChoice(
+              hongikLesson,
+              "ia_trip_time",
+              "repeat_trip",
+              "ask_direction_hongik_ia_repeat_trip_time",
+            ),
+            createThankChoice(
+              "thank_after_trip_repeat",
+              "ask_direction_hongik_ia_end",
+            ),
+          ],
+        },
+        {
+          stepId: "ia_transfer_info",
+          keepChoiceIds: ["repeat_transfer", "thank_after_transfer"],
+          extraChoices: [
+            getSourceChoice(
+              hongikLesson,
+              "ia_intro_route",
+              "ask_trip",
+              "ask_direction_hongik_ia_trip_time",
+            ),
+          ],
+        },
+        {
+          stepId: "ia_repeat_transfer_info",
+          keepChoiceIds: ["repeat_transfer_again", "thank_after_transfer_repeat"],
+          extraChoices: [
+            getSourceChoice(
+              hongikLesson,
+              "ia_intro_route",
+              "ask_trip",
+              "ask_direction_hongik_ia_trip_time",
+            ),
+          ],
+        },
+        {
+          stepId: "ia_repeat_transfer_info_short",
+          keepChoiceIds: ["thank_after_transfer_short"],
+          extraChoices: [
+            getSourceChoice(
+              hongikLesson,
+              "ia_transfer_info",
+              "repeat_transfer",
+              "ask_direction_hongik_ia_repeat_transfer_info_short",
+            ),
+            getSourceChoice(
+              hongikLesson,
+              "ia_intro_route",
+              "ask_trip",
+              "ask_direction_hongik_ia_trip_time",
             ),
           ],
         },

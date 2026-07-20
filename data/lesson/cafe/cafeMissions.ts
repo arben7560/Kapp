@@ -6,10 +6,6 @@ import {
 } from "./cafe";
 import { CAFE_PILOT_PRODUCT_CHOICES } from "./cafePilotOrder";
 
-const pricePaimentChooseVocalVideo = require(
-  "../../../assets/ai/cafe/pricePaimentChooseVocal.mp4",
-);
-
 export type CafeMissionScenarioKey =
   | "order_simple"
   | "order_dessert"
@@ -167,14 +163,6 @@ export function getCafeMissionScenario(
       replacePilotProductChoices(missionScenario);
       applyGenericOrderConfirmation(missionScenario, "ped_confirm");
       applyGenericOrderConfirmation(missionScenario, "ped_confirm_alt");
-      if (missionScenario.nodes.ped_payment_here) {
-        missionScenario.nodes.ped_payment_here.videoSource =
-          pricePaimentChooseVocalVideo;
-      }
-      if (missionScenario.nodes.ped_payment_takeout) {
-        missionScenario.nodes.ped_payment_takeout.videoSource =
-          pricePaimentChooseVocalVideo;
-      }
       keepChoices(missionScenario, "ped_choice2_drink", [
         "ped_here_drink",
         "ped_takeout_drink",
