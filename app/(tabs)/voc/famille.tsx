@@ -241,7 +241,7 @@ export default function FamilyCyber() {
                     end={{ x: 1, y: 1 }}
                     style={styles.playGradient}
                   >
-                    <AppText variant="button" style={styles.playBtnText}>ÉCOUTER ET RÉPÉTER</AppText>
+                    <AppText variant="button" style={styles.playBtnText}>ÉCOUTER</AppText>
                   </LinearGradient>
                 </Pressable>
               </BlurView>
@@ -309,7 +309,7 @@ export default function FamilyCyber() {
                   speakKo(currentQuiz.say);
                 }}
               >
-                <AppText variant="button" style={styles.quizListenText}>🔊 ÉCOUTER LE MOT</AppText>
+                <AppText variant="button" style={styles.quizListenText}>🔊 ÉCOUTER</AppText>
               </Pressable>
 
               <View style={styles.choiceColumn}>
@@ -351,7 +351,7 @@ export default function FamilyCyber() {
                   onPress={() => setShowAnswer(true)}
                   disabled={selectedChoice === null}
                 >
-                  <AppText variant="button" style={styles.verifyBtnText}>VÉRIFIER</AppText>
+                  <AppText variant="button" style={styles.verifyBtnText}>VALIDER</AppText>
                 </Pressable>
               ) : (
                 <View style={styles.answerArea}>
@@ -364,7 +364,7 @@ export default function FamilyCyber() {
                       setShowAnswer(false);
                     }}
                   >
-                    <AppText variant="button" style={styles.nextBtnText}>SUIVANT ➡️</AppText>
+                    <AppText variant="button" style={styles.nextBtnText}>{quizIndex === QUIZ_ITEMS.length - 1 ? "RECOMMENCER LE QUIZ" : "SUIVANT"}</AppText>
                   </Pressable>
                 </View>
               )}

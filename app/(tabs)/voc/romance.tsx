@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AnimatedAppText, AppText } from "../../../components/app-text";
 import { useVocAudio } from "../../../hooks/useVocAudio";
+import { VOC_DIALOGUE_COPY } from "../../../hooks/useVocDialogue";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 
 // ──────────────────────────────────────────────
@@ -615,11 +616,11 @@ export default function RomanceDating() {
                     },
                   ]}
                 >
-                  {visibleMessages >= activeScene.dialogue.length
-                    ? "Toucher pour recommencer"
-                    : isTyping
-                      ? "Réponse en cours..."
-                      : "Toucher pour continuer"}
+                    {visibleMessages >= activeScene.dialogue.length
+                      ? VOC_DIALOGUE_COPY.restart
+                      : isTyping
+                        ? VOC_DIALOGUE_COPY.typing
+                        : VOC_DIALOGUE_COPY.continue}
                 </AnimatedAppText>
               </Pressable>
             </BlurView>

@@ -72,6 +72,14 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
   const discoveredCount = activeScene.cards.filter((item) => lesson.discovered[item.id]).length;
   const sceneMastered = !!lesson.masteredScenes[activeScene.id];
   const allScenesMastered = module.scenes.every((scene) => lesson.masteredScenes[scene.id]);
+  const activeSceneIndex = module.scenes.findIndex((scene) => scene.id === activeScene.id);
+  const hasNextScene = activeSceneIndex < module.scenes.length - 1;
+  const willAddRetryQuestion = !!currentQuestion &&
+    answered !== null &&
+    answered !== currentQuestion.answer &&
+    !currentQuestion.id.endsWith("__retry") &&
+    !retrySourceIds[currentQuestion.id];
+  const willContinueQuiz = questionIndex + 1 < questions.length || willAddRetryQuestion;
   const canStartQuiz = discoveredCount === activeScene.cards.length;
   const moduleIndex = HANGUL_MODULES.findIndex((item) => item.id === module.id);
   const prerequisite = moduleIndex > 0 ? HANGUL_MODULES[moduleIndex - 1] : undefined;
@@ -322,7 +330,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               <AppText variant="sectionLabel" style={{ color: module.accent }}>PROGRESSION GUIDÉE</AppText>
               <AppText variant="screenTitle">Une étape avant celle-ci</AppText>
               <AppText variant="bodySecondary" tone="muted">
-                Maîtrise d’abord « {prerequisite.title} » pour que chaque exemple n’utilise que des caractères déjà étudiés.
+                Termine d’abord « {prerequisite.title} ». Les exemples n’utilisent que les caractères déjà étudiés.
               </AppText>
               <Pressable onPress={() => router.replace(prerequisite.route as never)} style={styles.primaryButton}>
                 <LinearGradient colors={[prerequisite.accent, module.accent]} style={styles.primaryGradient}>
@@ -396,7 +404,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                 </View>
                 <View style={[styles.stateBadge, { borderColor: `${activeScene.accent}88` }]}>
                   <AppText variant="caption" style={{ color: activeScene.accent }}>
-                    {sceneMastered ? "MAÎTRISÉ" : lesson.completedScenes[activeScene.id] ? "TERMINÉ" : "À COMMENCER"}
+                    {sceneMastered ? "RÉUSSI" : lesson.completedScenes[activeScene.id] ? "TERMINÉ" : "À COMMENCER"}
                   </AppText>
                 </View>
               </View>
@@ -437,15 +445,15 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
             <Pressable disabled={!canStartQuiz} onPress={startQuiz} style={[styles.primaryButton, !canStartQuiz && styles.buttonDisabled]}>
               <LinearGradient colors={[activeScene.accent, module.accent]} style={styles.primaryGradient}>
                 <AppText variant="button" style={styles.primaryText}>
-                  {!canStartQuiz ? `ÉCOUTE LES ${activeScene.cards.length} CARTES` : sceneMastered ? "REFAIRE LE DÉFI" : "DÉMARRER LE DÉFI DE LECTURE"}
+                  {!canStartQuiz ? `ÉCOUTE LES ${activeScene.cards.length} CARTES` : sceneMastered ? "RECOMMENCER L’ÉTAPE" : "COMMENCER L’ÉTAPE"}
                 </AppText>
               </LinearGradient>
             </Pressable>
 
             {allScenesMastered ? (
               <Pressable onPress={() => router.push(module.nextRoute as never)} style={styles.nextCard}>
-                <AppText variant="bodyStrong">Toutes les étapes sont maîtrisées.</AppText>
-                <AppText variant="button" style={{ color: module.accent }}>PASSER À {module.nextLabel} →</AppText>
+                <AppText variant="bodyStrong">Toutes les étapes sont terminées.</AppText>
+                <AppText variant="button" style={{ color: module.accent }}>OUVRIR {module.nextLabel} →</AppText>
               </Pressable>
             ) : null}
           </View>
@@ -518,7 +526,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                       </AppText>
                       <AppText variant="bodySecondary">{currentQuestion.explanation}</AppText>
                       <Pressable onPress={continueQuiz} style={[styles.continueButton, { backgroundColor: activeScene.accent }]}>
-                        <AppText variant="button" style={styles.primaryText}>CONTINUER</AppText>
+                        <AppText variant="button" style={styles.primaryText}>{willContinueQuiz ? "SUIVANT" : "TERMINER"}</AppText>
                       </Pressable>
                     </View>
                   ) : null}
@@ -526,16 +534,18 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               ) : (
                 <View style={styles.result}>
                   <AppText variant="sectionLabel" style={{ color: result.mastered ? "#4ADE80" : "#FDE047" }}>
-                    {result.mastered ? "ÉTAPE MAÎTRISÉE" : "ÉTAPE TERMINÉE"}
+                    {result.mastered ? "LECTURE RÉUSSIE" : "ÉTAPE TERMINÉE"}
                   </AppText>
                   <AppText variant="numericValue" style={styles.resultScore}>{result.score}/{result.total}</AppText>
                   <AppText variant="bodySecondary" align="center" tone="muted">
                     {result.mastered
-                      ? "Le seuil de maîtrise est atteint. Les erreurs éventuelles ont été représentées dans cette session."
-                      : "L’étape est enregistrée, mais pas encore maîtrisée. Revois les caractères signalés puis recommence."}
+                      ? Object.keys(retrySourceIds).length > 0
+                        ? "Les sons manqués sont revenus dans la session. Tu peux continuer."
+                        : "Lecture réussie. Tu peux continuer."
+                      : "Revois les caractères signalés, puis recommence."}
                   </AppText>
                   <Pressable onPress={closeResult} style={[styles.continueButton, { backgroundColor: activeScene.accent }]}>
-                    <AppText variant="button" style={styles.primaryText}>{result.mastered ? "CONTINUER" : "REVOIR L’ÉTAPE"}</AppText>
+                    <AppText variant="button" style={styles.primaryText}>{result.mastered ? hasNextScene ? "SUIVANT" : "TERMINER" : "REVOIR L’ÉTAPE"}</AppText>
                   </Pressable>
                 </View>
               )}

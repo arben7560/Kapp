@@ -399,6 +399,7 @@ export default function ListenScreen() {
   const [checked, setChecked] = useState(false);
   const [dailyMessage, setDailyMessage] = useState<string | null>(null);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [playedAudioIds, setPlayedAudioIds] = useState<Record<string, true>>({});
   const { playAudio: playMp3, stopAudio } = useVocAudio(setPlayingAudioId);
 
   const trainingKind = TRAINING_ORDER[trainingIndex];
@@ -406,6 +407,9 @@ export default function ListenScreen() {
   const item = exercises[exerciseIndex];
   const meta = KIND_LABEL[trainingKind];
   const audioSource = LISTEN_AUDIO_BY_ID[item.id];
+  const hasAttempt = item.kind === "order" ? picked.length > 0 : selected !== null;
+  const hasPlayedCurrentAudio = !!playedAudioIds[item.id];
+  const isLastExercise = exerciseIndex === exercises.length - 1;
 
   useEffect(() => {
     return stopAudio;
@@ -500,6 +504,7 @@ export default function ListenScreen() {
 
   const playAudio = () => {
     if (!audioSource) return;
+    setPlayedAudioIds((current) => ({ ...current, [item.id]: true }));
     playMp3(audioSource, item.id);
   };
 
@@ -801,7 +806,7 @@ export default function ListenScreen() {
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Écouter l’audio de la question"
+              accessibilityLabel={`${hasPlayedCurrentAudio ? "Réécouter" : "Écouter"} l’audio de la question`}
               accessibilityState={{ disabled: !audioSource }}
               aria-disabled={!audioSource}
               hitSlop={6}
@@ -814,7 +819,7 @@ export default function ListenScreen() {
             >
               <Ionicons name="play" size={18} color={COLORS.text} />
               <AppText variant="button" tone="strong" style={styles.listenText}>
-                Écouter
+                {hasPlayedCurrentAudio ? "Réécouter" : "Écouter"}
               </AppText>
             </Pressable>
 
@@ -827,7 +832,9 @@ export default function ListenScreen() {
               {audioSource
                 ? playingAudioId === item.id
                   ? "Lecture en cours"
-                  : "Prêt à écouter"
+                  : hasPlayedCurrentAudio
+                    ? "Prêt à réécouter"
+                    : "Prêt à écouter"
                 : "Audio indisponible"}
             </AppText>
 
@@ -874,9 +881,12 @@ export default function ListenScreen() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Réessayer cette question"
+                accessibilityState={{ disabled: !hasAttempt }}
+                aria-disabled={!hasAttempt}
                 hitSlop={6}
+                disabled={!hasAttempt}
                 onPress={resetAnswer}
-                style={[styles.actionButton, styles.secondaryButton]}
+                style={[styles.actionButton, styles.secondaryButton, !hasAttempt && styles.disabledButton]}
               >
                 <AppText
                   variant="button"
@@ -910,15 +920,17 @@ export default function ListenScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={
                     isCorrect
-                      ? "Passer a la question suivante"
-                      : "Corriger la réponse"
+                      ? isLastExercise
+                        ? "Recommencer l’entraînement"
+                        : "Passer à la question suivante"
+                      : "Réessayer cette question"
                   }
                   hitSlop={6}
                   onPress={isCorrect ? goNext : resetAnswer}
                   style={styles.actionButton}
                 >
                   <AppText variant="button" tone="strong" style={styles.actionText}>
-                    {isCorrect ? "Suivant" : "Corriger"}
+                    {isCorrect ? isLastExercise ? "Recommencer l’entraînement" : "Suivant" : "Réessayer"}
                   </AppText>
                 </Pressable>
               )}

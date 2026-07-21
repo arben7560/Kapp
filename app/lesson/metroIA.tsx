@@ -987,7 +987,7 @@ export default function MetroIaScreen() {
         >
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Retour"
+            accessibilityLabel="Quitter la scène"
             hitSlop={8}
             onPress={handleExit}
             style={styles.backBtn}
@@ -1200,7 +1200,7 @@ export default function MetroIaScreen() {
                     script="latin"
                     style={styles.endSubtitle}
                   >
-                    Tu peux rejouer cette mission ou revenir au menu.
+                    Tu peux rejouer cette scène ou revenir aux missions.
                   </AppText>
 
                   <AppText
@@ -1215,7 +1215,7 @@ export default function MetroIaScreen() {
                   <View style={styles.endActions}>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Rejouer la mission"
+                      accessibilityLabel="Rejouer la scène"
                       hitSlop={6}
                       onPress={handleRestart}
                       style={({ pressed }) => [
@@ -1238,14 +1238,14 @@ export default function MetroIaScreen() {
                           align="center"
                           style={styles.endActionPrimaryText}
                         >
-                          Rejouer
+                          Rejouer la scène
                         </AppText>
                       </LinearGradient>
                     </Pressable>
 
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Retour"
+                      accessibilityLabel="Retour aux missions"
                       hitSlop={6}
                       onPress={handleExit}
                       style={({ pressed }) => [
@@ -1260,7 +1260,7 @@ export default function MetroIaScreen() {
                         align="center"
                         style={styles.endActionSecondaryText}
                       >
-                        Retour
+                        Retour aux missions
                       </AppText>
                     </Pressable>
                   </View>
@@ -1358,6 +1358,7 @@ export default function MetroIaScreen() {
       */}
       <MetroConversationSummaryModal
         memory={conversationMemory}
+        missionId={currentMission?.id}
         onClose={() => setIsSummaryOpen(false)}
         visible={isMetroSpeechPilot && isSummaryOpen}
       />

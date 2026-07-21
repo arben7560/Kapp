@@ -98,11 +98,7 @@ export function buildMetroConversationSummary(
       .map(({ category }) => category),
   );
   const achievements: string[] = [];
-  const vocabularyToReview = new Set([
-    "강남에 어떻게 가요?",
-    "강남 방향",
-    "강남 방향은 어느 쪽이에요?",
-  ]);
+  const vocabularyToReview = new Set<string>();
 
   if (
     [...successfulCategories].some((category) =>
@@ -146,6 +142,15 @@ export function buildMetroConversationSummary(
 
   if (categories.has("particle-imperfection")) {
     vocabularyToReview.add("Destination : 강남에 / 강남까지");
+  }
+  if (categories.has("destination-only")) {
+    vocabularyToReview.add("Direction : 강남 방향");
+  }
+  if (categories.has("direction-only")) {
+    vocabularyToReview.add("Destination : 강남");
+  }
+  if (categories.has("wrong-destination")) {
+    vocabularyToReview.add("Destination de la mission : 강남");
   }
   if (categories.has("word-order")) {
     vocabularyToReview.add("Ordre naturel : 강남에 어떻게 가요?");

@@ -1,12 +1,7 @@
-import {
-  createAudioPlayer,
-  setAudioModeAsync,
-  type AudioPlayer,
-} from "expo-audio";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -15,12 +10,13 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Vibration,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AnimatedAppText, AppText } from "../../../components/app-text";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
+import { useVocAudio } from "../../../hooks/useVocAudio";
+import { useVocDialogue } from "../../../hooks/useVocDialogue";
 
 type AudioAsset = number;
 
@@ -421,121 +417,27 @@ export default function GastronomyImmersion() {
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
-  const [visibleMessages, setVisibleMessages] = useState(1);
-  const [isTyping, setIsTyping] = useState(false);
+  const { playAudio, stopAudio } = useVocAudio(setSelectedWord, {
+    trackPlayback: false,
+  });
+  const {
+    advanceDialogue,
+    hintText,
+    isTyping,
+    resetDialogue,
+    shouldHighlightHint,
+    visibleMessages,
+  } = useVocDialogue({
+    sceneId: activeScene.id,
+    messages: activeScene.dialogue,
+    playAudio,
+    stopAudio,
+    setSelectedAudio: setSelectedWord,
+  });
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const bgFadeAnim = useRef(new Animated.Value(0)).current;
   const tapHintPulse = useRef(new Animated.Value(0)).current;
-  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const shouldAutoPlayNextMessageRef = useRef(false);
-
-  const playerRef = useRef<AudioPlayer | null>(null);
-  const activeAudioIdRef = useRef<string | null>(null);
-  const playbackListenerRef = useRef<{ remove: () => void } | null>(null);
-
-  const cleanupAudioListener = useCallback(() => {
-    if (playbackListenerRef.current) {
-      playbackListenerRef.current.remove();
-      playbackListenerRef.current = null;
-    }
-  }, []);
-
-  const stopAudio = useCallback(() => {
-    try {
-      cleanupAudioListener();
-
-      if (playerRef.current) {
-        playerRef.current.pause();
-        playerRef.current.remove();
-        playerRef.current = null;
-      }
-
-      activeAudioIdRef.current = null;
-    } catch {
-      playerRef.current = null;
-      activeAudioIdRef.current = null;
-    }
-  }, [cleanupAudioListener]);
-
-  const playAudio = useCallback(
-    (audioSource?: AudioAsset, id?: string) => {
-      if (!audioSource) return;
-
-      try {
-        stopAudio();
-
-        if (id) {
-          activeAudioIdRef.current = id;
-          setSelectedWord(id);
-        }
-
-        Vibration.vibrate(8);
-
-        const player = createAudioPlayer(audioSource, {
-          updateInterval: 250,
-        });
-
-        playerRef.current = player;
-
-        playbackListenerRef.current = player.addListener(
-          "playbackStatusUpdate",
-          (status) => {
-            const currentId = activeAudioIdRef.current;
-            const statusAny = status as any;
-
-            const didFinish =
-              statusAny.didJustFinish === true ||
-              statusAny.playbackState === "ended" ||
-              statusAny.playbackState === "finished" ||
-              statusAny.timeControlStatus === "ended" ||
-              (typeof statusAny.currentTime === "number" &&
-                typeof statusAny.duration === "number" &&
-                statusAny.duration > 0 &&
-                statusAny.currentTime >= statusAny.duration - 0.05 &&
-                statusAny.playing === false);
-
-            if (!didFinish) return;
-
-            if (currentId) {
-              setSelectedWord((current) =>
-                current === currentId ? null : current,
-              );
-            }
-
-            cleanupAudioListener();
-
-            try {
-              player.remove();
-            } catch {
-              // silence volontaire : évite un crash si le player est déjà libéré
-            }
-
-            if (playerRef.current === player) {
-              playerRef.current = null;
-            }
-
-            activeAudioIdRef.current = null;
-          },
-        );
-
-        player.seekTo(0);
-        player.play();
-      } catch {
-        setSelectedWord(null);
-        activeAudioIdRef.current = null;
-      }
-    },
-    [cleanupAudioListener, stopAudio],
-  );
-
-  useEffect(() => {
-    setAudioModeAsync({
-      playsInSilentMode: true,
-      allowsRecording: false,
-      shouldPlayInBackground: false,
-    }).catch(() => null);
-  }, []);
 
   useEffect(() => {
     fadeAnim.setValue(0);
@@ -547,33 +449,7 @@ export default function GastronomyImmersion() {
       useNativeDriver: true,
     }).start();
 
-    stopAudio();
-    shouldAutoPlayNextMessageRef.current = false;
-    setSelectedWord(null);
-    setVisibleMessages(1);
-    setIsTyping(false);
-
-    if (typingTimer.current) {
-      clearTimeout(typingTimer.current);
-      typingTimer.current = null;
-    }
-  }, [activeScene, fadeAnim, stopAudio]);
-
-  useEffect(() => {
-    if (!shouldAutoPlayNextMessageRef.current || isTyping) return;
-
-    shouldAutoPlayNextMessageRef.current = false;
-
-    const currentMessageIndex = visibleMessages - 1;
-    const currentMessage = activeScene.dialogue[currentMessageIndex];
-
-    if (!currentMessage) return;
-
-    playAudio(
-      currentMessage.audio,
-      `${activeScene.id}-dialogue-${currentMessageIndex}`,
-    );
-  }, [activeScene, visibleMessages, isTyping, playAudio]);
+  }, [activeScene, fadeAnim]);
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -597,29 +473,15 @@ export default function GastronomyImmersion() {
 
     return () => {
       animation.stop();
-
-      if (typingTimer.current) {
-        clearTimeout(typingTimer.current);
-      }
-
-      stopAudio();
     };
-  }, [tapHintPulse, stopAudio]);
+  }, [tapHintPulse]);
 
   const handleSceneChange = (scene: Scene) => {
     if (scene.id === activeScene.id) return;
 
     stopAudio();
-    shouldAutoPlayNextMessageRef.current = false;
     setSelectedWord(null);
-    setVisibleMessages(1);
-    setIsTyping(false);
-
-    if (typingTimer.current) {
-      clearTimeout(typingTimer.current);
-      typingTimer.current = null;
-    }
-
+    resetDialogue();
     setPreviousBackground(activeScene.image);
     bgFadeAnim.setValue(1);
     setActiveScene(scene);
@@ -634,47 +496,6 @@ export default function GastronomyImmersion() {
       bgFadeAnim.setValue(0);
     });
   };
-
-  const advanceDialogue = () => {
-    if (isTyping) return;
-
-    if (visibleMessages >= activeScene.dialogue.length) {
-      Vibration.vibrate(8);
-      stopAudio();
-      shouldAutoPlayNextMessageRef.current = false;
-      setSelectedWord(null);
-      setVisibleMessages(1);
-      setIsTyping(false);
-      return;
-    }
-
-    const nextMessage = activeScene.dialogue[visibleMessages];
-
-    Vibration.vibrate(8);
-    shouldAutoPlayNextMessageRef.current = true;
-
-    if (nextMessage.side === "server") {
-      setIsTyping(true);
-
-      const delay = 600 + Math.floor(Math.random() * 301);
-
-      typingTimer.current = setTimeout(() => {
-        setIsTyping(false);
-        setVisibleMessages((prev) =>
-          Math.min(prev + 1, activeScene.dialogue.length),
-        );
-      }, delay);
-
-      return;
-    }
-
-    setVisibleMessages((prev) =>
-      Math.min(prev + 1, activeScene.dialogue.length),
-    );
-  };
-
-  const shouldHighlightHint =
-    !isTyping && visibleMessages < activeScene.dialogue.length;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -871,11 +692,7 @@ export default function GastronomyImmersion() {
                       },
                     ]}
                   >
-                    {visibleMessages >= activeScene.dialogue.length
-                      ? "Toucher pour recommencer"
-                      : isTyping
-                        ? "Réponse en cours..."
-                        : "Toucher pour continuer"}
+                    {hintText}
                   </AnimatedAppText>
                 </Pressable>
               </View>

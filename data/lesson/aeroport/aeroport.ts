@@ -1,5 +1,7 @@
 // app/data/lesson/aeroport/aeroport.ts
 
+import { GUIDED_REPEAT_REQUEST } from "../sharedPhrases";
+
 export const aeroportDialogueData = {
   scenarioTitle: "Aéroport d'Incheon → Seoul Station",
   scenarioDescription:
@@ -68,9 +70,7 @@ export const aeroportDialogueData = {
         },
         {
           id: "repeat_welcome",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주시겠어요?",
-          romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+          ...GUIDED_REPEAT_REQUEST,
           nextNodeId: "ia_welcome_repeat",
         },
       ],
@@ -120,9 +120,7 @@ export const aeroportDialogueData = {
         },
         {
           id: "repeat_transport",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주시겠어요?",
-          romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+          ...GUIDED_REPEAT_REQUEST,
           nextNodeId: "ia_transport_repeat",
         },
       ],
@@ -172,9 +170,7 @@ export const aeroportDialogueData = {
         },
         {
           id: "repeat_tmoney",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주시겠어요?",
-          romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+          ...GUIDED_REPEAT_REQUEST,
           nextNodeId: "ia_tmoney_repeat",
         },
       ],
@@ -224,9 +220,7 @@ export const aeroportDialogueData = {
         },
         {
           id: "repeat_tmoney_charge",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주시겠어요?",
-          romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+          ...GUIDED_REPEAT_REQUEST,
           nextNodeId: "ia_tmoney_charge_repeat",
         },
       ],
@@ -276,9 +270,7 @@ export const aeroportDialogueData = {
         },
         {
           id: "repeat_tmoney_arex",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주시겠어요?",
-          romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+          ...GUIDED_REPEAT_REQUEST,
           nextNodeId: "ia_tmoney_arex_repeat",
         },
       ],
@@ -328,9 +320,7 @@ export const aeroportDialogueData = {
         },
         {
           id: "repeat_recommend",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주시겠어요?",
-          romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+          ...GUIDED_REPEAT_REQUEST,
           nextNodeId: "ia_recommend_repeat",
         },
       ],
@@ -380,9 +370,7 @@ export const aeroportDialogueData = {
         },
         {
           id: "repeat_platform",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주시겠어요?",
-          romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+          ...GUIDED_REPEAT_REQUEST,
           nextNodeId: "ia_platform_repeat",
         },
       ],
@@ -432,9 +420,7 @@ export const aeroportDialogueData = {
         },
         {
           id: "repeat_verify_train",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주시겠어요?",
-          romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+          ...GUIDED_REPEAT_REQUEST,
           nextNodeId: "ia_verify_train_repeat",
         },
       ],
@@ -483,9 +469,7 @@ export const aeroportDialogueData = {
         },
         {
           id: "repeat_time",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주시겠어요?",
-          romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+          ...GUIDED_REPEAT_REQUEST,
           nextNodeId: "ia_time_repeat",
         },
       ],
@@ -534,9 +518,7 @@ export const aeroportDialogueData = {
         },
         {
           id: "repeat_lost",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주시겠어요?",
-          romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+          ...GUIDED_REPEAT_REQUEST,
           nextNodeId: "ia_lost_repeat",
         },
       ],

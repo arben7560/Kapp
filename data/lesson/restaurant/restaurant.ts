@@ -1,3 +1,5 @@
+import { GUIDED_REPEAT_REQUEST } from "../sharedPhrases";
+
 export interface DialogueChoice {
   id: string;
   label: string;
@@ -89,9 +91,7 @@ export const restaurantDialogueData = {
           },
           {
             id: "repeat_ped_welcome",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 한번 말씀해 주시겠어요?",
-            romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+            ...GUIDED_REPEAT_REQUEST,
             nextNodeId: "ped_welcome",
           },
         ],
@@ -129,9 +129,7 @@ export const restaurantDialogueData = {
           },
           {
             id: "repeat_ped_recommendation",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 한번 말씀해 주시겠어요?",
-            romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+            ...GUIDED_REPEAT_REQUEST,
             nextNodeId: "ped_recommendation",
           },
         ],
@@ -181,9 +179,7 @@ export const restaurantDialogueData = {
           },
           {
             id: "repeat_ped_confirm_samgyeopsal",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 한번 말씀해 주시겠어요?",
-            romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+            ...GUIDED_REPEAT_REQUEST,
             nextNodeId: "ped_confirm_samgyeopsal",
           },
         ],
@@ -209,9 +205,7 @@ export const restaurantDialogueData = {
           },
           {
             id: "repeat_ped_confirm_galbi",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 한번 말씀해 주시겠어요?",
-            romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+            ...GUIDED_REPEAT_REQUEST,
             nextNodeId: "ped_confirm_galbi",
           },
         ],
@@ -255,9 +249,7 @@ export const restaurantDialogueData = {
           },
           {
             id: "repeat_ped_side",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 한번 말씀해 주시겠어요?",
-            romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+            ...GUIDED_REPEAT_REQUEST,
             nextNodeId: "ped_side_prompt",
           },
         ],
@@ -300,9 +292,7 @@ export const restaurantDialogueData = {
           },
           {
             id: "repeat_ped_spicy",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 한번 말씀해 주시겠어요?",
-            romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+            ...GUIDED_REPEAT_REQUEST,
             nextNodeId: "ped_spicy_prompt",
           },
         ],
@@ -347,9 +337,7 @@ export const restaurantDialogueData = {
           },
           {
             id: "repeat_ped_extra",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 한번 말씀해 주시겠어요?",
-            romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+            ...GUIDED_REPEAT_REQUEST,
             nextNodeId: "ped_extra_prompt",
           },
         ],
@@ -396,9 +384,7 @@ export const restaurantDialogueData = {
           },
           {
             id: "repeat_ped_payment",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 한번 말씀해 주시겠어요?",
-            romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+            ...GUIDED_REPEAT_REQUEST,
             nextNodeId: "ped_payment_prompt",
           },
         ],

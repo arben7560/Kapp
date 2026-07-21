@@ -411,12 +411,12 @@ export default function CafeListenScreen() {
 
                 <View style={{ flexDirection: "row", gap: 10 }}>
                   <ActionButton
-                    label="Recommencer"
+                    label="Recommencer la leçon"
                     onPress={restart}
                     tone="cyan"
                   />
                   <ActionButton
-                    label="Retour"
+                    label="Retour à l’écoute"
                     onPress={() => router.back()}
                     tone="ghost"
                   />
@@ -426,7 +426,7 @@ export default function CafeListenScreen() {
                   <>
                     <View style={{ height: 10 }} />
                     <ActionButton
-                      label="Rejouer les erreurs"
+                      label="Revoir les erreurs"
                       onPress={replayMistakes}
                       tone="purple"
                     />
@@ -453,7 +453,7 @@ export default function CafeListenScreen() {
         >
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Retour"
+            accessibilityLabel="Quitter la scène"
             onPress={() => router.back()}
             hitSlop={10}
             style={{
@@ -462,7 +462,7 @@ export default function CafeListenScreen() {
               marginBottom: 10,
             }}
           >
-            <AppText variant="button" style={{ color: MUTED }}>← Retour</AppText>
+            <AppText variant="button" style={{ color: MUTED }}>← Quitter la scène</AppText>
           </Pressable>
 
           <View
@@ -847,7 +847,7 @@ export default function CafeListenScreen() {
                     tone="purple"
                   />
                   <ActionButton
-                    label="Suivant"
+                    label={index === session.length - 1 ? "Terminer" : "Suivant"}
                     onPress={nextExercise}
                     tone="cyan"
                   />

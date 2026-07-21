@@ -79,3 +79,4 @@ Call Stack
   ExpoRoot (node_modules\expo-router\build\ExpoRoot.js)
   App (node_modules\expo-router\build\qualified-entry.js)
   WithDevTools (node_modules\expo\src\launch\withDevTools.tsx)
+ WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/AppAndFlow/react-native-safe-area-context

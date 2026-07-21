@@ -70,9 +70,6 @@ export function MissionLaunchModal({
       >
         {mission.title}
       </AppText>
-      <AppText variant="body" tone="muted" style={styles.subtitle}>
-        {mission.subtitle}
-      </AppText>
 
       {mission.objective ? (
         <View style={styles.objectiveBox}>
@@ -106,9 +103,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 16,
-  },
-  subtitle: {
-    marginTop: 9,
   },
   objectiveBox: {
     marginTop: 18,

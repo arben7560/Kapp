@@ -490,7 +490,9 @@ export default function GangnamRainRunScreen() {
                 backgroundColor: "rgba(255,255,255,0.04)",
               }}
             >
-              <AppText variant="button" style={{ color: TXT}}>← Retour</AppText>
+              <AppText variant="button" style={{ color: TXT}}>
+                ← {step > 0 ? "Quitter la scène" : "Retour au parcours"}
+              </AppText>
             </Pressable>
 
             <Pill tone="cyan">Capsule signature</Pill>
@@ -599,7 +601,7 @@ export default function GangnamRainRunScreen() {
                   }}
                 >
                   <AppText variant="button" style={{ textAlign: "center"}}>
-                    Commencer l’expérience
+                    Commencer
                   </AppText>
                 </Pressable>
               </Card>
@@ -630,7 +632,7 @@ export default function GangnamRainRunScreen() {
                         textAlign: "center",
                       }}
                     >
-                      Rejouer depuis le début
+                      Effacer le résultat
                     </AppText>
                   </Pressable>
                 </Card>
@@ -730,7 +732,7 @@ export default function GangnamRainRunScreen() {
                         textAlign: "center",
                       }}
                     >
-                      Vérifier
+                      Valider
                     </AppText>
                   </Pressable>
 
@@ -754,7 +756,7 @@ export default function GangnamRainRunScreen() {
                         textAlign: "center",
                       }}
                     >
-                      Rechoisir
+                      {revealed ? "Réessayer" : "Annuler"}
                     </AppText>
                   </Pressable>
                 </View>
@@ -806,7 +808,7 @@ export default function GangnamRainRunScreen() {
                     }}
                   >
                     <AppText variant="button" style={{ textAlign: "center"}}>
-                      {step < 5 ? "Étape suivante" : "Voir le débrief final"}
+                      {step < 5 ? "Suivant" : "Terminer"}
                     </AppText>
                   </Pressable>
                 )}
@@ -930,7 +932,7 @@ export default function GangnamRainRunScreen() {
                           textAlign: "center",
                         }}
                       >
-                        Rejouer la capsule
+                        Rejouer la scène
                       </AppText>
                     </Pressable>
                   </Card>

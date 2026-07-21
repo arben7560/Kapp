@@ -125,10 +125,10 @@ export default function Profile() {
 
           <Pressable
             onPress={() => {
-              Alert.alert("Reset", "Reinitialiser la progression ?", [
+              Alert.alert("Réinitialiser", "Réinitialiser toute la progression ?", [
                 { text: "Annuler", style: "cancel" },
                 {
-                  text: "Oui",
+                  text: "Confirmer",
                   style: "destructive",
                   onPress: () => {
                     void resetStreak();
@@ -155,7 +155,7 @@ export default function Profile() {
               alignItems: "center",
             })}
           >
-            <AppText variant="button" align="center" style={{ color: TXT }}>Reinitialiser</AppText>
+            <AppText variant="button" align="center" style={{ color: TXT }}>Réinitialiser la progression</AppText>
           </Pressable>
         </View>
       </ScrollView>

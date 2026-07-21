@@ -1,4 +1,8 @@
 import type { CafeOrderProduct } from "../../../lib/cafeOrderState";
+import {
+  CAFE_REAL_REPEAT_REQUEST,
+  GUIDED_REPEAT_REQUEST,
+} from "../sharedPhrases";
 
 export interface DialogueChoice {
   id: string;
@@ -86,9 +90,7 @@ export const cafeDialogueData = {
           },
           {
             id: "repeat_ped1",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 한번 말씀해 주시겠어요?",
-            romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+            ...GUIDED_REPEAT_REQUEST,
             nextNodeId: "ped_welcome",
           },
         ],
@@ -140,9 +142,7 @@ export const cafeDialogueData = {
           },
           {
             id: "repeat_ped2_drink",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 한번 말씀해 주시겠어요?",
-            romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+            ...GUIDED_REPEAT_REQUEST,
             nextNodeId: "ped_confirm",
           },
         ],
@@ -168,9 +168,7 @@ export const cafeDialogueData = {
           },
           {
             id: "repeat_ped2_cake",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 한번 말씀해 주시겠어요?",
-            romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+            ...GUIDED_REPEAT_REQUEST,
             nextNodeId: "ped_confirm_alt",
           },
         ],
@@ -222,9 +220,7 @@ export const cafeDialogueData = {
           },
           {
             id: "repeat_ped3_here",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 한번 말씀해 주시겠어요?",
-            romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+            ...GUIDED_REPEAT_REQUEST,
             nextNodeId: "ped_payment_here",
           },
         ],
@@ -250,9 +246,7 @@ export const cafeDialogueData = {
           },
           {
             id: "repeat_ped3_takeout",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 한번 말씀해 주시겠어요?",
-            romanization: "Dasi hanbeon malsseumhae jusigesseoyo?",
+            ...GUIDED_REPEAT_REQUEST,
             nextNodeId: "ped_payment_takeout",
           },
         ],
@@ -404,9 +398,7 @@ export const cafeDialogueData = {
           },
           {
             id: "repeat_real1",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 말씀해 주실래요?",
-            romanization: "Dasi malsseumhae jusillaeyo?",
+            ...CAFE_REAL_REPEAT_REQUEST,
             nextNodeId: "real_welcome",
           },
         ],
@@ -456,9 +448,7 @@ export const cafeDialogueData = {
           },
           {
             id: "repeat_real2_drink",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 말씀해 주실래요?",
-            romanization: "Dasi malsseumhae jusillaeyo?",
+            ...CAFE_REAL_REPEAT_REQUEST,
             nextNodeId: "real_confirm",
           },
         ],
@@ -484,9 +474,7 @@ export const cafeDialogueData = {
           },
           {
             id: "repeat_real2_cake",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 말씀해 주실래요?",
-            romanization: "Dasi malsseumhae jusillaeyo?",
+            ...CAFE_REAL_REPEAT_REQUEST,
             nextNodeId: "real_confirm_alt",
           },
         ],
@@ -530,9 +518,7 @@ export const cafeDialogueData = {
           },
           {
             id: "repeat_real3_here",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 말씀해 주실래요?",
-            romanization: "Dasi malsseumhae jusillaeyo?",
+            ...CAFE_REAL_REPEAT_REQUEST,
             nextNodeId: "real_payment_here",
           },
         ],
@@ -558,9 +544,7 @@ export const cafeDialogueData = {
           },
           {
             id: "repeat_real3_takeout",
-            label: "Pouvez-vous répéter ?",
-            korean: "다시 말씀해 주실래요?",
-            romanization: "Dasi malsseumhae jusillaeyo?",
+            ...CAFE_REAL_REPEAT_REQUEST,
             nextNodeId: "real_payment_takeout",
           },
         ],

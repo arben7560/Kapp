@@ -23,25 +23,6 @@ type CafeConversationSummaryModalProps = Readonly<{
   onFinish: () => void;
 }>;
 
-function SummaryMetric({ label, value }: Readonly<{ label: string; value: number }>) {
-  return (
-    <View style={styles.metric}>
-      <AppText variant="sectionTitle" tone="strong" script="latin">
-        {value}
-      </AppText>
-      <AppText
-        variant="caption"
-        tone="muted"
-        script="latin"
-        align="center"
-        style={styles.metricLabel}
-      >
-        {label}
-      </AppText>
-    </View>
-  );
-}
-
 function ImperfectionCard({
   item,
   uncertain = false,
@@ -55,7 +36,7 @@ function ImperfectionCard({
   return (
     <View style={[styles.detailCard, uncertain && styles.uncertainCard]}>
       <AppText variant="caption" tone="soft" script="latin">
-        {uncertain ? "Le micro a entendu" : "Tu as dit"}
+        {uncertain ? "Le micro a peut-être entendu" : item.stepLabel}
       </AppText>
       <AppText
         variant="koreanSecondary"
@@ -65,17 +46,6 @@ function ImperfectionCard({
         style={styles.transcript}
       >
         {recordedTranscript}
-      </AppText>
-
-      <AppText variant="caption" tone="soft" script="latin">
-        {item.resultType === "not-understood"
-          ? "Intention probable"
-          : item.resultType === "ambiguous"
-            ? "Intentions détectées"
-            : "Intention comprise"}
-      </AppText>
-      <AppText variant="bodySecondary" tone="strong" script="latin">
-        {item.detectedIntent ?? "Intention non déterminée"}
       </AppText>
 
       <AppText
@@ -88,7 +58,7 @@ function ImperfectionCard({
       </AppText>
 
       <AppText variant="caption" tone="soft" script="latin">
-        Reformulation recommandée
+        Essaie
       </AppText>
       <AppText
         variant="koreanSecondary"
@@ -126,7 +96,9 @@ export function CafeConversationSummaryModal({
   onFinish,
 }: CafeConversationSummaryModalProps) {
   const [isReviewing, setIsReviewing] = useState(false);
+  const [listenedPhrases, setListenedPhrases] = useState<Record<string, true>>({});
   const summary = useMemo(() => buildCafeConversationSummary(memory), [memory]);
+  const phraseToRemember = summary.canonicalReferencePhrases[0];
 
   useEffect(() => () => {
     void Speech.stop();
@@ -135,6 +107,7 @@ export function CafeConversationSummaryModal({
   const handleClose = () => {
     void Speech.stop();
     setIsReviewing(false);
+    setListenedPhrases({});
     onClose();
   };
 
@@ -145,6 +118,7 @@ export function CafeConversationSummaryModal({
 
   const speak = (phrase: string) => {
     void Speech.stop();
+    setListenedPhrases((current) => ({ ...current, [phrase]: true }));
     Speech.speak(phrase, { language: "ko-KR", rate: 0.88 });
   };
 
@@ -167,8 +141,8 @@ export function CafeConversationSummaryModal({
                 style={styles.title}
               >
                 {isReviewing
-                  ? "Revoir mes phrases"
-                  : "Bilan de la conversation"}
+                  ? "Phrases utiles"
+                  : "Bilan"}
               </AppText>
               <Pressable
                 accessibilityRole="button"
@@ -190,11 +164,10 @@ export function CafeConversationSummaryModal({
               {isReviewing ? (
                 <View style={styles.section}>
                   <AppText variant="sectionTitle" tone="strong" script="latin">
-                    Phrases de référence
+                    Phrases utiles
                   </AppText>
                   <AppText variant="bodySecondary" tone="muted" script="latin">
-                    Ces formulations canoniques sont des phrases de référence.
-                    Elles peuvent différer de ta transcription réelle.
+                    Réécoute les phrases de cette mission.
                   </AppText>
                   {summary.canonicalReferencePhrases.length > 0 ? (
                     summary.canonicalReferencePhrases.map((phrase) => (
@@ -210,13 +183,13 @@ export function CafeConversationSummaryModal({
                         </AppText>
                         <Pressable
                           accessibilityRole="button"
-                          accessibilityLabel={`Écouter ${phrase}`}
+                          accessibilityLabel={`${listenedPhrases[phrase] ? "Réécouter" : "Écouter"} ${phrase}`}
                           hitSlop={6}
                           onPress={() => speak(phrase)}
                           style={styles.listenButton}
                         >
                           <AppText variant="button" tone="strong" script="latin">
-                            Écouter
+                            {listenedPhrases[phrase] ? "Réécouter" : "Écouter"}
                           </AppText>
                         </Pressable>
                       </View>
@@ -231,31 +204,7 @@ export function CafeConversationSummaryModal({
                 <>
                   <View style={styles.section}>
                     <AppText variant="sectionTitle" tone="strong" script="latin">
-                      Résumé
-                    </AppText>
-                    <View style={styles.metrics}>
-                      <SummaryMetric
-                        label="Réussies directement"
-                        value={summary.directSuccesses}
-                      />
-                      <SummaryMetric
-                        label="Comprises avec correction"
-                        value={summary.understoodWithCorrection}
-                      />
-                      <SummaryMetric
-                        label="Nouvelles tentatives"
-                        value={summary.newAttempts}
-                      />
-                      <SummaryMetric
-                        label="Non comprises"
-                        value={summary.notUnderstood}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.section}>
-                    <AppText variant="sectionTitle" tone="strong" script="latin">
-                      Points réussis
+                      Réussi
                     </AppText>
                     {(summary.successfulPoints.length > 0
                       ? summary.successfulPoints
@@ -273,35 +222,60 @@ export function CafeConversationSummaryModal({
                     ))}
                   </View>
 
-                  <View style={styles.section}>
-                    <AppText variant="sectionTitle" tone="strong" script="latin">
-                      À améliorer
-                    </AppText>
-                    {summary.improvements.length > 0 ? (
-                      summary.improvements.map((item) => (
+                  {summary.improvements.length > 0 ? (
+                    <View style={styles.section}>
+                      <AppText variant="sectionTitle" tone="strong" script="latin">
+                        À revoir
+                      </AppText>
+                      {summary.improvements.map((item) => (
                         <ImperfectionCard key={item.id} item={item} />
-                      ))
-                    ) : (
-                      <AppText variant="bodySecondary" tone="muted" script="latin">
-                        Aucun point à corriger dans cette conversation.
-                      </AppText>
-                    )}
-                  </View>
+                      ))}
+                    </View>
+                  ) : null}
 
-                  <View style={styles.section}>
-                    <AppText variant="sectionTitle" tone="strong" script="latin">
-                      Reconnaissance incertaine
-                    </AppText>
-                    {summary.uncertainRecognition.length > 0 ? (
-                      summary.uncertainRecognition.map((item) => (
-                        <ImperfectionCard key={item.id} item={item} uncertain />
-                      ))
-                    ) : (
-                      <AppText variant="bodySecondary" tone="muted" script="latin">
-                        Aucune difficulté de reconnaissance.
+                  {summary.uncertainRecognition.length > 0 ? (
+                    <View style={styles.section}>
+                      <AppText variant="sectionTitle" tone="strong" script="latin">
+                        Transcription à vérifier
                       </AppText>
-                    )}
-                  </View>
+                      <AppText variant="bodySecondary" tone="muted" script="latin">
+                        Ce point peut venir du micro, pas de ta réponse.
+                      </AppText>
+                      {summary.uncertainRecognition.map((item) => (
+                        <ImperfectionCard key={item.id} item={item} uncertain />
+                      ))}
+                    </View>
+                  ) : null}
+
+                  {phraseToRemember ? (
+                    <View style={styles.section}>
+                      <AppText variant="sectionTitle" tone="strong" script="latin">
+                        Phrase à retenir
+                      </AppText>
+                      <View style={styles.phraseRow}>
+                        <AppText
+                          variant="koreanSecondary"
+                          tone="strong"
+                          script="korean"
+                          accessibilityLanguage="ko-KR"
+                          style={styles.phraseText}
+                        >
+                          {phraseToRemember}
+                        </AppText>
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel={`${listenedPhrases[phraseToRemember] ? "Réécouter" : "Écouter"} ${phraseToRemember}`}
+                          hitSlop={6}
+                          onPress={() => speak(phraseToRemember)}
+                          style={styles.listenButton}
+                        >
+                          <AppText variant="button" tone="strong" script="latin">
+                            {listenedPhrases[phraseToRemember] ? "Réécouter" : "Écouter"}
+                          </AppText>
+                        </Pressable>
+                      </View>
+                    </View>
+                  ) : null}
                 </>
               )}
             </ScrollView>
@@ -310,14 +284,14 @@ export function CafeConversationSummaryModal({
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={
-                  isReviewing ? "Retour au bilan" : "Revoir mes phrases"
+                  isReviewing ? "Retour au bilan" : "Ouvrir les phrases"
                 }
                 hitSlop={6}
                 onPress={() => setIsReviewing((current) => !current)}
                 style={styles.secondaryAction}
               >
                 <AppText variant="button" tone="strong" script="latin" align="center">
-                  {isReviewing ? "Retour au bilan" : "Revoir mes phrases"}
+                  {isReviewing ? "Retour au bilan" : "Ouvrir les phrases"}
                 </AppText>
               </Pressable>
               <Pressable
@@ -388,26 +362,6 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: 12,
-  },
-  metrics: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  metric: {
-    flexGrow: 1,
-    flexBasis: "46%",
-    minHeight: 88,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 18,
-    backgroundColor: "rgba(168,85,247,0.10)",
-    borderWidth: 1,
-    borderColor: "rgba(168,85,247,0.22)",
-    padding: 10,
-  },
-  metricLabel: {
-    marginTop: 4,
   },
   successPoint: {
     paddingVertical: 2,

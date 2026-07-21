@@ -99,7 +99,7 @@ function AudioButton({ kr }: { kr: string }) {
         align="center"
         lineContract="singleLine"
       >
-        🔊 Écouter
+        Écouter
       </AppText>
     </Pressable>
   );
@@ -109,12 +109,10 @@ function VocabRow({
   kr,
   roman,
   fr,
-  level = "débutant",
 }: {
   kr: string;
   roman: string;
   fr: string;
-  level?: string;
 }) {
   return (
     <View
@@ -150,9 +148,6 @@ function VocabRow({
             style={{ marginTop: 4 }}
           >
             {roman}
-          </AppText>
-          <AppText variant="caption" tone="muted" style={{ marginTop: 4 }}>
-            • {level}
           </AppText>
         </View>
 
@@ -234,10 +229,10 @@ export default function ShopLesson() {
         <>
           <Card>
             <AppText variant="sectionTitle" tone="strong">
-              🛍️ Ce que dit souvent le vendeur
+              Ce que dit le vendeur
             </AppText>
             <AppText variant="body" tone="muted" style={{ marginTop: 8 }}>
-              Les phrases fréquentes dans une boutique à Séoul.
+              Les phrases que tu entendras le plus souvent.
             </AppText>
           </Card>
 
@@ -282,11 +277,10 @@ export default function ShopLesson() {
         <>
           <Card>
             <AppText variant="sectionTitle" tone="strong">
-              🙋 Ce que dit souvent le client
+              Ce que dit le client
             </AppText>
             <AppText variant="body" tone="muted" style={{ marginTop: 8 }}>
-              Les phrases les plus utiles pour demander une taille, essayer et
-              parler tax free.
+              Demande une taille, essaie un article et demande la détaxe.
             </AppText>
           </Card>
 
@@ -331,11 +325,10 @@ export default function ShopLesson() {
         <>
           <Card>
             <AppText variant="sectionTitle" tone="strong">
-              🔗 Connecteurs naturels
+              Connecteurs naturels
             </AppText>
             <AppText variant="body" tone="muted" style={{ marginTop: 8 }}>
-              Pour enchaîner taille, couleur, essayage et tax free plus
-              naturellement.
+              Enchaîne tes demandes plus naturellement.
             </AppText>
           </Card>
 
@@ -409,10 +402,10 @@ export default function ShopLesson() {
         <>
           <Card>
             <AppText variant="sectionTitle" tone="strong">
-              💬 Mini-dialogues immersifs
+              Dialogues
             </AppText>
             <AppText variant="body" tone="muted" style={{ marginTop: 8 }}>
-              De petites scènes réalistes en boutique.
+              Deux scènes courtes en boutique.
             </AppText>
           </Card>
 
@@ -477,10 +470,10 @@ export default function ShopLesson() {
       <>
         <Card>
           <AppText variant="sectionTitle" tone="strong">
-            🧠 Mini-quiz
+            À retenir
           </AppText>
           <AppText variant="body" tone="muted" style={{ marginTop: 8 }}>
-            Petites vérifications rapides pour ancrer le contenu.
+            Trois phrases à réécouter.
           </AppText>
         </Card>
 
@@ -554,19 +547,17 @@ export default function ShopLesson() {
           variant="sceneTitle"
           tone="strong"
         >
-          Magasin — taille, essayage, détaxe
+          Magasin — essayer et payer
         </AppText>
 
         <AppText variant="body" tone="muted" style={{ marginTop: 8 }}>
-          Vendeur, client, connecteurs naturels, mini-dialogues et petit quiz
-          pour gérer une situation réelle en boutique.
+          Les phrases utiles pour choisir, essayer et payer en boutique.
         </AppText>
 
         <View style={{ height: 14 }} />
 
         <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
           <Pill label="Magasin" active />
-          <Pill label="Magasin" />
           <Pill label="Séoul réel" />
         </View>
 
@@ -605,12 +596,10 @@ export default function ShopLesson() {
 
         <Card>
           <AppText variant="sectionTitle" tone="strong">
-            🛍️ Mode immersif
+            Parcours
           </AppText>
           <AppText variant="body" tone="muted" style={{ marginTop: 8 }}>
-            Apprends comme si tu étais dans une boutique à Séoul : phrases du
-            vendeur → réponses client → connecteurs naturels → mini-dialogues →
-            mini-quiz.
+            Choisis une partie.
           </AppText>
 
           <View style={{ height: 14 }} />
@@ -637,7 +626,7 @@ export default function ShopLesson() {
               onPress={() => setTab("dialogues")}
             />
             <Pill
-              label="Quiz"
+              label="À retenir"
               active={tab === "quiz"}
               onPress={() => setTab("quiz")}
             />

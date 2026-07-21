@@ -266,7 +266,7 @@ export default function BuildingsCyber() {
                     end={{ x: 1, y: 0 }}
                     style={styles.playGradient}
                   >
-                    <AppText variant="button" style={styles.playBtnText}>DÉCODER LE LIEU</AppText>
+                    <AppText variant="button" style={styles.playBtnText}>ÉCOUTER</AppText>
                     <View style={styles.btnGlow} />
                   </LinearGradient>
                 </Pressable>

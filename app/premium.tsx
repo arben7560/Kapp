@@ -93,7 +93,12 @@ export default function PremiumScreen() {
             },
           ]}
         >
-          <Pressable onPress={() => router.back()} style={styles.iconButton}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Fermer Premium"
+            onPress={() => router.back()}
+            style={styles.iconButton}
+          >
             <Ionicons name="chevron-back" size={24} color={COLORS.text} />
           </Pressable>
           <AppText variant="sectionLabel" style={styles.headerTitle}>Premium</AppText>
@@ -216,7 +221,7 @@ export default function PremiumScreen() {
           )}
 
           <ActionButton
-            label={hasPremiumAccess ? "Premium actif" : "Continuer"}
+            label={hasPremiumAccess ? "Premium actif" : selectedOffer?.cta ?? PAYWALL_COPY.cta}
             size="large"
             accentColor={COLORS.pink}
             labelColor={COLORS.text}

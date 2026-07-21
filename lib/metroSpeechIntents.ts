@@ -1,3 +1,5 @@
+import { getSpeechRecognitionFailureMessage } from "./speechRecognitionState.ts";
+
 export const METRO_SPEECH_PILOT_MISSION_ID = "ask-direction";
 
 export type MetroSpeechCategory =
@@ -120,9 +122,14 @@ function withAvailableChoices(
 
   if (labels.length === 0) return feedback;
 
-  return `${feedback} Options disponibles maintenant : ${labels
+  const conciseFeedback = feedback.trim().replace(/[.!?…]+$/u, "");
+  return `${conciseFeedback} — réponses proposées : ${labels
     .map((label) => `« ${label} »`)
     .join(" · ")}.`;
+}
+
+function appendMetroGuidance(feedback: string, guidance: string) {
+  return `${feedback.trim().replace(/[.!?…]+$/u, "")} — ${guidance}`;
 }
 
 function withProgressiveHelp(
@@ -132,22 +139,34 @@ function withProgressiveHelp(
 ) {
   if (context === "follow-up") {
     if (attemptNumber >= 3) {
-      return `${feedback} Tu peux afficher les réponses pour revoir les formulations proposées.`;
+      return appendMetroGuidance(
+        feedback,
+        "affiche les réponses pour revoir les formulations proposées.",
+      );
     }
 
     if (attemptNumber === 2) {
-      return `${feedback} Réécoute l’intervention, puis choisis une réponse proposée à ce moment précis.`;
+      return appendMetroGuidance(
+        feedback,
+        "réécoute, puis choisis une réponse proposée.",
+      );
     }
 
     return feedback;
   }
 
   if (attemptNumber >= 3) {
-    return `${feedback} Phrase modèle : « ${GANGNAM_MODEL} » (Gangnam banghyang-eun eoneu jjog-ieyo?)`;
+    return appendMetroGuidance(
+      feedback,
+      `Phrase modèle : « ${GANGNAM_MODEL} » (Gangnam banghyang-eun eoneu jjog-ieyo?).`,
+    );
   }
 
   if (attemptNumber === 2) {
-    return `${feedback} Mots utiles : 강남 · 방향 · 어느 쪽.`;
+    return appendMetroGuidance(
+      feedback,
+      "Mots utiles : 강남 · 방향 · 어느 쪽.",
+    );
   }
 
   return feedback;
@@ -306,7 +325,7 @@ export function matchMetroSpeechIntent(
       category: "empty",
       choice: null,
       feedback: withAvailableChoices(
-        "Je n’ai entendu aucune réponse. Tu peux réessayer ou afficher les réponses.",
+        getSpeechRecognitionFailureMessage("empty"),
         choices,
       ),
       understoodWithCorrection: false,
@@ -399,7 +418,7 @@ export function matchMetroSpeechIntent(
     if (hasExitQuestion) {
       return help(
         "exit-confusion",
-        "Ta question porte sur une autre information. Réponds avec l’une des options affichées.",
+        "La sortie n’est pas demandée ici.",
         attemptNumber,
         "follow-up",
       );
@@ -408,7 +427,7 @@ export function matchMetroSpeechIntent(
     if (hasDurationQuestion && hasTransferQuestion) {
       return help(
         "uncertain",
-        "J’ai entendu deux questions à la fois : la durée et la correspondance. Pose-les l’une après l’autre pour que je suive ton intention.",
+        "Tu as posé deux questions : la durée et la correspondance. Pose-les l’une après l’autre.",
         attemptNumber,
         "follow-up",
       );
@@ -418,7 +437,7 @@ export function matchMetroSpeechIntent(
       if (!durationChoice) {
         return help(
           "duration-confusion",
-          "Tu redemandes la durée. À ce moment de la scène, tu peux poser l’autre question, demander de répéter ou terminer l’échange.",
+          "La durée a déjà été demandée. Pose l’autre question, demande de répéter ou termine l’échange.",
           attemptNumber,
           "follow-up",
         );
@@ -436,7 +455,7 @@ export function matchMetroSpeechIntent(
         return matched(
           "duration-imperfection",
           durationChoice,
-          "J’ai compris que tu demandes la durée. La formulation correcte est « 얼마나 걸려요? ».",
+          "Tu demandes la durée. Dis : « 얼마나 걸려요? ».",
           true,
         );
       }
@@ -445,8 +464,8 @@ export function matchMetroSpeechIntent(
         isNaturalDuration ? "duration" : "duration-imperfection",
         durationChoice,
         isNaturalDuration
-          ? "Très bien, tu demandes combien de temps dure le trajet jusqu’à Gangnam."
-          : "J’ai compris ta question sur la durée. Une formulation A1 naturelle est « 얼마나 걸려요? ».",
+          ? "Tu as demandé la durée du trajet."
+          : "Question comprise. Essaie : « 얼마나 걸려요? ».",
         !isNaturalDuration,
       );
     }
@@ -455,7 +474,7 @@ export function matchMetroSpeechIntent(
       if (!transferChoice) {
         return help(
           "transfer-confusion",
-          "Tu redemandes s’il faut changer de ligne. À ce moment de la scène, tu peux poser l’autre question, demander de répéter ou terminer l’échange.",
+          "La correspondance a déjà été demandée. Pose l’autre question, demande de répéter ou termine l’échange.",
           attemptNumber,
           "follow-up",
         );
@@ -474,7 +493,7 @@ export function matchMetroSpeechIntent(
         return matched(
           "transfer-imperfection",
           transferChoice,
-          "J’ai compris que tu demandes s’il faut changer de ligne. La formulation correcte est : 갈아타야 하나요?",
+          "Tu demandes s’il faut changer de ligne. Dis : « 갈아타야 하나요? ».",
           true,
         );
       }
@@ -483,8 +502,8 @@ export function matchMetroSpeechIntent(
         isNaturalTransfer ? "transfer" : "transfer-imperfection",
         transferChoice,
         isNaturalTransfer
-          ? "Très bien, tu demandes s’il faut faire une correspondance."
-          : "J’ai compris ta question sur la correspondance. Tu peux dire « 환승해야 해요? » ou « 갈아타야 해요? ».",
+          ? "Tu as demandé s’il faut faire une correspondance."
+          : "Question comprise. Dis « 환승해야 해요? » ou « 갈아타야 해요? ».",
         !isNaturalTransfer,
       );
     }
@@ -492,7 +511,7 @@ export function matchMetroSpeechIntent(
     if (hasRelevantContentQuestion) {
       return help(
         "relevant-question",
-        "Ta question est liée aux indications données. Réécoute l’interlocuteur ou demande de répéter avec « 다시 한번 말씀해 주세요 ».",
+        "Cette question n’est pas disponible ici. Demande de répéter ou poursuis la scène.",
         attemptNumber,
         "follow-up",
       );
@@ -502,7 +521,7 @@ export function matchMetroSpeechIntent(
       return matched(
         "not-understood",
         repeatChoice,
-        "Tu indiques que tu n’as pas encore compris. Je vais répéter les informations plus simplement.",
+        "Tu n’as pas encore compris. Les indications vont être répétées plus simplement.",
       );
     }
 
@@ -521,7 +540,7 @@ export function matchMetroSpeechIntent(
         return matched(
           "mixed-language",
           repeatChoice,
-          "J’ai compris ta demande de répétition. En coréen, « 다시요 » suffit dans ce contexte.",
+          "Demande comprise. En coréen, « 다시요 » suffit ici.",
           true,
         );
       }
@@ -530,7 +549,7 @@ export function matchMetroSpeechIntent(
         return matched(
           "repeat-word-order",
           repeatChoice,
-          "J’ai compris ta demande. L’ordre naturel est « 다시 말해 주세요 ».",
+          "L’ordre naturel est : « 다시 말해 주세요 ».",
           true,
         );
       }
@@ -539,7 +558,7 @@ export function matchMetroSpeechIntent(
         return matched(
           "repeat-informal",
           repeatChoice,
-          "Ta demande est comprise. Avec un inconnu, préfère « 다시 말해 주세요 » à la forme directe « 다시 말해 ».",
+          "Avec un inconnu, dis « 다시 말해 주세요 » plutôt que « 다시 말해 ».",
           true,
         );
       }
@@ -551,8 +570,8 @@ export function matchMetroSpeechIntent(
         "repeat",
         repeatChoice,
         isShortRepeat
-          ? "J’ai compris que tu veux que la personne répète. « 다시요 » ou « 한 번 더요 » suffit dans ce contexte. Une version plus polie est « 다시 한번 말씀해 주세요 »."
-          : "Très bien, tu as demandé de répéter les indications.",
+          ? "Demande comprise. Dis « 다시요 » ou, plus poliment, « 다시 한번 말씀해 주세요 »."
+          : "Tu as demandé de répéter les indications.",
       );
     }
 
@@ -564,7 +583,7 @@ export function matchMetroSpeechIntent(
       return matched(
         "repeat-informal",
         repeatChoice,
-        "J’ai compris que tu demandes de répéter. La formulation correcte est « 다시 한번 말씀해 주세요 ».",
+        "Demande comprise. Dis : « 다시 한번 말씀해 주세요 ».",
         true,
       );
     }
@@ -591,8 +610,8 @@ export function matchMetroSpeechIntent(
         hasFormalThanks ? "thanks" : "understood",
         thanksChoice,
         hasFormalThanks
-          ? "Très bien, « 감사합니다 » suffit naturellement pour remercier et terminer l’échange."
-          : "Très bien, tu indiques clairement que tu as compris les indications.",
+          ? "« 감사합니다 » convient pour remercier et terminer l’échange."
+          : "Tu indiques clairement que tu as compris les indications.",
         isMixedLanguage,
       );
     }
@@ -601,7 +620,7 @@ export function matchMetroSpeechIntent(
       return matched(
         "thanks-informal",
         thanksChoice,
-        "Ton intention est comprise. Avec un inconnu, préfère « 감사합니다 » ou « 알겠습니다 ».",
+        "Avec un inconnu, préfère « 감사합니다 » ou « 알겠습니다 ».",
         true,
       );
     }
@@ -610,7 +629,7 @@ export function matchMetroSpeechIntent(
       return matched(
         "thanks-informal",
         thanksChoice,
-        "J’ai compris que tu termines l’échange. La formulation correcte est « 감사합니다 » ou « 알겠습니다 ».",
+        "Pour terminer l’échange, dis « 감사합니다 » ou « 알겠습니다 ».",
         true,
       );
     }
@@ -626,7 +645,7 @@ export function matchMetroSpeechIntent(
         category: "incomplete",
         choice: thanksChoice,
         feedback: withAvailableChoices(
-          "J’ai peut-être entendu une formule de clôture incomplète. Est-ce que tu voulais dire « 알겠습니다 » ou « 감사합니다 » ?",
+          "J’ai entendu une formule incomplète. Confirme avec « 알겠습니다 » ou « 감사합니다 ».",
           choices,
         ),
         understoodWithCorrection: false,
@@ -651,7 +670,7 @@ export function matchMetroSpeechIntent(
 
     return help(
       "out-of-scope",
-      "Ici, réponds à l’intervention en cours avec l’une des options affichées.",
+      "Choisis une des réponses proposées.",
       attemptNumber,
       "follow-up",
     );
@@ -742,7 +761,7 @@ export function matchMetroSpeechIntent(
   if (hasExit) {
     return help(
       "exit-confusion",
-      "Tu demandes la sortie. Ici, tu n’es pas encore arrivé : demande quelle direction prendre pour Gangnam avec « 방향 » ou « 가는 쪽 ».",
+      "Tu demandes la sortie, mais tu n’es pas encore arrivé. Demande la direction de Gangnam avec « 방향 » ou « 가는 쪽 ».",
       attemptNumber,
     );
   }
@@ -750,7 +769,7 @@ export function matchMetroSpeechIntent(
   if (hasDuration) {
     return help(
       "duration-confusion",
-      "Tu demandes combien de temps dure le trajet. À cette étape, cherche plutôt de quel côté prendre le train vers Gangnam.",
+      "Tu demandes la durée. Ici, demande de quel côté prendre le train vers Gangnam.",
       attemptNumber,
     );
   }
@@ -758,7 +777,7 @@ export function matchMetroSpeechIntent(
   if (hasTransfer) {
     return help(
       "transfer-confusion",
-      "Tu demandes où changer de ligne. Ici, le but est seulement de confirmer la direction vers Gangnam.",
+      "Tu demandes une correspondance. Ici, précise la direction vers Gangnam.",
       attemptNumber,
     );
   }
@@ -766,7 +785,7 @@ export function matchMetroSpeechIntent(
   if (wrongDestination && !hasGangnam) {
     return help(
       "wrong-destination",
-      `J’ai reconnu une autre destination (${wrongDestination}). Dans cette scène, tu cherches la direction de Gangnam. Réessaie en incluant « 강남 ».`,
+      `J’ai entendu une autre destination : ${wrongDestination}. Réessaie avec « 강남 ».`,
       attemptNumber,
     );
   }
@@ -778,14 +797,14 @@ export function matchMetroSpeechIntent(
   ) {
     return help(
       "wrong-destination",
-      "J’ai entendu Gangnam, mais aussi une autre direction. Demande uniquement comment aller vers Gangnam.",
+      "J’ai entendu Gangnam et une autre direction. Demande uniquement comment aller vers Gangnam.",
       attemptNumber,
     );
   }
 
   if (isFrench && !hasTravelIntent) {
     const feedback = frenchUnderstood
-      ? "Tu as bien compris qu’il faut demander comment aller à Gangnam. Essaie maintenant en coréen : « 강남에 어떻게 가요? »."
+      ? "Tu demandes comment aller à Gangnam. Essaie en coréen : « 강남에 어떻게 가요? »."
       : "Réponds en coréen : tu es à Hongik University et tu cherches comment aller à Gangnam.";
     return help("french", feedback, attemptNumber);
   }
@@ -795,7 +814,7 @@ export function matchMetroSpeechIntent(
       return matched(
         "natural",
         directionChoice,
-        "Très bien, tu t’es corrigé et ta demande finale vers Gangnam est claire.",
+        "Ta correction est claire : tu demandes la direction de Gangnam.",
       );
     }
 
@@ -803,7 +822,7 @@ export function matchMetroSpeechIntent(
       return matched(
         "mixed-language",
         directionChoice,
-        "J’ai compris ta demande vers Gangnam. En coréen, écris aussi la destination « 강남 » : « 강남에 어떻게 가요? ».",
+        "Demande comprise. Écris aussi la destination en coréen : « 강남에 어떻게 가요? ».",
         true,
       );
     }
@@ -812,7 +831,7 @@ export function matchMetroSpeechIntent(
       return matched(
         "particle-imperfection",
         directionChoice,
-        "Ta demande est comprise. Pour une destination, utilise « 에 » ou « 까지 » : « 강남에 어떻게 가요? ».",
+        "Pour une destination, utilise « 에 » ou « 까지 » : « 강남에 어떻게 가요? ».",
         true,
       );
     }
@@ -821,7 +840,7 @@ export function matchMetroSpeechIntent(
       return matched(
         "word-order",
         directionChoice,
-        "L’intention est claire. Un ordre naturel est : « 강남에 어떻게 가요? ».",
+        "Utilise cet ordre : « 강남에 어떻게 가요? ».",
         true,
       );
     }
@@ -830,7 +849,7 @@ export function matchMetroSpeechIntent(
       return matched(
         "go-come-confusion",
         directionChoice,
-        "J’ai compris que tu veux aller à Gangnam. Ici, utilise « 가요 » plutôt que « 와요 » : « 강남에 어떻게 가요? ».",
+        "Pour aller à Gangnam, utilise « 가요 » plutôt que « 와요 » : « 강남에 어떻게 가요? ».",
         true,
       );
     }
@@ -843,7 +862,7 @@ export function matchMetroSpeechIntent(
       return matched(
         "minor-imperfection",
         directionChoice,
-        "J’ai compris que tu cherches le métro pour Gangnam. Pour demander le trajet en général, dis plutôt « 강남에 어떻게 가요? ».",
+        "Tu cherches le métro pour Gangnam. Dis plutôt : « 강남에 어떻게 가요? ».",
         true,
       );
     }
@@ -852,7 +871,7 @@ export function matchMetroSpeechIntent(
       return matched(
         "minor-imperfection",
         directionChoice,
-        "Ta demande est comprise. Avec un inconnu, ajoute la terminaison polie : « 강남에 어떻게 가요? ».",
+        "Avec un inconnu, ajoute la terminaison polie : « 강남에 어떻게 가요? ».",
         true,
       );
     }
@@ -866,7 +885,7 @@ export function matchMetroSpeechIntent(
       return matched(
         "particle-imperfection",
         directionChoice,
-        "Ta demande est claire. Tu peux ajouter la particule de destination : « 강남에 어떻게 가요? » ou « 강남까지 어떻게 가요? ».",
+        "Ajoute la particule de destination : « 강남에 어떻게 가요? » ou « 강남까지 어떻게 가요? ».",
         true,
       );
     }
@@ -899,10 +918,10 @@ export function matchMetroSpeechIntent(
       isNatural ? "natural" : "minor-imperfection",
       directionChoice,
       isGeneralBeginnerPhrase
-        ? `Ta phrase est naturelle et permet de demander comment aller à Gangnam. Dans une station, tu peux aussi dire : ${GANGNAM_MODEL}`
+        ? `Ta phrase est naturelle. Dans une station, tu peux aussi dire : « ${GANGNAM_MODEL} ».`
         : isNatural
-          ? "Très bien. Tu as clairement demandé comment aller vers Gangnam."
-        : `Ta phrase est compréhensible. Pour être plus naturel, tu peux dire : « ${GANGNAM_MODEL} ».`,
+          ? "Tu as clairement demandé comment aller vers Gangnam."
+        : `Réponse comprise. Pour être plus naturel, dis : « ${GANGNAM_MODEL} ».`,
       !isNatural,
     );
   }
@@ -917,7 +936,7 @@ export function matchMetroSpeechIntent(
       category: "incomplete",
       choice: directionChoice,
       feedback: withAvailableChoices(
-        "Ta phrase semble inachevée après « 강남 가려면… ». Veux-tu demander comment aller à Gangnam ?",
+        "La phrase s’arrête après « 강남 가려면… ». Complète ta question ou réessaie.",
         choices,
       ),
       understoodWithCorrection: false,
@@ -927,7 +946,7 @@ export function matchMetroSpeechIntent(
   if (hasGangnam && !hasTravelIntent) {
     return help(
       "destination-only",
-      `J’ai bien reconnu Gangnam, mais il manque l’idée de direction. Demande de quel côté prendre le train : « ${GANGNAM_MODEL} ».`,
+      `Il manque la direction. Demande de quel côté prendre le train : « ${GANGNAM_MODEL} ».`,
       attemptNumber,
     );
   }
@@ -936,7 +955,7 @@ export function matchMetroSpeechIntent(
     return matched(
       "minor-imperfection",
       directionChoice,
-      "J’ai compris que tu demandes la direction de Gangnam. La destination correcte s’écrit « 강남 ».",
+      "La destination s’écrit « 강남 ».",
       true,
     );
   }
@@ -947,7 +966,7 @@ export function matchMetroSpeechIntent(
       category: "uncertain",
       choice: directionChoice,
       feedback: withAvailableChoices(
-        "J’ai peut-être entendu « 강남 방향 ». Est-ce bien la direction vers Gangnam que tu voulais demander ?",
+        "J’ai entendu « 강남 방향 ». Confirme ou réessaie.",
         choices,
       ),
       understoodWithCorrection: false,
@@ -957,14 +976,14 @@ export function matchMetroSpeechIntent(
   if (!hasGangnam && hasTravelIntent) {
     return help(
       "direction-only",
-      "Tu demandes bien de quel côté aller, mais il manque la destination. Ajoute « 강남 » pour préciser où tu veux aller.",
+      "Il manque la destination. Ajoute « 강남 ».",
       attemptNumber,
     );
   }
 
   return help(
     "out-of-scope",
-    "Ici, tu es dans la station de Hongik University et tu cherches le quai vers Gangnam. Demande de quel côté se trouve cette direction.",
+    "Demande de quel côté prendre le train vers Gangnam.",
     attemptNumber,
   );
 }

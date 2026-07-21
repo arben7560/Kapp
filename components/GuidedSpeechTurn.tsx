@@ -74,7 +74,7 @@ export function GuidedSpeechTurn({
   const primaryLabel = interactionDisabledLabel || (isListening
     ? "Arrêter"
     : canRetry
-      ? "Recommencer"
+      ? "Réessayer"
       : "Parler");
   const primaryIcon = isListening ? "stop" : "mic";
   const displayedFeedback = feedback || speechState.message;
@@ -89,7 +89,7 @@ export function GuidedSpeechTurn({
           script="latin"
           style={[styles.eyebrow, { color: accent }]}
         >
-          INTENTION EN FRANÇAIS
+          CE QUE TU VEUX DIRE
         </AppText>
         {intentionLabels.map((label, index) => (
           <View key={`${label}-${index}`} style={styles.intentionRow}>
@@ -199,7 +199,7 @@ export function GuidedSpeechTurn({
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Recommencer"
+              accessibilityLabel="Réessayer"
               hitSlop={6}
               onPress={onRetry}
               style={({ pressed }) => [
@@ -221,7 +221,7 @@ export function GuidedSpeechTurn({
                 align="center"
                 style={styles.helpButtonText}
               >
-                Recommencer
+                Réessayer
               </AppText>
             </Pressable>
           </>

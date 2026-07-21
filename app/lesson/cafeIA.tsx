@@ -770,7 +770,7 @@ export default function CafeIaScreen() {
         >
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Retour"
+            accessibilityLabel="Quitter la scène"
             hitSlop={8}
             onPress={handleExit}
             style={styles.backBtn}
@@ -978,7 +978,7 @@ export default function CafeIaScreen() {
                     script="latin"
                     style={styles.endSubtitle}
                   >
-                    Tu peux rejouer cette mission ou revenir au menu.
+                    Tu peux rejouer cette scène ou revenir aux missions.
                   </AppText>
 
                   <AppText
@@ -993,7 +993,7 @@ export default function CafeIaScreen() {
                   <View style={styles.endActions}>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Rejouer la mission"
+                      accessibilityLabel="Rejouer la scène"
                       hitSlop={6}
                       onPress={handleRestart}
                       style={({ pressed }) => [
@@ -1016,14 +1016,14 @@ export default function CafeIaScreen() {
                           align="center"
                           style={styles.endActionPrimaryText}
                         >
-                          Rejouer
+                          Rejouer la scène
                         </AppText>
                       </LinearGradient>
                     </Pressable>
 
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Retour"
+                      accessibilityLabel="Retour aux missions"
                       hitSlop={6}
                       onPress={handleExit}
                       style={({ pressed }) => [
@@ -1038,7 +1038,7 @@ export default function CafeIaScreen() {
                         align="center"
                         style={styles.endActionSecondaryText}
                       >
-                        Retour
+                        Retour aux missions
                       </AppText>
                     </Pressable>
                   </View>
@@ -1046,7 +1046,7 @@ export default function CafeIaScreen() {
                   {shouldShowPremiumSuggestion ? (
                     <Pressable
                       accessibilityRole="link"
-                      accessibilityLabel="Débloquer toutes les missions"
+                      accessibilityLabel="Découvrir Premium"
                       hitSlop={6}
                       onPress={() => router.push("/premium")}
                       style={({ pressed }) => [
@@ -1061,7 +1061,7 @@ export default function CafeIaScreen() {
                         align="center"
                         style={styles.endPremiumLinkText}
                       >
-                        Débloquer toutes les missions
+                        Découvrir Premium
                       </AppText>
                     </Pressable>
                   ) : null}

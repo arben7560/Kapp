@@ -242,7 +242,7 @@ export default function TravelCyber() {
                     end={{ x: 1, y: 1 }}
                     style={styles.playGradient}
                   >
-                    <AppText variant="button" style={styles.playBtnText}>ÉMETTRE LE SON</AppText>
+                    <AppText variant="button" style={styles.playBtnText}>ÉCOUTER</AppText>
                   </LinearGradient>
                 </Pressable>
               </BlurView>
@@ -291,7 +291,7 @@ export default function TravelCyber() {
                   speakKo(currentQuiz.say);
                 }}
               >
-                <AppText variant="button" style={styles.quizListenText}>{"🔊 ÉCOUTER L'UNITÉ"}</AppText>
+                <AppText variant="button" style={styles.quizListenText}>🔊 ÉCOUTER</AppText>
               </Pressable>
 
               <View style={styles.choiceColumn}>
@@ -332,7 +332,7 @@ export default function TravelCyber() {
                   onPress={() => setShowAnswer(true)}
                   disabled={selectedChoice === null}
                 >
-                  <AppText variant="button" style={styles.verifyBtnText}>VÉRIFIER LE SCAN</AppText>
+                  <AppText variant="button" style={styles.verifyBtnText}>VALIDER</AppText>
                 </Pressable>
               ) : (
                 <View style={styles.answerArea}>
@@ -345,7 +345,7 @@ export default function TravelCyber() {
                       setShowAnswer(false);
                     }}
                   >
-                    <AppText variant="button" style={styles.nextBtnText}>PROCHAIN MODULE ➡️</AppText>
+                    <AppText variant="button" style={styles.nextBtnText}>{quizIndex === QUIZ_ITEMS.length - 1 ? "RECOMMENCER LE QUIZ" : "SUIVANT"}</AppText>
                   </Pressable>
                 </View>
               )}

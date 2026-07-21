@@ -43,6 +43,32 @@ const CYAN = "#22D3EE";
 const PURPLE = "#A855F7";
 const VIDEO_OVERSCAN_SCALE = 1.06;
 
+const RESTAURANT_MISSION_PHRASES: Record<
+  string,
+  Readonly<{ korean: string; french: string }>
+> = {
+  "order-simple": {
+    korean: "삼겹살 2인분 주세요.",
+    french: "Deux portions de samgyeopsal, s’il vous plaît.",
+  },
+  "ask-recommendation": {
+    korean: "추천 메뉴가 있어요?",
+    french: "Vous avez un menu à recommander ?",
+  },
+  "choose-grill": {
+    korean: "네, 구워 주세요.",
+    french: "Oui, faites-la griller pour nous.",
+  },
+  "add-sides": {
+    korean: "반찬 좀 더 주세요.",
+    french: "Un peu plus d’accompagnements, s’il vous plaît.",
+  },
+  "pay-receipt": {
+    korean: "영수증 주세요.",
+    french: "Le reçu, s’il vous plaît.",
+  },
+};
+
 // ==================== VIDEOS ====================
 const pedWelcome = require("../../assets/ai/restaurant/ped_welcome.mp4");
 const pedRecommendation = require("../../assets/ai/restaurant/ped_recommendation.mp4");
@@ -163,6 +189,9 @@ export default function RestaurantIaScreen() {
   const currentMission =
     getRestaurantMissionById(missionId) ??
     getRestaurantMissionById(DEFAULT_RESTAURANT_MISSION_ID);
+  const missionPhrase =
+    RESTAURANT_MISSION_PHRASES[currentMission?.id ?? ""] ??
+    RESTAURANT_MISSION_PHRASES[DEFAULT_RESTAURANT_MISSION_ID];
   const { hasPremiumAccess, isLoading: isPaywallLoading } = usePaywall();
   const canEnterMission =
     currentMission?.access !== "premium" || hasPremiumAccess;
@@ -485,7 +514,7 @@ export default function RestaurantIaScreen() {
         >
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Retour"
+            accessibilityLabel="Quitter la scène"
             hitSlop={8}
             onPress={() => router.back()}
             style={styles.backBtn}
@@ -702,12 +731,22 @@ export default function RestaurantIaScreen() {
                     Mission terminée
                   </AppText>
                   <AppText
-                    variant="bodySecondary"
+                    variant="caption"
                     tone="muted"
                     script="latin"
                     style={styles.endSubtitle}
                   >
-                    Tu peux rejouer cette mission ou revenir au menu.
+                    Phrase à retenir
+                  </AppText>
+
+                  <AppText
+                    variant="koreanSecondary"
+                    tone="strong"
+                    script="korean"
+                    accessibilityLanguage="ko-KR"
+                    style={styles.endSubtitle}
+                  >
+                    {missionPhrase.korean}
                   </AppText>
 
                   <AppText
@@ -716,13 +755,13 @@ export default function RestaurantIaScreen() {
                     script="latin"
                     style={styles.endSubtitle}
                   >
-                    Série conservée.
+                    {missionPhrase.french}
                   </AppText>
 
                   <View style={styles.endActions}>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Rejouer la mission"
+                      accessibilityLabel="Rejouer la scène"
                       hitSlop={6}
                       onPress={handleRestart}
                       style={({ pressed }) => [
@@ -745,14 +784,14 @@ export default function RestaurantIaScreen() {
                           align="center"
                           style={styles.endActionPrimaryText}
                         >
-                          Rejouer
+                          Rejouer la scène
                         </AppText>
                       </LinearGradient>
                     </Pressable>
 
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Retour"
+                      accessibilityLabel="Retour aux missions"
                       hitSlop={6}
                       onPress={() => router.back()}
                       style={({ pressed }) => [
@@ -767,7 +806,7 @@ export default function RestaurantIaScreen() {
                         align="center"
                         style={styles.endActionSecondaryText}
                       >
-                        Retour
+                        Retour aux missions
                       </AppText>
                     </Pressable>
                   </View>

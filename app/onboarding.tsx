@@ -398,7 +398,7 @@ export default function OnboardingScreen() {
               <View style={styles.bottomCtaArea}>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Commencer l’expérience"
+                  accessibilityLabel="Choisir une scène"
                   accessibilityHint="Ouvre le choix de la scène de départ"
                   hitSlop={6}
                   style={styles.primaryWrap}
@@ -419,7 +419,7 @@ export default function OnboardingScreen() {
                       style={StyleSheet.absoluteFill}
                     />
                     <AppText variant="button" style={styles.primaryText}>
-                      Commencer l’expérience
+                      Choisir une scène
                     </AppText>
                   </BlurView>
                 </Pressable>
@@ -473,7 +473,7 @@ export default function OnboardingScreen() {
             >
               <Pressable
                 accessibilityRole="link"
-                accessibilityLabel="Choisir ton parcours. Hangul, vocabulaire et autres bases"
+                accessibilityLabel="Ouvrir les parcours. Hangul, vocabulaire et autres bases"
                 accessibilityHint="Ouvre l'accueil des parcours"
                 hitSlop={6}
                 style={styles.pathPress}
@@ -533,7 +533,7 @@ export default function OnboardingScreen() {
                       isCompactScreen && styles.pathBottomRowCompact,
                     ]}
                   >
-                    <AppText variant="label" style={styles.pathAction}>Entrer</AppText>
+                    <AppText variant="label" style={styles.pathAction}>Ouvrir</AppText>
                     <AppText variant="sectionTitle" lineContract="singleLine" style={[styles.pathArrow, { color: CYAN }]}>→</AppText>
                   </View>
                 </BlurView>
@@ -758,13 +758,13 @@ export default function OnboardingScreen() {
 
               <Pressable
                 accessibilityRole="link"
-                  accessibilityLabel="Voir plus de scènes"
+                  accessibilityLabel="Ouvrir l’accueil"
                 hitSlop={8}
                 style={styles.discreetAction}
                 onPress={openMoreScenes}
               >
                 <AppText variant="link" style={styles.discreetActionText}>
-                  Voir plus de scènes
+                  Ouvrir l’accueil
                 </AppText>
               </Pressable>
             </View>
@@ -778,7 +778,7 @@ export default function OnboardingScreen() {
                 style={styles.secondaryButton}
                 onPress={() => goToStep("arrival")}
               >
-                <AppText variant="button" style={styles.secondaryText}>Retour</AppText>
+                <AppText variant="button" style={styles.secondaryText}>Retour à l’introduction</AppText>
               </Pressable>
 
               <Pressable
@@ -949,7 +949,7 @@ export default function OnboardingScreen() {
                   style={styles.secondaryButton}
                   onPress={() => goToStep("scene")}
                 >
-                  <AppText variant="button" style={styles.secondaryText}>Retour</AppText>
+                  <AppText variant="button" style={styles.secondaryText}>Retour aux scènes</AppText>
                 </Pressable>
 
                 <Pressable

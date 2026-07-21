@@ -11,7 +11,14 @@ type AudioAsset = number;
 
 type SetSelectedAudio = (id: string | null) => void;
 
-export function useVocAudio(setSelectedAudio: SetSelectedAudio) {
+type UseVocAudioOptions = {
+  trackPlayback?: boolean;
+};
+
+export function useVocAudio(
+  setSelectedAudio: SetSelectedAudio,
+  { trackPlayback = true }: UseVocAudioOptions = {},
+) {
   const playerRef = useRef<AudioPlayer | null>(null);
   const activeAudioIdRef = useRef<string | null>(null);
   const playbackListenerRef = useRef<{ remove: () => void } | null>(null);
@@ -53,7 +60,9 @@ export function useVocAudio(setSelectedAudio: SetSelectedAudio) {
         }
 
         Vibration.vibrate(8);
-        void trackAudioPlayed();
+        if (trackPlayback) {
+          void trackAudioPlayed();
+        }
 
         const player = createAudioPlayer(audioSource, {
           updateInterval: 250,
@@ -128,7 +137,7 @@ export function useVocAudio(setSelectedAudio: SetSelectedAudio) {
         onError?.();
       }
     },
-    [cleanupAudioListener, setSelectedAudio, stopAudio],
+    [cleanupAudioListener, setSelectedAudio, stopAudio, trackPlayback],
   );
 
   useEffect(() => {

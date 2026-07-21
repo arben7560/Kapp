@@ -54,7 +54,7 @@ export function ModuleCard({
   metaLabel,
   requiresPremium = false,
   selected = false,
-  lockedSubtitle = "Débloquer avec Premium",
+  lockedSubtitle = "Découvrir Premium",
   accessibilityContext,
   iconScript = "latin",
   visualVariant = "default",
@@ -73,7 +73,7 @@ export function ModuleCard({
       : "Accès gratuit";
   const selectedLabel = selected ? "Sélectionné" : undefined;
   const actionLabel = isLocked
-    ? "Ouvre l'écran Premium"
+    ? "Découvrir Premium"
     : `Ouvre ${accessibilityContext}`;
   const accessibilityLabel = [
     title,
@@ -271,7 +271,7 @@ export function ModuleCard({
                 ? "✧"
                 : "›"
               : isLocked
-                ? "Premium"
+                ? "Découvrir Premium"
                 : "Ouvrir"}
           </AppText>
         </BlurView>

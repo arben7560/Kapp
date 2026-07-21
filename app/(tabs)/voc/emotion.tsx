@@ -240,7 +240,7 @@ export default function EmotionCyber() {
                     end={{ x: 1, y: 1 }}
                     style={styles.playGradient}
                   >
-                    <AppText variant="button" style={styles.playBtnText}>ÉCOUTER LA NUANCE</AppText>
+                    <AppText variant="button" style={styles.playBtnText}>ÉCOUTER</AppText>
                   </LinearGradient>
                 </Pressable>
               </BlurView>

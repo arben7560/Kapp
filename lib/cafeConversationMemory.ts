@@ -180,24 +180,18 @@ export function markCafeSpeechNodeCorrected(
 
 function getExplanation(attempt: CafeSpeechAttempt) {
   if (attempt.resultType === "word-order-error") {
-    return "Attention à l’ordre des mots : 먹고 doit précéder 갈게요 dans cette expression.";
+    return "Mets 먹고 avant 갈게요 dans cette expression.";
   }
   if (attempt.resultType === "probable-transcription-error") {
-    return (
-      attempt.feedback ??
-      "La reconnaissance vocale a probablement déformé un mot. Ce n’est pas présenté comme une faute certaine."
-    );
+    return "Le micro a peut-être déformé un mot.";
   }
   if (attempt.resultType === "ambiguous") {
-    return attempt.feedback ?? "Plusieurs intentions restent possibles.";
+    return attempt.feedback ?? "Choisis une seule réponse.";
   }
   if (attempt.resultType === "not-understood") {
-    return attempt.feedback ?? "La réponse n’a pas pu être reliée à une option de cette étape.";
+    return attempt.feedback ?? "Cette réponse ne convient pas ici.";
   }
-  return (
-    attempt.feedback ??
-    "L’intention est comprise, avec une formulation plus naturelle recommandée."
-  );
+  return attempt.feedback ?? "Essaie une formulation plus naturelle.";
 }
 
 function getImperfectionGroupKey(attempt: CafeSpeechAttempt) {

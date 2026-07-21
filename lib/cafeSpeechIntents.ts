@@ -1,4 +1,5 @@
 import type { CafeOrderProduct } from "./cafeOrderState";
+import { getSpeechRecognitionFailureMessage } from "./speechRecognitionState.ts";
 
 export const CAFE_SPEECH_PILOT_MISSION_ID = "order-takeout";
 export const CAFE_SPEECH_MAX_KEYWORD_DISTANCE = 1;
@@ -130,19 +131,19 @@ export type CafeSpeechAttemptPedagogy = Readonly<{
 }>;
 
 const AMBIGUOUS_PRODUCT_FEEDBACK =
-  "J’ai reconnu plusieurs produits. Choisis une seule commande dans cette scène.";
+  "J’ai entendu plusieurs produits. Choisis-en un seul.";
 const AMBIGUOUS_CONSUMPTION_FEEDBACK =
-  "J’ai reconnu à la fois sur place et à emporter. Choisis une seule option.";
+  "Tu as indiqué sur place et à emporter. Choisis une seule réponse.";
 const AMBIGUOUS_PAYMENT_FEEDBACK =
-  "J’ai reconnu à la fois carte et espèces. Quel moyen de paiement souhaites-tu utiliser ?";
+  "Tu as donné deux moyens de paiement. Choisis-en un.";
 const AMBIGUOUS_RECEIPT_FEEDBACK =
-  "J’ai reconnu à la fois oui et non pour le reçu. Indique clairement si tu le souhaites.";
+  "Tu as répondu oui et non pour le reçu. Choisis une réponse.";
 const EAT_HERE_WORD_ORDER_FEEDBACK =
-  "J’ai compris que tu voulais dire “je vais manger ici”, mais l’ordre des mots est incorrect. En coréen, dis plutôt : 먹고 갈게요.";
+  "L’ordre des mots est incorrect. Dis plutôt : 먹고 갈게요.";
 const AMBIGUOUS_RECEIPT_STATEMENT_FEEDBACK =
-  "J’ai compris que tu parles du reçu, mais je ne sais pas si tu l’acceptes ou le refuses. Dis plutôt “네, 영수증 주세요” ou “아니요, 괜찮아요”.";
+  "Précise si tu veux le reçu. Dis “네, 영수증 주세요” ou “아니요, 괜찮아요”.";
 const UNAVAILABLE_PRODUCT_FEEDBACK =
-  "Cette réponse ne correspond à aucune commande disponible ici. Choisis americano, jus d’orange, latte ou cheesecake.";
+  "Ce produit n’est pas disponible ici. Choisis un americano, un jus d’orange, un latte ou un cheesecake.";
 
 const PRODUCT_FORBIDDEN_TOKENS = [
   "안",
@@ -434,17 +435,17 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
       {
         variants: ["아메리카노 한 조각 주세요.", "아메리카노 줘."],
         feedback:
-          "Commande comprise : americano. Pour une boisson, dis plutôt “아메리카노 한 잔 주세요.”",
+          "Pour une boisson, utilise 잔. Dis : “아메리카노 한 잔 주세요.”",
       },
       {
         variants: ["아메리카노 한 개 주세요."],
         feedback:
-          "Commande comprise : americano. Pour une boisson, on utilise généralement 잔 plutôt que 개 : “아메리카노 한 잔 주세요.”",
+          "Pour une boisson, utilise 잔 plutôt que 개 : “아메리카노 한 잔 주세요.”",
       },
       {
         variants: ["아메리카노 한 주세요."],
         feedback:
-          "Commande comprise : americano. Après 한, ajoute le classificateur 잔 : “아메리카노 한 잔 주세요.”",
+          "Après 한, ajoute 잔 : “아메리카노 한 잔 주세요.”",
       },
     ],
     fuzzyKeywords: ["아메리카노"],
@@ -457,7 +458,7 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
     helpLabel: "commande un americano",
     meaning: "Ta réponse commande un americano",
     correctionMessage:
-      "Commande comprise : americano. Dis plutôt “아메리카노 한 잔 주세요.”",
+      "J’ai compris « americano ». Essaie : “아메리카노 한 잔 주세요.”",
     ambiguityMessage: AMBIGUOUS_PRODUCT_FEEDBACK,
   },
   {
@@ -482,17 +483,17 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
       {
         variants: ["오렌지 주스 한 조각 주세요.", "오렌지 주스 줘."],
         feedback:
-          "Commande comprise : jus d’orange. Pour une boisson, dis plutôt “오렌지 주스 한 잔 주세요.”",
+          "Pour une boisson, utilise 잔. Dis : “오렌지 주스 한 잔 주세요.”",
       },
       {
         variants: ["오렌지 주스 한 개 주세요."],
         feedback:
-          "Commande comprise : jus d’orange. Pour une boisson, on utilise généralement 잔 plutôt que 개 : “오렌지 주스 한 잔 주세요.”",
+          "Pour une boisson, utilise 잔 plutôt que 개 : “오렌지 주스 한 잔 주세요.”",
       },
       {
         variants: ["오렌지 주스 한 주세요."],
         feedback:
-          "Commande comprise : jus d’orange. Après 한, ajoute le classificateur 잔 : “오렌지 주스 한 잔 주세요.”",
+          "Après 한, ajoute 잔 : “오렌지 주스 한 잔 주세요.”",
       },
     ],
     fuzzyKeywords: ["오렌지주스"],
@@ -505,7 +506,7 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
     helpLabel: "commande un jus d’orange",
     meaning: "Ta réponse commande un jus d’orange",
     correctionMessage:
-      "Commande comprise : jus d’orange. Dis plutôt “오렌지 주스 한 잔 주세요.”",
+      "J’ai compris « jus d’orange ». Essaie : “오렌지 주스 한 잔 주세요.”",
     ambiguityMessage: AMBIGUOUS_PRODUCT_FEEDBACK,
   },
   {
@@ -530,17 +531,17 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
       {
         variants: ["라떼 한 조각 주세요.", "라떼 줘."],
         feedback:
-          "Commande comprise : latte. Pour une boisson, dis plutôt “라떼 한 잔 주세요.”",
+          "Pour une boisson, utilise 잔. Dis : “라떼 한 잔 주세요.”",
       },
       {
         variants: ["라떼 한 개 주세요."],
         feedback:
-          "Commande comprise : latte. Pour une boisson, on utilise généralement 잔 plutôt que 개 : “라떼 한 잔 주세요.”",
+          "Pour une boisson, utilise 잔 plutôt que 개 : “라떼 한 잔 주세요.”",
       },
       {
         variants: ["라떼 한 주세요."],
         feedback:
-          "Commande comprise : latte. Après 한, ajoute le classificateur 잔 : “라떼 한 잔 주세요.”",
+          "Après 한, ajoute 잔 : “라떼 한 잔 주세요.”",
       },
     ],
     fuzzyKeywords: ["라떼"],
@@ -553,7 +554,7 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
     helpLabel: "commande un latte",
     meaning: "Ta réponse commande un latte",
     correctionMessage:
-      "Commande comprise : latte. Dis plutôt “라떼 한 잔 주세요.”",
+      "J’ai compris « latte ». Essaie : “라떼 한 잔 주세요.”",
     ambiguityMessage: AMBIGUOUS_PRODUCT_FEEDBACK,
   },
   {
@@ -580,12 +581,12 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
       {
         variants: ["치즈케이크 한 잔 주세요.", "치즈케이크 줘."],
         feedback:
-          "Commande comprise : cheesecake. Pour une part, dis plutôt “치즈케이크 한 조각 주세요.”",
+          "Pour une part, utilise 조각. Dis : “치즈케이크 한 조각 주세요.”",
       },
       {
         variants: ["치즈케이크 한 주세요."],
         feedback:
-          "Commande comprise : cheesecake. Après 한, ajoute le classificateur 조각 : “치즈케이크 한 조각 주세요.”",
+          "Après 한, ajoute 조각 : “치즈케이크 한 조각 주세요.”",
       },
     ],
     fuzzyKeywords: ["치즈케이크"],
@@ -598,7 +599,7 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
     helpLabel: "commande un cheesecake",
     meaning: "Ta réponse commande un cheesecake",
     correctionMessage:
-      "Commande comprise : cheesecake. Dis plutôt “치즈케이크 한 조각 주세요.”",
+      "J’ai compris « cheesecake ». Essaie : “치즈케이크 한 조각 주세요.”",
     ambiguityMessage: AMBIGUOUS_PRODUCT_FEEDBACK,
   },
   {
@@ -629,7 +630,7 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
       {
         variants: ["다시 말해.", "다시 말해 줘."],
         feedback:
-          "Intention comprise : répéter. Plus poli : “다시 한번 말씀해 주세요.”",
+          "Pour rester poli, dis : “다시 한번 말씀해 주세요.”",
       },
     ],
     fuzzyKeywords: ["말씀"],
@@ -642,7 +643,7 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
     helpLabel: "demande de répéter",
     meaning: "Ta réponse demande de répéter",
     correctionMessage:
-      "Intention comprise : répéter. Dis plutôt “다시 한번 말씀해 주세요.”",
+      "Demande comprise. Essaie : “다시 한번 말씀해 주세요.”",
     ambiguityMessage:
       "J’ai reconnu plusieurs demandes. Reformule uniquement la demande de répétition.",
     includeInUnavailableFeedback: false,
@@ -687,12 +688,12 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
       {
         variants: ["드시고 갈 거예요."],
         feedback:
-          "Intention comprise : sur place. Pour parler de toi, dis plutôt “먹고 갈게요”.",
+          "Pour parler de toi, dis : “먹고 갈게요”.",
       },
       {
         variants: ["먹고 가.", "여기서 먹어."],
         feedback:
-          "Intention comprise : sur place. Plus poli : “먹고 갈게요.”",
+          "Pour rester poli, dis : “먹고 갈게요.”",
       },
     ],
     fuzzyKeywords: ["먹고", "매장"],
@@ -705,7 +706,7 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
     helpLabel: "indique que tu consommeras sur place",
     meaning: "Ta réponse signifie que tu consommeras sur place",
     correctionMessage:
-      "Intention comprise : sur place. Dis plutôt “먹고 갈게요.”",
+      "J’ai compris « sur place ». Essaie : “먹고 갈게요.”",
     ambiguityMessage: AMBIGUOUS_CONSUMPTION_FEEDBACK,
   },
   {
@@ -754,7 +755,7 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
           "테이크아웃 줘.",
         ],
         feedback:
-          "Intention comprise : à emporter. Plus naturel : “포장해 주세요” ou “테이크아웃이요”.",
+          "Pour être plus naturel, dis “포장해 주세요” ou “테이크아웃이요”.",
       },
     ],
     fuzzyKeywords: ["포장", "테이크아웃"],
@@ -767,7 +768,7 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
     helpLabel: "demande à emporter",
     meaning: "Ta réponse demande une commande à emporter",
     correctionMessage:
-      "Intention comprise : à emporter. Dis plutôt “포장해 주세요.”",
+      "J’ai compris « à emporter ». Essaie : “포장해 주세요.”",
     ambiguityMessage: AMBIGUOUS_CONSUMPTION_FEEDBACK,
   },
   {
@@ -793,12 +794,12 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
       {
         variants: ["카드 할게요."],
         feedback:
-          "J’ai compris que tu veux payer par carte. Avec un moyen de paiement, utilise 로 : “카드로 할게요.”",
+          "Pour payer par carte, utilise 로 : “카드로 할게요.”",
       },
       {
         variants: ["카드.", "카드로 해."],
         feedback:
-          "Paiement compris : carte. Plus poli : “카드로 할게요.”",
+          "Pour rester poli, dis : “카드로 할게요.”",
       },
     ],
     fuzzyKeywords: ["카드"],
@@ -811,7 +812,7 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
     helpLabel: "choisis le paiement par carte",
     meaning: "Ta réponse demande un paiement par carte",
     correctionMessage:
-      "Paiement compris : carte. Dis plutôt “카드로 할게요.”",
+      "J’ai compris « carte ». Essaie : “카드로 할게요.”",
     ambiguityMessage: AMBIGUOUS_PAYMENT_FEEDBACK,
   },
   {
@@ -837,12 +838,12 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
       {
         variants: ["현금 할게요.", "현금에 할게요."],
         feedback:
-          "J’ai compris que tu veux payer en espèces. Utilise 으로, et non 에 : “현금으로 할게요.”",
+          "Pour payer en espèces, utilise 으로 et non 에 : “현금으로 할게요.”",
       },
       {
         variants: ["현금.", "현금으로 해."],
         feedback:
-          "Paiement compris : espèces. Plus poli : “현금으로 할게요.”",
+          "Pour rester poli, dis : “현금으로 할게요.”",
       },
     ],
     fuzzyKeywords: ["현금"],
@@ -855,7 +856,7 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
     helpLabel: "choisis le paiement en espèces",
     meaning: "Ta réponse demande un paiement en espèces",
     correctionMessage:
-      "Paiement compris : espèces. Dis plutôt “현금으로 할게요.”",
+      "J’ai compris « espèces ». Essaie : “현금으로 할게요.”",
     ambiguityMessage: AMBIGUOUS_PAYMENT_FEEDBACK,
   },
   {
@@ -882,7 +883,7 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
       {
         variants: ["영수증.", "영수증 줘."],
         feedback:
-          "Intention comprise : tu souhaites le reçu. Plus poli : “영수증 주세요.”",
+          "Pour demander le reçu poliment, dis : “영수증 주세요.”",
       },
     ],
     fuzzyKeywords: ["영수증", "필요해요"],
@@ -895,7 +896,7 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
     helpLabel: "accepte le reçu",
     meaning: "Ta réponse accepte le reçu",
     correctionMessage:
-      "J’ai compris que tu souhaites le reçu. Le mot “영수증” a peut-être été mal reconnu. Dis plutôt “영수증 주세요.”",
+      "J’ai compris « avec reçu ». Essaie : “영수증 주세요.”",
     ambiguityMessage: AMBIGUOUS_RECEIPT_FEEDBACK,
   },
   {
@@ -921,7 +922,7 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
       {
         variants: ["아니.", "필요 없어."],
         feedback:
-          "Intention comprise : pas de reçu. Plus poli : “아니요, 괜찮아요.”",
+          "Pour refuser poliment, dis : “아니요, 괜찮아요.”",
       },
     ],
     fuzzyKeywords: ["괜찮아요"],
@@ -934,7 +935,7 @@ export const CAFE_SPEECH_INTENTS: readonly CafeSpeechIntentDefinition[] = [
     helpLabel: "refuse le reçu",
     meaning: "Ta réponse refuse le reçu",
     correctionMessage:
-      "Intention comprise : pas de reçu. La reconnaissance vocale a peut-être déformé un mot. Dis plutôt “아니요, 괜찮아요.”",
+      "J’ai compris « sans reçu ». Essaie : “아니요, 괜찮아요.”",
     ambiguityMessage: AMBIGUOUS_RECEIPT_FEEDBACK,
   },
 ];
@@ -944,25 +945,25 @@ const CAFE_PRODUCT_MENTIONS = [
     id: "americano",
     aliases: ["아메리카노"],
     feedback:
-      "Commande comprise : americano. Pour une boisson, dis plutôt “아메리카노 한 잔 주세요.”",
+      "J’ai compris « americano ». Essaie : “아메리카노 한 잔 주세요.”",
   },
   {
     id: "cheesecake",
     aliases: ["치즈케이크", "케이크"],
     feedback:
-      "Commande comprise : cheesecake. Pour une part, dis plutôt “치즈케이크 한 조각 주세요.”",
+      "J’ai compris « cheesecake ». Essaie : “치즈케이크 한 조각 주세요.”",
   },
   {
     id: "orange-juice",
     aliases: ["오렌지주스", "주스"],
     feedback:
-      "Commande comprise : jus d’orange. Pour une boisson, dis plutôt “오렌지 주스 한 잔 주세요.”",
+      "J’ai compris « jus d’orange ». Essaie : “오렌지 주스 한 잔 주세요.”",
   },
   {
     id: "latte",
     aliases: ["라떼"],
     feedback:
-      "Commande comprise : latte. Pour une boisson, dis plutôt “라떼 한 잔 주세요.”",
+      "J’ai compris « latte ». Essaie : “라떼 한 잔 주세요.”",
   },
 ] as const;
 
@@ -2112,7 +2113,7 @@ function getSemanticCandidateFeedback(
         "latte-order": "latte",
         "cheesecake-order": "cheesecake",
       }[candidate.definition.id];
-      return `Commande comprise : ${productLabel}. Le classificateur ${candidate.observedClassifier} ne convient pas ici. Utilise ${expectedClassifier} : “${candidate.definition.canonical}”`;
+      return `J’ai compris « ${productLabel} ». Utilise ${expectedClassifier} plutôt que ${candidate.observedClassifier} : “${candidate.definition.canonical}”`;
     }
   }
   if (candidate.hasIncoherentClassifier || candidate.isTerse) {
@@ -2122,7 +2123,11 @@ function getSemanticCandidateFeedback(
 }
 
 function buildTranscriptionFeedback(definition: CafeSpeechIntentDefinition) {
-  return `Intention comprise, mais un mot a probablement été mal reconnu. Formulation recommandée : “${definition.canonical}”`;
+  return `J’ai compris « ${definition.confirmationLabel} ». Essaie : “${definition.canonical}”`;
+}
+
+function buildUncertainFeedback(definition: CafeSpeechIntentDefinition) {
+  return `J’ai compris « ${definition.confirmationLabel} ». Confirme ou réessaie.`;
 }
 
 function getAmbiguityFeedback(
@@ -2133,7 +2138,7 @@ function getAmbiguityFeedback(
   );
   return messages.length === 1
     ? messages[0]
-    : "La transcription reste compatible avec plusieurs intentions. Reformule avec un seul choix.";
+    : "J’ai entendu plusieurs réponses. Choisis-en une seule.";
 }
 
 function joinFrenchOptions(options: readonly string[]) {
@@ -2280,7 +2285,6 @@ function buildCafeContextualResponseAnalysis(
   choices: readonly CafeSpeechChoice[],
   detectedIntentHint?: CafeSpeechIntentDefinition,
 ): CafeContextualResponseAnalysis {
-  const spokenPhrase = transcript.trim() || "(aucune phrase reconnue)";
   const normalizedTranscript = normalizeKoreanSpeech(transcript);
   const context = getCafeConversationStepContext(choices);
   const examples = formatCafeExamples(context.examples);
@@ -2310,8 +2314,8 @@ function buildCafeContextualResponseAnalysis(
       canonicalFormulation:
         context.examples[0] ?? detectedIntent.canonical,
       feedback: isAvailableNow
-        ? `Tu as dit « ${spokenPhrase} » et ton intention semble être : ${detectedIntent.confirmationLabel}. Cette intention convient à cette étape, mais la formulation n’a pas été reconnue comme suffisamment claire ou naturelle. Essaie plutôt ${examples} ; tu es proche de la bonne réponse.`
-        : `Tu as dit « ${spokenPhrase} ». ${detectedIntent.meaning}. Cette intention est correcte en soi, mais elle arrive au mauvais moment : ${context.expectation}. Ici, tu pouvais répondre par exemple ${examples}.`,
+        ? `J’ai compris « ${detectedIntent.confirmationLabel} ». Essaie : ${examples}.`
+        : `Cette réponse ne convient pas ici : ${context.expectation}. Essaie ${examples}.`,
     };
   }
 
@@ -2322,7 +2326,7 @@ function buildCafeContextualResponseAnalysis(
       detectedIntent: `Nier ou refuser l’intention « ${blockedIntent.confirmationLabel} »`,
       canonicalFormulation:
         context.examples[0] ?? blockedIntent.canonical,
-      feedback: `Tu as dit « ${spokenPhrase} ». J’ai reconnu l’idée de « ${blockedIntent.confirmationLabel} », mais elle est accompagnée d’une négation ou d’un refus ; la phrase ne permet donc pas de sélectionner cette option. À cette étape, ${context.expectation}. Pour répondre clairement et positivement, essaie plutôt ${examples}.`,
+      feedback: `Ta réponse contient une négation. Ici, ${context.expectation} ; essaie ${examples}.`,
     };
   }
 
@@ -2332,7 +2336,7 @@ function buildCafeContextualResponseAnalysis(
       intentId: knownExpression.id,
       detectedIntent: knownExpression.detectedIntent,
       canonicalFormulation: context.examples[0] ?? "",
-      feedback: `Tu as dit « ${spokenPhrase} » : ${knownExpression.explanation}. Ta phrase est compréhensible, mais elle ne répond pas à la question actuelle : ${context.expectation}. Ici, tu pouvais répondre par exemple ${examples}.`,
+      feedback: `${knownExpression.explanation}. Ici, ${context.expectation} ; essaie ${examples}.`,
     };
   }
 
@@ -2342,7 +2346,7 @@ function buildCafeContextualResponseAnalysis(
       intentId: `request:${normalizeKoreanSpeech(requestedObject)}`,
       detectedIntent: `Demander « ${requestedObject} » avec 주세요`,
       canonicalFormulation: context.examples[0] ?? "",
-      feedback: `Tu as dit « ${spokenPhrase} » et utilisé 주세요, la structure polie pour demander qu’on te donne « ${requestedObject} ». La construction est compréhensible, mais elle ne répond pas à cette étape : ${context.expectation}. Essaie plutôt ${examples}.`,
+      feedback: `Tu demandes « ${requestedObject} ». Ici, ${context.expectation} ; essaie ${examples}.`,
     };
   }
 
@@ -2350,7 +2354,7 @@ function buildCafeContextualResponseAnalysis(
     intentId: `context-mismatch:${context.id}:${normalizedTranscript || "empty"}`,
     detectedIntent: `Réponse sans indication claire de ${context.topic}`,
     canonicalFormulation: context.examples[0] ?? "",
-    feedback: `Tu as dit « ${spokenPhrase} ». Je n’y ai pas identifié d’indication claire de ${context.topic}, alors que ${context.expectation}. Pour poursuivre naturellement la conversation, tu pouvais répondre ${examples} ; reformule tranquillement avec l’une de ces intentions.`,
+    feedback: `Cette réponse ne précise pas ${context.topic}. Essaie ${examples}.`,
   };
 }
 
@@ -2376,10 +2380,10 @@ function buildCafeOutOfScopeFeedback(
   const instruction = joinFrenchOptions(availableInstructions);
 
   if (detectedIntent) {
-    return `${detectedIntent.meaning}. Cette intention n’est pas disponible ici. À cette étape, ${instruction}.`;
+    return `Cette réponse ne convient pas ici. Tu peux ${instruction}.`;
   }
 
-  return `Cette réponse ne correspond à aucune option disponible à cette étape. Tu peux ${instruction}, recommencer ou utiliser l’aide.`;
+  return `Cette réponse ne convient pas ici. Tu peux ${instruction}, réessayer ou utiliser l’aide.`;
 }
 
 export function buildCafeUnavailableFeedback(
@@ -2418,7 +2422,7 @@ function findCafeExplicitSelfCorrection(
     choice: correctedResult.choice,
     feedback:
       combineCafeFeedback(
-        `J’ai compris ton auto-correction : tu choisis finalement ${definition.confirmationLabel}. Formulation recommandée : “${definition.canonical}”`,
+        `J’ai compris ta correction : ${definition.confirmationLabel}. Essaie : “${definition.canonical}”`,
         correctedResult.feedback,
       ) ?? correctedResult.feedback,
   };
@@ -2434,7 +2438,7 @@ export function matchCafeSpeechIntent(
     return {
       reason: "empty",
       choice: null,
-      feedback: "Aucune réponse n’a été reconnue. Recommence.",
+      feedback: getSpeechRecognitionFailureMessage("empty"),
     };
   }
 
@@ -2582,7 +2586,7 @@ export function matchCafeSpeechIntent(
         reason: "uncertain",
         choice,
         confirmationLabel: definition.confirmationLabel,
-        feedback: `Intention probablement comprise. Tu voulais dire « ${definition.confirmationLabel} » ?`,
+        feedback: buildUncertainFeedback(definition),
       };
     }
     return {
@@ -2603,7 +2607,7 @@ export function matchCafeSpeechIntent(
       choice: null,
       feedback:
         findIntentDefinition(validChoices[0].id)?.ambiguityMessage ||
-        "J’ai reconnu plusieurs intentions. Choisis une seule réponse.",
+        "J’ai entendu plusieurs réponses. Choisis-en une seule.",
     };
   }
 
@@ -2628,7 +2632,7 @@ export function matchCafeSpeechIntent(
         reason: "uncertain",
         choice,
         confirmationLabel: definition.confirmationLabel,
-        feedback: `Intention probablement comprise. Tu voulais dire « ${definition.confirmationLabel} » ?`,
+        feedback: buildUncertainFeedback(definition),
       };
     }
     return {
@@ -2668,7 +2672,7 @@ export function matchCafeSpeechIntent(
         reason: "uncertain",
         choice: candidate.choice,
         confirmationLabel: candidate.definition.confirmationLabel,
-        feedback: `Intention probablement comprise. Tu voulais dire « ${candidate.definition.confirmationLabel} » ?`,
+        feedback: buildUncertainFeedback(candidate.definition),
       };
     }
 
@@ -2710,7 +2714,7 @@ export function matchCafeSpeechIntent(
           reason: "uncertain",
           choice: productMatch.choice,
           confirmationLabel: productMatch.definition.confirmationLabel,
-          feedback: `Intention probablement comprise. Tu voulais dire « ${productMatch.definition.confirmationLabel} » ?`,
+          feedback: buildUncertainFeedback(productMatch.definition),
         };
       }
       return {
@@ -2759,7 +2763,7 @@ export function matchCafeSpeechIntent(
           reason: "uncertain",
           choice,
           confirmationLabel: definition.confirmationLabel,
-          feedback: `Intention probablement comprise. Tu voulais dire « ${definition.confirmationLabel} » ?`,
+          feedback: buildUncertainFeedback(definition),
         };
       }
       return {
@@ -2807,7 +2811,7 @@ export function matchCafeSpeechIntent(
           reason: "uncertain",
           choice,
           confirmationLabel: definition.confirmationLabel,
-          feedback: `Intention probablement comprise. Tu voulais dire « ${definition.confirmationLabel} » ?`,
+          feedback: buildUncertainFeedback(definition),
         };
       }
 
@@ -2844,7 +2848,7 @@ export function matchCafeSpeechIntent(
       reason: "uncertain",
       choice,
       confirmationLabel: definition.confirmationLabel,
-      feedback: `Intention probablement comprise. Tu voulais dire « ${definition.confirmationLabel} » ?`,
+      feedback: buildUncertainFeedback(definition),
     };
   }
 

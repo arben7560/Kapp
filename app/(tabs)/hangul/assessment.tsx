@@ -123,23 +123,23 @@ export default function HangulAssessmentScreen() {
             <AppText variant="sectionLabel" style={styles.gold}>VALIDATION FINALE</AppText>
             <AppText variant="screenTitle" style={styles.title}>Lire sans romanisation</AppText>
             <AppText variant="bodySecondary" tone="muted">
-              12 défis, majoritairement inédits. Il faut 11 bonnes réponses pour valider le socle de lecture.
+              12 défis, majoritairement inédits. Il faut 11 bonnes réponses pour réussir.
             </AppText>
 
             {!started ? (
               <BlurView intensity={55} tint="dark" style={styles.card}>
-                <AppText variant="sceneTitle">Compétences évaluées</AppText>
+                <AppText variant="sceneTitle">Au programme</AppText>
                 <AppText variant="body">Reconnaissance visuelle · écoute · assemblage · lecture inédite · batchim · liaison</AppText>
                 {saved ? <AppText variant="bodySecondary" tone="muted">Meilleur résultat : {saved.bestScore}/{saved.total} · {saved.attempts} tentative(s)</AppText> : null}
-                {!curriculumReady && missingModule ? <AppText variant="bodySecondary" style={styles.warning}>Étape requise : maîtrise d’abord « {missingModule.title} ».</AppText> : null}
+                {!curriculumReady && missingModule ? <AppText variant="bodySecondary" style={styles.warning}>Termine d’abord « {missingModule.title} ».</AppText> : null}
                 <Pressable onPress={start} style={styles.button}><AppText variant="button" style={styles.buttonText}>{curriculumReady ? "Commencer sans aide latine" : `Ouvrir ${missingModule?.title}`}</AppText></Pressable>
               </BlurView>
             ) : finished ? (
               <BlurView intensity={55} tint="dark" style={styles.card}>
-                <AppText variant="sectionLabel" style={{ color: score >= HANGUL_ASSESSMENT_PASS_SCORE ? "#4ADE80" : "#FDE047" }}>{score >= HANGUL_ASSESSMENT_PASS_SCORE ? "SOCLE VALIDÉ" : "À CONSOLIDER"}</AppText>
+                <AppText variant="sectionLabel" style={{ color: score >= HANGUL_ASSESSMENT_PASS_SCORE ? "#4ADE80" : "#FDE047" }}>{score >= HANGUL_ASSESSMENT_PASS_SCORE ? "LECTURE RÉUSSIE" : "SONS À REVOIR"}</AppText>
                 <AppText variant="numericValue">{score}/{HANGUL_ASSESSMENT_QUESTIONS.length}</AppText>
-                <AppText variant="bodySecondary" tone="muted" align="center">{score >= HANGUL_ASSESSMENT_PASS_SCORE ? "Tu peux maintenant passer à la lecture guidée." : "Tes erreurs sont enregistrées par caractère. Revois les séquences concernées avant une nouvelle tentative."}</AppText>
-                <Pressable onPress={() => score >= HANGUL_ASSESSMENT_PASS_SCORE ? router.push("/(tabs)/hangul/bridge" as never) : start()} style={styles.button}><AppText variant="button" style={styles.buttonText}>{score >= HANGUL_ASSESSMENT_PASS_SCORE ? "OUVRIR LA PASSERELLE" : "RECOMMENCER"}</AppText></Pressable>
+                <AppText variant="bodySecondary" tone="muted" align="center">{score >= HANGUL_ASSESSMENT_PASS_SCORE ? "Tu peux maintenant lire des phrases guidées." : "Revois les sons concernés avant une nouvelle tentative."}</AppText>
+                <Pressable onPress={() => score >= HANGUL_ASSESSMENT_PASS_SCORE ? router.push("/(tabs)/hangul/bridge" as never) : start()} style={styles.button}><AppText variant="button" style={styles.buttonText}>{score >= HANGUL_ASSESSMENT_PASS_SCORE ? "OUVRIR LA LECTURE GUIDÉE" : "RECOMMENCER L’ÉVALUATION"}</AppText></Pressable>
               </BlurView>
             ) : (
               <BlurView intensity={70} tint="dark" style={styles.card}>
@@ -156,7 +156,7 @@ export default function HangulAssessmentScreen() {
                     return <Pressable key={option.value} onPress={() => answer(option.value)} style={[styles.option, correct && styles.correct, wrong && styles.wrong]}><AppText variant="bodyStrong" align="center">{option.label}</AppText></Pressable>;
                   })}
                 </View>
-                {answered !== null ? <View style={styles.feedback}><AppText variant="bodyStrong" style={{ color: answered === current.answer ? "#4ADE80" : "#F87171" }}>{answered === current.answer ? "Correct" : `Bonne réponse : ${correctAnswerLabel}`}</AppText><AppText variant="bodySecondary">{current.explanation}</AppText><Pressable onPress={next} style={styles.button}><AppText variant="button" style={styles.buttonText}>CONTINUER</AppText></Pressable></View> : null}
+                {answered !== null ? <View style={styles.feedback}><AppText variant="bodyStrong" style={{ color: answered === current.answer ? "#4ADE80" : "#F87171" }}>{answered === current.answer ? "Correct" : `Bonne réponse : ${correctAnswerLabel}`}</AppText><AppText variant="bodySecondary">{current.explanation}</AppText><Pressable onPress={next} style={styles.button}><AppText variant="button" style={styles.buttonText}>{index + 1 < HANGUL_ASSESSMENT_QUESTIONS.length ? "SUIVANT" : "TERMINER"}</AppText></Pressable></View> : null}
               </BlurView>
             )}
           </View>

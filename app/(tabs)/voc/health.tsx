@@ -224,7 +224,7 @@ export default function HealthCyber() {
                     style={styles.playGradient}
                   >
                     <AppText variant="button" style={styles.playBtnText}>
-                      ANALYSER LA PRONONCIATION
+                      ÉCOUTER
                     </AppText>
                   </LinearGradient>
                 </Pressable>

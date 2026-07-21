@@ -238,7 +238,7 @@ export default function ImmersionScene() {
               alignItems: "center",
             }}
           >
-            <AppText variant="button" style={{ color: TXT}}>Retour</AppText>
+            <AppText variant="button" style={{ color: TXT}}>Retour à l’immersion</AppText>
           </Pressable>
         </View>
       </LinearGradient>
@@ -310,7 +310,7 @@ export default function ImmersionScene() {
                     backgroundColor: CARD,
                   }}
                 >
-                  <AppText variant="button" style={{ color: TXT}}>Rejouer</AppText>
+                  <AppText variant="button" style={{ color: TXT}}>Rejouer la scène</AppText>
                 </Pressable>
 
                 <Pressable
@@ -324,7 +324,7 @@ export default function ImmersionScene() {
                     backgroundColor: CARD,
                   }}
                 >
-                  <AppText variant="button" style={{ color: TXT}}>Retour</AppText>
+                  <AppText variant="button" style={{ color: TXT}}>Retour à l’immersion</AppText>
                 </Pressable>
               </View>
             </View>

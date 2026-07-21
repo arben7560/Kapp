@@ -63,7 +63,7 @@ const HANGUL_MODULES: HangulHubModule[] = [
   },
   {
     id: "hangul_bridge",
-    title: "Passerelle de lecture",
+    title: "Lecture guidée",
     sub: "Lecture guidée, vocabulaire et écoute lente",
     href: "/(tabs)/hangul/bridge",
     icon: "읽",

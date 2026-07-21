@@ -36,6 +36,32 @@ const CYAN = "#22D3EE";
 const PURPLE = "#A855F7";
 const VIDEO_OVERSCAN_SCALE = 1.06;
 
+const AEROPORT_MISSION_PHRASES: Record<
+  string,
+  Readonly<{ korean: string; french: string }>
+> = {
+  "go-seoul-station": {
+    korean: "실례합니다, 서울역까지 어떻게 가요?",
+    french: "Excusez-moi, comment aller à Seoul Station ?",
+  },
+  "buy-tmoney": {
+    korean: "티머니 카드를 사고 싶어요.",
+    french: "Je voudrais acheter une carte T-money.",
+  },
+  "choose-arex": {
+    korean: "어느 열차를 타는 게 좋을까요?",
+    french: "Quel train me conseillez-vous ?",
+  },
+  "find-platform": {
+    korean: "플랫폼은 어디예요?",
+    french: "Où se trouve le quai ?",
+  },
+  "lost-help": {
+    korean: "길을 잃으면 어떻게 해요?",
+    french: "Que faire si je me perds ?",
+  },
+};
+
 // ==================== VIDEOS ====================
 const iaWelcome = require("../../assets/ai/aeroport/ia_welcome.mp4");
 const iaWelcomeRepeat = require("../../assets/ai/aeroport/ia_welcome_repeat.mp4");
@@ -238,6 +264,9 @@ export default function AeroportIaScreen() {
   const currentMission =
     getAeroportMissionById(missionId) ??
     getAeroportMissionById(DEFAULT_AEROPORT_MISSION_ID);
+  const missionPhrase =
+    AEROPORT_MISSION_PHRASES[currentMission?.id ?? ""] ??
+    AEROPORT_MISSION_PHRASES[DEFAULT_AEROPORT_MISSION_ID];
   const { hasPremiumAccess, isLoading: isPaywallLoading } = usePaywall();
   const canEnterMission =
     currentMission?.access !== "premium" || hasPremiumAccess;
@@ -557,7 +586,13 @@ export default function AeroportIaScreen() {
             { paddingTop: Math.max(6, insets.top * 0.15) },
           ]}
         >
-          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Quitter la scène"
+            hitSlop={8}
+            onPress={() => router.back()}
+            style={styles.backBtn}
+          >
             <AppText
               variant="button"
               tone="strong"
@@ -744,12 +779,22 @@ export default function AeroportIaScreen() {
                   </AppText>
 
                   <AppText
-                    variant="bodySecondary"
+                    variant="caption"
                     tone="muted"
                     script="latin"
                     style={styles.endSubtitle}
                   >
-                    Tu peux rejouer cette mission ou revenir au menu.
+                    Phrase à retenir
+                  </AppText>
+
+                  <AppText
+                    variant="koreanSecondary"
+                    tone="strong"
+                    script="korean"
+                    accessibilityLanguage="ko-KR"
+                    style={styles.endSubtitle}
+                  >
+                    {missionPhrase.korean}
                   </AppText>
 
                   <AppText
@@ -758,11 +803,14 @@ export default function AeroportIaScreen() {
                     script="latin"
                     style={styles.endSubtitle}
                   >
-                    Série conservée.
+                    {missionPhrase.french}
                   </AppText>
 
                   <View style={styles.endActions}>
                     <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Rejouer la scène"
+                      hitSlop={6}
                       onPress={handleRestart}
                       style={({ pressed }) => [
                         styles.endActionPrimary,
@@ -784,12 +832,15 @@ export default function AeroportIaScreen() {
                           align="center"
                           style={styles.endActionPrimaryText}
                         >
-                          Rejouer
+                          Rejouer la scène
                         </AppText>
                       </LinearGradient>
                     </Pressable>
 
                     <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Retour aux missions"
+                      hitSlop={6}
                       onPress={() => router.back()}
                       style={({ pressed }) => [
                         styles.endActionSecondary,
@@ -803,7 +854,7 @@ export default function AeroportIaScreen() {
                         align="center"
                         style={styles.endActionSecondaryText}
                       >
-                        Retour
+                        Retour aux missions
                       </AppText>
                     </Pressable>
                   </View>

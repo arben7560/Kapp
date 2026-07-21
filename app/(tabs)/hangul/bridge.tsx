@@ -37,27 +37,27 @@ export default function HangulBridgeScreen() {
         <ScrollView contentContainerStyle={[styles.scroll, { paddingHorizontal: responsive.horizontalPadding }]}>
           <View style={[styles.frame, { maxWidth: responsive.maxWidth }]}>
             <Pressable onPress={() => router.back()} style={styles.back}><AppText variant="screenTitle">‹</AppText><AppText variant="sectionLabel">ÉVALUATION HANGUL</AppText></Pressable>
-            <AppText variant="sectionLabel" style={styles.teal}>PASSERELLE DE LECTURE</AppText>
-            <AppText variant="screenTitle" style={styles.title}>Du décodage au coréen réel</AppText>
+            <AppText variant="sectionLabel" style={styles.teal}>LECTURE GUIDÉE</AppText>
+            <AppText variant="screenTitle" style={styles.title}>Lire des phrases complètes</AppText>
             <AppText variant="bodySecondary" tone="muted">Lis chaque ligne avant de lancer l’écoute lente. Aucun texte latin n’est nécessaire.</AppText>
 
             {unlocked ? <>
-            <AppText variant="sectionLabel" style={[styles.teal, styles.packLabel]}>PREMIER MINI-PACK COMPATIBLE</AppText>
+            <AppText variant="sectionLabel" style={[styles.teal, styles.packLabel]}>PREMIÈRES PHRASES</AppText>
             <View style={styles.readings}>
               {READINGS.map((item) => <Pressable key={item.text} onPress={() => speak(item.text)}><BlurView intensity={50} tint="dark" style={styles.readingCard}><View style={styles.readingTop}><AppText variant="koreanPrimary" script="korean" style={styles.korean}>{item.text}</AppText><AppText variant="caption">🔊 LENT</AppText></View><AppText variant="bodyStrong">{item.guide}</AppText><AppText variant="bodySecondary" tone="muted">{item.meaning}</AppText></BlurView></Pressable>)}
             </View>
 
             <BlurView intensity={55} tint="dark" style={styles.transitionCard}>
               <AppText variant="sceneTitle">Choisis la suite</AppText>
-              <AppText variant="bodySecondary" tone="muted">Le vocabulaire et l’écoute utilisent désormais des phrases plus longues. Les nouvelles règles seront signalées comme des éléments à observer, pas comme des acquis déjà maîtrisés.</AppText>
-              <Pressable onPress={() => router.push("/(tabs)/voc/basics" as never)} style={styles.primary}><AppText variant="button" style={styles.primaryText}>CONTINUER VERS LE VOCABULAIRE</AppText></Pressable>
-              <Pressable onPress={() => router.push("/(tabs)/listen" as never)} style={styles.secondary}><AppText variant="button" style={styles.teal}>ÉCOUTE ET DICTÉE</AppText></Pressable>
-              <Pressable onPress={() => router.push("/(tabs)" as never)} style={styles.home}><AppText variant="caption" tone="muted">Choisir un autre module</AppText></Pressable>
+              <AppText variant="bodySecondary" tone="muted">Le vocabulaire et l’écoute utilisent maintenant des phrases plus longues. Observe les nouvelles règles ; tu les apprendras plus tard.</AppText>
+              <Pressable onPress={() => router.push("/(tabs)/voc/basics" as never)} style={styles.primary}><AppText variant="button" style={styles.primaryText}>OUVRIR LE VOCABULAIRE</AppText></Pressable>
+              <Pressable onPress={() => router.push("/(tabs)/listen" as never)} style={styles.secondary}><AppText variant="button" style={styles.teal}>OUVRIR L’ÉCOUTE ET LA DICTÉE</AppText></Pressable>
+              <Pressable onPress={() => router.push("/(tabs)" as never)} style={styles.home}><AppText variant="caption" tone="muted">Retour à l’accueil</AppText></Pressable>
             </BlurView>
             </> : (
               <BlurView intensity={55} tint="dark" style={styles.transitionCard}>
-                <AppText variant="sceneTitle">Valide d’abord ton socle</AppText>
-                <AppText variant="bodySecondary" tone="muted">La passerelle se débloque après l’évaluation finale, avec au moins 11 bonnes réponses sur 12.</AppText>
+                <AppText variant="sceneTitle">Termine d’abord l’évaluation</AppText>
+                <AppText variant="bodySecondary" tone="muted">Cette lecture se débloque avec au moins 11 bonnes réponses sur 12.</AppText>
                 <Pressable onPress={() => router.replace("/(tabs)/hangul/assessment" as never)} style={styles.primary}><AppText variant="button" style={styles.primaryText}>OUVRIR L’ÉVALUATION</AppText></Pressable>
               </BlurView>
             )}

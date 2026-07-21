@@ -1,4 +1,5 @@
 import type { MetroLesson, MetroState, MetroStep } from "./type";
+import { METRO_REPEAT_REQUEST } from "../sharedPhrases";
 
 export type {
   MetroChoice,
@@ -66,9 +67,7 @@ export const seoulStationToJamsilLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_intro",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_intro_repeat",
         },
         {
@@ -137,9 +136,7 @@ export const seoulStationToJamsilLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_transfer",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_transfer_repeat",
         },
         {
@@ -210,9 +207,7 @@ export const seoulStationToJamsilLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_time",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_time_repeat",
         },
         {
@@ -260,9 +255,7 @@ export const seoulStationToJamsilLesson: MetroLesson = {
         },
         {
           id: "repeat_time_again",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_end_summary",
         },
       ],
@@ -281,9 +274,7 @@ export const seoulStationToJamsilLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_exit",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_exit_repeat",
         },
         {
@@ -321,9 +312,7 @@ export const seoulStationToJamsilLesson: MetroLesson = {
         },
         {
           id: "repeat_exit_again",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_end_summary",
         },
         {
@@ -357,9 +346,7 @@ export const seoulStationToJamsilLesson: MetroLesson = {
         },
         {
           id: "repeat_summary",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_end",
         },
         {
@@ -444,9 +431,7 @@ export const myeongdongToItaewonLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_intro",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_repeat_intro_route",
         },
         {
@@ -511,9 +496,7 @@ export const myeongdongToItaewonLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_line4_direction",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_repeat_line4_direction",
         },
         {
@@ -577,9 +560,7 @@ export const myeongdongToItaewonLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_transfer_station",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_repeat_transfer_station",
         },
         {
@@ -644,9 +625,7 @@ export const myeongdongToItaewonLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_line6_direction",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_repeat_line6_direction",
         },
         {
@@ -713,9 +692,7 @@ export const myeongdongToItaewonLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_trip_time",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_repeat_trip_time",
         },
         {
@@ -780,9 +757,7 @@ export const myeongdongToItaewonLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_station_count",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_repeat_station_count",
         },
         {
@@ -849,9 +824,7 @@ export const myeongdongToItaewonLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_exit",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_repeat_exit_info",
         },
         {
@@ -913,9 +886,7 @@ export const myeongdongToItaewonLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_landmark",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_repeat_exit_landmark_info",
         },
         {
@@ -978,9 +949,7 @@ export const myeongdongToItaewonLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_transfer_count",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_repeat_transfer_count_info",
         },
         {
@@ -1059,9 +1028,7 @@ export const myeongdongToItaewonLesson: MetroLesson = {
         },
         {
           id: "repeat_summary",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_end_summary_short",
         },
         {
@@ -1182,9 +1149,7 @@ export const hongikToGangnamLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_intro",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_repeat_intro_route",
         },
         {
@@ -1249,9 +1214,7 @@ export const hongikToGangnamLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_platform",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_repeat_platform_direction",
         },
         {
@@ -1317,9 +1280,7 @@ export const hongikToGangnamLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_trip",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_repeat_trip_time",
         },
         {
@@ -1382,9 +1343,7 @@ export const hongikToGangnamLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_transfer",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_repeat_transfer_info",
         },
         {
@@ -1431,9 +1390,7 @@ export const hongikToGangnamLesson: MetroLesson = {
         },
         {
           id: "repeat_transfer_again",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_repeat_transfer_info_short",
         },
       ],
@@ -1490,9 +1447,7 @@ export const hongikToGangnamLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_exit",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_repeat_exit_info",
         },
         {
@@ -1523,9 +1478,7 @@ export const hongikToGangnamLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_exit_2",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_repeat_exit_info_short",
         },
         {
@@ -1585,9 +1538,7 @@ export const hongikToGangnamLesson: MetroLesson = {
       choices: [
         {
           id: "repeat_landmark",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_repeat_exit_landmark_info",
         },
         {
@@ -1642,9 +1593,7 @@ export const hongikToGangnamLesson: MetroLesson = {
         },
         {
           id: "repeat_summary",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_end_summary_short",
         },
       ],
@@ -1671,9 +1620,7 @@ export const hongikToGangnamLesson: MetroLesson = {
         },
         {
           id: "repeat_summary_short_again",
-          label: "Pouvez-vous répéter ?",
-          korean: "다시 한번 말씀해 주실 수 있나요?",
-          romanization: "Dasi hanbeon malsseumhae jusil su innayo?",
+          ...METRO_REPEAT_REQUEST,
           nextId: "ia_end",
         },
         {

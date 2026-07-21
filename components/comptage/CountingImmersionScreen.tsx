@@ -434,7 +434,7 @@ export default function CountingImmersionScreen({
                   ]}
                 >
                   {visibleMessages >= activeScene.dialogue.length
-                    ? "Toucher pour recommencer"
+                    ? "Toucher pour recommencer l’étape"
                     : isTyping
                       ? "Réponse en cours..."
                       : "Toucher pour continuer"}
