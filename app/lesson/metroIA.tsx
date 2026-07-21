@@ -491,8 +491,10 @@ export default function MetroIaScreen() {
 
     hasReportedMissionCompleteRef.current = true;
     complete(buildProgressId("metro", mode, missionId));
-    void completeDailyActivity("ai_mission");
-  }, [complete, isSceneEnded, missionId, mode]);
+    void completeDailyActivity(
+      isMetroSpeechPilot ? "voice_immersion" : "ai_mission",
+    );
+  }, [complete, isMetroSpeechPilot, isSceneEnded, missionId, mode]);
 
   useEffect(() => {
     mountedRef.current = true;

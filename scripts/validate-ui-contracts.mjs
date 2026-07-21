@@ -32,6 +32,8 @@ const activeRoutes = [
   ["/hangul/batchim", "app/(tabs)/hangul/batchim.tsx"],
   ["/hangul/assessment", "app/(tabs)/hangul/assessment.tsx"],
   ["/hangul/bridge", "app/(tabs)/hangul/bridge.tsx"],
+  ["/grammar", "app/(tabs)/grammar/index.tsx"],
+  ["/grammar/[stageId]", "app/(tabs)/grammar/[stageId].tsx"],
   ["/voc", "app/(tabs)/voc/index.tsx"],
   ["/voc/gastronomie", "app/(tabs)/voc/gastronomie.tsx"],
   ["/voc/basics", "app/(tabs)/voc/basics.tsx"],
@@ -137,6 +139,10 @@ const nonNavigationRouteReferenceFiles = new Map([
   [
     "lib/paywall/config.ts",
     "inventaire d'accès Premium; ce Set ne déclenche aucune navigation",
+  ],
+  [
+    "data/grammar/contentLinks.ts",
+    "registre de contenus filtré par disponibilité avant toute navigation grammaticale",
   ],
 ]);
 

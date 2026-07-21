@@ -328,8 +328,10 @@ export default function CafeIaScreen() {
 
     hasReportedMissionCompleteRef.current = true;
     complete(buildProgressId("cafe", mode, missionId));
-    void completeDailyActivity("ai_mission");
-  }, [complete, isSceneEnded, missionId, mode]);
+    void completeDailyActivity(
+      isCafeSpeechPilot ? "voice_immersion" : "ai_mission",
+    );
+  }, [complete, isCafeSpeechPilot, isSceneEnded, missionId, mode]);
 
   useEffect(() => {
     mountedRef.current = true;

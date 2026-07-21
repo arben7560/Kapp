@@ -26,6 +26,7 @@ import {
   HANGUL_MODULES,
 } from "../../data/hangul/curriculum";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
+import { trackHangulExerciseCompleted } from "../../lib/immersionStreak";
 
 const BACKGROUND_SOURCE = require("../../assets/images/vowelbasic.png");
 const shuffle = <T,>(items: T[]) => [...items].sort(() => Math.random() - 0.5);
@@ -254,6 +255,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
       return next;
     });
     complete(`${module.id}_${activeScene.id}`);
+    void trackHangulExerciseCompleted(`${module.id}_${activeScene.id}`);
     if (mastered) {
       updateHangulProgress((current) => ({
         ...current,

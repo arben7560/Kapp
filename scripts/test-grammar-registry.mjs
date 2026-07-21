@@ -250,7 +250,11 @@ test("recommended prerequisites do not block access", () => {
   assert.equal(blockingResult.missingBlocking.length, 1);
 });
 
-test("Lot 0 exposes no unfinished grammar route", () => {
-  assert.equal(existsSync(join(projectRoot, "app/(tabs)/grammar")), false);
-  assert.equal(existsSync(join(projectRoot, "app/lesson/grammar")), false);
+test("the public grammar journey exposes its hub and dynamic lesson route", () => {
+  assert.equal(existsSync(join(projectRoot, "app/(tabs)/grammar/index.tsx")), true);
+  assert.equal(existsSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx")), true);
+  assert.match(
+    readFileSync(join(projectRoot, "app/(tabs)/index.tsx"), "utf8"),
+    /route:\s*"\/grammar"/u,
+  );
 });

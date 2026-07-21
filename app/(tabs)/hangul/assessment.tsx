@@ -5,6 +5,7 @@ import * as Speech from "expo-speech";
 import React from "react";
 import { ImageBackground, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { trackHangulExerciseCompleted } from "../../../lib/immersionStreak";
 
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
@@ -106,7 +107,10 @@ export default function HangulAssessmentScreen() {
         passed: state.assessment?.passed || passed,
       },
     }));
-    if (passed) complete("hangul_assessment");
+    if (passed) {
+      complete("hangul_assessment");
+      void trackHangulExerciseCompleted("hangul_assessment");
+    }
     setFinished(true);
   };
 

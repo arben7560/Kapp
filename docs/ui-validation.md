@@ -3,9 +3,10 @@
 ## Routes de production
 
 Le parcours publié part de `/`, passe par `/onboarding` si nécessaire, puis
-arrive sur `/(tabs)`. Les points d'entrée actifs sont Hangul, Vocabulaire,
-Comptage, Speak, Listen, Premium et Streak. L'évaluation et la passerelle
-Hangul font partie du parcours actif. Les sous-routes listées par
+arrive sur `/(tabs)`. Les points d'entrée actifs sont Hangul, Grammaire,
+Vocabulaire, Comptage, Speak, Listen, Premium et Streak. L'évaluation et la passerelle
+Hangul, ainsi que le parcours Grammaire A0 → A1 et ses leçons dynamiques,
+font partie du parcours actif. Les sous-routes listées par
 `scripts/validate-ui-contracts.mjs` font partie de ce contrat.
 
 Shopping conserve son mémo sur `/lesson/magasin`, mais n'est pas affiché dans

@@ -4,10 +4,15 @@ import {
   createEmptyHangulProgress,
   type HangulDetailedProgress,
 } from "./data/hangul/types";
-import { trackHangulExerciseCompleted } from "./lib/immersionStreak";
+import type { GrammarLearningProgress } from "./data/grammar/types";
+import {
+  createEmptyGrammarLearningProgress,
+  normalizeGrammarLearningProgress,
+} from "./lib/grammar/learning";
 
 export type LearningTrack =
   | "hangul"
+  | "grammar"
   | "vocab"
   | "numbers"
   | "classifier"
@@ -28,6 +33,7 @@ export type Progress = {
   completed: Record<string, boolean>;
   hangulLevel: number;
   hangulProgress: HangulDetailedProgress;
+  grammarProgress: GrammarLearningProgress;
 };
 
 const STORE_KEY = "@k_app/pedagogical_progress_v1";
@@ -40,6 +46,7 @@ const initialProgress: Progress = {
   completed: {},
   hangulLevel: 1,
   hangulProgress: createEmptyHangulProgress(),
+  grammarProgress: createEmptyGrammarLearningProgress(),
 };
 
 type StoreValue = {
@@ -51,6 +58,9 @@ type StoreValue = {
   bumpHangul: () => void;
   updateHangulProgress: (
     updater: (current: HangulDetailedProgress) => HangulDetailedProgress,
+  ) => void;
+  updateGrammarProgress: (
+    updater: (current: GrammarLearningProgress) => GrammarLearningProgress,
   ) => void;
   isHydrated: boolean;
 };
@@ -74,6 +84,7 @@ function mergeProgress(saved: Partial<Progress>): Progress {
         ...(saved.hangulProgress?.masteredCharacters ?? {}),
       },
     },
+    grammarProgress: normalizeGrammarLearningProgress(saved.grammarProgress),
   };
 }
 
@@ -146,10 +157,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       [id]: true,
     };
 
-    if (id.startsWith("hangul_")) {
-      void trackHangulExerciseCompleted(id);
-    }
-
     setProgress((p) => {
       if (p.completed[id]) return p;
 
@@ -191,6 +198,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
+  const updateGrammarProgress = (
+    updater: (current: GrammarLearningProgress) => GrammarLearningProgress,
+  ) => {
+    setProgress((current) => ({
+      ...current,
+      grammarProgress: updater(current.grammarProgress),
+    }));
+  };
+
   return (
     <StoreContext.Provider
       value={{
@@ -200,6 +216,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         togglePremium,
         bumpHangul,
         updateHangulProgress,
+        updateGrammarProgress,
         setTrack,
         isHydrated,
       }}

@@ -5,6 +5,7 @@ import { useStore } from "../../_store";
 import { AppMixedText, AppText } from "../../components/app-text";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import { createEmptyHangulProgress } from "../../data/hangul/types";
+import { createEmptyGrammarLearningProgress } from "../../lib/grammar";
 
 const BG0 = "#070812";
 const TXT = "rgba(255,255,255,0.92)";
@@ -134,6 +135,7 @@ export default function Profile() {
                     void resetStreak();
                     setProgress({
                       completed: {},
+                      grammarProgress: createEmptyGrammarLearningProgress(),
                       hangulProgress: createEmptyHangulProgress(),
                       hangulLevel: 1,
                       isPremium: false,

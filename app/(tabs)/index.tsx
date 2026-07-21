@@ -22,6 +22,7 @@ import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import type { DailyStreakState } from "../../lib/dailyStreak";
 import { HANGUL_PROGRESS_IDS } from "../../data/hangul/curriculum";
+import { getGrammarJourneyCompletion } from "../../lib/grammar";
 
 const BACKGROUND_SOURCE = require("../../assets/images/seoulhub.png");
 
@@ -64,6 +65,16 @@ const SEQUENCES: any[] = [
     trackKey: "hangul",
     place: "CENTRE D'APPRENTISSAGE",
     narrative: "Décrypte l'âme visuelle de la ville.",
+    type: "pedagogical",
+  },
+  {
+    title: "Grammaire",
+    label: "Grammaire",
+    color: "#2DD4BF",
+    route: "/grammar",
+    trackKey: "grammar",
+    place: "SÉOUL • A0 → A1",
+    narrative: "Construis des phrases naturelles, étape par étape.",
     type: "pedagogical",
   },
   {
@@ -810,6 +821,9 @@ function DailyStreakCard({
 }
 
 function getSequenceProgress(trackKey: string, progress: any) {
+  if (trackKey === "grammar") {
+    return getGrammarJourneyCompletion(progress.grammarProgress);
+  }
   if (trackKey !== "hangul") return null;
 
   const completedHangulItems = HANGUL_PROGRESS_IDS.filter(
@@ -823,6 +837,8 @@ function getSequenceIcon(trackKey: string) {
   switch (trackKey) {
     case "hangul":
       return "가";
+    case "grammar":
+      return "문";
     case "vocab":
       return "dialogue";
     case "numbers":

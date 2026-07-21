@@ -259,6 +259,37 @@ export type GrammarExercise = {
   criterion?: GrammarCriterion;
 };
 
+export type GrammarPracticeAnswer = string | readonly string[];
+
+export type GrammarPracticeQuestion = GrammarExercise & {
+  display?: string;
+  korean?: string;
+  french?: string;
+  options: readonly string[];
+  answer: GrammarPracticeAnswer;
+  explanation: string;
+  memo?: string;
+};
+
+export type GrammarPracticeResponse = {
+  questionId: string;
+  answer: GrammarPracticeAnswer;
+  correct: boolean;
+};
+
+export type GrammarPracticeSession = {
+  id: string;
+  stageId: GrammarStageId;
+  attemptNumber: number;
+  questions: readonly GrammarPracticeQuestion[];
+  questionIndex: number;
+  responses: readonly GrammarPracticeResponse[];
+  draftAnswer?: GrammarPracticeAnswer;
+  score: number;
+  startedAt: string;
+  completedAt?: string;
+};
+
 export type GrammarMilestoneProgress = {
   firstAt: string;
   lastAt: string;
@@ -320,3 +351,20 @@ export type GrammarProgress = {
 export type GrammarProgressState = Partial<
   Record<GrammarConceptId, GrammarProgress>
 >;
+
+export type GrammarStagePracticeProgress = {
+  attempts: number;
+  bestScore: number;
+  lastScore?: number;
+  lastCompletedAt?: string;
+  activeSession?: GrammarPracticeSession;
+  completedSessionIds: readonly string[];
+  streakSessionIds: readonly string[];
+};
+
+export type GrammarLearningProgress = {
+  schemaVersion: 1;
+  concepts: GrammarProgressState;
+  stages: Partial<Record<GrammarStageId, GrammarStagePracticeProgress>>;
+  lastStageId?: GrammarStageId;
+};

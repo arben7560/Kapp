@@ -1,4 +1,5 @@
 import React from "react";
+import { AppState } from "react-native";
 import {
   completeDailyActivity as completeDailyActivityStorage,
   getDailyStreakState,
@@ -48,8 +49,16 @@ export function DailyStreakProvider({
     const timer = setTimeout(() => {
       void refreshStreak();
     }, 0);
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        void refreshStreak();
+      }
+    });
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      subscription.remove();
+    };
   }, [refreshStreak]);
 
   const completeDailyActivity = React.useCallback(

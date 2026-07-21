@@ -12,8 +12,10 @@ export type StreakBadgeMilestone = (typeof STREAK_BADGE_MILESTONES)[number];
 export type DailyActivityType =
   | "listen_exercise"
   | "ai_mission"
+  | "voice_immersion"
   | "guided_dialogue"
   | "hangul_exercise"
+  | "grammar_exercise"
   | "counting_scene"
   | "classifier_scene"
   | "pedagogical_activity";
@@ -68,8 +70,10 @@ export function getStreakDateKey(date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
-function createInitialState(): DailyStreakState {
-  const todayDate = getStreakDateKey();
+export function createDailyStreakState(
+  now = new Date(),
+): DailyStreakState {
+  const todayDate = getStreakDateKey(now);
 
   return {
     badges: {},
@@ -116,8 +120,9 @@ function getDayDistance(fromDate: string, toDate: string): number {
 function getUnlockedBadges(
   currentStreak: number,
   previousBadges: DailyStreakState["badges"],
+  now: Date,
 ): DailyStreakState["badges"] {
-  const now = new Date().toISOString();
+  const unlockedAt = now.toISOString();
 
   return STREAK_BADGE_MILESTONES.reduce(
     (badges, milestone) => {
@@ -127,7 +132,7 @@ function getUnlockedBadges(
         ...badges,
         [milestone]: {
           milestone,
-          unlockedAt: now,
+          unlockedAt,
         },
       };
     },
@@ -135,12 +140,15 @@ function getUnlockedBadges(
   );
 }
 
-function normalizeState(state: DailyStreakState): DailyStreakState {
-  const todayDate = getStreakDateKey();
+export function normalizeDailyStreakState(
+  state: DailyStreakState,
+  now = new Date(),
+): DailyStreakState {
+  const todayDate = getStreakDateKey(now);
   const isTodayCompleted = !!state.completedDates?.[todayDate];
 
   return {
-    ...createInitialState(),
+    ...createDailyStreakState(now),
     ...state,
     badges: state.badges ?? {},
     completedDates: state.completedDates ?? {},
@@ -156,12 +164,12 @@ function normalizeState(state: DailyStreakState): DailyStreakState {
 }
 
 function migrateLegacyState(legacy: LegacyImmersionState): DailyStreakState {
-  const initialState = createInitialState();
+  const initialState = createDailyStreakState();
   const lastCompletedDate = legacy.lastValidatedDate ?? null;
   const currentStreak = Math.max(0, legacy.currentStreak ?? 0);
   const longestStreak = Math.max(currentStreak, legacy.longestStreak ?? 0);
 
-  return normalizeState({
+  return normalizeDailyStreakState({
     ...initialState,
     currentStreak,
     lastCompletedDate,
@@ -175,116 +183,141 @@ async function readState(): Promise<DailyStreakState> {
 
   if (rawValue) {
     try {
-      return normalizeState(JSON.parse(rawValue) as DailyStreakState);
+      return normalizeDailyStreakState(
+        JSON.parse(rawValue) as DailyStreakState,
+      );
     } catch {
-      return createInitialState();
+      return createDailyStreakState();
     }
   }
 
   const legacyValue = await AsyncStorage.getItem(LEGACY_STORAGE_KEY);
-  if (!legacyValue) return createInitialState();
+  if (!legacyValue) return createDailyStreakState();
 
   try {
     return migrateLegacyState(JSON.parse(legacyValue) as LegacyImmersionState);
   } catch {
-    return createInitialState();
+    return createDailyStreakState();
   }
 }
 
 async function writeState(state: DailyStreakState): Promise<DailyStreakState> {
-  const normalizedState = normalizeState(state);
+  const normalizedState = normalizeDailyStreakState(state);
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedState));
   return normalizedState;
+}
+
+let stateOperationQueue: Promise<void> = Promise.resolve();
+
+function enqueueStateOperation<T>(operation: () => Promise<T>): Promise<T> {
+  const result = stateOperationQueue.then(operation, operation);
+  stateOperationQueue = result.then(
+    () => undefined,
+    () => undefined,
+  );
+  return result;
 }
 
 async function updateState(
   updater: (state: DailyStreakState) => DailyStreakState,
 ): Promise<DailyStreakState> {
-  const currentState = await readState();
-  return writeState(updater(currentState));
+  return enqueueStateOperation(async () => {
+    const currentState = await readState();
+    return writeState(updater(currentState));
+  });
 }
 
 export async function getDailyStreakState(): Promise<DailyStreakState> {
-  return writeState(await readState());
+  return enqueueStateOperation(async () => writeState(await readState()));
+}
+
+export function completeDailyStreakState(
+  currentState: DailyStreakState,
+  activityType: DailyActivityType = "pedagogical_activity",
+  now = new Date(),
+): DailyStreakState {
+  const state = normalizeDailyStreakState(currentState, now);
+  const todayDate = getStreakDateKey(now);
+  const existingToday = state.completedDates[todayDate];
+
+  if (existingToday) {
+    const existingActivities = existingToday.activities ?? [];
+    const activities = existingActivities.includes(activityType)
+      ? existingActivities
+      : [...existingActivities, activityType];
+
+    return normalizeDailyStreakState({
+      ...state,
+      completedDates: {
+        ...state.completedDates,
+        [todayDate]: {
+          ...existingToday,
+          activities,
+        },
+      },
+      isTodayCompleted: true,
+      lastCompletionResult: "already_completed",
+      todayDate,
+    }, now);
+  }
+
+  const lastCompletedDate = state.lastCompletedDate;
+  const distance = lastCompletedDate
+    ? getDayDistance(lastCompletedDate, todayDate)
+    : undefined;
+  const canUseFreeze =
+    distance === 2 && state.freezesAvailable > 0 && !!lastCompletedDate;
+  const missedDate = canUseFreeze ? addDays(lastCompletedDate, 1) : undefined;
+  const nextCurrentStreak =
+    !lastCompletedDate || !distance
+      ? 1
+      : distance === 1
+        ? state.currentStreak + 1
+        : canUseFreeze
+          ? state.currentStreak + 2
+          : 1;
+  const result: DailyStreakCompletionResult =
+    !lastCompletedDate || !distance || distance === 1
+      ? "completed"
+      : canUseFreeze
+        ? "completed_with_freeze"
+        : "restarted";
+  const nextFreezeDates = missedDate
+    ? { ...state.freezeDates, [missedDate]: true as const }
+    : state.freezeDates;
+
+  return normalizeDailyStreakState({
+    ...state,
+    badges: getUnlockedBadges(nextCurrentStreak, state.badges, now),
+    completedDates: {
+      ...state.completedDates,
+      [todayDate]: {
+        activities: [activityType],
+        completedAt: now.toISOString(),
+        date: todayDate,
+      },
+    },
+    currentStreak: nextCurrentStreak,
+    freezeDates: nextFreezeDates,
+    freezesAvailable: canUseFreeze
+      ? state.freezesAvailable - 1
+      : state.freezesAvailable,
+    freezesUsed: canUseFreeze ? state.freezesUsed + 1 : state.freezesUsed,
+    isTodayCompleted: true,
+    lastCompletedDate: todayDate,
+    lastCompletionResult: result,
+    longestStreak: Math.max(state.longestStreak, nextCurrentStreak),
+    todayDate,
+    totalCompletedDays: Object.keys(state.completedDates).length + 1,
+  }, now);
 }
 
 export async function completeDailyActivity(
   activityType: DailyActivityType = "pedagogical_activity",
 ): Promise<DailyStreakState> {
-  return updateState((state) => {
-    const todayDate = getStreakDateKey();
-    const existingToday = state.completedDates[todayDate];
-
-    if (existingToday) {
-      const activities = existingToday.activities.includes(activityType)
-        ? existingToday.activities
-        : [...existingToday.activities, activityType];
-
-      return {
-        ...state,
-        completedDates: {
-          ...state.completedDates,
-          [todayDate]: {
-            ...existingToday,
-            activities,
-          },
-        },
-        isTodayCompleted: true,
-        lastCompletionResult: "already_completed",
-        todayDate,
-      };
-    }
-
-    const lastCompletedDate = state.lastCompletedDate;
-    const distance = lastCompletedDate
-      ? getDayDistance(lastCompletedDate, todayDate)
-      : undefined;
-    const canUseFreeze =
-      distance === 2 && state.freezesAvailable > 0 && !!lastCompletedDate;
-    const missedDate = canUseFreeze ? addDays(lastCompletedDate, 1) : undefined;
-    const nextCurrentStreak =
-      !lastCompletedDate || !distance
-        ? 1
-        : distance === 1
-          ? state.currentStreak + 1
-          : canUseFreeze
-            ? state.currentStreak + 2
-            : 1;
-    const result: DailyStreakCompletionResult =
-      !lastCompletedDate || !distance || distance === 1
-        ? "completed"
-        : canUseFreeze
-          ? "completed_with_freeze"
-          : "restarted";
-    const nextFreezeDates = missedDate
-      ? { ...state.freezeDates, [missedDate]: true as const }
-      : state.freezeDates;
-
-    return {
-      ...state,
-      badges: getUnlockedBadges(nextCurrentStreak, state.badges),
-      completedDates: {
-        ...state.completedDates,
-        [todayDate]: {
-          activities: [activityType],
-          completedAt: new Date().toISOString(),
-          date: todayDate,
-        },
-      },
-      currentStreak: nextCurrentStreak,
-      freezeDates: nextFreezeDates,
-      freezesAvailable: canUseFreeze
-        ? state.freezesAvailable - 1
-        : state.freezesAvailable,
-      freezesUsed: canUseFreeze ? state.freezesUsed + 1 : state.freezesUsed,
-      isTodayCompleted: true,
-      lastCompletedDate: todayDate,
-      lastCompletionResult: result,
-      longestStreak: Math.max(state.longestStreak, nextCurrentStreak),
-      todayDate,
-      totalCompletedDays: Object.keys(state.completedDates).length + 1,
-    };
-  });
+  return updateState((state) =>
+    completeDailyStreakState(state, activityType, new Date()),
+  );
 }
 
 export async function applyStreakFreeze(dateToRepair?: string) {
@@ -322,5 +355,5 @@ export async function grantStreakFreeze(count = 1): Promise<DailyStreakState> {
 }
 
 export async function resetDailyStreak(): Promise<DailyStreakState> {
-  return writeState(createInitialState());
+  return enqueueStateOperation(() => writeState(createDailyStreakState()));
 }
