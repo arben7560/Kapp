@@ -1,0 +1,13 @@
+[
+  {
+    "index": 0,
+    "profile": "tablet-landscape-1280x800",
+    "logicalSize": [
+      1280,
+      800
+    ],
+    "route": "/onboarding",
+    "top": "artifacts\\responsive-v2\\matrix__tablet-landscape-1280x800__00__onboarding__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__tablet-landscape-1280x800__00__onboarding__bottom.png"
+  }
+]

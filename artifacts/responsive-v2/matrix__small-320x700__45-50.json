@@ -1,0 +1,68 @@
+[
+  {
+    "index": 45,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/review",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__45__review__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__45__review__bottom.png"
+  },
+  {
+    "index": 46,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/profile",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__46__profile__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__46__profile__bottom.png"
+  },
+  {
+    "index": 47,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/streak",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__47__streak__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__47__streak__bottom.png"
+  },
+  {
+    "index": 48,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/premium",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__48__premium__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__48__premium__bottom.png"
+  },
+  {
+    "index": 49,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/assimilation",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__49__assimilation__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__49__assimilation__bottom.png"
+  },
+  {
+    "index": 50,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/classificateur",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__50__classificateur__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__50__classificateur__bottom.png"
+  }
+]

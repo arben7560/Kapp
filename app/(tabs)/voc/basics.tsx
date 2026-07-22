@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AnimatedAppText, AppText } from "../../../components/app-text";
-import { ABSOLUTE_FILL } from "../../../constants/layout";
+import { ABSOLUTE_FILL, RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../../constants/layout";
 import { useVocAudio } from "../../../hooks/useVocAudio";
 import { useVocDialogue } from "../../../hooks/useVocDialogue";
 
@@ -664,7 +664,7 @@ export default function FirstStepsImmersion() {
                       />
 
                       <View style={styles.expTopRow}>
-                        <View style={{ flex: 1 }}>
+                        <View style={{ flex: 1, minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH }}>
                           <AppText variant="koreanPrimary" script="korean" style={styles.expWord}>{exp.word}</AppText>
                           <AppText variant="caption"
                             style={[
@@ -876,6 +876,7 @@ const styles = StyleSheet.create({
   },
   expTopRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "flex-start",
     gap: 14,
     marginBottom: 10,

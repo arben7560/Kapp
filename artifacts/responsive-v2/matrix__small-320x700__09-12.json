@@ -1,0 +1,46 @@
+[
+  {
+    "index": 9,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__09__grammar__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__09__grammar__bottom.png"
+  },
+  {
+    "index": 10,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/sentence-structure",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__10__grammar-sentence-structure__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__10__grammar-sentence-structure__bottom.png"
+  },
+  {
+    "index": 11,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/range-and-limit",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__11__grammar-range-and-limit__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__11__grammar-range-and-limit__bottom.png"
+  },
+  {
+    "index": 12,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/a1-validation",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__12__grammar-a1-validation__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__12__grammar-a1-validation__bottom.png"
+  }
+]

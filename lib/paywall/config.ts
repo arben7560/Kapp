@@ -1,4 +1,7 @@
-export const DEV_UNLOCK_ALL = true;
+// Preserve the development default while allowing locked-state QA against the
+// same native build and route graph.
+export const DEV_UNLOCK_ALL =
+  process.env.EXPO_PUBLIC_DEV_UNLOCK_ALL !== "0";
 
 export const ENABLE_NATIVE_IAP = false;
 

@@ -1,0 +1,101 @@
+[
+  {
+    "index": 30,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/comptage/base",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__30__comptage-base__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__30__comptage-base__bottom.png"
+  },
+  {
+    "index": 31,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/comptage/sino",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__31__comptage-sino__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__31__comptage-sino__bottom.png"
+  },
+  {
+    "index": 32,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/comptage/heures",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__32__comptage-heures__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__32__comptage-heures__bottom.png"
+  },
+  {
+    "index": 33,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/comptage/prix",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__33__comptage-prix__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__33__comptage-prix__bottom.png"
+  },
+  {
+    "index": 34,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/comptage/phone",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__34__comptage-phone__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__34__comptage-phone__bottom.png"
+  },
+  {
+    "index": 35,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/comptage/dates",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__35__comptage-dates__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__35__comptage-dates__bottom.png"
+  },
+  {
+    "index": 36,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/comptage/age",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__36__comptage-age__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__36__comptage-age__bottom.png"
+  },
+  {
+    "index": 37,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/comptage/ordinals",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__37__comptage-ordinals__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__37__comptage-ordinals__bottom.png"
+  },
+  {
+    "index": 38,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/listen",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__38__listen__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__38__listen__bottom.png"
+  }
+]

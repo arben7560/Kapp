@@ -1,0 +1,146 @@
+{
+  "profile": "tablet-landscape-1280x800",
+  "logicalSize": [
+    1280,
+    800
+  ],
+  "route": "/voc",
+  "top": {
+    "screenshot": "artifacts\\responsive-v2\\tablet-landscape-1280x800__voc__top.png",
+    "tree": "artifacts\\responsive-v2\\tablet-landscape-1280x800__voc__top.xml",
+    "visibleLabels": [
+      "Retour",
+      "SÉOUL IMMERSION",
+      "SÉOUL IMMERSION",
+      "어휘",
+      "Vocabulaire",
+      "COLLECTIONS · NIVEAU 1",
+      "\"Chaque mot devient une scène.\"",
+      "COLLECTIONS THÉMATIQUES",
+      "Gastronomie. Accès gratuit. Restaurants et cuisine de rue. Ouvre cette collection de vocabulaire",
+      "G",
+      "COLLECTION DE VOCABULAIRE",
+      "Gastronomie",
+      "Restaurants et cuisine de rue",
+      "›",
+      "Premiers pas. Accès gratuit. Salutations et survie. Ouvre cette collection de vocabulaire",
+      "P",
+      "COLLECTION DE VOCABULAIRE",
+      "Premiers pas",
+      "Salutations et survie",
+      "›",
+      "Transports et ville. Accès gratuit. S'orienter dans Séoul. Ouvre cette collection de vocabulaire",
+      "T",
+      "COLLECTION DE VOCABULAIRE",
+      "Transports et ville",
+      "S'orienter dans Séoul",
+      "›",
+      "Culture des K-dramas. Accès Premium verrouillé. Découvrir Premium. Découvrir Premium",
+      "C",
+      "COLLECTION DE VOCABULAIRE · PREMIUM",
+      "Culture des K-dramas",
+      "Découvrir Premium",
+      "PREMIUM 🔒",
+      "✧",
+      "Rencontres. Accès Premium verrouillé. Découvrir Premium. Découvrir Premium",
+      "R",
+      "COLLECTION DE VOCABULAIRE · PREMIUM",
+      "Rencontres",
+      "Découvrir Premium",
+      "PREMIUM 🔒",
+      "✧",
+      "Vie nocturne. Accès Premium verrouillé. Découvrir Premium. Découvrir Premium",
+      "V",
+      "COLLECTION DE VOCABULAIRE · PREMIUM",
+      "Vie nocturne",
+      "Découvrir Premium",
+      "PREMIUM 🔒",
+      "✧"
+    ],
+    "overflow": [],
+    "smallTouchTargets": [
+      {
+        "label": "Retour",
+        "bounds": [
+          214,
+          34,
+          342,
+          74
+        ],
+        "sizeDp": [
+          128.0,
+          40.0
+        ]
+      }
+    ]
+  },
+  "bottom": {
+    "screenshot": "artifacts\\responsive-v2\\tablet-landscape-1280x800__voc__bottom.png",
+    "tree": "artifacts\\responsive-v2\\tablet-landscape-1280x800__voc__bottom.xml",
+    "visibleLabels": [
+      "Retour",
+      "SÉOUL IMMERSION",
+      "SÉOUL IMMERSION",
+      "어휘",
+      "Vocabulaire",
+      "COLLECTIONS · NIVEAU 1",
+      "\"Chaque mot devient une scène.\"",
+      "COLLECTIONS THÉMATIQUES",
+      "Gastronomie. Accès gratuit. Restaurants et cuisine de rue. Ouvre cette collection de vocabulaire",
+      "G",
+      "COLLECTION DE VOCABULAIRE",
+      "Gastronomie",
+      "Restaurants et cuisine de rue",
+      "›",
+      "Premiers pas. Accès gratuit. Salutations et survie. Ouvre cette collection de vocabulaire",
+      "P",
+      "COLLECTION DE VOCABULAIRE",
+      "Premiers pas",
+      "Salutations et survie",
+      "›",
+      "Transports et ville. Accès gratuit. S'orienter dans Séoul. Ouvre cette collection de vocabulaire",
+      "T",
+      "COLLECTION DE VOCABULAIRE",
+      "Transports et ville",
+      "S'orienter dans Séoul",
+      "›",
+      "Culture des K-dramas. Accès Premium verrouillé. Découvrir Premium. Découvrir Premium",
+      "C",
+      "COLLECTION DE VOCABULAIRE · PREMIUM",
+      "Culture des K-dramas",
+      "Découvrir Premium",
+      "PREMIUM 🔒",
+      "✧",
+      "Rencontres. Accès Premium verrouillé. Découvrir Premium. Découvrir Premium",
+      "R",
+      "COLLECTION DE VOCABULAIRE · PREMIUM",
+      "Rencontres",
+      "Découvrir Premium",
+      "PREMIUM 🔒",
+      "✧",
+      "Vie nocturne. Accès Premium verrouillé. Découvrir Premium. Découvrir Premium",
+      "V",
+      "COLLECTION DE VOCABULAIRE · PREMIUM",
+      "Vie nocturne",
+      "Découvrir Premium",
+      "PREMIUM 🔒",
+      "✧"
+    ],
+    "overflow": [],
+    "smallTouchTargets": [
+      {
+        "label": "Retour",
+        "bounds": [
+          214,
+          34,
+          342,
+          74
+        ],
+        "sizeDp": [
+          128.0,
+          40.0
+        ]
+      }
+    ]
+  }
+}

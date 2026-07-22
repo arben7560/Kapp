@@ -1,0 +1,16 @@
+{
+  "profile": "small-320x700",
+  "logicalSize": [
+    320,
+    700
+  ],
+  "route": "/hangul",
+  "top": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__hangul__top.png",
+    "treeError": "ERROR: could not get idle state.\r\n"
+  },
+  "bottom": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__hangul__bottom.png",
+    "treeError": "ERROR: could not get idle state.\r\n"
+  }
+}

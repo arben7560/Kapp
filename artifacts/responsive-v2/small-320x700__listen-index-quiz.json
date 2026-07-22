@@ -1,0 +1,19 @@
+{
+  "profile": "small-320x700",
+  "logicalSize": [
+    320,
+    700
+  ],
+  "route": "/listen/index-quiz",
+  "top": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__listen-index-quiz__top.png",
+    "tree": "artifacts\\responsive-v2\\small-320x700__listen-index-quiz__top.xml",
+    "visibleLabels": [],
+    "overflow": [],
+    "smallTouchTargets": []
+  },
+  "bottom": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__listen-index-quiz__bottom.png",
+    "treeError": "UI hierarchy unavailable"
+  }
+}

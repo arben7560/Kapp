@@ -1,0 +1,79 @@
+{
+  "profile": "small-320x700",
+  "logicalSize": [
+    320,
+    700
+  ],
+  "route": "/voc",
+  "top": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__voc__top.png",
+    "tree": "artifacts\\responsive-v2\\small-320x700__voc__top.xml",
+    "visibleLabels": [
+      "Retour",
+      "SÉOUL IMMERSION",
+      "SÉOUL IMMERSION",
+      "어휘",
+      "Vocabulaire",
+      "COLLECTIONS · NIVEAU 1",
+      "\"Chaque mot devient une scène.\"",
+      "COLLECTIONS THÉMATIQUES",
+      "Gastronomie. Accès gratuit. Restaurants et cuisine de rue. Ouvre cette collection de vocabulaire",
+      "G",
+      "COLLECTION DE VOCABULAIRE",
+      "Gastronomie",
+      "Restaurants et cuisine de rue",
+      "›",
+      "Premiers pas. Accès gratuit. Salutations et survie. Ouvre cette collection de vocabulaire",
+      "P",
+      "COLLECTION DE VOCABULAIRE",
+      "Premiers pas",
+      "Salutations et survie",
+      "›"
+    ],
+    "overflow": [],
+    "smallTouchTargets": [
+      {
+        "label": "Retour",
+        "bounds": [
+          40,
+          95,
+          291,
+          175
+        ],
+        "sizeDp": [
+          125.5,
+          40.0
+        ]
+      }
+    ]
+  },
+  "bottom": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__voc__bottom.png",
+    "tree": "artifacts\\responsive-v2\\small-320x700__voc__bottom.xml",
+    "visibleLabels": [
+      "Vie nocturne. Accès Premium verrouillé. Découvrir Premium. Découvrir Premium",
+      "V",
+      "COLLECTION DE VOCABULAIRE · PREMIUM",
+      "PREMIUM 🔒",
+      "Vie nocturne",
+      "Découvrir Premium",
+      "✧",
+      "Urgences et santé. Accès Premium verrouillé. Découvrir Premium. Découvrir Premium",
+      "U",
+      "COLLECTION DE VOCABULAIRE · PREMIUM",
+      "PREMIUM 🔒",
+      "Urgences et santé",
+      "Découvrir Premium",
+      "✧",
+      "Vie professionnelle. Accès Premium verrouillé. Découvrir Premium. Découvrir Premium",
+      "V",
+      "COLLECTION DE VOCABULAIRE · PREMIUM",
+      "PREMIUM 🔒",
+      "Vie professionnelle",
+      "Découvrir Premium",
+      "✧"
+    ],
+    "overflow": [],
+    "smallTouchTargets": []
+  }
+}

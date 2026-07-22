@@ -1,0 +1,57 @@
+[
+  {
+    "index": 61,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/lesson/health",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__61__lesson-health__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__61__lesson-health__bottom.png"
+  },
+  {
+    "index": 62,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/lesson/help",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__62__lesson-help__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__62__lesson-help__bottom.png"
+  },
+  {
+    "index": 63,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/lesson/hotel",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__63__lesson-hotel__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__63__lesson-hotel__bottom.png"
+  },
+  {
+    "index": 64,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/lesson/late",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__64__lesson-late__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__64__lesson-late__bottom.png"
+  },
+  {
+    "index": 65,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/lesson/taxi",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__65__lesson-taxi__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__65__lesson-taxi__bottom.png"
+  }
+]

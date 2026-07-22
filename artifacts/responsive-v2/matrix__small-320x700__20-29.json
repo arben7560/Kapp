@@ -1,0 +1,112 @@
+[
+  {
+    "index": 20,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/voc/sante",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__20__voc-sante__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__20__voc-sante__bottom.png"
+  },
+  {
+    "index": 21,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/voc/work",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__21__voc-work__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__21__voc-work__bottom.png"
+  },
+  {
+    "index": 22,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/voc/emotion",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__22__voc-emotion__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__22__voc-emotion__bottom.png"
+  },
+  {
+    "index": 23,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/voc/famille",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__23__voc-famille__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__23__voc-famille__bottom.png"
+  },
+  {
+    "index": 24,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/voc/health",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__24__voc-health__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__24__voc-health__bottom.png"
+  },
+  {
+    "index": 25,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/voc/lieux",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__25__voc-lieux__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__25__voc-lieux__bottom.png"
+  },
+  {
+    "index": 26,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/voc/meteo",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__26__voc-meteo__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__26__voc-meteo__bottom.png"
+  },
+  {
+    "index": 27,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/voc/objets",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__27__voc-objets__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__27__voc-objets__bottom.png"
+  },
+  {
+    "index": 28,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/voc/voyage",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__28__voc-voyage__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__28__voc-voyage__bottom.png"
+  },
+  {
+    "index": 29,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/comptage",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__29__comptage__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__29__comptage__bottom.png"
+  }
+]

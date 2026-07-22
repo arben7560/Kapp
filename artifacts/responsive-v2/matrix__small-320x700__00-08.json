@@ -1,0 +1,101 @@
+[
+  {
+    "index": 0,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__00__home__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__00__home__bottom.png"
+  },
+  {
+    "index": 1,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/hangul",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__01__hangul__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__01__hangul__bottom.png"
+  },
+  {
+    "index": 2,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/hangul/vowels-basic",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__02__hangul-vowels-basic__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__02__hangul-vowels-basic__bottom.png"
+  },
+  {
+    "index": 3,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/hangul/consonants-basic",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__03__hangul-consonants-basic__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__03__hangul-consonants-basic__bottom.png"
+  },
+  {
+    "index": 4,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/hangul/vowels-compound",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__04__hangul-vowels-compound__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__04__hangul-vowels-compound__bottom.png"
+  },
+  {
+    "index": 5,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/hangul/consonants-tense",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__05__hangul-consonants-tense__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__05__hangul-consonants-tense__bottom.png"
+  },
+  {
+    "index": 6,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/hangul/batchim",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__06__hangul-batchim__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__06__hangul-batchim__bottom.png"
+  },
+  {
+    "index": 7,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/hangul/assessment",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__07__hangul-assessment__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__07__hangul-assessment__bottom.png"
+  },
+  {
+    "index": 8,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/hangul/bridge",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__08__hangul-bridge__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__08__hangul-bridge__bottom.png"
+  }
+]

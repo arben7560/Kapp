@@ -1,0 +1,122 @@
+{
+  "profile": "small-320x700",
+  "logicalSize": [
+    320,
+    700
+  ],
+  "route": "/review",
+  "top": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__review__top.png",
+    "tree": "artifacts\\responsive-v2\\small-320x700__review__top.xml",
+    "visibleLabels": [
+      "Carnet",
+      "Révision intelligente (prototype)",
+      "Stats",
+      "Missions validées : 0",
+      "XP : 120",
+      "Réviser maintenant (2 min)",
+      "3 chunks utiles à répéter.",
+      "Café — americano",
+      "아이스 아메리카노 하나 주세요",
+      "Pas encore validé",
+      "Marquer comme validé",
+      "Marquer comme validé",
+      "Métro — ligne 2",
+      "2호선 어디예요?",
+      "Pas encore validé",
+      "Marquer comme validé",
+      "Marquer comme validé"
+    ],
+    "overflow": [],
+    "smallTouchTargets": [
+      {
+        "label": "Marquer comme validé",
+        "bounds": [
+          96,
+          913,
+          544,
+          993
+        ],
+        "sizeDp": [
+          224.0,
+          40.0
+        ]
+      },
+      {
+        "label": "Marquer comme validé",
+        "bounds": [
+          96,
+          1249,
+          544,
+          1329
+        ],
+        "sizeDp": [
+          224.0,
+          40.0
+        ]
+      }
+    ]
+  },
+  "bottom": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__review__bottom.png",
+    "tree": "artifacts\\responsive-v2\\small-320x700__review__bottom.xml",
+    "visibleLabels": [
+      "아이스 아메리카노 하나 주세요",
+      "Pas encore validé",
+      "Marquer comme validé",
+      "Marquer comme validé",
+      "Métro — ligne 2",
+      "2호선 어디예요?",
+      "Pas encore validé",
+      "Marquer comme validé",
+      "Marquer comme validé",
+      "Restaurant — commande",
+      "이거 주세요",
+      "Pas encore validé",
+      "Marquer comme validé",
+      "Marquer comme validé"
+    ],
+    "overflow": [],
+    "smallTouchTargets": [
+      {
+        "label": "Marquer comme validé",
+        "bounds": [
+          96,
+          256,
+          544,
+          336
+        ],
+        "sizeDp": [
+          224.0,
+          40.0
+        ]
+      },
+      {
+        "label": "Marquer comme validé",
+        "bounds": [
+          96,
+          592,
+          544,
+          672
+        ],
+        "sizeDp": [
+          224.0,
+          40.0
+        ]
+      },
+      {
+        "label": "Marquer comme validé",
+        "bounds": [
+          96,
+          928,
+          544,
+          1008
+        ],
+        "sizeDp": [
+          224.0,
+          40.0
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+[
+  {
+    "index": 14,
+    "profile": "compact-360x800",
+    "logicalSize": [
+      360,
+      800
+    ],
+    "route": "/voc/gastronomie",
+    "top": "artifacts\\responsive-v2\\matrix__compact-360x800__14__voc-gastronomie__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__compact-360x800__14__voc-gastronomie__bottom.png"
+  }
+]

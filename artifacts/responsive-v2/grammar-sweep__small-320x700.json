@@ -1,0 +1,453 @@
+[
+  {
+    "index": 1,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/sentence-structure",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__01__grammar-sentence-structure__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__01__grammar-sentence-structure__bottom.png"
+  },
+  {
+    "index": 2,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/identify-with-copula",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__02__grammar-identify-with-copula__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__02__grammar-identify-with-copula__bottom.png"
+  },
+  {
+    "index": 3,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/polite-register",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__03__grammar-polite-register__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__03__grammar-polite-register__bottom.png"
+  },
+  {
+    "index": 4,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/introduce-topic",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__04__grammar-introduce-topic__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__04__grammar-introduce-topic__bottom.png"
+  },
+  {
+    "index": 5,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/demonstratives",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__05__grammar-demonstratives__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__05__grammar-demonstratives__bottom.png"
+  },
+  {
+    "index": 6,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/nominal-questions",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__06__grammar-nominal-questions__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__06__grammar-nominal-questions__bottom.png"
+  },
+  {
+    "index": 7,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/existence",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__07__grammar-existence__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__07__grammar-existence__bottom.png"
+  },
+  {
+    "index": 8,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/locate-thing",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__08__grammar-locate-thing__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__08__grammar-locate-thing__bottom.png"
+  },
+  {
+    "index": 9,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/present-actions",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__09__grammar-present-actions__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__09__grammar-present-actions__bottom.png"
+  },
+  {
+    "index": 10,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/object-actions",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__10__grammar-object-actions__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__10__grammar-object-actions__bottom.png"
+  },
+  {
+    "index": 11,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/action-location",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__11__grammar-action-location__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__11__grammar-action-location__bottom.png"
+  },
+  {
+    "index": 12,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/destination-and-time",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__12__grammar-destination-and-time__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__12__grammar-destination-and-time__bottom.png"
+  },
+  {
+    "index": 13,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/possession",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__13__grammar-possession__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__13__grammar-possession__bottom.png"
+  },
+  {
+    "index": 14,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/information-questions",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__14__grammar-information-questions__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__14__grammar-information-questions__bottom.png"
+  },
+  {
+    "index": 15,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/simple-negation",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__15__grammar-simple-negation__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__15__grammar-simple-negation__bottom.png"
+  },
+  {
+    "index": 16,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/request-item",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__16__grammar-request-item__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__16__grammar-request-item__bottom.png"
+  },
+  {
+    "index": 17,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/request-quantity",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__17__grammar-request-quantity__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__17__grammar-request-quantity__bottom.png"
+  },
+  {
+    "index": 18,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/sino-number-contexts",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__18__grammar-sino-number-contexts__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__18__grammar-sino-number-contexts__bottom.png"
+  },
+  {
+    "index": 19,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/coordinate-items",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__19__grammar-coordinate-items__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__19__grammar-coordinate-items__bottom.png"
+  },
+  {
+    "index": 20,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/choose-alternative",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__20__grammar-choose-alternative__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__20__grammar-choose-alternative__bottom.png"
+  },
+  {
+    "index": 21,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/request-action",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__21__grammar-request-action__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__21__grammar-request-action__bottom.png"
+  },
+  {
+    "index": 22,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/polite-instructions",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__22__grammar-polite-instructions__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__22__grammar-polite-instructions__bottom.png"
+  },
+  {
+    "index": 23,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/direction-and-means",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__23__grammar-direction-and-means__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__23__grammar-direction-and-means__bottom.png"
+  },
+  {
+    "index": 24,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/express-desire",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__24__grammar-express-desire__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__24__grammar-express-desire__bottom.png"
+  },
+  {
+    "index": 25,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/express-ability",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__25__grammar-express-ability__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__25__grammar-express-ability__bottom.png"
+  },
+  {
+    "index": 26,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/ask-permission",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__26__grammar-ask-permission__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__26__grammar-ask-permission__bottom.png"
+  },
+  {
+    "index": 27,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/express-inability",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__27__grammar-express-inability__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__27__grammar-express-inability__bottom.png"
+  },
+  {
+    "index": 28,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/add-item",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__28__grammar-add-item__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__28__grammar-add-item__bottom.png"
+  },
+  {
+    "index": 29,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/limit-request",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__29__grammar-limit-request__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__29__grammar-limit-request__bottom.png"
+  },
+  {
+    "index": 30,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/range-and-limit",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__30__grammar-range-and-limit__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__30__grammar-range-and-limit__bottom.png"
+  },
+  {
+    "index": 31,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/past-event",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__31__grammar-past-event__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__31__grammar-past-event__bottom.png"
+  },
+  {
+    "index": 32,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/future-plan",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__32__grammar-future-plan__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__32__grammar-future-plan__bottom.png"
+  },
+  {
+    "index": 33,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/decision-and-promise",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__33__grammar-decision-and-promise__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__33__grammar-decision-and-promise__bottom.png"
+  },
+  {
+    "index": 34,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/link-actions",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__34__grammar-link-actions__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__34__grammar-link-actions__bottom.png"
+  },
+  {
+    "index": 35,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/give-reason",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__35__grammar-give-reason__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__35__grammar-give-reason__bottom.png"
+  },
+  {
+    "index": 36,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/mark-contrast",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__36__grammar-mark-contrast__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__36__grammar-mark-contrast__bottom.png"
+  },
+  {
+    "index": 37,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/simple-condition",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__37__grammar-simple-condition__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__37__grammar-simple-condition__bottom.png"
+  },
+  {
+    "index": 38,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/necessity-and-obligation",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__38__grammar-necessity-and-obligation__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__38__grammar-necessity-and-obligation__bottom.png"
+  },
+  {
+    "index": 39,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/simple-comparison",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__39__grammar-simple-comparison__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__39__grammar-simple-comparison__bottom.png"
+  },
+  {
+    "index": 40,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/make-suggestion",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__40__grammar-make-suggestion__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__40__grammar-make-suggestion__bottom.png"
+  },
+  {
+    "index": 41,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/grammar/a1-validation",
+    "top": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__41__grammar-a1-validation__top.png",
+    "bottom": "artifacts\\responsive-v2\\grammar-sweep__small-320x700__41__grammar-a1-validation__bottom.png"
+  }
+]

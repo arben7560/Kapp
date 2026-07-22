@@ -1,0 +1,61 @@
+{
+  "profile": "small-320x700",
+  "logicalSize": [
+    320,
+    700
+  ],
+  "route": "/premium",
+  "top": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__premium__top.png",
+    "tree": "artifacts\\responsive-v2\\small-320x700__premium__top.xml",
+    "visibleLabels": [
+      "Fermer Premium",
+      "",
+      "PREMIUM",
+      "",
+      "ACCÈS TOTAL",
+      "K-App Premium",
+      "Débloque les parcours et missions Premium disponibles.",
+      "Premium mensuel, , 5,99 EUR / mois, Abonnement mensuel, résiliable depuis l’App Store ou Google Play.",
+      "Premium mensuel",
+      "",
+      "5,99 EUR / mois",
+      "Abonnement mensuel, résiliable depuis l’App Store ou Google Play.",
+      "Premium annuel, Économisez 17 %, , 59,99 EUR / an, Environ 5 EUR / mois. Abonnement annuel, résiliable depuis l’App Store ou Google Play.",
+      "Premium annuel",
+      "",
+      "Économisez 17 %",
+      "59,99 EUR / an",
+      "Environ 5 EUR / mois. Abonnement annuel, résiliable depuis l’App Store ou Google Play."
+    ],
+    "overflow": [],
+    "smallTouchTargets": []
+  },
+  "bottom": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__premium__bottom.png",
+    "tree": "artifacts\\responsive-v2\\small-320x700__premium__bottom.xml",
+    "visibleLabels": [
+      "Fermer Premium",
+      "",
+      "PREMIUM",
+      "",
+      "Tous les parcours disponibles débloqués",
+      "",
+      "Exercices et programmes Premium inclus",
+      "",
+      "Toutes les missions Premium disponibles",
+      "",
+      "Achats restaurables via ton compte App Store ou Google Play",
+      "Choisir l’abonnement annuel",
+      "Choisir l’abonnement annuel",
+      "Offre sélectionnée : Premium annuel",
+      "Restaurer mes achats",
+      "Restaurer mes achats",
+      "Gérer mon abonnement",
+      "Gérer mon abonnement",
+      "Le paiement est traité par l’App Store ou Google Play. Le renouvellement et l’expiration de l’abonnement sont gérés par le compte associé."
+    ],
+    "overflow": [],
+    "smallTouchTargets": []
+  }
+}

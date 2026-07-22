@@ -1,8 +1,10 @@
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { AppMixedText, AppText } from "../../components/app-text";
+import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import { createEmptyHangulProgress } from "../../data/hangul/types";
 import { createEmptyGrammarLearningProgress } from "../../lib/grammar";
@@ -16,10 +18,20 @@ const CARD = "rgba(255,255,255,0.06)";
 export default function Profile() {
   const { progress, setProgress, togglePremium } = useStore();
   const { resetStreak, streak } = useDailyStreak();
+  const responsive = useResponsiveLayout({ maxWidth: 760 });
 
   return (
     <LinearGradient colors={[BG0, "#0b0b1d", "#0b0f22"]} style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={{
+            alignSelf: "center",
+            maxWidth: responsive.maxWidth,
+            paddingBottom: 120,
+            paddingHorizontal: responsive.horizontalPadding,
+            width: "100%",
+          }}
+        >
         <AppText accessibilityRole="header" variant="screenTitle" style={{ color: TXT, marginTop: 8 }}>
           Profil
         </AppText>
@@ -160,7 +172,8 @@ export default function Profile() {
             <AppText variant="button" align="center" style={{ color: TXT }}>Réinitialiser la progression</AppText>
           </Pressable>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     </LinearGradient>
   );
 }

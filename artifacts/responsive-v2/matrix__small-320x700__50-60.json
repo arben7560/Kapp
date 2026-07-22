@@ -1,0 +1,123 @@
+[
+  {
+    "index": 50,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/classificateur",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__50__classificateur__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__50__classificateur__bottom.png"
+  },
+  {
+    "index": 51,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/classificateur/animals",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__51__classificateur-animals__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__51__classificateur-animals__bottom.png"
+  },
+  {
+    "index": 52,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/classificateur/drinks",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__52__classificateur-drinks__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__52__classificateur-drinks__bottom.png"
+  },
+  {
+    "index": 53,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/classificateur/machines",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__53__classificateur-machines__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__53__classificateur-machines__bottom.png"
+  },
+  {
+    "index": 54,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/classificateur/objects",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__54__classificateur-objects__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__54__classificateur-objects__bottom.png"
+  },
+  {
+    "index": 55,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/classificateur/paper",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__55__classificateur-paper__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__55__classificateur-paper__bottom.png"
+  },
+  {
+    "index": 56,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/classificateur/people",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__56__classificateur-people__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__56__classificateur-people__bottom.png"
+  },
+  {
+    "index": 57,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/listen/CafeListen",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__57__listen-CafeListen__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__57__listen-CafeListen__bottom.png"
+  },
+  {
+    "index": 58,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/listen/MetroListen",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__58__listen-MetroListen__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__58__listen-MetroListen__bottom.png"
+  },
+  {
+    "index": 59,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/listen/RestaurantListen",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__59__listen-RestaurantListen__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__59__listen-RestaurantListen__bottom.png"
+  },
+  {
+    "index": 60,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/listen/index-quiz",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__60__listen-index-quiz__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__60__listen-index-quiz__bottom.png"
+  }
+]

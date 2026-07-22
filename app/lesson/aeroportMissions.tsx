@@ -13,6 +13,7 @@ import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
 import { MissionAccessBadge } from "../../components/immersion/MissionAccessBadge";
 import { MissionLaunchModal } from "../../components/immersion/MissionLaunchModal";
+import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import { SeoulMidnightGlass } from "../../constants/theme";
 import {
@@ -193,9 +194,9 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   backButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: IMMERSIVE_MIN_TOUCH_TARGET,
+    height: IMMERSIVE_MIN_TOUCH_TARGET,
+    borderRadius: IMMERSIVE_MIN_TOUCH_TARGET / 2,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,

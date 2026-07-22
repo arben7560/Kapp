@@ -1,0 +1,57 @@
+[
+  {
+    "index": 40,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/lesson/cafe",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__40__lesson-cafe__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__40__lesson-cafe__bottom.png"
+  },
+  {
+    "index": 41,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/lesson/metro",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__41__lesson-metro__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__41__lesson-metro__bottom.png"
+  },
+  {
+    "index": 42,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/lesson/restaurant",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__42__lesson-restaurant__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__42__lesson-restaurant__bottom.png"
+  },
+  {
+    "index": 43,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/lesson/airport",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__43__lesson-airport__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__43__lesson-airport__bottom.png"
+  },
+  {
+    "index": 44,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/lesson/magasin",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__44__lesson-magasin__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__44__lesson-magasin__bottom.png"
+  }
+]

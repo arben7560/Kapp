@@ -1,0 +1,115 @@
+
+> k-app@1.0.0 dev-client
+> expo start --port 8082 --dev-client
+
+Starting project at C:\Users\Peposi\Documents\Kapp
+Logs: C:\Users\Peposi\Documents\Kapp\.expo\dev\logs\start.log
+🔍 [expo-iap] Config values: horizonAppId=undefined, isHorizonEnabled=false, isOnsideEnabled=false
+📦 [expo-iap] Using OpenIAP from CocoaPods
+React Compiler enabled
+Starting Metro Bundler
+
+Waiting on http://localhost:8082
+An update for expo is available: 56.0.9 → ~56.0.16
+10 other packages may need updating. Run npx expo install --check for details.
+Logs for your project will appear below.
+Android Bundled 2529ms node_modules\expo-router\entry.js (4442 modules)
+ WARN  [Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device.
+ WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/AppAndFlow/react-native-safe-area-context
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.
+ WARN  Modal with 'pageSheet' presentation style and 'transparent' value is not supported.

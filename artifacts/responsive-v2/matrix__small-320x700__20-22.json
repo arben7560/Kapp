@@ -1,0 +1,35 @@
+[
+  {
+    "index": 20,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/voc/sante",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__20__voc-sante__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__20__voc-sante__bottom.png"
+  },
+  {
+    "index": 21,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/voc/work",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__21__voc-work__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__21__voc-work__bottom.png"
+  },
+  {
+    "index": 22,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/voc/emotion",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__22__voc-emotion__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__22__voc-emotion__bottom.png"
+  }
+]

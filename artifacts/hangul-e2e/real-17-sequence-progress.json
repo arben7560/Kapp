@@ -1,33 +1,15 @@
 {
-  "learningTrack": "hangul",
-  "xp": 1040,
+  "learningTrack": null,
+  "xp": 280,
   "streak": 0,
   "isPremium": false,
   "completed": {
     "hangul_vowels_basic_blocks": true,
     "hangul_vowels_basic_core-vowels": true,
     "hangul_vowels_basic_y-vowels": true,
-    "hangul_vowels_basic": true,
-    "hangul_consonants_basic_simple-a": true,
-    "hangul_consonants_basic_simple-b": true,
-    "hangul_consonants_basic_aspirated": true,
-    "hangul_consonants_basic_cv-reading": true,
-    "hangul_consonants_basic": true,
-    "hangul_consonants_tense_tense-letters": true,
-    "hangul_consonants_tense_three-way": true,
-    "hangul_consonants_tense_tense-reading": true,
-    "hangul_consonants_tense": true,
-    "hangul_vowels_compound_e-vowels": true,
-    "hangul_vowels_compound_w-vowels": true,
-    "hangul_vowels_compound_compound-reading": true,
-    "hangul_vowels_compound": true,
-    "hangul_batchim_cvc-structure": true,
-    "hangul_batchim_simple-final-spellings": true,
-    "hangul_batchim_batchim-reading": true,
-    "hangul_batchim_liaison": true,
-    "hangul_batchim": true
+    "hangul_vowels_basic": true
   },
-  "hangulLevel": 5,
+  "hangulLevel": 1,
   "hangulProgress": {
     "lessons": {
       "hangul_vowels_basic": {
@@ -35,20 +17,20 @@
           "block-o": true,
           "block-a": true,
           "guardian": true,
-          "eo": true,
           "a": true,
-          "i": true,
           "eu": true,
           "u": true,
           "o": true,
-          "yo": true,
+          "eo": true,
+          "i": true,
           "yeo": true,
           "ya": true,
+          "ai": true,
+          "yu": true,
+          "yo": true,
           "yeou": true,
           "uyu": true,
-          "oi": true,
-          "ai": true,
-          "yu": true
+          "oi": true
         },
         "completedScenes": {
           "blocks": true,
@@ -79,249 +61,12 @@
         },
         "errorsByCharacter": {
           "ㅇ": 2,
-          "ㅏ": 1,
-          "ㅜ": 2,
-          "ㅕ": 1
+          "ㅗ": 1,
+          "ㅣ": 1,
+          "ㅕ": 1,
+          "ㅜ": 1
         },
         "currentSceneId": "y-vowels"
-      },
-      "hangul_consonants_basic": {
-        "discovered": {
-          "n": true,
-          "g": true,
-          "b": true,
-          "m": true,
-          "d": true,
-          "s": true,
-          "r": true,
-          "h": true,
-          "j": true,
-          "t": true,
-          "k": true,
-          "ch": true,
-          "p": true,
-          "moja": true,
-          "nabi": true,
-          "haru": true,
-          "bada": true,
-          "gicha": true
-        },
-        "completedScenes": {
-          "simple-a": true,
-          "simple-b": true,
-          "aspirated": true,
-          "cv-reading": true
-        },
-        "masteredScenes": {
-          "simple-a": true,
-          "simple-b": true,
-          "aspirated": true,
-          "cv-reading": true
-        },
-        "scores": {
-          "simple-a": {
-            "bestScore": 10,
-            "total": 10,
-            "attempts": 1
-          },
-          "simple-b": {
-            "bestScore": 7,
-            "total": 8,
-            "attempts": 1
-          },
-          "aspirated": {
-            "bestScore": 8,
-            "total": 8,
-            "attempts": 1
-          },
-          "cv-reading": {
-            "bestScore": 6,
-            "total": 7,
-            "attempts": 1
-          }
-        },
-        "errorsByCharacter": {
-          "ㄹ": 1,
-          "ㄴ": 1,
-          "ㅏ": 1,
-          "ㅂ": 1,
-          "ㅣ": 1
-        },
-        "currentSceneId": "cv-reading"
-      },
-      "hangul_consonants_tense": {
-        "discovered": {
-          "tt": true,
-          "kk": true,
-          "jj": true,
-          "ss": true,
-          "pp": true,
-          "td": true,
-          "kg": true,
-          "jch": true,
-          "pb": true,
-          "ttada": true,
-          "kkori": true,
-          "jjada": true,
-          "ssada": true,
-          "appa": true
-        },
-        "completedScenes": {
-          "tense-letters": true,
-          "three-way": true,
-          "tense-reading": true
-        },
-        "masteredScenes": {
-          "tense-letters": true,
-          "three-way": true,
-          "tense-reading": true
-        },
-        "scores": {
-          "tense-letters": {
-            "bestScore": 10,
-            "total": 10,
-            "attempts": 1
-          },
-          "three-way": {
-            "bestScore": 6,
-            "total": 6,
-            "attempts": 2
-          },
-          "tense-reading": {
-            "bestScore": 6,
-            "total": 6,
-            "attempts": 1
-          }
-        },
-        "errorsByCharacter": {
-          "ㅂ": 1,
-          "ㅃ": 1,
-          "ㅍ": 1,
-          "ㅏ": 1
-        },
-        "currentSceneId": "tense-reading"
-      },
-      "hangul_vowels_compound": {
-        "discovered": {
-          "e": true,
-          "ae": true,
-          "oe": true,
-          "ye": true,
-          "yae": true,
-          "wae": true,
-          "wa": true,
-          "ui": true,
-          "wi": true,
-          "we": true,
-          "wo": true,
-          "uisa": true,
-          "sagwa": true,
-          "word-wi": true,
-          "oegyo": true,
-          "word-wae": true,
-          "segye": true
-        },
-        "completedScenes": {
-          "e-vowels": true,
-          "w-vowels": true,
-          "compound-reading": true
-        },
-        "masteredScenes": {
-          "e-vowels": true,
-          "w-vowels": true,
-          "compound-reading": true
-        },
-        "scores": {
-          "e-vowels": {
-            "bestScore": 10,
-            "total": 10,
-            "attempts": 1
-          },
-          "w-vowels": {
-            "bestScore": 12,
-            "total": 12,
-            "attempts": 1
-          },
-          "compound-reading": {
-            "bestScore": 7,
-            "total": 7,
-            "attempts": 1
-          }
-        },
-        "errorsByCharacter": {},
-        "currentSceneId": "compound-reading"
-      },
-      "hangul_batchim": {
-        "discovered": {
-          "n": true,
-          "k": true,
-          "p": true,
-          "m": true,
-          "l": true,
-          "t": true,
-          "ng": true,
-          "fg-n": true,
-          "fg-k": true,
-          "fg-p": true,
-          "fg-m": true,
-          "fg-l": true,
-          "fg-t": true,
-          "fg-ng": true,
-          "jip": true,
-          "bap": true,
-          "gang": true,
-          "mun": true,
-          "bam": true,
-          "mul": true,
-          "ot": true,
-          "jibe": true,
-          "meogeo": true,
-          "hangugeo": true,
-          "osi": true
-        },
-        "completedScenes": {
-          "cvc-structure": true,
-          "simple-final-spellings": true,
-          "batchim-reading": true,
-          "liaison": true
-        },
-        "masteredScenes": {
-          "cvc-structure": true,
-          "simple-final-spellings": true,
-          "batchim-reading": true,
-          "liaison": true
-        },
-        "scores": {
-          "cvc-structure": {
-            "bestScore": 6,
-            "total": 7,
-            "attempts": 1
-          },
-          "simple-final-spellings": {
-            "bestScore": 6,
-            "total": 7,
-            "attempts": 1
-          },
-          "batchim-reading": {
-            "bestScore": 6,
-            "total": 7,
-            "attempts": 1
-          },
-          "liaison": {
-            "bestScore": 6,
-            "total": 6,
-            "attempts": 1
-          }
-        },
-        "errorsByCharacter": {
-          "ㄱ": 2,
-          "ㅏ": 2,
-          "ㄷ": 1,
-          "ㅊ": 1,
-          "ㅐ": 1,
-          "ㅂ": 1
-        },
-        "currentSceneId": "liaison"
       }
     },
     "masteredCharacters": {
@@ -335,36 +80,12 @@
       "ㅑ": true,
       "ㅕ": true,
       "ㅛ": true,
-      "ㅠ": true,
-      "ㄱ": true,
-      "ㄴ": true,
-      "ㄷ": true,
-      "ㅁ": true,
-      "ㅂ": true,
-      "ㄹ": true,
-      "ㅅ": true,
-      "ㅈ": true,
-      "ㅎ": true,
-      "ㅋ": true,
-      "ㅌ": true,
-      "ㅍ": true,
-      "ㅊ": true,
-      "ㄲ": true,
-      "ㄸ": true,
-      "ㅃ": true,
-      "ㅆ": true,
-      "ㅉ": true,
-      "ㅐ": true,
-      "ㅔ": true,
-      "ㅒ": true,
-      "ㅖ": true,
-      "ㅚ": true,
-      "ㅘ": true,
-      "ㅙ": true,
-      "ㅝ": true,
-      "ㅞ": true,
-      "ㅟ": true,
-      "ㅢ": true
+      "ㅠ": true
     }
+  },
+  "grammarProgress": {
+    "schemaVersion": 1,
+    "concepts": {},
+    "stages": {}
   }
 }

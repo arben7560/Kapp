@@ -8,6 +8,7 @@ import {
   buildMetroConversationSummary,
   type MetroConversationMemory,
 } from "../../lib/metroConversationMemory";
+import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
 import { AppText } from "../app-text";
 
 type Props = {
@@ -69,7 +70,6 @@ export function MetroConversationSummaryModal({
   return (
     <Modal
       animationType="slide"
-      presentationStyle="pageSheet"
       transparent
       visible={visible}
       onRequestClose={handleClose}
@@ -176,9 +176,9 @@ export function MetroConversationSummaryModal({
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.62)" },
-  sheet: { maxHeight: "92%", backgroundColor: "#0A0D1A", borderTopLeftRadius: 30, borderTopRightRadius: 30 },
+  sheet: { width: "100%", maxWidth: 680, maxHeight: "92%", alignSelf: "center", backgroundColor: "#0A0D1A", borderTopLeftRadius: 30, borderTopRightRadius: 30 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 18, paddingBottom: 12 },
-  closeButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.07)" },
+  closeButton: { width: IMMERSIVE_MIN_TOUCH_TARGET, height: IMMERSIVE_MIN_TOUCH_TARGET, borderRadius: IMMERSIVE_MIN_TOUCH_TARGET / 2, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.07)" },
   content: { paddingHorizontal: 20, paddingBottom: 28, gap: 14 },
   card: { gap: 10, borderRadius: 20, padding: 16, backgroundColor: "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" },
   listenButton: { minHeight: 44, borderRadius: 15, paddingHorizontal: 16, alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#A855F7" },

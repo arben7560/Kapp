@@ -5,3 +5,6 @@ export const ABSOLUTE_FILL = {
   bottom: 0,
   left: 0,
 };
+
+/** Minimum readable copy width before a trailing audio control wraps below. */
+export const RESPONSIVE_AUDIO_COPY_MIN_WIDTH = 220;

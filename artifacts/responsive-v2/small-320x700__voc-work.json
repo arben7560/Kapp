@@ -1,0 +1,16 @@
+{
+  "profile": "small-320x700",
+  "logicalSize": [
+    320,
+    700
+  ],
+  "route": "/voc/work",
+  "top": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__voc-work__top.png",
+    "treeError": "ERROR: could not get idle state.\r\n"
+  },
+  "bottom": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__voc-work__bottom.png",
+    "treeError": "ERROR: could not get idle state.\r\n"
+  }
+}

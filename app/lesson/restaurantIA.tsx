@@ -7,7 +7,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  useWindowDimensions,
   View,
 } from "react-native";
 import {
@@ -17,6 +16,15 @@ import {
 
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { ImmersiveMediaStatusOverlay } from "../../components/immersion/ImmersiveMediaStatusOverlay";
+import { ImmersiveStepProgress } from "../../components/immersion/ImmersiveStepProgress";
+import {
+  getImmersiveBottomPadding,
+  getImmersivePortraitMediaLayout,
+  IMMERSIVE_CONTENT_MAX_WIDTH,
+  IMMERSIVE_MIN_TOUCH_TARGET,
+  IMMERSIVE_VIDEO_VIEW_PROPS,
+} from "../../constants/immersive-layout";
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import {
   restaurantDialogueData,
@@ -30,6 +38,8 @@ import {
   getRestaurantMissionScenario,
 } from "../../data/lesson/restaurant/restaurantMissions";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
+import { useImmersiveMediaStatus } from "../../hooks/useImmersiveMediaStatus";
+import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { buildProgressId } from "../../lib/progressIds";
@@ -179,8 +189,7 @@ export default function RestaurantIaScreen() {
     number | null
   >(null);
   const insets = useSafeAreaInsets();
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const responsive = useResponsiveLayout({ maxWidth: 760 });
+  const responsive = useResponsiveLayout({ maxWidth: IMMERSIVE_CONTENT_MAX_WIDTH });
   const params = useLocalSearchParams();
   const mode = normalizeMode(params.mode as string | string[] | undefined);
   const missionId =
@@ -248,6 +257,17 @@ export default function RestaurantIaScreen() {
   const player = useVideoPlayer(null, (playerInstance) => {
     playerInstance.loop = false;
   });
+  const {
+    status: mediaStatus,
+    markReady: markMediaReady,
+    markError: markMediaError,
+  } = useImmersiveMediaStatus(displayedVideoSource);
+  useImmersiveVideoLifecycle(
+    player,
+    currentNode?.type === "ia" &&
+      Boolean(currentVideoSource) &&
+      mediaStatus === "ready",
+  );
 
   useEffect(() => {
     if (isPaywallLoading || canEnterMission) return;
@@ -261,12 +281,11 @@ export default function RestaurantIaScreen() {
     }
   }, [canEnterMission, currentNode, currentVideoSource]);
 
-  const avatarFrameHeight = Math.min(
-    responsive.contentWidth * 1.2,
-    screenWidth * 1,
-    screenHeight * 1,
-    520,
-  );
+  const { width: avatarFrameWidth, height: avatarFrameHeight } =
+    getImmersivePortraitMediaLayout({
+      contentWidth: responsive.contentWidth,
+      viewportHeight: responsive.height,
+    });
   const avatarVideoHeight = avatarFrameHeight;
 
   const goToNextNode = useCallback((node?: DialogueNodeWithVideo) => {
@@ -337,10 +356,14 @@ export default function RestaurantIaScreen() {
     let isCancelled = false;
 
     async function updateVideoSource() {
+      const nextVideoSource = displayedVideoSource;
+
       try {
-        await player.replaceAsync(displayedVideoSource);
+        await player.replaceAsync(nextVideoSource);
 
         if (isCancelled) return;
+
+        markMediaReady(nextVideoSource);
 
         if (currentNode?.type === "ia" && currentVideoSource) {
           player.play();
@@ -348,7 +371,10 @@ export default function RestaurantIaScreen() {
           player.pause();
         }
       } catch {
-        // ignore
+        if (!isCancelled) {
+          player.pause();
+          markMediaError(nextVideoSource);
+        }
       }
     }
 
@@ -363,6 +389,8 @@ export default function RestaurantIaScreen() {
     currentVideoSource,
     displayedVideoSource,
     canEnterMission,
+    markMediaError,
+    markMediaReady,
     player,
   ]);
 
@@ -406,7 +434,7 @@ export default function RestaurantIaScreen() {
     if (!canEnterMission) return;
     if (!currentNode) return;
     if (currentNode.type !== "ia") return;
-    if (currentVideoSource) return;
+    if (currentVideoSource && mediaStatus !== "error") return;
     if (isTransitioning || isSceneEnded) return;
 
     const delay = getAutoAdvanceDelay(currentNode, mode);
@@ -425,6 +453,7 @@ export default function RestaurantIaScreen() {
   }, [
     currentNode,
     currentVideoSource,
+    mediaStatus,
     mode,
     isTransitioning,
     isSceneEnded,
@@ -538,40 +567,17 @@ export default function RestaurantIaScreen() {
             ]}
           >
             <View style={[styles.topInner, { maxWidth: responsive.maxWidth }]}>
-              <View style={styles.stepsContainer}>
-                {steps.map((s, i) => {
-                  const active = i === progressIndex;
-                  const done = i <= progressIndex;
-                  const accent = mode === "real" ? CYAN : PURPLE;
-
-                  return (
-                    <View key={s} style={styles.stepWrapper}>
-                      <View
-                        style={[
-                          styles.stepDot,
-                          done && {
-                            backgroundColor: accent,
-                            opacity: active ? 1 : 0.7,
-                          },
-                        ]}
-                      />
-                      <AppText
-                        variant={active ? "bodyStrong" : "bodySecondary"}
-                        tone={active ? "strong" : "muted"}
-                        script="latin"
-                        style={styles.stepLabel}
-                      >
-                        {s}
-                      </AppText>
-                    </View>
-                  );
-                })}
-              </View>
+              <ImmersiveStepProgress
+                steps={steps}
+                activeIndex={progressIndex}
+                accent={mode === "real" ? CYAN : PURPLE}
+              />
 
               <View
                 style={[
                   styles.videoContainer,
                   {
+                    width: avatarFrameWidth,
                     height: avatarFrameHeight,
                     borderColor:
                       mode === "real"
@@ -598,11 +604,7 @@ export default function RestaurantIaScreen() {
                     accessibilityLabel="Vidéo de l’interlocuteur du restaurant"
                     player={player}
                     style={[styles.video, { height: avatarVideoHeight }]}
-                    contentFit="cover"
-                    surfaceType="textureView"
-                    useExoShutter={false}
-                    nativeControls={false}
-                    allowsPictureInPicture={false}
+                    {...IMMERSIVE_VIDEO_VIEW_PROPS}
                   />
                 ) : (
                   <View style={styles.videoFallback}>
@@ -627,6 +629,7 @@ export default function RestaurantIaScreen() {
                   locations={[0, 0.62, 1]}
                   style={styles.videoOverlay}
                 />
+                <ImmersiveMediaStatusOverlay status={mediaStatus} />
               </View>
 
               <Pressable
@@ -702,7 +705,7 @@ export default function RestaurantIaScreen() {
             contentContainerStyle={[
               styles.interactionScroll,
               { paddingHorizontal: responsive.horizontalPadding },
-              { paddingBottom: Math.max(22, insets.bottom + 8) },
+              { paddingBottom: getImmersiveBottomPadding(insets.bottom) },
             ]}
           >
             <View
@@ -940,9 +943,9 @@ const styles = StyleSheet.create({
   },
 
   backBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: IMMERSIVE_MIN_TOUCH_TARGET,
+    height: IMMERSIVE_MIN_TOUCH_TARGET,
+    borderRadius: IMMERSIVE_MIN_TOUCH_TARGET / 2,
     backgroundColor: "rgba(255,255,255,0.05)",
     alignItems: "center",
     justifyContent: "center",
@@ -953,31 +956,7 @@ const styles = StyleSheet.create({
   backTxt: {
   },
 
-  stepsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 22,
-    marginTop: 6,
-  },
-
-  stepWrapper: {
-    alignItems: "center",
-    flex: 1,
-  },
-
-  stepDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "rgba(255,255,255,0.16)",
-    marginBottom: 8,
-  },
-
-  stepLabel: {
-  },
-
   videoContainer: {
-    width: "88%",
     alignSelf: "center",
     borderRadius: 32,
     overflow: "hidden",

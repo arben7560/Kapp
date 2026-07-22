@@ -75,7 +75,7 @@ export function useVocAudio(
           (status) => {
             const currentId = activeAudioIdRef.current;
 
-            if (status.error && onError && playerRef.current === player) {
+            if (status.error && playerRef.current === player) {
               cleanupAudioListener();
 
               try {

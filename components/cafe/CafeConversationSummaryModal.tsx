@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppText } from "../app-text";
+import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
 import {
   buildCafeConversationSummary,
   type CafeConversationMemory,
@@ -349,9 +350,9 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   closeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: IMMERSIVE_MIN_TOUCH_TARGET,
+    height: IMMERSIVE_MIN_TOUCH_TARGET,
+    borderRadius: IMMERSIVE_MIN_TOUCH_TARGET / 2,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(255,255,255,0.06)",

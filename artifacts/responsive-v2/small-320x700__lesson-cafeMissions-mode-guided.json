@@ -1,0 +1,92 @@
+{
+  "profile": "small-320x700",
+  "logicalSize": [
+    320,
+    700
+  ],
+  "route": "/lesson/cafeMissions?mode=guided",
+  "top": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__lesson-cafeMissions-mode-guided__top.png",
+    "tree": "artifacts\\responsive-v2\\small-320x700__lesson-cafeMissions-mode-guided__top.xml",
+    "visibleLabels": [
+      "x",
+      "x",
+      "MISSIONS",
+      "Café",
+      "Choisis une mission complète. Une fois lancée, elle reste jouable jusqu'à la fin.",
+      "Commander un café simple. Mission gratuite. Une commande courte, sur place.. Ouvre cette mission",
+      "GRATUIT",
+      "Ouvrir",
+      "Commander un café simple",
+      "Une commande courte, sur place.",
+      "Commander un café + dessert. Mission premium incluse. Ajoute un dessert à ta commande.. Ouvre cette mission",
+      "PREMIUM",
+      "Ouvrir",
+      "Commander un café + dessert",
+      "Ajoute un dessert à ta commande.",
+      "Commander à emporter. Mission premium incluse. Demande l’option à emporter.. Ouvre cette mission",
+      "VOCAL",
+      "Ouvrir",
+      "Commander à emporter",
+      "Demande l’option à emporter."
+    ],
+    "overflow": [],
+    "smallTouchTargets": [
+      {
+        "label": "x",
+        "bounds": [
+          40,
+          112,
+          124,
+          196
+        ],
+        "sizeDp": [
+          42.0,
+          42.0
+        ]
+      }
+    ]
+  },
+  "bottom": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__lesson-cafeMissions-mode-guided__bottom.png",
+    "tree": "artifacts\\responsive-v2\\small-320x700__lesson-cafeMissions-mode-guided__bottom.xml",
+    "visibleLabels": [
+      "x",
+      "x",
+      "MISSIONS",
+      "Café",
+      "Choisis une mission complète. Une fois lancée, elle reste jouable jusqu'à la fin.",
+      "Commander un café simple. Mission gratuite. Une commande courte, sur place.. Ouvre cette mission",
+      "GRATUIT",
+      "Ouvrir",
+      "Commander un café simple",
+      "Une commande courte, sur place.",
+      "Commander un café + dessert. Mission premium incluse. Ajoute un dessert à ta commande.. Ouvre cette mission",
+      "PREMIUM",
+      "Ouvrir",
+      "Commander un café + dessert",
+      "Ajoute un dessert à ta commande.",
+      "Commander à emporter. Mission premium incluse. Demande l’option à emporter.. Ouvre cette mission",
+      "VOCAL",
+      "Ouvrir",
+      "Commander à emporter",
+      "Demande l’option à emporter."
+    ],
+    "overflow": [],
+    "smallTouchTargets": [
+      {
+        "label": "x",
+        "bounds": [
+          40,
+          112,
+          124,
+          196
+        ],
+        "sizeDp": [
+          42.0,
+          42.0
+        ]
+      }
+    ]
+  }
+}

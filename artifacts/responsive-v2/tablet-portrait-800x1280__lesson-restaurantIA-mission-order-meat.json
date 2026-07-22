@@ -1,0 +1,60 @@
+{
+  "profile": "tablet-portrait-800x1280",
+  "logicalSize": [
+    800,
+    1280
+  ],
+  "route": "/lesson/restaurantIA?mission=order-meat",
+  "top": {
+    "screenshot": "artifacts\\responsive-v2\\tablet-portrait-800x1280__lesson-restaurantIA-mission-order-meat__top.png",
+    "tree": "artifacts\\responsive-v2\\tablet-portrait-800x1280__lesson-restaurantIA-mission-order-meat__top.xml",
+    "visibleLabels": [
+      "Quitter la scène",
+      "x",
+      "Commande",
+      "Viande",
+      "Accomp.",
+      "Paiement",
+      "Final",
+      "Revoir la transcription",
+      "...",
+      "Appuyer pour revoir",
+      "Vidéo de l’interlocuteur du restaurant",
+      "Ta réponse",
+      "삼겹살 2인분 주세요.. Commander du samgyeopsal pour deux personnes.",
+      "삼겹살 2인분 주세요.",
+      "Commander du samgyeopsal pour deux personnes.",
+      "다시 한번 말씀해 주시겠어요?. Pouvez-vous répéter ?",
+      "다시 한번 말씀해 주시겠어요?",
+      "Pouvez-vous répéter ?"
+    ],
+    "overflow": [],
+    "smallTouchTargets": []
+  },
+  "bottom": {
+    "screenshot": "artifacts\\responsive-v2\\tablet-portrait-800x1280__lesson-restaurantIA-mission-order-meat__bottom.png",
+    "tree": "artifacts\\responsive-v2\\tablet-portrait-800x1280__lesson-restaurantIA-mission-order-meat__bottom.xml",
+    "visibleLabels": [
+      "Quitter la scène",
+      "x",
+      "Commande",
+      "Viande",
+      "Accomp.",
+      "Paiement",
+      "Final",
+      "Revoir la transcription",
+      "...",
+      "Appuyer pour revoir",
+      "Vidéo de l’interlocuteur du restaurant",
+      "Ta réponse",
+      "삼겹살 2인분 주세요.. Commander du samgyeopsal pour deux personnes.",
+      "삼겹살 2인분 주세요.",
+      "Commander du samgyeopsal pour deux personnes.",
+      "다시 한번 말씀해 주시겠어요?. Pouvez-vous répéter ?",
+      "다시 한번 말씀해 주시겠어요?",
+      "Pouvez-vous répéter ?"
+    ],
+    "overflow": [],
+    "smallTouchTargets": []
+  }
+}

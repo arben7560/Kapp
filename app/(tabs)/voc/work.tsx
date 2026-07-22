@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AnimatedAppText, AppText } from "../../../components/app-text";
-import { ABSOLUTE_FILL } from "../../../constants/layout";
+import { ABSOLUTE_FILL, RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../../constants/layout";
 import { useVocAudio } from "../../../hooks/useVocAudio";
 import { VOC_DIALOGUE_COPY } from "../../../hooks/useVocDialogue";
 
@@ -602,7 +602,7 @@ export default function BusinessImmersion() {
                     },
                   ]}
                 >
-                  {scene.title}
+                  {scene.id === "message" ? "Le message" : scene.title}
                 </AppText>
               </Pressable>
             ))}
@@ -785,7 +785,7 @@ export default function BusinessImmersion() {
 
                       <View style={styles.vocabContent}>
                         <View style={styles.vocabTopRow}>
-                          <View style={{ flex: 1 }}>
+                          <View style={{ flex: 1, minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH }}>
                             <AppText variant="koreanPrimary" script="korean" style={styles.vocabKr}>{exp.word}</AppText>
                             <AppText variant="caption"
                               style={[
@@ -1001,6 +1001,7 @@ const styles = StyleSheet.create({
   vocabContent: { padding: 20 },
   vocabTopRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "flex-start",
     gap: 14,
     marginBottom: 10,

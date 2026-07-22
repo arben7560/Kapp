@@ -1,0 +1,68 @@
+{
+  "profile": "small-320x700",
+  "logicalSize": [
+    320,
+    700
+  ],
+  "route": "/streak",
+  "top": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__streak__top.png",
+    "tree": "artifacts\\responsive-v2\\small-320x700__streak__top.xml",
+    "visibleLabels": [
+      "",
+      "",
+      "SÉRIE",
+      "HABITUDE QUOTIDIENNE",
+      "0",
+      "jour de suite",
+      "Une petite activité suffit pour conserver ta série.",
+      "0 j",
+      "Record",
+      "À faire",
+      "Aujourd'hui",
+      "1",
+      "Protection de série",
+      "Calendrier",
+      "Derniers 35 jours",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24"
+    ],
+    "overflow": [],
+    "smallTouchTargets": []
+  },
+  "bottom": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__streak__bottom.png",
+    "tree": "artifacts\\responsive-v2\\small-320x700__streak__bottom.xml",
+    "visibleLabels": [
+      "",
+      "",
+      "SÉRIE",
+      "HABITUDE QUOTIDIENNE",
+      "0",
+      "jour de suite",
+      "Une petite activité suffit pour conserver ta série.",
+      "0 j",
+      "Record",
+      "À faire",
+      "Aujourd'hui",
+      "1",
+      "Protection de série",
+      "Calendrier",
+      "Derniers 35 jours",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24"
+    ],
+    "overflow": [],
+    "smallTouchTargets": []
+  }
+}

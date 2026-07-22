@@ -1,8 +1,10 @@
 import * as Speech from "expo-speech";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, TextInput, View } from "react-native";
+import { Pressable, ScrollView, TextInput, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { isCorrect } from "../../lib/answerCheck";
 import { shuffleArray } from "../../lib/choiceOrder";
 import { completeDailyActivity } from "../../lib/dailyStreak";
@@ -65,6 +67,7 @@ const SESSION: Exercise[] = [
 
 export default function ListeningScreen() {
   const { complete } = useStore();
+  const responsive = useResponsiveLayout({ maxWidth: 680 });
   const [index, setIndex] = useState(0);
   const [input, setInput] = useState("");
   const [result, setResult] = useState<string | null>(null);
@@ -108,15 +111,39 @@ export default function ListeningScreen() {
 
   if (!exercise) {
     return (
-      <View style={{ padding: 20 }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#060816" }}>
+        <View
+          style={{
+            alignSelf: "center",
+            maxWidth: responsive.maxWidth,
+            padding: responsive.horizontalPadding,
+            width: "100%",
+          }}
+        >
         <AppText accessibilityRole="header" variant="sectionTitle">Session terminée 🎉</AppText>
-      </View>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={{ padding: 20 }}>
-      <Pressable onPress={playAudio}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#060816" }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          alignSelf: "center",
+          maxWidth: responsive.maxWidth,
+          paddingBottom: 48,
+          paddingHorizontal: responsive.horizontalPadding,
+          paddingTop: 20,
+          width: "100%",
+        }}
+      >
+      <Pressable
+        accessibilityRole="button"
+        onPress={playAudio}
+        style={{ justifyContent: "center", minHeight: 44 }}
+      >
         <AppText variant="button">🔊 Écouter</AppText>
       </Pressable>
 
@@ -128,6 +155,9 @@ export default function ListeningScreen() {
             key={a}
             onPress={() => check(a)}
             style={{
+              backgroundColor: "rgba(255,255,255,0.05)",
+              borderColor: "rgba(255,255,255,0.16)",
+              borderRadius: 16,
               padding: 12,
               marginTop: 10,
               borderWidth: 1,
@@ -164,6 +194,7 @@ export default function ListeningScreen() {
       )}
 
       {result && <AppText variant="bodyStrong" style={{ marginTop: 20 }}>{result}</AppText>}
-    </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

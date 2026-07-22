@@ -95,11 +95,23 @@ def visible(node, width=None, height=None):
 
 
 def dump_ui():
-    result = shell("uiautomator", "dump", "--compressed", DEVICE_XML, timeout=30, check=False)
-    if result.returncode:
-        raise RuntimeError(result.stdout.decode("utf-8", "replace"))
-    raw = adb("exec-out", "cat", DEVICE_XML, timeout=10).stdout
-    return ET.fromstring(raw.decode("utf-8"))
+    last_output = ""
+    for _ in range(4):
+        shell("rm", "-f", DEVICE_XML, timeout=10, check=False)
+        result = shell(
+            "uiautomator",
+            "dump",
+            "--compressed",
+            DEVICE_XML,
+            timeout=35,
+            check=False,
+        )
+        last_output = result.stdout.decode("utf-8", "replace")
+        raw = adb("exec-out", "cat", DEVICE_XML, timeout=10, check=False).stdout
+        if raw.lstrip().startswith(b"<?xml"):
+            return ET.fromstring(raw.decode("utf-8"))
+        time.sleep(0.8)
+    raise RuntimeError(last_output or "UI hierarchy unavailable")
 
 
 def nodes(root):
@@ -288,7 +300,10 @@ def discover_scene():
         starts = [node for node in nodes(root)
                   if node.attrib.get("clickable") == "true"
                   and node.attrib.get("enabled") == "true"
-                  and ("DÉMARRER LE DÉFI" in node_label(node) or "REFAIRE LE DÉFI" in node_label(node))
+                  and any(label in node_label(node) for label in (
+                      "COMMENCER L’ÉTAPE",
+                      "RECOMMENCER L’ÉTAPE",
+                  ))
                   and visible(node)]
         if starts:
             tap(*center(starts[0]))
@@ -390,7 +405,11 @@ def verify_feedback_and_continue(question, expected_correct, checkpoint=None):
         else:
             correct_label = next(option["label"] for option in question["options"] if option["value"] == question["answer"])
             feedback_ok = any(label == f"Bonne réponse : {correct_label}" for label in labels)
-        continues = find_nodes(root, exact="CONTINUER", clickable=True, enabled=True)
+        continues = [
+            node
+            for label in ("SUIVANT", "TERMINER")
+            for node in find_nodes(root, exact=label, clickable=True, enabled=True)
+        ]
         if feedback_ok and continues:
             if checkpoint:
                 screenshot(checkpoint)
@@ -477,14 +496,17 @@ def complete_quiz(intentional_error=False, seen_types=None):
     scroll_top(3)
     root = dump_ui()
     labels = [node_label(node) for node in nodes(root)]
-    mastered = any("SÉQUENCE MAÎTRISÉE" == label for label in labels)
-    completed = any("SÉQUENCE TERMINÉE" == label for label in labels)
+    mastered = any("LECTURE RÉUSSIE" == label for label in labels)
+    completed = any("ÉTAPE TERMINÉE" == label for label in labels)
     if not (mastered or completed):
         raise AssertionError(f"No result status visible for {module_id}/{scene_id}")
     score_labels = [label for label in labels if re.fullmatch(r"\d+/\d+", label)]
     screenshot(f"result-{module_id}-{scene_id}-{'mastered' if mastered else 'completed'}")
     log(f"result {module_id}/{scene_id}: {score_labels[-1] if score_labels else '?'} {'mastered' if mastered else 'completed'}")
-    click_desc("CONTINUER" if mastered else "REVOIR LA LEÇON", scroll=True)
+    if mastered:
+        click_desc("SUIVANT" if any(label == "SUIVANT" for label in labels) else "TERMINER", scroll=True)
+    else:
+        click_desc("REVOIR L’ÉTAPE", scroll=True)
     time.sleep(0.8)
     return mastered, scene_id
 
@@ -494,7 +516,10 @@ def start_existing_scene_quiz():
         root = dump_ui()
         starts = [node for node in nodes(root)
                   if node.attrib.get("clickable") == "true" and node.attrib.get("enabled") == "true"
-                  and ("DÉMARRER LE DÉFI" in node_label(node) or "REFAIRE LE DÉFI" in node_label(node))
+                  and any(label in node_label(node) for label in (
+                      "COMMENCER L’ÉTAPE",
+                      "RECOMMENCER L’ÉTAPE",
+                  ))
                   and visible(node)]
         if starts:
             tap(*center(starts[0]))
@@ -509,7 +534,7 @@ def move_to_next_module():
         root = dump_ui()
         candidates = [node for node in nodes(root)
                       if node.attrib.get("clickable") == "true" and node.attrib.get("enabled") == "true"
-                      and "Toutes les séquences sont maîtrisées" in node_label(node)
+                      and "Toutes les étapes sont terminées" in node_label(node)
                       and visible(node)]
         if candidates:
             log(f"module continuation: {node_label(candidates[0])}")
@@ -524,7 +549,7 @@ def move_to_next_module():
 def run_curriculum(max_scenes=None):
     # The first sequence is run separately as a harness check and already
     # validates these three exercise families before the remaining 16 scenes.
-    seen_types = {"layout", "assemble", "audio-to-character"}
+    seen_types = set()
     completed_scenes = 0
     modules_completed_before = set()
     while completed_scenes < (max_scenes or 17):

@@ -11,6 +11,7 @@ import {
   type ViewStyle,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { SeoulMidnightGlass } from "@/constants/theme";
 
@@ -39,9 +40,12 @@ export function AppDialog({
   children,
 }: AppDialogProps) {
   const { height, width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isCompact = width <= 380 || height <= 680;
   const edgeInset = isCompact ? 12 : 24;
-  const cardMaxHeight = Math.max(220, height - edgeInset * 2);
+  const topInset = Math.max(edgeInset, insets.top + 8);
+  const bottomInset = Math.max(edgeInset, insets.bottom + 8);
+  const cardMaxHeight = Math.max(160, height - topInset - bottomInset);
 
   const content = scrollable ? (
     <ScrollView
@@ -63,8 +67,18 @@ export function AppDialog({
       animationType={animationType}
       onRequestClose={onRequestClose}
       statusBarTranslucent
+      navigationBarTranslucent
     >
-      <View style={[styles.root, { padding: edgeInset }]}>
+      <View
+        style={[
+          styles.root,
+          {
+            paddingHorizontal: edgeInset,
+            paddingTop: topInset,
+            paddingBottom: bottomInset,
+          },
+        ]}
+      >
         <Pressable
           accessible={false}
           onPress={onRequestClose}

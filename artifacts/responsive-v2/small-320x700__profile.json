@@ -1,0 +1,56 @@
+{
+  "profile": "small-320x700",
+  "logicalSize": [
+    320,
+    700
+  ],
+  "route": "/profile",
+  "top": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__profile__top.png",
+    "tree": "artifacts\\responsive-v2\\small-320x700__profile__top.xml",
+    "visibleLabels": [
+      "Profil",
+      "Objectifs, premium, debug",
+      "Stats",
+      "XP : 120",
+      "Streak : 0 jours",
+      "Record : 0 jours",
+      "Jour valide : Non",
+      "Hangul : niveau 1/5",
+      "Premium : Non",
+      "Premium",
+      "Debloque dialogues avances + prononciation intensive.",
+      "Activer Premium (prototype)",
+      "Activer Premium (prototype)",
+      "Outils",
+      "Prototype pour tester vite.",
+      "Réinitialiser la progression",
+      "Réinitialiser la progression"
+    ],
+    "overflow": [],
+    "smallTouchTargets": []
+  },
+  "bottom": {
+    "screenshot": "artifacts\\responsive-v2\\small-320x700__profile__bottom.png",
+    "tree": "artifacts\\responsive-v2\\small-320x700__profile__bottom.xml",
+    "visibleLabels": [
+      "Stats",
+      "XP : 120",
+      "Streak : 0 jours",
+      "Record : 0 jours",
+      "Jour valide : Non",
+      "Hangul : niveau 1/5",
+      "Premium : Non",
+      "Premium",
+      "Debloque dialogues avances + prononciation intensive.",
+      "Activer Premium (prototype)",
+      "Activer Premium (prototype)",
+      "Outils",
+      "Prototype pour tester vite.",
+      "Réinitialiser la progression",
+      "Réinitialiser la progression"
+    ],
+    "overflow": [],
+    "smallTouchTargets": []
+  }
+}

@@ -1,8 +1,10 @@
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Pressable, ScrollView, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 
 const BG0 = "#070812";
 const TXT = "rgba(255,255,255,0.92)";
@@ -26,12 +28,22 @@ const SUGGEST = [
 
 export default function Review() {
   const { progress, complete } = useStore();
+  const responsive = useResponsiveLayout({ maxWidth: 760 });
 
   const done = Object.keys(progress.completed);
 
   return (
     <LinearGradient colors={[BG0, "#0b0b1d", "#0b0f22"]} style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={{
+            alignSelf: "center",
+            maxWidth: responsive.maxWidth,
+            paddingBottom: 120,
+            paddingHorizontal: responsive.horizontalPadding,
+            width: "100%",
+          }}
+        >
         <AppText accessibilityRole="header" variant="screenTitle" style={{ color: TXT, marginTop: 8 }}>
           Carnet
         </AppText>
@@ -131,7 +143,8 @@ export default function Review() {
             );
           })}
         </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     </LinearGradient>
   );
 }

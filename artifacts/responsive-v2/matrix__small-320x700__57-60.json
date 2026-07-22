@@ -1,0 +1,46 @@
+[
+  {
+    "index": 57,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/listen/CafeListen",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__57__listen-CafeListen__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__57__listen-CafeListen__bottom.png"
+  },
+  {
+    "index": 58,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/listen/MetroListen",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__58__listen-MetroListen__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__58__listen-MetroListen__bottom.png"
+  },
+  {
+    "index": 59,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/listen/RestaurantListen",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__59__listen-RestaurantListen__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__59__listen-RestaurantListen__bottom.png"
+  },
+  {
+    "index": 60,
+    "profile": "small-320x700",
+    "logicalSize": [
+      320,
+      700
+    ],
+    "route": "/listen/index-quiz",
+    "top": "artifacts\\responsive-v2\\matrix__small-320x700__60__listen-index-quiz__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__small-320x700__60__listen-index-quiz__bottom.png"
+  }
+]

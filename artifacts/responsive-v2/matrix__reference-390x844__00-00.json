@@ -1,0 +1,13 @@
+[
+  {
+    "index": 0,
+    "profile": "reference-390x844",
+    "logicalSize": [
+      390,
+      844
+    ],
+    "route": "/onboarding",
+    "top": "artifacts\\responsive-v2\\matrix__reference-390x844__00__onboarding__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__reference-390x844__00__onboarding__bottom.png"
+  }
+]

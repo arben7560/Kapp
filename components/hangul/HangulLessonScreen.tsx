@@ -397,7 +397,12 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
             </ScrollView>
 
             <BlurView intensity={55} tint="dark" style={styles.introCard}>
-              <View style={styles.introHeader}>
+              <View
+                style={[
+                  styles.introHeader,
+                  responsive.isCompact && styles.introHeaderCompact,
+                ]}
+              >
                 <View style={styles.introCopy}>
                   <AppText variant="sceneTitle">{activeScene.title}</AppText>
                   <AppText variant="koreanSecondary" script="korean" style={{ color: activeScene.accent }}>
@@ -578,8 +583,9 @@ const styles = StyleSheet.create({
   tabText: { color: "rgba(255,255,255,0.9)" },
   introCard: { borderRadius: 24, borderWidth: 1, borderColor: "rgba(255,255,255,0.13)", padding: 20, overflow: "hidden" },
   introHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 14 },
+  introHeaderCompact: { flexDirection: "column", gap: 10 },
   introCopy: { flex: 1, gap: 4 },
-  stateBadge: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
+  stateBadge: { alignSelf: "flex-start", borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
   description: { marginTop: 14 },
   instruction: { marginTop: 14, borderLeftWidth: 3, paddingLeft: 12 },
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 26, marginBottom: 12 },

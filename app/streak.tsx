@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../components/app-text";
+import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../lib/DailyStreakProvider";
 import {
   STREAK_BADGE_MILESTONES,
@@ -44,6 +45,7 @@ const ABSOLUTE_FILL = {
 
 export default function StreakScreen() {
   const { applyFreeze, isLoading, streak } = useDailyStreak();
+  const responsive = useResponsiveLayout({ maxWidth: 860 });
   const currentStreak = streak?.currentStreak ?? 0;
   const longestStreak = streak?.longestStreak ?? 0;
   const isTodayCompleted = streak?.isTodayCompleted ?? false;
@@ -74,7 +76,17 @@ export default function StreakScreen() {
           <View style={styles.iconButtonGhost} />
         </View>
 
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            {
+              alignSelf: "center",
+              maxWidth: responsive.maxWidth,
+              paddingHorizontal: responsive.horizontalPadding,
+              width: "100%",
+            },
+          ]}
+        >
           <BlurView intensity={54} tint="dark" style={styles.heroCard}>
             <LinearGradient
               colors={[
@@ -111,7 +123,12 @@ export default function StreakScreen() {
             </AppText>
           </BlurView>
 
-          <View style={styles.statsGrid}>
+          <View
+            style={[
+              styles.statsGrid,
+              responsive.isCompact && styles.statsGridCompact,
+            ]}
+          >
             <StatCard label="Record" value={`${longestStreak} j`} />
             <StatCard
               label="Aujourd'hui"
@@ -391,6 +408,7 @@ const styles = StyleSheet.create({
   heroTitle: { color: COLORS.text},
   heroText: { color: COLORS.muted, marginTop: 8 },
   statsGrid: { flexDirection: "row", gap: 10, marginTop: 14 },
+  statsGridCompact: { flexDirection: "column" },
   statCard: {
     backgroundColor: "rgba(255,255,255,0.045)",
     borderColor: COLORS.line,

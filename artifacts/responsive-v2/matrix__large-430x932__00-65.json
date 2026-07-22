@@ -1,0 +1,728 @@
+[
+  {
+    "index": 0,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__00__home__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__00__home__bottom.png"
+  },
+  {
+    "index": 1,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/hangul",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__01__hangul__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__01__hangul__bottom.png"
+  },
+  {
+    "index": 2,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/hangul/vowels-basic",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__02__hangul-vowels-basic__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__02__hangul-vowels-basic__bottom.png"
+  },
+  {
+    "index": 3,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/hangul/consonants-basic",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__03__hangul-consonants-basic__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__03__hangul-consonants-basic__bottom.png"
+  },
+  {
+    "index": 4,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/hangul/vowels-compound",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__04__hangul-vowels-compound__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__04__hangul-vowels-compound__bottom.png"
+  },
+  {
+    "index": 5,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/hangul/consonants-tense",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__05__hangul-consonants-tense__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__05__hangul-consonants-tense__bottom.png"
+  },
+  {
+    "index": 6,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/hangul/batchim",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__06__hangul-batchim__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__06__hangul-batchim__bottom.png"
+  },
+  {
+    "index": 7,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/hangul/assessment",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__07__hangul-assessment__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__07__hangul-assessment__bottom.png"
+  },
+  {
+    "index": 8,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/hangul/bridge",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__08__hangul-bridge__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__08__hangul-bridge__bottom.png"
+  },
+  {
+    "index": 9,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/grammar",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__09__grammar__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__09__grammar__bottom.png"
+  },
+  {
+    "index": 10,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/grammar/sentence-structure",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__10__grammar-sentence-structure__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__10__grammar-sentence-structure__bottom.png"
+  },
+  {
+    "index": 11,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/grammar/range-and-limit",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__11__grammar-range-and-limit__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__11__grammar-range-and-limit__bottom.png"
+  },
+  {
+    "index": 12,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/grammar/a1-validation",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__12__grammar-a1-validation__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__12__grammar-a1-validation__bottom.png"
+  },
+  {
+    "index": 13,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/voc",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__13__voc__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__13__voc__bottom.png"
+  },
+  {
+    "index": 14,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/voc/gastronomie",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__14__voc-gastronomie__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__14__voc-gastronomie__bottom.png"
+  },
+  {
+    "index": 15,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/voc/basics",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__15__voc-basics__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__15__voc-basics__bottom.png"
+  },
+  {
+    "index": 16,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/voc/transport",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__16__voc-transport__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__16__voc-transport__bottom.png"
+  },
+  {
+    "index": 17,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/voc/kdrama",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__17__voc-kdrama__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__17__voc-kdrama__bottom.png"
+  },
+  {
+    "index": 18,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/voc/romance",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__18__voc-romance__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__18__voc-romance__bottom.png"
+  },
+  {
+    "index": 19,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/voc/nuit",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__19__voc-nuit__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__19__voc-nuit__bottom.png"
+  },
+  {
+    "index": 20,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/voc/sante",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__20__voc-sante__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__20__voc-sante__bottom.png"
+  },
+  {
+    "index": 21,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/voc/work",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__21__voc-work__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__21__voc-work__bottom.png"
+  },
+  {
+    "index": 22,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/voc/emotion",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__22__voc-emotion__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__22__voc-emotion__bottom.png"
+  },
+  {
+    "index": 23,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/voc/famille",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__23__voc-famille__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__23__voc-famille__bottom.png"
+  },
+  {
+    "index": 24,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/voc/health",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__24__voc-health__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__24__voc-health__bottom.png"
+  },
+  {
+    "index": 25,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/voc/lieux",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__25__voc-lieux__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__25__voc-lieux__bottom.png"
+  },
+  {
+    "index": 26,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/voc/meteo",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__26__voc-meteo__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__26__voc-meteo__bottom.png"
+  },
+  {
+    "index": 27,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/voc/objets",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__27__voc-objets__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__27__voc-objets__bottom.png"
+  },
+  {
+    "index": 28,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/voc/voyage",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__28__voc-voyage__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__28__voc-voyage__bottom.png"
+  },
+  {
+    "index": 29,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/comptage",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__29__comptage__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__29__comptage__bottom.png"
+  },
+  {
+    "index": 30,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/comptage/base",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__30__comptage-base__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__30__comptage-base__bottom.png"
+  },
+  {
+    "index": 31,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/comptage/sino",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__31__comptage-sino__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__31__comptage-sino__bottom.png"
+  },
+  {
+    "index": 32,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/comptage/heures",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__32__comptage-heures__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__32__comptage-heures__bottom.png"
+  },
+  {
+    "index": 33,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/comptage/prix",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__33__comptage-prix__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__33__comptage-prix__bottom.png"
+  },
+  {
+    "index": 34,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/comptage/phone",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__34__comptage-phone__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__34__comptage-phone__bottom.png"
+  },
+  {
+    "index": 35,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/comptage/dates",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__35__comptage-dates__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__35__comptage-dates__bottom.png"
+  },
+  {
+    "index": 36,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/comptage/age",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__36__comptage-age__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__36__comptage-age__bottom.png"
+  },
+  {
+    "index": 37,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/comptage/ordinals",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__37__comptage-ordinals__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__37__comptage-ordinals__bottom.png"
+  },
+  {
+    "index": 38,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/listen",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__38__listen__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__38__listen__bottom.png"
+  },
+  {
+    "index": 39,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/speak",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__39__speak__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__39__speak__bottom.png"
+  },
+  {
+    "index": 40,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/lesson/cafe",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__40__lesson-cafe__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__40__lesson-cafe__bottom.png"
+  },
+  {
+    "index": 41,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/lesson/metro",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__41__lesson-metro__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__41__lesson-metro__bottom.png"
+  },
+  {
+    "index": 42,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/lesson/restaurant",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__42__lesson-restaurant__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__42__lesson-restaurant__bottom.png"
+  },
+  {
+    "index": 43,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/lesson/airport",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__43__lesson-airport__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__43__lesson-airport__bottom.png"
+  },
+  {
+    "index": 44,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/lesson/magasin",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__44__lesson-magasin__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__44__lesson-magasin__bottom.png"
+  },
+  {
+    "index": 45,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/review",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__45__review__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__45__review__bottom.png"
+  },
+  {
+    "index": 46,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/profile",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__46__profile__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__46__profile__bottom.png"
+  },
+  {
+    "index": 47,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/streak",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__47__streak__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__47__streak__bottom.png"
+  },
+  {
+    "index": 48,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/premium",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__48__premium__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__48__premium__bottom.png"
+  },
+  {
+    "index": 49,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/assimilation",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__49__assimilation__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__49__assimilation__bottom.png"
+  },
+  {
+    "index": 50,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/classificateur",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__50__classificateur__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__50__classificateur__bottom.png"
+  },
+  {
+    "index": 51,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/classificateur/animals",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__51__classificateur-animals__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__51__classificateur-animals__bottom.png"
+  },
+  {
+    "index": 52,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/classificateur/drinks",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__52__classificateur-drinks__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__52__classificateur-drinks__bottom.png"
+  },
+  {
+    "index": 53,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/classificateur/machines",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__53__classificateur-machines__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__53__classificateur-machines__bottom.png"
+  },
+  {
+    "index": 54,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/classificateur/objects",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__54__classificateur-objects__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__54__classificateur-objects__bottom.png"
+  },
+  {
+    "index": 55,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/classificateur/paper",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__55__classificateur-paper__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__55__classificateur-paper__bottom.png"
+  },
+  {
+    "index": 56,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/classificateur/people",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__56__classificateur-people__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__56__classificateur-people__bottom.png"
+  },
+  {
+    "index": 57,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/listen/CafeListen",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__57__listen-CafeListen__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__57__listen-CafeListen__bottom.png"
+  },
+  {
+    "index": 58,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/listen/MetroListen",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__58__listen-MetroListen__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__58__listen-MetroListen__bottom.png"
+  },
+  {
+    "index": 59,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/listen/RestaurantListen",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__59__listen-RestaurantListen__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__59__listen-RestaurantListen__bottom.png"
+  },
+  {
+    "index": 60,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/listen/index-quiz",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__60__listen-index-quiz__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__60__listen-index-quiz__bottom.png"
+  },
+  {
+    "index": 61,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/lesson/health",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__61__lesson-health__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__61__lesson-health__bottom.png"
+  },
+  {
+    "index": 62,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/lesson/help",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__62__lesson-help__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__62__lesson-help__bottom.png"
+  },
+  {
+    "index": 63,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/lesson/hotel",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__63__lesson-hotel__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__63__lesson-hotel__bottom.png"
+  },
+  {
+    "index": 64,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/lesson/late",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__64__lesson-late__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__64__lesson-late__bottom.png"
+  },
+  {
+    "index": 65,
+    "profile": "large-430x932",
+    "logicalSize": [
+      430,
+      932
+    ],
+    "route": "/lesson/taxi",
+    "top": "artifacts\\responsive-v2\\matrix__large-430x932__65__lesson-taxi__top.png",
+    "bottom": "artifacts\\responsive-v2\\matrix__large-430x932__65__lesson-taxi__bottom.png"
+  }
+]

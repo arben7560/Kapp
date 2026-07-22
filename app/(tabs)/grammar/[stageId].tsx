@@ -122,6 +122,7 @@ export default function GrammarLessonScreen() {
   const { completeDailyActivity } = useDailyStreak();
   const responsive = useResponsiveLayout({ maxWidth: 900 });
   const completionInFlight = React.useRef(new Set<string>());
+  const scrollRef = React.useRef<ScrollView>(null);
 
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
   const stageProgress = progress.grammarProgress.stages[stageId];
@@ -135,6 +136,17 @@ export default function GrammarLessonScreen() {
   const access = getGrammarStageAccess(progress.grammarProgress, stageId, completedContentRefs);
   const completionRecorded = !!session && stageProgress?.completedSessionIds.includes(session.id);
   const streakRecorded = !!session && stageProgress?.streakSessionIds.includes(session.id);
+  const contentState = !access.canOpen
+    ? "locked"
+    : session?.completedAt
+      ? "result"
+      : session
+        ? "practice"
+        : "lesson";
+
+  React.useEffect(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, [contentState, stageId]);
 
   React.useEffect(() => {
     if (
@@ -247,6 +259,7 @@ export default function GrammarLessonScreen() {
         <BlurView intensity={84} tint="dark" style={styles.backgroundBlur} />
         <LinearGradient colors={["rgba(2,3,6,0.55)", "rgba(2,3,6,0.94)", "#020306"]} style={ABSOLUTE_FILL} />
         <ScrollView
+          ref={scrollRef}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.scroll, { paddingHorizontal: responsive.horizontalPadding }]}
         >

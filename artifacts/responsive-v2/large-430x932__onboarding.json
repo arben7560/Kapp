@@ -1,0 +1,16 @@
+{
+  "profile": "large-430x932",
+  "logicalSize": [
+    430,
+    932
+  ],
+  "route": "/onboarding",
+  "top": {
+    "screenshot": "artifacts\\responsive-v2\\large-430x932__onboarding__top.png",
+    "treeError": "ERROR: could not get idle state.\r\n"
+  },
+  "bottom": {
+    "screenshot": "artifacts\\responsive-v2\\large-430x932__onboarding__bottom.png",
+    "treeError": "ERROR: could not get idle state.\r\n"
+  }
+}

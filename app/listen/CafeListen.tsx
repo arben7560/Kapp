@@ -2,12 +2,21 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Pressable, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { AppText } from "../../components/app-text";
 import CafeAvatar from "../../components/ai/CafeAvatar";
+import {
+  getImmersiveBottomPadding,
+  IMMERSIVE_CONTENT_MAX_WIDTH,
+  IMMERSIVE_MIN_TOUCH_TARGET,
+} from "../../constants/immersive-layout";
 import { useStore } from "../../_store";
 import { CAFE_SESSION, type ListenExercise } from "../../data/listen/cafe";
 import { useVocAudio } from "../../hooks/useVocAudio";
+import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { isCorrect } from "../../lib/answerCheck";
 import { shuffleArray } from "../../lib/choiceOrder";
 import { completeDailyActivity } from "../../lib/dailyStreak";
@@ -185,6 +194,8 @@ function ActionButton({
 
 export default function CafeListenScreen() {
   const { complete } = useStore();
+  const insets = useSafeAreaInsets();
+  const responsive = useResponsiveLayout({ maxWidth: IMMERSIVE_CONTENT_MAX_WIDTH });
   const [fadeAnim] = useState(() => new Animated.Value(1));
   const hasReportedCompletionRef = useRef(false);
 
@@ -193,6 +204,7 @@ export default function CafeListenScreen() {
   );
   const [index, setIndex] = useState(0);
   const [activeAudioId, setActiveAudioId] = useState<string | null>(null);
+  const [audioError, setAudioError] = useState<string | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [result, setResult] = useState<null | { ok: boolean }>(null);
   const [score, setScore] = useState(0);
@@ -213,8 +225,15 @@ export default function CafeListenScreen() {
   }, [exercise, index, session.length]);
 
   const playAudio = useCallback(() => {
-    if (!exercise?.audioSource) return;
-    playAssetAudio(exercise.audioSource, exercise.id);
+    if (!exercise?.audioSource) {
+      setAudioError("Audio indisponible. Tu peux continuer l’exercice.");
+      return;
+    }
+
+    setAudioError(null);
+    playAssetAudio(exercise.audioSource, exercise.id, () => {
+      setAudioError("Audio indisponible. Réessaie ou continue l’exercice.");
+    });
   }, [exercise, playAssetAudio]);
 
   useEffect(() => {
@@ -331,11 +350,14 @@ export default function CafeListenScreen() {
             style={{
               flex: 1,
               justifyContent: "center",
-              paddingHorizontal: 18,
+              alignItems: "center",
+              paddingHorizontal: responsive.horizontalPadding,
             }}
           >
             <View
               style={{
+                width: "100%",
+                maxWidth: responsive.maxWidth,
                 borderRadius: 28,
                 borderWidth: 1,
                 borderColor: LINE,
@@ -442,11 +464,13 @@ export default function CafeListenScreen() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
-            paddingHorizontal: 14,
+            alignItems: "center",
+            paddingHorizontal: responsive.horizontalPadding,
             paddingTop: 6,
-            paddingBottom: 28,
+            paddingBottom: getImmersiveBottomPadding(insets.bottom, 28, 20),
           }}
         >
+          <View style={{ width: "100%", maxWidth: responsive.maxWidth }}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Quitter la scène"
@@ -454,7 +478,8 @@ export default function CafeListenScreen() {
             hitSlop={10}
             style={{
               alignSelf: "flex-start",
-              paddingVertical: 6,
+              minHeight: IMMERSIVE_MIN_TOUCH_TARGET,
+              justifyContent: "center",
               marginBottom: 10,
             }}
           >
@@ -482,6 +507,7 @@ export default function CafeListenScreen() {
           <View
             style={{
               flexDirection: "row",
+              flexWrap: "wrap",
               gap: 10,
               marginBottom: 14,
             }}
@@ -549,7 +575,7 @@ export default function CafeListenScreen() {
               <View style={{ alignItems: "center" }}>
                 <View
                   style={{
-                    width: 162,
+                    width: 176,
                     height: 192,
                     borderRadius: 22,
                     overflow: "hidden",
@@ -680,7 +706,7 @@ export default function CafeListenScreen() {
                   style={({ pressed }) => ({
                     opacity: speaking ? 0.9 : pressed ? 0.94 : 1,
                     alignSelf: "flex-start",
-                    minHeight: 42,
+                    minHeight: IMMERSIVE_MIN_TOUCH_TARGET,
                     paddingHorizontal: 14,
                     borderRadius: 14,
                     borderWidth: 1,
@@ -700,6 +726,17 @@ export default function CafeListenScreen() {
                     {speaking ? "🔊 Lecture..." : "🔊 Réécouter"}
                   </AppText>
                 </Pressable>
+
+                {audioError ? (
+                  <AppText
+                    accessibilityRole="alert"
+                    accessibilityLiveRegion="polite"
+                    variant="bodySecondary"
+                    style={{ color: MUTED, marginTop: 10 }}
+                  >
+                    {audioError}
+                  </AppText>
+                ) : null}
               </View>
             </LinearGradient>
           </Animated.View>
@@ -873,6 +910,7 @@ export default function CafeListenScreen() {
               Astuce : écoute d’abord la phrase globalement, puis associe le bon
               sens.
             </AppText>
+          </View>
           </View>
         </ScrollView>
       </SafeAreaView>

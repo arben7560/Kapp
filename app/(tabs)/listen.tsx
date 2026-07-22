@@ -768,16 +768,19 @@ export default function ListenScreen() {
                   selected: currentExerciseIndex === exerciseIndex,
                 }}
                 aria-selected={currentExerciseIndex === exerciseIndex}
-                hitSlop={12}
                 onPress={() => {
                   setExerciseIndex(currentExerciseIndex);
                   resetAnswer();
                 }}
-                style={[
-                  styles.dot,
-                  currentExerciseIndex === exerciseIndex && styles.dotActive,
-                ]}
-              />
+                style={styles.dotButton}
+              >
+                <View
+                  style={[
+                    styles.dot,
+                    currentExerciseIndex === exerciseIndex && styles.dotActive,
+                  ]}
+                />
+              </Pressable>
             ))}
           </View>
 
@@ -1151,8 +1154,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    gap: 24,
     marginBottom: 22,
+  },
+  dotButton: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
   },
   dot: {
     width: 11,

@@ -501,11 +501,15 @@ export default function OnboardingScreen() {
                     ]}
                   >
                     <View
-                      style={[styles.pathIcon, { borderColor: `${CYAN}33` }]}
+                      style={[
+                        styles.pathIcon,
+                        isCompactScreen && styles.pathIconCompact,
+                        { borderColor: `${CYAN}33` },
+                      ]}
                     >
                       <AppText variant="sectionTitle" style={styles.pathIconText}>⌂</AppText>
                     </View>
-                    <AppText variant="sectionLabel" style={[styles.pathStep, { color: CYAN }]}>
+                    <AppText variant="sectionLabel" style={[styles.pathStep, isCompactScreen && styles.pathStepCompact, { color: CYAN }]}>
                       ACCUEIL
                     </AppText>
                   </View>
@@ -569,11 +573,15 @@ export default function OnboardingScreen() {
                     ]}
                   >
                     <View
-                      style={[styles.pathIcon, { borderColor: `${PINK}33` }]}
+                      style={[
+                        styles.pathIcon,
+                        isCompactScreen && styles.pathIconCompact,
+                        { borderColor: `${PINK}33` },
+                      ]}
                     >
                       <AppText variant="sectionTitle" style={styles.pathIconText}>●</AppText>
                     </View>
-                    <AppText variant="sectionLabel" style={[styles.pathStep, { color: PINK }]}>
+                    <AppText variant="sectionLabel" style={[styles.pathStep, isCompactScreen && styles.pathStepCompact, { color: PINK }]}>
                       CONVERSATION
                     </AppText>
                   </View>
@@ -1202,8 +1210,14 @@ const styles = StyleSheet.create({
     color: TXT,
     textAlign: "center",
   },
+  pathIconCompact: {
+    display: "none",
+  },
   pathStep: {
     marginLeft: 10,
+  },
+  pathStepCompact: {
+    marginLeft: 0,
   },
   pathTitle: {
     color: TXT,

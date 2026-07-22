@@ -25,6 +25,8 @@ void SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const forceFontFallback =
   process.env.EXPO_PUBLIC_FORCE_FONT_FALLBACK === "1";
+const enableHiddenRoutesQa =
+  __DEV__ && process.env.EXPO_PUBLIC_ENABLE_HIDDEN_ROUTES_QA === "1";
 
 const RELEASE_HIDDEN_PATHS = new Set([
   "/profile",
@@ -51,6 +53,10 @@ const RELEASE_HIDDEN_PREFIXES = ["/classificateur", "/immersion"] as const;
 
 function ReleaseRouteGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  if (enableHiddenRoutesQa) {
+    return children;
+  }
+
   const isHidden =
     RELEASE_HIDDEN_PREFIXES.some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
