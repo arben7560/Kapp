@@ -146,7 +146,7 @@ export default function GrammarHubScreen() {
                   {grammarProgress.stages[nextStageId]?.activeSession &&
                   !grammarProgress.stages[nextStageId]?.activeSession?.completedAt
                     ? "REPRENDRE LA LEÇON"
-                    : "COMMENCER L’ÉTAPE"}
+                    : "COMMENCER LA LEÇON"}
                 </AppText>
               </Pressable>
             </BlurView>

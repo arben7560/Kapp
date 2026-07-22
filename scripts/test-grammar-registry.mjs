@@ -11,7 +11,9 @@ import {
   GRAMMAR_CONCEPT_IDS,
   GRAMMAR_CONTENT_LINKS,
   GRAMMAR_STAGES,
+  GRAMMAR_STAGE_BY_ID,
   GRAMMAR_STAGE_IDS,
+  getGrammarLessonExamples,
   validateGrammarRegistry,
 } from "../data/grammar/index.ts";
 import {
@@ -147,6 +149,111 @@ test("early A2 forms remain receptive only", () => {
       assert.equal(advancedForm.level, "early-a2-receptive", concept.id);
       assert.equal(advancedForm.a1Usage, "receptive", concept.id);
     }
+  }
+});
+
+test("every concept exposes a concise usable rule", () => {
+  for (const concept of GRAMMAR_CONCEPTS) {
+    const words = concept.rule.trim().split(/\s+/u).length;
+    const [minimum, maximum] = concept.level === "pre-a1" ? [15, 25] : [30, 45];
+    assert.ok(words >= minimum && words <= maximum, `${concept.id}: ${words} words`);
+    assert.notEqual(concept.rule, concept.shortFunction, concept.id);
+    assert.match(concept.rule, /[.!?]$/u, concept.id);
+  }
+});
+
+test("lesson examples are unique and Korean translations stay consistent", () => {
+  const translations = new Map();
+  const register = ({ korean, french }, owner) => {
+    assert.equal(
+      translations.get(korean) ?? french,
+      french,
+      `${owner}: inconsistent translation for ${korean}`,
+    );
+    translations.set(korean, french);
+  };
+
+  for (const concept of GRAMMAR_CONCEPTS) {
+    concept.examples.forEach((example) => register(example, concept.id));
+    register(concept.practice.scene, `${concept.id}:scene`);
+  }
+  for (const stage of GRAMMAR_STAGES) {
+    stage.canonicalExamples.forEach((example) => register(example, stage.id));
+    const visibleExamples = getGrammarLessonExamples(stage.id);
+    assert.equal(
+      new Set(visibleExamples.map(({ korean }) => korean.trim())).size,
+      visibleExamples.length,
+      stage.id,
+    );
+  }
+});
+
+test("each French formulation maps to only one Korean answer", () => {
+  const koreanByWording = new Map();
+  const register = ({ korean, french, note }, owner, context = note) => {
+    const wording = `${context ?? ""}\n${french}`;
+    const previous = koreanByWording.get(wording);
+    assert.equal(
+      previous?.korean ?? korean,
+      korean,
+      `${owner}: ambiguous French formulation « ${french} » also maps to ${previous?.korean}`,
+    );
+    koreanByWording.set(wording, { korean, owner });
+
+    if (/^(?:Ça va|C’est bon|C’est bien|D’accord)\.?$/iu.test(french)) {
+      assert.ok(context, `${owner}: generic French formulation needs context`);
+    }
+    assert.doesNotMatch(
+      french,
+      /\b(?:Je peux|Est-ce que je peux)\b/iu,
+      `${owner}: ability or permission must be explicit`,
+    );
+  };
+
+  for (const concept of GRAMMAR_CONCEPTS) {
+    concept.examples.forEach((example) => register(example, concept.id));
+    register(concept.practice.scene, `${concept.id}:scene`, concept.practice.scenario);
+  }
+  for (const stage of GRAMMAR_STAGES) {
+    stage.canonicalExamples.forEach((example) => register(example, stage.id));
+  }
+});
+
+test("the final step is a general review with a multiline dialogue", () => {
+  const review = GRAMMAR_STAGE_BY_ID["a1-validation"];
+  assert.equal(review.title, "Révision générale A1");
+  assert.equal(
+    review.communicativeGoal,
+    "Revoir les principales structures dans des phrases courtes.",
+  );
+  assert.equal(review.mode, "review");
+  assert.ok(
+    review.canonicalExamples.some(
+      ({ korean, french, format }) =>
+        format === "dialogue" && korean.includes("\n") && french.includes("\n"),
+    ),
+  );
+});
+
+test("forbidden draft and technical copy is absent from the grammar experience", () => {
+  const sources = [
+    "app/(tabs)/grammar/[stageId].tsx",
+    "app/(tabs)/grammar/index.tsx",
+    "data/grammar/stages.ts",
+    "lib/grammar/exercises.ts",
+  ].map((path) => readFileSync(join(projectRoot, path), "utf8")).join("\n");
+  for (const forbidden of [
+    "BIEN JOUÉ",
+    "Tu as repéré le bon réflexe",
+    "Pas encore — regarde la structure",
+    "La structure commence à devenir naturelle",
+    "dès que la règle du registre sera satisfaite",
+    "Un prérequis bloquant reste à valider",
+    "Ton essai est sauvegardé",
+    "Ta progression est sauvegardée",
+    "Valider le niveau A1",
+  ]) {
+    assert.doesNotMatch(sources, new RegExp(forbidden, "u"), forbidden);
   }
 });
 

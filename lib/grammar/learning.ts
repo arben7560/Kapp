@@ -192,8 +192,10 @@ export function recordGrammarSessionCompletion(
   const passed = ratio >= GRAMMAR_PRACTICE_PASS_RATIO;
   const stage = GRAMMAR_STAGE_BY_ID[session.stageId];
   const concepts = { ...current.concepts };
-  for (const conceptId of stage.conceptIds) {
-    concepts[conceptId] = recordConceptAttempt(concepts[conceptId], session, passed);
+  if (stage.mode !== "review") {
+    for (const conceptId of stage.conceptIds) {
+      concepts[conceptId] = recordConceptAttempt(concepts[conceptId], session, passed);
+    }
   }
   return {
     ...current,
@@ -246,6 +248,15 @@ export function getGrammarStageState(
   stageId: GrammarStageId,
 ): GrammarMasteryState {
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
+  if (stage.mode === "review") {
+    const stageProgress = progress.stages[stageId];
+    if ((stageProgress?.bestScore ?? 0) >= GRAMMAR_PRACTICE_PASS_RATIO) {
+      return "practiced";
+    }
+    return stageProgress?.activeSession || (stageProgress?.attempts ?? 0) > 0
+      ? "discovered"
+      : "unseen";
+  }
   const states = stage.conceptIds.map((conceptId) =>
     getGrammarMasteryState(progress.concepts[conceptId], stage.validationCriteria),
   );

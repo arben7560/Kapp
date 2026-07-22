@@ -1,0 +1,40 @@
+# Git
+.git/
+.github/
+
+# Dépendances installées à nouveau par EAS
+node_modules/
+
+# Builds, audits et fichiers générés
+.expo-qa-dist/
+artifacts/
+dist/
+web-build/
+coverage/
+test-results/
+playwright-report/
+
+# Expo et caches locaux
+.expo/
+.expo-shared/
+.metro-cache/
+.cache/
+.tmp/
+temp/
+
+# Éditeurs et outils locaux
+.vscode/
+.idea/
+.agents/
+
+# Logs et fichiers temporaires
+*.log
+*.tmp
+*.bak
+*.backup
+.expo-web-test.log
+.expo-web-test.err.log
+
+# Fichiers Windows
+Thumbs.db
+Desktop.ini

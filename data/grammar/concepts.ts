@@ -1,11 +1,22 @@
 import { getContentLinksForConcept } from "./contentLinks.ts";
+import {
+  GRAMMAR_EDITORIAL,
+  GRAMMAR_FORM_DISTRACTORS,
+  GRAMMAR_PRACTICE_FOCUS_FORMS,
+} from "./editorial.ts";
 import type { GrammarConcept } from "./types";
 
 function defineConcept(
-  concept: Omit<GrammarConcept, "contentLinks">,
+  concept: Omit<GrammarConcept, "contentLinks" | "practice" | "rule">,
 ): GrammarConcept {
   return {
     ...concept,
+    ...GRAMMAR_EDITORIAL[concept.id],
+    practice: {
+      ...GRAMMAR_EDITORIAL[concept.id].practice,
+      focusForm: GRAMMAR_PRACTICE_FOCUS_FORMS[concept.id],
+      formDistractors: GRAMMAR_FORM_DISTRACTORS[concept.id],
+    },
     contentLinks: getContentLinksForConcept(concept.id),
   };
 }
@@ -21,7 +32,7 @@ export const GRAMMAR_CONCEPTS = [
     examples: [
       {
         korean: "저는 커피를 마셔요.",
-        french: "Je bois du café.",
+        french: "Moi, je bois du café.",
       },
       {
         korean: "집에 가요.",
@@ -38,8 +49,8 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: [],
     examples: [
-      { korean: "학생이에요.", french: "Je suis étudiant." },
-      { korean: "마크예요.", french: "C’est Marc." },
+      { korean: "학생이에요.", french: "Je suis étudiant.", note: "REGISTRE\nPoli courant" },
+      { korean: "마크예요.", french: "C’est Marc.", note: "REGISTRE\nPoli courant" },
     ],
   }),
   defineConcept({
@@ -50,8 +61,12 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: [],
     examples: [
-      { korean: "괜찮아요.", french: "Ça va / Ce n’est pas grave." },
-      { korean: "맛있어요.", french: "C’est bon." },
+      {
+        korean: "괜찮아요.",
+        french: "Ça va.",
+        note: "CONTEXTE\nUn proche s’inquiète pour toi.",
+      },
+      { korean: "맛있어요.", french: "Ce plat est délicieux." },
     ],
     advancedRecognitionForms: [
       {
@@ -76,7 +91,7 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "receptive",
     prerequisiteIds: ["copula-ieyo-yeyo", "polite-style-yo"],
     examples: [
-      { korean: "학생입니다.", french: "Je suis étudiant." },
+      { korean: "학생입니다.", french: "Je suis étudiant.", note: "REGISTRE\nFormel" },
       { korean: "회사원입니다.", french: "Je suis employé de bureau." },
     ],
   }),
@@ -100,7 +115,7 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: ["copula-ieyo-yeyo"],
     examples: [
-      { korean: "이거 뭐예요?", french: "Qu’est-ce que c’est ?" },
+      { korean: "이거 뭐예요?", french: "Qu’est-ce que cet objet-ci ?" },
       { korean: "저 가방이에요.", french: "C’est ce sac là-bas." },
     ],
   }),
@@ -112,8 +127,8 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: ["copula-ieyo-yeyo", "demonstratives-i-geu-jeo"],
     examples: [
-      { korean: "누구예요?", french: "Qui est-ce ?" },
-      { korean: "몇 명이에요?", french: "Vous êtes combien ?", sourceRefId: "listening:cafe-dictation-01" },
+      { korean: "누구예요?", french: "Qui est cette personne ?", note: "REGISTRE\nPoli courant" },
+      { korean: "몇 명이에요?", french: "Combien de personnes êtes-vous ?", sourceRefId: "listening:cafe-dictation-01", note: "REGISTRE\nPoli courant" },
     ],
   }),
   defineConcept({
@@ -193,7 +208,7 @@ export const GRAMMAR_CONCEPTS = [
     prerequisiteIds: ["location-e", "present-a-eoyo"],
     examples: [
       { korean: "카페에서 공부해요.", french: "J’étudie au café." },
-      { korean: "홍대입구에서 내려요.", french: "Je descends à Hongik University.", sourceRefId: "listening:metro-gap-04" },
+      { korean: "홍대입구에서 내려요.", french: "Je descends à Hongdae.", sourceRefId: "listening:metro-gap-04" },
     ],
   }),
   defineConcept({
@@ -204,7 +219,7 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: ["location-e", "present-a-eoyo"],
     examples: [
-      { korean: "세 시에 서울역에 가요.", french: "Je vais à Seoul Station à trois heures." },
+      { korean: "세 시에 서울역에 가요.", french: "Je vais à la gare de Séoul à trois heures." },
       { korean: "집에 가요.", french: "Je rentre à la maison.", sourceRefId: "hangul:bridge" },
     ],
   }),
@@ -216,7 +231,7 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: ["topic-eun-neun"],
     examples: [
-      { korean: "제 이름은 마크예요.", french: "Je m’appelle Marc." },
+      { korean: "제 이름은 마크예요.", french: "Mon nom est Marc." },
       { korean: "친구의 가방이에요.", french: "C’est le sac de mon ami." },
     ],
   }),
@@ -229,7 +244,7 @@ export const GRAMMAR_CONCEPTS = [
     prerequisiteIds: ["question-mwo-nugu-myeot", "present-a-eoyo"],
     examples: [
       { korean: "화장실이 어디예요?", french: "Où sont les toilettes ?", sourceRefId: "listening:street-order-05" },
-      { korean: "이거 얼마예요?", french: "Combien coûte ceci ?", sourceRefId: "listening:shop-dictation-04" },
+      { korean: "이거 얼마예요?", french: "Combien coûte cet article-ci ?", sourceRefId: "listening:shop-dictation-04" },
     ],
   }),
   defineConcept({
@@ -272,7 +287,7 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: ["polite-style-yo"],
     examples: [
-      { korean: "물 좀 주세요.", french: "Un peu d’eau, s’il vous plaît.", sourceRefId: "listening:restaurant-order-04" },
+      { korean: "물 좀 주세요.", french: "De l’eau, s’il vous plaît.", sourceRefId: "listening:restaurant-order-04", note: "NUANCE\nDemande adoucie avec 좀" },
       { korean: "아이스 아메리카노 주세요.", french: "Un americano glacé, s’il vous plaît.", sourceRefId: "listening:cafe-dictation-02" },
     ],
   }),
@@ -317,7 +332,7 @@ export const GRAMMAR_CONCEPTS = [
     prerequisiteIds: [],
     examples: [
       { korean: "이거 만 원이에요.", french: "Cela coûte dix mille wons." },
-      { korean: "이 호선이에요.", french: "C’est la ligne 2." },
+      { korean: "2호선이에요.", french: "C’est la ligne 2." },
     ],
   }),
   defineConcept({
@@ -341,7 +356,7 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: ["noun-link-hago-irang"],
     examples: [
-      { korean: "커피나 차 주세요.", french: "Un café ou un thé, s’il vous plaît." },
+      { korean: "커피나 차 있어요?", french: "Avez-vous du café ou du thé ?" },
       { korean: "카드 아니면 현금이에요?", french: "Carte ou espèces ?" },
     ],
   }),
@@ -354,7 +369,7 @@ export const GRAMMAR_CONCEPTS = [
     prerequisiteIds: ["present-a-eoyo", "request-n-juseyo"],
     examples: [
       { korean: "다시 말해 주세요.", french: "Répétez, s’il vous plaît." },
-      { korean: "포장해 주세요.", french: "Emballez-le à emporter, s’il vous plaît." },
+      { korean: "포장해 주세요.", french: "Emballez cette commande pour l’emporter, s’il vous plaît." },
     ],
     advancedRecognitionForms: [
       {
@@ -380,7 +395,7 @@ export const GRAMMAR_CONCEPTS = [
     prerequisiteIds: ["present-a-eoyo", "polite-style-yo"],
     examples: [
       { korean: "여기에서 내리세요.", french: "Descendez ici." },
-      { korean: "이곳으로 가세요.", french: "Allez par ici.", sourceRefId: "listening:metro-dictation-03" },
+      { korean: "이곳으로 가세요.", french: "Allez dans cette direction.", sourceRefId: "listening:metro-dictation-03" },
     ],
   }),
   defineConcept({
@@ -391,8 +406,12 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: ["destination-time-e"],
     examples: [
-      { korean: "카드로 할게요.", french: "Je vais payer par carte.", sourceRefId: "listening:shop-situation-04" },
-      { korean: "지하철로 가요.", french: "J’y vais en métro." },
+      { korean: "카드로 할게요.", french: "Ce sera par carte.", sourceRefId: "listening:shop-situation-04", note: "CONTEXTE\nOn te demande : « Carte ou espèces ? »" },
+      {
+        korean: "지하철로 가요.",
+        french: "J’y vais en métro.",
+        note: "CONTEXTE\nLa destination du trajet est déjà connue.",
+      },
     ],
   }),
   defineConcept({
@@ -415,8 +434,12 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: ["present-a-eoyo"],
     examples: [
-      { korean: "여기서 충전할 수 있어요?", french: "Est-ce que je peux recharger ici ?" },
-      { korean: "한국어를 읽을 수 있어요.", french: "Je peux lire le coréen." },
+      {
+        korean: "여기서 충전할 수 있어요?",
+        french: "Est-il possible de recharger ma carte ici ?",
+        note: "CONTEXTE\nTu es à un guichet T-money avec ta carte.",
+      },
+      { korean: "한국어를 읽을 수 있어요.", french: "Je sais lire le coréen." },
     ],
     advancedRecognitionForms: [
       {
@@ -435,8 +458,8 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: ["present-a-eoyo", "negation-an"],
     examples: [
-      { korean: "사진 찍어도 돼요?", french: "Je peux prendre une photo ?" },
-      { korean: "여기 앉아도 돼요?", french: "Je peux m’asseoir ici ?" },
+      { korean: "사진 찍어도 돼요?", french: "Puis-je prendre une photo ?", note: "INTENTION\nDemande d’autorisation" },
+      { korean: "여기 앉아도 돼요?", french: "Puis-je m’asseoir ici ?", note: "INTENTION\nDemande d’autorisation" },
     ],
   }),
   defineConcept({
@@ -448,7 +471,7 @@ export const GRAMMAR_CONCEPTS = [
     prerequisiteIds: ["negation-an", "ability-eul-su-isseoyo"],
     examples: [
       { korean: "잘 못 알아들어요.", french: "Je ne comprends pas bien." },
-      { korean: "매운 음식을 못 먹어요.", french: "Je ne peux pas manger épicé." },
+      { korean: "매운 음식을 못 먹어요.", french: "Je ne peux pas manger de plats épicés." },
     ],
   }),
   defineConcept({
@@ -483,8 +506,12 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: ["destination-time-e", "sino-korean-numbers"],
     examples: [
-      { korean: "아홉 시부터 다섯 시까지예요.", french: "C’est de neuf heures à cinq heures." },
-      { korean: "서울역까지 가요.", french: "Je vais jusqu’à Seoul Station." },
+      {
+        korean: "아홉 시부터 다섯 시까지예요.",
+        french: "Les horaires sont de neuf heures à cinq heures.",
+        note: "CONTEXTE\nTu indiques les horaires d’ouverture d’un lieu.",
+      },
+      { korean: "서울역까지 가요.", french: "Je vais jusqu’à la gare de Séoul." },
     ],
     advancedRecognitionForms: [
       {
@@ -504,7 +531,7 @@ export const GRAMMAR_CONCEPTS = [
     prerequisiteIds: ["present-a-eoyo"],
     examples: [
       { korean: "예약했어요.", french: "J’ai réservé.", sourceRefId: "listening:hotel-dictation-05" },
-      { korean: "어제 먹었어요.", french: "J’en ai mangé hier." },
+      { korean: "어제 먹었어요.", french: "J’ai mangé hier." },
     ],
   }),
   defineConcept({
@@ -515,7 +542,7 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: ["present-a-eoyo"],
     examples: [
-      { korean: "내일 서울에 갈 거예요.", french: "Demain, je vais aller à Séoul." },
+      { korean: "내일 서울에 갈 거예요.", french: "Demain, j’irai à Séoul." },
       { korean: "주말에 친구를 만날 거예요.", french: "Je vais voir un ami ce week-end." },
     ],
   }),
@@ -527,8 +554,12 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: ["future-eul-geoyeyo"],
     examples: [
-      { korean: "카드로 계산할게요.", french: "Je vais payer par carte.", sourceRefId: "listening:shop-gap-03" },
-      { korean: "제가 할게요.", french: "Je vais le faire." },
+      { korean: "카드로 계산할게요.", french: "Je vais régler par carte.", sourceRefId: "listening:shop-gap-03", note: "NUANCE\nDécision prise maintenant" },
+      {
+        korean: "제가 할게요.",
+        french: "Je m’en charge.",
+        note: "CONTEXTE\nQuelqu’un demande qui accomplira l’action.",
+      },
     ],
   }),
   defineConcept({
@@ -539,8 +570,12 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: ["present-a-eoyo"],
     examples: [
-      { korean: "먹고 갈게요.", french: "Je vais manger ici avant de partir." },
-      { korean: "지하철을 타고 갈아타요.", french: "Je prends le métro puis je change." },
+      {
+        korean: "먹고 갈게요.",
+        french: "Je vais manger ici avant de partir.",
+        note: "CONTEXTE\nAu restaurant, on te demande : « Sur place ou à emporter ? »",
+      },
+      { korean: "지하철을 타고 갈아타요.", french: "Je prends le métro, puis je change de ligne." },
     ],
     advancedRecognitionForms: [
       {
@@ -577,8 +612,8 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: ["present-a-eoyo"],
     examples: [
-      { korean: "맵지만 맛있어요.", french: "C’est épicé, mais délicieux." },
-      { korean: "비싸지만 좋아요.", french: "C’est cher, mais bien." },
+      { korean: "맵지만 맛있어요.", french: "Ce plat est épicé, mais délicieux." },
+      { korean: "비싸지만 좋아요.", french: "Cet article est cher, mais il me plaît." },
     ],
   }),
   defineConcept({
@@ -589,7 +624,11 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: ["present-a-eoyo", "sequence-go"],
     examples: [
-      { korean: "시간이 있으면 가요.", french: "J’y vais si j’ai le temps." },
+      {
+        korean: "시간이 있으면 가요.",
+        french: "J’y vais si j’ai le temps.",
+        note: "CONTEXTE\nVous parlez d’une sortie déjà prévue.",
+      },
       { korean: "여기에서 내리면 돼요.", french: "Il suffit de descendre ici." },
     ],
     advancedRecognitionForms: [
@@ -630,7 +669,7 @@ export const GRAMMAR_CONCEPTS = [
     prerequisiteIds: ["present-a-eoyo", "subject-i-ga"],
     examples: [
       { korean: "버스보다 지하철이 빨라요.", french: "Le métro est plus rapide que le bus." },
-      { korean: "이게 제일 싸요.", french: "C’est celui-ci le moins cher." },
+      { korean: "이게 제일 싸요.", french: "Cet article-ci est le moins cher." },
     ],
   }),
   defineConcept({
@@ -641,7 +680,11 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "productive",
     prerequisiteIds: ["present-a-eoyo", "future-eul-geoyeyo"],
     examples: [
-      { korean: "같이 갈까요?", french: "On y va ensemble ?" },
+      {
+        korean: "같이 갈까요?",
+        french: "On y va ensemble ?",
+        note: "CONTEXTE\nLa destination du trajet est déjà connue.",
+      },
       { korean: "커피를 마실까요?", french: "On prend un café ?" },
     ],
   }),
@@ -653,8 +696,8 @@ export const GRAMMAR_CONCEPTS = [
     a1Usage: "receptive",
     prerequisiteIds: ["polite-style-yo"],
     examples: [
-      { korean: "몇 분이세요?", french: "Vous êtes combien ?", sourceRefId: "listening:cafe-dictation-01" },
-      { korean: "다시 한번 말씀해 주시겠어요?", french: "Pouvez-vous répéter, s’il vous plaît ?", sourceRefId: "shared:repeat-request" },
+      { korean: "몇 분이세요?", french: "Combien de personnes êtes-vous ?", sourceRefId: "listening:cafe-dictation-01", note: "REGISTRE\nTrès respectueux" },
+      { korean: "다시 한번 말씀해 주시겠어요?", french: "Pourriez-vous répéter, s’il vous plaît ?", sourceRefId: "shared:repeat-request", note: "REGISTRE\nTrès respectueux" },
     ],
     advancedRecognitionForms: [
       {

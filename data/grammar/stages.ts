@@ -10,7 +10,7 @@ import {
 
 const REVIEW_AFTER_DAYS = [3, 10, 30] as const;
 
-const A1_VALIDATION_CRITERIA = ["R", "M", "L", "P", "D"] as const;
+const GENERAL_REVIEW_CRITERIA = ["R", "M"] as const;
 
 const A1_PRODUCTIVE_CONCEPT_IDS = [
   "sentence-order",
@@ -92,7 +92,7 @@ export const GRAMMAR_STAGES = [
       },
     ],
     canonicalExamples: [
-      { korean: "저는 커피를 마셔요.", french: "Je bois du café." },
+      { korean: "저는 커피를 마셔요.", french: "Moi, je bois du café." },
     ],
     reuseContentRefIds: ["listening:active"],
     validationCriteria: ["M", "L", "D"],
@@ -109,10 +109,8 @@ export const GRAMMAR_STAGES = [
     receptiveConceptIds: ["polite-style-yo"],
     prerequisites: recommendedStages(["sentence-structure"]),
     canonicalExamples: [
-      {
-        korean: "학생이에요. 마크예요.",
-        french: "Je suis étudiant. Je m’appelle Marc.",
-      },
+      { korean: "학생이에요.", french: "Je suis étudiant.", note: "REGISTRE\nPoli courant" },
+      { korean: "마크예요.", french: "C’est Marc.", note: "REGISTRE\nPoli courant" },
     ],
     reuseContentRefIds: ["vocabulary:basics", "counting:base"],
     validationCriteria: ["R", "M", "P", "D"],
@@ -129,10 +127,8 @@ export const GRAMMAR_STAGES = [
     receptiveConceptIds: ["copula-imnida"],
     prerequisites: recommendedStages(["identify-with-copula"]),
     canonicalExamples: [
-      {
-        korean: "학생이에요 / 학생입니다.",
-        french: "Je suis étudiant. / Je suis étudiant. (formel)",
-      },
+      { korean: "학생이에요.", french: "Je suis étudiant.", note: "REGISTRE\nPoli courant" },
+      { korean: "학생입니다.", french: "Je suis étudiant.", note: "REGISTRE\nFormel" },
     ],
     reuseContentRefIds: [
       "scene:cafe",
@@ -159,7 +155,7 @@ export const GRAMMAR_STAGES = [
     canonicalExamples: [
       {
         korean: "저는 프랑스 사람이에요.",
-        french: "Je suis français.",
+        french: "Moi, je suis français.",
       },
     ],
     reuseContentRefIds: [
@@ -176,12 +172,12 @@ export const GRAMMAR_STAGES = [
     number: 5,
     chapterId: "foundations",
     title: "Montrer et identifier",
-    communicativeGoal: "Montrer et identifier",
+    communicativeGoal: "Désigner un objet proche ou éloigné",
     conceptIds: ["demonstratives-i-geu-jeo"],
     receptiveConceptIds: ["question-mwo-nugu-myeot"],
     prerequisites: recommendedStages(["identify-with-copula"]),
     canonicalExamples: [
-      { korean: "이거 뭐예요?", french: "Qu’est-ce que c’est ?" },
+      { korean: "이거 뭐예요?", french: "Qu’est-ce que cet objet-ci ?" },
     ],
     reuseContentRefIds: [
       "scene:magasin",
@@ -197,7 +193,7 @@ export const GRAMMAR_STAGES = [
     number: 6,
     chapterId: "foundations",
     title: "Demander qui ou quoi",
-    communicativeGoal: "Demander qui ou quoi",
+    communicativeGoal: "Identifier une personne, une chose ou une quantité",
     conceptIds: ["question-mwo-nugu-myeot"],
     receptiveConceptIds: ["classifiers-basic"],
     prerequisites: recommendedStages([
@@ -205,10 +201,8 @@ export const GRAMMAR_STAGES = [
       "demonstratives",
     ]),
     canonicalExamples: [
-      {
-        korean: "누구예요? 몇 명이에요?",
-        french: "Qui est-ce ? Combien de personnes y a-t-il ?",
-      },
+      { korean: "누구예요?", french: "Qui est cette personne ?", note: "REGISTRE\nPoli courant" },
+      { korean: "몇 명이에요?", french: "Combien de personnes êtes-vous ?", note: "REGISTRE\nPoli courant" },
     ],
     reuseContentRefIds: [
       "scene:cafe",
@@ -245,7 +239,7 @@ export const GRAMMAR_STAGES = [
     number: 8,
     chapterId: "foundations",
     title: "Situer une chose",
-    communicativeGoal: "Situer une chose",
+    communicativeGoal: "Indiquer où se trouve une personne ou un objet",
     conceptIds: ["location-e"],
     receptiveConceptIds: ["sino-korean-numbers"],
     prerequisites: recommendedStages(["existence"]),
@@ -342,7 +336,7 @@ export const GRAMMAR_STAGES = [
     number: 12,
     chapterId: "build-a-sentence",
     title: "Indiquer destination ou heure",
-    communicativeGoal: "Indiquer destination ou heure",
+    communicativeGoal: "Préciser où l’on va ou à quel moment",
     conceptIds: ["destination-time-e"],
     receptiveConceptIds: ["native-numbers"],
     prerequisites: recommendedStages(["locate-thing", "present-actions"]),
@@ -371,7 +365,7 @@ export const GRAMMAR_STAGES = [
     conceptIds: ["possession-ui-je-nae"],
     prerequisites: recommendedStages(["introduce-topic"]),
     canonicalExamples: [
-      { korean: "제 이름은 마크예요.", french: "Je m’appelle Marc." },
+      { korean: "제 이름은 마크예요.", french: "Mon nom est Marc." },
     ],
     reuseContentRefIds: [
       "vocabulary:basics",
@@ -426,10 +420,8 @@ export const GRAMMAR_STAGES = [
       "present-actions",
     ]),
     canonicalExamples: [
-      {
-        korean: "안 매워요. 학생이 아니에요.",
-        french: "Ce n’est pas épicé. Je ne suis pas étudiant.",
-      },
+      { korean: "안 매워요.", french: "Ce n’est pas épicé." },
+      { korean: "학생이 아니에요.", french: "Je ne suis pas étudiant." },
     ],
     reuseContentRefIds: [
       "vocabulary:gastronomie",
@@ -445,7 +437,7 @@ export const GRAMMAR_STAGES = [
     number: 16,
     chapterId: "daily-actions",
     title: "Commander une chose",
-    communicativeGoal: "Commander une chose",
+    communicativeGoal: "Obtenir simplement un objet ou un plat",
     conceptIds: ["request-n-juseyo"],
     prerequisites: recommendedStages([
       "identify-with-copula",
@@ -469,7 +461,7 @@ export const GRAMMAR_STAGES = [
     number: 17,
     chapterId: "daily-actions",
     title: "Commander une quantité",
-    communicativeGoal: "Commander une quantité",
+    communicativeGoal: "Demander un nombre précis d’objets ou de portions",
     conceptIds: ["native-numbers", "classifiers-basic"],
     prerequisites: recommendedStages(["request-item"]),
     canonicalExamples: [
@@ -493,11 +485,11 @@ export const GRAMMAR_STAGES = [
     number: 18,
     chapterId: "daily-actions",
     title: "Comprendre les nombres du quotidien",
-    communicativeGoal: "Comprendre prix, minutes, dates et numéros",
+    communicativeGoal: "Lire un prix, une durée, une date ou un numéro",
     conceptIds: ["sino-korean-numbers"],
     prerequisites: recommendedStages(["information-questions"]),
     canonicalExamples: [
-      { korean: "이거 만 원이에요.", french: "Ceci coûte 10 000 wons." },
+      { korean: "이거 만 원이에요.", french: "Cela coûte dix mille wons." },
     ],
     reuseContentRefIds: [
       "counting:sino",
@@ -515,7 +507,7 @@ export const GRAMMAR_STAGES = [
     number: 19,
     chapterId: "daily-actions",
     title: "Commander plusieurs éléments",
-    communicativeGoal: "Commander plusieurs éléments",
+    communicativeGoal: "Relier des objets dans une même commande",
     conceptIds: ["noun-link-hago-irang"],
     prerequisites: recommendedStages(["request-item", "request-quantity"]),
     canonicalExamples: [
@@ -538,13 +530,13 @@ export const GRAMMAR_STAGES = [
     number: 20,
     chapterId: "daily-actions",
     title: "Choisir une alternative",
-    communicativeGoal: "Proposer ou choisir une alternative",
+    communicativeGoal: "Présenter deux possibilités simples",
     conceptIds: ["alternative-ina-animyeon"],
     prerequisites: recommendedStages(["coordinate-items"]),
     canonicalExamples: [
       {
-        korean: "커피나 차 주세요.",
-        french: "Un café ou un thé, s’il vous plaît.",
+        korean: "커피나 차 있어요?",
+        french: "Avez-vous du café ou du thé ?",
       },
     ],
     reuseContentRefIds: ["scene:restaurant", "scene:cafe"],
@@ -557,7 +549,7 @@ export const GRAMMAR_STAGES = [
     number: 21,
     chapterId: "daily-actions",
     title: "Demander une action",
-    communicativeGoal: "Demander une action",
+    communicativeGoal: "Demander poliment à quelqu’un d’agir",
     conceptIds: ["request-v-a-eo-juseyo"],
     prerequisites: recommendedStages(["present-actions", "request-item"]),
     canonicalExamples: [
@@ -586,7 +578,7 @@ export const GRAMMAR_STAGES = [
     canonicalExamples: [
       {
         korean: "여기에서 내리세요.",
-        french: "Descendez ici, s’il vous plaît.",
+        french: "Descendez ici.",
       },
     ],
     reuseContentRefIds: [
@@ -603,12 +595,12 @@ export const GRAMMAR_STAGES = [
     number: 23,
     chapterId: "daily-actions",
     title: "Indiquer direction ou moyen",
-    communicativeGoal: "Indiquer direction ou moyen",
+    communicativeGoal: "Préciser par où aller ou comment se déplacer",
     conceptIds: ["direction-means-ro-euro"],
     receptiveConceptIds: ["intention-eulgeyo"],
     prerequisites: recommendedStages(["destination-and-time"]),
     canonicalExamples: [
-      { korean: "카드로 할게요.", french: "Je vais payer par carte." },
+      { korean: "카드로 할게요.", french: "Ce sera par carte.", note: "CONTEXTE\nOn te demande : « Carte ou espèces ? »" },
     ],
     reuseContentRefIds: [
       "scene:cafe",
@@ -625,7 +617,7 @@ export const GRAMMAR_STAGES = [
     number: 24,
     chapterId: "express-needs",
     title: "Exprimer un souhait",
-    communicativeGoal: "Exprimer un souhait",
+    communicativeGoal: "Dire ce que l’on aimerait faire",
     conceptIds: ["desire-go-sipeoyo"],
     prerequisites: recommendedStages(["present-actions", "object-actions"]),
     canonicalExamples: [
@@ -653,7 +645,8 @@ export const GRAMMAR_STAGES = [
     canonicalExamples: [
       {
         korean: "여기서 충전할 수 있어요?",
-        french: "Est-ce que je peux la recharger ici ?",
+        french: "Est-il possible de recharger ma carte ici ?",
+        note: "CONTEXTE\nTu es à un guichet T-money avec ta carte.",
       },
     ],
     reuseContentRefIds: ["scene:aeroport", "scene:metro"],
@@ -666,11 +659,11 @@ export const GRAMMAR_STAGES = [
     number: 26,
     chapterId: "express-needs",
     title: "Demander la permission",
-    communicativeGoal: "Demander une permission",
+    communicativeGoal: "Vérifier si une action est autorisée",
     conceptIds: ["permission-a-eodo-dwaeyo"],
     prerequisites: recommendedStages(["present-actions", "simple-negation"]),
     canonicalExamples: [
-      { korean: "사진 찍어도 돼요?", french: "Je peux prendre une photo ?" },
+      { korean: "사진 찍어도 돼요?", french: "Puis-je prendre une photo ?", note: "INTENTION\nDemande d’autorisation" },
     ],
     reuseContentRefIds: [
       "vocabulary:gastronomie",
@@ -712,7 +705,7 @@ export const GRAMMAR_STAGES = [
     number: 28,
     chapterId: "express-needs",
     title: "Ajouter une chose",
-    communicativeGoal: "Ajouter une chose",
+    communicativeGoal: "Inclure un élément supplémentaire",
     conceptIds: ["additive-do"],
     prerequisites: recommendedStages(["request-item", "coordinate-items"]),
     canonicalExamples: [
@@ -732,7 +725,7 @@ export const GRAMMAR_STAGES = [
     number: 29,
     chapterId: "express-needs",
     title: "Limiter une demande",
-    communicativeGoal: "Limiter une demande",
+    communicativeGoal: "Préciser que l’on ne veut qu’un élément",
     conceptIds: ["restrictive-man"],
     prerequisites: recommendedStages([
       "request-quantity",
@@ -741,7 +734,7 @@ export const GRAMMAR_STAGES = [
     canonicalExamples: [
       {
         korean: "한 잔만 주세요.",
-        french: "Juste une tasse, s’il vous plaît.",
+        french: "Un seul verre, s’il vous plaît.",
       },
     ],
     reuseContentRefIds: ["scene:cafe", "counting:base", "scene:metro"],
@@ -763,7 +756,7 @@ export const GRAMMAR_STAGES = [
     canonicalExamples: [
       {
         korean: "아홉 시부터 다섯 시까지예요.",
-        french: "C’est de neuf heures à cinq heures.",
+        french: "Les horaires sont de neuf heures à cinq heures.",
       },
     ],
     reuseContentRefIds: [
@@ -823,7 +816,7 @@ export const GRAMMAR_STAGES = [
     conceptIds: ["intention-eulgeyo"],
     prerequisites: recommendedStages(["future-plan"]),
     canonicalExamples: [
-      { korean: "카드로 계산할게요.", french: "Je vais payer par carte." },
+      { korean: "카드로 계산할게요.", french: "Je vais régler par carte.", note: "NUANCE\nDécision prise maintenant" },
     ],
     reuseContentRefIds: [
       "scene:cafe",
@@ -840,12 +833,12 @@ export const GRAMMAR_STAGES = [
     number: 34,
     chapterId: "time-and-linking",
     title: "Relier deux actions",
-    communicativeGoal: "Relier deux actions",
+    communicativeGoal: "Enchaîner deux actions dans une phrase",
     conceptIds: ["sequence-go"],
     receptiveConceptIds: ["intention-eulgeyo"],
     prerequisites: recommendedStages(["present-actions"]),
     canonicalExamples: [
-      { korean: "먹고 갈게요.", french: "Je vais manger avant de partir." },
+      { korean: "먹고 갈게요.", french: "Je vais manger ici avant de partir.", note: "CONTEXTE\nAu restaurant, on te demande : « Sur place ou à emporter ? »" },
     ],
     reuseContentRefIds: ["scene:cafe", "scene:metro"],
     validationCriteria: ["M", "L", "P", "D"],
@@ -877,13 +870,13 @@ export const GRAMMAR_STAGES = [
     number: 36,
     chapterId: "time-and-linking",
     title: "Marquer un contraste",
-    communicativeGoal: "Marquer un contraste",
+    communicativeGoal: "Opposer deux informations dans une phrase",
     conceptIds: ["contrast-jiman"],
     prerequisites: recommendedStages(["present-actions"]),
     canonicalExamples: [
       {
         korean: "맵지만 맛있어요.",
-        french: "C’est épicé, mais délicieux.",
+        french: "Ce plat est épicé, mais délicieux.",
       },
     ],
     reuseContentRefIds: ["scene:restaurant", "scene:aeroport"],
@@ -900,7 +893,7 @@ export const GRAMMAR_STAGES = [
     conceptIds: ["condition-eumyeon"],
     prerequisites: recommendedStages(["present-actions", "link-actions"]),
     canonicalExamples: [
-      { korean: "시간이 있으면 가요.", french: "J’irai si j’ai le temps." },
+      { korean: "시간이 있으면 가요.", french: "J’y vais si j’ai le temps.", note: "CONTEXTE\nVous parlez d’une sortie déjà prévue." },
     ],
     reuseContentRefIds: [
       "scene:metro",
@@ -923,7 +916,7 @@ export const GRAMMAR_STAGES = [
       "simple-condition",
     ]),
     canonicalExamples: [
-      { korean: "표를 사야 해요.", french: "Je dois acheter un billet." },
+      { korean: "표를 사야 해요.", french: "Il faut acheter un billet." },
     ],
     reuseContentRefIds: ["scene:metro", "scene:aeroport"],
     validationCriteria: ["R", "M", "L", "P", "D"],
@@ -935,7 +928,7 @@ export const GRAMMAR_STAGES = [
     number: 39,
     chapterId: "time-and-linking",
     title: "Comparer simplement",
-    communicativeGoal: "Comparer simplement",
+    communicativeGoal: "Comparer deux éléments ou désigner le meilleur",
     conceptIds: ["comparison-boda-deo-jeil"],
     prerequisites: recommendedStages(["present-actions"]),
     canonicalExamples: [
@@ -962,7 +955,7 @@ export const GRAMMAR_STAGES = [
     conceptIds: ["suggestion-eulkkayo"],
     prerequisites: recommendedStages(["present-actions", "future-plan"]),
     canonicalExamples: [
-      { korean: "같이 갈까요?", french: "On y va ensemble ?" },
+      { korean: "같이 갈까요?", french: "On y va ensemble ?", note: "CONTEXTE\nLa destination du trajet est déjà connue." },
     ],
     reuseContentRefIds: [
       "vocabulary:basics",
@@ -977,19 +970,19 @@ export const GRAMMAR_STAGES = [
     id: "a1-validation",
     number: 41,
     chapterId: "a1-validation",
-    title: "Valider le niveau A1",
-    communicativeGoal: "Réussir une interaction A1 complète",
+    title: "Révision générale A1",
+    communicativeGoal: "Revoir les principales structures dans des phrases courtes.",
     conceptIds: A1_PRODUCTIVE_CONCEPT_IDS,
     receptiveConceptIds: ["honorific-si"],
     prerequisites: recommendedStages(GRAMMAR_STAGE_IDS.slice(0, 40)),
-    // L’audit proposait une validation multi-scènes, sans exemple canonique unique.
     canonicalExamples: [
       {
         korean:
-          "안녕하세요. 예약했어요. 창가 자리에 앉아도 돼요? 네, 이쪽으로 오세요.",
+          "손님: 안녕하세요. 예약했어요.\n직원: 네, 성함이 어떻게 되세요?\n손님: 마크예요. 창가 자리에 앉아도 돼요?\n직원: 네, 이쪽으로 오세요.",
         french:
-          "Bonjour. J’ai réservé. Je peux m’asseoir près de la fenêtre ? Oui, venez par ici.",
-        note: "Exemple composite de consolidation et de reconnaissance de -시-.",
+          "Client : Bonjour. J’ai réservé.\nEmployé : Très bien. Quel est votre nom ?\nClient : Je m’appelle Marc. Puis-je m’asseoir près de la fenêtre ?\nEmployé : Oui, venez par ici.",
+        format: "dialogue",
+        note: "MÉMO\n« 성함 » est la forme honorifique de « 이름 » : reconnais-la sans chercher à la produire.",
       },
     ],
     reuseContentRefIds: [
@@ -1004,9 +997,10 @@ export const GRAMMAR_STAGES = [
       "scene:magasin",
       "listening:active",
     ],
-    validationCriteria: A1_VALIDATION_CRITERIA,
+    validationCriteria: GENERAL_REVIEW_CRITERIA,
     reviewAfterDays: REVIEW_AFTER_DAYS,
     status: "a1",
+    mode: "review",
   },
 ] as const satisfies readonly GrammarStage[];
 
@@ -1044,7 +1038,7 @@ export const GRAMMAR_CHAPTERS = [
   {
     id: "a1-validation",
     number: 6,
-    title: "Validation A1",
+    title: "Révision générale A1",
     stageIds: GRAMMAR_STAGE_IDS.slice(40, 41),
   },
 ] as const satisfies readonly GrammarChapter[];

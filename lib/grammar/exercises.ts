@@ -5,16 +5,13 @@ import {
 import { shuffleArray, type RandomSource } from "../choiceOrder.ts";
 import type {
   GrammarConcept,
+  GrammarExample,
   GrammarPracticeAnswer,
   GrammarPracticeQuestion,
   GrammarPracticeSession,
   GrammarStageId,
 } from "../../data/grammar/types";
 import { toIsoTimestamp, type TimestampInput } from "./progress.ts";
-
-const GLOBAL_EXAMPLES = GRAMMAR_CONCEPTS.flatMap((concept) =>
-  concept.examples.map((example) => ({ concept, example })),
-);
 
 function hash(value: string): number {
   let result = 0;
@@ -67,10 +64,157 @@ function getExample(
   return examples[index % examples.length];
 }
 
-function explanationFor(concept: GrammarConcept, memo?: string) {
-  return memo
-    ? `${concept.form} — ${concept.shortFunction} ${memo}`
-    : `${concept.form} — ${concept.shortFunction}`;
+function isSimpleSentence(example: GrammarExample): boolean {
+  if (example.format === "dialogue" || /[\r\n]/u.test(example.korean)) return false;
+  return (example.korean.match(/[.!?]/gu) ?? []).length <= 1;
+}
+
+function getOrderSource(
+  concepts: readonly GrammarConcept[],
+  attemptNumber: number,
+) {
+  const candidates = concepts.flatMap((concept) =>
+    concept.examples
+      .filter(isSimpleSentence)
+      .map((example) => ({ concept, example })),
+  );
+  return candidates[(attemptNumber - 1) % candidates.length];
+}
+
+function conceptReason(concept: GrammarConcept, lead: string) {
+  return `${lead} ${concept.rule}`;
+}
+
+function formatPromptBlock(
+  context: string | undefined,
+  label: string,
+  phrase: string,
+) {
+  return `${context ? `${context}\n\n` : ""}${label}\n« ${phrase} »`;
+}
+
+function formatScenario(scenario: string, label: string, phrase: string) {
+  return formatPromptBlock(`CONTEXTE\n${scenario}`, label, phrase);
+}
+
+function formatExample(
+  example: GrammarExample,
+  label: string,
+  phrase: string,
+) {
+  return formatPromptBlock(example.note, label, phrase);
+}
+
+function buildReviewQuestions(
+  stageId: GrammarStageId,
+  attemptNumber: number,
+  random: RandomSource,
+): readonly GrammarPracticeQuestion[] {
+  const stage = GRAMMAR_STAGE_BY_ID[stageId];
+  const offset = Math.max(0, attemptNumber - 1) * 5;
+  const concepts = Array.from({ length: 5 }, (_, index) =>
+    GRAMMAR_CONCEPTS.find(
+      ({ id }) => id === stage.conceptIds[(offset + index * 9) % stage.conceptIds.length],
+    ),
+  ).filter((concept): concept is GrammarConcept => !!concept);
+
+  return concepts.map((concept, index) => {
+    const { scene, scenario } = concept.practice;
+    const base = {
+      id: `${stageId}:${attemptNumber}:review-${index + 1}`,
+      stageId,
+      conceptIds: [concept.id],
+      phase: "review",
+    } as const;
+    const seed = `${stageId}:${attemptNumber}:review-${concept.id}`;
+
+    if (index === 2) {
+      return {
+        ...base,
+        kind: "transformation",
+        criterion: "M",
+        prompt: "Choisis la forme qui exprime précisément cette phrase.",
+        display: formatScenario(scenario, "PHRASE À EXPRIMER", scene.french),
+        korean: scene.korean,
+        french: scene.french,
+        options: buildOptions(
+          concept.practice.focusForm,
+          concept.practice.formDistractors,
+          `${seed}:form`,
+          random,
+        ),
+        answer: concept.practice.focusForm,
+        explanation: conceptReason(
+          concept,
+          `Dans cet exemple, la forme ciblée est ${concept.practice.focusForm}.`,
+        ),
+      };
+    }
+    if (index === 1) {
+      return {
+        ...base,
+        kind: "choice",
+        criterion: "R",
+        prompt: "Choisis la phrase coréenne qui exprime exactement la situation.",
+        display: formatScenario(scenario, "PHRASE À TRADUIRE", scene.french),
+        korean: scene.korean,
+        french: scene.french,
+        options: buildOptions(
+          scene.korean,
+          concept.examples.map((example) => example.korean),
+          `${seed}:ko`,
+          random,
+        ),
+        answer: scene.korean,
+        explanation: conceptReason(
+          concept,
+          `La phrase attendue est « ${scene.korean} ».`,
+        ),
+      };
+    }
+    if (index === 3) {
+      return {
+        ...base,
+        kind: "scene",
+        criterion: "P",
+        prompt: "Choisis la phrase adaptée à la situation.",
+        display: formatScenario(scenario, "PHRASE À EXPRIMER", scene.french),
+        korean: scene.korean,
+        french: scene.french,
+        options: buildOptions(
+          scene.korean,
+          concept.examples.map((example) => example.korean),
+          `${seed}:scene`,
+          random,
+        ),
+        answer: scene.korean,
+        explanation: conceptReason(
+          concept,
+          `Ici, « ${scene.korean} » répond précisément à la situation.`,
+        ),
+      };
+    }
+    return {
+      ...base,
+      kind: "matching",
+      criterion: "R",
+      prompt: "Choisis la traduction adaptée à cette situation.",
+      display: formatScenario(scenario, "PHRASE CORÉENNE", scene.korean),
+      korean: scene.korean,
+      french: scene.french,
+      options: buildOptions(
+        scene.french,
+        concept.examples.map((example) => example.french),
+        `${seed}:fr`,
+        random,
+      ),
+      answer: scene.french,
+      explanation: conceptReason(
+        concept,
+        `« ${scene.korean} » signifie « ${scene.french} ».`,
+      ),
+    };
+  });
 }
 
 export function areGrammarAnswersEqual(
@@ -94,48 +238,74 @@ export function buildGrammarPracticeQuestions(
   random: RandomSource = Math.random,
 ): readonly GrammarPracticeQuestion[] {
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
+  if (stage.mode === "review") {
+    return buildReviewQuestions(stageId, attemptNumber, random);
+  }
+
   const concepts = getConcepts(stageId);
   const first = getExample(concepts, Math.max(0, attemptNumber - 1));
   const second = getExample(concepts, attemptNumber);
   const formConcept = concepts[(attemptNumber - 1) % concepts.length];
-  const orderSource = stage.canonicalExamples[0] ?? first.example;
+  const sceneConcept = concepts[attemptNumber % concepts.length];
+  const order = getOrderSource(concepts, attemptNumber);
+  const orderConcept = order.concept;
+  const orderSource = order.example;
   const orderTokens = orderSource.korean.split(/\s+/u).filter(Boolean);
-  const koreanCandidates = GLOBAL_EXAMPLES.map(({ example }) => example.korean);
-  const frenchCandidates = GLOBAL_EXAMPLES.map(({ example }) => example.french);
-  const formCandidates = GRAMMAR_CONCEPTS.map((concept) => concept.form);
   const seed = `${stageId}:${attemptNumber}`;
 
   const questions: GrammarPracticeQuestion[] = [
     {
-      id: `${seed}:meaning-ko`,
+      id: `${seed}:meaning-fr`,
       stageId,
       conceptIds: [first.concept.id],
       phase: "manipulation",
-      kind: "choice",
+      kind: "matching",
       criterion: "R",
-      prompt: "Choisis la phrase coréenne qui correspond.",
-      display: first.example.french,
+      prompt: "Choisis la traduction exacte dans le contexte indiqué.",
+      display: formatExample(first.example, "PHRASE CORÉENNE", first.example.korean),
       french: first.example.french,
       korean: first.example.korean,
-      options: buildOptions(first.example.korean, koreanCandidates, `${seed}:ko`, random),
-      answer: first.example.korean,
-      explanation: explanationFor(first.concept, first.example.note),
+      options: buildOptions(
+        first.example.french,
+        [
+          ...first.concept.examples.map((example) => example.french),
+          first.concept.practice.scene.french,
+        ],
+        `${seed}:fr`,
+        random,
+      ),
+      answer: first.example.french,
+      explanation: conceptReason(
+        first.concept,
+        `« ${first.example.korean} » signifie « ${first.example.french} ».`,
+      ),
       ...(first.example.note ? { memo: first.example.note } : {}),
     },
     {
-      id: `${seed}:meaning-fr`,
+      id: `${seed}:meaning-ko`,
       stageId,
       conceptIds: [second.concept.id],
       phase: "manipulation",
-      kind: "matching",
+      kind: "choice",
       criterion: "R",
-      prompt: "Retrouve le sens de cette phrase.",
-      display: second.example.korean,
+      prompt: "Choisis la phrase coréenne qui exprime exactement le sens indiqué.",
+      display: formatExample(second.example, "PHRASE À TRADUIRE", second.example.french),
       korean: second.example.korean,
       french: second.example.french,
-      options: buildOptions(second.example.french, frenchCandidates, `${seed}:fr`, random),
-      answer: second.example.french,
-      explanation: explanationFor(second.concept, second.example.note),
+      options: buildOptions(
+        second.example.korean,
+        [
+          ...second.concept.examples.map((example) => example.korean),
+          second.concept.practice.scene.korean,
+        ],
+        `${seed}:ko`,
+        random,
+      ),
+      answer: second.example.korean,
+      explanation: conceptReason(
+        second.concept,
+        `La phrase attendue est « ${second.example.korean} ».`,
+      ),
       ...(second.example.note ? { memo: second.example.note } : {}),
     },
     {
@@ -145,27 +315,42 @@ export function buildGrammarPracticeQuestions(
       phase: "manipulation",
       kind: "transformation",
       criterion: "M",
-      prompt: "Quelle forme sert à exprimer cette intention ?",
-      display: formConcept.shortFunction,
-      options: buildOptions(formConcept.form, formCandidates, `${seed}:form`, random),
-      answer: formConcept.form,
-      explanation: explanationFor(formConcept),
+      prompt: "Choisis la forme qui exprime précisément cette phrase.",
+      display: formatScenario(
+        formConcept.practice.scenario,
+        "PHRASE À EXPRIMER",
+        formConcept.practice.scene.french,
+      ),
+      options: buildOptions(
+        formConcept.practice.focusForm,
+        formConcept.practice.formDistractors,
+        `${seed}:form`,
+        random,
+      ),
+      answer: formConcept.practice.focusForm,
+      explanation: conceptReason(
+        formConcept,
+        `Dans cet exemple, la forme ciblée est ${formConcept.practice.focusForm}.`,
+      ),
     },
     orderTokens.length > 1
       ? {
           id: `${seed}:order`,
           stageId,
-          conceptIds: stage.conceptIds,
+          conceptIds: [orderConcept.id],
           phase: "manipulation",
           kind: "order",
           criterion: "M",
-          prompt: "Remets les éléments dans l’ordre coréen.",
-          display: orderSource.french,
+          prompt: "Remets les éléments dans l’ordre pour former la phrase coréenne indiquée.",
+          display: formatExample(orderSource, "PHRASE À FORMER", orderSource.french),
           korean: orderSource.korean,
           french: orderSource.french,
           options: shuffleArray(orderTokens, random),
           answer: orderTokens,
-          explanation: `En coréen, le prédicat vient à la fin : ${orderSource.korean}`,
+          explanation: conceptReason(
+            orderConcept,
+            `L’ordre attendu donne « ${orderSource.korean} ».`,
+          ),
           ...(orderSource.note ? { memo: orderSource.note } : {}),
         }
       : {
@@ -175,27 +360,49 @@ export function buildGrammarPracticeQuestions(
           phase: "manipulation",
           kind: "gap",
           criterion: "M",
-          prompt: "Complète l’idée avec la bonne phrase.",
-          display: first.example.french,
-          options: buildOptions(first.example.korean, koreanCandidates, `${seed}:gap`, random),
+          prompt: "Choisis la phrase coréenne qui exprime exactement le sens indiqué.",
+          display: formatExample(first.example, "PHRASE À TRADUIRE", first.example.french),
+          options: buildOptions(
+            first.example.korean,
+            [
+              ...first.concept.examples.map((example) => example.korean),
+              first.concept.practice.scene.korean,
+            ],
+            `${seed}:gap`,
+            random,
+          ),
           answer: first.example.korean,
-          explanation: explanationFor(first.concept, first.example.note),
+          explanation: conceptReason(
+            first.concept,
+            `La phrase complète est « ${first.example.korean} ».`,
+          ),
         },
     {
       id: `${seed}:context`,
       stageId,
-      conceptIds: [second.concept.id],
+      conceptIds: [sceneConcept.id],
       phase: "production",
       kind: "scene",
       criterion: "P",
-      prompt: "Dans cette situation, quelle réponse est la plus naturelle ?",
-      display: second.example.french,
-      korean: second.example.korean,
-      french: second.example.french,
-      options: buildOptions(second.example.korean, koreanCandidates, `${seed}:context`, random),
-      answer: second.example.korean,
-      explanation: explanationFor(second.concept, second.example.note),
-      ...(second.example.note ? { memo: second.example.note } : {}),
+      prompt: "Choisis l’unique phrase coréenne adaptée à la situation.",
+      display: formatScenario(
+        sceneConcept.practice.scenario,
+        "PHRASE À EXPRIMER",
+        sceneConcept.practice.scene.french,
+      ),
+      korean: sceneConcept.practice.scene.korean,
+      french: sceneConcept.practice.scene.french,
+      options: buildOptions(
+        sceneConcept.practice.scene.korean,
+        sceneConcept.examples.map((example) => example.korean),
+        `${seed}:context`,
+        random,
+      ),
+      answer: sceneConcept.practice.scene.korean,
+      explanation: conceptReason(
+        sceneConcept,
+        `Dans cette situation, la réponse naturelle est « ${sceneConcept.practice.scene.korean} ».`,
+      ),
     },
   ];
 

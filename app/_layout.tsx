@@ -153,7 +153,10 @@ export default function RootLayout() {
             <SubscriptionAccessGuard />
             {/* <ScreenCaptureProtection /> */}
             <ReleaseRouteGuard>
-              <Stack screenOptions={{ headerShown: false }}>
+              <Stack
+                initialRouteName="index"
+                screenOptions={{ headerShown: false }}
+              >
                 <Stack.Screen name="index" />
                 <Stack.Screen name="onboarding" />
                 <Stack.Screen name="premium" />

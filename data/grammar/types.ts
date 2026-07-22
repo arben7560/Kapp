@@ -153,6 +153,25 @@ export type GrammarExample = {
   french: string;
   sourceRefId?: string;
   note?: string;
+  format?: "sentence" | "dialogue";
+};
+
+export type GrammarPracticeProfile = {
+  distractorGroup:
+    | "identity"
+    | "sentence"
+    | "quantity-request"
+      | "ability-needs"
+      | "time-linking";
+  focusForm: string;
+  formDistractors: readonly [string, string, string];
+  scenario: string;
+  scene: GrammarExample;
+};
+
+export type GrammarRulePart = {
+  form: string;
+  explanation: string;
 };
 
 export type AdvancedRecognitionForm = {
@@ -166,6 +185,9 @@ export type GrammarConcept = {
   id: GrammarConceptId;
   form: string;
   shortFunction: string;
+  rule: string;
+  ruleParts?: readonly GrammarRulePart[];
+  practice: GrammarPracticeProfile;
   level: GrammarLevel;
   a1Usage: GrammarA1Usage;
   a1ReceptiveForms?: readonly string[];
@@ -219,6 +241,7 @@ export type GrammarStage = {
   validationCriteria: readonly GrammarCriterion[];
   reviewAfterDays: readonly number[];
   status: GrammarLevel;
+  mode?: "lesson" | "review";
 };
 
 export type GrammarChapter = {

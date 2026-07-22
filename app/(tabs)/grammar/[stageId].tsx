@@ -21,6 +21,7 @@ import {
   GRAMMAR_CONCEPTS,
   GRAMMAR_STAGE_BY_ID,
   GRAMMAR_STAGE_IDS,
+  getGrammarLessonExamples,
   type GrammarConcept,
   type GrammarPracticeAnswer,
   type GrammarPracticeQuestion,
@@ -56,6 +57,11 @@ function answerLabel(answer: GrammarPracticeAnswer) {
   return Array.isArray(answer) ? answer.join(" ") : answer;
 }
 
+function scoreLabel(score: number) {
+  const plural = score === 1 ? "" : "s";
+  return `${score} réponse${plural} correcte${plural}`;
+}
+
 function getRemainingTokens(options: readonly string[], draft: readonly string[]) {
   const used = new Set<number>();
   for (const token of draft) {
@@ -63,6 +69,48 @@ function getRemainingTokens(options: readonly string[], draft: readonly string[]
     if (matchIndex >= 0) used.add(matchIndex);
   }
   return options.map((token, index) => ({ token, index })).filter(({ index }) => !used.has(index));
+}
+
+function EditorialNote({ note, boxed = false }: { note: string; boxed?: boolean }) {
+  const [label, ...contentParts] = note.split("\n");
+  const content = contentParts.join("\n");
+
+  return (
+    <View style={boxed ? styles.memoBox : styles.editorialNote}>
+      <AppText variant="sectionLabel" style={styles.accentText}>{label}</AppText>
+      {content ? <AppText variant="caption" tone="muted">{content}</AppText> : null}
+    </View>
+  );
+}
+
+function QuestionDisplay({ value }: { value: string }) {
+  const sections = value.split("\n\n");
+
+  return (
+    <View style={styles.questionSections}>
+      {sections.map((section, index) => {
+        const [label, ...contentParts] = section.split("\n");
+        const content = contentParts.join("\n");
+        const isKorean = /[가-힣]/u.test(content);
+        const contentVariant = isKorean
+          ? "koreanPrimary"
+          : content.length > 70
+            ? "bodyStrong"
+            : "featureTitle";
+
+        return (
+          <View key={`${label}-${index}`} style={styles.questionSection}>
+            <AppText variant="sectionLabel" tone="soft">{label}</AppText>
+            {content ? (
+              <AppText variant={contentVariant} script={isKorean ? "korean" : "latin"}>
+                {content}
+              </AppText>
+            ) : null}
+          </View>
+        );
+      })}
+    </View>
+  );
 }
 
 export default function GrammarLessonScreen() {
@@ -250,17 +298,43 @@ function LessonExplanation({ stageId, isTablet, onStart }: { stageId: GrammarSta
     .map((contentRefId) => CONTENT_REFS.find((item) => item.id === contentRefId))
     .filter((item) => item?.route && item.availability === "public")
     .slice(0, 3);
+  const lessonExamples = getGrammarLessonExamples(stageId);
+  const detailExamples = lessonExamples.slice(stage.canonicalExamples.length);
+  const isGeneralReview = stage.mode === "review";
+  const advancedForms = isGeneralReview
+    ? []
+    : concepts.flatMap((concept) => concept.advancedRecognitionForms ?? []);
 
   return (
     <View style={styles.contentStack}>
       <View style={[styles.explanationGrid, isTablet && styles.explanationGridTablet]}>
         <View style={[styles.explanationColumn, isTablet && styles.explanationColumnTablet]}>
-          <AppText variant="sectionLabel" tone="soft">LA RÈGLE</AppText>
-          {concepts.map((concept) => (
+          <AppText variant="sectionLabel" tone="soft">
+            {isGeneralReview ? "REPÈRES DE RÉVISION" : "LA RÈGLE"}
+          </AppText>
+          {isGeneralReview ? (
+            <BlurView intensity={50} tint="dark" style={styles.ruleCard}>
+              <LinearGradient colors={["rgba(45,212,191,0.13)", "rgba(255,255,255,0.02)"]} style={ABSOLUTE_FILL} />
+              <AppText variant="sectionTitle">Observe, choisis, puis construis</AppText>
+              <AppText variant="bodySecondary" tone="muted">
+                Repère la particule ou la terminaison utile, vérifie sa place, puis lis la phrase entière avant de répondre.
+              </AppText>
+            </BlurView>
+          ) : concepts.map((concept) => (
             <BlurView key={concept.id} intensity={50} tint="dark" style={styles.ruleCard}>
               <LinearGradient colors={["rgba(45,212,191,0.13)", "rgba(255,255,255,0.02)"]} style={ABSOLUTE_FILL} />
               <AppText variant="koreanPrimary" script="korean" style={styles.accentText}>{concept.form}</AppText>
-              <AppText variant="bodyStrong">{concept.shortFunction}</AppText>
+              <AppText variant="bodySecondary">{concept.rule}</AppText>
+              {concept.ruleParts?.length ? (
+                <View style={styles.ruleParts}>
+                  {concept.ruleParts.map((part) => (
+                    <View key={part.form} style={styles.rulePart}>
+                      <AppText variant="bodyStrong">{part.form}</AppText>
+                      <AppText variant="bodySecondary" tone="muted">{part.explanation}</AppText>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
               <AppText variant="caption" tone="soft">
                 {concept.a1Usage === "productive" ? "À comprendre et à utiliser" : "À reconnaître"}
               </AppText>
@@ -272,22 +346,20 @@ function LessonExplanation({ stageId, isTablet, onStart }: { stageId: GrammarSta
           <AppText variant="sectionLabel" tone="soft">EXEMPLES</AppText>
           {stage.canonicalExamples.map((example, index) => (
             <BlurView key={`${example.korean}-${index}`} intensity={46} tint="dark" style={styles.exampleCard}>
-              <AppText variant="koreanPrimary" script="korean">{example.korean}</AppText>
+              <AppText variant={example.format === "dialogue" ? "koreanSecondary" : "koreanPrimary"} script="korean">
+                {example.korean}
+              </AppText>
               <AppText variant="bodySecondary" tone="muted">{example.french}</AppText>
-              {example.note ? (
-                <View style={styles.memoBox}>
-                  <AppText variant="caption" style={styles.accentText}>MÉMO · {example.note}</AppText>
-                </View>
-              ) : null}
+              {example.note ? <EditorialNote note={example.note} boxed /> : null}
             </BlurView>
           ))}
-          {concepts.flatMap((concept) => concept.examples).slice(0, 3).map((example, index) => (
+          {!isGeneralReview ? detailExamples.map((example, index) => (
             <View key={`${example.korean}-detail-${index}`} style={styles.exampleLine}>
               <AppText variant="koreanSecondary" script="korean">{example.korean}</AppText>
               <AppText variant="bodySecondary" tone="muted">{example.french}</AppText>
-              {example.note ? <AppText variant="caption" style={styles.accentText}>{example.note}</AppText> : null}
+              {example.note ? <EditorialNote note={example.note} /> : null}
             </View>
-          ))}
+          )) : null}
         </View>
       </View>
 
@@ -300,7 +372,7 @@ function LessonExplanation({ stageId, isTablet, onStart }: { stageId: GrammarSta
               <AppText variant="bodySecondary" tone="muted">{concept.shortFunction}</AppText>
             </View>
           ))}
-          {concepts.flatMap((concept) => concept.advancedRecognitionForms ?? []).map((form) => (
+          {advancedForms.map((form) => (
             <View key={form.form} style={styles.receptiveRow}>
               <AppText variant="bodyStrong">{form.form}</AppText>
               <AppText variant="bodySecondary" tone="muted">{form.shortFunction}</AppText>
@@ -311,9 +383,13 @@ function LessonExplanation({ stageId, isTablet, onStart }: { stageId: GrammarSta
 
       <BlurView intensity={55} tint="dark" style={styles.practiceLaunchCard}>
         <AppText variant="sectionLabel" style={styles.accentText}>PRATIQUE GUIDÉE</AppText>
-        <AppText variant="sectionTitle">Passe de la règle au réflexe</AppText>
+        <AppText variant="sectionTitle">
+          {isGeneralReview ? "Revois cinq structures en contexte" : "Mets la règle en pratique"}
+        </AppText>
         <AppText variant="bodySecondary" tone="muted">
-          5 exercices · sens, forme, construction et mise en situation. 4 bonnes réponses valident l’étape.
+          {isGeneralReview
+            ? "Cinq situations courtes, renouvelées à chaque tentative. Cette révision ne constitue pas une validation du niveau A1."
+            : "Cinq exercices sur le sens, la forme et la construction. Quatre réponses correctes terminent l’étape."}
         </AppText>
         <PrimaryButton label="COMMENCER LES EXERCICES" onPress={onStart} />
       </BlurView>
@@ -360,7 +436,7 @@ function PracticePanel({
         <AppText variant="sectionLabel" style={styles.accentText}>
           EXERCICE {session.questionIndex + 1} / {session.questions.length}
         </AppText>
-        <AppText variant="caption" tone="soft">{session.score} juste{session.score > 1 ? "s" : ""}</AppText>
+        <AppText variant="caption" tone="soft">{scoreLabel(session.score)}</AppText>
       </View>
       <View style={styles.exerciseProgressTrack}>
         <View style={[styles.exerciseProgressFill, { width: `${((session.questionIndex + (response ? 1 : 0)) / session.questions.length) * 100}%` }]} />
@@ -369,15 +445,7 @@ function PracticePanel({
       <BlurView intensity={58} tint="dark" style={styles.questionCard}>
         <AppText variant="sectionLabel" tone="soft">{exerciseKindLabel(question)}</AppText>
         <AppText variant="sectionTitle">{question.prompt}</AppText>
-        {question.display ? (
-          <AppText
-            variant={question.display.match(/[가-힣]/u) ? "koreanPrimary" : "featureTitle"}
-            script={question.display.match(/[가-힣]/u) ? "korean" : "latin"}
-            style={styles.questionDisplay}
-          >
-            {question.display}
-          </AppText>
-        ) : null}
+        {question.display ? <QuestionDisplay value={question.display} /> : null}
       </BlurView>
 
       {question.kind === "order" ? (
@@ -424,11 +492,7 @@ function PracticePanel({
 
       {response ? (
         <FeedbackCard question={question} response={response} onContinue={onContinue} isLast={isLast} />
-      ) : (
-        <AppText variant="caption" tone="soft" align="center">
-          Ta réponse est enregistrée à chaque étape : tu peux reprendre plus tard.
-        </AppText>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -487,10 +551,7 @@ function FeedbackCard({
   return (
     <BlurView intensity={58} tint="dark" style={[styles.feedbackCard, response.correct ? styles.feedbackCorrect : styles.feedbackWrong]}>
       <AppText variant="sectionLabel" style={response.correct ? styles.successText : styles.errorText}>
-        {response.correct ? "BIEN JOUÉ" : "À RETENIR"}
-      </AppText>
-      <AppText variant="sectionTitle">
-        {response.correct ? "Tu as repéré le bon réflexe." : "Pas encore — regarde la structure."}
+        {response.correct ? "CORRECT" : "À CORRIGER"}
       </AppText>
       {!response.correct ? (
         <View style={styles.correctAnswerBox}>
@@ -499,40 +560,46 @@ function FeedbackCard({
         </View>
       ) : null}
       <AppText variant="bodySecondary" tone="muted">{question.explanation}</AppText>
-      {question.memo ? <AppText variant="caption" style={styles.accentText}>MÉMO · {question.memo}</AppText> : null}
+      {question.memo ? <EditorialNote note={question.memo} /> : null}
       <PrimaryButton label={isLast ? "VOIR MON BILAN" : "CONTINUER"} onPress={onContinue} />
     </BlurView>
   );
 }
 
 function LessonResult({ session, onRetry }: { session: GrammarPracticeSession; onRetry: () => void }) {
+  const stage = GRAMMAR_STAGE_BY_ID[session.stageId];
   const stageIndex = GRAMMAR_STAGE_IDS.indexOf(session.stageId);
   const nextStageId = GRAMMAR_STAGE_IDS[stageIndex + 1];
   const ratio = session.questions.length > 0 ? session.score / session.questions.length : 0;
   const passed = ratio >= GRAMMAR_PRACTICE_PASS_RATIO;
   const wrongResponses = session.responses.filter((response) => !response.correct);
+  const isGeneralReview = stage.mode === "review";
 
   return (
     <View style={styles.resultStack}>
       <BlurView intensity={62} tint="dark" style={[styles.resultCard, passed ? styles.resultPassed : styles.resultRetry]}>
         <AppText variant="sectionLabel" style={passed ? styles.successText : styles.pinkText}>
-          {passed ? "ÉTAPE TERMINÉE" : "LEÇON COMPLÈTE"}
+          {passed
+            ? isGeneralReview ? "RÉVISION TERMINÉE" : "ÉTAPE TERMINÉE"
+            : isGeneralReview ? "RÉVISION À REPRENDRE" : "ÉTAPE À REPRENDRE"}
         </AppText>
         <AppText variant="numericValue" style={passed ? styles.successText : styles.pinkText}>
           {session.score}/{session.questions.length}
         </AppText>
         <AppText variant="sectionTitle">
-          {passed ? "La structure commence à devenir naturelle." : "Encore un passage pour fixer la structure."}
+          {scoreLabel(session.score)} sur {session.questions.length}.
         </AppText>
         <AppText variant="bodySecondary" tone="muted">
           {passed
-            ? "Ta progression est sauvegardée et les recommandations de la suite ont été actualisées."
-            : "Ton essai est sauvegardé. Reprends l’explication puis vise 4 bonnes réponses sur 5."}
+            ? isGeneralReview
+              ? "Tu as revu cinq structures. Reviens à cette révision pour en rencontrer d’autres."
+              : "Objectif atteint. Tu peux poursuivre ou refaire la leçon."
+            : "Revois les corrections ci-dessous, puis essaie de nouveau."}
         </AppText>
         <View style={styles.resultMetrics}>
           <Metric value={`${Math.round(ratio * 100)}%`} label="PRÉCISION" />
           <Metric value={`${wrongResponses.length}`} label="À REVOIR" />
-          <Metric value={`#${session.attemptNumber}`} label="ESSAI" />
+          <Metric value={`${session.attemptNumber}`} label="TENTATIVE" />
         </View>
       </BlurView>
 
@@ -573,9 +640,9 @@ function LockedLesson({ stageId }: { stageId: GrammarStageId }) {
   return (
     <BlurView intensity={58} tint="dark" style={styles.lockedCard}>
       <AppText variant="sectionLabel" tone="soft">ÉTAPE VERROUILLÉE</AppText>
-      <AppText variant="sectionTitle">Un prérequis bloquant reste à valider.</AppText>
+      <AppText variant="sectionTitle">Cette étape n’est pas encore accessible.</AppText>
       <AppText variant="bodySecondary" tone="muted">
-        L’accès à « {stage.title} » s’ouvrira automatiquement dès que la règle du registre sera satisfaite.
+        Termine d’abord les étapes requises pour ouvrir « {stage.title} ».
       </AppText>
       <PrimaryButton label="VOIR LE PARCOURS" onPress={() => router.replace("/grammar" as never)} />
     </BlurView>
@@ -617,7 +684,7 @@ function exerciseKindLabel(question: GrammarPracticeQuestion) {
   switch (question.kind) {
     case "order": return "CONSTRUCTION";
     case "matching": return "COMPRÉHENSION";
-    case "transformation": return "FORME ET FONCTION";
+    case "transformation": return "FORME";
     case "scene": return "MISE EN SITUATION";
     default: return "CHOIX GUIDÉ";
   }
@@ -645,8 +712,11 @@ const styles = StyleSheet.create({
   explanationColumn: { gap: 10 },
   explanationColumnTablet: { flex: 1 },
   ruleCard: { borderRadius: 22, borderWidth: 1, borderColor: "rgba(45,212,191,0.24)", padding: 18, gap: 7, overflow: "hidden" },
+  ruleParts: { gap: 10 },
+  rulePart: { gap: 3, paddingTop: 2 },
   exampleCard: { borderRadius: 22, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", padding: 18, gap: 7, overflow: "hidden" },
   exampleLine: { borderLeftWidth: 2, borderLeftColor: "rgba(45,212,191,0.32)", paddingLeft: 14, gap: 3 },
+  editorialNote: { marginTop: 4, gap: 2 },
   memoBox: { marginTop: 4, borderRadius: 10, padding: 10, backgroundColor: "rgba(45,212,191,0.09)" },
   receptiveBox: { borderRadius: 20, borderWidth: 1, borderColor: "rgba(244,114,182,0.2)", backgroundColor: "rgba(244,114,182,0.06)", padding: 18, gap: 12 },
   receptiveRow: { gap: 2 },
@@ -659,7 +729,8 @@ const styles = StyleSheet.create({
   exerciseProgressTrack: { height: 5, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.09)", overflow: "hidden" },
   exerciseProgressFill: { height: "100%", borderRadius: 999, backgroundColor: ACCENT },
   questionCard: { minHeight: 190, borderRadius: 26, borderWidth: 1, borderColor: "rgba(45,212,191,0.22)", padding: 22, justifyContent: "center", gap: 12, overflow: "hidden" },
-  questionDisplay: { marginTop: 5 },
+  questionSections: { marginTop: 5, gap: 14 },
+  questionSection: { gap: 4 },
   optionGrid: { gap: 10 },
   optionGridTablet: { flexDirection: "row", flexWrap: "wrap" },
   optionButton: { minHeight: 62, borderRadius: 18, borderWidth: 1, borderColor: "rgba(255,255,255,0.13)", backgroundColor: "rgba(255,255,255,0.045)", alignItems: "center", justifyContent: "center", padding: 14 },
