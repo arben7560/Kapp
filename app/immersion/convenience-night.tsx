@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { AppText } from "../../components/app-text";
+import { shuffleArray } from "../../lib/choiceOrder";
 
 const BG0 = "#070812";
 const CARD = "rgba(255,255,255,0.06)";
@@ -419,6 +420,10 @@ export default function GangnamRainRunScreen() {
   const [answers, setAnswers] = useState<Record<number, boolean>>({});
 
   const currentStep = step > 0 ? steps[step - 1] : null;
+  const currentOptions = useMemo(
+    () => shuffleArray(currentStep?.options ?? []),
+    [currentStep],
+  );
 
   useEffect(() => {
     if (!currentStep) return;
@@ -445,7 +450,7 @@ export default function GangnamRainRunScreen() {
 
   function validateAnswer() {
     if (selected === null || !currentStep) return;
-    const ok = currentStep.options[selected].correct;
+    const ok = currentOptions[selected].correct;
     setRevealed(true);
     setAnswers((prev) => ({ ...prev, [currentStep.id]: ok }));
   }
@@ -702,9 +707,9 @@ export default function GangnamRainRunScreen() {
                   {currentStep?.question}
                 </AppText>
 
-                {currentStep?.options.map((opt, idx) => (
+                {currentOptions.map((opt, idx) => (
                   <ChoiceCard
-                    key={`${currentStep.id}_${idx}`}
+                    key={`${currentStep?.id}_${idx}`}
                     label={opt.label}
                     selected={selected === idx}
                     reveal={revealed}
@@ -767,24 +772,24 @@ export default function GangnamRainRunScreen() {
                       marginTop: 14,
                       borderRadius: 18,
                       borderWidth: 1,
-                      borderColor: currentStep.options[selected].correct
+                      borderColor: currentOptions[selected].correct
                         ? GREEN
                         : RED,
-                      backgroundColor: currentStep.options[selected].correct
+                      backgroundColor: currentOptions[selected].correct
                         ? GREEN_BG
                         : RED_BG,
                       padding: 14,
                     }}
                   >
                     <AppText variant="bodyStrong" style={{ color: TXT}}>
-                      {currentStep.options[selected].correct
+                      {currentOptions[selected].correct
                         ? "Bien vu"
                         : "Presque"}
                     </AppText>
                     <AppText variant="bodySecondary"
                       style={{ color: MUTED, marginTop: 8}}
                     >
-                      {currentStep.options[selected].explain}
+                      {currentOptions[selected].explain}
                     </AppText>
 
                     <AppText variant="bodyStrong"

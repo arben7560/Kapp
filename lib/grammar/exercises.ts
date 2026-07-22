@@ -2,6 +2,7 @@ import {
   GRAMMAR_CONCEPTS,
   GRAMMAR_STAGE_BY_ID,
 } from "../../data/grammar/index.ts";
+import { shuffleArray, type RandomSource } from "../choiceOrder.ts";
 import type {
   GrammarConcept,
   GrammarPracticeAnswer,
@@ -37,12 +38,13 @@ function buildOptions(
   answer: string,
   candidates: readonly string[],
   seed: string,
+  random: RandomSource,
 ): string[] {
   const distractors = rotate(
     unique(candidates).filter((candidate) => candidate !== answer),
     hash(seed),
   ).slice(0, 3);
-  return rotate(unique([answer, ...distractors]), hash(`${seed}:options`));
+  return shuffleArray(unique([answer, ...distractors]), random);
 }
 
 function getConcepts(stageId: GrammarStageId): GrammarConcept[] {
@@ -89,6 +91,7 @@ export function areGrammarAnswersEqual(
 export function buildGrammarPracticeQuestions(
   stageId: GrammarStageId,
   attemptNumber = 1,
+  random: RandomSource = Math.random,
 ): readonly GrammarPracticeQuestion[] {
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
   const concepts = getConcepts(stageId);
@@ -114,7 +117,7 @@ export function buildGrammarPracticeQuestions(
       display: first.example.french,
       french: first.example.french,
       korean: first.example.korean,
-      options: buildOptions(first.example.korean, koreanCandidates, `${seed}:ko`),
+      options: buildOptions(first.example.korean, koreanCandidates, `${seed}:ko`, random),
       answer: first.example.korean,
       explanation: explanationFor(first.concept, first.example.note),
       ...(first.example.note ? { memo: first.example.note } : {}),
@@ -130,7 +133,7 @@ export function buildGrammarPracticeQuestions(
       display: second.example.korean,
       korean: second.example.korean,
       french: second.example.french,
-      options: buildOptions(second.example.french, frenchCandidates, `${seed}:fr`),
+      options: buildOptions(second.example.french, frenchCandidates, `${seed}:fr`, random),
       answer: second.example.french,
       explanation: explanationFor(second.concept, second.example.note),
       ...(second.example.note ? { memo: second.example.note } : {}),
@@ -144,7 +147,7 @@ export function buildGrammarPracticeQuestions(
       criterion: "M",
       prompt: "Quelle forme sert à exprimer cette intention ?",
       display: formConcept.shortFunction,
-      options: buildOptions(formConcept.form, formCandidates, `${seed}:form`),
+      options: buildOptions(formConcept.form, formCandidates, `${seed}:form`, random),
       answer: formConcept.form,
       explanation: explanationFor(formConcept),
     },
@@ -160,7 +163,7 @@ export function buildGrammarPracticeQuestions(
           display: orderSource.french,
           korean: orderSource.korean,
           french: orderSource.french,
-          options: rotate(orderTokens, 1),
+          options: shuffleArray(orderTokens, random),
           answer: orderTokens,
           explanation: `En coréen, le prédicat vient à la fin : ${orderSource.korean}`,
           ...(orderSource.note ? { memo: orderSource.note } : {}),
@@ -174,7 +177,7 @@ export function buildGrammarPracticeQuestions(
           criterion: "M",
           prompt: "Complète l’idée avec la bonne phrase.",
           display: first.example.french,
-          options: buildOptions(first.example.korean, koreanCandidates, `${seed}:gap`),
+          options: buildOptions(first.example.korean, koreanCandidates, `${seed}:gap`, random),
           answer: first.example.korean,
           explanation: explanationFor(first.concept, first.example.note),
         },
@@ -189,7 +192,7 @@ export function buildGrammarPracticeQuestions(
       display: second.example.french,
       korean: second.example.korean,
       french: second.example.french,
-      options: buildOptions(second.example.korean, koreanCandidates, `${seed}:context`),
+      options: buildOptions(second.example.korean, koreanCandidates, `${seed}:context`, random),
       answer: second.example.korean,
       explanation: explanationFor(second.concept, second.example.note),
       ...(second.example.note ? { memo: second.example.note } : {}),

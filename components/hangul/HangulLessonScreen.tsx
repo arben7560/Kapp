@@ -26,10 +26,10 @@ import {
   HANGUL_MODULES,
 } from "../../data/hangul/curriculum";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
+import { shuffleArray } from "../../lib/choiceOrder";
 import { trackHangulExerciseCompleted } from "../../lib/immersionStreak";
 
 const BACKGROUND_SOURCE = require("../../assets/images/vowelbasic.png");
-const shuffle = <T,>(items: T[]) => [...items].sort(() => Math.random() - 0.5);
 
 const normalizeLesson = (value?: Partial<HangulLessonProgress>): HangulLessonProgress => ({
   ...createEmptyHangulLessonProgress(),
@@ -168,9 +168,9 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
 
   const startQuiz = () => {
     if (!canStartQuiz) return;
-    const baseQuestions = shuffle(activeScene.questions).map((item) => ({
+    const baseQuestions = shuffleArray(activeScene.questions).map((item) => ({
       ...item,
-      options: shuffle(item.options),
+      options: shuffleArray(item.options),
     }));
     const originalIds = baseQuestions.map((item) => item.id);
     originalQuestionIds.current = new Set(originalIds);
@@ -283,7 +283,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
         ...currentQuestion,
         id: `${currentQuestion.id}__retry`,
         prompt: `Révision : ${currentQuestion.prompt}`,
-        options: shuffle(currentQuestion.options),
+        options: shuffleArray(currentQuestion.options),
       };
       nextQuestions = [...questions, retry];
       setQuestions(nextQuestions);

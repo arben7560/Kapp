@@ -1,9 +1,10 @@
 import * as Speech from "expo-speech";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
 import { isCorrect } from "../../lib/answerCheck";
+import { shuffleArray } from "../../lib/choiceOrder";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { buildProgressId } from "../../lib/progressIds";
 
@@ -70,6 +71,10 @@ export default function ListeningScreen() {
   const isDailyActivityReportedRef = useRef(false);
 
   const exercise = SESSION[index];
+  const displayedAnswers = useMemo(
+    () => shuffleArray(exercise?.answers ?? []),
+    [exercise],
+  );
 
   useEffect(() => {
     if (exercise || isDailyActivityReportedRef.current) return;
@@ -118,7 +123,7 @@ export default function ListeningScreen() {
       <AppText variant="bodyStrong" style={{ marginTop: 20 }}>{exercise.question}</AppText>
 
       {exercise.type === "choice" &&
-        exercise.answers?.map((a) => (
+        displayedAnswers.map((a) => (
           <Pressable
             key={a}
             onPress={() => check(a)}

@@ -14,6 +14,7 @@ import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
 import { useVocAudio } from "../../hooks/useVocAudio";
 import { completeDailyActivity } from "../../lib/dailyStreak";
+import { shuffleArray, shuffleIndexedChoices } from "../../lib/choiceOrder";
 import { buildProgressId } from "../../lib/progressIds";
 
 const BG_URL =
@@ -65,6 +66,23 @@ type OrderExercise = BaseExercise & {
 };
 
 type ListenExercise = ChoiceExercise | GapExercise | OrderExercise;
+
+function shuffleListenChoices(exercise: ListenExercise): ListenExercise {
+  if (exercise.kind === "order") {
+    return { ...exercise, words: shuffleArray(exercise.words) };
+  }
+
+  if (exercise.kind === "gap") {
+    return { ...exercise, options: shuffleArray(exercise.options) };
+  }
+
+  const shuffled = shuffleIndexedChoices(exercise.options, exercise.answer);
+  return {
+    ...exercise,
+    options: shuffled.choices,
+    answer: shuffled.correctIndex,
+  };
+}
 
 const LISTEN_AUDIO_BY_ID: Partial<Record<string, number>> = {
   "cafe-dictation-01": require("../../assets/audio/listen/cafe-dictation-01.mp3"),
@@ -404,7 +422,8 @@ export default function ListenScreen() {
 
   const trainingKind = TRAINING_ORDER[trainingIndex];
   const exercises = EXERCISES_BY_KIND[trainingKind];
-  const item = exercises[exerciseIndex];
+  const sourceItem = exercises[exerciseIndex];
+  const item = useMemo(() => shuffleListenChoices(sourceItem), [sourceItem]);
   const meta = KIND_LABEL[trainingKind];
   const audioSource = LISTEN_AUDIO_BY_ID[item.id];
   const hasAttempt = item.kind === "order" ? picked.length > 0 : selected !== null;

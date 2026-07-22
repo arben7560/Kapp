@@ -15,8 +15,15 @@ import {
   HANGUL_MODULES,
 } from "../../../data/hangul/curriculum";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
+import { shuffleArray } from "../../../lib/choiceOrder";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.png");
+const createAssessmentQuestions = () =>
+  HANGUL_ASSESSMENT_QUESTIONS.map((question) => ({
+    ...question,
+    options: shuffleArray(question.options),
+  }));
+
 export default function HangulAssessmentScreen() {
   const { progress, updateHangulProgress, complete } = useStore();
   const responsive = useResponsiveLayout({ maxWidth: 760 });
@@ -25,7 +32,8 @@ export default function HangulAssessmentScreen() {
   const [score, setScore] = React.useState(0);
   const [answered, setAnswered] = React.useState<string | null>(null);
   const [finished, setFinished] = React.useState(false);
-  const current = HANGUL_ASSESSMENT_QUESTIONS[index];
+  const [questions, setQuestions] = React.useState(createAssessmentQuestions);
+  const current = questions[index];
   const correctAnswerLabel = current?.options.find(
     (option) => option.value === current.answer,
   )?.label ?? current?.answer;
@@ -58,6 +66,7 @@ export default function HangulAssessmentScreen() {
     setScore(0);
     setAnswered(null);
     setFinished(false);
+    setQuestions(createAssessmentQuestions());
     setStarted(true);
   };
 

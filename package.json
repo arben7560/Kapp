@@ -18,6 +18,7 @@
     "test:metro-speech": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-metro-speech.mjs",
     "test:hangul": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-hangul-curriculum.mjs",
     "test:grammar": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-grammar-registry.mjs ./scripts/test-grammar-experience.mjs",
+    "test:choices": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-choice-order.mjs",
     "test:streak": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-daily-streak.mjs",
     "validate:ui": "node ./scripts/validate-ui-contracts.mjs",
     "lint": "expo lint"

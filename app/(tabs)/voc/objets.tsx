@@ -3,7 +3,7 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import * as Speech from "expo-speech";
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -17,6 +17,7 @@ import {
 import { AppText } from "../../../components/app-text";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
+import { shuffleIndexedChoices } from "../../../lib/choiceOrder";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/seoul-hub-bg.jpg");
 
@@ -91,7 +92,15 @@ export default function ObjectsCyber() {
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   const currentWord = ESSENTIALS[wordIndex];
-  const currentQuiz = QUIZ_ITEMS[quizIndex];
+  const currentQuiz = useMemo(() => {
+    const item = QUIZ_ITEMS[quizIndex];
+    const shuffled = shuffleIndexedChoices(item.choices, item.correctIndex);
+    return {
+      ...item,
+      choices: shuffled.choices,
+      correctIndex: shuffled.correctIndex,
+    };
+  }, [quizIndex]);
 
   const animateChange = (direction: number) => {
     triggerHaptic();

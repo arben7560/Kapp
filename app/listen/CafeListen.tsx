@@ -9,6 +9,7 @@ import { useStore } from "../../_store";
 import { CAFE_SESSION, type ListenExercise } from "../../data/listen/cafe";
 import { useVocAudio } from "../../hooks/useVocAudio";
 import { isCorrect } from "../../lib/answerCheck";
+import { shuffleArray } from "../../lib/choiceOrder";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { buildProgressId } from "../../lib/progressIds";
 
@@ -35,15 +36,6 @@ const GREEN = "rgba(34,197,94,0.45)";
 const GREEN_BG = "rgba(34,197,94,0.12)";
 const RED = "rgba(239,68,68,0.45)";
 const RED_BG = "rgba(239,68,68,0.12)";
-
-function shuffleArray<T>(array: T[]) {
-  const copy = [...array];
-  for (let i = copy.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
 
 function SmallPill({
   label,
@@ -210,6 +202,10 @@ export default function CafeListenScreen() {
   const exercise = session[index];
   const finished = !exercise;
   const speaking = activeAudioId === exercise?.id;
+  const displayedAnswers = useMemo(
+    () => shuffleArray(exercise?.answers ?? []),
+    [exercise],
+  );
 
   const progressLabel = useMemo(() => {
     if (!exercise) return "Terminé";
@@ -739,7 +735,7 @@ export default function CafeListenScreen() {
             </AppText>
 
             <View style={{ gap: 12 }}>
-              {(exercise.answers ?? []).map((answer) => (
+              {displayedAnswers.map((answer) => (
                 <ChoiceButton
                   key={answer}
                   label={answer}

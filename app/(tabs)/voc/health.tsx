@@ -3,7 +3,7 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import * as Speech from "expo-speech";
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -17,6 +17,7 @@ import {
 import { AppMixedText, AppText } from "../../../components/app-text";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
+import { shuffleIndexedChoices } from "../../../lib/choiceOrder";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/seoul-hub-bg.jpg");
 
@@ -74,6 +75,11 @@ export default function HealthCyber() {
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   const currentWord = ESSENTIALS[wordIndex];
+  const diagnosticQuiz = useMemo(() => {
+    const item = QUIZ_ITEMS[1];
+    const shuffled = shuffleIndexedChoices(item.choices, item.correctIndex);
+    return { ...item, choices: shuffled.choices };
+  }, []);
 
   const animateChange = (direction: number) => {
     triggerHaptic();
@@ -282,9 +288,9 @@ export default function HealthCyber() {
             {/* --- MINI QUIZ SECTION --- */}
             <AppText variant="sectionLabel" style={styles.sectionLabel}>TEST DE DIAGNOSTIC</AppText>
             <BlurView intensity={25} tint="dark" style={styles.quizCard}>
-              <AppText variant="bodyStrong" style={styles.quizPrompt}>{QUIZ_ITEMS[1].prompt}</AppText>
+              <AppText variant="bodyStrong" style={styles.quizPrompt}>{diagnosticQuiz.prompt}</AppText>
               <View style={styles.choiceRow}>
-                {QUIZ_ITEMS[1].choices.map((choice, i) => (
+                {diagnosticQuiz.choices.map((choice, i) => (
                   <Pressable
                     key={i}
                     style={styles.choiceBtn}
