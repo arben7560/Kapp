@@ -29,7 +29,7 @@ const COLORS = {
   glass: "rgba(255,255,255,0.05)",
 };
 
-const METRO_IMAGE = require("../../assets/images/metrobg.png");
+const METRO_IMAGE = require("../../assets/images/metrobg.jpg");
 const metroLesson =
   metroLessons.find((lesson) => lesson.id === "myeongdong_to_itaewon") ??
   metroLessons[0];

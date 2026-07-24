@@ -32,11 +32,17 @@
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
         "android.permission.ACCESS_NETWORK_STATE",
-        "android.permission.CAMERA",
         "android.permission.INTERNET",
+        "android.permission.WAKE_LOCK"
+      ],
+      "blockedPermissions": [
+        "android.permission.BLUETOOTH",
+        "android.permission.CAMERA",
+        "android.permission.DETECT_SCREEN_CAPTURE",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
         "android.permission.SYSTEM_ALERT_WINDOW",
-        "android.permission.WAKE_LOCK",
-        "android.permission.BLUETOOTH"
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
       "package": "com.arben60.kapp"
     },
@@ -65,7 +71,6 @@
       "expo-video",
       "expo-audio",
       "expo-status-bar",
-      "@config-plugins/react-native-webrtc",
       "expo-iap"
     ],
     "experiments": {

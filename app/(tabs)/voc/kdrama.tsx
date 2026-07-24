@@ -75,7 +75,7 @@ const SCENES = [
     realLife:
       "À utiliser quand tu veux exprimer un sentiment sans être trop direct.",
     accent: COLORS.pink,
-    image: require("../../../assets/images/love.png"),
+    image: require("../../../assets/images/love.jpg"),
     dialogue: [
       {
         char: "Ji-soo",
@@ -159,7 +159,7 @@ const SCENES = [
     realLife:
       "Utile dans les situations sérieuses, au travail ou face à une critique.",
     accent: COLORS.cyan,
-    image: require("../../../assets/images/office.png"),
+    image: require("../../../assets/images/office.jpg"),
     dialogue: [
       {
         char: "Directeur",
@@ -244,7 +244,7 @@ const SCENES = [
     realLife:
       "Très naturel pour encourager quelqu’un ou célébrer un petit moment.",
     accent: COLORS.gold,
-    image: require("../../../assets/images/pocha.png"),
+    image: require("../../../assets/images/pocha.jpg"),
     dialogue: [
       {
         char: "Pil-Seung",

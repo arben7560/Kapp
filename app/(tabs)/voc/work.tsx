@@ -85,7 +85,7 @@ const SCENES = [
     description:
       "Donner son avis, demander une explication et participer avec respect.",
     accent: COLORS.corporateBlue,
-    image: require("../../../assets/images/businessmeeting.png"),
+    image: require("../../../assets/images/businessmeeting.jpg"),
     dialogue: [
       {
         char: "Moi",
@@ -198,7 +198,7 @@ const SCENES = [
     description:
       "Demander, confirmer et répondre avec une formule professionnelle.",
     accent: COLORS.executiveViolet,
-    image: require("../../../assets/images/businessmail.png"),
+    image: require("../../../assets/images/businessmail.jpg"),
     dialogue: [
       {
         char: "Moi",
@@ -312,7 +312,7 @@ const SCENES = [
     description:
       "Se présenter, répondre avec confiance et laisser une bonne impression.",
     accent: COLORS.premiumGold,
-    image: require("../../../assets/images/businessinterview.png"),
+    image: require("../../../assets/images/businessinterview.jpg"),
     dialogue: [
       {
         char: "Recruteur",

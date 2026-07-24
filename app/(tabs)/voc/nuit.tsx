@@ -70,7 +70,7 @@ const SCENES = [
     description: "Sous la tente orange, entre soju et anju.",
     cultureHint: "On sert souvent le verre des autres avant le sien.",
     accent: COLORS.sojuGreen,
-    image: require("../../../assets/images/pocha2.png"),
+    image: require("../../../assets/images/pocha2.jpg"),
     dialogue: [
       {
         char: "Ji-hun",
@@ -150,7 +150,7 @@ const SCENES = [
     description: "Libérer le stress dans une salle de karaoké privée.",
     cultureHint: "Le tambourin fait presque partie du rituel.",
     accent: COLORS.neonPurple,
-    image: require("../../../assets/images/noraebang.png"),
+    image: require("../../../assets/images/noraebang.jpg"),
     dialogue: [
       {
         char: "Sora",
@@ -231,7 +231,7 @@ const SCENES = [
     cultureHint:
       "2차 signifie passer à un autre endroit après le premier lieu.",
     accent: COLORS.warningOrange,
-    image: require("../../../assets/images/2cha.png"),
+    image: require("../../../assets/images/2cha.jpg"),
     dialogue: [
       {
         char: "Jun",

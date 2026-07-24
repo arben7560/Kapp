@@ -27,7 +27,7 @@ const COLORS = {
   muted: "rgba(255,255,255,0.60)",
 };
 
-const AIRPORT_IMAGE = require("../../assets/images/airport.png");
+const AIRPORT_IMAGE = require("../../assets/images/airport.jpg");
 
 type Expression = {
   word: string;

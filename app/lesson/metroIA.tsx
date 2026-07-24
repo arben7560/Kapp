@@ -34,9 +34,9 @@ import {
   getMetroMissionById,
   getMetroMissionLesson,
 } from "../../data/lesson/metro/metroMissions";
-import { useKoreanSpeechRecognition } from "../../hooks/useKoreanSpeechRecognition";
 import { useImmersiveMediaStatus } from "../../hooks/useImmersiveMediaStatus";
 import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
+import { useKoreanSpeechRecognition } from "../../hooks/useKoreanSpeechRecognition";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import {
@@ -45,14 +45,14 @@ import {
   recordMetroHelpRequest,
   recordMetroSpeechAttempt,
 } from "../../lib/metroConversationMemory";
-import { usePaywall } from "../../lib/paywall/PaywallProvider";
-import { buildProgressId } from "../../lib/progressIds";
 import {
   getMetroSpeechChoiceIntent,
   getMetroSpeechContextualStrings,
   matchMetroSpeechIntent,
   METRO_SPEECH_PILOT_MISSION_ID,
 } from "../../lib/metroSpeechIntents";
+import { usePaywall } from "../../lib/paywall/PaywallProvider";
+import { buildProgressId } from "../../lib/progressIds";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -65,14 +65,12 @@ const VIDEO_OVERSCAN_SCALE = 1;
 // ==================== VIDEOS ====================
 const iaTransferInfo = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_transfer_info.mp4");
 const iaRepeatTransferInfo = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_transfer_info.mp4");
-const iaRepeatTransferInfoShort = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_transfer_info_short.mp4");
 
 const iaExitInfo = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_exit_info.mp4");
 const iaRepeatExitInfo = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_exit_info.mp4");
-const iaRepeatExitInfoShort = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_exit_info_short.mp4");
 
 const iaEnd = require("../../assets/ai/metro/Hongik-to-Gangnam/ia_end.mp4");
-const metroBackground = require("../../assets/images/metrobg.png");
+const metroBackground = require("../../assets/images/metrobg.jpg");
 
 type VideoMap = Record<string, number>;
 
@@ -88,11 +86,9 @@ const hongikToGangnamVideos: VideoMap = {
 
   ia_transfer_info: iaTransferInfo,
   ia_repeat_transfer_info: iaRepeatTransferInfo,
-  ia_repeat_transfer_info_short: iaRepeatTransferInfoShort,
 
   ia_exit_info: iaExitInfo,
   ia_repeat_exit_info: iaRepeatExitInfo,
-  ia_repeat_exit_info_short: iaRepeatExitInfoShort,
 
   ia_exit_landmark_info: require("../../assets/ai/metro/Hongik-to-Gangnam/ia_exit_landmark_info.mp4"),
   ia_repeat_exit_landmark_info: require("../../assets/ai/metro/Hongik-to-Gangnam/ia_repeat_exit_landmark_info.mp4"),
@@ -353,7 +349,9 @@ export default function MetroIaScreen() {
   const { complete } = useStore();
 
   const insets = useSafeAreaInsets();
-  const responsive = useResponsiveLayout({ maxWidth: IMMERSIVE_CONTENT_MAX_WIDTH });
+  const responsive = useResponsiveLayout({
+    maxWidth: IMMERSIVE_CONTENT_MAX_WIDTH,
+  });
   const params = useLocalSearchParams();
   const mode = normalizeMode(params.mode as string | string[] | undefined);
   const missionId =
@@ -363,8 +361,7 @@ export default function MetroIaScreen() {
     getMetroMissionById(missionId) ??
     getMetroMissionById(DEFAULT_METRO_MISSION_ID);
   const isMetroSpeechPilot =
-    mode === "guided" &&
-    currentMission?.id === METRO_SPEECH_PILOT_MISSION_ID;
+    mode === "guided" && currentMission?.id === METRO_SPEECH_PILOT_MISSION_ID;
   const { hasPremiumAccess, isLoading: isPaywallLoading } = usePaywall();
   const canEnterMission =
     currentMission?.access !== "premium" || hasPremiumAccess;
@@ -409,7 +406,9 @@ export default function MetroIaScreen() {
   const [speechUiNodeId, setSpeechUiNodeId] = useState<string | null>(null);
   const [pendingSpeechChoice, setPendingSpeechChoice] =
     useState<DialogueChoice | null>(null);
-  const [lastIaVideoSource, setLastIaVideoSource] = useState<number | null>(null);
+  const [lastIaVideoSource, setLastIaVideoSource] = useState<number | null>(
+    null,
+  );
   const [isReplayingLastIa, setIsReplayingLastIa] = useState(false);
   const [conversationMemory, setConversationMemory] = useState(
     createMetroConversationMemory,
@@ -459,25 +458,28 @@ export default function MetroIaScreen() {
     });
   const avatarVideoHeight = avatarFrameHeight;
 
-  const goToNextNode = useCallback((node?: DialogueNode) => {
-    if (!node || !mountedRef.current) return;
+  const goToNextNode = useCallback(
+    (node?: DialogueNode) => {
+      if (!node || !mountedRef.current) return;
 
-    if (node.type === "ia") {
-      const source = node.videoSources?.[0] ?? node.videoSource ?? null;
-      if (source) setLastIaVideoSource(source);
-    }
+      if (node.type === "ia") {
+        const source = node.videoSources?.[0] ?? node.videoSource ?? null;
+        if (source) setLastIaVideoSource(source);
+      }
 
-    if (node.nextNodeId) {
-      const nextNode = currentScenario.nodes[node.nextNodeId];
-      const nextVideo =
-        nextNode?.videoSources?.[0] ?? nextNode?.videoSource ?? null;
-      if (nextVideo) setDisplayedVideoSource(nextVideo);
-      setCurrentNodeId(node.nextNodeId);
-    } else {
-      setIsSceneEnded(true);
-      if (isMetroSpeechPilot) setIsSummaryOpen(true);
-    }
-  }, [currentScenario, isMetroSpeechPilot]);
+      if (node.nextNodeId) {
+        const nextNode = currentScenario.nodes[node.nextNodeId];
+        const nextVideo =
+          nextNode?.videoSources?.[0] ?? nextNode?.videoSource ?? null;
+        if (nextVideo) setDisplayedVideoSource(nextVideo);
+        setCurrentNodeId(node.nextNodeId);
+      } else {
+        setIsSceneEnded(true);
+        if (isMetroSpeechPilot) setIsSummaryOpen(true);
+      }
+    },
+    [currentScenario, isMetroSpeechPilot],
+  );
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Route parameters select a new mission and require one atomic local reset.
@@ -699,24 +701,27 @@ export default function MetroIaScreen() {
     return () => clearTimeout(t);
   }, [currentNodeId]);
 
-  const handleChoice = useCallback((choice: DialogueChoice, delay = 320) => {
-    if (isTransitioning || isSceneEnded || isReplayingLastIa) return;
+  const handleChoice = useCallback(
+    (choice: DialogueChoice, delay = 320) => {
+      if (isTransitioning || isSceneEnded || isReplayingLastIa) return;
 
-    setIsTransitioning(true);
-    setSelectedChoiceId(choice.id);
+      setIsTransitioning(true);
+      setSelectedChoiceId(choice.id);
 
-    setTimeout(() => {
-      if (!mountedRef.current) return;
+      setTimeout(() => {
+        if (!mountedRef.current) return;
 
-      const nextNode = currentScenario.nodes[choice.nextNodeId];
-      const nextVideo =
-        nextNode?.videoSources?.[0] ?? nextNode?.videoSource ?? null;
-      if (nextVideo) setDisplayedVideoSource(nextVideo);
-      setCurrentNodeId(choice.nextNodeId);
-      setSelectedChoiceId(null);
-      setIsTransitioning(false);
-    }, delay);
-  }, [currentScenario, isReplayingLastIa, isSceneEnded, isTransitioning]);
+        const nextNode = currentScenario.nodes[choice.nextNodeId];
+        const nextVideo =
+          nextNode?.videoSources?.[0] ?? nextNode?.videoSource ?? null;
+        if (nextVideo) setDisplayedVideoSource(nextVideo);
+        setCurrentNodeId(choice.nextNodeId);
+        setSelectedChoiceId(null);
+        setIsTransitioning(false);
+      }, delay);
+    },
+    [currentScenario, isReplayingLastIa, isSceneEnded, isTransitioning],
+  );
 
   const isUserChoice = currentNode?.type === "user_choice";
   const speechChoices = useMemo(
@@ -1298,7 +1303,9 @@ export default function MetroIaScreen() {
                       feedback={displayedSpeechFeedback}
                       interactionDisabled={isReplayingLastIa || isTransitioning}
                       interactionDisabledLabel={
-                        isReplayingLastIa ? "Écoute l’interlocuteur…" : undefined
+                        isReplayingLastIa
+                          ? "Écoute l’interlocuteur…"
+                          : undefined
                       }
                       intentionLabels={speechChoices.map((choice) =>
                         choice.id === "choose_hongik_direction"
@@ -1419,8 +1426,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.06)",
   },
 
-  backTxt: {
-  },
+  backTxt: {},
 
   aiIntroText: {
     marginBottom: 0,
@@ -1490,8 +1496,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
-  aiFr: {
-  },
+  aiFr: {},
 
   interactionSection: {
     minHeight: 220,
@@ -1550,8 +1555,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
 
-  choiceFr: {
-  },
+  choiceFr: {},
 
   waitingCard: {
     borderRadius: 22,
@@ -1579,11 +1583,9 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
 
-  waitingTxt: {
-  },
+  waitingTxt: {},
 
-  waitingSub: {
-  },
+  waitingSub: {},
 
   endCard: {
     borderRadius: 24,
@@ -1616,8 +1618,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  endActionPrimaryText: {
-  },
+  endActionPrimaryText: {},
 
   endActionSecondary: {
     borderRadius: 18,
@@ -1629,6 +1630,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  endActionSecondaryText: {
-  },
+  endActionSecondaryText: {},
 });

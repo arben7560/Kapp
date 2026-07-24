@@ -1,0 +1,16 @@
+Starting project at C:\Users\Peposi\Documents\Kapp
+Logs: C:\Users\Peposi\Documents\Kapp\.expo\dev\logs\start.log
+🔍 [expo-iap] Config values: horizonAppId=undefined, isHorizonEnabled=false, isOnsideEnabled=false
+📦 [expo-iap] Using OpenIAP from CocoaPods
+React Compiler enabled
+Starting Metro Bundler
+
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+| 🔍 [expo-iap] Config values: horizonAppId=undefined, isHorizonEnabled=false, isOnsideEnabled=false
+| 🔍 [expo-iap] Config values: horizonAppId=undefined, isHorizonEnabled=false, isOnsideEnabled=false
+| 📦 [expo-iap] Using OpenIAP from CocoaPods
+| 📦 [expo-iap] Using OpenIAP from CocoaPods
+λ Bundled 204671ms node_modules\expo\node_modules\@expo\cli\node_modules\@expo\router-server\node\render.js (3609 modules)
+Web Bundled 225640ms node_modules\expo-router\entry.js (3576 modules)
+Web Bundled 127895ms node_modules\expo-router\entry.js (3580 modules)

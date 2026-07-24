@@ -10,7 +10,7 @@ import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
 
-const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.png");
+const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
 const READINGS = [
   { text: "아이와 여우", guide: "아이 + 와 + 여우", meaning: "L’enfant et le renard" },
   { text: "사과와 우유", guide: "사과 + 와 + 우유", meaning: "Une pomme et du lait" },

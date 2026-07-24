@@ -23,7 +23,7 @@ import { SeoulMidnightGlass } from "../../../constants/theme";
 import { HANGUL_MODULES as HANGUL_CURRICULUM_MODULES } from "../../../data/hangul/curriculum";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
 
-const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.png");
+const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — SEOUL MIDNIGHT GLASS

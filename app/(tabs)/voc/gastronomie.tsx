@@ -114,7 +114,7 @@ const SCENES: Scene[] = [
     description:
       "L'art de griller la viande et de partager les accompagnements.",
     accent: COLORS.chiliRed,
-    image: require("../../../assets/images/bbq.png"),
+    image: require("../../../assets/images/bbq.jpg"),
     dialogue: [
       {
         char: "Moi",
@@ -217,7 +217,7 @@ const SCENES: Scene[] = [
     koreanTitle: "길거리 음식",
     description: "Explorer les saveurs rapides et épicées de Myeongdong.",
     accent: COLORS.sunsetOrange,
-    image: require("../../../assets/images/streetfood.png"),
+    image: require("../../../assets/images/streetfood.jpg"),
     dialogue: [
       {
         char: "Moi",
@@ -320,7 +320,7 @@ const SCENES: Scene[] = [
     koreanTitle: "카페 투어 (Tournée des cafés)",
     description: "Détente dans un café esthétique de Yeonnam-dong.",
     accent: COLORS.matchaGreen,
-    image: require("../../../assets/images/culturecafe.png"),
+    image: require("../../../assets/images/culturecafe.jpg"),
     dialogue: [
       {
         char: "Moi",

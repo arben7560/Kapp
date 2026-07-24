@@ -21,7 +21,7 @@ import { ABSOLUTE_FILL } from "../../../constants/layout";
 import { SeoulMidnightGlass } from "../../../constants/theme";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
 
-const BACKGROUND_SOURCE = require("../../../assets/images/vocabulaire.png");
+const BACKGROUND_SOURCE = require("../../../assets/images/vocabulaire.jpg");
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — SEOUL MIDNIGHT GLASS

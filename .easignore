@@ -2,7 +2,7 @@
 .git/
 .github/
 
-# Dépendances installées à nouveau par EAS
+# Dépendances réinstallées par EAS
 node_modules/
 
 # Builds, audits et fichiers générés
@@ -38,3 +38,11 @@ temp/
 # Fichiers Windows
 Thumbs.db
 Desktop.ini
+
+# Caches et sorties Android
+android/.gradle/
+android/build/
+android/app/build/
+android/.cxx/
+android/app/.cxx/
+android/local.properties

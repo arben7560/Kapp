@@ -1,0 +1,42 @@
+
+C:\Users\Peposi\Documents\Kapp\android>if "Windows_NT" == "Windows_NT" setlocal
+
+C:\Users\Peposi\Documents\Kapp\android>set DIRNAME=C:\Users\Peposi\Documents\Kapp\android\ 
+
+C:\Users\Peposi\Documents\Kapp\android>if "C:\Users\Peposi\Documents\Kapp\android\" == "" set DIRNAME=. 
+
+C:\Users\Peposi\Documents\Kapp\android>set APP_BASE_NAME=gradlew 
+
+C:\Users\Peposi\Documents\Kapp\android>set APP_HOME=C:\Users\Peposi\Documents\Kapp\android\ 
+
+C:\Users\Peposi\Documents\Kapp\android>for %i in ("C:\Users\Peposi\Documents\Kapp\android\") do set APP_HOME=%~fi 
+
+C:\Users\Peposi\Documents\Kapp\android>set APP_HOME=C:\Users\Peposi\Documents\Kapp\android\ 
+
+C:\Users\Peposi\Documents\Kapp\android>set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m" 
+
+C:\Users\Peposi\Documents\Kapp\android>if defined JAVA_HOME goto findJavaFromJavaHome 
+
+C:\Users\Peposi\Documents\Kapp\android>set JAVA_HOME=C:\Program Files\Android\Android Studio\jbr 
+
+C:\Users\Peposi\Documents\Kapp\android>set JAVA_EXE=C:\Program Files\Android\Android Studio\jbr/bin/java.exe 
+
+C:\Users\Peposi\Documents\Kapp\android>if exist "C:\Program Files\Android\Android Studio\jbr/bin/java.exe" goto execute 
+
+C:\Users\Peposi\Documents\Kapp\android>"C:\Program Files\Android\Android Studio\jbr/bin/java.exe" "-Xmx64m" "-Xms64m"   "-Dorg.gradle.appname=gradlew" -jar "C:\Users\Peposi\Documents\Kapp\android\\gradle\wrapper\gradle-wrapper.jar" assembleRelease --console=plain --no-daemon 
+Downloading https://services.gradle.org/distributions/gradle-8.14.3-bin.zip
+
+
+C:\Users\Peposi\Documents\Kapp\android>if 1 EQU 0 goto mainEnd 
+
+C:\Users\Peposi\Documents\Kapp\android>rem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of 
+
+C:\Users\Peposi\Documents\Kapp\android>rem the _cmd.exe /c_ return code! 
+
+C:\Users\Peposi\Documents\Kapp\android>set EXIT_CODE=1 
+
+C:\Users\Peposi\Documents\Kapp\android>if 1 EQU 0 set EXIT_CODE=1 
+
+C:\Users\Peposi\Documents\Kapp\android>if not "" == "" exit 1 
+
+C:\Users\Peposi\Documents\Kapp\android>exit /b 1 

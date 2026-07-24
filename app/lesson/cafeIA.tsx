@@ -76,16 +76,11 @@ const VIDEO_OVERSCAN_SCALE = 1;
 const CAFE_STEPS = ["Accueil", "Choix", "Paiement", "Final"] as const;
 
 // ==================== VIDEOS ====================
-const welcomeCafeReal = require("../../assets/ai/cafe/welcomeCafeReal.mp4");
 const orderConfirmationJuiceReal = require("../../assets/ai/cafe/orderConfirmationJuiceReal.mp4");
 const orderConfirmationCakeReal = require("../../assets/ai/cafe/orderConfirmationCakeReal.mp4");
 const pricePaimentChooseVideo = require("../../assets/ai/cafe/pricePaimentChoose.mp4");
-const byCashReceiptReal = require("../../assets/ai/cafe/byCashReceiptReal.mp4");
-const byCardReceiptReal = require("../../assets/ai/cafe/byCardReceiptReal.mp4");
-const takeOutThanksReal = require("../../assets/ai/cafe/takeOutThanksReal.mp4");
-const jingdonbelReal = require("../../assets/ai/cafe/jingdonbelReal.mp4");
 const cafeIdleVideo = require("../../assets/ai/cafe/welcomeCafe.mp4");
-const cafeBackground = require("../../assets/images/cafe.png");
+const cafeBackground = require("../../assets/images/cafe.jpg");
 
 type ModeType = "guided" | "real";
 
@@ -159,9 +154,6 @@ function attachRealVideosToScenario(
     clonedNodes[nodeId] = { ...node };
   }
 
-  if (clonedNodes.real_welcome)
-    clonedNodes.real_welcome.videoSources = [welcomeCafeReal];
-
   if (clonedNodes.real_confirm)
     clonedNodes.real_confirm.videoSources = [orderConfirmationJuiceReal];
 
@@ -173,24 +165,6 @@ function attachRealVideosToScenario(
 
   if (clonedNodes.real_payment_takeout)
     clonedNodes.real_payment_takeout.videoSources = [pricePaimentChooseVideo];
-
-  if (clonedNodes.real_cash_done_here)
-    clonedNodes.real_cash_done_here.videoSources = [byCashReceiptReal];
-
-  if (clonedNodes.real_cash_done_takeout)
-    clonedNodes.real_cash_done_takeout.videoSources = [byCashReceiptReal];
-
-  if (clonedNodes.real_card_done_here)
-    clonedNodes.real_card_done_here.videoSources = [byCardReceiptReal];
-
-  if (clonedNodes.real_card_done_takeout)
-    clonedNodes.real_card_done_takeout.videoSources = [byCardReceiptReal];
-
-  if (clonedNodes.real_takeout_end)
-    clonedNodes.real_takeout_end.videoSources = [takeOutThanksReal];
-
-  if (clonedNodes.real_here_end)
-    clonedNodes.real_here_end.videoSources = [jingdonbelReal];
 
   return { ...scenario, nodes: clonedNodes };
 }

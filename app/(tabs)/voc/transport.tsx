@@ -57,9 +57,9 @@ const COLORS = {
   muted: "rgba(255,255,255,0.60)",
 };
 
-const METRO_BG = require("../../../assets/images/bg-metro-station.png");
-const TAXI_BG = require("../../../assets/images/bg-taxi-night.png");
-const BUKCHON_BG = require("../../../assets/images/bg-bukchon-alley.png");
+const METRO_BG = require("../../../assets/images/bg-metro-station.jpg");
+const TAXI_BG = require("../../../assets/images/bg-taxi-night.jpg");
+const BUKCHON_BG = require("../../../assets/images/bg-bukchon-alley.jpg");
 
 const METRO_AUDIO = {
   message1: require("../../../assets/audio/voc/Metro/metro-bulle-1.mp3"),

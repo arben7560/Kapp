@@ -1,5 +1,7 @@
-import { Redirect, Stack, usePathname } from "expo-router";
-import { useFonts } from "expo-font";
+import {
+  NotoSansKR_400Regular,
+  NotoSansKR_700Bold,
+} from "@expo-google-fonts/noto-sans-kr";
 import {
   Outfit_300Light,
   Outfit_400Regular,
@@ -8,10 +10,9 @@ import {
   Outfit_700Bold,
   Outfit_900Black,
 } from "@expo-google-fonts/outfit";
-import {
-  NotoSansKR_400Regular,
-  NotoSansKR_700Bold,
-} from "@expo-google-fonts/noto-sans-kr";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFonts } from "expo-font";
+import { Redirect, Stack, router, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React from "react";
 import { StoreProvider } from "../_store";
@@ -23,8 +24,10 @@ import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard"
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
-const forceFontFallback =
-  process.env.EXPO_PUBLIC_FORCE_FONT_FALLBACK === "1";
+const ONBOARDING_KEY = "kapp_onboarding_completed";
+
+const forceFontFallback = process.env.EXPO_PUBLIC_FORCE_FONT_FALLBACK === "1";
+
 const enableHiddenRoutesQa =
   __DEV__ && process.env.EXPO_PUBLIC_ENABLE_HIDDEN_ROUTES_QA === "1";
 
@@ -49,10 +52,12 @@ const RELEASE_HIDDEN_PATHS = new Set([
   "/voc/objets",
   "/voc/voyage",
 ]);
+
 const RELEASE_HIDDEN_PREFIXES = ["/classificateur", "/immersion"] as const;
 
 function ReleaseRouteGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+
   if (enableHiddenRoutesQa) {
     return children;
   }
@@ -69,48 +74,50 @@ function ReleaseRouteGuard({ children }: { children: React.ReactNode }) {
   return children;
 }
 
-/*const SCREEN_CAPTURE_PROTECTION_KEY = "k-app-global-protection";
+function InitialOnboardingRoute() {
+  const pathname = usePathname();
+  const hasCheckedInitialRoute = React.useRef(false);
 
-function ScreenCaptureProtection() {
   React.useEffect(() => {
-    if (Platform.OS === "web") {
+    if (hasCheckedInitialRoute.current) {
       return;
     }
 
-    void ScreenCapture.preventScreenCaptureAsync(
-      SCREEN_CAPTURE_PROTECTION_KEY
-    ).catch((error) => {
-      console.warn("Screen capture protection could not be enabled.", error);
-    });
+    let active = true;
 
-    if (Platform.OS === "ios") {
-      void ScreenCapture.enableAppSwitcherProtectionAsync().catch((error) => {
-        console.warn("App switcher protection could not be enabled.", error);
-      });
-    }
+    const checkOnboarding = async () => {
+      try {
+        const completed = await AsyncStorage.getItem(ONBOARDING_KEY);
 
-    return () => {
-      void ScreenCapture.allowScreenCaptureAsync(
-        SCREEN_CAPTURE_PROTECTION_KEY
-      ).catch((error) => {
-        console.warn("Screen capture protection could not be disabled.", error);
-      });
+        if (!active) {
+          return;
+        }
 
-      if (Platform.OS === "ios") {
-        void ScreenCapture.disableAppSwitcherProtectionAsync().catch(
-          (error) => {
-            console.warn(
-              "App switcher protection could not be disabled.",
-              error
-            );
-          }
-        );
+        hasCheckedInitialRoute.current = true;
+
+        if (completed !== "true" && pathname !== "/onboarding") {
+          router.replace("/onboarding");
+        }
+      } catch (error) {
+        hasCheckedInitialRoute.current = true;
+
+        console.warn("Unable to read the onboarding state.", error);
+
+        if (active && pathname !== "/onboarding") {
+          router.replace("/onboarding");
+        }
       }
     };
-  }, []);
+
+    void checkOnboarding();
+
+    return () => {
+      active = false;
+    };
+  }, [pathname]);
 
   return null;
-}*/
+}
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
@@ -126,12 +133,14 @@ export default function RootLayout() {
 
   useImmersionActiveTime();
 
-  const customFontsAvailable =
-    fontsLoaded && !fontError && !forceFontFallback;
-  const appReady = fontsLoaded || !!fontError || forceFontFallback;
+  const customFontsAvailable = fontsLoaded && !fontError && !forceFontFallback;
+
+  const appReady = fontsLoaded || Boolean(fontError) || forceFontFallback;
 
   React.useEffect(() => {
-    if (!fontError && !forceFontFallback) return;
+    if (!fontError && !forceFontFallback) {
+      return;
+    }
 
     console.warn(
       forceFontFallback
@@ -142,7 +151,9 @@ export default function RootLayout() {
   }, [fontError]);
 
   React.useEffect(() => {
-    if (!appReady) return;
+    if (!appReady) {
+      return;
+    }
 
     void SplashScreen.hideAsync().catch(() => {});
   }, [appReady]);
@@ -157,10 +168,12 @@ export default function RootLayout() {
         <DailyStreakProvider>
           <PaywallProvider>
             <SubscriptionAccessGuard />
-            {/* <ScreenCaptureProtection /> */}
+
             <ReleaseRouteGuard>
+              <InitialOnboardingRoute />
+
               <Stack
-                initialRouteName="index"
+                initialRouteName="onboarding"
                 screenOptions={{ headerShown: false }}
               >
                 <Stack.Screen name="index" />

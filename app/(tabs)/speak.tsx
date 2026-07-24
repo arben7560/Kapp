@@ -20,7 +20,7 @@ import { AppText } from "../../components/app-text";
 import { ModuleCard } from "../../components/ModuleCard";
 import { ABSOLUTE_FILL } from "../../constants/layout";
 
-const BACKGROUND_SOURCE = require("../../assets/images/speak.png");
+const BACKGROUND_SOURCE = require("../../assets/images/speak.jpg");
 const SPEAK_BACKGROUND_DARKNESS = 0.72;
 
 const BG_DEEP = "#020306";
@@ -29,11 +29,11 @@ const CYAN = "#22D3EE";
 const ORANGE = "#FB923C";
 
 const ASSETS = {
-  cafe: require("../../assets/images/cafeIA.png"),
-  metro: require("../../assets/images/metroIA.png"),
-  restaurant: require("../../assets/images/restaurantIA.png"),
-  airport: require("../../assets/images/airport.png"),
-  shopping: require("../../assets/images/shopping.png"),
+  cafe: require("../../assets/images/cafeIA.jpg"),
+  metro: require("../../assets/images/metroIA.jpg"),
+  restaurant: require("../../assets/images/restaurantIA.jpg"),
+  airport: require("../../assets/images/airport.jpg"),
+  shopping: require("../../assets/images/shopping.jpg"),
 };
 type ThemeKey = "cafe" | "metro" | "restaurant" | "airport" | "shopping";
 type TextLessonRoute =

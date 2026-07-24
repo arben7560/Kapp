@@ -17,7 +17,7 @@ import {
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
 import { shuffleArray } from "../../../lib/choiceOrder";
 
-const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.png");
+const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
 const createAssessmentQuestions = () =>
   HANGUL_ASSESSMENT_QUESTIONS.map((question) => ({
     ...question,

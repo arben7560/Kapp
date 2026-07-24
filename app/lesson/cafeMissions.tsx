@@ -25,7 +25,7 @@ import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
-const cafeBackground = require("../../assets/images/cafe.png");
+const cafeBackground = require("../../assets/images/cafe.jpg");
 
 const BG_DEEP = "#050508";
 const TXT = "rgba(255,255,255,0.98)";

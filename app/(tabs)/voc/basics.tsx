@@ -106,7 +106,7 @@ const SCENES: Scene[] = [
     koreanTitle: "첫 만남 (Cheot Mannam)",
     description: "Saluer poliment et se présenter pour la première fois.",
     accent: COLORS.calmBlue,
-    image: require("../../../assets/images/meet.png"),
+    image: require("../../../assets/images/meet.jpg"),
     dialogue: [
       {
         char: "Moi",
@@ -195,7 +195,7 @@ const SCENES: Scene[] = [
     koreanTitle: "예의 (Yei)",
     description: "Demander un prix poliment dans une boutique.",
     accent: COLORS.softTeal,
-    image: require("../../../assets/images/meet.png"),
+    image: require("../../../assets/images/meet.jpg"),
     dialogue: [
       {
         char: "Moi",
@@ -284,7 +284,7 @@ const SCENES: Scene[] = [
     koreanTitle: "사과 (Sagwa)",
     description: "Exprimer des regrets de manière appropriée.",
     accent: COLORS.accentOrange,
-    image: require("../../../assets/images/meet.png"),
+    image: require("../../../assets/images/meet.jpg"),
     dialogue: [
       {
         char: "Moi",

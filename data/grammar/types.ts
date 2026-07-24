@@ -106,6 +106,7 @@ export const GRAMMAR_CHAPTER_IDS = [
 export type GrammarChapterId = (typeof GRAMMAR_CHAPTER_IDS)[number];
 export type GrammarLevel = "pre-a1" | "a1" | "early-a2-receptive";
 export type GrammarA1Usage = "productive" | "receptive";
+export type GrammarAccess = "free" | "premium";
 
 export type GrammarContentRole =
   | "discovery"
@@ -231,6 +232,7 @@ export type GrammarStage = {
   id: GrammarStageId;
   number: number;
   chapterId: GrammarChapterId;
+  access: GrammarAccess;
   title: string;
   communicativeGoal: string;
   conceptIds: readonly GrammarConceptId[];

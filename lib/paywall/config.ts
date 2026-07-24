@@ -1,9 +1,16 @@
 // Preserve the development default while allowing locked-state QA against the
 // same native build and route graph.
-export const DEV_UNLOCK_ALL =
-  process.env.EXPO_PUBLIC_DEV_UNLOCK_ALL !== "0";
+const IS_DEVELOPMENT =
+  typeof __DEV__ === "boolean"
+    ? __DEV__
+    : process.env.NODE_ENV !== "production";
 
-export const ENABLE_NATIVE_IAP = false;
+export const DEV_UNLOCK_ALL =
+  IS_DEVELOPMENT && process.env.EXPO_PUBLIC_DEV_UNLOCK_ALL !== "0";
+
+export const ENABLE_NATIVE_IAP =
+  process.env.EXPO_PUBLIC_ENABLE_NATIVE_IAP === "1" ||
+  (!IS_DEVELOPMENT && process.env.EXPO_PUBLIC_ENABLE_NATIVE_IAP !== "0");
 
 export const PREMIUM_ENTITLEMENT_ID = "premium_all_access";
 

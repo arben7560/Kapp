@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
+import { StatusBadge } from "../../../components/ui/status-badge";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 import { SeoulMidnightGlass } from "../../../constants/theme";
 import {
@@ -34,6 +35,8 @@ import {
   GRAMMAR_PRACTICE_PASS_RATIO,
   advanceGrammarPracticeSession,
   answerGrammarPracticeQuestion,
+  canAccessGrammarStage,
+  canRepeatGrammarPractice,
   createGrammarPracticeSession,
   getGrammarStageAccess,
   markGrammarSessionStreakRecorded,
@@ -41,9 +44,10 @@ import {
   setGrammarActiveSession,
   setGrammarPracticeDraft,
 } from "../../../lib/grammar";
+import { usePaywall } from "../../../lib/paywall/PaywallProvider";
 import { buildProgressId } from "../../../lib/progressIds";
 
-const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.png");
+const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
 const ACCENT = "#2DD4BF";
 const SUCCESS = "#86EFAC";
 const ERROR = "#FDA4AF";
@@ -119,6 +123,10 @@ export default function GrammarLessonScreen() {
   const validStageId = isGrammarStageId(rawStageId) ? rawStageId : undefined;
   const stageId = validStageId ?? GRAMMAR_STAGE_IDS[0];
   const { progress, updateGrammarProgress, complete, setTrack } = useStore();
+  const {
+    hasPremiumAccess: isPremium,
+    isLoading: isPaywallLoading,
+  } = usePaywall();
   const { completeDailyActivity } = useDailyStreak();
   const responsive = useResponsiveLayout({ maxWidth: 900 });
   const completionInFlight = React.useRef(new Set<string>());
@@ -127,6 +135,7 @@ export default function GrammarLessonScreen() {
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
   const stageProgress = progress.grammarProgress.stages[stageId];
   const session = stageProgress?.activeSession;
+  const premiumLocked = !canAccessGrammarStage(stage, isPremium);
   const completedContentRefs = new Set(
     CONTENT_REFS.filter((contentRef) => {
       const normalizedId = contentRef.id.replace(/[^a-zA-Z0-9]+/gu, "_").toLowerCase();
@@ -136,13 +145,20 @@ export default function GrammarLessonScreen() {
   const access = getGrammarStageAccess(progress.grammarProgress, stageId, completedContentRefs);
   const completionRecorded = !!session && stageProgress?.completedSessionIds.includes(session.id);
   const streakRecorded = !!session && stageProgress?.streakSessionIds.includes(session.id);
-  const contentState = !access.canOpen
+  const contentState = premiumLocked
+    ? "premium-locked"
+    : !access.canOpen
     ? "locked"
     : session?.completedAt
       ? "result"
       : session
         ? "practice"
-        : "lesson";
+      : "lesson";
+
+  React.useEffect(() => {
+    if (isPaywallLoading || !premiumLocked) return;
+    router.replace("/premium");
+  }, [isPaywallLoading, premiumLocked]);
 
   React.useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
@@ -153,6 +169,7 @@ export default function GrammarLessonScreen() {
       !session?.completedAt ||
       !completionRecorded ||
       streakRecorded ||
+      premiumLocked ||
       completionInFlight.current.has(session.id)
     ) {
       return;
@@ -180,6 +197,7 @@ export default function GrammarLessonScreen() {
     complete,
     completeDailyActivity,
     completionRecorded,
+    premiumLocked,
     session,
     stageId,
     streakRecorded,
@@ -191,11 +209,34 @@ export default function GrammarLessonScreen() {
   }, [updateGrammarProgress]);
 
   const startPractice = React.useCallback(() => {
+    if (!canRepeatGrammarPractice(stage, isPremium)) {
+      router.push("/premium");
+      return;
+    }
     const attemptNumber = (stageProgress?.attempts ?? 0) + 1;
     const nextSession = createGrammarPracticeSession(stageId, attemptNumber);
     setTrack("grammar");
     updateGrammarProgress((current) => setGrammarActiveSession(current, nextSession));
-  }, [setTrack, stageId, stageProgress?.attempts, updateGrammarProgress]);
+  }, [
+    isPremium,
+    setTrack,
+    stage,
+    stageId,
+    stageProgress?.attempts,
+    updateGrammarProgress,
+  ]);
+
+  const openStage = React.useCallback((nextStageId: GrammarStageId) => {
+    const nextStage = GRAMMAR_STAGE_BY_ID[nextStageId];
+    if (!canAccessGrammarStage(nextStage, isPremium)) {
+      router.push("/premium");
+      return;
+    }
+    router.replace({
+      pathname: "/grammar/[stageId]",
+      params: { stageId: nextStageId },
+    } as never);
+  }, [isPremium]);
 
   const chooseAnswer = React.useCallback((answer: GrammarPracticeAnswer) => {
     if (!session) return;
@@ -222,11 +263,20 @@ export default function GrammarLessonScreen() {
   }, [replaceSession, session, updateGrammarProgress]);
 
   const renderContent = () => {
+    if (premiumLocked) {
+      return <PremiumLockedLesson stageId={stageId} />;
+    }
     if (!access.canOpen) {
       return <LockedLesson stageId={stageId} />;
     }
     if (session?.completedAt) {
-      return <LessonResult session={session} onRetry={startPractice} />;
+      return (
+        <LessonResult
+          session={session}
+          onRetry={startPractice}
+          onOpenStage={openStage}
+        />
+      );
     }
     if (session) {
       return (
@@ -239,7 +289,15 @@ export default function GrammarLessonScreen() {
         />
       );
     }
-    return <LessonExplanation stageId={stageId} isTablet={responsive.isTablet} onStart={startPractice} />;
+    return (
+      <LessonExplanation
+        stageId={stageId}
+        isPremium={isPremium}
+        isTablet={responsive.isTablet}
+        onOpenPremium={() => router.push("/premium")}
+        onStart={startPractice}
+      />
+    );
   };
 
   if (!validStageId) {
@@ -279,9 +337,18 @@ export default function GrammarLessonScreen() {
             </View>
 
             <View style={styles.lessonHeader}>
-              <AppText variant="sectionLabel" style={styles.accentText}>
-                {stage.status === "pre-a1" ? "NIVEAU A0" : "NIVEAU A1"} · ÉTAPE {stage.number}
-              </AppText>
+              <View style={styles.lessonMetaRow}>
+                <AppText variant="sectionLabel" style={stage.access === "premium" ? styles.premiumText : styles.accentText}>
+                  {stage.status === "pre-a1" ? "NIVEAU A0" : "NIVEAU A1"} · ÉTAPE {stage.number}
+                </AppText>
+                <StatusBadge
+                  label={stage.access === "premium" ? "PREMIUM" : "GRATUIT"}
+                  tone={stage.access === "premium" ? "premium" : "accent"}
+                  appearance="soft"
+                  size="compact"
+                  accentColor={ACCENT}
+                />
+              </View>
               <AppText accessibilityRole="header" variant={responsive.isCompact ? "featureTitle" : "screenTitle"}>
                 {stage.title}
               </AppText>
@@ -299,7 +366,19 @@ export default function GrammarLessonScreen() {
   );
 }
 
-function LessonExplanation({ stageId, isTablet, onStart }: { stageId: GrammarStageId; isTablet: boolean; onStart: () => void }) {
+function LessonExplanation({
+  stageId,
+  isPremium,
+  isTablet,
+  onOpenPremium,
+  onStart,
+}: {
+  stageId: GrammarStageId;
+  isPremium: boolean;
+  isTablet: boolean;
+  onOpenPremium: () => void;
+  onStart: () => void;
+}) {
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
   const concepts = stage.conceptIds
     .map((conceptId) => GRAMMAR_CONCEPTS.find((concept) => concept.id === conceptId))
@@ -317,6 +396,7 @@ function LessonExplanation({ stageId, isTablet, onStart }: { stageId: GrammarSta
   const advancedForms = isGeneralReview
     ? []
     : concepts.flatMap((concept) => concept.advancedRecognitionForms ?? []);
+  const visibleAdvancedForms = isPremium ? advancedForms : [];
 
   return (
     <View style={styles.contentStack}>
@@ -376,7 +456,7 @@ function LessonExplanation({ stageId, isTablet, onStart }: { stageId: GrammarSta
         </View>
       </View>
 
-      {receptiveConcepts.length > 0 ? (
+      {receptiveConcepts.length > 0 || visibleAdvancedForms.length > 0 ? (
         <View style={styles.receptiveBox}>
           <AppText variant="sectionLabel" style={styles.pinkText}>À RECONNAÎTRE</AppText>
           {receptiveConcepts.map((concept) => (
@@ -385,13 +465,40 @@ function LessonExplanation({ stageId, isTablet, onStart }: { stageId: GrammarSta
               <AppText variant="bodySecondary" tone="muted">{concept.shortFunction}</AppText>
             </View>
           ))}
-          {advancedForms.map((form) => (
+          {visibleAdvancedForms.map((form) => (
             <View key={form.form} style={styles.receptiveRow}>
               <AppText variant="bodyStrong">{form.form}</AppText>
               <AppText variant="bodySecondary" tone="muted">{form.shortFunction}</AppText>
             </View>
           ))}
         </View>
+      ) : null}
+
+      {!isPremium && advancedForms.length > 0 ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Repères A2 Premium verrouillés. Ouvre l’offre Premium"
+          accessibilityHint="Ouvre l’offre Premium"
+          onPress={onOpenPremium}
+          style={({ pressed }) => [
+            styles.advancedLockedCard,
+            pressed && styles.pressed,
+          ]}
+        >
+          <StatusBadge
+            label="A2 · PREMIUM"
+            tone="premium"
+            appearance="soft"
+            size="compact"
+          />
+          <View style={styles.advancedLockedCopy}>
+            <AppText variant="bodyStrong">Repères avancés à reconnaître</AppText>
+            <AppText variant="bodySecondary" tone="muted">
+              Débloque les nuances A2 réceptives et leurs exemples.
+            </AppText>
+          </View>
+          <AppText aria-hidden variant="symbol" style={styles.premiumText}>⌁</AppText>
+        </Pressable>
       ) : null}
 
       <BlurView intensity={55} tint="dark" style={styles.practiceLaunchCard}>
@@ -579,7 +686,15 @@ function FeedbackCard({
   );
 }
 
-function LessonResult({ session, onRetry }: { session: GrammarPracticeSession; onRetry: () => void }) {
+function LessonResult({
+  session,
+  onRetry,
+  onOpenStage,
+}: {
+  session: GrammarPracticeSession;
+  onRetry: () => void;
+  onOpenStage: (stageId: GrammarStageId) => void;
+}) {
   const stage = GRAMMAR_STAGE_BY_ID[session.stageId];
   const stageIndex = GRAMMAR_STAGE_IDS.indexOf(session.stageId);
   const nextStageId = GRAMMAR_STAGE_IDS[stageIndex + 1];
@@ -633,11 +748,14 @@ function LessonResult({ session, onRetry }: { session: GrammarPracticeSession; o
       ) : null}
 
       <View style={styles.resultActions}>
-        <PrimaryButton label={passed ? "REFAIRE LA LEÇON" : "RÉESSAYER"} onPress={onRetry} />
+        <PrimaryButton
+          label={passed ? "REFAIRE LA LEÇON" : "RÉESSAYER"}
+          onPress={onRetry}
+        />
         {passed && nextStageId ? (
           <SecondaryButton
             label="ÉTAPE SUIVANTE"
-            onPress={() => router.replace({ pathname: "/grammar/[stageId]", params: { stageId: nextStageId } } as never)}
+            onPress={() => onOpenStage(nextStageId)}
           />
         ) : null}
         <Pressable onPress={() => router.replace("/grammar" as never)} style={styles.textButton}>
@@ -662,6 +780,29 @@ function LockedLesson({ stageId }: { stageId: GrammarStageId }) {
   );
 }
 
+function PremiumLockedLesson({ stageId }: { stageId: GrammarStageId }) {
+  const stage = GRAMMAR_STAGE_BY_ID[stageId];
+  return (
+    <BlurView intensity={58} tint="dark" style={[styles.lockedCard, styles.premiumLockedCard]}>
+      <StatusBadge
+        label="PREMIUM"
+        tone="premium"
+        appearance="soft"
+        size="compact"
+      />
+      <AppText variant="sectionTitle">{stage.title}</AppText>
+      <AppText variant="bodySecondary" tone="muted">
+        Cette leçon {stage.status === "a1" ? "A1" : "avancée"} et ses exercices approfondis sont inclus dans K-App Premium.
+      </AppText>
+      <PrimaryButton
+        label="DÉCOUVRIR PREMIUM"
+        onPress={() => router.replace("/premium")}
+        premium
+      />
+    </BlurView>
+  );
+}
+
 function Metric({ value, label }: { value: string; label: string }) {
   return (
     <View style={styles.metric}>
@@ -671,16 +812,39 @@ function Metric({ value, label }: { value: string; label: string }) {
   );
 }
 
-function PrimaryButton({ label, onPress, disabled = false }: { label: string; onPress: () => void; disabled?: boolean }) {
+function PrimaryButton({
+  label,
+  onPress,
+  disabled = false,
+  premium = false,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+  premium?: boolean;
+}) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [styles.primaryButton, disabled && styles.buttonDisabled, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.primaryButton,
+        premium && styles.primaryButtonPremium,
+        disabled && styles.buttonDisabled,
+        pressed && styles.pressed,
+      ]}
     >
-      <AppText variant="button" style={styles.primaryButtonText}>{label}</AppText>
+      <AppText
+        variant="button"
+        style={[
+          styles.primaryButtonText,
+          premium && styles.primaryButtonPremiumText,
+        ]}
+      >
+        {label}
+      </AppText>
     </Pressable>
   );
 }
@@ -713,7 +877,9 @@ const styles = StyleSheet.create({
   navRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 24 },
   backButton: { flexDirection: "row", alignItems: "center", gap: 8 },
   lessonHeader: { gap: 7, marginBottom: 26 },
+  lessonMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 },
   accentText: { color: ACCENT },
+  premiumText: { color: COLORS.premiumGold },
   successText: { color: SUCCESS },
   errorText: { color: ERROR },
   pinkText: { color: "#F9A8D4" },
@@ -733,6 +899,8 @@ const styles = StyleSheet.create({
   memoBox: { marginTop: 4, borderRadius: 10, padding: 10, backgroundColor: "rgba(45,212,191,0.09)" },
   receptiveBox: { borderRadius: 20, borderWidth: 1, borderColor: "rgba(244,114,182,0.2)", backgroundColor: "rgba(244,114,182,0.06)", padding: 18, gap: 12 },
   receptiveRow: { gap: 2 },
+  advancedLockedCard: { minHeight: 84, borderRadius: 20, borderWidth: 1, borderColor: COLORS.premiumBorder, backgroundColor: COLORS.premiumSurface, padding: 16, flexDirection: "row", alignItems: "center", gap: 12 },
+  advancedLockedCopy: { flex: 1, minWidth: 0, gap: 3 },
   practiceLaunchCard: { borderRadius: 24, borderWidth: 1, borderColor: "rgba(45,212,191,0.28)", padding: 20, gap: 10, overflow: "hidden" },
   reuseSection: { gap: 10 },
   reuseLinks: { gap: 8 },
@@ -769,8 +937,11 @@ const styles = StyleSheet.create({
   reviewRow: { gap: 3, borderLeftWidth: 2, borderLeftColor: "rgba(253,164,175,0.42)", paddingLeft: 12 },
   resultActions: { gap: 10 },
   lockedCard: { borderRadius: 26, borderWidth: 1, borderColor: "rgba(255,255,255,0.14)", padding: 22, gap: 12, overflow: "hidden" },
+  premiumLockedCard: { borderColor: COLORS.premiumBorder, backgroundColor: COLORS.premiumSurface },
   primaryButton: { minHeight: 52, borderRadius: 16, backgroundColor: ACCENT, alignItems: "center", justifyContent: "center", paddingHorizontal: 18, marginTop: 6 },
   primaryButtonText: { color: "#02110F" },
+  primaryButtonPremium: { backgroundColor: COLORS.premiumGold },
+  primaryButtonPremiumText: { color: COLORS.premiumInk },
   secondaryButton: { minHeight: 52, borderRadius: 16, borderWidth: 1, borderColor: "rgba(45,212,191,0.5)", alignItems: "center", justifyContent: "center", paddingHorizontal: 18 },
   textButton: { alignItems: "center", justifyContent: "center", padding: 14 },
   buttonDisabled: { opacity: 0.35 },

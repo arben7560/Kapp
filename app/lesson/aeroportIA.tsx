@@ -96,7 +96,7 @@ const iaTimeRepeat = require("../../assets/ai/aeroport/ia_time_repeat.mp4");
 const iaSummary = require("../../assets/ai/aeroport/ia_summary.mp4");
 const iaSummaryShort = require("../../assets/ai/aeroport/ia_summary_short.mp4");
 const iaEnd = require("../../assets/ai/aeroport/ia_end.mp4");
-const airportBackground = require("../../assets/images/airport.png");
+const airportBackground = require("../../assets/images/airport.jpg");
 
 // ==================== TYPES ====================
 type ModeType = "guided" | "real";

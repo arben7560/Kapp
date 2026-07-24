@@ -69,7 +69,7 @@ const SCENES = [
     koreanTitle: "Le rendez-vous",
     description: "Le premier rendez-vous arrangé dans un café chic de Gangnam.",
     accent: COLORS.romance,
-    image: require("../../../assets/images/sogeting.png"),
+    image: require("../../../assets/images/sogeting.jpg"),
     dialogue: [
       {
         char: "Mirae",
@@ -148,7 +148,7 @@ const SCENES = [
     koreanTitle: "Premiers flirts",
     description: "Flirt et tension au bord du fleuve Han à minuit.",
     accent: COLORS.lavender,
-    image: require("../../../assets/images/han.png"),
+    image: require("../../../assets/images/han.jpg"),
     dialogue: [
       {
         char: "Do-yun",
@@ -227,7 +227,7 @@ const SCENES = [
     koreanTitle: "Le couple",
     description: "Promesse d'éternité à la N Seoul Tower.",
     accent: COLORS.heart,
-    image: require("../../../assets/images/tower.png"),
+    image: require("../../../assets/images/tower.jpg"),
     dialogue: [
       {
         char: "Tae-yang",

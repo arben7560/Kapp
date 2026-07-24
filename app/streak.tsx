@@ -34,7 +34,7 @@ const COLORS = {
 };
 
 const CALENDAR_DAYS = 35;
-const BACKGROUND_SOURCE = require("../assets/images/seoulhub.png");
+const BACKGROUND_SOURCE = require("../assets/images/seoulhub.jpg");
 const ABSOLUTE_FILL = {
   position: "absolute" as const,
   top: 0,

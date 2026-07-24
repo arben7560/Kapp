@@ -1,3 +1,4 @@
+export * from "./access.ts";
 export * from "./exercises.ts";
 export * from "./learning.ts";
 export * from "./prerequisites.ts";

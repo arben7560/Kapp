@@ -1,6 +1,6 @@
-import { useFocusEffect } from "expo-router";
+import { useIsFocused } from "expo-router";
 import type { VideoPlayer } from "expo-video";
-import { useCallback } from "react";
+import { useEffect } from "react";
 import { AppState } from "react-native";
 
 /** Pauses immersive media off-screen and resumes the active scene on return. */
@@ -8,26 +8,26 @@ export function useImmersiveVideoLifecycle(
   player: VideoPlayer,
   shouldPlay: boolean,
 ) {
-  useFocusEffect(
-    useCallback(() => {
-      if (AppState.currentState === "active" && shouldPlay) {
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    const updatePlayback = (appState = AppState.currentState) => {
+      if (isFocused && appState === "active" && shouldPlay) {
         player.play();
       } else {
         player.pause();
       }
+    };
 
-      const subscription = AppState.addEventListener("change", (nextState) => {
-        if (nextState === "active" && shouldPlay) {
-          player.play();
-        } else {
-          player.pause();
-        }
-      });
+    updatePlayback();
 
-      return () => {
-        subscription.remove();
-        player.pause();
-      };
-    }, [player, shouldPlay]),
-  );
+    const subscription = AppState.addEventListener("change", updatePlayback);
+
+    return () => {
+      subscription.remove();
+      // useVideoPlayer releases its native SharedObject earlier during unmount.
+      // Playback is already stopped by that release; calling pause here would
+      // target the released object when leaving an immersion scene.
+    };
+  }, [isFocused, player, shouldPlay]);
 }

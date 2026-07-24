@@ -24,7 +24,7 @@ import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
-const airportBackground = require("../../assets/images/airport.png");
+const airportBackground = require("../../assets/images/airport.jpg");
 
 const BG_DEEP = "#050508";
 const TXT = "rgba(255,255,255,0.98)";

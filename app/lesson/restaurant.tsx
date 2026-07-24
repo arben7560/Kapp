@@ -29,7 +29,7 @@ const COLORS = {
   glass: "rgba(255,255,255,0.05)",
 };
 
-const RESTAURANT_IMAGE = require("../../assets/images/restaurant.png");
+const RESTAURANT_IMAGE = require("../../assets/images/restaurant.jpg");
 
 type DialogueLine = {
   char: string;

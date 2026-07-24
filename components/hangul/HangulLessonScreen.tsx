@@ -29,7 +29,7 @@ import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { shuffleArray } from "../../lib/choiceOrder";
 import { trackHangulExerciseCompleted } from "../../lib/immersionStreak";
 
-const BACKGROUND_SOURCE = require("../../assets/images/vowelbasic.png");
+const BACKGROUND_SOURCE = require("../../assets/images/vowelbasic.jpg");
 
 const normalizeLesson = (value?: Partial<HangulLessonProgress>): HangulLessonProgress => ({
   ...createEmptyHangulLessonProgress(),

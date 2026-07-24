@@ -706,24 +706,6 @@ function createAskDirectionLesson(): MetroLesson {
             ),
           ],
         },
-        {
-          stepId: "ia_repeat_transfer_info_short",
-          keepChoiceIds: ["thank_after_transfer_short"],
-          extraChoices: [
-            getSourceChoice(
-              hongikLesson,
-              "ia_transfer_info",
-              "repeat_transfer",
-              "ask_direction_hongik_ia_repeat_transfer_info_short",
-            ),
-            getSourceChoice(
-              hongikLesson,
-              "ia_intro_route",
-              "ask_trip",
-              "ask_direction_hongik_ia_trip_time",
-            ),
-          ],
-        },
         { stepId: "ia_end" },
       ]),
     ],

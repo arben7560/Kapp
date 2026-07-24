@@ -13,6 +13,8 @@ import {
   advanceGrammarPracticeSession,
   answerGrammarPracticeQuestion,
   buildGrammarPracticeQuestions,
+  canAccessGrammarStage,
+  canRepeatGrammarPractice,
   createEmptyGrammarLearningProgress,
   createGrammarPracticeSession,
   getGrammarJourneyCompletion,
@@ -29,6 +31,83 @@ const projectRoot = fileURLToPath(new URL("..", import.meta.url));
 const FIRST_STAGE = "sentence-structure";
 const SECOND_STAGE = "identify-with-copula";
 
+test("the freemium boundary keeps A0 free and reserves A1 to Premium", () => {
+  const freeStages = GRAMMAR_STAGE_IDS.filter(
+    (stageId) => GRAMMAR_STAGE_BY_ID[stageId].access === "free",
+  );
+  const premiumStages = GRAMMAR_STAGE_IDS.filter(
+    (stageId) => GRAMMAR_STAGE_BY_ID[stageId].access === "premium",
+  );
+
+  assert.equal(freeStages.length, 15);
+  assert.equal(premiumStages.length, 26);
+  assert.ok(
+    freeStages.every(
+      (stageId) => GRAMMAR_STAGE_BY_ID[stageId].status === "pre-a1",
+    ),
+  );
+  assert.ok(
+    premiumStages.every(
+      (stageId) => GRAMMAR_STAGE_BY_ID[stageId].status === "a1",
+    ),
+  );
+  assert.ok(
+    freeStages.every((stageId) =>
+      canRepeatGrammarPractice(GRAMMAR_STAGE_BY_ID[stageId], false),
+    ),
+  );
+  assert.equal(
+    canAccessGrammarStage(GRAMMAR_STAGE_BY_ID[FIRST_STAGE], false),
+    true,
+  );
+  assert.equal(
+    canAccessGrammarStage(GRAMMAR_STAGE_BY_ID["request-item"], false),
+    false,
+  );
+  assert.equal(
+    canAccessGrammarStage(GRAMMAR_STAGE_BY_ID["request-item"], true),
+    true,
+  );
+});
+
+test("A0 lessons and retries stay free without limit after success", () => {
+  const freeStage = GRAMMAR_STAGE_BY_ID[FIRST_STAGE];
+  assert.equal(canRepeatGrammarPractice(freeStage, false), true);
+  assert.equal(canRepeatGrammarPractice(freeStage, true), true);
+
+  const premiumStage = GRAMMAR_STAGE_BY_ID["request-item"];
+  assert.equal(canRepeatGrammarPractice(premiumStage, false), false);
+  assert.equal(canRepeatGrammarPractice(premiumStage, true), true);
+});
+
+test("unlocking Premium preserves already saved grammar progress", () => {
+  const premiumStageId = "request-item";
+  const premiumStage = GRAMMAR_STAGE_BY_ID[premiumStageId];
+  const completedSession = answerRemainingCorrectly(
+    createGrammarPracticeSession(
+      premiumStageId,
+      1,
+      "2026-07-21T09:00:00.000Z",
+    ),
+    "2026-07-21T09:05:00.000Z",
+  );
+  const savedProgress = recordGrammarSessionCompletion(
+    createEmptyGrammarLearningProgress(),
+    completedSession,
+  );
+  const serializedBeforeUnlock = JSON.stringify(savedProgress);
+
+  assert.equal(canAccessGrammarStage(premiumStage, false), false);
+  assert.equal(canAccessGrammarStage(premiumStage, true), true);
+  assert.equal(JSON.stringify(savedProgress), serializedBeforeUnlock);
+
+  const restored = normalizeGrammarLearningProgress(
+    JSON.parse(serializedBeforeUnlock),
+  );
+  assert.equal(getGrammarStageState(restored, premiumStageId), "practiced");
+  assert.equal(restored.stages[premiumStageId].bestScore, 1);
+});
+
 function answerRemainingCorrectly(session, completedAt = "2026-07-21T10:10:00.000Z") {
   let current = session;
   while (!current.completedAt) {
@@ -42,7 +121,7 @@ function answerRemainingCorrectly(session, completedAt = "2026-07-21T10:10:00.00
   return current;
 }
 
-test("every registered stage produces a five-exercise public practice", () => {
+test("every registered stage produces a five-exercise practice", () => {
   for (const stageId of GRAMMAR_STAGE_IDS) {
     const questions = buildGrammarPracticeQuestions(stageId);
     assert.equal(questions.length, 5, stageId);
@@ -235,6 +314,21 @@ test("grammar completion still keeps XP and streak hooks in place", () => {
   assert.match(lesson, /complete\(buildProgressId\("grammar", stageId\)\)/u);
   assert.match(lesson, /completeDailyActivity\("grammar_exercise"\)/u);
   assert.match(lesson, /markGrammarSessionStreakRecorded/u);
+});
+
+test("grammar screens guard premium navigation at the hub and lesson route", () => {
+  const hub = readFileSync(join(projectRoot, "app/(tabs)/grammar/index.tsx"), "utf8");
+  const lesson = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+
+  assert.match(hub, /hasPremiumAccess:\s*isPremium/u);
+  assert.match(hub, /canAccessGrammarStage\(GRAMMAR_STAGE_BY_ID\[stageId\], isPremium\)/u);
+  assert.match(hub, /router\.push\("\/premium"\)/u);
+  assert.match(hub, /label=\{isPremiumStage \? "PREMIUM" : "GRATUIT"\}/u);
+
+  assert.match(lesson, /const premiumLocked = !canAccessGrammarStage\(stage, isPremium\)/u);
+  assert.match(lesson, /router\.replace\("\/premium"\)/u);
+  assert.match(lesson, /canRepeatGrammarPractice/u);
+  assert.match(lesson, /label=\{stage\.access === "premium" \? "PREMIUM" : "GRATUIT"\}/u);
 });
 
 test("the public screens keep explicit compact and tablet layouts", () => {

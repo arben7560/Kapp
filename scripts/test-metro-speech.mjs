@@ -446,7 +446,6 @@ test("chaque réplique affichée de chaque nœud possède une intention et une t
       "ask_direction_hongik_ia_repeat_trip_time_choices",
       "ask_direction_hongik_ia_transfer_info_choices",
       "ask_direction_hongik_ia_repeat_transfer_info_choices",
-      "ask_direction_hongik_ia_repeat_transfer_info_short_choices",
     ],
   );
 
@@ -668,7 +667,6 @@ test("la branche Direction réutilise les réponses durée et correspondance san
     "ia_repeat_trip_time",
     "ia_transfer_info",
     "ia_repeat_transfer_info",
-    "ia_repeat_transfer_info_short",
     "ia_end",
   ]) {
     assert.match(branch, new RegExp(`stepId: "${stepId}"`), stepId);
@@ -678,7 +676,6 @@ test("la branche Direction réutilise les réponses durée et correspondance san
     "ask_direction_hongik_ia_trip_time",
     "ask_direction_hongik_ia_transfer_info",
     "ask_direction_hongik_ia_repeat_trip_time",
-    "ask_direction_hongik_ia_repeat_transfer_info_short",
     "ask_direction_hongik_ia_end",
   ]) {
     assert.match(branch, new RegExp(`"${target}"`), target);

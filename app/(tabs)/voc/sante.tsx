@@ -65,7 +65,7 @@ const SCENES = [
     koreanTitle: "약국 (Yak-guk)",
     description: "Demander conseil pour des symptômes courants.",
     accent: COLORS.safetyGreen,
-    image: require("../../../assets/images/safety.png"),
+    image: require("../../../assets/images/safety.jpg"),
     dialogue: [
       {
         char: "Patient",
@@ -133,7 +133,7 @@ const SCENES = [
     koreanTitle: "병원 (Byeong-won)",
     description: "Expliquer une douleur pendant une consultation.",
     accent: COLORS.medicalBlue,
-    image: require("../../../assets/images/safety.png"),
+    image: require("../../../assets/images/safety.jpg"),
     dialogue: [
       {
         char: "Médecin",
@@ -212,7 +212,7 @@ const SCENES = [
     koreanTitle: "응급 상황",
     description: "Appeler les secours et signaler une urgence.",
     accent: COLORS.emergencyRed,
-    image: require("../../../assets/images/safety.png"),
+    image: require("../../../assets/images/safety.jpg"),
     dialogue: [
       {
         char: "Opérateur",

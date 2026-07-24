@@ -24,7 +24,7 @@ import type { DailyStreakState } from "../../lib/dailyStreak";
 import { HANGUL_PROGRESS_IDS } from "../../data/hangul/curriculum";
 import { getGrammarJourneyCompletion } from "../../lib/grammar";
 
-const BACKGROUND_SOURCE = require("../../assets/images/seoulhub.png");
+const BACKGROUND_SOURCE = require("../../assets/images/seoulhub.jpg");
 
 // ──────────────────────────────────────────────
 // DESIGN TOKENS
@@ -222,7 +222,7 @@ export default function Home() {
         }),
       ]),
     ).start();
-  }, []);
+  }, [pulseAnim]);
 
   useFocusEffect(
     useCallback(() => {
@@ -538,6 +538,25 @@ function AnimatedFragment({
   const slideAnim = useRef(new Animated.Value(30)).current;
   const floatAnim = useRef(new Animated.Value(0)).current;
 
+  const startFloating = useCallback(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 3400 + index * 300,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 3400 + index * 300,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, [floatAnim, index]);
+
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -555,26 +574,7 @@ function AnimatedFragment({
         useNativeDriver: true,
       }),
     ]).start(() => startFloating());
-  }, []);
-
-  const startFloating = () => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(floatAnim, {
-          toValue: 1,
-          duration: 3400 + index * 300,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(floatAnim, {
-          toValue: 0,
-          duration: 3400 + index * 300,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ]),
-    ).start();
-  };
+  }, [fadeAnim, index, slideAnim, startFloating]);
 
   const translateY = Animated.add(
     slideAnim,

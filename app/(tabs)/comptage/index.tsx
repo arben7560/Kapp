@@ -20,7 +20,7 @@ import { ModuleCard } from "../../../components/ModuleCard";
 import { SeoulMidnightGlass } from "../../../constants/theme";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
 
-const BACKGROUND_SOURCE = require("../../../assets/images/comptage.png");
+const BACKGROUND_SOURCE = require("../../../assets/images/comptage.jpg");
 
 // ----------------------------------------------
 // DESIGN TOKENS

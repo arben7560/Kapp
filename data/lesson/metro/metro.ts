@@ -1391,42 +1391,7 @@ export const hongikToGangnamLesson: MetroLesson = {
         {
           id: "repeat_transfer_again",
           ...METRO_REPEAT_REQUEST,
-          nextId: "ia_repeat_transfer_info_short",
-        },
-      ],
-    },
-
-    {
-      id: "ia_repeat_transfer_info_short",
-      speaker: "ai",
-      phase: "Trajet",
-      text: "Très simplement : pas de transfert, restez sur la ligne 2.",
-      korean: "아주 간단히 말씀드리면, 갈아타지 않고 2호선 그대로 가시면 돼요.",
-      french: "Très simplement : pas de transfert, restez sur la ligne 2.",
-      romanization:
-        "Aju gandanhi malsseumdeurimyeon, hwansung eopsi ihoseon geudaero gasimyeon dwaeyo.",
-      choices: [
-        {
-          id: "ask_exit_after_transfer_short",
-          label: "Quelle sortie dois-je prendre à Gangnam ?",
-          korean: "강남역에서는 몇 번 출구로 나가야 하나요?",
-          romanization:
-            "Gangnam-yeogeseoneun myeot beon chulgu-ro nagaya hanayo?",
-          nextId: "ia_exit_info",
-        },
-        {
-          id: "thank_after_transfer_short",
-          label: "Merci beaucoup, j'ai tout compris !",
-          korean: "감사합니다, 다 이해했어요!",
-          romanization: "Gamsahamnida, da ihaehaesseoyo!",
-          nextId: "ia_end",
-        },
-        {
-          id: "ask_trip_again_after_transfer_short",
-          label: "Combien de temps dure le trajet ?",
-          korean: "시간은 얼마나 걸리나요?",
-          romanization: "Siganeun eolmana geollinayo?",
-          nextId: "ia_trip_time",
+          nextId: "ia_repeat_transfer_info",
         },
       ],
     },
@@ -1479,7 +1444,7 @@ export const hongikToGangnamLesson: MetroLesson = {
         {
           id: "repeat_exit_2",
           ...METRO_REPEAT_REQUEST,
-          nextId: "ia_repeat_exit_info_short",
+          nextId: "ia_repeat_exit_info",
         },
         {
           id: "ask_landmark_after_exit_repeat",
@@ -1490,32 +1455,6 @@ export const hongikToGangnamLesson: MetroLesson = {
         },
         {
           id: "thank_after_exit_repeat",
-          label: "Merci beaucoup, j'ai tout compris !",
-          korean: "감사합니다, 다 이해했어요!",
-          romanization: "Gamsahamnida, da ihaehaesseoyo!",
-          nextId: "ia_end",
-        },
-      ],
-    },
-
-    {
-      id: "ia_repeat_exit_info_short",
-      speaker: "ai",
-      phase: "Sortie",
-      text: "Très simplement : sortie numéro 2.",
-      korean: "아주 간단히 말씀드리면, 2번 출구예요.",
-      french: "Très simplement : sortie numéro 2.",
-      romanization: "Aju gandanhi malsseumdeurimyeon, 2beon chulgu-yeyo.",
-      choices: [
-        {
-          id: "ask_landmark_after_exit_short",
-          label: "Et le COEX ou Teheran-ro, c'est proche ?",
-          korean: "COEX나 테헤란로도 가까운가요?",
-          romanization: "COEX-na Teheran-ro-do gakkaunga-yo?",
-          nextId: "ia_exit_landmark_info",
-        },
-        {
-          id: "thank_after_exit_short",
           label: "Merci beaucoup, j'ai tout compris !",
           korean: "감사합니다, 다 이해했어요!",
           romanization: "Gamsahamnida, da ihaehaesseoyo!",
@@ -1628,7 +1567,7 @@ export const hongikToGangnamLesson: MetroLesson = {
           label: "Quelle sortie déjà ?",
           korean: "출구가 몇 번이라고 하셨죠?",
           romanization: "Chulgu-ga myeot beon-irago hasyeotjyo?",
-          nextId: "ia_repeat_exit_info_short",
+          nextId: "ia_repeat_exit_info",
         },
       ],
     },

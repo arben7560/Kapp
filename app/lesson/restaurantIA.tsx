@@ -92,7 +92,7 @@ const pedPaymentPrompt = require("../../assets/ai/restaurant/ped_payment_prompt.
 const pedReceiptCard = require("../../assets/ai/restaurant/ped_receipt_card.mp4");
 const pedReceiptCash = require("../../assets/ai/restaurant/ped_receipt_cash.mp4");
 const pedGoodbye = require("../../assets/ai/restaurant/ped_goodbye.mp4");
-const restaurantBackground = require("../../assets/images/restaurant.png");
+const restaurantBackground = require("../../assets/images/restaurant.jpg");
 
 const videoByNodeId: Record<string, number> = {
   ped_welcome: pedWelcome,

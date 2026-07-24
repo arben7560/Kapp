@@ -1,10 +1,10 @@
-import { BlurView } from "expo-blur";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -18,10 +18,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../components/app-text";
 
-const HERO_IMAGE = require("../assets/images/hero.png");
-const CAFE_IMAGE = require("../assets/images/cafe.png");
-const METRO_IMAGE = require("../assets/images/metro.png");
-const RESTAURANT_IMAGE = require("../assets/images/restaurant.png");
+const HERO_IMAGE = require("../assets/images/hero.jpg");
+const CAFE_IMAGE = require("../assets/images/cafe.jpg");
+const METRO_IMAGE = require("../assets/images/metro.jpg");
+const RESTAURANT_IMAGE = require("../assets/images/restaurant.jpg");
 
 const BG_DEEP = "#050508";
 const TXT = "rgba(255,255,255,0.98)";
@@ -298,12 +298,6 @@ export default function OnboardingScreen() {
     router.push("/(tabs)" as any);
   };
 
-  const openBasics = async () => {
-    await tap();
-    await AsyncStorage.setItem(ONBOARDING_KEY, "true");
-    router.replace("/(tabs)" as any);
-  };
-
   const animatedStyle = {
     opacity: fade,
     transform: [{ translateY }],
@@ -343,15 +337,34 @@ export default function OnboardingScreen() {
               <View style={styles.topRow}>
                 <View style={styles.badge}>
                   <View style={styles.badgeDot} />
-                  <AppText variant="label" lineContract="singleLine" style={styles.badgeText}>SÉOUL IMMERSION</AppText>
+                  <AppText
+                    variant="label"
+                    lineContract="singleLine"
+                    style={styles.badgeText}
+                  >
+                    SÉOUL IMMERSION
+                  </AppText>
                 </View>
               </View>
 
               <View style={styles.arrivalCenter}>
-                <AppText variant="koreanPrimary" script="korean" style={styles.koreanLine}>어서 오세요</AppText>
-                <AppText accessibilityRole="header" variant="display" style={styles.bigTitle}>Bienvenue à Séoul</AppText>
+                <AppText
+                  variant="koreanPrimary"
+                  script="korean"
+                  style={styles.koreanLine}
+                >
+                  어서 오세요
+                </AppText>
+                <AppText
+                  accessibilityRole="header"
+                  variant="display"
+                  style={styles.bigTitle}
+                >
+                  Bienvenue à Séoul
+                </AppText>
                 <AppText variant="subtitle" style={styles.subtitle}>
-                  Tu n’apprends pas le coréen. Tu entres dans des scènes réelles.
+                  Tu n’apprends pas le coréen. Tu entres dans des scènes
+                  réelles.
                 </AppText>
 
                 <Animated.View
@@ -383,13 +396,15 @@ export default function OnboardingScreen() {
                       style={StyleSheet.absoluteFill}
                     />
 
-                    <AppText variant="sectionLabel" style={styles.heroEyebrow}>IMMERSION</AppText>
+                    <AppText variant="sectionLabel" style={styles.heroEyebrow}>
+                      IMMERSION
+                    </AppText>
                     <AppText variant="sceneTitle" style={styles.heroTitle}>
                       La ville s’ouvre devant toi
                     </AppText>
                     <AppText variant="body" style={styles.heroText}>
-                      Choisis une scène recommandée pour commencer, ou prépare-toi
-                      d’abord avec les bases essentielles.
+                      Choisis une scène recommandée pour commencer, ou
+                      prépare-toi d’abord avec les bases essentielles.
                     </AppText>
                   </BlurView>
                 </Animated.View>
@@ -440,342 +455,207 @@ export default function OnboardingScreen() {
               keyboardShouldPersistTaps="handled"
               nestedScrollEnabled
             >
-            <View style={styles.topRow}>
-              <View style={styles.badge}>
-                <View style={[styles.badgeDot, { backgroundColor: PINK }]} />
-                <AppText variant="label" lineContract="singleLine" style={styles.badgeText}>POINT DE DÉPART</AppText>
+              <View style={styles.topRow}>
+                <View style={styles.badge}>
+                  <View style={[styles.badgeDot, { backgroundColor: PINK }]} />
+                  <AppText
+                    variant="label"
+                    lineContract="singleLine"
+                    style={styles.badgeText}
+                  >
+                    POINT DE DÉPART
+                  </AppText>
+                </View>
               </View>
-            </View>
-
-            <View
-              style={[
-                styles.sectionHead,
-                isCompactScreen && styles.sectionHeadCompact,
-              ]}
-            >
-              <AppText variant="sectionLabel" style={styles.sectionEyebrow}>POUR COMMENCER</AppText>
-              <AppText accessibilityRole="header" variant="screenTitle"
-                style={[
-                  styles.sectionTitle,
-                  styles.sectionTitleScene,
-                  isCompactScreen && styles.sectionTitleCompact,
-                ]}
-              >
-                Où veux-tu commencer ?
-              </AppText>
-            </View>
-
-            <View
-              style={[
-                styles.pathGrid,
-                isCompactScreen && styles.pathGridCompact,
-              ]}
-            >
-              <Pressable
-                accessibilityRole="link"
-                accessibilityLabel="Ouvrir les parcours. Hangul, vocabulaire et autres bases"
-                accessibilityHint="Ouvre l'accueil des parcours"
-                hitSlop={6}
-                style={styles.pathPress}
-                onPress={openBasics}
-              >
-                <BlurView
-                  intensity={25}
-                  tint="dark"
-                  style={[
-                    styles.pathCard,
-                    isCompactScreen && styles.pathCardCompact,
-                  ]}
-                >
-                  <LinearGradient
-                    colors={["rgba(34,211,238,0.12)", "rgba(255,255,255,0.02)"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                  />
-
-                  <View
-                    style={[
-                      styles.pathTopRow,
-                      isCompactScreen && styles.pathTopRowCompact,
-                    ]}
-                  >
-                    <View
-                      style={[
-                        styles.pathIcon,
-                        isCompactScreen && styles.pathIconCompact,
-                        { borderColor: `${CYAN}33` },
-                      ]}
-                    >
-                      <AppText variant="sectionTitle" style={styles.pathIconText}>⌂</AppText>
-                    </View>
-                    <AppText variant="sectionLabel" style={[styles.pathStep, isCompactScreen && styles.pathStepCompact, { color: CYAN }]}>
-                      ACCUEIL
-                    </AppText>
-                  </View>
-
-                  <AppText variant="sectionTitle"
-                    style={[
-                      styles.pathTitle,
-                      isCompactScreen && styles.pathTitleCompact,
-                    ]}
-                  >
-                    Choisis ton parcours
-                  </AppText>
-                  <AppText variant="bodySecondary" tone="muted"
-                    style={[
-                      styles.pathText,
-                      isCompactScreen && styles.pathTextCompact,
-                    ]}
-                  >
-                    Hangul, vocabulaire et autres parcours
-                  </AppText>
-
-                  <View
-                    style={[
-                      styles.pathBottomRow,
-                      isCompactScreen && styles.pathBottomRowCompact,
-                    ]}
-                  >
-                    <AppText variant="label" style={styles.pathAction}>Ouvrir</AppText>
-                    <AppText variant="sectionTitle" lineContract="singleLine" style={[styles.pathArrow, { color: CYAN }]}>→</AppText>
-                  </View>
-                </BlurView>
-              </Pressable>
 
               <View
-                accessibilityRole="summary"
-                accessibilityLabel="Conversation. Choisis une scène Café, Métro ou Restaurant"
-                style={styles.pathPress}
+                style={[
+                  styles.sectionHead,
+                  isCompactScreen && styles.sectionHeadCompact,
+                ]}
               >
-                <BlurView
-                  intensity={25}
-                  tint="dark"
+                <AppText variant="sectionLabel" style={styles.sectionEyebrow}>
+                  POUR COMMENCER
+                </AppText>
+                <AppText
+                  accessibilityRole="header"
+                  variant="screenTitle"
                   style={[
-                    styles.pathCard,
-                    isCompactScreen && styles.pathCardCompact,
+                    styles.sectionTitle,
+                    styles.sectionTitleScene,
+                    isCompactScreen && styles.sectionTitleCompact,
                   ]}
                 >
-                  <LinearGradient
-                    colors={[
-                      "rgba(244,114,182,0.12)",
-                      "rgba(255,255,255,0.02)",
-                    ]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                  />
-
-                  <View
-                    style={[
-                      styles.pathTopRow,
-                      isCompactScreen && styles.pathTopRowCompact,
-                    ]}
-                  >
-                    <View
-                      style={[
-                        styles.pathIcon,
-                        isCompactScreen && styles.pathIconCompact,
-                        { borderColor: `${PINK}33` },
-                      ]}
-                    >
-                      <AppText variant="sectionTitle" style={styles.pathIconText}>●</AppText>
-                    </View>
-                    <AppText variant="sectionLabel" style={[styles.pathStep, isCompactScreen && styles.pathStepCompact, { color: PINK }]}>
-                      CONVERSATION
-                    </AppText>
-                  </View>
-
-                  <AppText variant="sectionTitle"
-                    style={[
-                      styles.pathTitle,
-                      isCompactScreen && styles.pathTitleCompact,
-                    ]}
-                  >
-                    Choisis ta scène
-                  </AppText>
-                  <AppText variant="bodySecondary" tone="muted"
-                    style={[
-                      styles.pathText,
-                      isCompactScreen && styles.pathTextCompact,
-                    ]}
-                  >
-                    Café · métro · restaurant
-                  </AppText>
-
-                  <View
-                    style={[
-                      styles.pathBottomRow,
-                      isCompactScreen && styles.pathBottomRowCompact,
-                    ]}
-                  >
-                    <AppText variant="label" style={styles.pathAction}>Choisir</AppText>
-                    <AppText variant="sectionTitle" lineContract="singleLine" style={[styles.pathArrow, { color: PINK }]}>↓</AppText>
-                  </View>
-                </BlurView>
+                  Choisis ta première scène
+                </AppText>
               </View>
-            </View>
 
-            <View
-              style={[
-                styles.subSectionHead,
-                isCompactScreen && styles.subSectionHeadCompact,
-              ]}
-            >
-              <AppText variant="sectionLabel" style={styles.subSectionEyebrow}>CONVERSATION</AppText>
-              <AppText variant="sectionTitle" style={styles.subSectionTitle}>Choisis une scène</AppText>
-            </View>
+              <View
+                style={[
+                  styles.sceneList,
+                  isCompactScreen && styles.sceneListCompact,
+                ]}
+              >
+                {SCENES.map((scene) => {
+                  const active = selectedScene === scene.key;
+                  const sceneImageBlurRadius = scene.key === "cafe" ? 2 : 0;
 
-            <View
-              style={[
-                styles.sceneList,
-                isCompactScreen && styles.sceneListCompact,
-              ]}
-            >
-              {SCENES.map((scene) => {
-                const active = selectedScene === scene.key;
-                const sceneImageBlurRadius = scene.key === "cafe" ? 2 : 0;
-
-                return (
-                  <Pressable
-                    key={scene.key}
-                    accessibilityRole="radio"
-                    accessibilityLabel={`${scene.title}. ${scene.subtitle}`}
-                    accessibilityState={{ checked: active, selected: active }}
-                    aria-checked={active}
-                    aria-selected={active}
-                    hitSlop={6}
-                    style={styles.scenePress}
-                    onPress={async () => {
-                      await tap();
-                      setSelectedScene(scene.key);
-                    }}
-                  >
-                    <View
-                      style={[
-                        styles.sceneCardOuter,
-                        active && { transform: [{ scale: 1.012 }] },
-                      ]}
+                  return (
+                    <Pressable
+                      key={scene.key}
+                      accessibilityRole="radio"
+                      accessibilityLabel={`${scene.title}. ${scene.subtitle}`}
+                      accessibilityState={{ checked: active, selected: active }}
+                      aria-checked={active}
+                      aria-selected={active}
+                      hitSlop={6}
+                      style={styles.scenePress}
+                      onPress={async () => {
+                        await tap();
+                        setSelectedScene(scene.key);
+                      }}
                     >
-                      <BlurView
-                        intensity={30}
-                        tint="dark"
+                      <View
                         style={[
-                          styles.sceneCard,
-                          isCompactScreen && styles.sceneCardCompact,
-                          active && { borderColor: "rgba(255,255,255,0.28)" },
+                          styles.sceneCardOuter,
+                          active && { transform: [{ scale: 1.012 }] },
                         ]}
                       >
-                        <Image
-                          source={scene.image}
-                          style={StyleSheet.absoluteFill}
-                          contentFit="cover"
-                          blurRadius={sceneImageBlurRadius}
-                        />
-
-                        <LinearGradient
-                          colors={[
-                            "rgba(0,0,0,0.15)",
-                            "rgba(5,5,8,0.50)",
-                            "rgba(5,5,8,0.92)",
-                          ]}
-                          locations={[0, 0.4, 0.95]}
-                          style={StyleSheet.absoluteFill}
-                        />
-
-                        <LinearGradient
-                          colors={[
-                            active
-                              ? `${scene.accent}25`
-                              : "rgba(255,255,255,0.04)",
-                            "transparent",
-                          ]}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 0.6, y: 1 }}
-                          style={StyleSheet.absoluteFill}
-                        />
-
-                        <View
+                        <BlurView
+                          intensity={30}
+                          tint="dark"
                           style={[
-                            styles.sceneAccent,
-                            {
-                              backgroundColor: scene.accent,
-                              opacity: active ? 1 : 0.4,
-                            },
+                            styles.sceneCard,
+                            isCompactScreen && styles.sceneCardCompact,
+                            active && { borderColor: "rgba(255,255,255,0.28)" },
                           ]}
-                        />
+                        >
+                          <Image
+                            source={scene.image}
+                            style={StyleSheet.absoluteFill}
+                            contentFit="cover"
+                            blurRadius={sceneImageBlurRadius}
+                          />
 
-                        <View style={styles.sceneContent}>
-                          <View style={{ flex: 1 }}>
-                            <View style={styles.sceneTopLine}>
-                              <AppText variant="sectionLabel"
-                                style={[
-                                  styles.sceneEyebrow,
-                                  active && { color: scene.accent },
-                                ]}
-                              >
-                                {scene.eyebrow}
-                              </AppText>
+                          <LinearGradient
+                            colors={[
+                              "rgba(0,0,0,0.15)",
+                              "rgba(5,5,8,0.50)",
+                              "rgba(5,5,8,0.92)",
+                            ]}
+                            locations={[0, 0.4, 0.95]}
+                            style={StyleSheet.absoluteFill}
+                          />
 
-                              {active && (
-                                <View
-                                  style={[
-                                    styles.selectedPill,
-                                    { borderColor: `${scene.accent}44` },
-                                  ]}
-                                >
-                                  <AppText variant="label" style={styles.selectedPillText}>
-                                    SÉLECTIONNÉ
-                                  </AppText>
-                                </View>
-                              )}
-                            </View>
-
-                            <AppText variant="cardTitle" style={styles.sceneTitleText}>
-                              {scene.title}
-                            </AppText>
-                            <AppText variant="bodySecondary" tone="muted" style={styles.sceneSubtitle}>
-                              {scene.subtitle}
-                            </AppText>
-                          </View>
+                          <LinearGradient
+                            colors={[
+                              active
+                                ? `${scene.accent}25`
+                                : "rgba(255,255,255,0.04)",
+                              "transparent",
+                            ]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 0.6, y: 1 }}
+                            style={StyleSheet.absoluteFill}
+                          />
 
                           <View
                             style={[
-                              styles.radioWrap,
-                              active && {
-                                borderColor: scene.accent,
-                                backgroundColor: "rgba(255,255,255,0.04)",
+                              styles.sceneAccent,
+                              {
+                                backgroundColor: scene.accent,
+                                opacity: active ? 1 : 0.4,
                               },
                             ]}
-                          >
-                            {active && (
-                              <View
-                                style={[
-                                  styles.radioDot,
-                                  { backgroundColor: scene.accent },
-                                ]}
-                              />
-                            )}
-                          </View>
-                        </View>
-                      </BlurView>
-                    </View>
-                  </Pressable>
-                );
-              })}
+                          />
 
-              <Pressable
-                accessibilityRole="link"
-                  accessibilityLabel="Ouvrir l’accueil"
-                hitSlop={8}
-                style={styles.discreetAction}
-                onPress={openMoreScenes}
-              >
-                <AppText variant="link" style={styles.discreetActionText}>
-                  Ouvrir l’accueil
-                </AppText>
-              </Pressable>
-            </View>
+                          <View style={styles.sceneContent}>
+                            <View style={{ flex: 1 }}>
+                              <View style={styles.sceneTopLine}>
+                                <AppText
+                                  variant="sectionLabel"
+                                  style={[
+                                    styles.sceneEyebrow,
+                                    active && { color: scene.accent },
+                                  ]}
+                                >
+                                  {scene.eyebrow}
+                                </AppText>
+
+                                {active && (
+                                  <View
+                                    style={[
+                                      styles.selectedPill,
+                                      { borderColor: `${scene.accent}44` },
+                                    ]}
+                                  >
+                                    <AppText
+                                      variant="label"
+                                      style={styles.selectedPillText}
+                                    >
+                                      SÉLECTIONNÉ
+                                    </AppText>
+                                  </View>
+                                )}
+                              </View>
+
+                              <AppText
+                                variant="cardTitle"
+                                style={styles.sceneTitleText}
+                              >
+                                {scene.title}
+                              </AppText>
+                              <AppText
+                                variant="bodySecondary"
+                                tone="muted"
+                                style={[
+                                  styles.sceneSubtitle,
+                                  isCompactScreen &&
+                                    styles.sceneSubtitleCompact,
+                                ]}
+                              >
+                                {scene.subtitle}
+                              </AppText>
+                            </View>
+
+                            <View
+                              style={[
+                                styles.radioWrap,
+                                active && {
+                                  borderColor: scene.accent,
+                                  backgroundColor: "rgba(255,255,255,0.04)",
+                                },
+                              ]}
+                            >
+                              {active && (
+                                <View
+                                  style={[
+                                    styles.radioDot,
+                                    { backgroundColor: scene.accent },
+                                  ]}
+                                />
+                              )}
+                            </View>
+                          </View>
+                        </BlurView>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+
+                <Pressable
+                  accessibilityRole="link"
+                  accessibilityLabel="Explorer l’accueil"
+                  accessibilityHint="Quitte l’onboarding et ouvre l’accueil de l’application"
+                  hitSlop={8}
+                  style={styles.discreetAction}
+                  onPress={openMoreScenes}
+                >
+                  <AppText variant="link" style={styles.discreetActionText}>
+                    Explorer l’accueil
+                  </AppText>
+                </Pressable>
+              </View>
             </ScrollView>
 
             <View style={[styles.bottomBar, styles.bottomBarContained]}>
@@ -786,12 +666,14 @@ export default function OnboardingScreen() {
                 style={styles.secondaryButton}
                 onPress={() => goToStep("arrival")}
               >
-                <AppText variant="button" style={styles.secondaryText}>Retour à l’introduction</AppText>
+                <AppText variant="button" style={styles.secondaryText}>
+                  Retour à l’introduction
+                </AppText>
               </Pressable>
 
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Choisir ${selectedSceneData.title.toLowerCase()}`}
+                accessibilityLabel={`Continuer avec la scène ${selectedSceneData.title}`}
                 hitSlop={6}
                 style={styles.primaryInlineWrap}
                 onPress={() => goToStep("mode")}
@@ -811,7 +693,7 @@ export default function OnboardingScreen() {
                     style={StyleSheet.absoluteFill}
                   />
                   <AppText variant="button" style={styles.primaryText}>
-                    Choisir {selectedSceneData.title.toLowerCase()}
+                    Continuer
                   </AppText>
                 </BlurView>
               </Pressable>
@@ -833,7 +715,13 @@ export default function OnboardingScreen() {
               <View style={styles.topRow}>
                 <View style={styles.badge}>
                   <View style={[styles.badgeDot, { backgroundColor: CYAN }]} />
-                  <AppText variant="label" lineContract="singleLine" style={styles.badgeText}>CONVERSATION</AppText>
+                  <AppText
+                    variant="label"
+                    lineContract="singleLine"
+                    style={styles.badgeText}
+                  >
+                    CONVERSATION
+                  </AppText>
                 </View>
               </View>
 
@@ -843,9 +731,19 @@ export default function OnboardingScreen() {
                   (isCompactScreen || isLargeText) && styles.sectionHeadCompact,
                 ]}
               >
-                <AppText variant="sectionLabel" style={styles.sectionEyebrow}>SCÈNE CHOISIE</AppText>
-                <AppText accessibilityRole="header" variant="screenTitle" style={styles.sectionTitle}>{selectedSceneData.title}</AppText>
-                <AppText variant="body" style={styles.sectionText}>Choisis ton approche.</AppText>
+                <AppText variant="sectionLabel" style={styles.sectionEyebrow}>
+                  SCÈNE CHOISIE
+                </AppText>
+                <AppText
+                  accessibilityRole="header"
+                  variant="screenTitle"
+                  style={styles.sectionTitle}
+                >
+                  {selectedSceneData.title}
+                </AppText>
+                <AppText variant="body" style={styles.sectionText}>
+                  Choisis ton approche.
+                </AppText>
               </View>
 
               <View style={styles.modeList}>
@@ -899,7 +797,8 @@ export default function OnboardingScreen() {
 
                         <View style={styles.modeContent}>
                           <View style={styles.modeCopy}>
-                            <AppText variant="cardTitle"
+                            <AppText
+                              variant="cardTitle"
                               style={[
                                 styles.modeTitle,
                                 active && { color: mode.accent },
@@ -907,14 +806,23 @@ export default function OnboardingScreen() {
                             >
                               {mode.title}
                             </AppText>
-                            <AppText variant="bodySecondary" tone="muted" style={styles.modeSubtitle}>
+                            <AppText
+                              variant="bodySecondary"
+                              tone="muted"
+                              style={styles.modeSubtitle}
+                            >
                               {mode.subtitle}
                             </AppText>
                           </View>
 
                           {mode.highlighted && (
                             <View style={styles.signatureBadge}>
-                              <AppText variant="caption" style={styles.signatureText}>SIGNATURE</AppText>
+                              <AppText
+                                variant="caption"
+                                style={styles.signatureText}
+                              >
+                                SIGNATURE
+                              </AppText>
                             </View>
                           )}
                         </View>
@@ -943,7 +851,9 @@ export default function OnboardingScreen() {
                   end={{ x: 1, y: 1 }}
                   style={StyleSheet.absoluteFill}
                 />
-                <AppText variant="sectionLabel" style={styles.previewEyebrow}>PRÊT À ENTRER</AppText>
+                <AppText variant="sectionLabel" style={styles.previewEyebrow}>
+                  PRÊT À ENTRER
+                </AppText>
                 <AppText variant="sectionTitle" style={styles.previewTitle}>
                   {selectedSceneData.title} · {selectedModeData.title}
                 </AppText>
@@ -957,7 +867,9 @@ export default function OnboardingScreen() {
                   style={styles.secondaryButton}
                   onPress={() => goToStep("scene")}
                 >
-                  <AppText variant="button" style={styles.secondaryText}>Retour aux scènes</AppText>
+                  <AppText variant="button" style={styles.secondaryText}>
+                    Retour aux scènes
+                  </AppText>
                 </Pressable>
 
                 <Pressable
@@ -981,7 +893,9 @@ export default function OnboardingScreen() {
                       end={{ x: 1, y: 1 }}
                       style={StyleSheet.absoluteFill}
                     />
-                    <AppText variant="button" style={styles.primaryText}>Commencer</AppText>
+                    <AppText variant="button" style={styles.primaryText}>
+                      Commencer
+                    </AppText>
                   </BlurView>
                 </Pressable>
               </View>
@@ -1006,9 +920,19 @@ export default function OnboardingScreen() {
               />
             </View>
 
-            <AppText variant="sectionLabel" style={styles.transitionEyebrow}>SCÈNE EN COURS</AppText>
-            <AppText accessibilityRole="header" variant="screenTitle" style={styles.transitionTitle}>Tu es prêt.</AppText>
-            <AppText variant="body" style={styles.transitionText}>La conversation commence.</AppText>
+            <AppText variant="sectionLabel" style={styles.transitionEyebrow}>
+              SCÈNE EN COURS
+            </AppText>
+            <AppText
+              accessibilityRole="header"
+              variant="screenTitle"
+              style={styles.transitionTitle}
+            >
+              Tu es prêt.
+            </AppText>
+            <AppText variant="body" style={styles.transitionText}>
+              La conversation commence.
+            </AppText>
           </Animated.View>
         )}
       </SafeAreaView>
@@ -1161,104 +1085,6 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.65)",
     marginTop: 6,
   },
-  pathGrid: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 24,
-  },
-  pathGridCompact: {
-    gap: 8,
-    marginBottom: 16,
-  },
-  pathPress: {
-    flex: 1,
-    borderRadius: 24,
-    overflow: "hidden",
-  },
-  pathCard: {
-    minHeight: 168,
-    borderRadius: 24,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    padding: 18,
-  },
-  pathCardCompact: {
-    minHeight: 108,
-    borderRadius: 20,
-    padding: 12,
-  },
-  pathTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-
-    marginBottom: 20,
-  },
-  pathTopRowCompact: {
-    marginBottom: 8,
-  },
-  pathIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 999,
-    borderWidth: 1,
-    backgroundColor: "rgba(255,255,255,0.04)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  pathIconText: {
-    color: TXT,
-    textAlign: "center",
-  },
-  pathIconCompact: {
-    display: "none",
-  },
-  pathStep: {
-    marginLeft: 10,
-  },
-  pathStepCompact: {
-    marginLeft: 0,
-  },
-  pathTitle: {
-    color: TXT,
-  },
-  pathTitleCompact: {
-  },
-  pathText: {
-    color: "rgba(255,255,255,0.52)",
-    marginTop: 6,
-  },
-  pathTextCompact: {
-    display: "none",
-  },
-  pathBottomRow: {
-    marginTop: "auto",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 12,
-  },
-  pathBottomRowCompact: {
-    paddingTop: 6,
-  },
-  pathAction: {
-    color: TXT_SOFT,
-  },
-  pathArrow: {
-  },
-  subSectionHead: {
-    marginBottom: 14,
-  },
-  subSectionHeadCompact: {
-    marginBottom: 10,
-  },
-  subSectionEyebrow: {
-    color: TXT_SOFT,
-    marginBottom: 4,
-  },
-  subSectionTitle: {
-    color: TXT,
-  },
   scroll: {
     flex: 1,
     marginHorizontal: -4,
@@ -1358,6 +1184,10 @@ const styles = StyleSheet.create({
   sceneSubtitle: {
     color: "rgba(255,255,255,0.58)",
     marginTop: 2,
+  },
+  sceneSubtitleCompact: {
+    marginTop: 1,
+    opacity: 0.92,
   },
   radioWrap: {
     width: 20,

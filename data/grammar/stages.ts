@@ -69,7 +69,7 @@ function recommendedStages(
   }));
 }
 
-export const GRAMMAR_STAGES = [
+const GRAMMAR_STAGE_DEFINITIONS = [
   {
     id: "sentence-structure",
     number: 1,
@@ -1002,7 +1002,13 @@ export const GRAMMAR_STAGES = [
     status: "a1",
     mode: "review",
   },
-] as const satisfies readonly GrammarStage[];
+] as const satisfies readonly Omit<GrammarStage, "access">[];
+
+export const GRAMMAR_STAGES: readonly GrammarStage[] =
+  GRAMMAR_STAGE_DEFINITIONS.map((stage) => ({
+    ...stage,
+    access: stage.status === "pre-a1" ? "free" : "premium",
+  }));
 
 export const GRAMMAR_CHAPTERS = [
   {

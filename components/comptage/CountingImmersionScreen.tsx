@@ -64,7 +64,7 @@ type Props = {
   stopAudioOnDialogueChange?: boolean;
 };
 
-const BACKGROUND_SOURCE = require("../../assets/images/comptage.png");
+const BACKGROUND_SOURCE = require("../../assets/images/comptage.jpg");
 
 const COLORS = {
   bg: "#020306",
