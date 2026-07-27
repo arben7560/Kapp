@@ -18,10 +18,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
 import { AppTypography } from "../../constants/theme";
+import { HANGUL_PROGRESS_IDS } from "../../data/hangul/curriculum";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import type { DailyStreakState } from "../../lib/dailyStreak";
-import { HANGUL_PROGRESS_IDS } from "../../data/hangul/curriculum";
 import { getGrammarJourneyCompletion } from "../../lib/grammar";
 
 const BACKGROUND_SOURCE = require("../../assets/images/seoulhub.jpg");
@@ -347,10 +347,7 @@ export default function Home() {
                 ]}
               >
                 <View style={styles.heroContent}>
-                  <AppText
-                    variant="sectionLabel"
-                    style={styles.heroLabel}
-                  >
+                  <AppText variant="sectionLabel" style={styles.heroLabel}>
                     SÉOUL IMMERSION
                   </AppText>
 
@@ -372,7 +369,8 @@ export default function Home() {
                           transform: [
                             {
                               translateY:
-                                1 - AppTypography[heroSeoulVariant].lineHeight / 2,
+                                1 -
+                                AppTypography[heroSeoulVariant].lineHeight / 2,
                             },
                           ],
                         },
@@ -437,10 +435,7 @@ export default function Home() {
             />
 
             <View style={styles.sectionDivider}>
-              <AppText
-                variant="sectionLabel"
-                style={styles.sectionTitle}
-              >
+              <AppText variant="sectionLabel" style={styles.sectionTitle}>
                 PARCOURS
               </AppText>
               <View style={styles.titleLineWrap}>
@@ -477,10 +472,7 @@ export default function Home() {
             </View>
 
             <View style={styles.sectionDivider}>
-              <AppText
-                variant="sectionLabel"
-                style={styles.sectionTitle}
-              >
+              <AppText variant="sectionLabel" style={styles.sectionTitle}>
                 IMMERSION
               </AppText>
               <View style={styles.titleLineWrap}>
@@ -611,16 +603,10 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
     >
       <BlurView intensity={60} tint="dark" style={styles.mainCard}>
         <View style={styles.cardContent}>
-          <AppText
-            variant="sectionLabel"
-            style={styles.cardKicker}
-          >
+          <AppText variant="sectionLabel" style={styles.cardKicker}>
             {isMission ? "REPRENDRE LA MISSION" : "REPRENDRE LE PARCOURS"}
           </AppText>
-          <AppText
-            variant="featureTitle"
-            style={styles.cardTitle}
-          >
+          <AppText variant="featureTitle" style={styles.cardTitle}>
             {displayLabel}
           </AppText>
           <AppText
@@ -696,31 +682,19 @@ function DailyStreakCard({
 
         <View style={styles.streakTopRow}>
           <View style={styles.streakCounterBlock}>
-            <AppText
-              variant="sectionLabel"
-              style={styles.streakKicker}
-            >
+            <AppText variant="sectionLabel" style={styles.streakKicker}>
               SÉRIE QUOTIDIENNE
             </AppText>
             <View style={styles.streakNumberRow}>
               <View style={styles.streakSymbol}>
-                <AppText
-                  variant="caption"
-                  style={styles.streakSymbolText}
-                >
+                <AppText variant="caption" style={styles.streakSymbolText}>
                   ST
                 </AppText>
               </View>
-              <AppText
-                variant="numericValue"
-                style={styles.streakNumber}
-              >
+              <AppText variant="numericValue" style={styles.streakNumber}>
                 {currentStreak}
               </AppText>
-              <AppText
-                variant="caption"
-                style={styles.streakUnit}
-              >
+              <AppText variant="caption" style={styles.streakUnit}>
                 {currentStreak > 1 ? "jours" : "jour"}
               </AppText>
             </View>
@@ -745,10 +719,7 @@ function DailyStreakCard({
         </View>
 
         <View style={styles.streakMessageBox}>
-          <AppText
-            variant="bodyStrong"
-            style={styles.streakMessageTitle}
-          >
+          <AppText variant="bodyStrong" style={styles.streakMessageTitle}>
             {isValidated ? "Objectif du jour atteint" : "Objectif du jour"}
           </AppText>
           <AppText
@@ -762,10 +733,7 @@ function DailyStreakCard({
 
         <View style={styles.streakMetrics}>
           <View style={styles.streakMetricCard}>
-            <AppText
-              variant="bodyStrong"
-              style={styles.streakMetricValue}
-            >
+            <AppText variant="bodyStrong" style={styles.streakMetricValue}>
               {longestStreak} j
             </AppText>
             <AppText
@@ -777,10 +745,7 @@ function DailyStreakCard({
             </AppText>
           </View>
           <View style={styles.streakMetricCard}>
-            <AppText
-              variant="bodyStrong"
-              style={styles.streakMetricValue}
-            >
+            <AppText variant="bodyStrong" style={styles.streakMetricValue}>
               {freezesAvailable}
             </AppText>
             <AppText
@@ -792,10 +757,7 @@ function DailyStreakCard({
             </AppText>
           </View>
           <View style={styles.streakMetricCard}>
-            <AppText
-              variant="bodyStrong"
-              style={styles.streakMetricValue}
-            >
+            <AppText variant="bodyStrong" style={styles.streakMetricValue}>
               {isValidated ? "OK" : "1"}
             </AppText>
             <AppText
@@ -808,11 +770,7 @@ function DailyStreakCard({
           </View>
         </View>
 
-        <AppText
-          variant="caption"
-          tone="soft"
-          style={styles.streakOpenHint}
-        >
+        <AppText variant="caption" tone="soft" style={styles.streakOpenHint}>
           Voir le calendrier et les badges
         </AppText>
       </BlurView>
@@ -846,7 +804,7 @@ function getSequenceIcon(trackKey: string) {
     case "dialogs":
       return "compass";
     case "listen":
-      return "음";
+      return "소리";
     default:
       return "•";
   }
@@ -974,23 +932,13 @@ function SequenceCard({ item, isActive, onPress }: any) {
         <View style={styles.seqDividerLine} />
 
         <View style={styles.seqText}>
-          <AppText
-            variant="sectionLabel"
-            style={styles.seqPlace}
-          >
+          <AppText variant="sectionLabel" style={styles.seqPlace}>
             {item.place}
           </AppText>
-          <AppText
-            variant="cardTitle"
-            style={styles.seqTitle}
-          >
+          <AppText variant="cardTitle" style={styles.seqTitle}>
             {item.title}
           </AppText>
-          <AppText
-            variant="bodySecondary"
-            tone="muted"
-            style={styles.seqSub}
-          >
+          <AppText variant="bodySecondary" tone="muted" style={styles.seqSub}>
             {item.narrative}
           </AppText>
         </View>
@@ -1009,7 +957,6 @@ function SequenceCard({ item, isActive, onPress }: any) {
         >
           ›
         </AppText>
-
       </BlurView>
     </Pressable>
   );
@@ -1427,8 +1374,7 @@ const styles = StyleSheet.create({
     height: "58%",
     borderRadius: 22,
   },
-  seqIcon: {
-  },
+  seqIcon: {},
   seqDividerLine: {
     width: 1,
     height: 42,

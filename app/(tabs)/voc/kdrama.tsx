@@ -40,6 +40,9 @@ const ROMANCE_AUDIO = {
   toolbox1: require("../../../assets/audio/voc/romance/toolbox/confession-toolbox-1.mp3"),
   toolbox2: require("../../../assets/audio/voc/romance/toolbox/confession-toolbox-2.mp3"),
   toolbox3: require("../../../assets/audio/voc/romance/toolbox/confession-toolbox-3.mp3"),
+  toolbox4: require("../../../assets/audio/voc/romance/toolbox/confession-toolbox-4.mp3"),
+  toolbox5: require("../../../assets/audio/voc/romance/toolbox/confession-toolbox-5.mp3"),
+  toolbox6: require("../../../assets/audio/voc/romance/toolbox/confession-toolbox-6.mp3"),
 };
 
 const TENSION_AUDIO = {
@@ -50,6 +53,9 @@ const TENSION_AUDIO = {
   toolbox1: require("../../../assets/audio/voc/Tension/toolbox/tension-toolbox-1.mp3"),
   toolbox2: require("../../../assets/audio/voc/Tension/toolbox/tension-toolbox-2.mp3"),
   toolbox3: require("../../../assets/audio/voc/Tension/toolbox/tension-toolbox-3.mp3"),
+  toolbox4: require("../../../assets/audio/voc/Tension/toolbox/tension-toolbox-4.mp3"),
+  toolbox5: require("../../../assets/audio/voc/Tension/toolbox/tension-toolbox-5.mp3"),
+  toolbox6: require("../../../assets/audio/voc/Tension/toolbox/tension-toolbox-6.mp3"),
 };
 
 const POCHA_AUDIO = {
@@ -60,6 +66,9 @@ const POCHA_AUDIO = {
   toolbox1: require("../../../assets/audio/voc/pocha/toolbox/pocha-toolbox-1.mp3"),
   toolbox2: require("../../../assets/audio/voc/pocha/toolbox/pocha-toolbox-2.mp3"),
   toolbox3: require("../../../assets/audio/voc/pocha/toolbox/pocha-toolbox-3.mp3"),
+  toolbox4: require("../../../assets/audio/voc/pocha/toolbox/pocha-toolbox-4.mp3"),
+  toolbox5: require("../../../assets/audio/voc/pocha/toolbox/pocha-toolbox-5.mp3"),
+  toolbox6: require("../../../assets/audio/voc/pocha/toolbox/pocha-toolbox-6.mp3"),
 };
 
 const SCENES = [
@@ -133,18 +142,21 @@ const SCENES = [
         rom: "Budam gatji ma",
         mean: "Ne te mets pas la pression",
         context: "Phrase douce pour rassurer quelqu'un.",
+        audio: ROMANCE_AUDIO.toolbox4,
       },
       {
         word: "나도 그래",
         rom: "Nado geurae",
         mean: "Moi aussi",
         context: "Réponse courte et naturelle à un aveu.",
+        audio: ROMANCE_AUDIO.toolbox5,
       },
       {
         word: "진심이야",
         rom: "Jinsimiya",
         mean: "Je suis sincère",
         context: "Pour rendre une confession plus claire.",
+        audio: ROMANCE_AUDIO.toolbox6,
       },
     ],
   },
@@ -217,18 +229,21 @@ const SCENES = [
         rom: "Joesonghamnida",
         mean: "Je suis désolé",
         context: "Formule de base dans une scène sérieuse.",
+        audio: TENSION_AUDIO.toolbox4,
       },
       {
         word: "다시 하겠습니다",
         rom: "Dasi hagetseumnida",
         mean: "Je vais recommencer",
         context: "Réponse utile après une critique.",
+        audio: TENSION_AUDIO.toolbox5,
       },
       {
         word: "꼭 해내겠습니다",
         rom: "Kkok haenaegetseumnida",
         mean: "Je vais absolument y arriver",
         context: "Phrase déterminée typique des dramas de bureau.",
+        audio: TENSION_AUDIO.toolbox6,
       },
     ],
   },
@@ -302,18 +317,21 @@ const SCENES = [
         rom: "Jal beotyeosseo",
         mean: "Tu as bien tenu",
         context: "Pour encourager quelqu'un après une journée difficile.",
+        audio: POCHA_AUDIO.toolbox4,
       },
       {
         word: "오늘 힘들었어",
         rom: "Oneul himdeureosseo",
         mean: "Aujourd'hui, c'était dur",
         context: "Phrase naturelle pour parler de fatigue.",
+        audio: POCHA_AUDIO.toolbox5,
       },
       {
         word: "내일도 힘내",
         rom: "Naeildo himnae",
         mean: "Courage aussi demain",
         context: "Encouragement simple entre amis.",
+        audio: POCHA_AUDIO.toolbox6,
       },
     ],
   },

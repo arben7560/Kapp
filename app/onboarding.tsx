@@ -4,6 +4,7 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { Home, MoveRight } from "lucide-react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
@@ -486,6 +487,66 @@ export default function OnboardingScreen() {
                     isCompactScreen && styles.sectionTitleCompact,
                   ]}
                 >
+                  Choisis comment entrer
+                </AppText>
+              </View>
+
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel="Explorer l’accueil"
+                accessibilityHint="Quitte l’onboarding et ouvre l’accueil de l’application"
+                hitSlop={8}
+                style={styles.exploreHomeAction}
+                onPress={openMoreScenes}
+              >
+                <BlurView
+                  intensity={26}
+                  tint="dark"
+                  style={styles.exploreHomeCard}
+                >
+                  <LinearGradient
+                    colors={[
+                      "rgba(255,255,255,0.12)",
+                      "rgba(255,255,255,0.045)",
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <View style={styles.exploreHomeIcon}>
+                    <Home size={18} color="#FFFFFF" strokeWidth={2.1} />
+                  </View>
+                  <View style={styles.exploreHomeCopy}>
+                    <AppText
+                      variant="sectionLabel"
+                      style={styles.exploreHomeEyebrow}
+                    >
+                      ACCÈS DIRECT
+                    </AppText>
+                    <AppText variant="cardTitle" style={styles.exploreHomeText}>
+                      Explorer l’accueil
+                    </AppText>
+                  </View>
+                  <View style={styles.exploreHomeArrow}>
+                    <MoveRight size={18} color="#FFFFFF" strokeWidth={2.1} />
+                  </View>
+                </BlurView>
+              </Pressable>
+
+              <View
+                style={[
+                  styles.sceneChoiceHead,
+                  isCompactScreen && styles.sceneChoiceHeadCompact,
+                ]}
+              >
+                <View style={styles.choiceDivider} />
+                <AppText
+                  variant="sectionLabel"
+                  style={styles.sceneChoiceEyebrow}
+                >
+                  OU COMMENCER PAR UNE SITUATION
+                </AppText>
+                <AppText variant="sectionTitle" style={styles.sceneChoiceTitle}>
                   Choisis ta première scène
                 </AppText>
               </View>
@@ -642,19 +703,6 @@ export default function OnboardingScreen() {
                     </Pressable>
                   );
                 })}
-
-                <Pressable
-                  accessibilityRole="link"
-                  accessibilityLabel="Explorer l’accueil"
-                  accessibilityHint="Quitte l’onboarding et ouvre l’accueil de l’application"
-                  hitSlop={8}
-                  style={styles.discreetAction}
-                  onPress={openMoreScenes}
-                >
-                  <AppText variant="link" style={styles.discreetActionText}>
-                    Explorer l’accueil
-                  </AppText>
-                </Pressable>
               </View>
             </ScrollView>
 
@@ -1117,12 +1165,86 @@ const styles = StyleSheet.create({
   },
   sceneList: {
     paddingHorizontal: 4,
-    gap: 12,
-    paddingBottom: 24,
+    gap: 16,
+    paddingBottom: 152,
   },
   sceneListCompact: {
-    gap: 8,
-    paddingBottom: 84,
+    gap: 14,
+    paddingBottom: 196,
+  },
+  exploreHomeAction: {
+    alignSelf: "stretch",
+    marginHorizontal: 4,
+    marginTop: -2,
+    marginBottom: 32,
+    borderRadius: 22,
+    overflow: "hidden",
+  },
+  exploreHomeCard: {
+    minHeight: 76,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderTopWidth: 1.2,
+    borderColor: "rgba(255,255,255,0.16)",
+    borderTopColor: "rgba(255,255,255,0.32)",
+    backgroundColor: "rgba(255,255,255,0.055)",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    overflow: "hidden",
+  },
+  exploreHomeIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.20)",
+    backgroundColor: "rgba(244,114,182,0.22)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  exploreHomeCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  exploreHomeEyebrow: {
+    color: PINK,
+    marginBottom: 3,
+  },
+  exploreHomeText: {
+    color: TXT,
+  },
+  exploreHomeArrow: {
+    width: 34,
+    height: 34,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sceneChoiceHead: {
+    alignItems: "center",
+    marginBottom: 44,
+  },
+  sceneChoiceHeadCompact: {
+    marginBottom: 20,
+  },
+  choiceDivider: {
+    width: 44,
+    height: 1,
+    marginBottom: 18,
+    backgroundColor: "rgba(255,255,255,0.20)",
+  },
+  sceneChoiceEyebrow: {
+    color: "rgba(255,255,255,0.58)",
+    textAlign: "center",
+    marginBottom: 6,
+  },
+  sceneChoiceTitle: {
+    color: TXT,
+    textAlign: "center",
   },
   scenePress: {
     borderRadius: 24,
@@ -1203,14 +1325,6 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 999,
-  },
-  discreetAction: {
-    alignSelf: "center",
-    paddingVertical: 12,
-    marginTop: 4,
-  },
-  discreetActionText: {
-    color: "rgba(255,255,255,0.45)",
   },
   modeList: {
     gap: 12,

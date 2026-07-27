@@ -1,7 +1,7 @@
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 import * as Speech from "expo-speech";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -270,6 +270,17 @@ export default function RestaurantLesson() {
     };
   }, []);
 
+  const handleBack = useCallback(() => {
+    Speech.stop();
+
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/(tabs)");
+  }, []);
+
   const speak = (text: string, id: string) => {
     Speech.stop();
     setSelectedWord(id);
@@ -329,7 +340,7 @@ export default function RestaurantLesson() {
 
         <ScrollView contentContainerStyle={styles.scroll}>
           <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.backBtn}>
+            <Pressable onPress={handleBack} style={styles.backBtn}>
               <AppText variant="screenTitle" lineContract="singleLine" style={styles.backArrow}>‹</AppText>
               <AppText variant="sectionLabel" lineContract="singleLine" style={styles.backText}>RETOUR</AppText>
             </Pressable>

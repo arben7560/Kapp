@@ -40,6 +40,9 @@ const SOGETING_AUDIO = {
   toolbox1: require("../../../assets/audio/voc/sogaeting/toolbox/sogaeting-toolbox-1.mp3"),
   toolbox2: require("../../../assets/audio/voc/sogaeting/toolbox/sogaeting-toolbox-2.mp3"),
   toolbox3: require("../../../assets/audio/voc/sogaeting/toolbox/sogaeting-toolbox-3.mp3"),
+  toolbox4: require("../../../assets/audio/voc/sogaeting/toolbox/sogaeting-toolbox-4.mp3"),
+  toolbox5: require("../../../assets/audio/voc/sogaeting/toolbox/sogaeting-toolbox-5.mp3"),
+  toolbox6: require("../../../assets/audio/voc/sogaeting/toolbox/sogaeting-toolbox-6.mp3"),
 };
 
 const SOME_AUDIO = {
@@ -50,6 +53,9 @@ const SOME_AUDIO = {
   toolbox1: require("../../../assets/audio/voc/le-some/toolbox/some-toolbox-1.mp3"),
   toolbox2: require("../../../assets/audio/voc/le-some/toolbox/some-toolbox-2.mp3"),
   toolbox3: require("../../../assets/audio/voc/le-some/toolbox/some-toolbox-3.mp3"),
+  toolbox4: require("../../../assets/audio/voc/le-some/toolbox/some-toolbox-4.mp3"),
+  toolbox5: require("../../../assets/audio/voc/le-some/toolbox/some-toolbox-5.mp3"),
+  toolbox6: require("../../../assets/audio/voc/le-some/toolbox/some-toolbox-6.mp3"),
 };
 
 const COUPLE_AUDIO = {
@@ -60,6 +66,9 @@ const COUPLE_AUDIO = {
   toolbox1: require("../../../assets/audio/voc/couple/toolbox/couple-toolbox-1.mp3"),
   toolbox2: require("../../../assets/audio/voc/couple/toolbox/couple-toolbox-2.mp3"),
   toolbox3: require("../../../assets/audio/voc/couple/toolbox/couple-toolbox-3.mp3"),
+  toolbox4: require("../../../assets/audio/voc/couple/toolbox/couple-toolbox-4.mp3"),
+  toolbox5: require("../../../assets/audio/voc/couple/toolbox/couple-toolbox-5.mp3"),
+  toolbox6: require("../../../assets/audio/voc/couple/toolbox/couple-toolbox-6.mp3"),
 };
 
 const SCENES = [
@@ -127,18 +136,21 @@ const SCENES = [
         rom: "Daehwaga jal tonghaeyo",
         mean: "La conversation passe bien",
         context: "Compliment naturel pendant un premier rendez-vous.",
+        audio: SOGETING_AUDIO.toolbox4,
       },
       {
         word: "실물이 더 예쁘시네요",
         rom: "Silmuri deo yeppeusineyo",
         mean: "Vous êtes plus jolie en vrai",
         context: "Compliment direct, à utiliser avec tact.",
+        audio: SOGETING_AUDIO.toolbox5,
       },
       {
         word: "다음에 또 만날까요?",
         rom: "Daeume tto mannalkkayo?",
         mean: "On se revoit la prochaine fois ?",
         context: "Phrase utile pour proposer un deuxième rendez-vous.",
+        audio: SOGETING_AUDIO.toolbox6,
       },
     ],
   },
@@ -206,18 +218,21 @@ const SCENES = [
         rom: "Uri museun saiyeyo?",
         mean: "C'est quoi notre relation ?",
         context: "La grande question dans une relation ambiguë.",
+        audio: SOME_AUDIO.toolbox4,
       },
       {
         word: "괜찮아요",
         rom: "Gwaenchanayo",
         mean: "Ça va / C'est bon",
         context: "Réponse douce quand on ne veut pas trop en dire.",
+        audio: SOME_AUDIO.toolbox5,
       },
       {
         word: "더 알고 싶어요",
         rom: "Deo algo sipeoyo",
         mean: "J'aimerais mieux vous connaître",
         context: "Phrase polie pour faire avancer le flirt.",
+        audio: SOME_AUDIO.toolbox6,
       },
     ],
   },
@@ -285,18 +300,21 @@ const SCENES = [
         rom: "Narang sagwillae?",
         mean: "Tu veux sortir avec moi ?",
         context: "Version plus complète et naturelle de la demande.",
+        audio: COUPLE_AUDIO.toolbox4,
       },
       {
         word: "같은 마음이야",
         rom: "Gateun maeumiya",
         mean: "Je ressens la même chose",
         context: "Réponse tendre à une déclaration.",
+        audio: COUPLE_AUDIO.toolbox5,
       },
       {
         word: "헤어지지 말자",
         rom: "Heeojiji malja",
         mean: "Ne nous séparons pas",
         context: "Promesse romantique très drama.",
+        audio: COUPLE_AUDIO.toolbox6,
       },
     ],
   },

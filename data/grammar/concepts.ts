@@ -395,7 +395,7 @@ export const GRAMMAR_CONCEPTS = [
     prerequisiteIds: ["present-a-eoyo", "polite-style-yo"],
     examples: [
       { korean: "여기에서 내리세요.", french: "Descendez ici." },
-      { korean: "이곳으로 가세요.", french: "Allez dans cette direction.", sourceRefId: "listening:metro-dictation-03" },
+      { korean: "이쪽 가세요.", french: "Allez dans cette direction.", sourceRefId: "listening:metro-dictation-03" },
     ],
   }),
   defineConcept({

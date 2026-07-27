@@ -64,6 +64,15 @@ export default function MetroMissionsScreen() {
     (mission) => mission.missionKind === "mini",
   );
 
+  const handleBack = React.useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/(tabs)");
+  }, []);
+
   const openMission = (mission: MetroMission) => {
     if (!canOpenImmersionMission(mission, hasPremiumAccess)) {
       router.push("/premium");
@@ -97,7 +106,7 @@ export default function MetroMissionsScreen() {
             },
           ]}
         >
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Pressable onPress={handleBack} style={styles.backButton}>
             <AppText variant="sectionTitle" lineContract="singleLine" style={styles.backText}>x</AppText>
           </Pressable>
           <View style={styles.headerCopy}>

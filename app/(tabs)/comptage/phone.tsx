@@ -177,7 +177,7 @@ const SCENES = withSceneAudio([
       },
       {
         char: "Manager",
-        kr: "회의 시간이 삼 시에서 네 시로 바뀌었어요.",
+        kr: "회의 시간이 세 시에서 네 시로 바뀌었어요.",
         fr: "L'heure de la réunion est passée de 3h à 4h.",
       },
       {
@@ -247,7 +247,7 @@ const SCENES = withSceneAudio([
       },
       {
         char: "Ami",
-        kr: "괜찮아, 여덟 시 전에 답장만 해줘.",
+        kr: "괜찮아, 여덟 시 전에만 답장해 줘.",
         fr: "Pas grave, réponds-moi juste avant 8h.",
       },
       {

@@ -1,12 +1,12 @@
-import type { MetroLesson, MetroState, MetroStep } from "./type";
 import { METRO_REPEAT_REQUEST } from "../sharedPhrases";
+import type { MetroLesson, MetroState, MetroStep } from "./type";
 
 export type {
   MetroChoice,
   MetroLesson,
   MetroPhase,
   MetroState,
-  MetroStep,
+  MetroStep
 } from "./type";
 
 export const seoulStationToJamsilLesson: MetroLesson = {
@@ -486,11 +486,9 @@ export const myeongdongToItaewonLesson: MetroLesson = {
       phase: "Direction",
       narrator:
         "Le passant vous donne maintenant le sens à prendre sur la ligne 4.",
-      text: "Prenez la ligne 4 en direction de Sadang ou Oido. Descendez à Samgakji après environ quatre arrêts.",
-      korean:
-        "4호선 사당이나 오이도 방면 열차를 타세요. 약 네 정거장 후에 삼각지역에서 내리시면 됩니다.",
-      french:
-        "Prenez la ligne 4 en direction de Sadang ou Oido. Descendez à Samgakji après environ quatre arrêts.",
+      text: "Descendez à Samgakji quatre stations plus loin.",
+      korean: "네 정거장 뒤에 삼각지역에서 내리시면 됩니다.",
+      french: "Descendez à Samgakji quatre stations plus loin.",
       romanization:
         "Sahoseon Sadang-ina Oido bangmyeon yeolchareul taseyo. Yak ne jeonggeojang hue Samgakji-yeogeseo naerisimyeon doemnida.",
       choices: [
@@ -552,7 +550,7 @@ export const myeongdongToItaewonLesson: MetroLesson = {
         "Le passant vous explique maintenant où et comment faire la correspondance.",
       text: "Vous changez à Samgakji. Descendez de la ligne 4, suivez les panneaux de la ligne 6, puis prenez la ligne 6 en direction d'Itaewon.",
       korean:
-        "삼각지역에서 갈아타시면 돼요. 4호선에서 내리신 다음 6호선 표지판을 따라가세요. 그리고 이태원 방향 열차를 타시면 됩니다.",
+        "삼각지역에서 갈아타시면 돼요. 사호선에서 내리신 다음 육호선 표지판을 따라가세요. 그리고 이태원 방향 열차를 타시면 됩니다.",
       french:
         "Vous changez à Samgakji. Descendez de la ligne 4, suivez les panneaux de la ligne 6, puis prenez la ligne 6 en direction d'Itaewon.",
       romanization:
@@ -1273,8 +1271,7 @@ export const hongikToGangnamLesson: MetroLesson = {
         "Vous obtenez maintenant des précisions sur la durée et le nombre d'arrêts.",
       text: "Le trajet dure environ 40 minutes et Gangnam est à 17 stations.",
       korean: "강남역까지는 약 40분 걸리고, 열일곱 정거장이에요.",
-      french:
-        "Le trajet dure environ 40 minutes et Gangnam est à 17 stations.",
+      french: "Le trajet dure environ 40 minutes et Gangnam est à 17 stations.",
       romanization:
         "Gangnam-yeokkkajineun yak sasip bun geolligo, yeolilgop jeonggeojang-ieyo.",
       choices: [
@@ -1307,10 +1304,8 @@ export const hongikToGangnamLesson: MetroLesson = {
       phase: "Trajet",
       text: "Bien sûr. Comptez environ 40 minutes pour 17 stations.",
       korean: "네. 약 40분 걸리고, 열일곱 정거장이에요.",
-      french:
-        "Bien sûr. Comptez environ 40 minutes pour 17 stations.",
-      romanization:
-        "Ne. Yak sasip bun geolligo, yeolilgop jeonggeojang-ieyo.",
+      french: "Bien sûr. Comptez environ 40 minutes pour 17 stations.",
+      romanization: "Ne. Yak sasip bun geolligo, yeolilgop jeonggeojang-ieyo.",
       choices: [
         {
           id: "ask_transfer_after_trip_repeat",
@@ -1578,7 +1573,7 @@ export const hongikToGangnamLesson: MetroLesson = {
       phase: "Fin",
       narrator: "La conversation se termine naturellement.",
       text: "De rien ! Bon voyage et bonne journée !",
-      korean: "아니에요! 안전하게 다녀오세요. 좋은 하루 되세요!",
+      korean: "아니에요! 안전하게 여행 하세요.",
       french: "De rien ! Bon voyage et bonne journée !",
       romanization: "Aniyeyo! Anjeonhage danyeooseyo. Joeun haru doeseyo!",
     },

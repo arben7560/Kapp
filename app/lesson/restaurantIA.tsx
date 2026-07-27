@@ -497,6 +497,15 @@ export default function RestaurantIaScreen() {
     hasReportedMissionCompleteRef.current = false;
   };
 
+  const handleExit = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/(tabs)");
+  }, []);
+
   const isUserChoice = currentNode?.type === "user_choice";
 
   const isReviewableTranscript =
@@ -545,7 +554,7 @@ export default function RestaurantIaScreen() {
             accessibilityRole="button"
             accessibilityLabel="Quitter la scène"
             hitSlop={8}
-            onPress={() => router.back()}
+            onPress={handleExit}
             style={styles.backBtn}
           >
             <AppText
@@ -796,7 +805,7 @@ export default function RestaurantIaScreen() {
                       accessibilityRole="button"
                       accessibilityLabel="Retour aux missions"
                       hitSlop={6}
-                      onPress={() => router.back()}
+                      onPress={handleExit}
                       style={({ pressed }) => [
                         styles.endActionSecondary,
                         { opacity: pressed ? 0.9 : 1 },

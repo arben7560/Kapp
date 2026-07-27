@@ -46,6 +46,9 @@ const HOPITAL_AUDIO = {
   toolbox1: require("../../../assets/audio/voc/hopital/toolbox/hopital-toolbox-1.mp3"),
   toolbox2: require("../../../assets/audio/voc/hopital/toolbox/hopital-toolbox-2.mp3"),
   toolbox3: require("../../../assets/audio/voc/hopital/toolbox/hopital-toolbox-3.mp3"),
+  toolbox4: require("../../../assets/audio/voc/hopital/toolbox/hopital-toolbox-4.mp3"),
+  toolbox5: require("../../../assets/audio/voc/hopital/toolbox/hopital-toolbox-5.mp3"),
+  toolbox6: require("../../../assets/audio/voc/hopital/toolbox/hopital-toolbox-6.mp3"),
 };
 
 const URGENCE_AUDIO = {
@@ -56,6 +59,9 @@ const URGENCE_AUDIO = {
   toolbox1: require("../../../assets/audio/voc/urgence/toolbox/urgence-toolbox-1.mp3"),
   toolbox2: require("../../../assets/audio/voc/urgence/toolbox/urgence-toolbox-2.mp3"),
   toolbox3: require("../../../assets/audio/voc/urgence/toolbox/urgence-toolbox-3.mp3"),
+  toolbox4: require("../../../assets/audio/voc/urgence/toolbox/urgence-toolbox-4.mp3"),
+  toolbox5: require("../../../assets/audio/voc/urgence/toolbox/urgence-toolbox-5.mp3"),
+  toolbox6: require("../../../assets/audio/voc/urgence/toolbox/urgence-toolbox-6.mp3"),
 };
 
 const SCENES = [
@@ -191,18 +197,21 @@ const SCENES = [
         rom: "Eodiga apeuseyo?",
         mean: "Où avez-vous mal ?",
         context: "Question très fréquente pendant une consultation.",
+        audio: HOPITAL_AUDIO.toolbox4,
       },
       {
         word: "배가 아파요",
         rom: "Baega apayo",
         mean: "J'ai mal au ventre",
         context: "Phrase simple pour décrire une douleur courante.",
+        audio: HOPITAL_AUDIO.toolbox5,
       },
       {
         word: "열이 나요",
         rom: "Yeori nayo",
         mean: "J'ai de la fièvre",
         context: "Symptôme essentiel à expliquer au médecin.",
+        audio: HOPITAL_AUDIO.toolbox6,
       },
     ],
   },
@@ -270,18 +279,21 @@ const SCENES = [
         rom: "Sagoga nasseoyo",
         mean: "Il y a eu un accident",
         context: "Phrase cruciale pour signaler une urgence.",
+        audio: URGENCE_AUDIO.toolbox4,
       },
       {
         word: "위치가 어디예요?",
         rom: "Wichiga eodiyeyo?",
         mean: "Quelle est la position ?",
         context: "Question centrale lors d'un appel aux secours.",
+        audio: URGENCE_AUDIO.toolbox5,
       },
       {
         word: "의식이 있어요",
         rom: "Uisigi isseoyo",
         mean: "La personne est consciente",
         context: "Information importante à donner au 119.",
+        audio: URGENCE_AUDIO.toolbox6,
       },
     ],
   },

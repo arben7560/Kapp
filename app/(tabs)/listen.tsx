@@ -13,8 +13,8 @@ import {
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
 import { useVocAudio } from "../../hooks/useVocAudio";
-import { completeDailyActivity } from "../../lib/dailyStreak";
 import { shuffleArray, shuffleIndexedChoices } from "../../lib/choiceOrder";
+import { completeDailyActivity } from "../../lib/dailyStreak";
 import { buildProgressId } from "../../lib/progressIds";
 
 const BG_URL =
@@ -299,9 +299,9 @@ const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       theme: "Métro",
       title: "Remets en ordre",
       instruction: "Écoute, puis reconstruis la phrase.",
-      words: ["가세요", "이곳으로", "그냥"],
-      answer: ["그냥", "이곳으로", "가세요"],
-      explanation: "그냥 이곳으로 가세요. = Allez simplement par ici.",
+      words: ["가세요", "이쪽으로", "쭉"],
+      answer: ["쭉", "이쪽으로", "가세요"],
+      explanation: "쭉 이쪽으로 가세요. = Allez simplement par ici.",
     },
     {
       id: "cafe-order-02",
@@ -417,7 +417,9 @@ export default function ListenScreen() {
   const [checked, setChecked] = useState(false);
   const [dailyMessage, setDailyMessage] = useState<string | null>(null);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
-  const [playedAudioIds, setPlayedAudioIds] = useState<Record<string, true>>({});
+  const [playedAudioIds, setPlayedAudioIds] = useState<Record<string, true>>(
+    {},
+  );
   const { playAudio: playMp3, stopAudio } = useVocAudio(setPlayingAudioId);
 
   const trainingKind = TRAINING_ORDER[trainingIndex];
@@ -426,7 +428,8 @@ export default function ListenScreen() {
   const item = useMemo(() => shuffleListenChoices(sourceItem), [sourceItem]);
   const meta = KIND_LABEL[trainingKind];
   const audioSource = LISTEN_AUDIO_BY_ID[item.id];
-  const hasAttempt = item.kind === "order" ? picked.length > 0 : selected !== null;
+  const hasAttempt =
+    item.kind === "order" ? picked.length > 0 : selected !== null;
   const hasPlayedCurrentAudio = !!playedAudioIds[item.id];
   const isLastExercise = exerciseIndex === exercises.length - 1;
 
@@ -436,7 +439,9 @@ export default function ListenScreen() {
 
   useEffect(() => {
     if (!audioSource) {
-      console.warn(`[Listen] Source audio manquante pour l’exercice ${item.id}.`);
+      console.warn(
+        `[Listen] Source audio manquante pour l’exercice ${item.id}.`,
+      );
     }
   }, [audioSource, item.id]);
 
@@ -893,7 +898,11 @@ export default function ListenScreen() {
                 >
                   {getExpectedAnswer()}
                 </AppText>
-                <AppText variant="body" tone="muted" style={styles.feedbackText}>
+                <AppText
+                  variant="body"
+                  tone="muted"
+                  style={styles.feedbackText}
+                >
                   {item.explanation}
                 </AppText>
               </View>
@@ -908,7 +917,11 @@ export default function ListenScreen() {
                 hitSlop={6}
                 disabled={!hasAttempt}
                 onPress={resetAnswer}
-                style={[styles.actionButton, styles.secondaryButton, !hasAttempt && styles.disabledButton]}
+                style={[
+                  styles.actionButton,
+                  styles.secondaryButton,
+                  !hasAttempt && styles.disabledButton,
+                ]}
               >
                 <AppText
                   variant="button"
@@ -933,7 +946,11 @@ export default function ListenScreen() {
                     !canCheck && styles.disabledButton,
                   ]}
                 >
-                  <AppText variant="button" tone="strong" style={styles.actionText}>
+                  <AppText
+                    variant="button"
+                    tone="strong"
+                    style={styles.actionText}
+                  >
                     Valider
                   </AppText>
                 </Pressable>
@@ -951,8 +968,16 @@ export default function ListenScreen() {
                   onPress={isCorrect ? goNext : resetAnswer}
                   style={styles.actionButton}
                 >
-                  <AppText variant="button" tone="strong" style={styles.actionText}>
-                    {isCorrect ? isLastExercise ? "Recommencer l’entraînement" : "Suivant" : "Réessayer"}
+                  <AppText
+                    variant="button"
+                    tone="strong"
+                    style={styles.actionText}
+                  >
+                    {isCorrect
+                      ? isLastExercise
+                        ? "Recommencer l’entraînement"
+                        : "Suivant"
+                      : "Réessayer"}
                   </AppText>
                 </Pressable>
               )}

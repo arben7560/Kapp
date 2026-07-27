@@ -862,7 +862,12 @@ export default function MetroIaScreen() {
 
   const handleExit = useCallback(() => {
     cancelSpeechRecognition();
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/(tabs)");
   }, [cancelSpeechRecognition]);
 
   const isStartChoiceNode = currentNodeId === "start";

@@ -100,7 +100,7 @@ const SCENES = withSceneAudio(
       dialogue: [
         {
           char: "Ami",
-          kr: "생일이 언제예요?",
+          kr: "생년월일이 언제예요?",
           fr: "C'est quand ton anniversaire ?",
         },
         {
@@ -175,8 +175,8 @@ const SCENES = withSceneAudio(
         },
         {
           char: "Moi",
-          kr: "다음 주 수요일부터 금요일까지요.",
-          fr: "Du mercredi au vendredi de la semaine prochaine.",
+          kr: "다음 주 수요일이요.",
+          fr: "Mercredi prochain.",
         },
         {
           char: "Hôtel",

@@ -40,6 +40,9 @@ const POCHA_AUDIO = {
   toolbox1: require("../../../assets/audio/voc/nuit/toolbox/pocha-toolbox-1.mp3"),
   toolbox2: require("../../../assets/audio/voc/nuit/toolbox/pocha-toolbox-2.mp3"),
   toolbox3: require("../../../assets/audio/voc/nuit/toolbox/pocha-toolbox-3.mp3"),
+  toolbox4: require("../../../assets/audio/voc/nuit/toolbox/pocha-toolbox-4.mp3"),
+  toolbox5: require("../../../assets/audio/voc/nuit/toolbox/pocha-toolbox-5.mp3"),
+  toolbox6: require("../../../assets/audio/voc/nuit/toolbox/pocha-toolbox-6.mp3"),
 };
 
 const NORAEBANG_AUDIO = {
@@ -50,6 +53,9 @@ const NORAEBANG_AUDIO = {
   toolbox1: require("../../../assets/audio/voc/noraebang/toolbox/noraebang-toolbox-1.mp3"),
   toolbox2: require("../../../assets/audio/voc/noraebang/toolbox/noraebang-toolbox-2.mp3"),
   toolbox3: require("../../../assets/audio/voc/noraebang/toolbox/noraebang-toolbox-3.mp3"),
+  toolbox4: require("../../../assets/audio/voc/noraebang/toolbox/noraebang-toolbox-4.mp3"),
+  toolbox5: require("../../../assets/audio/voc/noraebang/toolbox/noraebang-toolbox-5.mp3"),
+  toolbox6: require("../../../assets/audio/voc/noraebang/toolbox/noraebang-toolbox-6.mp3"),
 };
 
 const NUIT_AUDIO = {
@@ -60,6 +66,9 @@ const NUIT_AUDIO = {
   toolbox1: require("../../../assets/audio/voc/after/toolbox/after-toolbox-1.mp3"),
   toolbox2: require("../../../assets/audio/voc/after/toolbox/after-toolbox-2.mp3"),
   toolbox3: require("../../../assets/audio/voc/after/toolbox/after-toolbox-3.mp3"),
+  toolbox4: require("../../../assets/audio/voc/after/toolbox/after-toolbox-4.mp3"),
+  toolbox5: require("../../../assets/audio/voc/after/toolbox/after-toolbox-5.mp3"),
+  toolbox6: require("../../../assets/audio/voc/after/toolbox/after-toolbox-6.mp3"),
 };
 
 const SCENES = [
@@ -128,18 +137,21 @@ const SCENES = [
         rom: "Han jan deo halkkayo?",
         mean: "On reprend un verre ?",
         context: "Phrase naturelle pour proposer une autre tournée.",
+        audio: POCHA_AUDIO.toolbox4,
       },
       {
         word: "제가 따를게요",
         rom: "Jega ttareulgeyo",
         mean: "Je vais vous servir",
         context: "Très utile dans la culture du soju et du partage.",
+        audio: POCHA_AUDIO.toolbox5,
       },
       {
         word: "계산할게요",
         rom: "Gyesan-halgeyo",
         mean: "Je vais payer",
         context: "Formule pratique pour régler au pocha.",
+        audio: POCHA_AUDIO.toolbox6,
       },
     ],
   },
@@ -208,18 +220,21 @@ const SCENES = [
         rom: "Daeum gok",
         mean: "Chanson suivante",
         context: "Pour choisir ou annoncer le prochain morceau.",
+        audio: NORAEBANG_AUDIO.toolbox4,
       },
       {
         word: "마이크 주세요",
         rom: "Maikeu juseyo",
         mean: "Passez-moi le micro",
         context: "Phrase simple pour participer au karaoké.",
+        audio: NORAEBANG_AUDIO.toolbox5,
       },
       {
         word: "점수 대박!",
         rom: "Jeomsu daebak!",
         mean: "Score de dingue !",
         context: "Réaction naturelle après une bonne performance.",
+        audio: NORAEBANG_AUDIO.toolbox6,
       },
     ],
   },
@@ -289,18 +304,21 @@ const SCENES = [
         rom: "Geuncheoro gayo",
         mean: "Allons dans les environs",
         context: "Très pratique quand on cherche le prochain lieu.",
+        audio: NUIT_AUDIO.toolbox4,
       },
       {
         word: "아직 안 끝났어요",
         rom: "Ajik an kkeunnasseoyo",
         mean: "Ce n'est pas encore fini",
         context: "Phrase parfaite pour prolonger la soirée.",
+        audio: NUIT_AUDIO.toolbox5,
       },
       {
         word: "물 좀 주세요",
         rom: "Mul jom juseyo",
         mean: "Un peu d'eau, s'il vous plaît",
         context: "Utile et prudent après une longue soirée.",
+        audio: NUIT_AUDIO.toolbox6,
       },
     ],
   },
