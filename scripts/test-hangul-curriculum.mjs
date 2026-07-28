@@ -24,6 +24,7 @@ import {
   answerHangulQuizQuestion,
   createHangulQuizSession,
   restoreHangulQuizSession,
+  shuffleHangulQuestions,
 } from "../lib/hangulQuiz.ts";
 import { PREMIUM_ROUTE_PATHS } from "../lib/paywall/config.ts";
 import { createRestartableSpeechController } from "../lib/restartableSpeech.ts";
@@ -91,6 +92,75 @@ test("every Hangul listening exercise exposes a playable audio source", () => {
       `${question.id} has no playable audio source`,
     );
   }
+});
+
+test("every consonant discovery explains the model vowel sound", () => {
+  const consonantScenes = HANGUL_MODULES.flatMap((module) => module.scenes)
+    .filter(
+      (scene) =>
+        scene.cards.length > 0 &&
+        scene.cards.every((card) => card.kind === "consonant") &&
+        scene.questions.some(
+          (question) => question.type === "character-to-sound",
+        ),
+    );
+
+  assert.ok(consonantScenes.length >= 4);
+  for (const scene of consonantScenes) {
+    assert.match(scene.instruction, /ㅏ/u, scene.id);
+    assert.match(scene.instruction, /consonne isolée/u, scene.id);
+  }
+});
+
+test("Hangul answer positions are randomized without long same-position streaks", () => {
+  const questions = Array.from({ length: 9 }, (_, index) => ({
+    id: `position-${index}`,
+    type: "read",
+    prompt: `Position ${index}`,
+    options: [
+      { value: `correct-${index}`, label: "Correct" },
+      { value: `wrong-a-${index}`, label: "Incorrect A" },
+      { value: `wrong-b-${index}`, label: "Incorrect B" },
+    ],
+    answer: `correct-${index}`,
+    explanation: "Test",
+    characters: ["ㅏ"],
+  }));
+
+  const shuffled = shuffleHangulQuestions(questions, { random: () => 0 });
+  const positions = shuffled.map((question) =>
+    question.options.findIndex((option) => option.value === question.answer),
+  );
+
+  assert.deepEqual(
+    shuffled.map((question) => question.id),
+    questions.map((question) => question.id),
+  );
+  assert.ok(new Set(positions).size > 1);
+  for (let index = 2; index < positions.length; index += 1) {
+    assert.equal(
+      positions[index] === positions[index - 1] &&
+        positions[index] === positions[index - 2],
+      false,
+    );
+  }
+});
+
+test("a repeated Hangul question moves its correct answer", () => {
+  const initialSession = createHangulQuizSession("scene", [
+    QUIZ_TEST_QUESTIONS[0],
+  ]);
+  const previousPosition = initialSession.questions[0].options.findIndex(
+    (option) => option.value === QUIZ_TEST_QUESTIONS[0].answer,
+  );
+  const answered = answerHangulQuizQuestion(initialSession, "q1-wrong");
+  const catchUp = advanceHangulQuiz(answered, () => 0);
+  const nextPosition = catchUp.session.questions[0].options.findIndex(
+    (option) => option.value === QUIZ_TEST_QUESTIONS[0].answer,
+  );
+
+  assert.equal(catchUp.status, "next-round");
+  assert.notEqual(nextPosition, previousPosition);
 });
 
 test("a Hangul exercise completed without error finishes after the first round", () => {

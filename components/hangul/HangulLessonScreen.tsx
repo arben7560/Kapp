@@ -1,7 +1,6 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
 import React from "react";
 import {
   ImageBackground,
@@ -22,17 +21,18 @@ import {
   createEmptyHangulLessonProgress,
   type HangulLessonProgress,
 } from "../../data/hangul/types";
+import { useHangulAudio } from "../../hooks/useHangulAudio";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
-import { shuffleArray } from "../../lib/choiceOrder";
 import {
   advanceHangulQuiz,
   answerHangulQuizQuestion,
   createHangulQuizSession,
   restoreHangulQuizSession,
+  shuffleHangulQuestions,
 } from "../../lib/hangulQuiz";
 import { trackHangulExerciseCompleted } from "../../lib/immersionStreak";
-import { createRestartableSpeechController } from "../../lib/restartableSpeech";
 import { AppText } from "../app-text";
+import { HangulAudioBadge } from "./HangulAudioBadge";
 import { HangulReplayButton } from "./HangulReplayButton";
 
 const BACKGROUND_SOURCE = require("../../assets/images/vowelbasic.jpg");
@@ -54,10 +54,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
   const module = getHangulModule(moduleId);
   const { progress, updateHangulProgress, complete, isHydrated } = useStore();
   const responsive = useResponsiveLayout({ maxWidth: 920 });
-  const speechController = React.useMemo(
-    () => createRestartableSpeechController(Speech),
-    [],
-  );
+  const { playAudio, stopAudio } = useHangulAudio();
   const savedLesson = normalizeLesson(
     progress.hangulProgress.lessons[module.id],
   );
@@ -167,21 +164,6 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
     updateHangulProgress,
   ]);
 
-  const speak = React.useCallback((value: string) => {
-    void speechController.speak(value, {
-      language: "ko-KR",
-      rate: 0.72,
-      pitch: 1,
-    });
-  }, [speechController]);
-
-  React.useEffect(
-    () => () => {
-      void speechController.stop();
-    },
-    [speechController],
-  );
-
   React.useEffect(() => {
     if (
       quizActive &&
@@ -189,10 +171,10 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
       currentQuestion?.audio &&
       answered === null
     ) {
-      const timer = setTimeout(() => speak(currentQuestion.audio!), 250);
+      const timer = setTimeout(() => playAudio(currentQuestion.audio!), 250);
       return () => clearTimeout(timer);
     }
-  }, [answered, currentQuestion, quizActive, quizComplete, speak]);
+  }, [answered, currentQuestion, playAudio, quizActive, quizComplete]);
 
   React.useEffect(() => {
     if (allScenesMastered) complete(module.id);
@@ -216,12 +198,12 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
       return;
     setActiveSceneId(sceneId);
     setQuizActive(false);
-    void speechController.stop();
+    stopAudio();
     updateLesson((current) => ({ ...current, currentSceneId: sceneId }));
   };
 
   const discover = (cardId: string, audio: string) => {
-    speak(audio);
+    playAudio(audio);
     Vibration.vibrate(8);
     updateLesson((current) => ({
       ...current,
@@ -232,10 +214,9 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
 
   const startQuiz = () => {
     if (!canStartQuiz) return;
-    const baseQuestions = shuffleArray(activeScene.questions).map((item) => ({
-      ...item,
-      options: shuffleArray(item.options),
-    }));
+    const baseQuestions = shuffleHangulQuestions(activeScene.questions, {
+      shuffleQuestions: true,
+    });
     const session = createHangulQuizSession(activeScene.id, baseQuestions);
     setQuizSession(session);
     setQuizComplete(false);
@@ -326,7 +307,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
 
   const continueQuiz = () => {
     if (!quizSession || !currentQuestion || answered === null) return;
-    const advancement = advanceHangulQuiz(quizSession, shuffleArray);
+    const advancement = advanceHangulQuiz(quizSession);
 
     if (advancement.status === "complete") {
       finishQuiz(advancement.session);
@@ -583,9 +564,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                         >
                           {item.glyph}
                         </AppText>
-                        <AppText variant="caption" style={styles.audioMark}>
-                          🔊
-                        </AppText>
+                        <HangulAudioBadge accent={activeScene.accent} />
                       </View>
                       {showRomanization && item.romanization ? (
                         <AppText
@@ -668,7 +647,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                       {currentQuestion.audio ? (
                         <HangulReplayButton
                           accent={activeScene.accent}
-                          onPress={() => speak(currentQuestion.audio!)}
+                          onPress={() => playAudio(currentQuestion.audio!)}
                         />
                       ) : null}
                     </View>
@@ -715,12 +694,23 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                               ]}
                             >
                               <Pressable
-                                onPress={() => speak(item.audio!)}
+                                onPress={() => playAudio(item.audio!)}
                                 style={styles.audioListen}
                               >
-                                <AppText variant="bodyStrong">
-                                  🔊 {item.label}
-                                </AppText>
+                                <HangulAudioBadge
+                                  accent={activeScene.accent}
+                                />
+                                <View style={styles.audioListenCopy}>
+                                  <AppText
+                                    variant="caption"
+                                    style={{ color: activeScene.accent }}
+                                  >
+                                    ÉCOUTER
+                                  </AppText>
+                                  <AppText variant="bodyStrong">
+                                    {item.label}
+                                  </AppText>
+                                </View>
                               </Pressable>
                               <Pressable
                                 disabled={answered !== null}
@@ -938,7 +928,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   glyph: { flexShrink: 1 },
-  audioMark: { opacity: 0.8 },
   cardLabel: { marginTop: 8, marginBottom: 5 },
   primaryButton: { marginTop: 24, borderRadius: 18, overflow: "hidden" },
   buttonDisabled: { opacity: 0.45 },
@@ -996,7 +985,14 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 9,
   },
-  audioListen: { flex: 1, paddingVertical: 6 },
+  audioListen: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+    paddingVertical: 3,
+  },
+  audioListenCopy: { gap: 1 },
   audioChoose: {
     borderWidth: 1,
     borderRadius: 999,

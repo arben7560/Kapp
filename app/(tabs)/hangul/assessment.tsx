@@ -1,7 +1,6 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
 import React from "react";
 import { ImageBackground, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,24 +14,18 @@ import {
   HANGUL_ASSESSMENT_PASS_SCORE,
   HANGUL_MODULES,
 } from "../../../data/hangul/curriculum";
+import { useHangulAudio } from "../../../hooks/useHangulAudio";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
-import { shuffleArray } from "../../../lib/choiceOrder";
-import { createRestartableSpeechController } from "../../../lib/restartableSpeech";
+import { shuffleHangulQuestions } from "../../../lib/hangulQuiz";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
 const createAssessmentQuestions = () =>
-  HANGUL_ASSESSMENT_QUESTIONS.map((question) => ({
-    ...question,
-    options: shuffleArray(question.options),
-  }));
+  shuffleHangulQuestions(HANGUL_ASSESSMENT_QUESTIONS);
 
 export default function HangulAssessmentScreen() {
   const { progress, updateHangulProgress, complete } = useStore();
   const responsive = useResponsiveLayout({ maxWidth: 760 });
-  const speechController = React.useMemo(
-    () => createRestartableSpeechController(Speech),
-    [],
-  );
+  const { playAudio } = useHangulAudio();
   const [started, setStarted] = React.useState(false);
   const [index, setIndex] = React.useState(0);
   const [score, setScore] = React.useState(0);
@@ -47,23 +40,12 @@ export default function HangulAssessmentScreen() {
   const missingModule = HANGUL_MODULES.find((module) => !progress.completed[module.id]);
   const curriculumReady = !missingModule || !!saved?.passed;
 
-  const speak = React.useCallback((value: string) => {
-    void speechController.speak(value, {
-      language: "ko-KR",
-      rate: 0.72,
-    });
-  }, [speechController]);
-
   React.useEffect(() => {
     if (started && !finished && answered === null && current.audio) {
-      const timer = setTimeout(() => speak(current.audio!), 250);
+      const timer = setTimeout(() => playAudio(current.audio!), 250);
       return () => clearTimeout(timer);
     }
-  }, [answered, current, finished, speak, started]);
-
-  React.useEffect(() => () => {
-    void speechController.stop();
-  }, [speechController]);
+  }, [answered, current, finished, playAudio, started]);
 
   const start = () => {
     if (missingModule && !saved?.passed) {
@@ -166,7 +148,7 @@ export default function HangulAssessmentScreen() {
               <BlurView intensity={70} tint="dark" style={styles.card}>
                 <View style={styles.questionHeader}>
                   <AppText variant="sectionLabel" style={styles.gold}>QUESTION {index + 1}/12</AppText>
-                  {current.audio ? <HangulReplayButton accent="#FDE047" onPress={() => speak(current.audio!)} /> : null}
+                  {current.audio ? <HangulReplayButton accent="#FDE047" onPress={() => playAudio(current.audio!)} /> : null}
                 </View>
                 {current.display ? <AppText variant="koreanHero" script="korean" align="center" style={styles.display}>{current.display}</AppText> : null}
                 <AppText variant="sceneTitle" align="center">{current.prompt}</AppText>

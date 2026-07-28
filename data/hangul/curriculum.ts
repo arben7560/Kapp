@@ -102,18 +102,26 @@ const makeCharacterScene = (
   sceneCards: HangulCard[],
   introducedConsonants?: string[],
   introducedVowels?: string[],
-): HangulScene => ({
-  id,
-  title,
-  koreanTitle,
-  description,
-  instruction,
-  accent,
-  cards: sceneCards,
-  questions: characterQuestions(id, sceneCards),
-  introducedConsonants,
-  introducedVowels,
-});
+): HangulScene => {
+  const usesConsonantModelA =
+    sceneCards.length > 0 &&
+    sceneCards.every((card) => card.kind === "consonant");
+
+  return {
+    id,
+    title,
+    koreanTitle,
+    description,
+    instruction: usesConsonantModelA
+      ? `Le son entendu est toujours celui de la consonne combinée avec ㅏ (« a »), jamais celui d’une consonne isolée. ${instruction}`
+      : instruction,
+    accent,
+    cards: sceneCards,
+    questions: characterQuestions(id, sceneCards),
+    introducedConsonants,
+    introducedVowels,
+  };
+};
 
 const coreVowels = cards([
   ["a", "ㅏ", "a", "A ouvert", "Comme le a de « ami ».", "아"],
@@ -230,7 +238,7 @@ const consonantsBasic: HangulModule = {
   eyebrow: "ARCHITECTURE",
   romanizationDefault: true,
   scenes: [
-    makeCharacterScene("simple-a", "Consonnes simples I", "ㄱ · ㄴ · ㄷ · ㅁ · ㅂ", "Cinq consonnes très fréquentes.", "Lis la consonne, puis écoute son bloc modèle en ㅏ.", "#60A5FA", simpleA, simpleA.map((item) => item.glyph)),
+    makeCharacterScene("simple-a", "Consonnes simples I", "ㄱ · ㄴ · ㄷ · ㅁ · ㅂ", "Cinq consonnes très fréquentes.", "Observe la consonne, puis écoute son bloc modèle.", "#60A5FA", simpleA, simpleA.map((item) => item.glyph)),
     makeCharacterScene("simple-b", "Consonnes simples II", "ㄹ · ㅅ · ㅇ · ㅈ · ㅎ", "Cette famille complète les dix consonnes simples.", "Porte une attention particulière à ㄹ et aux deux rôles de ㅇ.", "#34D399", simpleB, simpleB.map((item) => item.glyph)),
     makeCharacterScene("aspirated", "Consonnes aspirées", "ㅋ · ㅌ · ㅍ · ㅊ", "Ces quatre consonnes ajoutent un souffle net aux séries ㄱ, ㄷ, ㅂ et ㅈ.", "Place une main devant la bouche et écoute le souffle.", "#A78BFA", aspirated, aspirated.map((item) => item.glyph)),
     {
@@ -280,7 +288,7 @@ const tenseModule: HangulModule = {
       title: "Simple, tendue ou aspirée",
       koreanTitle: "가 · 까 · 카",
       description: "Le coréen oppose trois types d’attaque.",
-      instruction: "Écoute chaque syllabe seule et choisis sa consonne.",
+      instruction: "Tous les sons sont présentés avec la voyelle ㅏ (« a ») : 가/까/카, 다/따/타, 바/빠/파 et 자/짜/차. Écoute chaque syllabe, puis choisis sa consonne.",
       accent: "#22D3EE",
       cards: cards([
         ["kg", "가 · 까 · 카", undefined, "ㄱ · ㄲ · ㅋ", "Simple, tendue, aspirée.", "가|까|카"],

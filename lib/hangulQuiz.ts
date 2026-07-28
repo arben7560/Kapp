@@ -1,12 +1,86 @@
 import type {
   HangulQuestion,
-  HangulQuestionOption,
   HangulQuizSession,
 } from "../data/hangul/types";
+import { shuffleArray, type RandomSource } from "./choiceOrder.ts";
 
-type ShuffleOptions = (
-  options: HangulQuestionOption[],
-) => HangulQuestionOption[];
+const correctAnswerIndex = (question: HangulQuestion) =>
+  question.options.findIndex((option) => option.value === question.answer);
+
+const moveCorrectAnswerAwayFrom = (
+  question: HangulQuestion,
+  avoidedIndex: number,
+  random: RandomSource,
+): HangulQuestion => {
+  const currentIndex = correctAnswerIndex(question);
+  if (
+    question.options.length < 2 ||
+    currentIndex < 0 ||
+    currentIndex !== avoidedIndex
+  ) {
+    return question;
+  }
+
+  const availableIndexes = question.options
+    .map((_, index) => index)
+    .filter((index) => index !== avoidedIndex);
+  const targetIndex =
+    availableIndexes[Math.floor(random() * availableIndexes.length)];
+  const options = [...question.options];
+  [options[currentIndex], options[targetIndex]] = [
+    options[targetIndex],
+    options[currentIndex],
+  ];
+
+  return { ...question, options };
+};
+
+export function shuffleHangulQuestions(
+  questions: readonly HangulQuestion[],
+  {
+    random = Math.random,
+    shuffleQuestions = false,
+  }: {
+    random?: RandomSource;
+    shuffleQuestions?: boolean;
+  } = {},
+): HangulQuestion[] {
+  let previousCorrectIndex = -1;
+  let repeatedPositionCount = 0;
+  const orderedQuestions = shuffleQuestions
+    ? shuffleArray(questions, random)
+    : [...questions];
+
+  return orderedQuestions.map((question) => {
+    let shuffledQuestion = {
+      ...question,
+      options: shuffleArray(question.options, random),
+    };
+    let nextCorrectIndex = correctAnswerIndex(shuffledQuestion);
+
+    if (
+      nextCorrectIndex >= 0 &&
+      nextCorrectIndex === previousCorrectIndex &&
+      repeatedPositionCount >= 2
+    ) {
+      shuffledQuestion = moveCorrectAnswerAwayFrom(
+        shuffledQuestion,
+        previousCorrectIndex,
+        random,
+      );
+      nextCorrectIndex = correctAnswerIndex(shuffledQuestion);
+    }
+
+    if (nextCorrectIndex === previousCorrectIndex) {
+      repeatedPositionCount += 1;
+    } else {
+      previousCorrectIndex = nextCorrectIndex;
+      repeatedPositionCount = 1;
+    }
+
+    return shuffledQuestion;
+  });
+}
 
 type LegacyHangulQuizSession = HangulQuizSession & {
   retrySourceIds?: Record<string, true>;
@@ -68,7 +142,7 @@ export function answerHangulQuizQuestion(
 
 export function advanceHangulQuiz(
   session: HangulQuizSession,
-  shuffleOptions: ShuffleOptions = (options) => options,
+  random: RandomSource = Math.random,
 ): HangulQuizAdvance {
   if (session.answered === null) {
     return { status: "next-question", session };
@@ -90,10 +164,18 @@ export function advanceHangulQuiz(
     const incorrectIds = new Set(session.roundIncorrectQuestionIds);
     const retryQuestions = session.questions
       .filter((question) => incorrectIds.has(question.id))
-      .map((question) => ({
-        ...question,
-        options: shuffleOptions([...question.options]),
-      }));
+      .map((question) => {
+        const previousCorrectIndex = correctAnswerIndex(question);
+        const shuffledQuestion = {
+          ...question,
+          options: shuffleArray(question.options, random),
+        };
+        return moveCorrectAnswerAwayFrom(
+          shuffledQuestion,
+          previousCorrectIndex,
+          random,
+        );
+      });
 
     return {
       status: "next-round",

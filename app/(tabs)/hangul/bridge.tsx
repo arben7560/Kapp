@@ -1,15 +1,14 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
-import React from "react";
 import { ImageBackground, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
+import { HangulAudioBadge } from "../../../components/hangul/HangulAudioBadge";
+import { useHangulAudio } from "../../../hooks/useHangulAudio";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
-import { createRestartableSpeechController } from "../../../lib/restartableSpeech";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
 const READINGS = [
@@ -23,19 +22,7 @@ export default function HangulBridgeScreen() {
   const { progress } = useStore();
   const responsive = useResponsiveLayout({ maxWidth: 820 });
   const unlocked = !!progress.hangulProgress.assessment?.passed;
-  const speechController = React.useMemo(
-    () => createRestartableSpeechController(Speech),
-    [],
-  );
-  const speak = (value: string) => {
-    void speechController.speak(value, {
-      language: "ko-KR",
-      rate: 0.62,
-    });
-  };
-  React.useEffect(() => () => {
-    void speechController.stop();
-  }, [speechController]);
+  const { playAudio } = useHangulAudio();
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -51,7 +38,7 @@ export default function HangulBridgeScreen() {
             {unlocked ? <>
             <AppText variant="sectionLabel" style={[styles.teal, styles.packLabel]}>PREMIÈRES PHRASES</AppText>
             <View style={styles.readings}>
-              {READINGS.map((item) => <Pressable key={item.text} onPress={() => speak(item.text)}><BlurView intensity={50} tint="dark" style={styles.readingCard}><View style={styles.readingTop}><AppText variant="koreanPrimary" script="korean" style={styles.korean}>{item.text}</AppText><AppText variant="caption">🔊 LENT</AppText></View><AppText variant="bodyStrong">{item.guide}</AppText><AppText variant="bodySecondary" tone="muted">{item.meaning}</AppText></BlurView></Pressable>)}
+              {READINGS.map((item) => <Pressable key={item.text} onPress={() => playAudio(item.text)}><BlurView intensity={50} tint="dark" style={styles.readingCard}><View style={styles.readingTop}><AppText variant="koreanPrimary" script="korean" style={styles.korean}>{item.text}</AppText><HangulAudioBadge accent="#2DD4BF" label="ÉCOUTER" /></View><AppText variant="bodyStrong">{item.guide}</AppText><AppText variant="bodySecondary" tone="muted">{item.meaning}</AppText></BlurView></Pressable>)}
             </View>
 
             <BlurView intensity={55} tint="dark" style={styles.transitionCard}>
