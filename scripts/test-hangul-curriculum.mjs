@@ -19,12 +19,213 @@ import {
   validateHangulCurriculum,
 } from "../data/hangul/curriculum.ts";
 import { createEmptyHangulProgress } from "../data/hangul/types.ts";
+import {
+  advanceHangulQuiz,
+  answerHangulQuizQuestion,
+  createHangulQuizSession,
+  restoreHangulQuizSession,
+} from "../lib/hangulQuiz.ts";
 import { PREMIUM_ROUTE_PATHS } from "../lib/paywall/config.ts";
+import { createRestartableSpeechController } from "../lib/restartableSpeech.ts";
+
+const QUIZ_TEST_QUESTIONS = ["q1", "q2", "q3"].map((id) => ({
+  id,
+  type: "read",
+  prompt: `Question ${id}`,
+  options: [
+    { value: `${id}-correct`, label: "Correct" },
+    { value: `${id}-wrong`, label: "Incorrect" },
+  ],
+  answer: `${id}-correct`,
+  explanation: `Explication ${id}`,
+  characters: [id],
+}));
+
+const answerAndAdvance = (session, value) =>
+  advanceHangulQuiz(answerHangulQuizQuestion(session, value));
 
 test("the curriculum covers the complete modern Hangul inventory", () => {
   assert.equal(new Set(ALL_HANGUL_VOWELS).size, 21);
   assert.equal(new Set(ALL_HANGUL_CONSONANTS).size, 19);
   assert.equal(new Set(ESSENTIAL_FINAL_SOUNDS).size, 7);
+});
+
+test("Hangul replay waits for stop and keeps only the latest rapid request", async () => {
+  const events = [];
+  const speechController = createRestartableSpeechController({
+    async stop() {
+      events.push("stop");
+    },
+    speak(value) {
+      events.push(`speak:${value}`);
+    },
+  });
+
+  const firstPlayback = speechController.speak("아", {
+    language: "ko-KR",
+    rate: 0.72,
+  });
+  const latestPlayback = speechController.speak("오|우", {
+    language: "ko-KR",
+    rate: 0.72,
+  });
+
+  await Promise.all([firstPlayback, latestPlayback]);
+
+  assert.deepEqual(events, ["stop", "stop", "speak:오", "speak:우"]);
+});
+
+test("every Hangul listening exercise exposes a playable audio source", () => {
+  const questions = [
+    ...HANGUL_MODULES.flatMap((module) =>
+      module.scenes.flatMap((scene) => scene.questions),
+    ),
+    ...HANGUL_ASSESSMENT_QUESTIONS,
+  ];
+
+  for (const question of questions) {
+    if (!question.prompt.toLocaleLowerCase("fr").includes("écoute")) continue;
+
+    assert.ok(
+      question.audio || question.options.some((option) => option.audio),
+      `${question.id} has no playable audio source`,
+    );
+  }
+});
+
+test("a Hangul exercise completed without error finishes after the first round", () => {
+  let session = createHangulQuizSession("scene", QUIZ_TEST_QUESTIONS);
+
+  for (const [index, question] of QUIZ_TEST_QUESTIONS.entries()) {
+    const advancement = answerAndAdvance(session, question.answer);
+    if (index < QUIZ_TEST_QUESTIONS.length - 1) {
+      assert.equal(advancement.status, "next-question");
+      session = advancement.session;
+    } else {
+      assert.equal(advancement.status, "complete");
+      assert.equal(advancement.session.score, QUIZ_TEST_QUESTIONS.length);
+      assert.equal(advancement.session.round, 1);
+    }
+  }
+});
+
+test("one Hangul error creates a catch-up round containing only that question", () => {
+  let session = createHangulQuizSession("scene", QUIZ_TEST_QUESTIONS);
+
+  session = answerAndAdvance(session, QUIZ_TEST_QUESTIONS[0].answer).session;
+  session = answerAndAdvance(session, "q2-wrong").session;
+  const catchUp = answerAndAdvance(session, QUIZ_TEST_QUESTIONS[2].answer);
+
+  assert.equal(catchUp.status, "next-round");
+  assert.deepEqual(
+    catchUp.session.questions.map((question) => question.id),
+    ["q2"],
+  );
+  assert.deepEqual(Object.keys(catchUp.session.correctQuestionIds).sort(), [
+    "q1",
+    "q3",
+  ]);
+
+  const completed = answerAndAdvance(
+    catchUp.session,
+    QUIZ_TEST_QUESTIONS[1].answer,
+  );
+  assert.equal(completed.status, "complete");
+  assert.equal(completed.session.score, QUIZ_TEST_QUESTIONS.length);
+});
+
+test("multiple Hangul errors keep only the incorrect questions", () => {
+  let session = createHangulQuizSession("scene", QUIZ_TEST_QUESTIONS);
+
+  session = answerAndAdvance(session, "q1-wrong").session;
+  session = answerAndAdvance(session, QUIZ_TEST_QUESTIONS[1].answer).session;
+  const catchUp = answerAndAdvance(session, "q3-wrong");
+
+  assert.equal(catchUp.status, "next-round");
+  assert.deepEqual(
+    catchUp.session.questions.map((question) => question.id),
+    ["q1", "q3"],
+  );
+  assert.deepEqual(Object.keys(catchUp.session.correctQuestionIds), ["q2"]);
+});
+
+test("an error repeated during catch-up remains alone in the next round", () => {
+  const initialSession = createHangulQuizSession("scene", [
+    QUIZ_TEST_QUESTIONS[0],
+  ]);
+  const firstCatchUp = answerAndAdvance(initialSession, "q1-wrong");
+  const secondCatchUp = answerAndAdvance(firstCatchUp.session, "q1-wrong");
+
+  assert.equal(firstCatchUp.status, "next-round");
+  assert.equal(secondCatchUp.status, "next-round");
+  assert.deepEqual(
+    secondCatchUp.session.questions.map((question) => question.id),
+    ["q1"],
+  );
+  assert.equal(secondCatchUp.session.round, 3);
+
+  const completed = answerAndAdvance(
+    secondCatchUp.session,
+    QUIZ_TEST_QUESTIONS[0].answer,
+  );
+  assert.equal(completed.status, "complete");
+});
+
+test("a paused Hangul catch-up round survives closing and reopening", () => {
+  let session = createHangulQuizSession("scene", QUIZ_TEST_QUESTIONS);
+
+  session = answerAndAdvance(session, "q1-wrong").session;
+  session = answerAndAdvance(session, QUIZ_TEST_QUESTIONS[1].answer).session;
+  const catchUp = answerAndAdvance(session, QUIZ_TEST_QUESTIONS[2].answer);
+  const answeredCatchUp = answerHangulQuizQuestion(
+    catchUp.session,
+    "q1-wrong",
+  );
+  const serialized = JSON.stringify(answeredCatchUp);
+  const restored = restoreHangulQuizSession(
+    JSON.parse(serialized),
+    QUIZ_TEST_QUESTIONS,
+  );
+
+  assert.equal(JSON.stringify(restored), serialized);
+  assert.equal(restored.round, 2);
+  assert.equal(restored.answered, "q1-wrong");
+  assert.deepEqual(restored.roundIncorrectQuestionIds, ["q1"]);
+  assert.deepEqual(Object.keys(restored.correctQuestionIds).sort(), [
+    "q2",
+    "q3",
+  ]);
+
+  const nextCatchUp = advanceHangulQuiz(restored);
+  assert.equal(nextCatchUp.status, "next-round");
+  assert.deepEqual(
+    nextCatchUp.session.questions.map((question) => question.id),
+    ["q1"],
+  );
+});
+
+test("the next Hangul stage stays locked until every error is corrected", () => {
+  const initialSession = createHangulQuizSession("scene", [
+    QUIZ_TEST_QUESTIONS[0],
+  ]);
+  const firstCatchUp = answerAndAdvance(initialSession, "q1-wrong");
+  const secondCatchUp = answerAndAdvance(firstCatchUp.session, "q1-wrong");
+
+  assert.notEqual(firstCatchUp.status, "complete");
+  assert.notEqual(secondCatchUp.status, "complete");
+  assert.equal(firstCatchUp.session.score, 0);
+  assert.equal(secondCatchUp.session.score, 0);
+
+  const completed = answerAndAdvance(
+    secondCatchUp.session,
+    QUIZ_TEST_QUESTIONS[0].answer,
+  );
+  assert.equal(completed.status, "complete");
+  assert.equal(completed.session.score, 1);
+  assert.equal(
+    completed.session.score,
+    completed.session.originalQuestionCount,
+  );
 });
 
 test("the 16 simple final spellings map exactly to the seven final sounds", () => {
@@ -97,7 +298,9 @@ test("detailed progression, including a paused quiz, survives serialization", ()
       questionIndex: 0,
       answered: question.options[0].value,
       score: 1,
-      retrySourceIds: {},
+      correctQuestionIds: { [question.id]: true },
+      roundIncorrectQuestionIds: [],
+      round: 1,
       originalQuestionIds: [question.id],
       originalQuestionCount: 1,
     },

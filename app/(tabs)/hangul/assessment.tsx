@@ -9,6 +9,7 @@ import { trackHangulExerciseCompleted } from "../../../lib/immersionStreak";
 
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
+import { HangulReplayButton } from "../../../components/hangul/HangulReplayButton";
 import { HANGUL_ASSESSMENT_QUESTIONS } from "../../../data/hangul/assessment";
 import {
   HANGUL_ASSESSMENT_PASS_SCORE,
@@ -16,6 +17,7 @@ import {
 } from "../../../data/hangul/curriculum";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
 import { shuffleArray } from "../../../lib/choiceOrder";
+import { createRestartableSpeechController } from "../../../lib/restartableSpeech";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
 const createAssessmentQuestions = () =>
@@ -27,6 +29,10 @@ const createAssessmentQuestions = () =>
 export default function HangulAssessmentScreen() {
   const { progress, updateHangulProgress, complete } = useStore();
   const responsive = useResponsiveLayout({ maxWidth: 760 });
+  const speechController = React.useMemo(
+    () => createRestartableSpeechController(Speech),
+    [],
+  );
   const [started, setStarted] = React.useState(false);
   const [index, setIndex] = React.useState(0);
   const [score, setScore] = React.useState(0);
@@ -42,9 +48,11 @@ export default function HangulAssessmentScreen() {
   const curriculumReady = !missingModule || !!saved?.passed;
 
   const speak = React.useCallback((value: string) => {
-    Speech.stop();
-    Speech.speak(value, { language: "ko-KR", rate: 0.72 });
-  }, []);
+    void speechController.speak(value, {
+      language: "ko-KR",
+      rate: 0.72,
+    });
+  }, [speechController]);
 
   React.useEffect(() => {
     if (started && !finished && answered === null && current.audio) {
@@ -54,8 +62,8 @@ export default function HangulAssessmentScreen() {
   }, [answered, current, finished, speak, started]);
 
   React.useEffect(() => () => {
-    void Speech.stop();
-  }, []);
+    void speechController.stop();
+  }, [speechController]);
 
   const start = () => {
     if (missingModule && !saved?.passed) {
@@ -158,7 +166,7 @@ export default function HangulAssessmentScreen() {
               <BlurView intensity={70} tint="dark" style={styles.card}>
                 <View style={styles.questionHeader}>
                   <AppText variant="sectionLabel" style={styles.gold}>QUESTION {index + 1}/12</AppText>
-                  {current.audio ? <Pressable onPress={() => speak(current.audio!)} style={styles.replay}><AppText variant="caption">🔊 RÉÉCOUTER</AppText></Pressable> : null}
+                  {current.audio ? <HangulReplayButton accent="#FDE047" onPress={() => speak(current.audio!)} /> : null}
                 </View>
                 {current.display ? <AppText variant="koreanHero" script="korean" align="center" style={styles.display}>{current.display}</AppText> : null}
                 <AppText variant="sceneTitle" align="center">{current.prompt}</AppText>
@@ -186,12 +194,11 @@ const styles = StyleSheet.create({
   frame: { width: "100%", alignSelf: "center" },
   back: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 26 },
   gold: { color: "#FDE047" },
-  title: { marginTop: 6, marginBottom: 8 },
+  title: { marginTop: 15, marginBottom: 18 },
   card: { marginTop: 24, borderRadius: 26, borderWidth: 1, borderColor: "rgba(255,255,255,0.14)", padding: 22, gap: 16, overflow: "hidden" },
   button: { marginTop: 8, borderRadius: 15, paddingVertical: 15, paddingHorizontal: 18, alignItems: "center", backgroundColor: "#FDE047" },
   buttonText: { color: "#020306" },
   questionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  replay: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: "rgba(255,255,255,0.08)" },
   display: { color: "#FDE047", marginVertical: 10 },
   options: { gap: 10 },
   option: { borderWidth: 1, borderColor: "rgba(255,255,255,0.16)", backgroundColor: "rgba(255,255,255,0.07)", borderRadius: 15, padding: 15 },

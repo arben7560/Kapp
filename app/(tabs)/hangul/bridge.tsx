@@ -9,6 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
+import { createRestartableSpeechController } from "../../../lib/restartableSpeech";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
 const READINGS = [
@@ -22,13 +23,19 @@ export default function HangulBridgeScreen() {
   const { progress } = useStore();
   const responsive = useResponsiveLayout({ maxWidth: 820 });
   const unlocked = !!progress.hangulProgress.assessment?.passed;
+  const speechController = React.useMemo(
+    () => createRestartableSpeechController(Speech),
+    [],
+  );
   const speak = (value: string) => {
-    Speech.stop();
-    Speech.speak(value, { language: "ko-KR", rate: 0.62 });
+    void speechController.speak(value, {
+      language: "ko-KR",
+      rate: 0.62,
+    });
   };
   React.useEffect(() => () => {
-    void Speech.stop();
-  }, []);
+    void speechController.stop();
+  }, [speechController]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -75,7 +82,7 @@ const styles = StyleSheet.create({
   frame: { width: "100%", alignSelf: "center" },
   back: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 26 },
   teal: { color: "#2DD4BF" },
-  title: { marginTop: 6, marginBottom: 8 },
+  title: { marginTop: 15, marginBottom: 18 },
   packLabel: { marginTop: 24 },
   readings: { marginTop: 10, gap: 12 },
   readingCard: { borderRadius: 20, borderWidth: 1, borderColor: "rgba(45,212,191,0.26)", padding: 18, gap: 7, overflow: "hidden" },

@@ -77,7 +77,9 @@ export type HangulQuizSession = {
   questionIndex: number;
   answered: string | null;
   score: number;
-  retrySourceIds: Record<string, true>;
+  correctQuestionIds: Record<string, true>;
+  roundIncorrectQuestionIds: string[];
+  round: number;
   originalQuestionIds: string[];
   originalQuestionCount: number;
 };
