@@ -12,10 +12,10 @@ import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
 const READINGS = [
-  { text: "아이와 여우", guide: "아이 + 와 + 여우", meaning: "L’enfant et le renard" },
-  { text: "사과와 우유", guide: "사과 + 와 + 우유", meaning: "Une pomme et du lait" },
-  { text: "집에 가요", guide: "집 + 에 → 지베 · 가요", meaning: "Je vais à la maison" },
-  { text: "한국어", guide: "한국 + 어 → 한구거", meaning: "Langue coréenne" },
+  { text: "아이와 여우", audio: "아이와 여우", guide: "아이 + 와 + 여우", meaning: "L’enfant et le renard" },
+  { text: "사과와 우유", audio: "사과와 우유", guide: "사과 + 와 + 우유", meaning: "Une pomme et du lait" },
+  { text: "집에 가요", audio: "집에 가요", guide: "집 + 에 → 지베 · 가요", meaning: "Je vais à la maison" },
+  { text: "한국어", audio: "한국어", guide: "한국 + 어 → 한구거", meaning: "Langue coréenne" },
 ];
 
 export default function HangulBridgeScreen() {
@@ -38,7 +38,7 @@ export default function HangulBridgeScreen() {
             {unlocked ? <>
             <AppText variant="sectionLabel" style={[styles.teal, styles.packLabel]}>PREMIÈRES PHRASES</AppText>
             <View style={styles.readings}>
-              {READINGS.map((item) => <Pressable key={item.text} onPress={() => playAudio(item.text)}><BlurView intensity={50} tint="dark" style={styles.readingCard}><View style={styles.readingTop}><AppText variant="koreanPrimary" script="korean" style={styles.korean}>{item.text}</AppText><HangulAudioBadge accent="#2DD4BF" label="ÉCOUTER" /></View><AppText variant="bodyStrong">{item.guide}</AppText><AppText variant="bodySecondary" tone="muted">{item.meaning}</AppText></BlurView></Pressable>)}
+              {READINGS.map((item) => <Pressable key={item.text} onPress={() => playAudio(item.audio)}><BlurView intensity={50} tint="dark" style={styles.readingCard}><View style={styles.readingTop}><AppText variant="koreanPrimary" script="korean" style={styles.korean}>{item.text}</AppText><HangulAudioBadge accent="#2DD4BF" label="ÉCOUTER" /></View><AppText variant="bodyStrong">{item.guide}</AppText><AppText variant="bodySecondary" tone="muted">{item.meaning}</AppText></BlurView></Pressable>)}
             </View>
 
             <BlurView intensity={55} tint="dark" style={styles.transitionCard}>

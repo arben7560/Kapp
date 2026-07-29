@@ -13,6 +13,8 @@ import {
 
 type AudioSubscription = { remove: () => void };
 
+const HANGUL_AUDIO_SEQUENCE_GAP_MS = 220;
+
 const didPlaybackFinish = (status: unknown) => {
   const value = status as {
     didJustFinish?: boolean;
@@ -39,9 +41,15 @@ const didPlaybackFinish = (status: unknown) => {
 export function useHangulAudio() {
   const playerRef = useRef<AudioPlayer | null>(null);
   const listenerRef = useRef<AudioSubscription | null>(null);
+  const sequenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestIdRef = useRef(0);
 
   const releasePlayer = useCallback(() => {
+    if (sequenceTimerRef.current) {
+      clearTimeout(sequenceTimerRef.current);
+      sequenceTimerRef.current = null;
+    }
+
     listenerRef.current?.remove();
     listenerRef.current = null;
 
@@ -98,7 +106,12 @@ export function useHangulAudio() {
               if (!didPlaybackFinish(status)) return;
 
               releasePlayer();
-              playSegment(index + 1);
+              if (index + 1 >= sources.length) return;
+
+              sequenceTimerRef.current = setTimeout(() => {
+                sequenceTimerRef.current = null;
+                playSegment(index + 1);
+              }, HANGUL_AUDIO_SEQUENCE_GAP_MS);
             },
           );
           player.play();

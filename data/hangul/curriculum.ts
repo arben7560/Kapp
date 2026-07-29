@@ -60,6 +60,7 @@ const cards = (items: CardTuple[], kind: HangulCard["kind"]): HangulCard[] =>
 const characterQuestions = (prefix: string, items: HangulCard[]): HangulQuestion[] => {
   const eligible = items.filter((item) => item.romanization);
   return eligible.flatMap((item, index) => {
+    const usesConsonantModelA = item.kind === "consonant";
     const others = [...eligible.slice(index + 1), ...eligible.slice(0, index)]
       .filter((candidate) => candidate.id !== item.id)
       .slice(0, 3);
@@ -70,7 +71,9 @@ const characterQuestions = (prefix: string, items: HangulCard[]): HangulQuestion
       q(
         `${prefix}-${item.id}-visual`,
         "character-to-sound",
-        "Écoute les propositions, puis choisis le son de ce caractère.",
+        usesConsonantModelA
+          ? "Les consonnes sont jouées avec ㅏ. Écoute les propositions, puis choisis la consonne."
+          : "Écoute les propositions, puis choisis le son de ce caractère.",
         item.glyph,
         audioChoices,
         `${item.glyph} : ${item.explanation}`,
@@ -80,7 +83,9 @@ const characterQuestions = (prefix: string, items: HangulCard[]): HangulQuestion
       q(
         `${prefix}-${item.id}-audio`,
         "audio-to-character",
-        "Écoute, puis choisis le caractère entendu.",
+        usesConsonantModelA
+          ? "Les consonnes sont jouées avec ㅏ. Écoute, puis choisis la consonne entendue."
+          : "Écoute, puis choisis le caractère entendu.",
         item.glyph,
         [o(item.glyph), ...others.map((candidate) => o(candidate.glyph))],
         `Le son entendu correspond à ${item.glyph}.`,
@@ -297,12 +302,12 @@ const tenseModule: HangulModule = {
         ["jch", "자 · 짜 · 차", undefined, "ㅈ · ㅉ · ㅊ", "Simple, tendue, aspirée.", "자|짜|차"],
       ], "syllable"),
       questions: [
-        q("three-kka", "contrast", "Quelle consonne commence le son entendu ?", "ㄲ", [o("ㄱ"), o("ㄲ"), o("ㅋ")], "까 commence par ㄲ.", ["ㄱ", "ㄲ", "ㅋ", "ㅏ"], undefined, "까"),
-        q("three-ka", "contrast", "Quelle consonne commence le son entendu ?", "ㅋ", [o("ㄱ"), o("ㄲ"), o("ㅋ")], "카 commence par ㅋ.", ["ㄱ", "ㄲ", "ㅋ", "ㅏ"], undefined, "카"),
-        q("three-da", "contrast", "Quelle consonne commence le son entendu ?", "ㄷ", [o("ㄷ"), o("ㄸ"), o("ㅌ")], "다 commence par ㄷ.", ["ㄷ", "ㄸ", "ㅌ", "ㅏ"], undefined, "다"),
-        q("three-ppa", "contrast", "Quelle consonne commence le son entendu ?", "ㅃ", [o("ㅂ"), o("ㅃ"), o("ㅍ")], "빠 commence par ㅃ.", ["ㅂ", "ㅃ", "ㅍ", "ㅏ"], undefined, "빠"),
-        q("three-cha", "contrast", "Quelle consonne commence le son entendu ?", "ㅊ", [o("ㅈ"), o("ㅉ"), o("ㅊ")], "차 commence par ㅊ.", ["ㅈ", "ㅉ", "ㅊ", "ㅏ"], undefined, "차"),
-        q("three-ssa", "contrast", "Quelle consonne commence le son entendu ?", "ㅆ", [o("ㅅ"), o("ㅆ"), o("ㅈ")], "싸 commence par ㅆ.", ["ㅅ", "ㅆ", "ㅏ"], undefined, "싸"),
+        q("three-kka", "contrast", "Les consonnes sont jouées avec ㅏ. Quelle consonne commence la syllabe entendue ?", "ㄲ", [o("ㄱ"), o("ㄲ"), o("ㅋ")], "까 commence par ㄲ.", ["ㄱ", "ㄲ", "ㅋ", "ㅏ"], undefined, "까"),
+        q("three-ka", "contrast", "Les consonnes sont jouées avec ㅏ. Quelle consonne commence la syllabe entendue ?", "ㅋ", [o("ㄱ"), o("ㄲ"), o("ㅋ")], "카 commence par ㅋ.", ["ㄱ", "ㄲ", "ㅋ", "ㅏ"], undefined, "카"),
+        q("three-da", "contrast", "Les consonnes sont jouées avec ㅏ. Quelle consonne commence la syllabe entendue ?", "ㄷ", [o("ㄷ"), o("ㄸ"), o("ㅌ")], "다 commence par ㄷ.", ["ㄷ", "ㄸ", "ㅌ", "ㅏ"], undefined, "다"),
+        q("three-ppa", "contrast", "Les consonnes sont jouées avec ㅏ. Quelle consonne commence la syllabe entendue ?", "ㅃ", [o("ㅂ"), o("ㅃ"), o("ㅍ")], "빠 commence par ㅃ.", ["ㅂ", "ㅃ", "ㅍ", "ㅏ"], undefined, "빠"),
+        q("three-cha", "contrast", "Les consonnes sont jouées avec ㅏ. Quelle consonne commence la syllabe entendue ?", "ㅊ", [o("ㅈ"), o("ㅉ"), o("ㅊ")], "차 commence par ㅊ.", ["ㅈ", "ㅉ", "ㅊ", "ㅏ"], undefined, "차"),
+        q("three-ssa", "contrast", "Les consonnes sont jouées avec ㅏ. Quelle consonne commence la syllabe entendue ?", "ㅆ", [o("ㅅ"), o("ㅆ"), o("ㅈ")], "싸 commence par ㅆ.", ["ㅅ", "ㅆ", "ㅏ"], undefined, "싸"),
       ],
     },
     {
@@ -332,10 +337,10 @@ const tenseModule: HangulModule = {
 };
 
 const eVowels = cards([
-  ["ae", "ㅐ", "ae", "AE", "Distinct dans l’orthographe de ㅔ, mais souvent très proche à l’oral.", "애"],
-  ["e", "ㅔ", "e", "E", "Très proche de ㅐ dans la prononciation contemporaine.", "에"],
-  ["yae", "ㅒ", "yae", "YAE", "ㅑ + ㅣ ; souvent proche de ㅖ à l’oral.", "얘"],
-  ["ye", "ㅖ", "ye", "YE", "ㅕ + ㅣ.", "예"],
+  ["ae", "ㅐ", "ae", "AE", "S’écrit comme ㅏ + ㅣ. En coréen moderne, il est très souvent prononcé comme ㅔ.", "애"],
+  ["e", "ㅔ", "e", "E", "S’écrit comme ㅓ + ㅣ. À l’oral moderne, la différence avec ㅐ est souvent absente.", "에"],
+  ["yae", "ㅒ", "yae", "YAE", "S’écrit comme ㅑ + ㅣ. Il est souvent prononcé comme ㅖ dans l’usage courant.", "얘"],
+  ["ye", "ㅖ", "ye", "YE", "S’écrit comme ㅕ + ㅣ. Retient surtout sa forme écrite et les mots qui l’utilisent.", "얘"],
   ["oe", "ㅚ", "oe / we", "OE", "Se prononce très souvent comme « we » aujourd’hui.", "외"],
 ], "vowel");
 
@@ -360,8 +365,44 @@ const compoundModule: HangulModule = {
   eyebrow: "COMPLEXITÉ",
   romanizationDefault: false,
   scenes: [
-    makeCharacterScene("e-vowels", "Les sons E et OE", "ㅐ · ㅔ · ㅒ · ㅖ · ㅚ", "L’orthographe distingue ces formes même lorsque leur prononciation est proche.", "Mémorise la forme écrite et vérifie le son par l’écoute.", "#A78BFA", eVowels, undefined, eVowels.map((item) => item.glyph)),
-    makeCharacterScene("w-vowels", "Les glissements W et UI", "ㅘ · ㅙ · ㅝ · ㅞ · ㅟ · ㅢ", "Ces voyelles combinent deux mouvements.", "Observe leur composition puis écoute le glissement.", "#F472B6", wVowels, undefined, wVowels.map((item) => item.glyph)),
+    {
+      id: "e-vowels",
+      title: "Les E en orthographe",
+      koreanTitle: "ㅐ · ㅔ · ㅒ · ㅖ · ㅚ",
+      description: "ㅐ/ㅔ et ㅒ/ㅖ sont très souvent prononcées de manière identique en coréen moderne. Ici, l’objectif est surtout de reconnaître leur écriture.",
+      instruction: "Écoute pour te familiariser avec les mots, mais ne cherche pas à deviner ㅐ ou ㅔ uniquement à l’oreille : mémorise la forme et l’orthographe.",
+      accent: "#A78BFA",
+      introducedVowels: eVowels.map((item) => item.glyph),
+      cards: eVowels,
+      questions: [
+        q("e-ae-shape", "assemble", "Quelle voyelle s’écrit ㅏ + ㅣ ?", "ㅐ", [o("ㅐ"), o("ㅔ"), o("ㅚ")], "ㅐ combine la forme de ㅏ avec ㅣ.", ["ㅐ"], "ㅏ + ㅣ"),
+        q("e-e-shape", "assemble", "Quelle voyelle s’écrit ㅓ + ㅣ ?", "ㅔ", [o("ㅔ"), o("ㅐ"), o("ㅖ")], "ㅔ combine la forme de ㅓ avec ㅣ.", ["ㅔ"], "ㅓ + ㅣ"),
+        q("e-yae-shape", "assemble", "Quelle voyelle correspond à ㅑ + ㅣ ?", "ㅒ", [o("ㅒ"), o("ㅖ"), o("ㅐ")], "ㅒ est la version en y de ㅐ.", ["ㅒ"], "ㅑ + ㅣ"),
+        q("e-ye-shape", "assemble", "Quelle voyelle correspond à ㅕ + ㅣ ?", "ㅖ", [o("ㅖ"), o("ㅒ"), o("ㅔ")], "ㅖ est la version en y de ㅔ.", ["ㅖ"], "ㅕ + ㅣ"),
+        q("e-modern-ae-e", "layout", "Quelle remarque est correcte pour ㅐ et ㅔ aujourd’hui ?", "Ils sont souvent prononcés pareil", [o("Ils sont souvent prononcés pareil"), o("Ils doivent toujours être distingués à l’oreille"), o("ㅐ est muet")], "En coréen moderne, beaucoup de locuteurs ne distinguent plus nettement ㅐ et ㅔ à l’oral.", ["ㅐ", "ㅔ"], "ㅐ · ㅔ"),
+        q("e-modern-yae-ye", "layout", "Quelle stratégie est la plus fiable pour ㅒ et ㅖ ?", "Reconnaître l’orthographe", [o("Reconnaître l’orthographe"), o("Deviner uniquement à l’oreille"), o("Les ignorer")], "ㅒ et ㅖ peuvent être très proches à l’oral ; l’orthographe du mot devient le repère principal.", ["ㅒ", "ㅖ"], "ㅒ · ㅖ"),
+        q("e-oe-spelling", "layout", "Quelle voyelle est écrite dans 외 ?", "ㅚ", [o("ㅚ"), o("ㅐ"), o("ㅔ")], "외 contient ㅚ, souvent prononcé comme « we ».", ["ㅇ", "ㅚ"], "외"),
+      ],
+    },
+    {
+      id: "w-vowels",
+      title: "Les glissements W et UI",
+      koreanTitle: "ㅘ · ㅙ · ㅝ · ㅞ · ㅟ · ㅢ",
+      description: "Ces voyelles combinent deux mouvements. ㅙ, ㅚ et ㅞ peuvent sonner très proches en coréen moderne : l’orthographe reste le repère fiable.",
+      instruction: "Observe la composition de chaque voyelle. L’écoute sert à te familiariser avec les mots, pas à départager ㅙ/ㅚ/ㅞ uniquement à l’oreille.",
+      accent: "#F472B6",
+      introducedVowels: wVowels.map((item) => item.glyph),
+      cards: wVowels,
+      questions: [
+        q("w-wa-shape", "assemble", "Quelle voyelle s’écrit ㅗ + ㅏ ?", "ㅘ", [o("ㅘ"), o("ㅝ"), o("ㅙ")], "ㅘ combine ㅗ et ㅏ.", ["ㅘ"], "ㅗ + ㅏ"),
+        q("w-wae-shape", "assemble", "Quelle voyelle s’écrit ㅗ + ㅐ ?", "ㅙ", [o("ㅙ"), o("ㅚ"), o("ㅞ")], "ㅙ combine ㅗ et ㅐ.", ["ㅙ"], "ㅗ + ㅐ"),
+        q("w-wo-shape", "assemble", "Quelle voyelle s’écrit ㅜ + ㅓ ?", "ㅝ", [o("ㅝ"), o("ㅘ"), o("ㅞ")], "ㅝ combine ㅜ et ㅓ.", ["ㅝ"], "ㅜ + ㅓ"),
+        q("w-we-shape", "assemble", "Quelle voyelle s’écrit ㅜ + ㅔ ?", "ㅞ", [o("ㅞ"), o("ㅙ"), o("ㅚ")], "ㅞ combine ㅜ et ㅔ.", ["ㅞ"], "ㅜ + ㅔ"),
+        q("w-wi-shape", "assemble", "Quelle voyelle s’écrit ㅜ + ㅣ ?", "ㅟ", [o("ㅟ"), o("ㅢ"), o("ㅚ")], "ㅟ combine ㅜ et ㅣ.", ["ㅟ"], "ㅜ + ㅣ"),
+        q("w-ui-rule", "layout", "Quelle remarque est correcte pour ㅢ ?", "Sa prononciation varie selon la position", [o("Sa prononciation varie selon la position"), o("Il se prononce toujours eu-i"), o("Il est muet")], "ㅢ se réalise différemment selon sa position et son rôle.", ["ㅢ"], "ㅢ"),
+        q("w-modern-we", "layout", "Quelle stratégie est fiable pour ㅙ, ㅚ et ㅞ ?", "Reconnaître l’orthographe", [o("Reconnaître l’orthographe"), o("Deviner uniquement à l’oreille"), o("Les écrire au hasard")], "Ces voyelles peuvent être très proches à l’oral moderne ; lis la forme écrite du mot.", ["ㅙ", "ㅚ", "ㅞ"], "ㅙ · ㅚ · ㅞ"),
+      ],
+    },
     {
       id: "compound-reading",
       title: "Lecture cumulative",
@@ -372,7 +413,7 @@ const compoundModule: HangulModule = {
       cards: cards([
         ["sagwa", "사과", undefined, "Pomme", "사 + 과 ; 과 contient ㅘ."],
         ["uisa", "의사", undefined, "Médecin", "의 + 사 ; 의 contient ㅢ."],
-        ["segye", "세계", undefined, "Monde", "세 + 계 ; 계 contient ㅖ."],
+        ["segye", "세계", undefined, "Monde", "세 + 계 ; 계 contient ㅖ. Prononciation soignée : segye ; à l’oral moderne, 계 sonne souvent très proche de 게, donc sege."],
         ["word-wae", "왜", undefined, "Pourquoi", "Un bloc avec ㅙ."],
         ["oegyo", "외교", undefined, "Diplomatie", "외 + 교 ; 외 contient ㅚ."],
         ["word-wi", "위", undefined, "Dessus", "Un bloc avec ㅟ."],
@@ -380,10 +421,10 @@ const compoundModule: HangulModule = {
       questions: [
         q("cr-sagwa", "read", "Écoute puis choisis le mot.", "사과", [o("사과"), o("의사"), o("외교")], "사과 contient ㅘ.", ["ㅅ", "ㅏ", "ㄱ", "ㅘ"], undefined, "사과"),
         q("cr-uisa", "read", "Quel mot commence par ㅢ ?", "의사", [o("의사"), o("세계"), o("사과")], "의사 commence par 의.", ["ㅇ", "ㅢ", "ㅅ", "ㅏ"], "의사"),
-        q("cr-oe", "audio-to-character", "Choisis la voyelle entendue.", "ㅚ", [o("ㅚ"), o("ㅙ"), o("ㅞ")], "외 contient ㅚ.", ["ㅇ", "ㅚ"], undefined, "외"),
+        q("cr-oe", "layout", "Quelle voyelle est écrite dans 외 ?", "ㅚ", [o("ㅚ"), o("ㅙ"), o("ㅞ")], "외 contient ㅚ.", ["ㅇ", "ㅚ"], "외"),
         q("cr-gwa", "assemble", "Assemble ㄱ + ㅘ.", "과", [o("과"), o("가"), o("궈")], "ㄱ + ㅘ forme 과.", ["ㄱ", "ㅘ"], "ㄱ + ㅘ"),
         q("cr-segye", "read", "Quel mot se décompose en 세 + 계 ?", "세계", [o("세계"), o("외교"), o("의사")], "세 + 계 forme 세계.", ["ㅅ", "ㅔ", "ㄱ", "ㅖ"], "세 + 계"),
-        q("cr-wae", "read", "Écoute et choisis le bloc.", "왜", [o("왜"), o("웨"), o("외")], "Le bloc entendu est 왜.", ["ㅇ", "ㅙ"], undefined, "왜"),
+        q("cr-wae", "assemble", "Assemble ㅇ + ㅙ.", "왜", [o("왜"), o("웨"), o("외")], "왜 s’écrit avec ㅙ.", ["ㅇ", "ㅙ"], "ㅇ + ㅙ"),
         q("cr-ui", "character-to-sound", "Quelle remarque est correcte pour ㅢ ?", "Sa prononciation varie selon la position", [o("Sa prononciation varie selon la position"), o("Il se prononce toujours eu-i"), o("Il est muet")], "ㅢ se réalise différemment selon sa position et son rôle.", ["ㅢ"], "ㅢ"),
       ],
     },
@@ -436,17 +477,17 @@ const batchimModule: HangulModule = {
       title: "Seize graphies, sept sons",
       koreanTitle: "ㄱ · ㄴ · ㄷ · ㄹ · ㅁ · ㅂ · ㅇ",
       description: "Les graphies simples se regroupent en sept réalisations finales.",
-      instruction: "Apprends chaque famille sonore.",
+      instruction: "Les cartes jouent les graphies avec ㅏ pour les entendre clairement. Pour ㅇ final, l’exemple 앙 fait entendre le son ng.",
       accent: "#22D3EE",
       introducedFinals: Object.values(SIMPLE_FINAL_GROUPS).flat(),
       cards: cards([
-        ["fg-k", "ㄱ · ㄲ · ㅋ", undefined, "→ ㄱ final", "Trois graphies, un K final coupé.", "각"],
-        ["fg-n", "ㄴ", undefined, "→ ㄴ final", "N final.", "간"],
-        ["fg-t", "ㄷ · ㅅ · ㅆ · ㅈ · ㅊ · ㅌ · ㅎ", undefined, "→ ㄷ final", "Sept graphies, un T final coupé.", "옷"],
-        ["fg-l", "ㄹ", undefined, "→ ㄹ final", "L final.", "달"],
-        ["fg-m", "ㅁ", undefined, "→ ㅁ final", "M final.", "밤"],
-        ["fg-p", "ㅂ · ㅍ", undefined, "→ ㅂ final", "Deux graphies, un P final coupé.", "앞"],
-        ["fg-ng", "ㅇ", undefined, "→ ㅇ final", "NG final.", "강"],
+        ["fg-k", "ㄱ · ㄲ · ㅋ", undefined, "→ ㄱ final", "Trois graphies, un K final coupé.", "가|까|카"],
+        ["fg-n", "ㄴ", undefined, "→ ㄴ final", "N final.", "나"],
+        ["fg-t", "ㄷ · ㅅ · ㅆ · ㅈ · ㅊ · ㅌ · ㅎ", undefined, "→ ㄷ final", "Sept graphies, un T final coupé.", "다|사|싸|자|차|타|하"],
+        ["fg-l", "ㄹ", undefined, "→ ㄹ final", "L final.", "라"],
+        ["fg-m", "ㅁ", undefined, "→ ㅁ final", "M final.", "마"],
+        ["fg-p", "ㅂ · ㅍ", undefined, "→ ㅂ final", "Deux graphies, un P final coupé.", "바|파"],
+        ["fg-ng", "ㅇ", undefined, "→ ㅇ final", "NG final.", "앙"],
       ], "consonant"),
       questions: [
         q("fs-book", "batchim", "Quel son final produit ㄱ dans 책 ?", "ㄱ", ESSENTIAL_FINAL_SOUNDS.map((item) => o(item)), "책 se termine par la classe ㄱ.", ["ㅊ", "ㅐ", "ㄱ"], "책"),
@@ -475,7 +516,7 @@ const batchimModule: HangulModule = {
         ["ot", "옷", undefined, "Vêtement", "ㅅ final rejoint le son ㄷ."],
       ], "word"),
       questions: [
-        q("br-bap", "read", "Écoute puis choisis le mot.", "밥", [o("밥"), o("밤"), o("집")], "밥 se termine par ㅂ.", ["ㅂ", "ㅏ"], undefined, "밥"),
+        q("br-bap", "read", "Écoute puis choisis le mot.", "밥", [o("밥"), o("밤"), o("문")], "밥 se termine par ㅂ.", ["ㅂ", "ㅏ"], undefined, "밥"),
         q("br-mul", "read", "Quel mot se termine par ㄹ ?", "물", [o("문"), o("물"), o("밤")], "물 se termine par ㄹ.", ["ㅁ", "ㅜ", "ㄹ"], "물"),
         q("br-bam", "read", "Écoute et distingue 밤 de 밥.", "밤", [o("밤"), o("밥"), o("강")], "밤 finit par m ; 밥 finit par p.", ["ㅂ", "ㅏ", "ㅁ"], undefined, "밤"),
         q("br-jip", "batchim", "Quel batchim est écrit dans 집 ?", "ㅂ", [o("ㅂ"), o("ㅁ"), o("ㄹ")], "Le dernier élément est ㅂ.", ["ㅈ", "ㅣ", "ㅂ"], "집"),
@@ -489,7 +530,7 @@ const batchimModule: HangulModule = {
       title: "Première liaison",
       koreanTitle: "먹어 · 집에 · 옷이 · 한국어",
       description: "Devant une syllabe commençant par ㅇ, le son final se rattache souvent à la voyelle suivante.",
-      instruction: "Cette première règle ne couvre pas encore tous les changements phonétiques.",
+      instruction: "Les batchim doubles et les règles avancées seront abordés plus tard. Ici, concentre-toi sur la liaison devant ㅇ initial.",
       accent: "#FDE047",
       cards: cards([
         ["meogeo", "먹어", undefined, "Mange", "먹 + 어 se lit de façon liée : 머거."],
@@ -499,11 +540,11 @@ const batchimModule: HangulModule = {
       ], "word"),
       questions: [
         q("link-rule", "layout", "Que se passe-t-il souvent devant ㅇ initial ?", "Le son final se rattache à la voyelle", [o("Le son final se rattache à la voyelle"), o("Le mot devient muet"), o("La voyelle disparaît")], "ㅇ est muet, permettant la liaison.", ["ㅇ"], "집 + 에"),
-        q("link-jibe", "read", "Choisis la lecture liée de 집에.", "지베", [o("지베"), o("집에"), o("지메")], "ㅂ se lie à 에.", ["ㅈ", "ㅣ", "ㅂ", "ㅇ", "ㅔ"], undefined, "집에"),
-        q("link-meogeo", "read", "Quel enchaînement correspond à 먹어 ?", "머거", [o("머거"), o("먹어"), o("먼어")], "ㄱ se lie à 어.", ["ㅁ", "ㅓ", "ㄱ", "ㅇ"], "먹어"),
+        q("link-jibe", "read", "Choisis la lecture liée de 집에.", "지베", [o("지베"), o("지페"), o("지메")], "ㅂ se lie à 에.", ["ㅈ", "ㅣ", "ㅂ", "ㅇ", "ㅔ"], undefined, "집에"),
+        q("link-meogeo", "read", "Quel enchaînement correspond à 먹어 ?", "머거", [o("머거"), o("머커"), o("먼어")], "ㄱ se lie à 어.", ["ㅁ", "ㅓ", "ㄱ", "ㅇ"], "먹어"),
         q("link-osi", "read", "Choisis la forme entendue pour 옷이.", "오시", [o("오시"), o("오디"), o("오치")], "ㅅ se lie devant 이.", ["ㅇ", "ㅗ", "ㅅ", "ㅣ"], undefined, "옷이"),
-        q("link-hangugeo", "read", "Quel groupe se lit 한구거 ?", "한국어", [o("한국어"), o("한구어"), o("한국오")], "ㄱ se lie à 어.", ["ㅎ", "ㅏ", "ㄴ", "ㄱ", "ㅜ", "ㅇ", "ㅓ"], "한구거"),
-        q("link-scope", "layout", "Cette étape couvre-t-elle toutes les règles ?", "Non", [o("Non"), o("Oui")], "Les batchim doubles et changements avancés sont reportés.", ["ㅇ"], "받침"),
+        q("link-hangugeo", "read", "Choisis la lecture liée de 한국어.", "한구거", [o("한구거"), o("한구어"), o("한국오")], "ㄱ se lie à 어.", ["ㅎ", "ㅏ", "ㄴ", "ㄱ", "ㅜ", "ㅇ", "ㅓ"], "한국어"),
+        q("link-final-k", "batchim", "Dans 한국어, quel son final se rattache à 어 ?", "ㄱ", [o("ㄱ"), o("ㄴ"), o("ㅇ")], "Dans 한국어, le ㄱ de 국 se rattache à 어 : 한구거.", ["ㅎ", "ㅏ", "ㄴ", "ㄱ", "ㅜ", "ㅇ", "ㅓ"], "한국 + 어"),
       ],
     },
   ],
