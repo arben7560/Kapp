@@ -1,11 +1,18 @@
 import {
   createAudioPlayer,
-  setAudioModeAsync,
   type AudioPlayer,
+  type AudioStatus,
 } from "expo-audio";
-import { useCallback, useEffect, useRef } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Vibration } from "react-native";
+import {
+  releaseAudioResources,
+  type RemovableAudioSubscription,
+} from "../lib/audioPlayerLifecycle";
 import { trackAudioPlayed } from "../lib/immersionStreak";
+import { mediaSession } from "../lib/mediaSession";
+import type { MediaSessionLease } from "../lib/mediaSessionCore";
 
 type AudioAsset = number;
 
@@ -15,84 +22,210 @@ type UseVocAudioOptions = {
   trackPlayback?: boolean;
 };
 
+export type VocAudioPlaybackState =
+  | "idle"
+  | "starting"
+  | "playing"
+  | "interrupted"
+  | "completed"
+  | "error";
+
+export type VocAudioPlaybackCallbacks = Readonly<{
+  onCompleted?: () => void;
+  onError?: (playbackError: Error) => void;
+  onInterrupted?: () => void;
+  onStarted?: () => void;
+}>;
+
+type ActivePlaybackListener = {
+  player: AudioPlayer;
+  subscription: RemovableAudioSubscription;
+};
+
+let audioOwnerSequence = 0;
+
+function toPlaybackError(error: unknown) {
+  if (error instanceof Error) return error;
+  return new Error("La lecture audio a échoué.");
+}
+
+function normalizeCallbacks(
+  callbacks?: VocAudioPlaybackCallbacks | ((playbackError: Error) => void),
+): VocAudioPlaybackCallbacks {
+  return typeof callbacks === "function"
+    ? { onError: callbacks }
+    : callbacks ?? {};
+}
+
 export function useVocAudio(
   setSelectedAudio: SetSelectedAudio,
   { trackPlayback = true }: UseVocAudioOptions = {},
 ) {
+  const ownerIdRef = useRef(`expo-audio-${++audioOwnerSequence}`);
   const playerRef = useRef<AudioPlayer | null>(null);
-  const activeAudioIdRef = useRef<string | null>(null);
-  const playbackListenerRef = useRef<{ remove: () => void } | null>(null);
+  const playbackListenerRef = useRef<ActivePlaybackListener | null>(null);
+  const playbackCallbacksRef = useRef<VocAudioPlaybackCallbacks>({});
+  const playbackStartedRef = useRef(false);
+  const requestIdRef = useRef(0);
+  const leaseRef = useRef<MediaSessionLease | null>(null);
+  const mountedRef = useRef(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [playbackState, setPlaybackState] =
+    useState<VocAudioPlaybackState>("idle");
 
-  const cleanupAudioListener = useCallback(() => {
-    if (playbackListenerRef.current) {
-      playbackListenerRef.current.remove();
-      playbackListenerRef.current = null;
+  const clearError = useCallback(() => {
+    if (mountedRef.current) {
+      setError(null);
     }
   }, []);
 
-  const stopAudio = useCallback(() => {
-    try {
-      cleanupAudioListener();
+  const releasePlayer = useCallback(
+    (
+      player: AudioPlayer,
+      nextState: VocAudioPlaybackState,
+      updateSelection = true,
+    ) => {
+      const activeListener =
+        playbackListenerRef.current?.player === player
+          ? playbackListenerRef.current.subscription
+          : null;
 
-      if (playerRef.current) {
-        playerRef.current.pause();
-        playerRef.current.remove();
-        playerRef.current = null;
+      if (activeListener) {
+        playbackListenerRef.current = null;
       }
 
-      activeAudioIdRef.current = null;
-    } catch {
-      playerRef.current = null;
-      activeAudioIdRef.current = null;
+      releaseAudioResources(player, activeListener);
+
+      if (playerRef.current === player) {
+        playerRef.current = null;
+        playbackStartedRef.current = false;
+
+        if (updateSelection && mountedRef.current) {
+          setSelectedAudio(null);
+        }
+
+        if (mountedRef.current) {
+          setPlaybackState(nextState);
+        }
+      }
+    },
+    [setSelectedAudio],
+  );
+
+  const stopAudio = useCallback(() => {
+    requestIdRef.current += 1;
+    const player = playerRef.current;
+
+    if (player) {
+      releasePlayer(player, "idle");
+    } else {
+      const orphanedListener =
+        playbackListenerRef.current?.subscription ?? null;
+      playbackListenerRef.current = null;
+      releaseAudioResources(null, orphanedListener);
+
+      if (mountedRef.current) {
+        setSelectedAudio(null);
+        setPlaybackState("idle");
+      }
     }
-  }, [cleanupAudioListener]);
+
+    const lease = leaseRef.current;
+    leaseRef.current = null;
+    if (lease) {
+      void mediaSession.release(lease);
+    }
+  }, [releasePlayer, setSelectedAudio]);
 
   const playAudio = useCallback(
-    (audioSource?: AudioAsset, id?: string, onError?: () => void) => {
-      if (!audioSource) return;
+    async (
+      audioSource?: AudioAsset,
+      id?: string,
+      callbacks?:
+        | VocAudioPlaybackCallbacks
+        | ((playbackError: Error) => void),
+    ) => {
+      const playbackCallbacks = normalizeCallbacks(callbacks);
 
-      try {
+      if (!audioSource) {
+        const playbackError = new Error("Aucune source audio n’est disponible.");
         stopAudio();
 
-        if (id) {
-          activeAudioIdRef.current = id;
-          setSelectedAudio(id);
+        if (mountedRef.current) {
+          setError(playbackError);
+          setPlaybackState("error");
         }
 
-        Vibration.vibrate(8);
-        if (trackPlayback) {
-          void trackAudioPlayed();
+        playbackCallbacks.onError?.(playbackError);
+        return;
+      }
+
+      let player: AudioPlayer | null = null;
+      stopAudio();
+      const requestId = requestIdRef.current;
+      playbackCallbacksRef.current = playbackCallbacks;
+      playbackStartedRef.current = false;
+
+      try {
+        clearError();
+
+        if (mountedRef.current) {
+          setPlaybackState("starting");
         }
 
-        const player = createAudioPlayer(audioSource, {
-          updateInterval: 250,
+        const lease = await mediaSession.claim({
+          id: ownerIdRef.current,
+          mode: "shortPlayback",
+          onInterrupt: () => {
+            if (requestId !== requestIdRef.current) return;
+
+            requestIdRef.current += 1;
+            leaseRef.current = null;
+            const interruptedPlayer = playerRef.current;
+            if (interruptedPlayer) {
+              releasePlayer(interruptedPlayer, "interrupted");
+            }
+            playbackCallbacksRef.current.onInterrupted?.();
+          },
         });
 
-        playerRef.current = player;
+        if (!lease) return;
+        if (requestId !== requestIdRef.current) {
+          void mediaSession.release(lease);
+          return;
+        }
+        leaseRef.current = lease;
 
-        playbackListenerRef.current = player.addListener(
+        player = createAudioPlayer(audioSource, {
+          updateInterval: 250,
+        });
+        const activePlayer = player;
+        playerRef.current = activePlayer;
+
+        const subscription = activePlayer.addListener(
           "playbackStatusUpdate",
           (status) => {
-            const currentId = activeAudioIdRef.current;
+            if (playerRef.current !== activePlayer) return;
 
-            if (status.error && playerRef.current === player) {
-              cleanupAudioListener();
-
-              try {
-                player.remove();
-              } catch {
-                // Player may already be released after a native playback error.
+            if (status.error) {
+              const playbackError = toPlaybackError(status.error);
+              requestIdRef.current += 1;
+              releasePlayer(activePlayer, "error");
+              const currentLease = leaseRef.current;
+              leaseRef.current = null;
+              if (currentLease) {
+                void mediaSession.release(currentLease);
               }
 
-              playerRef.current = null;
-              activeAudioIdRef.current = null;
-              setSelectedAudio(null);
-              onError?.();
+              if (mountedRef.current) {
+                setError(playbackError);
+              }
+
+              playbackCallbacksRef.current.onError?.(playbackError);
               return;
             }
 
-            const statusAny = status as any;
-
+            const statusAny = status as AudioStatus;
             const didFinish =
               statusAny.didJustFinish === true ||
               statusAny.playbackState === "ended" ||
@@ -104,51 +237,151 @@ export function useVocAudio(
                 statusAny.currentTime >= statusAny.duration - 0.05 &&
                 statusAny.playing === false);
 
-            if (!didFinish) return;
+            if (statusAny.playing && !playbackStartedRef.current) {
+              playbackStartedRef.current = true;
 
-            if (currentId) {
-              setSelectedAudio(null);
+              if (id && mountedRef.current) {
+                setSelectedAudio(id);
+              }
+
+              if (mountedRef.current) {
+                setPlaybackState("playing");
+              }
+
+              Vibration.vibrate(8);
+              if (trackPlayback) {
+                void trackAudioPlayed();
+              }
+              playbackCallbacksRef.current.onStarted?.();
             }
 
-            cleanupAudioListener();
+            if (didFinish) {
+              requestIdRef.current += 1;
+              const completedAfterNativeStart = playbackStartedRef.current;
+              releasePlayer(activePlayer, "completed");
+              const currentLease = leaseRef.current;
+              leaseRef.current = null;
+              if (currentLease) {
+                void mediaSession.release(currentLease);
+              }
 
-            try {
-              player.remove();
-            } catch {
-              // Player may already be released by navigation cleanup.
+              if (completedAfterNativeStart) {
+                playbackCallbacksRef.current.onCompleted?.();
+              }
+              return;
             }
 
-            if (playerRef.current === player) {
-              playerRef.current = null;
-            }
+            const wasInterrupted =
+              playbackStartedRef.current &&
+              !statusAny.playing &&
+              !statusAny.isBuffering &&
+              statusAny.isLoaded &&
+              statusAny.duration > 0 &&
+              statusAny.currentTime < statusAny.duration - 0.05;
 
-            activeAudioIdRef.current = null;
+            if (wasInterrupted) {
+              requestIdRef.current += 1;
+              releasePlayer(activePlayer, "interrupted");
+              const currentLease = leaseRef.current;
+              leaseRef.current = null;
+              if (currentLease) {
+                void mediaSession.release(currentLease);
+              }
+              playbackCallbacksRef.current.onInterrupted?.();
+            }
           },
         );
 
-        player.seekTo(0);
-        player.play();
-      } catch {
-        if (onError) {
-          stopAudio();
+        playbackListenerRef.current = {
+          player: activePlayer,
+          subscription,
+        };
+
+        await activePlayer.seekTo(0);
+        if (
+          requestId !== requestIdRef.current ||
+          playerRef.current !== activePlayer
+        ) {
+          releasePlayer(activePlayer, "idle");
+          return;
         }
-        setSelectedAudio(null);
-        activeAudioIdRef.current = null;
-        onError?.();
+
+        activePlayer.play();
+      } catch (caughtError) {
+        if (requestId !== requestIdRef.current) return;
+
+        const playbackError = toPlaybackError(caughtError);
+        requestIdRef.current += 1;
+
+        if (player) {
+          releasePlayer(player, "error");
+        } else {
+          if (mountedRef.current) {
+            setSelectedAudio(null);
+            setPlaybackState("error");
+          }
+        }
+        const currentLease = leaseRef.current;
+        leaseRef.current = null;
+        if (currentLease) {
+          void mediaSession.release(currentLease);
+        }
+
+        if (mountedRef.current) {
+          setError(playbackError);
+        }
+
+        playbackCallbacks.onError?.(playbackError);
       }
     },
-    [cleanupAudioListener, setSelectedAudio, stopAudio, trackPlayback],
+    [
+      clearError,
+      releasePlayer,
+      setSelectedAudio,
+      stopAudio,
+      trackPlayback,
+    ],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        if (playerRef.current && playbackStartedRef.current) {
+          playbackCallbacksRef.current.onInterrupted?.();
+        }
+        stopAudio();
+      };
+    }, [stopAudio]),
   );
 
   useEffect(() => {
-    setAudioModeAsync({
-      playsInSilentMode: true,
-      allowsRecording: false,
-      shouldPlayInBackground: false,
-    }).catch(() => null);
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      requestIdRef.current += 1;
 
-    return stopAudio;
-  }, [stopAudio]);
+      const player = playerRef.current;
+      if (player) {
+        releasePlayer(player, "idle", false);
+      } else {
+        const orphanedListener =
+          playbackListenerRef.current?.subscription ?? null;
+        playbackListenerRef.current = null;
+        releaseAudioResources(null, orphanedListener);
+      }
+      const lease = leaseRef.current;
+      leaseRef.current = null;
+      if (lease) {
+        void mediaSession.release(lease);
+      }
+    };
+  }, [releasePlayer]);
 
-  return { playAudio, stopAudio };
+  return {
+    playAudio,
+    stopAudio,
+    error,
+    clearError,
+    playbackState,
+  };
 }

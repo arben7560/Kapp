@@ -1,7 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -13,7 +13,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AnimatedAppText, AppText } from "../../../components/app-text";
-import { ABSOLUTE_FILL, RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../../constants/layout";
+import {
+  ABSOLUTE_FILL,
+  RESPONSIVE_AUDIO_COPY_MIN_WIDTH,
+} from "../../../constants/layout";
 import { useVocAudio } from "../../../hooks/useVocAudio";
 import { useVocDialogue } from "../../../hooks/useVocDialogue";
 
@@ -221,7 +224,7 @@ const SCENES: Scene[] = [
       {
         char: "Vendeur",
         kr: "여기 있습니다. 만 원입니다.",
-        fr: "Tenez, c'est 10 000 wons.",
+        fr: "C'est 10 000 wons.",
         side: "server",
         audio: POLITESSE_AUDIO.message4,
       },
@@ -402,7 +405,6 @@ export default function FirstStepsImmersion() {
       easing: Easing.out(Easing.back(1)),
       useNativeDriver: true,
     }).start();
-
   }, [activeScene, fadeAnim]);
 
   useEffect(() => {
@@ -454,13 +456,24 @@ export default function FirstStepsImmersion() {
         >
           <View style={styles.topNav}>
             <Pressable onPress={() => router.back()} style={styles.backCircle}>
-              <AppText variant="screenTitle" lineContract="singleLine" style={styles.backArrow}>‹</AppText>
+              <AppText
+                variant="screenTitle"
+                lineContract="singleLine"
+                style={styles.backArrow}
+              >
+                ‹
+              </AppText>
             </Pressable>
             <View>
-              <AppText variant="sectionLabel" style={[styles.navEyebrow, { color: activeScene.accent }]}>
+              <AppText
+                variant="sectionLabel"
+                style={[styles.navEyebrow, { color: activeScene.accent }]}
+              >
                 SÉOUL IMMERSION
               </AppText>
-              <AppText variant="cardTitle" style={styles.navTitle}>Premiers pas</AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>
+                Premiers pas
+              </AppText>
             </View>
           </View>
 
@@ -477,7 +490,9 @@ export default function FirstStepsImmersion() {
                   },
                 ]}
               >
-                <AppText variant="label" lineContract="singleLine"
+                <AppText
+                  variant="label"
+                  lineContract="singleLine"
                   style={[
                     styles.tabLabel,
                     activeScene.id === scene.id && {
@@ -511,12 +526,21 @@ export default function FirstStepsImmersion() {
               />
 
               <View style={styles.cardInfo}>
-                <AppText variant="koreanSecondary" script="korean" lineContract="singleLine"
+                <AppText
+                  variant="koreanSecondary"
+                  script="korean"
+                  lineContract="singleLine"
                   style={[styles.krCategory, { color: activeScene.accent }]}
                 >
                   {activeScene.koreanTitle}
                 </AppText>
-                <AppText accessibilityRole="header" variant="sceneTitle" style={styles.sceneTitle}>{activeScene.title}</AppText>
+                <AppText
+                  accessibilityRole="header"
+                  variant="sceneTitle"
+                  style={styles.sceneTitle}
+                >
+                  {activeScene.title}
+                </AppText>
                 <AppText variant="subtitle" style={styles.sceneSubtitle}>
                   {activeScene.description}
                 </AppText>
@@ -545,7 +569,8 @@ export default function FirstStepsImmersion() {
                           },
                         ]}
                       >
-                        <AppText variant="label"
+                        <AppText
+                          variant="label"
                           style={[
                             styles.msgChar,
                             { color: activeScene.accent },
@@ -553,8 +578,20 @@ export default function FirstStepsImmersion() {
                         >
                           {line.char}
                         </AppText>
-                        <AppText variant="koreanSecondary" script="korean" style={styles.msgKr}>{line.kr}</AppText>
-                        <AppText variant="bodySecondary" tone="muted" style={styles.msgFr}>{line.fr}</AppText>
+                        <AppText
+                          variant="koreanSecondary"
+                          script="korean"
+                          style={styles.msgKr}
+                        >
+                          {line.kr}
+                        </AppText>
+                        <AppText
+                          variant="bodySecondary"
+                          tone="muted"
+                          style={styles.msgFr}
+                        >
+                          {line.fr}
+                        </AppText>
                       </Pressable>
                     );
                   })}
@@ -563,7 +600,8 @@ export default function FirstStepsImmersion() {
                   <View
                     style={[styles.msgBox, styles.msgLeft, styles.typingBubble]}
                   >
-                    <AppText variant="label"
+                    <AppText
+                      variant="label"
                       style={[styles.msgChar, { color: activeScene.accent }]}
                     >
                       {activeScene.dialogue[visibleMessages]?.char}
@@ -593,7 +631,8 @@ export default function FirstStepsImmersion() {
                 )}
 
                 <Pressable onPress={advanceDialogue} disabled={isTyping}>
-                  <AnimatedAppText variant="caption"
+                  <AnimatedAppText
+                    variant="caption"
                     style={[
                       styles.tapHint,
                       shouldHighlightHint && {
@@ -622,7 +661,9 @@ export default function FirstStepsImmersion() {
 
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <AppText variant="sectionTitle" style={styles.toolboxTitle}>Expressions clés</AppText>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>
+                Expressions clés
+              </AppText>
               <View
                 style={[
                   styles.toolboxLine,
@@ -664,9 +705,21 @@ export default function FirstStepsImmersion() {
                       />
 
                       <View style={styles.expTopRow}>
-                        <View style={{ flex: 1, minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH }}>
-                          <AppText variant="koreanPrimary" script="korean" style={styles.expWord}>{exp.word}</AppText>
-                          <AppText variant="caption"
+                        <View
+                          style={{
+                            flex: 1,
+                            minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH,
+                          }}
+                        >
+                          <AppText
+                            variant="koreanPrimary"
+                            script="korean"
+                            style={styles.expWord}
+                          >
+                            {exp.word}
+                          </AppText>
+                          <AppText
+                            variant="caption"
                             style={[
                               styles.expRom,
                               { color: activeScene.accent },
@@ -685,7 +738,9 @@ export default function FirstStepsImmersion() {
                             },
                           ]}
                         >
-                          <AppText variant="caption" lineContract="singleLine"
+                          <AppText
+                            variant="caption"
+                            lineContract="singleLine"
                             style={[
                               styles.listenIcon,
                               { color: activeScene.accent },
@@ -693,12 +748,26 @@ export default function FirstStepsImmersion() {
                           >
                             {isActive ? "●" : "▶"}
                           </AppText>
-                          <AppText variant="label" lineContract="singleLine" style={styles.listenText}>ÉCOUTER</AppText>
+                          <AppText
+                            variant="label"
+                            lineContract="singleLine"
+                            style={styles.listenText}
+                          >
+                            ÉCOUTER
+                          </AppText>
                         </View>
                       </View>
 
-                      <AppText variant="bodyStrong" style={styles.expMean}>{exp.mean}</AppText>
-                      <AppText variant="bodySecondary" tone="muted" style={styles.expCtx}>{exp.context}</AppText>
+                      <AppText variant="bodyStrong" style={styles.expMean}>
+                        {exp.mean}
+                      </AppText>
+                      <AppText
+                        variant="bodySecondary"
+                        tone="muted"
+                        style={styles.expCtx}
+                      >
+                        {exp.context}
+                      </AppText>
                     </BlurView>
                   </Pressable>
                 );
@@ -737,8 +806,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.15)",
   },
   backArrow: { color: "#fff", marginTop: -2 },
-  navEyebrow: {
-  },
+  navEyebrow: {},
   navTitle: { color: "#fff", opacity: 0.8 },
 
   header: {
@@ -885,8 +953,7 @@ const styles = StyleSheet.create({
     color: COLORS.txt,
     marginBottom: 2,
   },
-  expRom: {
-  },
+  expRom: {},
   expMean: {
     color: COLORS.txt,
     marginBottom: 4,
@@ -904,8 +971,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  listenIcon: {
-  },
+  listenIcon: {},
   listenText: {
     color: "rgba(255, 255, 255, 0.78)",
   },

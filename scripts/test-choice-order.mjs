@@ -95,9 +95,12 @@ test("all evaluated renderers use the shared stable choice-order logic", () => {
     "app/immersion/convenience-night.tsx",
   ];
   for (const file of files) {
-    const choiceOrderImport = file.includes("hangul")
-      ? /lib\/(?:choiceOrder|hangulQuiz)/u
-      : /lib\/choiceOrder/u;
+    const choiceOrderImport =
+      file === "app/(tabs)/listen.tsx"
+        ? /lib\/listenExerciseChoices/u
+        : file.includes("hangul")
+          ? /lib\/(?:choiceOrder|hangulQuiz)/u
+          : /lib\/choiceOrder/u;
     assert.match(
       readFileSync(join(projectRoot, file), "utf8"),
       choiceOrderImport,
@@ -106,6 +109,10 @@ test("all evaluated renderers use the shared stable choice-order logic", () => {
   }
   assert.match(
     readFileSync(join(projectRoot, "lib/hangulQuiz.ts"), "utf8"),
+    /choiceOrder/u,
+  );
+  assert.match(
+    readFileSync(join(projectRoot, "lib/listenExerciseChoices.ts"), "utf8"),
     /choiceOrder/u,
   );
 });

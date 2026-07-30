@@ -38,11 +38,11 @@ import {
   getRestaurantMissionScenario,
 } from "../../data/lesson/restaurant/restaurantMissions";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
-import { useImmersiveMediaStatus } from "../../hooks/useImmersiveMediaStatus";
 import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { buildProgressId } from "../../lib/progressIds";
+import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -232,6 +232,7 @@ export default function RestaurantIaScreen() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isSceneEnded, setIsSceneEnded] = useState(false);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
+  const [videoRetryKey, setVideoRetryKey] = useState(0);
 
   const [lastIaTranscript, setLastIaTranscript] = useState<{
     korean: string;
@@ -258,15 +259,16 @@ export default function RestaurantIaScreen() {
     playerInstance.loop = false;
   });
   const {
-    status: mediaStatus,
-    markReady: markMediaReady,
     markError: markMediaError,
-  } = useImmersiveMediaStatus(displayedVideoSource);
-  useImmersiveVideoLifecycle(
+    markLoading: markMediaLoading,
+    replaceSource: replaceVideoSource,
+    resume: resumeVideo,
+    status: mediaStatus,
+  } = useImmersiveVideoLifecycle(
     player,
+    displayedVideoSource,
     currentNode?.type === "ia" &&
-      Boolean(currentVideoSource) &&
-      mediaStatus === "ready",
+      Boolean(currentVideoSource),
   );
 
   useEffect(() => {
@@ -277,6 +279,7 @@ export default function RestaurantIaScreen() {
   useEffect(() => {
     if (!canEnterMission) return;
     if (currentNode?.type === "ia" && currentVideoSource) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- The displayed native source follows the active IA node.
       setDisplayedVideoSource(currentVideoSource);
     }
   }, [canEnterMission, currentNode, currentVideoSource]);
@@ -311,6 +314,7 @@ export default function RestaurantIaScreen() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Route parameters select a new mission and require one atomic local reset.
     setCurrentNodeId(currentScenario.startNodeId);
     setMaxProgressIndex(getProgressIndex(currentScenario.startNodeId));
     setSelectedChoiceId(null);
@@ -340,6 +344,7 @@ export default function RestaurantIaScreen() {
 
   useEffect(() => {
     hasAdvancedFromVideoRef.current = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Transcript visibility is scoped to the active dialogue node.
     setIsTranscriptOpen(false);
 
     if (iaAutoTimerRef.current) {
@@ -348,6 +353,7 @@ export default function RestaurantIaScreen() {
     }
   }, [currentNodeId]);
 
+  /* eslint-disable react-hooks/immutability -- expo-video exposes an imperative player handle by design. */
   useEffect(() => {
     if (!canEnterMission) return;
     if (!currentNode) return;
@@ -357,23 +363,26 @@ export default function RestaurantIaScreen() {
 
     async function updateVideoSource() {
       const nextVideoSource = displayedVideoSource;
+      markMediaLoading();
 
       try {
-        await player.replaceAsync(nextVideoSource);
+        const replaced = await replaceVideoSource(nextVideoSource);
 
-        if (isCancelled) return;
-
-        markMediaReady(nextVideoSource);
+        if (isCancelled || !replaced) return;
 
         if (currentNode?.type === "ia" && currentVideoSource) {
-          player.play();
+          player.currentTime = 0;
         } else {
           player.pause();
         }
-      } catch {
+      } catch (error) {
         if (!isCancelled) {
           player.pause();
-          markMediaError(nextVideoSource);
+          markMediaError(
+            error instanceof Error
+              ? error.message
+              : "Impossible de lire cette vidéo.",
+          );
         }
       }
     }
@@ -390,9 +399,12 @@ export default function RestaurantIaScreen() {
     displayedVideoSource,
     canEnterMission,
     markMediaError,
-    markMediaReady,
+    markMediaLoading,
     player,
+    replaceVideoSource,
+    videoRetryKey,
   ]);
+  /* eslint-enable react-hooks/immutability */
 
   useEffect(() => {
     if (!canEnterMission) return;
@@ -401,32 +413,25 @@ export default function RestaurantIaScreen() {
     if (!currentVideoSource) return;
     if (isTransitioning || isSceneEnded) return;
 
-    const interval = setInterval(() => {
-      if (!mountedRef.current) return;
-      if (hasAdvancedFromVideoRef.current) return;
+    if (
+      !canAdvanceAfterRequiredVideo({
+        hasRequiredVideo: true,
+        status: mediaStatus,
+      })
+    ) {
+      return;
+    }
+    if (hasAdvancedFromVideoRef.current) return;
 
-      const duration = player.duration ?? 0;
-      const currentTime = player.currentTime ?? 0;
-
-      if (duration <= 0) return;
-
-      const isNearEnd = currentTime >= duration - 0.08;
-
-      if (isNearEnd) {
-        hasAdvancedFromVideoRef.current = true;
-        clearInterval(interval);
-        goToNextNode(currentNode);
-      }
-    }, 120);
-
-    return () => clearInterval(interval);
+    hasAdvancedFromVideoRef.current = true;
+    goToNextNode(currentNode);
   }, [
     currentNode,
     currentVideoSource,
     isTransitioning,
     isSceneEnded,
     canEnterMission,
-    player,
+    mediaStatus,
     goToNextNode,
   ]);
 
@@ -434,7 +439,7 @@ export default function RestaurantIaScreen() {
     if (!canEnterMission) return;
     if (!currentNode) return;
     if (currentNode.type !== "ia") return;
-    if (currentVideoSource && mediaStatus !== "error") return;
+    if (currentVideoSource) return;
     if (isTransitioning || isSceneEnded) return;
 
     const delay = getAutoAdvanceDelay(currentNode, mode);
@@ -453,7 +458,6 @@ export default function RestaurantIaScreen() {
   }, [
     currentNode,
     currentVideoSource,
-    mediaStatus,
     mode,
     isTransitioning,
     isSceneEnded,
@@ -505,6 +509,12 @@ export default function RestaurantIaScreen() {
 
     router.replace("/(tabs)");
   }, []);
+
+  const handleRetryVideo = useCallback(() => {
+    hasAdvancedFromVideoRef.current = false;
+    markMediaLoading();
+    setVideoRetryKey((current) => current + 1);
+  }, [markMediaLoading]);
 
   const isUserChoice = currentNode?.type === "user_choice";
 
@@ -638,7 +648,14 @@ export default function RestaurantIaScreen() {
                   locations={[0, 0.62, 1]}
                   style={styles.videoOverlay}
                 />
-                <ImmersiveMediaStatusOverlay status={mediaStatus} />
+                <ImmersiveMediaStatusOverlay
+                  status={mediaStatus}
+                  onExit={handleExit}
+                  onResume={() => {
+                    void resumeVideo();
+                  }}
+                  onRetry={handleRetryVideo}
+                />
               </View>
 
               <Pressable

@@ -37,7 +37,7 @@ export function HangulAudioBadge({
         <Ionicons name="volume-medium-outline" size={17} color={accent} />
       </View>
       {label ? (
-        <AppText variant="caption" style={[styles.label, { color: accent }]}>
+        <AppText variant="caption" style={{ color: accent }}>
           {label}
         </AppText>
       ) : null}
@@ -72,8 +72,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 14,
     borderWidth: 1,
-  },
-  label: {
-    letterSpacing: 0.7,
   },
 });

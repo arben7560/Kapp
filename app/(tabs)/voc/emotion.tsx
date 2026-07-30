@@ -2,7 +2,7 @@ import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
+import * as Speech from "@/lib/speechPlayback";
 import React, { useRef, useState } from "react";
 import {
   Animated,
@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { AppText } from "../../../components/app-text";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useSpeechLifecycle } from "../../../hooks/useSpeechLifecycle";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/seoul-hub-bg.jpg");
@@ -85,6 +86,7 @@ const speakKo = (text: string) => {
 };
 
 export default function EmotionCyber() {
+  useSpeechLifecycle();
   const [wordIndex, setWordIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;

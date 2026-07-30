@@ -9,6 +9,10 @@ import {
   createEmptyGrammarLearningProgress,
   normalizeGrammarLearningProgress,
 } from "./lib/grammar/learning";
+import {
+  COMPLETION_XP,
+  reserveCompletion,
+} from "./lib/progressCompletion";
 
 export type LearningTrack =
   | "hangul"
@@ -53,7 +57,7 @@ type StoreValue = {
   setTrack: (t: LearningTrack) => void;
   progress: Progress;
   setProgress: React.Dispatch<React.SetStateAction<Progress>>;
-  complete: (id: string) => void;
+  complete: (id: string) => boolean;
   togglePremium: () => void;
   bumpHangul: () => void;
   updateHangulProgress: (
@@ -91,6 +95,7 @@ function mergeProgress(saved: Partial<Progress>): Progress {
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [progress, setProgress] = React.useState<Progress>(initialProgress);
   const [isHydrated, setIsHydrated] = React.useState(false);
+  const isHydratedRef = React.useRef(false);
   const completedRef = React.useRef<Record<string, boolean>>(
     initialProgress.completed,
   );
@@ -115,6 +120,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         console.warn("Impossible de restaurer le store pédagogique:", error);
       } finally {
         if (mounted) {
+          isHydratedRef.current = true;
           setIsHydrated(true);
         }
       }
@@ -149,18 +155,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setProgress((p) => ({ ...p, learningTrack: t }));
   };
 
-  const complete = (id: string) => {
-    if (completedRef.current[id]) return;
+  const complete = React.useCallback((id: string) => {
+    const nextCompleted = reserveCompletion(
+      completedRef.current,
+      id,
+      isHydratedRef.current,
+    );
 
-    completedRef.current = {
-      ...completedRef.current,
-      [id]: true,
-    };
+    if (!nextCompleted) return false;
+
+    completedRef.current = nextCompleted;
 
     setProgress((p) => {
       if (p.completed[id]) return p;
 
-      const nextCompleted = { ...p.completed, [id]: true };
       const completedCoreModules = [
         "hangul_vowels_basic",
         "hangul_consonants_basic",
@@ -172,11 +180,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       return {
         ...p,
         completed: nextCompleted,
-        xp: p.xp + 40,
+        xp: p.xp + COMPLETION_XP,
         hangulLevel: Math.min(5, Math.max(1, completedCoreModules)),
       };
     });
-  };
+
+    return true;
+  }, []);
 
   const togglePremium = () => {
     setProgress((p) => ({ ...p, isPremium: !p.isPremium }));

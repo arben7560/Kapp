@@ -12,9 +12,15 @@ import {
 } from "react-native";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import {
+  EXERCISES_BY_KIND,
+  TRAINING_ORDER,
+  type ExerciseKind,
+} from "../../data/listen/activeExercises";
 import { useVocAudio } from "../../hooks/useVocAudio";
-import { shuffleArray, shuffleIndexedChoices } from "../../lib/choiceOrder";
 import { completeDailyActivity } from "../../lib/dailyStreak";
+import { shuffleListenChoices } from "../../lib/listenExerciseChoices";
+import { canValidateListenAnswer } from "../../lib/listenValidation";
 import { buildProgressId } from "../../lib/progressIds";
 
 const BG_URL =
@@ -33,56 +39,6 @@ const COLORS = {
   purple: "#a855f7",
   green: "#8df0b5",
 };
-
-type ExerciseKind = "dictation" | "situation" | "gap" | "order" | "reaction";
-
-type BaseExercise = {
-  id: string;
-  kind: ExerciseKind;
-  theme: string;
-  title: string;
-  instruction: string;
-  explanation?: string;
-};
-
-type ChoiceExercise = BaseExercise & {
-  kind: "dictation" | "situation" | "reaction";
-  options: string[];
-  answer: number;
-};
-
-type GapExercise = BaseExercise & {
-  kind: "gap";
-  before: string;
-  after: string;
-  options: string[];
-  answer: string;
-};
-
-type OrderExercise = BaseExercise & {
-  kind: "order";
-  words: string[];
-  answer: string[];
-};
-
-type ListenExercise = ChoiceExercise | GapExercise | OrderExercise;
-
-function shuffleListenChoices(exercise: ListenExercise): ListenExercise {
-  if (exercise.kind === "order") {
-    return { ...exercise, words: shuffleArray(exercise.words) };
-  }
-
-  if (exercise.kind === "gap") {
-    return { ...exercise, options: shuffleArray(exercise.options) };
-  }
-
-  const shuffled = shuffleIndexedChoices(exercise.options, exercise.answer);
-  return {
-    ...exercise,
-    options: shuffled.choices,
-    answer: shuffled.correctIndex,
-  };
-}
 
 const LISTEN_AUDIO_BY_ID: Partial<Record<string, number>> = {
   "cafe-dictation-01": require("../../assets/audio/listen/cafe-dictation-01.mp3"),
@@ -112,293 +68,6 @@ const LISTEN_AUDIO_BY_ID: Partial<Record<string, number>> = {
   "street-reaction-05": require("../../assets/audio/listen/street-reaction-05.mp3"),
 };
 
-const TRAINING_ORDER: ExerciseKind[] = [
-  "dictation",
-  "situation",
-  "gap",
-  "order",
-  "reaction",
-];
-
-const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
-  dictation: [
-    {
-      id: "cafe-dictation-01",
-      kind: "dictation",
-      theme: "Café",
-      title: "Retrouve la phrase",
-      instruction: "Écoute, puis choisis la bonne écriture.",
-      options: ["몇 분이세요?", "몇 본이세요?", "몇 분 이세요?"],
-      answer: 0,
-      explanation: "몇 분이세요? = Vous êtes combien ?",
-    },
-    {
-      id: "cafe-dictation-02",
-      kind: "dictation",
-      theme: "Café",
-      title: "Repère la formule",
-      instruction: "Écoute, puis choisis la phrase exacte.",
-      options: [
-        "아이스 아메리카노 주세요.",
-        "아이 아메리카노 주세요.",
-        "아이스 아메리카노 주새요.",
-      ],
-      answer: 0,
-      explanation:
-        "아이스 아메리카노 주세요. = Un americano glacé, s'il vous plaît.",
-    },
-    {
-      id: "metro-dictation-03",
-      kind: "dictation",
-      theme: "Métro",
-      title: "Entends la direction",
-      instruction: "Écoute, puis retrouve l'écriture correcte.",
-      options: ["이곳으로 가세요.", "이것으로 가세요.", "이곳으로 가새요."],
-      answer: 0,
-      explanation: "이곳으로 가세요. = Allez par ici.",
-    },
-    {
-      id: "shop-dictation-04",
-      kind: "dictation",
-      theme: "Boutique",
-      title: "Distingue le prix",
-      instruction: "Écoute, puis sélectionne la bonne phrase.",
-      options: ["얼마예요?", "얼마에요?", "얼마이에요?"],
-      answer: 0,
-      explanation: "얼마예요? = Combien ça coûte ?",
-    },
-    {
-      id: "hotel-dictation-05",
-      kind: "dictation",
-      theme: "Hôtel",
-      title: "Note la demande",
-      instruction: "Écoute, puis choisis la bonne écriture.",
-      options: ["예약했어요.", "여약했어요.", "예약해써요."],
-      answer: 0,
-      explanation: "예약했어요. = J'ai réservé.",
-    },
-  ],
-  situation: [
-    {
-      id: "bbq-situation-01",
-      kind: "situation",
-      theme: "K-BBQ",
-      title: "Comprends la situation",
-      instruction: "Écoute la serveuse et choisis la réponse logique.",
-      options: ["두 명이에요.", "카드로 계산할게요.", "물 주세요."],
-      answer: 0,
-      explanation: "La serveuse demande le nombre de personnes.",
-    },
-    {
-      id: "cafe-situation-02",
-      kind: "situation",
-      theme: "Café",
-      title: "Réponds au barista",
-      instruction: "Écoute la question et choisis la réponse naturelle.",
-      options: ["따뜻한 라떼 주세요.", "여기서 내려요.", "예약했어요."],
-      answer: 0,
-      explanation: "On te demande ce que tu veux commander.",
-    },
-    {
-      id: "metro-situation-03",
-      kind: "situation",
-      theme: "Métro",
-      title: "Trouve l'arrêt",
-      instruction: "Écoute l'annonce et choisis quoi faire.",
-      options: ["여기서 내려요.", "두 명이에요.", "포장해 주세요."],
-      answer: 0,
-      explanation: "L'annonce indique que c'est l'arrêt où descendre.",
-    },
-    {
-      id: "shop-situation-04",
-      kind: "situation",
-      theme: "Boutique",
-      title: "Choisis le paiement",
-      instruction: "Écoute la question et choisis la réponse adaptée.",
-      options: ["카드로 할게요.", "화장실이 어디예요?", "괜찮아요."],
-      answer: 0,
-      explanation: "On te demande comment tu veux payer.",
-    },
-    {
-      id: "street-situation-05",
-      kind: "situation",
-      theme: "Rue",
-      title: "Demande ton chemin",
-      instruction: "Écoute la personne et choisis la réponse logique.",
-      options: ["네, 감사합니다.", "아이스로 주세요.", "삼겹살 주세요."],
-      answer: 0,
-      explanation: "La personne vient de t'indiquer le chemin.",
-    },
-  ],
-  gap: [
-    {
-      id: "restaurant-gap-01",
-      kind: "gap",
-      theme: "Restaurant",
-      title: "Complète le mot",
-      instruction: "Écoute, puis complète la phrase.",
-      before: "삼겹살 ",
-      after: " 주세요.",
-      options: ["2인분", "2번", "2명"],
-      answer: "2인분",
-      explanation: "2인분 = deux portions.",
-    },
-    {
-      id: "cafe-gap-02",
-      kind: "gap",
-      theme: "Café",
-      title: "Complète la commande",
-      instruction: "Écoute, puis choisis le mot manquant.",
-      before: "아이스 ",
-      after: " 주세요.",
-      options: ["라떼", "지하철", "계산"],
-      answer: "라떼",
-      explanation: "아이스 라떼 주세요. = Un latte glacé, s'il vous plaît.",
-    },
-    {
-      id: "shop-gap-03",
-      kind: "gap",
-      theme: "Boutique",
-      title: "Complète le paiement",
-      instruction: "Écoute, puis complète la phrase.",
-      before: "",
-      after: "로 계산할게요.",
-      options: ["카드", "물", "여기"],
-      answer: "카드",
-      explanation: "카드로 계산할게요. = Je vais payer par carte.",
-    },
-    {
-      id: "metro-gap-04",
-      kind: "gap",
-      theme: "Métro",
-      title: "Complète le lieu",
-      instruction: "Écoute, puis choisis le mot manquant.",
-      before: "",
-      after: "에서 내려요.",
-      options: ["홍대입구", "커피", "예약"],
-      answer: "홍대입구",
-      explanation: "홍대입구에서 내려요. = Je descends à Hongik University.",
-    },
-    {
-      id: "hotel-gap-05",
-      kind: "gap",
-      theme: "Hôtel",
-      title: "Complète la réservation",
-      instruction: "Écoute, puis complète la phrase.",
-      before: "",
-      after: "했어요.",
-      options: ["예약", "주문", "하차"],
-      answer: "예약",
-      explanation: "예약했어요. = J'ai réservé.",
-    },
-  ],
-  order: [
-    {
-      id: "metro-order-01",
-      kind: "order",
-      theme: "Métro",
-      title: "Remets en ordre",
-      instruction: "Écoute, puis reconstruis la phrase.",
-      words: ["가세요", "이쪽으로", "쭉"],
-      answer: ["쭉", "이쪽으로", "가세요"],
-      explanation: "쭉 이쪽으로 가세요. = Allez simplement par ici.",
-    },
-    {
-      id: "cafe-order-02",
-      kind: "order",
-      theme: "Café",
-      title: "Reconstruis la commande",
-      instruction: "Écoute, puis remets les mots dans l'ordre.",
-      words: ["주세요", "아이스", "아메리카노"],
-      answer: ["아이스", "아메리카노", "주세요"],
-      explanation:
-        "아이스 아메리카노 주세요. = Un americano glacé, s'il vous plaît.",
-    },
-    {
-      id: "shop-order-03",
-      kind: "order",
-      theme: "Boutique",
-      title: "Replace les mots",
-      instruction: "Écoute, puis reconstruis la phrase.",
-      words: ["얼마예요", "이거", "?"],
-      answer: ["이거", "얼마예요", "?"],
-      explanation: "이거 얼마예요? = Combien coûte ceci ?",
-    },
-    {
-      id: "restaurant-order-04",
-      kind: "order",
-      theme: "Restaurant",
-      title: "Remets la demande",
-      instruction: "Écoute, puis remets les mots en ordre.",
-      words: ["주세요", "물", "좀"],
-      answer: ["물", "좀", "주세요"],
-      explanation: "물 좀 주세요. = Un peu d'eau, s'il vous plaît.",
-    },
-    {
-      id: "street-order-05",
-      kind: "order",
-      theme: "Rue",
-      title: "Reconstruis la question",
-      instruction: "Écoute, puis reconstruis la phrase.",
-      words: ["어디예요", "화장실이", "?"],
-      answer: ["화장실이", "어디예요", "?"],
-      explanation: "화장실이 어디예요? = Où sont les toilettes ?",
-    },
-  ],
-  reaction: [
-    {
-      id: "cafe-reaction-01",
-      kind: "reaction",
-      theme: "Café",
-      title: "Choisis la réaction",
-      instruction: "Écoute et réponds naturellement.",
-      options: ["아이스 아메리카노 주세요.", "화장실이 어디예요?", "괜찮아요."],
-      answer: 0,
-      explanation: "On te demande ce que tu veux prendre.",
-    },
-    {
-      id: "restaurant-reaction-02",
-      kind: "reaction",
-      theme: "Restaurant",
-      title: "Réagis à la serveuse",
-      instruction: "Écoute et choisis la réponse naturelle.",
-      options: ["네, 물 좀 주세요.", "여기서 내려요.", "예약했어요."],
-      answer: 0,
-      explanation: "La serveuse demande si tu as besoin de quelque chose.",
-    },
-    {
-      id: "shop-reaction-03",
-      kind: "reaction",
-      theme: "Boutique",
-      title: "Réponds au vendeur",
-      instruction: "Écoute, puis choisis la bonne réaction.",
-      options: ["괜찮아요, 그냥 볼게요.", "두 명이에요.", "맛있어요."],
-      answer: 0,
-      explanation: "Le vendeur propose de t'aider, tu réponds que tu regardes.",
-    },
-    {
-      id: "hotel-reaction-04",
-      kind: "reaction",
-      theme: "Hôtel",
-      title: "Réponds à l'accueil",
-      instruction: "Écoute et choisis la réponse adaptée.",
-      options: ["예약했어요.", "포장해 주세요.", "얼마예요?"],
-      answer: 0,
-      explanation: "La réception demande si tu as une réservation.",
-    },
-    {
-      id: "street-reaction-05",
-      kind: "reaction",
-      theme: "Rue",
-      title: "Réagis poliment",
-      instruction: "Écoute, puis choisis la réaction naturelle.",
-      options: ["감사합니다.", "아이스로 주세요.", "카드로 할게요."],
-      answer: 0,
-      explanation: "Quelqu'un vient de t'aider, tu remercies.",
-    },
-  ],
-};
-
 const KIND_LABEL: Record<ExerciseKind, { mini: string; skill: string }> = {
   dictation: { mini: "Orthographe", skill: "Écoute + Hangul" },
   situation: { mini: "Situation", skill: "Compréhension" },
@@ -408,8 +77,9 @@ const KIND_LABEL: Record<ExerciseKind, { mini: string; skill: string }> = {
 };
 
 export default function ListenScreen() {
-  const { complete } = useStore();
+  const { complete, isHydrated } = useStore();
   const scrollRef = useRef<ScrollView | null>(null);
+  const validationLockRef = useRef(false);
   const [trainingIndex, setTrainingIndex] = useState(0);
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -420,7 +90,15 @@ export default function ListenScreen() {
   const [playedAudioIds, setPlayedAudioIds] = useState<Record<string, true>>(
     {},
   );
-  const { playAudio: playMp3, stopAudio } = useVocAudio(setPlayingAudioId);
+  const [completedAudioIds, setCompletedAudioIds] = useState<
+    Record<string, true>
+  >({});
+  const {
+    playAudio: playMp3,
+    stopAudio,
+    error: audioPlaybackError,
+    clearError: clearAudioError,
+  } = useVocAudio(setPlayingAudioId);
 
   const trainingKind = TRAINING_ORDER[trainingIndex];
   const exercises = EXERCISES_BY_KIND[trainingKind];
@@ -431,6 +109,8 @@ export default function ListenScreen() {
   const hasAttempt =
     item.kind === "order" ? picked.length > 0 : selected !== null;
   const hasPlayedCurrentAudio = !!playedAudioIds[item.id];
+  const hasCompletedCurrentAudio = !!completedAudioIds[item.id];
+  const isPlayingCurrentAudio = playingAudioId === item.id;
   const isLastExercise = exerciseIndex === exercises.length - 1;
 
   useEffect(() => {
@@ -472,6 +152,7 @@ export default function ListenScreen() {
   const isCorrect = checked && isAnswerCorrect();
 
   const resetAnswer = () => {
+    validationLockRef.current = false;
     setSelected(null);
     setPicked([]);
     setChecked(false);
@@ -480,6 +161,7 @@ export default function ListenScreen() {
   const goNext = () => {
     const nextIndex =
       exerciseIndex === exercises.length - 1 ? 0 : exerciseIndex + 1;
+    clearAudioError();
     setExerciseIndex(nextIndex);
     resetAnswer();
   };
@@ -489,14 +171,23 @@ export default function ListenScreen() {
       (trainingIndex + direction + TRAINING_ORDER.length) %
       TRAINING_ORDER.length;
 
+    clearAudioError();
     setTrainingIndex(nextTrainingIndex);
     setExerciseIndex(0);
     resetAnswer();
   };
 
   const handleValidate = () => {
-    if (!canCheck) return;
+    if (!canValidateListenAnswer({
+      hasAnswer: canCheck,
+      hasCompletedRequiredMedia: hasCompletedCurrentAudio,
+      isHydrated,
+      isLocked: checked || validationLockRef.current,
+    })) {
+      return;
+    }
 
+    validationLockRef.current = true;
     const correct = isAnswerCorrect();
     const expectedAnswer = getExpectedAnswer();
 
@@ -511,6 +202,7 @@ export default function ListenScreen() {
 
     if (correct) {
       complete(buildProgressId("listen", item.id));
+
       void completeDailyActivity("listen_exercise").then((state) => {
         setDailyMessage(
           state.lastCompletionResult === "completed_with_freeze"
@@ -527,9 +219,18 @@ export default function ListenScreen() {
   };
 
   const playAudio = () => {
-    if (!audioSource) return;
-    setPlayedAudioIds((current) => ({ ...current, [item.id]: true }));
-    playMp3(audioSource, item.id);
+    if (!audioSource || isPlayingCurrentAudio) return;
+    void playMp3(audioSource, item.id, {
+      onCompleted: () => {
+        setCompletedAudioIds((current) => ({
+          ...current,
+          [item.id]: true,
+        }));
+      },
+      onStarted: () => {
+        setPlayedAudioIds((current) => ({ ...current, [item.id]: true }));
+      },
+    });
   };
 
   const pickOrderWord = (wordIndex: number) => {
@@ -774,6 +475,7 @@ export default function ListenScreen() {
                 }}
                 aria-selected={currentExerciseIndex === exerciseIndex}
                 onPress={() => {
+                  clearAudioError();
                   setExerciseIndex(currentExerciseIndex);
                   resetAnswer();
                 }}
@@ -834,14 +536,17 @@ export default function ListenScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`${hasPlayedCurrentAudio ? "Réécouter" : "Écouter"} l’audio de la question`}
-              accessibilityState={{ disabled: !audioSource }}
-              aria-disabled={!audioSource}
+              accessibilityState={{
+                disabled: !audioSource || isPlayingCurrentAudio,
+              }}
+              aria-disabled={!audioSource || isPlayingCurrentAudio}
               hitSlop={6}
-              disabled={!audioSource}
+              disabled={!audioSource || isPlayingCurrentAudio}
               onPress={playAudio}
               style={[
                 styles.listenButton,
-                !audioSource && styles.disabledButton,
+                (!audioSource || isPlayingCurrentAudio) &&
+                  styles.disabledButton,
               ]}
             >
               <Ionicons name="play" size={18} color={COLORS.text} />
@@ -857,13 +562,42 @@ export default function ListenScreen() {
               style={styles.audioHint}
             >
               {audioSource
-                ? playingAudioId === item.id
+                ? isPlayingCurrentAudio
                   ? "Lecture en cours"
-                  : hasPlayedCurrentAudio
-                    ? "Prêt à réécouter"
+                  : hasCompletedCurrentAudio
+                    ? "Audio terminé · prêt à réécouter"
+                    : hasPlayedCurrentAudio
+                      ? "Lecture interrompue · réessaie"
                     : "Prêt à écouter"
                 : "Audio indisponible"}
             </AppText>
+
+            {!!audioPlaybackError && (
+              <View
+                accessibilityRole="alert"
+                accessibilityLiveRegion="polite"
+                style={styles.audioError}
+              >
+                <AppText
+                  variant="body"
+                  tone="strong"
+                  style={styles.audioErrorText}
+                >
+                  Impossible de lire l’audio. Vérifie le volume, puis réessaie.
+                </AppText>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Réessayer la lecture audio"
+                  hitSlop={6}
+                  onPress={playAudio}
+                  style={styles.audioRetryButton}
+                >
+                  <AppText variant="button" tone="strong">
+                    Réessayer
+                  </AppText>
+                </Pressable>
+              </View>
+            )}
 
             {renderChoices()}
 
@@ -872,7 +606,11 @@ export default function ListenScreen() {
                 accessibilityLiveRegion="polite"
                 accessible
                 accessibilityRole="alert"
-                accessibilityLabel={`${isCorrect ? "Correct" : "À revoir"}. Réponse attendue : ${getExpectedAnswer()}. ${item.explanation ?? ""}`}
+                accessibilityLabel={`${isCorrect ? "Correct" : "À revoir"}. ${
+                  item.kind === "situation" || item.kind === "reaction"
+                    ? `Phrase entendue : ${item.sourceText}. `
+                    : ""
+                }Réponse attendue : ${getExpectedAnswer()}. ${item.explanation}`}
                 style={[styles.feedback, isCorrect ? styles.good : styles.bad]}
               >
                 <AppText
@@ -882,6 +620,27 @@ export default function ListenScreen() {
                 >
                   {isCorrect ? "Correct" : "À revoir"}
                 </AppText>
+                {(item.kind === "situation" ||
+                  item.kind === "reaction") && (
+                  <>
+                    <AppText
+                      variant="label"
+                      tone="strong"
+                      style={styles.expectedLabel}
+                    >
+                      Phrase entendue
+                    </AppText>
+                    <AppText
+                      variant="koreanSecondary"
+                      tone="accent"
+                      script="korean"
+                      accessibilityLanguage="ko"
+                      style={styles.expectedText}
+                    >
+                      {item.sourceText}
+                    </AppText>
+                  </>
+                )}
                 <AppText
                   variant="label"
                   tone="strong"
@@ -936,14 +695,24 @@ export default function ListenScreen() {
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Valider la réponse"
-                  accessibilityState={{ disabled: !canCheck }}
-                  aria-disabled={!canCheck}
+                  accessibilityState={{
+                    disabled:
+                      !canCheck || !hasCompletedCurrentAudio || !isHydrated,
+                  }}
+                  aria-disabled={
+                    !canCheck || !hasCompletedCurrentAudio || !isHydrated
+                  }
                   hitSlop={6}
-                  disabled={!canCheck}
+                  disabled={
+                    !canCheck || !hasCompletedCurrentAudio || !isHydrated
+                  }
                   onPress={handleValidate}
                   style={[
                     styles.actionButton,
-                    !canCheck && styles.disabledButton,
+                    (!canCheck ||
+                      !hasCompletedCurrentAudio ||
+                      !isHydrated) &&
+                      styles.disabledButton,
                   ]}
                 >
                   <AppText
@@ -982,6 +751,18 @@ export default function ListenScreen() {
                 </Pressable>
               )}
             </View>
+
+            {!isHydrated && (
+              <AppText
+                accessibilityLiveRegion="polite"
+                variant="caption"
+                tone="soft"
+                align="center"
+                style={styles.hydrationMessage}
+              >
+                Synchronisation de ta progression… Tu peux déjà écouter.
+              </AppText>
+            )}
 
             {!!dailyMessage && (
               <View style={styles.streakToast}>
@@ -1274,6 +1055,28 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 18,
   },
+  audioError: {
+    alignItems: "center",
+    backgroundColor: "rgba(255,79,102,0.12)",
+    borderColor: "rgba(255,79,102,0.42)",
+    borderRadius: 18,
+    borderWidth: 1,
+    gap: 10,
+    marginBottom: 18,
+    padding: 14,
+  },
+  audioErrorText: {
+    color: COLORS.text,
+    textAlign: "center",
+  },
+  audioRetryButton: {
+    alignItems: "center",
+    backgroundColor: COLORS.red,
+    borderRadius: 14,
+    justifyContent: "center",
+    minHeight: 44,
+    paddingHorizontal: 18,
+  },
   choiceStack: {
     gap: 12,
   },
@@ -1450,6 +1253,11 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.35,
+  },
+  hydrationMessage: {
+    color: COLORS.faint,
+    marginTop: 12,
+    textAlign: "center",
   },
   footerNote: {
     marginTop: 16,

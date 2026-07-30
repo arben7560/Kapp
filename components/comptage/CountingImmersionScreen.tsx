@@ -1,7 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
+import * as Speech from "@/lib/speechPlayback";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { useVocAudio } from "../../hooks/useVocAudio";
+import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
 import {
   trackAudioPlayed,
   trackSceneCompleted,
@@ -79,6 +80,7 @@ export default function CountingImmersionScreen({
   fallbackToSpeechOnAudioError = false,
   stopAudioOnDialogueChange = false,
 }: Props) {
+  useSpeechLifecycle();
   const { complete } = useStore();
   const [activeScene, setActiveScene] = useState(scenes[0]);
   const [visibleMessages, setVisibleMessages] = useState(1);

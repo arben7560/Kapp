@@ -7,11 +7,10 @@
     "icon": "./assets/images/icon.png",
     "scheme": "kapp",
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": [
-      "assets/**/*"
-    ],
+    "assetBundlePatterns": ["assets/**/*"],
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.arben60.kapp",
       "infoPlist": {
         "NSSpeechRecognitionUsageDescription": "Allow $(PRODUCT_NAME) to use speech recognition.",
         "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to use the microphone."
@@ -29,8 +28,6 @@
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
         "android.permission.ACCESS_NETWORK_STATE",
         "android.permission.INTERNET",
         "android.permission.WAKE_LOCK"
@@ -52,7 +49,13 @@
     },
     "plugins": [
       "expo-router",
-      "expo-speech-recognition",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Autoriser $(PRODUCT_NAME) à utiliser le microphone pour les exercices de prononciation coréenne.",
+          "speechRecognitionPermission": "Autoriser $(PRODUCT_NAME) à reconnaître votre voix pendant les exercices de prononciation coréenne."
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -68,8 +71,22 @@
       "expo-font",
       "expo-image",
       "expo-web-browser",
-      "expo-video",
-      "expo-audio",
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": false,
+          "supportsPictureInPicture": false
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "enableBackgroundPlayback": false,
+          "enableBackgroundRecording": false,
+          "microphonePermission": "Autoriser $(PRODUCT_NAME) à utiliser le microphone pour les exercices de prononciation coréenne.",
+          "recordAudioAndroid": true
+        }
+      ],
       "expo-status-bar",
       "expo-iap"
     ],

@@ -1,10 +1,11 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
+import * as Speech from "@/lib/speechPlayback";
 import React, { useMemo, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
 import { AppMixedText, AppText } from "@/components/app-text";
+import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
 
 const BG0 = "#070812";
 const LINE = "rgba(255,255,255,0.12)";
@@ -221,6 +222,7 @@ function LineBlock({
 }
 
 export default function ShopLesson() {
+  useSpeechLifecycle();
   const [tab, setTab] = useState<ShopTab>("vendeur");
 
   const content = useMemo(() => {

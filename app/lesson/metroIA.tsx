@@ -34,9 +34,11 @@ import {
   getMetroMissionById,
   getMetroMissionLesson,
 } from "../../data/lesson/metro/metroMissions";
-import { useImmersiveMediaStatus } from "../../hooks/useImmersiveMediaStatus";
 import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
-import { useKoreanSpeechRecognition } from "../../hooks/useKoreanSpeechRecognition";
+import {
+  useKoreanSpeechRecognition,
+  type SpeechTranscriptSession,
+} from "../../hooks/useKoreanSpeechRecognition";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import {
@@ -53,6 +55,7 @@ import {
 } from "../../lib/metroSpeechIntents";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { buildProgressId } from "../../lib/progressIds";
+import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -386,11 +389,6 @@ export default function MetroIaScreen() {
     () => getScenarioInitialVideoSource(metroScenario),
     [metroScenario],
   );
-  const loadedVideoSourceRef = useRef<number | null>(initialVideoSource);
-  const videoLoadRef = useRef<{
-    source: number;
-    promise: Promise<void>;
-  } | null>(null);
 
   const [displayedVideoSource, setDisplayedVideoSource] = useState<
     number | null
@@ -414,6 +412,7 @@ export default function MetroIaScreen() {
     createMetroConversationMemory,
   );
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
+  const [videoRetryKey, setVideoRetryKey] = useState(0);
 
   const currentScenario = useMemo(() => {
     return metroScenario;
@@ -436,13 +435,15 @@ export default function MetroIaScreen() {
     playerInstance.loop = false;
   });
   const {
-    status: mediaStatus,
-    markReady: markMediaReady,
     markError: markMediaError,
-  } = useImmersiveMediaStatus(displayedVideoSource);
-  useImmersiveVideoLifecycle(
+    markLoading: markMediaLoading,
+    replaceSource: replaceVideoSource,
+    resume: resumeVideo,
+    status: mediaStatus,
+  } = useImmersiveVideoLifecycle(
     player,
-    (isAvatarSpeaking || isReplayingLastIa) && mediaStatus === "ready",
+    displayedVideoSource,
+    isAvatarSpeaking || isReplayingLastIa,
   );
 
   useEffect(() => {
@@ -549,45 +550,25 @@ export default function MetroIaScreen() {
       const nextVideoSource = displayedVideoSource;
 
       try {
-        if (!nextVideoSource) {
-          player.pause();
-          return;
-        }
-
+        markMediaLoading();
         player.pause();
 
-        if (loadedVideoSourceRef.current !== nextVideoSource) {
-          if (videoLoadRef.current?.source !== nextVideoSource) {
-            const source = nextVideoSource;
-            const promise = player.replaceAsync(source).then(() => {
-              loadedVideoSourceRef.current = source;
-            });
-            videoLoadRef.current = { source, promise };
-            const clearPendingLoad = () => {
-              if (videoLoadRef.current?.promise === promise) {
-                videoLoadRef.current = null;
-              }
-            };
-            void promise.then(clearPendingLoad, clearPendingLoad);
-          }
-
-          await videoLoadRef.current.promise;
-        }
-
-        if (isCancelled) return;
-
-        markMediaReady(nextVideoSource);
+        const replaced = await replaceVideoSource(nextVideoSource);
+        if (isCancelled || !replaced || !nextVideoSource) return;
 
         if (isAvatarSpeaking || isReplayingLastIa) {
           player.currentTime = 0;
-          player.play();
         } else {
           if (player.currentTime <= 0.01) player.currentTime = 0.12;
         }
-      } catch {
+      } catch (error) {
         if (!isCancelled) {
           player.pause();
-          markMediaError(nextVideoSource);
+          markMediaError(
+            error instanceof Error
+              ? error.message
+              : "Impossible de lire cette vidéo.",
+          );
         }
       }
     }
@@ -603,8 +584,10 @@ export default function MetroIaScreen() {
     isReplayingLastIa,
     canEnterMission,
     markMediaError,
-    markMediaReady,
+    markMediaLoading,
     player,
+    replaceVideoSource,
+    videoRetryKey,
   ]);
 
   useEffect(() => {
@@ -614,59 +597,44 @@ export default function MetroIaScreen() {
     if (!currentVideoSource) return;
     if (isTransitioning || isSceneEnded) return;
 
-    const interval = setInterval(() => {
-      if (!mountedRef.current) return;
-      if (hasAdvancedFromVideoRef.current) return;
+    if (isReplayingLastIa) return;
+    if (
+      !canAdvanceAfterRequiredVideo({
+        hasRequiredVideo: true,
+        status: mediaStatus,
+      })
+    ) {
+      return;
+    }
+    if (hasAdvancedFromVideoRef.current) return;
 
-      const duration = player.duration ?? 0;
-      const currentTime = player.currentTime ?? 0;
-
-      if (duration <= 0) return;
-
-      const isNearEnd = currentTime >= duration - 0.08;
-
-      if (isNearEnd) {
-        hasAdvancedFromVideoRef.current = true;
-        clearInterval(interval);
-        player.pause();
-        player.currentTime = Math.max(0, duration - 0.08);
-        goToNextNode(currentNode);
-      }
-    }, 120);
-
-    return () => clearInterval(interval);
+    hasAdvancedFromVideoRef.current = true;
+    goToNextNode(currentNode);
   }, [
     currentNode,
     currentVideoSource,
     isTransitioning,
     isSceneEnded,
     canEnterMission,
-    player,
+    isReplayingLastIa,
+    mediaStatus,
     goToNextNode,
   ]);
 
   useEffect(() => {
     if (!isReplayingLastIa) return;
+    if (mediaStatus !== "ended") return;
 
-    const interval = setInterval(() => {
-      if (!mountedRef.current) return;
-      const duration = player.duration ?? 0;
-      if (duration <= 0 || player.currentTime < duration - 0.08) return;
-
-      player.pause();
-      player.currentTime = Math.max(0, duration - 0.08);
-      setIsReplayingLastIa(false);
-    }, 120);
-
-    return () => clearInterval(interval);
-  }, [isReplayingLastIa, player]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Native playToEnd terminates the explicit replay mode.
+    setIsReplayingLastIa(false);
+  }, [isReplayingLastIa, mediaStatus]);
   /* eslint-enable react-hooks/immutability */
 
   useEffect(() => {
     if (!canEnterMission) return;
     if (!currentNode) return;
     if (currentNode.type !== "ia") return;
-    if (currentVideoSource && mediaStatus !== "error") return;
+    if (currentVideoSource) return;
     if (isTransitioning || isSceneEnded) return;
 
     const delay = getAutoAdvanceDelay(currentNode, mode);
@@ -685,7 +653,6 @@ export default function MetroIaScreen() {
   }, [
     currentNode,
     currentVideoSource,
-    mediaStatus,
     mode,
     isTransitioning,
     isSceneEnded,
@@ -734,7 +701,8 @@ export default function MetroIaScreen() {
   );
 
   const handleSpeechTranscript = useCallback(
-    (transcript: string) => {
+    (transcript: string, session: SpeechTranscriptSession) => {
+      if (session.contextId !== currentNodeId) return;
       if (!isMetroSpeechPilot || currentNode?.type !== "user_choice") return;
 
       const attemptNumber =
@@ -767,7 +735,7 @@ export default function MetroIaScreen() {
         result.reason === "uncertain" ? result.choice : null,
       );
     },
-    [currentNode, handleChoice, isMetroSpeechPilot],
+    [currentNode, currentNodeId, handleChoice, isMetroSpeechPilot],
   );
 
   const {
@@ -803,7 +771,10 @@ export default function MetroIaScreen() {
     setShowSpeechChoices(false);
     setSpeechFeedback(null);
     setPendingSpeechChoice(null);
-    void startListening({ contextualStrings: speechContextualStrings });
+    void startListening({
+      contextualStrings: speechContextualStrings,
+      contextId: currentNodeId,
+    });
   }, [
     currentNode,
     currentNodeId,
@@ -869,6 +840,12 @@ export default function MetroIaScreen() {
 
     router.replace("/(tabs)");
   }, [cancelSpeechRecognition]);
+
+  const handleRetryVideo = useCallback(() => {
+    hasAdvancedFromVideoRef.current = false;
+    markMediaLoading();
+    setVideoRetryKey((current) => current + 1);
+  }, [markMediaLoading]);
 
   const isStartChoiceNode = currentNodeId === "start";
 
@@ -1094,7 +1071,14 @@ export default function MetroIaScreen() {
                   locations={[0, 0.62, 1]}
                   style={styles.videoOverlay}
                 />
-                <ImmersiveMediaStatusOverlay status={mediaStatus} />
+                <ImmersiveMediaStatusOverlay
+                  status={mediaStatus}
+                  onExit={handleExit}
+                  onResume={() => {
+                    void resumeVideo();
+                  }}
+                  onRetry={handleRetryVideo}
+                />
               </View>
 
               <Pressable

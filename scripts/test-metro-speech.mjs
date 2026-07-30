@@ -749,8 +749,13 @@ test("le runtime conserve et fige la même vidéo pendant le tour utilisateur", 
     new URL("../app/lesson/metroIA.tsx", import.meta.url),
     "utf8",
   );
+  const lifecycle = readFileSync(
+    new URL("../hooks/useImmersiveVideoLifecycle.ts", import.meta.url),
+    "utf8",
+  );
   assert.match(source, /getScenarioInitialVideoSource/);
-  assert.match(source, /player\.pause\(\);\s+player\.currentTime = Math\.max/);
+  assert.match(source, /mediaStatus !== "ended"/);
+  assert.match(lifecycle, /"playToEnd"/);
   assert.doesNotMatch(source, /setDisplayedVideoSource\(null\)/);
   assert.doesNotMatch(source, /replaceAsync\(null\)/);
 });

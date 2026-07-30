@@ -1,6 +1,6 @@
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
+import * as Speech from "@/lib/speechPlayback";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../../components/app-text";
 import { RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../constants/layout";
+import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
 
 import { restaurantDialogueData } from "../../data/lesson/restaurantLesson";
 
@@ -251,6 +252,7 @@ const buildScenes = (): Scene[] => {
 };
 
 export default function RestaurantLesson() {
+  useSpeechLifecycle();
   const scenes = useMemo(() => buildScenes(), []);
   const [activeScene, setActiveScene] = useState<Scene>(scenes[0]);
   const [previousBackground, setPreviousBackground] =

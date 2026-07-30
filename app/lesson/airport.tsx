@@ -1,6 +1,6 @@
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
+import * as Speech from "@/lib/speechPlayback";
 import React, { useEffect, useState } from "react";
 import {
   Animated,
@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../../components/app-text";
+import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
 
 import { ABSOLUTE_FILL, RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../constants/layout";
 
@@ -199,6 +200,7 @@ const SCENES: Scene[] = [
 ];
 
 export default function AirportLessonScreen() {
+  useSpeechLifecycle();
   const [activeScene, setActiveScene] = useState<Scene>(SCENES[0]);
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);

@@ -1,4 +1,4 @@
-import * as Speech from "expo-speech";
+import * as Speech from "@/lib/speechPlayback";
 import { useEffect, useMemo, useState } from "react";
 import {
   Modal,
@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppText } from "../app-text";
 import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
+import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
 import {
   buildCafeConversationSummary,
   type CafeConversationMemory,
@@ -96,6 +97,7 @@ export function CafeConversationSummaryModal({
   onClose,
   onFinish,
 }: CafeConversationSummaryModalProps) {
+  useSpeechLifecycle();
   const [isReviewing, setIsReviewing] = useState(false);
   const [listenedPhrases, setListenedPhrases] = useState<Record<string, true>>({});
   const summary = useMemo(() => buildCafeConversationSummary(memory), [memory]);

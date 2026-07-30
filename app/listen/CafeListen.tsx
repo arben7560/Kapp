@@ -14,12 +14,18 @@ import {
   IMMERSIVE_MIN_TOUCH_TARGET,
 } from "../../constants/immersive-layout";
 import { useStore } from "../../_store";
-import { CAFE_SESSION, type ListenExercise } from "../../data/listen/cafe";
+import { CAFE_SESSION } from "../../data/listen/cafe";
 import { useVocAudio } from "../../hooks/useVocAudio";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { isCorrect } from "../../lib/answerCheck";
+import {
+  createCafeListenProgress,
+  recordCafeListenAnswer,
+  startCafeListenRemediation,
+} from "../../lib/cafeListenProgress";
 import { shuffleArray } from "../../lib/choiceOrder";
 import { completeDailyActivity } from "../../lib/dailyStreak";
+import { canValidateListenAnswer } from "../../lib/listenValidation";
 import { buildProgressId } from "../../lib/progressIds";
 
 const BG0 = "#060816";
@@ -45,6 +51,10 @@ const GREEN = "rgba(34,197,94,0.45)";
 const GREEN_BG = "rgba(34,197,94,0.12)";
 const RED = "rgba(239,68,68,0.45)";
 const RED_BG = "rgba(239,68,68,0.12)";
+
+const CAFE_SESSION_BY_ID = new Map(
+  CAFE_SESSION.map((exercise) => [exercise.id, exercise]),
+);
 
 function SmallPill({
   label,
@@ -193,56 +203,86 @@ function ActionButton({
 }
 
 export default function CafeListenScreen() {
-  const { complete } = useStore();
+  const { complete, isHydrated } = useStore();
   const insets = useSafeAreaInsets();
   const responsive = useResponsiveLayout({ maxWidth: IMMERSIVE_CONTENT_MAX_WIDTH });
   const [fadeAnim] = useState(() => new Animated.Value(1));
-  const hasReportedCompletionRef = useRef(false);
-
-  const [session, setSession] = useState<ListenExercise[]>(() =>
-    shuffleArray(CAFE_SESSION),
+  const completionAttemptedRef = useRef(false);
+  const validationLockRef = useRef(false);
+  const [didAwardXp, setDidAwardXp] = useState<boolean | null>(null);
+  const [listenProgress, setListenProgress] = useState(() =>
+    createCafeListenProgress(CAFE_SESSION.map(({ id }) => id)),
   );
-  const [index, setIndex] = useState(0);
   const [activeAudioId, setActiveAudioId] = useState<string | null>(null);
-  const [audioError, setAudioError] = useState<string | null>(null);
+  const [missingAudioError, setMissingAudioError] = useState(false);
+  const [completedAudioId, setCompletedAudioId] = useState<string | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [result, setResult] = useState<null | { ok: boolean }>(null);
-  const [score, setScore] = useState(0);
-  const [wrongExercises, setWrongExercises] = useState<ListenExercise[]>([]);
-  const { playAudio: playAssetAudio, stopAudio } = useVocAudio(setActiveAudioId);
+  const {
+    playAudio: playAssetAudio,
+    stopAudio,
+    error: playbackError,
+    clearError: clearAudioError,
+  } = useVocAudio(setActiveAudioId);
 
-  const exercise = session[index];
-  const finished = !exercise;
+  const exerciseId =
+    listenProgress.status === "question"
+      ? listenProgress.queue[listenProgress.questionIndex]
+      : undefined;
+  const exercise = exerciseId
+    ? CAFE_SESSION_BY_ID.get(exerciseId)
+    : undefined;
+  const showingSummary = listenProgress.status !== "question";
+  const hasAudioError = missingAudioError || !!playbackError;
   const speaking = activeAudioId === exercise?.id;
+  const hasCompletedAudio = completedAudioId === exercise?.id;
   const displayedAnswers = useMemo(
     () => shuffleArray(exercise?.answers ?? []),
     [exercise],
   );
 
   const progressLabel = useMemo(() => {
-    if (!exercise) return "Terminé";
-    return `Étape ${index + 1}/${session.length}`;
-  }, [exercise, index, session.length]);
+    if (!exercise) {
+      return listenProgress.status === "complete"
+        ? "Terminé"
+        : "Bilan";
+    }
+
+    const prefix =
+      listenProgress.remediationRound === 0
+        ? "Premier passage"
+        : `Correction ${listenProgress.remediationRound}`;
+
+    return `${prefix} · ${listenProgress.questionIndex + 1}/${listenProgress.queue.length}`;
+  }, [exercise, listenProgress]);
 
   const playAudio = useCallback(() => {
     if (!exercise?.audioSource) {
-      setAudioError("Audio indisponible. Tu peux continuer l’exercice.");
+      setMissingAudioError(true);
       return;
     }
 
-    setAudioError(null);
-    playAssetAudio(exercise.audioSource, exercise.id, () => {
-      setAudioError("Audio indisponible. Réessaie ou continue l’exercice.");
+    setMissingAudioError(false);
+    clearAudioError();
+    void playAssetAudio(exercise.audioSource, exercise.id, {
+      onCompleted: () => setCompletedAudioId(exercise.id),
     });
-  }, [exercise, playAssetAudio]);
+  }, [clearAudioError, exercise, playAssetAudio]);
 
   useEffect(() => {
-    if (!finished || hasReportedCompletionRef.current) return;
+    if (
+      listenProgress.status !== "complete" ||
+      completionAttemptedRef.current ||
+      !isHydrated
+    ) {
+      return;
+    }
 
-    hasReportedCompletionRef.current = true;
-    complete(buildProgressId("listen", "cafe_session"));
+    completionAttemptedRef.current = true;
+    const awarded = complete(buildProgressId("listen", "cafe_session"));
+    setDidAwardXp(awarded);
     void completeDailyActivity("listen_exercise");
-  }, [complete, finished]);
+  }, [complete, isHydrated, listenProgress.status]);
 
   useEffect(() => {
     if (!exercise) return;
@@ -252,7 +292,7 @@ export default function CafeListenScreen() {
     }, 180);
 
     return () => clearTimeout(id);
-  }, [index, exercise, playAudio]);
+  }, [exercise, playAudio]);
 
   useEffect(() => {
     return stopAudio;
@@ -278,53 +318,66 @@ export default function CafeListenScreen() {
   }
 
   function submitAnswer(answer: string) {
-    if (!exercise || result) return;
+    if (!exercise || !canValidateListenAnswer({
+      hasAnswer: true,
+      hasCompletedRequiredMedia: hasCompletedAudio,
+      isHydrated,
+      isLocked: !!result || validationLockRef.current,
+    })) {
+      return;
+    }
 
+    validationLockRef.current = true;
     const ok = isCorrect(answer, exercise.correct);
     setSelectedAnswer(answer);
     setResult({ ok });
-
-    if (ok) {
-      setScore((s) => s + 1);
-    } else {
-      setWrongExercises((prev) => {
-        const exists = prev.some((item) => item.id === exercise.id);
-        return exists ? prev : [...prev, exercise];
-      });
-    }
   }
 
   function nextExercise() {
+    if (!exercise || !result) return;
+
     animateToNext(() => {
+      setMissingAudioError(false);
+      clearAudioError();
+      setListenProgress((current) =>
+        recordCafeListenAnswer(current, exercise.id, result.ok),
+      );
       setSelectedAnswer(null);
       setResult(null);
-      setIndex((prev) => prev + 1);
+      validationLockRef.current = false;
     });
   }
 
   function restart() {
     animateToNext(() => {
-      setSession(shuffleArray(CAFE_SESSION));
-      setIndex(0);
+      setMissingAudioError(false);
+      clearAudioError();
+      setListenProgress(
+        createCafeListenProgress(CAFE_SESSION.map(({ id }) => id)),
+      );
       setSelectedAnswer(null);
       setResult(null);
-      setScore(0);
-      setWrongExercises([]);
-      hasReportedCompletionRef.current = false;
+      setDidAwardXp(null);
+      validationLockRef.current = false;
+      completionAttemptedRef.current = false;
     });
   }
 
   function replayMistakes() {
-    if (wrongExercises.length === 0) return;
+    if (
+      listenProgress.status !== "round-summary" ||
+      listenProgress.incorrectIds.length === 0
+    ) {
+      return;
+    }
 
     animateToNext(() => {
-      setSession(shuffleArray(wrongExercises));
-      setIndex(0);
+      setMissingAudioError(false);
+      clearAudioError();
+      setListenProgress((current) => startCafeListenRemediation(current));
       setSelectedAnswer(null);
       setResult(null);
-      setScore(0);
-      setWrongExercises([]);
-      hasReportedCompletionRef.current = false;
+      validationLockRef.current = false;
     });
   }
 
@@ -342,16 +395,32 @@ export default function CafeListenScreen() {
     return "idle";
   }
 
-  if (finished) {
+  if (showingSummary) {
+    const remainingCount = listenProgress.incorrectIds.length;
+    const completed = listenProgress.status === "complete";
+
     return (
       <LinearGradient colors={[BG0, BG1, BG2]} style={{ flex: 1 }}>
         <SafeAreaView style={{ flex: 1 }}>
-          <View
-            style={{
-              flex: 1,
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              flexGrow: 1,
               justifyContent: "center",
               alignItems: "center",
               paddingHorizontal: responsive.horizontalPadding,
+              paddingTop: 24,
+              paddingBottom: getImmersiveBottomPadding(
+                insets.bottom,
+                28,
+                20,
+              ),
+            }}
+          >
+            <View
+            style={{
+              width: "100%",
+              maxWidth: responsive.maxWidth,
             }}
           >
             <View
@@ -379,7 +448,11 @@ export default function CafeListenScreen() {
                     textAlign: "center",
                   }}
                 >
-                  Session terminée 🎉
+                  {completed
+                    ? "Session validée 🎉"
+                    : listenProgress.remediationRound === 0
+                      ? "Premier passage terminé"
+                      : `Correction ${listenProgress.remediationRound} terminée`}
                 </AppText>
 
                 <AppText variant="bodySecondary"
@@ -389,7 +462,9 @@ export default function CafeListenScreen() {
                     marginTop: 10,
                   }}
                 >
-                  Tu as terminé la scène Café.
+                  {completed
+                    ? "Toutes les questions ont été réussies."
+                    : "On reprend uniquement les questions à corriger."}
                 </AppText>
 
                 <View style={{ height: 16 }} />
@@ -410,7 +485,8 @@ export default function CafeListenScreen() {
                       color: TXT,
                     }}
                   >
-                    Score : {score} / {session.length}
+                    Premier score : {listenProgress.firstPassScore ?? 0} /{" "}
+                    {listenProgress.totalQuestions}
                   </AppText>
                 </View>
 
@@ -422,8 +498,25 @@ export default function CafeListenScreen() {
                     textAlign: "center",
                   }}
                 >
-                  Erreurs à revoir : {wrongExercises.length}
+                  Questions restant à corriger : {remainingCount}
                 </AppText>
+
+                {completed && (
+                  <AppText
+                    variant="bodyStrong"
+                    style={{
+                      color: didAwardXp ? CYAN : MUTED,
+                      textAlign: "center",
+                      marginTop: 10,
+                    }}
+                  >
+                    {didAwardXp === null
+                      ? "Enregistrement de la progression…"
+                      : didAwardXp
+                        ? "+40 XP · progression enregistrée"
+                        : "Progression déjà enregistrée"}
+                  </AppText>
+                )}
 
                 <View style={{ height: 18 }} />
 
@@ -440,11 +533,13 @@ export default function CafeListenScreen() {
                   />
                 </View>
 
-                {wrongExercises.length > 0 && (
+                {!completed && remainingCount > 0 && (
                   <>
                     <View style={{ height: 10 }} />
                     <ActionButton
-                      label="Revoir les erreurs"
+                      label={`Corriger ${remainingCount} question${
+                        remainingCount > 1 ? "s" : ""
+                      }`}
                       onPress={replayMistakes}
                       tone="purple"
                     />
@@ -453,9 +548,14 @@ export default function CafeListenScreen() {
               </LinearGradient>
             </View>
           </View>
+          </ScrollView>
         </SafeAreaView>
       </LinearGradient>
     );
+  }
+
+  if (!exercise) {
+    return null;
   }
 
   return (
@@ -680,15 +780,15 @@ export default function CafeListenScreen() {
                     marginBottom: 6,
                   }}
                 >
-                  Phrase entendue
+                  Transcription
                 </AppText>
 
-                <AppText variant="koreanSecondary" script="korean"
+                <AppText variant="bodySecondary"
                   style={{
-                    color: TXT,
+                    color: MUTED,
                   }}
                 >
-                  {exercise.audio}
+                  Masquée jusqu’à ta réponse.
                 </AppText>
 
                 <View style={{ height: 12 }} />
@@ -727,15 +827,47 @@ export default function CafeListenScreen() {
                   </AppText>
                 </Pressable>
 
-                {audioError ? (
-                  <AppText
+                {hasAudioError ? (
+                  <View
                     accessibilityRole="alert"
                     accessibilityLiveRegion="polite"
-                    variant="bodySecondary"
-                    style={{ color: MUTED, marginTop: 10 }}
+                    style={{
+                      marginTop: 12,
+                      borderRadius: 14,
+                      borderWidth: 1,
+                      borderColor: RED,
+                      backgroundColor: RED_BG,
+                      padding: 12,
+                    }}
                   >
-                    {audioError}
-                  </AppText>
+                    <AppText
+                      variant="bodySecondary"
+                      style={{ color: TXT, marginBottom: 8 }}
+                    >
+                      Impossible de lire l’audio. Vérifie le volume, puis
+                      réessaie.
+                    </AppText>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Réessayer la lecture audio"
+                      hitSlop={6}
+                      onPress={playAudio}
+                      style={{
+                        alignSelf: "flex-start",
+                        minHeight: IMMERSIVE_MIN_TOUCH_TARGET,
+                        borderRadius: 12,
+                        backgroundColor: PURPLE_BG,
+                        borderColor: PURPLE,
+                        borderWidth: 1,
+                        justifyContent: "center",
+                        paddingHorizontal: 14,
+                      }}
+                    >
+                      <AppText variant="button" style={{ color: TXT }}>
+                        Réessayer
+                      </AppText>
+                    </Pressable>
+                  </View>
                 ) : null}
               </View>
             </LinearGradient>
@@ -776,23 +908,55 @@ export default function CafeListenScreen() {
                 <ChoiceButton
                   key={answer}
                   label={answer}
-                  disabled={!!result}
+                  disabled={
+                    !!result || !hasCompletedAudio || !isHydrated
+                  }
                   state={getChoiceState(answer)}
                   onPress={() => submitAnswer(answer)}
                 />
               ))}
             </View>
 
+            {!hasCompletedAudio && !hasAudioError ? (
+              <AppText
+                accessibilityLiveRegion="polite"
+                variant="caption"
+                style={{
+                  color: SOFT,
+                  textAlign: "center",
+                  marginTop: 12,
+                }}
+              >
+                Écoute l’audio jusqu’au bout pour pouvoir répondre.
+              </AppText>
+            ) : null}
+
+            {!isHydrated && (
+              <AppText
+                accessibilityLiveRegion="polite"
+                variant="caption"
+                style={{
+                  color: SOFT,
+                  textAlign: "center",
+                  marginTop: 12,
+                }}
+              >
+                Synchronisation de ta progression… Tu peux déjà écouter.
+              </AppText>
+            )}
+
             {result && (
               <View
                 accessibilityLiveRegion="polite"
                 accessible
                 accessibilityRole="alert"
-                accessibilityLabel={`${result.ok ? "Correct" : "Pas tout a fait"}. Reponse attendue : ${
+                accessibilityLabel={`${result.ok ? "Correct" : "Pas tout a fait"}. Phrase entendue : ${
+                  exercise.sourceText
+                }. Reponse attendue : ${
                   Array.isArray(exercise.correct)
                     ? exercise.correct.join(" / ")
                     : exercise.correct
-                }`}
+                }. ${!result.ok && exercise.hint ? exercise.hint : ""}`}
                 style={{
                   marginTop: 16,
                   borderRadius: 18,
@@ -808,6 +972,26 @@ export default function CafeListenScreen() {
                   }}
                 >
                   {result.ok ? "✅ Correct" : "❌ Pas tout à fait"}
+                </AppText>
+
+                <AppText variant="label"
+                  style={{
+                    color: TXT,
+                    marginTop: 12,
+                  }}
+                >
+                  Phrase entendue
+                </AppText>
+                <AppText
+                  variant="koreanSecondary"
+                  script="korean"
+                  accessibilityLanguage="ko"
+                  style={{
+                    color: TXT,
+                    marginTop: 4,
+                  }}
+                >
+                  {exercise.sourceText}
                 </AppText>
 
                 <AppText variant="label"
@@ -846,7 +1030,7 @@ export default function CafeListenScreen() {
                     : exercise.correct}
                 </AppText>
 
-                {!!exercise.hint && (
+                {!result.ok && !!exercise.hint && (
                   <>
                     <AppText variant="label"
                       style={{
@@ -854,7 +1038,7 @@ export default function CafeListenScreen() {
                         marginTop: 12,
                       }}
                     >
-                      Indice
+                      Explication
                     </AppText>
                     <AppText variant="bodySecondary"
                       style={{
@@ -880,7 +1064,12 @@ export default function CafeListenScreen() {
                     tone="purple"
                   />
                   <ActionButton
-                    label={index === session.length - 1 ? "Terminer" : "Suivant"}
+                    label={
+                      listenProgress.questionIndex ===
+                      listenProgress.queue.length - 1
+                        ? "Voir le bilan"
+                        : "Suivant"
+                    }
                     onPress={nextExercise}
                     tone="cyan"
                   />

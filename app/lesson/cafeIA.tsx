@@ -39,8 +39,10 @@ import {
   getCafeMissionById,
   getCafeMissionScenario,
 } from "../../data/lesson/cafe/cafeMissions";
-import { useKoreanSpeechRecognition } from "../../hooks/useKoreanSpeechRecognition";
-import { useImmersiveMediaStatus } from "../../hooks/useImmersiveMediaStatus";
+import {
+  useKoreanSpeechRecognition,
+  type SpeechTranscriptSession,
+} from "../../hooks/useKoreanSpeechRecognition";
 import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import {
@@ -63,6 +65,7 @@ import {
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { buildProgressId } from "../../lib/progressIds";
+import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -201,7 +204,6 @@ export default function CafeIaScreen() {
   const iaAutoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasAdvancedFromVideoRef = useRef(false);
   const hasReportedMissionCompleteRef = useRef(false);
-  const loadedAvatarVideoSourceRef = useRef<number>(cafeIdleVideo);
 
   const [currentNodeId, setCurrentNodeId] = useState(
     cafeDialogueData.pedagogical.startNodeId,
@@ -222,6 +224,7 @@ export default function CafeIaScreen() {
     createCafeConversationMemory,
   );
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
+  const [videoRetryKey, setVideoRetryKey] = useState(0);
 
   const [lastIaTranscript, setLastIaTranscript] = useState<{
     korean: string;
@@ -255,19 +258,20 @@ export default function CafeIaScreen() {
   const displayedVideoSource = isAvatarSpeaking
     ? currentVideoSource
     : cafeIdleVideo;
-  const {
-    status: mediaStatus,
-    markReady: markMediaReady,
-    markError: markMediaError,
-  } = useImmersiveMediaStatus(displayedVideoSource);
-
   const player = useVideoPlayer(cafeIdleVideo, (playerInstance) => {
     playerInstance.loop = false;
     playerInstance.pause();
   });
-  useImmersiveVideoLifecycle(
+  const {
+    markError: markMediaError,
+    markLoading: markMediaLoading,
+    replaceSource: replaceVideoSource,
+    resume: resumeVideo,
+    status: mediaStatus,
+  } = useImmersiveVideoLifecycle(
     player,
-    isAvatarSpeaking && mediaStatus === "ready",
+    displayedVideoSource,
+    isAvatarSpeaking,
   );
 
   useEffect(() => {
@@ -302,6 +306,7 @@ export default function CafeIaScreen() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Route parameters select a new mission and require one atomic local reset.
     setCurrentNodeId(currentScenario.startNodeId);
     setOrderState(EMPTY_CAFE_ORDER_STATE);
     setSelectedChoiceId(null);
@@ -335,6 +340,7 @@ export default function CafeIaScreen() {
 
   useEffect(() => {
     hasAdvancedFromVideoRef.current = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Transcript visibility is scoped to the active dialogue node.
     setIsTranscriptOpen(false);
 
     if (iaAutoTimerRef.current) {
@@ -343,6 +349,7 @@ export default function CafeIaScreen() {
     }
   }, [currentNodeId]);
 
+  /* eslint-disable react-hooks/immutability -- expo-video exposes an imperative player handle by design. */
   useEffect(() => {
     if (!canEnterMission) return;
 
@@ -350,29 +357,28 @@ export default function CafeIaScreen() {
 
     async function updateVideoSource() {
       const nextVideoSource = displayedVideoSource;
+      markMediaLoading();
 
       try {
         if (!isAvatarSpeaking) player.pause();
 
-        if (loadedAvatarVideoSourceRef.current !== nextVideoSource) {
-          await player.replaceAsync(nextVideoSource);
-          loadedAvatarVideoSourceRef.current = nextVideoSource;
-        }
+        const replaced = await replaceVideoSource(nextVideoSource);
 
-        if (isCancelled) return;
-
-        markMediaReady(nextVideoSource);
-
+        if (isCancelled || !replaced) return;
         if (isAvatarSpeaking) {
-          player.play();
+          player.currentTime = 0;
         } else {
           player.currentTime = 0;
           player.pause();
         }
-      } catch {
+      } catch (error) {
         if (!isCancelled) {
           player.pause();
-          markMediaError(nextVideoSource);
+          markMediaError(
+            error instanceof Error
+              ? error.message
+              : "Impossible de lire cette vidéo.",
+          );
         }
       }
     }
@@ -387,9 +393,12 @@ export default function CafeIaScreen() {
     isAvatarSpeaking,
     canEnterMission,
     markMediaError,
-    markMediaReady,
+    markMediaLoading,
     player,
+    replaceVideoSource,
+    videoRetryKey,
   ]);
+  /* eslint-enable react-hooks/immutability */
 
   useEffect(() => {
     if (!canEnterMission) return;
@@ -398,32 +407,25 @@ export default function CafeIaScreen() {
     if (!currentVideoSource) return;
     if (isTransitioning || isSceneEnded) return;
 
-    const interval = setInterval(() => {
-      if (!mountedRef.current) return;
-      if (hasAdvancedFromVideoRef.current) return;
+    if (
+      !canAdvanceAfterRequiredVideo({
+        hasRequiredVideo: true,
+        status: mediaStatus,
+      })
+    ) {
+      return;
+    }
+    if (hasAdvancedFromVideoRef.current) return;
 
-      const duration = player.duration ?? 0;
-      const currentTime = player.currentTime ?? 0;
-
-      if (duration <= 0) return;
-
-      const isNearEnd = currentTime >= duration - 0.08;
-
-      if (isNearEnd) {
-        hasAdvancedFromVideoRef.current = true;
-        clearInterval(interval);
-        goToNextNode(currentNode);
-      }
-    }, 120);
-
-    return () => clearInterval(interval);
+    hasAdvancedFromVideoRef.current = true;
+    goToNextNode(currentNode);
   }, [
     currentNode,
     currentVideoSource,
     isTransitioning,
     isSceneEnded,
     canEnterMission,
-    player,
+    mediaStatus,
     goToNextNode,
   ]);
 
@@ -431,7 +433,7 @@ export default function CafeIaScreen() {
     if (!canEnterMission) return;
     if (!currentNode) return;
     if (currentNode.type !== "ia") return;
-    if (currentVideoSource && mediaStatus !== "error") return;
+    if (currentVideoSource) return;
     if (isTransitioning || isSceneEnded) return;
 
     const delay = getAutoAdvanceDelay(currentNode, mode);
@@ -450,7 +452,6 @@ export default function CafeIaScreen() {
   }, [
     currentNode,
     currentVideoSource,
-    mediaStatus,
     mode,
     isTransitioning,
     isSceneEnded,
@@ -496,7 +497,8 @@ export default function CafeIaScreen() {
   );
 
   const handleSpeechTranscript = useCallback(
-    (transcript: string) => {
+    (transcript: string, session: SpeechTranscriptSession) => {
+      if (session.contextId !== currentNodeId) return;
       if (!isCafeSpeechPilot || currentNode?.type !== "user_choice") return;
 
       const result = matchCafeSpeechIntent(
@@ -538,7 +540,13 @@ export default function CafeIaScreen() {
           : null,
       );
     },
-    [currentNode, handleChoice, isCafeSpeechPilot, progressIndex],
+    [
+      currentNode,
+      currentNodeId,
+      handleChoice,
+      isCafeSpeechPilot,
+      progressIndex,
+    ],
   );
 
   const {
@@ -565,7 +573,10 @@ export default function CafeIaScreen() {
     setShowSpeechChoices(false);
     setSpeechFeedback(null);
     setPendingSpeechChoice(null);
-    void startListening({ contextualStrings: speechContextualStrings });
+    void startListening({
+      contextualStrings: speechContextualStrings,
+      contextId: currentNodeId,
+    });
   }, [currentNodeId, speechContextualStrings, startListening]);
 
   const handleNeedHelp = useCallback(() => {
@@ -621,6 +632,12 @@ export default function CafeIaScreen() {
 
     router.replace("/(tabs)");
   }, [cancelSpeechRecognition]);
+
+  const handleRetryVideo = useCallback(() => {
+    hasAdvancedFromVideoRef.current = false;
+    markMediaLoading();
+    setVideoRetryKey((current) => current + 1);
+  }, [markMediaLoading]);
 
   const isReviewableTranscript =
     currentNode?.type === "user_choice" && !!lastIaTranscript;
@@ -851,7 +868,14 @@ export default function CafeIaScreen() {
                   locations={[0, 0.62, 1]}
                   style={styles.videoOverlay}
                 />
-                <ImmersiveMediaStatusOverlay status={mediaStatus} />
+                <ImmersiveMediaStatusOverlay
+                  status={mediaStatus}
+                  onExit={handleExit}
+                  onResume={() => {
+                    void resumeVideo();
+                  }}
+                  onRetry={handleRetryVideo}
+                />
               </View>
 
               <Pressable

@@ -33,11 +33,11 @@ import {
   getAeroportMissionById,
 } from "../../data/lesson/aeroport/aeroportMissions";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
-import { useImmersiveMediaStatus } from "../../hooks/useImmersiveMediaStatus";
 import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { buildProgressId } from "../../lib/progressIds";
+import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -303,6 +303,7 @@ export default function AeroportIaScreen() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isSceneEnded, setIsSceneEnded] = useState(false);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
+  const [videoRetryKey, setVideoRetryKey] = useState(0);
   const [lastIaTranscript, setLastIaTranscript] = useState<{
     korean: string;
     french?: string;
@@ -326,15 +327,16 @@ export default function AeroportIaScreen() {
     playerInstance.loop = false;
   });
   const {
-    status: mediaStatus,
-    markReady: markMediaReady,
     markError: markMediaError,
-  } = useImmersiveMediaStatus(displayedVideoSource);
-  useImmersiveVideoLifecycle(
+    markLoading: markMediaLoading,
+    replaceSource: replaceVideoSource,
+    resume: resumeVideo,
+    status: mediaStatus,
+  } = useImmersiveVideoLifecycle(
     player,
+    displayedVideoSource,
     currentNode?.type === "ia" &&
-      Boolean(currentVideoSource) &&
-      mediaStatus === "ready",
+      Boolean(currentVideoSource),
   );
 
   useEffect(() => {
@@ -405,6 +407,7 @@ export default function AeroportIaScreen() {
     }
   }, [currentNodeId]);
 
+  /* eslint-disable react-hooks/immutability -- expo-video exposes an imperative player handle by design. */
   useEffect(() => {
     if (!canEnterMission) return;
     if (!currentNode) return;
@@ -414,23 +417,26 @@ export default function AeroportIaScreen() {
 
     async function updateVideoSource() {
       const nextVideoSource = displayedVideoSource;
+      markMediaLoading();
 
       try {
-        await player.replaceAsync(nextVideoSource);
+        const replaced = await replaceVideoSource(nextVideoSource);
 
-        if (isCancelled) return;
-
-        markMediaReady(nextVideoSource);
+        if (isCancelled || !replaced) return;
 
         if (currentNode?.type === "ia" && currentVideoSource) {
-          player.play();
+          player.currentTime = 0;
         } else {
           player.pause();
         }
-      } catch {
+      } catch (error) {
         if (!isCancelled) {
           player.pause();
-          markMediaError(nextVideoSource);
+          markMediaError(
+            error instanceof Error
+              ? error.message
+              : "Impossible de lire cette vidéo.",
+          );
         }
       }
     }
@@ -447,9 +453,12 @@ export default function AeroportIaScreen() {
     displayedVideoSource,
     canEnterMission,
     markMediaError,
-    markMediaReady,
+    markMediaLoading,
     player,
+    replaceVideoSource,
+    videoRetryKey,
   ]);
+  /* eslint-enable react-hooks/immutability */
 
   useEffect(() => {
     if (!canEnterMission) return;
@@ -458,32 +467,25 @@ export default function AeroportIaScreen() {
     if (!currentVideoSource) return;
     if (isTransitioning || isSceneEnded) return;
 
-    const interval = setInterval(() => {
-      if (!mountedRef.current) return;
-      if (hasAdvancedFromVideoRef.current) return;
+    if (
+      !canAdvanceAfterRequiredVideo({
+        hasRequiredVideo: true,
+        status: mediaStatus,
+      })
+    ) {
+      return;
+    }
+    if (hasAdvancedFromVideoRef.current) return;
 
-      const duration = player.duration ?? 0;
-      const currentTime = player.currentTime ?? 0;
-
-      if (duration <= 0) return;
-
-      const isNearEnd = currentTime >= duration - 0.08;
-
-      if (isNearEnd) {
-        hasAdvancedFromVideoRef.current = true;
-        clearInterval(interval);
-        goToNextNode(currentNode);
-      }
-    }, 120);
-
-    return () => clearInterval(interval);
+    hasAdvancedFromVideoRef.current = true;
+    goToNextNode(currentNode);
   }, [
     currentNode,
     currentVideoSource,
     isTransitioning,
     isSceneEnded,
     canEnterMission,
-    player,
+    mediaStatus,
     goToNextNode,
   ]);
 
@@ -491,7 +493,7 @@ export default function AeroportIaScreen() {
     if (!canEnterMission) return;
     if (!currentNode) return;
     if (currentNode.type !== "ia") return;
-    if (currentVideoSource && mediaStatus !== "error") return;
+    if (currentVideoSource) return;
     if (isTransitioning || isSceneEnded) return;
 
     const delay = getAutoAdvanceDelay(currentNode, mode);
@@ -510,7 +512,6 @@ export default function AeroportIaScreen() {
   }, [
     currentNode,
     currentVideoSource,
-    mediaStatus,
     mode,
     isTransitioning,
     isSceneEnded,
@@ -566,6 +567,21 @@ export default function AeroportIaScreen() {
     hasAdvancedFromVideoRef.current = false;
     hasReportedMissionCompleteRef.current = false;
   };
+
+  const handleExit = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/(tabs)");
+  }, []);
+
+  const handleRetryVideo = useCallback(() => {
+    hasAdvancedFromVideoRef.current = false;
+    markMediaLoading();
+    setVideoRetryKey((current) => current + 1);
+  }, [markMediaLoading]);
 
   const isStartChoiceNode = currentNodeId === "welcome_choices";
 
@@ -686,7 +702,14 @@ export default function AeroportIaScreen() {
                   locations={[0, 0.62, 1]}
                   style={styles.videoOverlay}
                 />
-                <ImmersiveMediaStatusOverlay status={mediaStatus} />
+                <ImmersiveMediaStatusOverlay
+                  status={mediaStatus}
+                  onExit={handleExit}
+                  onResume={() => {
+                    void resumeVideo();
+                  }}
+                  onRetry={handleRetryVideo}
+                />
               </View>
 
               <Pressable

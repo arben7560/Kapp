@@ -1,6 +1,6 @@
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
+import * as Speech from "@/lib/speechPlayback";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../../components/app-text";
 import { RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../constants/layout";
+import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
 
 const COLORS = {
   bg: "#020306",
@@ -258,6 +259,7 @@ const SCENES = [
 ];
 
 export default function CafeLesson() {
+  useSpeechLifecycle();
   const [activeScene, setActiveScene] = useState(SCENES[0]);
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);

@@ -1,8 +1,8 @@
 import {
   createAudioPlayer,
-  setAudioModeAsync,
   type AudioPlayer,
 } from "expo-audio";
+import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef } from "react";
 
 import {
@@ -10,10 +10,14 @@ import {
   hasHangulAudio,
   type HangulAudioSource,
 } from "../data/hangul/audio";
+import { releaseAudioResources } from "../lib/audioPlayerLifecycle";
+import { mediaSession } from "../lib/mediaSession";
+import type { MediaSessionLease } from "../lib/mediaSessionCore";
 
 type AudioSubscription = { remove: () => void };
 
 const HANGUL_AUDIO_SEQUENCE_GAP_MS = 220;
+let hangulOwnerSequence = 0;
 
 const didPlaybackFinish = (status: unknown) => {
   const value = status as {
@@ -39,10 +43,12 @@ const didPlaybackFinish = (status: unknown) => {
 };
 
 export function useHangulAudio() {
+  const ownerIdRef = useRef(`hangul-audio-${++hangulOwnerSequence}`);
   const playerRef = useRef<AudioPlayer | null>(null);
   const listenerRef = useRef<AudioSubscription | null>(null);
   const sequenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestIdRef = useRef(0);
+  const leaseRef = useRef<MediaSessionLease | null>(null);
 
   const releasePlayer = useCallback(() => {
     if (sequenceTimerRef.current) {
@@ -50,24 +56,21 @@ export function useHangulAudio() {
       sequenceTimerRef.current = null;
     }
 
-    listenerRef.current?.remove();
+    const listener = listenerRef.current;
     listenerRef.current = null;
-
-    if (!playerRef.current) return;
-
-    try {
-      playerRef.current.pause();
-      playerRef.current.remove();
-    } catch {
-      // The native player can already be released during navigation cleanup.
-    }
-
+    const player = playerRef.current;
     playerRef.current = null;
+    releaseAudioResources(player, listener);
   }, []);
 
   const stopAudio = useCallback(() => {
     requestIdRef.current += 1;
     releasePlayer();
+    const lease = leaseRef.current;
+    leaseRef.current = null;
+    if (lease) {
+      void mediaSession.release(lease);
+    }
   }, [releasePlayer]);
 
   const playAudio = useCallback(
@@ -88,7 +91,14 @@ export function useHangulAudio() {
         if (requestId !== requestIdRef.current) return;
 
         const source: HangulAudioSource | undefined = sources[index];
-        if (source === undefined) return;
+        if (source === undefined) {
+          const lease = leaseRef.current;
+          leaseRef.current = null;
+          if (lease) {
+            void mediaSession.release(lease);
+          }
+          return;
+        }
 
         releasePlayer();
 
@@ -98,15 +108,33 @@ export function useHangulAudio() {
           listenerRef.current = player.addListener(
             "playbackStatusUpdate",
             (status) => {
-              if (requestId !== requestIdRef.current || status.error) {
+              if (requestId !== requestIdRef.current) {
                 releasePlayer();
+                return;
+              }
+
+              if (status.error) {
+                requestIdRef.current += 1;
+                releasePlayer();
+                const lease = leaseRef.current;
+                leaseRef.current = null;
+                if (lease) {
+                  void mediaSession.release(lease);
+                }
                 return;
               }
 
               if (!didPlaybackFinish(status)) return;
 
               releasePlayer();
-              if (index + 1 >= sources.length) return;
+              if (index + 1 >= sources.length) {
+                const lease = leaseRef.current;
+                leaseRef.current = null;
+                if (lease) {
+                  void mediaSession.release(lease);
+                }
+                return;
+              }
 
               sequenceTimerRef.current = setTimeout(() => {
                 sequenceTimerRef.current = null;
@@ -117,22 +145,54 @@ export function useHangulAudio() {
           player.play();
         } catch {
           releasePlayer();
+          const lease = leaseRef.current;
+          leaseRef.current = null;
+          if (lease) {
+            void mediaSession.release(lease);
+          }
         }
       };
 
-      playSegment(0);
+      void mediaSession
+        .claim({
+          id: ownerIdRef.current,
+          mode: "shortPlayback",
+          onInterrupt: () => {
+            if (requestId !== requestIdRef.current) return;
+            requestIdRef.current += 1;
+            leaseRef.current = null;
+            releasePlayer();
+          },
+        })
+        .then((lease) => {
+          if (!lease) return;
+
+          if (requestId !== requestIdRef.current) {
+            void mediaSession.release(lease);
+            return;
+          }
+
+          leaseRef.current = lease;
+          playSegment(0);
+        })
+        .catch(() => {
+          if (requestId !== requestIdRef.current) return;
+          requestIdRef.current += 1;
+          leaseRef.current = null;
+          releasePlayer();
+        });
       return true;
     },
     [releasePlayer, stopAudio],
   );
 
-  useEffect(() => {
-    setAudioModeAsync({
-      playsInSilentMode: true,
-      allowsRecording: false,
-      shouldPlayInBackground: false,
-    }).catch(() => null);
+  useFocusEffect(
+    useCallback(() => {
+      return stopAudio;
+    }, [stopAudio]),
+  );
 
+  useEffect(() => {
     return stopAudio;
   }, [stopAudio]);
 

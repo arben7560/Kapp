@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as Speech from "expo-speech";
+import * as Speech from "@/lib/speechPlayback";
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,6 +9,7 @@ import {
   type MetroConversationMemory,
 } from "../../lib/metroConversationMemory";
 import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
+import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
 import { AppText } from "../app-text";
 
 type Props = {
@@ -56,6 +57,7 @@ export function MetroConversationSummaryModal({
   onClose,
   visible,
 }: Props) {
+  useSpeechLifecycle();
   const [hasListened, setHasListened] = useState(false);
   const summary = buildMetroConversationSummary(memory);
   const referencePhrase =

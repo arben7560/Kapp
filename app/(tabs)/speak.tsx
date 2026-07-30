@@ -14,7 +14,10 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { AppText } from "../../components/app-text";
 import { ModuleCard } from "../../components/ModuleCard";
@@ -300,11 +303,18 @@ function ThemeModeSheet({
   const [backdropOpacity] = useState(() => new Animated.Value(0));
   const [mounted, setMounted] = useState(visible);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   const sheetWidth = Math.min(Math.max(windowWidth - 32, 0), 520);
+  const sheetTopInset = Math.max(12, insets.top + 8);
+  const sheetBottomInset = Math.max(16, insets.bottom + 12);
+  const availableSheetHeight = Math.max(
+    300,
+    windowHeight - sheetTopInset - sheetBottomInset,
+  );
   const sheetMaxHeight = Math.min(
-    Math.max(300, windowHeight * (windowHeight < 600 ? 0.86 : 0.82)),
-    Math.max(300, windowHeight - 24),
+    Math.max(300, availableSheetHeight * (windowHeight < 600 ? 0.94 : 0.9)),
+    availableSheetHeight,
     680,
   );
   const heroHeight = windowHeight < 500 ? 104 : windowHeight < 700 ? 128 : 152;
@@ -407,7 +417,13 @@ function ThemeModeSheet({
         <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
 
         <Animated.View
-          style={[styles.sheetAnimatedWrap, { transform: [{ translateY }] }]}
+          style={[
+            styles.sheetAnimatedWrap,
+            {
+              paddingBottom: sheetBottomInset,
+              transform: [{ translateY }],
+            },
+          ]}
         >
           <View
             pointerEvents="none"
@@ -455,7 +471,10 @@ function ThemeModeSheet({
 
             <ScrollView
               style={styles.sheetScroll}
-              contentContainerStyle={styles.sheetScrollContent}
+              contentContainerStyle={[
+                styles.sheetScrollContent,
+                { paddingBottom: insets.bottom > 0 ? 8 : 2 },
+              ]}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
@@ -917,11 +936,11 @@ const styles = StyleSheet.create({
 
   sheetCloseIcon: {
     position: "absolute",
-    top: 10,
-    right: 10,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    top: 4,
+    right: 4,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(8,10,16,0.58)",

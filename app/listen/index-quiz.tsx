@@ -1,10 +1,11 @@
-import * as Speech from "expo-speech";
+import * as Speech from "@/lib/speechPlayback";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
+import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
 import { isCorrect } from "../../lib/answerCheck";
 import { shuffleArray } from "../../lib/choiceOrder";
 import { completeDailyActivity } from "../../lib/dailyStreak";
@@ -66,6 +67,7 @@ const SESSION: Exercise[] = [
 ];
 
 export default function ListeningScreen() {
+  useSpeechLifecycle();
   const { complete } = useStore();
   const responsive = useResponsiveLayout({ maxWidth: 680 });
   const [index, setIndex] = useState(0);

@@ -4,7 +4,7 @@ export type ListenExercise = {
   category: "Accueil" | "Commande" | "Nom";
   speaker: string;
   place: string;
-  audio: string;
+  sourceText: string;
   audioSource?: number;
   question: string;
   translation: string;
@@ -35,7 +35,7 @@ export const CAFE_SESSION: ListenExercise[] = [
     category: "Accueil",
     speaker: "Minji • 바리스타",
     place: "Gangnam Cafe • Seoul",
-    audio: "주문하시겠어요?",
+    sourceText: "주문하시겠어요?",
     question: "Que veut dire cette phrase ?",
     translation: "Voulez-vous commander ?",
     correct: "Voulez-vous commander ?",
@@ -54,7 +54,7 @@ export const CAFE_SESSION: ListenExercise[] = [
     category: "Commande",
     speaker: "Minji • 바리스타",
     place: "Gangnam Cafe • Seoul",
-    audio: "따뜻한 걸로 드릴까요?",
+    sourceText: "따뜻한 걸로 드릴까요?",
     question: "Que signifie cette phrase ?",
     translation: "Je vous le sers chaud ?",
     correct: "Je vous le sers chaud ?",
@@ -73,7 +73,7 @@ export const CAFE_SESSION: ListenExercise[] = [
     category: "Commande",
     speaker: "Minji • 바리스타",
     place: "Gangnam Cafe • Seoul",
-    audio: "차가운 걸로 드릴까요?",
+    sourceText: "차가운 걸로 드릴까요?",
     question: "Que veut dire cette phrase ?",
     translation: "Je vous le sers froid ?",
     correct: "Je vous le sers froid ?",
@@ -92,7 +92,7 @@ export const CAFE_SESSION: ListenExercise[] = [
     category: "Commande",
     speaker: "Minji • 바리스타",
     place: "Gangnam Cafe • Seoul",
-    audio: "매장에서 드시나요?",
+    sourceText: "매장에서 드시나요?",
     question: "Quel est le bon sens ?",
     translation: "Vous consommez sur place ?",
     correct: "Vous consommez sur place ?",
@@ -111,7 +111,7 @@ export const CAFE_SESSION: ListenExercise[] = [
     category: "Commande",
     speaker: "Minji • 바리스타",
     place: "Gangnam Cafe • Seoul",
-    audio: "가지고 가시나요?",
+    sourceText: "가지고 가시나요?",
     question: "Que signifie cette phrase ?",
     translation: "Vous l’emportez ?",
     correct: "Vous l’emportez ?",
@@ -130,7 +130,7 @@ export const CAFE_SESSION: ListenExercise[] = [
     category: "Commande",
     speaker: "Minji • 바리스타",
     place: "Gangnam Cafe • Seoul",
-    audio: "사이즈는 어떻게 하시겠어요?",
+    sourceText: "사이즈는 어떻게 하시겠어요?",
     question: "Que veut dire cette phrase ?",
     translation: "Quelle taille souhaitez-vous ?",
     correct: "Quelle taille souhaitez-vous ?",
@@ -149,7 +149,7 @@ export const CAFE_SESSION: ListenExercise[] = [
     category: "Commande",
     speaker: "Minji • 바리스타",
     place: "Gangnam Cafe • Seoul",
-    audio: "몇 잔 드릴까요?",
+    sourceText: "몇 잔 드릴까요?",
     question: "Quel est le bon sens ?",
     translation: "Combien de tasses voulez-vous ?",
     correct: "Combien de tasses voulez-vous ?",
@@ -168,7 +168,7 @@ export const CAFE_SESSION: ListenExercise[] = [
     category: "Nom",
     speaker: "Minji • 바리스타",
     place: "Gangnam Cafe • Seoul",
-    audio: "성함이 어떻게 되세요?",
+    sourceText: "성함이 어떻게 되세요?",
     question: "Que signifie cette phrase ?",
     translation: "Quel est votre nom ?",
     correct: "Quel est votre nom ?",
@@ -187,7 +187,7 @@ export const CAFE_SESSION: ListenExercise[] = [
     category: "Commande",
     speaker: "Minji • 바리스타",
     place: "Gangnam Cafe • Seoul",
-    audio: "결제는 카드로 하시겠어요?",
+    sourceText: "결제는 카드로 하시겠어요?",
     question: "Que veut dire cette phrase ?",
     translation: "Voulez-vous payer par carte ?",
     correct: "Voulez-vous payer par carte ?",
@@ -206,7 +206,7 @@ export const CAFE_SESSION: ListenExercise[] = [
     category: "Commande",
     speaker: "Minji • 바리스타",
     place: "Gangnam Cafe • Seoul",
-    audio: "영수증 필요하세요?",
+    sourceText: "영수증 필요하세요?",
     question: "Quel est le bon sens ?",
     translation: "Avez-vous besoin du reçu ?",
     correct: "Avez-vous besoin du reçu ?",

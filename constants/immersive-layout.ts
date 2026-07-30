@@ -3,7 +3,6 @@ export const IMMERSIVE_MIN_TOUCH_TARGET = 44;
 
 export const IMMERSIVE_PORTRAIT_MEDIA_ASPECT_RATIO = 0.82;
 export const IMMERSIVE_MEDIA_VIEWPORT_HEIGHT_RATIO = 0.54;
-export const IMMERSIVE_MEDIA_LOAD_TIMEOUT_MS = 8_000;
 
 export const IMMERSIVE_VIDEO_VIEW_PROPS = {
   contentFit: "cover" as const,

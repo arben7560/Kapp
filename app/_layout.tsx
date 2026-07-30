@@ -18,6 +18,7 @@ import React from "react";
 import { StoreProvider } from "../_store";
 import { AppTextProvider } from "../components/app-text";
 import { useImmersionActiveTime } from "../hooks/useImmersionActiveTime";
+import { useMediaSessionLifecycle } from "../hooks/useMediaSessionLifecycle";
 import { DailyStreakProvider } from "../lib/DailyStreakProvider";
 import { PaywallProvider } from "../lib/paywall/PaywallProvider";
 import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard";
@@ -132,6 +133,7 @@ export default function RootLayout() {
   });
 
   useImmersionActiveTime();
+  useMediaSessionLifecycle();
 
   const customFontsAvailable = fontsLoaded && !fontError && !forceFontFallback;
 

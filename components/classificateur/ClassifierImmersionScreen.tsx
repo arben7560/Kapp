@@ -1,7 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as Speech from "expo-speech";
+import * as Speech from "@/lib/speechPlayback";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
 import { useStore } from "../../_store";
 import {
   trackAudioPlayed,
@@ -70,6 +71,7 @@ export default function ClassifierImmersionScreen({
   badgeVariant = "outline",
   completionPrefix = "classifier",
 }: Props) {
+  useSpeechLifecycle();
   const { complete } = useStore();
   const [activeScene, setActiveScene] = useState(scenes[0]);
   const [visibleMessages, setVisibleMessages] = useState(1);

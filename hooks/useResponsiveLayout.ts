@@ -20,13 +20,19 @@ type GridColumnOptions = {
   gap?: number;
 };
 
-const COMPACT_PHONE_MAX = 374;
+const COMPACT_PHONE_MAX = 380;
+const COMPACT_PHONE_SHORT_HEIGHT_MAX = 700;
 const PHONE_MAX = 599;
 const LARGE_PHONE_MAX = 767;
 const TABLET_MAX = 1023;
 
 function getScreenClass(width: number, height: number): ScreenClass {
-  if (width <= COMPACT_PHONE_MAX) return "compactPhone";
+  if (
+    width <= COMPACT_PHONE_MAX ||
+    (width <= PHONE_MAX && height <= COMPACT_PHONE_SHORT_HEIGHT_MAX)
+  ) {
+    return "compactPhone";
+  }
   if (width <= PHONE_MAX) return "phone";
   if (width <= LARGE_PHONE_MAX) return "largePhone";
   if (width <= TABLET_MAX) {
