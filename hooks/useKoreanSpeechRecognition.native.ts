@@ -3,25 +3,22 @@ import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from "expo-speech-recognition";
-import {
-  useCallback,
-  useEffect,
-  useReducer,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
+import { mediaSession } from "../lib/mediaSession";
+import type { MediaSessionLease } from "../lib/mediaSessionCore";
 import {
   classifySpeechRecognitionError,
   INITIAL_SPEECH_RECOGNITION_STATE,
   speechRecognitionReducer,
 } from "../lib/speechRecognitionState";
-import { mediaSession } from "../lib/mediaSession";
-import type { MediaSessionLease } from "../lib/mediaSessionCore";
 import {
+  canRecoverSpeechQuarantine,
   createSpeechSessionLifecycle,
+  shouldAcceptNativeSpeechEnd,
   type SpeechSessionLifecycle,
   type SpeechSessionPhase,
+  type SpeechSessionTerminal,
 } from "../lib/speechSessionCore";
 
 export type SpeechTranscriptSession = Readonly<{
@@ -53,6 +50,14 @@ const IOS_RECOGNITION_CATEGORY = {
   mode: "measurement" as const,
 };
 
+const QUARANTINE_DRAIN_DELAY_MS = 250;
+
+function delay(milliseconds: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, milliseconds);
+  });
+}
+
 let speechRecognitionOwnerSequence = 0;
 
 export function useKoreanSpeechRecognition(
@@ -72,7 +77,16 @@ export function useKoreanSpeechRecognition(
     lease: MediaSessionLease;
   } | null>(null);
   const nativeStartGenerationRef = useRef<number | null>(null);
+  const nativeActiveGenerationRef = useRef<number | null>(null);
   const nativeStopGenerationRef = useRef<number | null>(null);
+  const coordinatorOwnsReleaseGenerationRef = useRef<number | null>(null);
+  const leaseReleaseRef = useRef<{
+    generation: number;
+    promise: Promise<boolean>;
+  } | null>(null);
+  const quarantineRecoveryRunnerRef = useRef<(generation: number) => void>(
+    () => {},
+  );
   const transcriptRef = useRef("");
   const contextRef = useRef<SpeechTranscriptSession | null>(null);
   const onFinalTranscriptRef = useRef(options.onFinalTranscript);
@@ -83,22 +97,82 @@ export function useKoreanSpeechRecognition(
     }
   }, []);
 
-  const handleTerminal = useCallback(({ generation }: { generation: number }) => {
+  const clearNativeGenerationRefs = useCallback((generation: number) => {
     nativeStartGenerationRef.current =
       nativeStartGenerationRef.current === generation
         ? null
         : nativeStartGenerationRef.current;
+    nativeActiveGenerationRef.current =
+      nativeActiveGenerationRef.current === generation
+        ? null
+        : nativeActiveGenerationRef.current;
     nativeStopGenerationRef.current =
       nativeStopGenerationRef.current === generation
         ? null
         : nativeStopGenerationRef.current;
+  }, []);
+
+  const dropOwnedLeaseForCoordinator = useCallback((generation: number) => {
+    if (leaseRef.current?.generation === generation) {
+      leaseRef.current = null;
+    }
+    if (coordinatorOwnsReleaseGenerationRef.current === generation) {
+      coordinatorOwnsReleaseGenerationRef.current = null;
+    }
+  }, []);
+
+  const restoreOwnedLease = useCallback((generation: number) => {
+    const pendingRelease = leaseReleaseRef.current;
+    if (pendingRelease?.generation === generation) {
+      return pendingRelease.promise;
+    }
 
     const ownedSession = leaseRef.current;
-    if (ownedSession?.generation !== generation) return;
+    if (ownedSession?.generation !== generation) {
+      return Promise.resolve(true);
+    }
 
-    leaseRef.current = null;
-    void mediaSession.restorePlaybackSession(ownedSession.lease);
+    const promise = mediaSession
+      .restorePlaybackSession(ownedSession.lease)
+      .then(() => {
+        if (leaseRef.current?.generation === generation) {
+          leaseRef.current = null;
+        }
+        return true;
+      })
+      .catch(() => false)
+      .finally(() => {
+        if (leaseReleaseRef.current?.generation === generation) {
+          leaseReleaseRef.current = null;
+        }
+      });
+
+    leaseReleaseRef.current = { generation, promise };
+    return promise;
   }, []);
+
+  const handleTerminal = useCallback(
+    ({ generation, reason }: SpeechSessionTerminal) => {
+      if (reason === "timeout") {
+        quarantineRecoveryRunnerRef.current(generation);
+        return;
+      }
+
+      clearNativeGenerationRefs(generation);
+
+      if (coordinatorOwnsReleaseGenerationRef.current === generation) {
+        dropOwnedLeaseForCoordinator(generation);
+        return;
+      }
+
+      void restoreOwnedLease(generation);
+    },
+    [
+      clearNativeGenerationRefs,
+      dropOwnedLeaseForCoordinator,
+      restoreOwnedLease,
+    ],
+  );
 
   // Callbacks are stored by the controller and run only on later native/timer events.
   // eslint-disable-next-line react-hooks/refs
@@ -147,6 +221,8 @@ export function useKoreanSpeechRecognition(
         return Promise.resolve();
       }
 
+      coordinatorOwnsReleaseGenerationRef.current = generation;
+
       if (mountedRef.current) {
         dispatch({ type: "reset" });
       }
@@ -154,9 +230,28 @@ export function useKoreanSpeechRecognition(
       transcriptRef.current = "";
       lifecycle.suppressFurtherResults(generation);
 
+      const currentPhase = lifecycle.getPhase();
+      if (currentPhase === "quarantined") {
+        try {
+          ExpoSpeechRecognitionModule.abort();
+        } catch {
+          // The original native stop can already be draining.
+        }
+        return lifecycle.waitForTerminal(generation);
+      }
+
+      if (
+        currentPhase === "idle" ||
+        currentPhase === "ended" ||
+        currentPhase === "error"
+      ) {
+        dropOwnedLeaseForCoordinator(generation);
+        return Promise.resolve();
+      }
+
       if (nativeStartGenerationRef.current !== generation) {
         lifecycle.finishWithoutNativeStart(generation);
-        return Promise.resolve();
+        return lifecycle.waitForTerminal(generation);
       }
 
       return requestNativeStop(generation, {
@@ -165,7 +260,7 @@ export function useKoreanSpeechRecognition(
         terminalPhase: "ended",
       });
     },
-    [lifecycle, requestNativeStop],
+    [dropOwnedLeaseForCoordinator, lifecycle, requestNativeStop],
   );
 
   const deliverFinalTranscript = useCallback(
@@ -179,10 +274,7 @@ export function useKoreanSpeechRecognition(
       dispatch({ type: "final", transcript: finalTranscript });
 
       const session = contextRef.current;
-      if (
-        finalTranscript &&
-        session?.generation === generation
-      ) {
+      if (finalTranscript && session?.generation === generation) {
         onFinalTranscriptRef.current?.(finalTranscript, session);
       }
 
@@ -193,8 +285,8 @@ export function useKoreanSpeechRecognition(
 
   useSpeechRecognitionEvent("start", () => {
     const generation = lifecycle.getGeneration();
-    lifecycle.markActive(generation);
-    if (lifecycle.getPhase() === "active") {
+    if (lifecycle.markActive(generation)) {
+      nativeActiveGenerationRef.current = generation;
       dispatch({ type: "native-start" });
     }
   });
@@ -270,18 +362,179 @@ export function useKoreanSpeechRecognition(
     // its final result. The lease is deliberately retained until `end`.
   });
 
-  useSpeechRecognitionEvent("end", () => {
+  const finalizeNativeEnd = useCallback(() => {
     if (lifecycle.acceptsResult()) {
       const transcript = transcriptRef.current.trim();
       if (transcript) {
         deliverFinalTranscript(transcript);
-      } else {
+      } else if (mountedRef.current) {
         dispatch({ type: "failure", failure: "empty" });
       }
     }
 
     lifecycle.end();
+  }, [deliverFinalTranscript, lifecycle]);
+
+  const completeQuarantinedSession = useCallback(
+    async (generation: number, clearLifecycle: () => boolean) => {
+      if (
+        lifecycle.getGeneration() !== generation ||
+        lifecycle.getPhase() !== "quarantined"
+      ) {
+        return false;
+      }
+
+      if (coordinatorOwnsReleaseGenerationRef.current === generation) {
+        clearNativeGenerationRefs(generation);
+        dropOwnedLeaseForCoordinator(generation);
+        return clearLifecycle();
+      }
+
+      const released = await restoreOwnedLease(generation);
+      if (!released) return false;
+
+      if (
+        lifecycle.getGeneration() !== generation ||
+        lifecycle.getPhase() !== "quarantined"
+      ) {
+        return true;
+      }
+
+      clearNativeGenerationRefs(generation);
+      return clearLifecycle();
+    },
+    [
+      clearNativeGenerationRefs,
+      dropOwnedLeaseForCoordinator,
+      lifecycle,
+      restoreOwnedLease,
+    ],
+  );
+
+  const handleNativeEnd = useCallback(async () => {
+    if (lifecycle.getPhase() === "quarantined") {
+      const generation = lifecycle.getQuarantinedGeneration();
+      if (generation !== null) {
+        await completeQuarantinedSession(generation, () => lifecycle.end());
+      }
+      return;
+    }
+
+    const observedGeneration = lifecycle.getGeneration();
+    const observedPhase = lifecycle.getPhase();
+
+    if (observedPhase === "requested") return;
+    if (
+      observedPhase === "starting" &&
+      nativeActiveGenerationRef.current !== observedGeneration
+    ) {
+      return;
+    }
+
+    try {
+      const nativeState = await ExpoSpeechRecognitionModule.getStateAsync();
+
+      if (
+        !shouldAcceptNativeSpeechEnd({
+          currentGeneration: lifecycle.getGeneration(),
+          nativeState,
+          observedGeneration,
+        })
+      ) {
+        return;
+      }
+    } catch {
+      // Native events have no session id. When the state probe fails, accepting
+      // the event would risk terminating a newer recognizer generation.
+      return;
+    }
+
+    finalizeNativeEnd();
+  }, [completeQuarantinedSession, finalizeNativeEnd, lifecycle]);
+
+  useSpeechRecognitionEvent("end", () => {
+    void handleNativeEnd();
   });
+
+  const recoverQuarantinedGeneration = useCallback(
+    async (
+      expectedGeneration: number,
+      {
+        attempts,
+        requireMounted,
+      }: {
+        attempts: number;
+        requireMounted: boolean;
+      },
+    ) => {
+      let previousState: Awaited<
+        ReturnType<typeof ExpoSpeechRecognitionModule.getStateAsync>
+      > | null = null;
+
+      for (let attempt = 0; attempt < attempts; attempt += 1) {
+        if (
+          lifecycle.getGeneration() !== expectedGeneration ||
+          lifecycle.getPhase() !== "quarantined"
+        ) {
+          return lifecycle.getPhase() !== "quarantined";
+        }
+
+        if (requireMounted && !mountedRef.current) return false;
+
+        try {
+          const currentState =
+            await ExpoSpeechRecognitionModule.getStateAsync();
+
+          if (
+            previousState !== null &&
+            canRecoverSpeechQuarantine({
+              currentGeneration: lifecycle.getGeneration(),
+              expectedGeneration,
+              firstState: previousState,
+              phase: lifecycle.getPhase(),
+              secondState: currentState,
+            })
+          ) {
+            return completeQuarantinedSession(expectedGeneration, () =>
+              lifecycle.recoverFromQuarantine(expectedGeneration),
+            );
+          }
+
+          previousState = currentState;
+        } catch {
+          previousState = null;
+        }
+
+        if (attempt + 1 < attempts) {
+          await delay(QUARANTINE_DRAIN_DELAY_MS);
+        }
+      }
+
+      return false;
+    },
+    [completeQuarantinedSession, lifecycle],
+  );
+
+  const tryRecoverQuarantinedSession = useCallback(async () => {
+    const expectedGeneration = lifecycle.getQuarantinedGeneration();
+    if (expectedGeneration === null) {
+      return lifecycle.getPhase() !== "quarantined";
+    }
+
+    return recoverQuarantinedGeneration(expectedGeneration, {
+      attempts: 2,
+      requireMounted: true,
+    });
+  }, [lifecycle, recoverQuarantinedGeneration]);
+
+  useEffect(() => {
+    quarantineRecoveryRunnerRef.current = (generation) => {
+      void recoverQuarantinedGeneration(generation, {
+        attempts: 8,
+        requireMounted: false,
+      });
+    };
+  }, [recoverQuarantinedGeneration]);
 
   const cancelInternal = useCallback(
     (resetState: boolean) => {
@@ -294,6 +547,19 @@ export function useKoreanSpeechRecognition(
 
       transcriptRef.current = "";
       lifecycle.suppressFurtherResults(generation);
+
+      if (currentPhase === "quarantined") {
+        try {
+          ExpoSpeechRecognitionModule.abort();
+        } catch {
+          // The recognizer can already be fully stopped.
+        }
+        void recoverQuarantinedGeneration(generation, {
+          attempts: 8,
+          requireMounted: false,
+        });
+        return;
+      }
 
       if (
         currentPhase === "requested" ||
@@ -316,7 +582,7 @@ export function useKoreanSpeechRecognition(
         });
       }
     },
-    [lifecycle, requestNativeStop],
+    [lifecycle, recoverQuarantinedGeneration, requestNativeStop],
   );
 
   const cancel = useCallback(() => {
@@ -325,7 +591,26 @@ export function useKoreanSpeechRecognition(
 
   const startListening = useCallback(
     async (startOptions: StartListeningOptions = {}) => {
-      const generation = lifecycle.request();
+      const currentPhase = lifecycle.getPhase();
+      const staleLease = leaseRef.current;
+      if (
+        staleLease &&
+        (currentPhase === "idle" ||
+          currentPhase === "ended" ||
+          currentPhase === "error")
+      ) {
+        const released = await restoreOwnedLease(staleLease.generation);
+        if (!released) return false;
+      }
+
+      let generation = lifecycle.request();
+
+      if (generation === null && lifecycle.getPhase() === "quarantined") {
+        const recovered = await tryRecoverQuarantinedSession();
+        if (!recovered) return false;
+        generation = lifecycle.request();
+      }
+
       if (generation === null) return false;
 
       transcriptRef.current = "";
@@ -379,7 +664,9 @@ export function useKoreanSpeechRecognition(
           lifecycle.getGeneration() !== generation ||
           lifecycle.getPhase() !== "starting"
         ) {
-          void mediaSession.release(lease);
+          void mediaSession.release(lease).catch(() => {
+            // A newer media generation owns the next cleanup attempt.
+          });
           return false;
         }
 
@@ -414,7 +701,13 @@ export function useKoreanSpeechRecognition(
         return false;
       }
     },
-    [interruptSession, lifecycle, requestNativeStop],
+    [
+      interruptSession,
+      lifecycle,
+      requestNativeStop,
+      restoreOwnedLease,
+      tryRecoverQuarantinedSession,
+    ],
   );
 
   const stopListening = useCallback(() => {

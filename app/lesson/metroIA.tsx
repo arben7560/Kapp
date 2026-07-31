@@ -34,13 +34,14 @@ import {
   getMetroMissionById,
   getMetroMissionLesson,
 } from "../../data/lesson/metro/metroMissions";
-import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
 import {
   useKoreanSpeechRecognition,
   type SpeechTranscriptSession,
-} from "../../hooks/useKoreanSpeechRecognition";
+} from "../../hooks/hooks/useKoreanSpeechRecognition";
+import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { completeDailyActivity } from "../../lib/dailyStreak";
+import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
 import {
   createMetroConversationMemory,
   recordMetroAudioReplay,
@@ -55,7 +56,6 @@ import {
 } from "../../lib/metroSpeechIntents";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { buildProgressId } from "../../lib/progressIds";
-import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";

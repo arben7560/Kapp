@@ -42,7 +42,7 @@ import {
 import {
   useKoreanSpeechRecognition,
   type SpeechTranscriptSession,
-} from "../../hooks/useKoreanSpeechRecognition";
+} from "../../hooks/hooks/useKoreanSpeechRecognition";
 import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import {
@@ -51,21 +51,21 @@ import {
   recordCafeSpeechAttempt,
 } from "../../lib/cafeConversationMemory";
 import {
+  applyCafeOrderProductSelection,
+  EMPTY_CAFE_ORDER_STATE,
+  type CafeOrderState,
+} from "../../lib/cafeOrderState";
+import {
   CAFE_SPEECH_PILOT_MISSION_ID,
   getCafeSpeechAttemptPedagogy,
   getCafeSpeechContextualStrings,
   matchCafeSpeechIntent,
   recordCafeSpeechRecoveryEvent,
 } from "../../lib/cafeSpeechIntents";
-import {
-  applyCafeOrderProductSelection,
-  EMPTY_CAFE_ORDER_STATE,
-  type CafeOrderState,
-} from "../../lib/cafeOrderState";
 import { completeDailyActivity } from "../../lib/dailyStreak";
+import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { buildProgressId } from "../../lib/progressIds";
-import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -183,7 +183,9 @@ function getAutoAdvanceDelay(node: DialogueNodeWithVideo, mode: ModeType) {
 export default function CafeIaScreen() {
   const { complete } = useStore();
   const insets = useSafeAreaInsets();
-  const responsive = useResponsiveLayout({ maxWidth: IMMERSIVE_CONTENT_MAX_WIDTH });
+  const responsive = useResponsiveLayout({
+    maxWidth: IMMERSIVE_CONTENT_MAX_WIDTH,
+  });
   const params = useLocalSearchParams();
   const mode = normalizeMode(params.mode as string | string[] | undefined);
   const missionId =
@@ -193,8 +195,7 @@ export default function CafeIaScreen() {
     getCafeMissionById(missionId) ??
     getCafeMissionById(DEFAULT_CAFE_MISSION_ID);
   const isCafeSpeechPilot =
-    mode === "guided" &&
-    currentMission?.id === CAFE_SPEECH_PILOT_MISSION_ID;
+    mode === "guided" && currentMission?.id === CAFE_SPEECH_PILOT_MISSION_ID;
   const { hasPremiumAccess, isLoading: isPaywallLoading } = usePaywall();
   const canEnterMission =
     currentMission?.access !== "premium" || hasPremiumAccess;
@@ -472,9 +473,7 @@ export default function CafeIaScreen() {
 
       setIsTransitioning(true);
       setSelectedChoiceId(choice.id);
-      setOrderState((state) =>
-        applyCafeOrderProductSelection(state, choice),
-      );
+      setOrderState((state) => applyCafeOrderProductSelection(state, choice));
 
       setTimeout(() => {
         if (!mountedRef.current) return;
@@ -595,11 +594,7 @@ export default function CafeIaScreen() {
         .reverse()
         .find(({ nodeId }) => nodeId === currentNodeId);
       return latestAttempt
-        ? markCafeSpeechNodeCorrected(
-            memory,
-            currentNodeId,
-            latestAttempt.id,
-          )
+        ? markCafeSpeechNodeCorrected(memory, currentNodeId, latestAttempt.id)
         : memory;
     });
     setSpeechFeedback(null);
@@ -1195,8 +1190,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.06)",
   },
 
-  backTxt: {
-  },
+  backTxt: {},
 
   videoContainer: {
     alignSelf: "center",
@@ -1266,8 +1260,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
-  aiFr: {
-  },
+  aiFr: {},
 
   interactionSection: {
     minHeight: 220,
@@ -1306,8 +1299,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
 
-  choiceFr: {
-  },
+  choiceFr: {},
 
   waitingCard: {
     borderRadius: 22,
@@ -1335,11 +1327,9 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
 
-  waitingTxt: {
-  },
+  waitingTxt: {},
 
-  waitingSub: {
-  },
+  waitingSub: {},
 
   endCard: {
     borderRadius: 24,
@@ -1372,8 +1362,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  endActionPrimaryText: {
-  },
+  endActionPrimaryText: {},
 
   endActionSecondary: {
     borderRadius: 18,
@@ -1385,8 +1374,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  endActionSecondaryText: {
-  },
+  endActionSecondaryText: {},
 
   endPremiumLink: {
     marginTop: 14,
@@ -1399,6 +1387,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  endPremiumLinkText: {
-  },
+  endPremiumLinkText: {},
 });

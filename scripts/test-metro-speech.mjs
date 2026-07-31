@@ -4,17 +4,17 @@ import { registerHooks } from "node:module";
 import test from "node:test";
 
 import {
-  getMetroSpeechChoiceIntent,
-  getMetroSpeechContextualStrings,
-  matchMetroSpeechIntent,
-} from "../lib/metroSpeechIntents.ts";
-import {
   buildMetroConversationSummary,
   createMetroConversationMemory,
   recordMetroAudioReplay,
   recordMetroHelpRequest,
   recordMetroSpeechAttempt,
 } from "../lib/metroConversationMemory.ts";
+import {
+  getMetroSpeechChoiceIntent,
+  getMetroSpeechContextualStrings,
+  matchMetroSpeechIntent,
+} from "../lib/metroSpeechIntents.ts";
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
@@ -233,8 +233,9 @@ test("Gangnam seul, une destination absente et des intentions contradictoires re
     "direction-only",
   );
   assert.equal(
-    matchMetroSpeechIntent("강남까지 어떻게 가요? 이태원 방향이에요?", [direction])
-      .category,
+    matchMetroSpeechIntent("강남까지 어떻게 가요? 이태원 방향이에요?", [
+      direction,
+    ]).category,
     "wrong-destination",
   );
 });
@@ -287,7 +288,10 @@ test("le deuxième tour reconnaît les demandes de répétition A1", () => {
   assert.equal(reversed.category, "repeat-word-order");
   assert.equal(reversed.choice?.id, repeat.id);
 
-  const otherQuestion = matchMetroSpeechIntent("몇 분 걸려요?", [repeat, thanks]);
+  const otherQuestion = matchMetroSpeechIntent("몇 분 걸려요?", [
+    repeat,
+    thanks,
+  ]);
   assert.equal(otherQuestion.category, "duration-confusion");
   assert.notEqual(otherQuestion.choice?.id, repeat.id);
 });
@@ -372,10 +376,10 @@ test("le troisième tour reconnaît remerciement, compréhension et nouvelle ré
   assert.equal(yesOnly.category, "ambiguous-acknowledgement");
   assert.equal(yesOnly.choice, null);
 
-  const notUnderstood = matchMetroSpeechIntent(
-    "아직 이해 못 했어요",
-    [repeat, thanks],
-  );
+  const notUnderstood = matchMetroSpeechIntent("아직 이해 못 했어요", [
+    repeat,
+    thanks,
+  ]);
   assert.equal(notUnderstood.category, "not-understood");
   assert.equal(notUnderstood.choice?.id, repeat.id);
 
@@ -499,7 +503,10 @@ test("chaque choix accepte ses formulations naturelles et ses transcriptions pro
 
 test("les feedbacks d’erreur énumèrent tous les choix réellement visibles", () => {
   for (const node of askDirectionSpeechNodes) {
-    const result = matchMetroSpeechIntent("커피를 주문하고 싶어요", node.choices);
+    const result = matchMetroSpeechIntent(
+      "커피를 주문하고 싶어요",
+      node.choices,
+    );
     assert.notEqual(result.reason, "matched", node.id);
 
     for (const choice of node.choices) {
@@ -587,7 +594,9 @@ test("la mission vocale réutilise ask-direction et conserve son accès premium"
     /stepId: "ia_repeat_platform_direction",[\s\S]*?"repeat_platform"[\s\S]*?"thank_after_direction_repeat"/,
   );
   assert.doesNotMatch(
-    source.match(/function createAskDirectionLesson[\s\S]*?type MiniLessonConfig/)?.[0] ?? "",
+    source.match(
+      /function createAskDirectionLesson[\s\S]*?type MiniLessonConfig/,
+    )?.[0] ?? "",
     /choose_myeongdong_direction/,
   );
 });
@@ -596,7 +605,10 @@ test("toutes les missions Métro actives conservent des transitions complètes",
   for (const mission of metroMissions) {
     const lesson = getMetroMissionLesson(mission);
     assert.ok(lesson, `Le script de ${mission.id} doit exister`);
-    assert.ok(lesson.steps.length > 1, `${mission.id} doit contenir un parcours`);
+    assert.ok(
+      lesson.steps.length > 1,
+      `${mission.id} doit contenir un parcours`,
+    );
 
     const stepIds = new Set(lesson.steps.map(({ id }) => id));
     assert.equal(
@@ -737,7 +749,10 @@ test("la branche Direction réutilise les réponses durée et correspondance san
   ]) {
     assert.ok(
       statSync(
-        new URL(`../assets/ai/metro/Hongik-to-Gangnam/${video}`, import.meta.url),
+        new URL(
+          `../assets/ai/metro/Hongik-to-Gangnam/${video}`,
+          import.meta.url,
+        ),
       ).size > 0,
       video,
     );
@@ -825,7 +840,9 @@ test("la mémoire et le bilan conservent les catégories du nœud conversationne
   const summary = buildMetroConversationSummary(memory);
   assert.ok(summary.achievements.includes("Demande de répétition réussie"));
   assert.ok(summary.achievements.includes("Échange terminé naturellement"));
-  assert.ok(summary.vocabularyToReview.includes("Politesse : 다시 말해 주세요"));
+  assert.ok(
+    summary.vocabularyToReview.includes("Politesse : 다시 말해 주세요"),
+  );
   assert.ok(
     summary.vocabularyToReview.includes(
       "Avec un inconnu : 감사합니다 / 알겠습니다",
@@ -838,12 +855,21 @@ test("le bilan distingue les nouvelles intentions et leurs corrections A1", () =
   memory = recordMetroSpeechAttempt(memory, {
     nodeId: "ask_direction_hongik_ia_platform_direction_choices",
     transcript: "몇 분?",
-    result: matchMetroSpeechIntent("몇 분?", [duration, transfer, repeat, thanks]),
+    result: matchMetroSpeechIntent("몇 분?", [
+      duration,
+      transfer,
+      repeat,
+      thanks,
+    ]),
   });
   memory = recordMetroSpeechAttempt(memory, {
     nodeId: "ask_direction_hongik_ia_trip_time_choices",
     transcript: "환승해야 해요?",
-    result: matchMetroSpeechIntent("환승해야 해요?", [transfer, repeat, thanks]),
+    result: matchMetroSpeechIntent("환승해야 해요?", [
+      transfer,
+      repeat,
+      thanks,
+    ]),
   });
 
   assert.deepEqual(
@@ -862,4 +888,36 @@ test("le bilan distingue les nouvelles intentions et leurs corrections A1", () =
   assert.ok(summary.achievements.includes("Durée du trajet demandée"));
   assert.ok(summary.achievements.includes("Correspondance vérifiée"));
   assert.ok(summary.vocabularyToReview.includes("Durée : 얼마나 걸려요?"));
+});
+
+test("les remerciements de Hongik concluent le dialogue sans relancer un résumé", () => {
+  const lesson = getMetroMissionLesson(getMetroMissionById("hongik-gangnam"));
+
+  assert.ok(lesson);
+
+  for (const [stepId, choiceId] of [
+    ["ia_exit_info", "thank_final"],
+    ["ia_repeat_exit_info", "thank_after_exit_repeat"],
+    ["ia_exit_landmark_info", "thank_after_landmark"],
+    ["ia_repeat_exit_landmark_info", "thank_after_landmark_repeat"],
+  ]) {
+    const step = lesson.steps.find((item) => item.id === stepId);
+
+    const choice = step?.choices?.find((item) => item.id === choiceId);
+
+    assert.ok(choice, `${stepId}.${choiceId} doit exister`);
+
+    assert.equal(
+      choice.nextId,
+      "ia_end",
+      `${stepId}.${choiceId} doit conclure directement le dialogue`,
+    );
+  }
+
+  assert.ok(
+    !lesson.steps.some(
+      ({ id }) => id === "ia_end_summary" || id === "ia_end_summary_short",
+    ),
+    "Le résumé ne doit pas être injecté après un remerciement final",
+  );
 });

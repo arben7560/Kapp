@@ -82,7 +82,8 @@ export const metroMissions: MetroMission[] = [
   {
     id: "ask-direction",
     title: "Direction vers Gangnam",
-    subtitle: "Demande la direction, puis précise le trajet si tu le souhaites.",
+    subtitle:
+      "Demande la direction, puis précise le trajet si tu le souhaites.",
     access: "premium",
     duration: "3-5 min",
     objective:
@@ -146,55 +147,58 @@ function applyMetroMissionToLesson(
 function createHongikCompleteLesson(lesson: MetroLesson): MetroLesson {
   return createFocusedLesson(lesson, [
     { stepId: "start", keepChoiceIds: ["ask1"] },
-    { stepId: "ia_intro_route", keepChoiceIds: ["repeat_intro", "ask_platform"] },
+
+    {
+      stepId: "ia_intro_route",
+      keepChoiceIds: ["repeat_intro", "ask_platform"],
+    },
+
     {
       stepId: "ia_repeat_intro_route",
       keepChoiceIds: ["ask_platform_after_repeat"],
     },
+
     {
       stepId: "ia_platform_direction",
       keepChoiceIds: ["repeat_platform"],
       extraChoices: [
-        getSourceChoice(
-          lesson,
-          "ia_intro_route",
-          "ask_trip",
-          "ia_trip_time",
-        ),
+        getSourceChoice(lesson, "ia_intro_route", "ask_trip", "ia_trip_time"),
       ],
     },
+
     {
       stepId: "ia_repeat_platform_direction",
       keepChoiceIds: [],
       extraChoices: [
-        getSourceChoice(
-          lesson,
-          "ia_intro_route",
-          "ask_trip",
-          "ia_trip_time",
-        ),
+        getSourceChoice(lesson, "ia_intro_route", "ask_trip", "ia_trip_time"),
       ],
     },
+
     {
       stepId: "ia_trip_time",
       keepChoiceIds: ["repeat_trip", "ask_transfer_from_trip"],
     },
+
     {
       stepId: "ia_repeat_trip_time",
       keepChoiceIds: ["ask_transfer_after_trip_repeat"],
     },
+
     {
       stepId: "ia_transfer_info",
       keepChoiceIds: ["repeat_transfer", "ask_exit_after_transfer"],
     },
+
     {
       stepId: "ia_repeat_transfer_info",
       keepChoiceIds: ["ask_exit_after_transfer_repeat"],
     },
+
     {
       stepId: "ia_exit_info",
       keepChoiceIds: ["repeat_exit", "ask_more_exit", "thank_final"],
     },
+
     {
       stepId: "ia_repeat_exit_info",
       keepChoiceIds: [
@@ -202,38 +206,17 @@ function createHongikCompleteLesson(lesson: MetroLesson): MetroLesson {
         "thank_after_exit_repeat",
       ],
     },
+
     {
       stepId: "ia_exit_landmark_info",
-      keepChoiceIds: ["repeat_landmark"],
-      extraChoices: [
-        getSourceChoice(
-          lesson,
-          "ia_exit_landmark_info",
-          "thank_after_landmark",
-          "ia_end_summary",
-        ),
-      ],
+      keepChoiceIds: ["repeat_landmark", "thank_after_landmark"],
     },
+
     {
       stepId: "ia_repeat_exit_landmark_info",
-      keepChoiceIds: [],
-      extraChoices: [
-        getSourceChoice(
-          lesson,
-          "ia_repeat_exit_landmark_info",
-          "thank_after_landmark_repeat",
-          "ia_end_summary",
-        ),
-      ],
+      keepChoiceIds: ["thank_after_landmark_repeat"],
     },
-    {
-      stepId: "ia_end_summary",
-      keepChoiceIds: ["thank_after_summary", "repeat_summary"],
-    },
-    {
-      stepId: "ia_end_summary_short",
-      keepChoiceIds: ["thank_after_summary_short"],
-    },
+
     { stepId: "ia_end" },
   ]);
 }
@@ -326,7 +309,10 @@ function createSeoulJamsilCompleteLesson(lesson: MetroLesson): MetroLesson {
       stepId: "ia_transfer_repeat",
       keepChoiceIds: ["ask_time_after_transfer_repeat"],
     },
-    { stepId: "ia_time", keepChoiceIds: ["repeat_time", "ask_exit_after_time"] },
+    {
+      stepId: "ia_time",
+      keepChoiceIds: ["repeat_time", "ask_exit_after_time"],
+    },
     {
       stepId: "ia_time_repeat",
       keepChoiceIds: ["ask_exit_after_time_repeat"],
@@ -352,7 +338,8 @@ function createAskExitLesson(): MetroLesson {
       "Vous êtes dans le métro à Séoul. Votre objectif est simple : demander uniquement quelle sortie prendre.",
     objective:
       "Choisir un trajet, demander la bonne sortie, vérifier si besoin, puis remercier.",
-    startText: "Choisissez le trajet pour lequel vous voulez demander la sortie.",
+    startText:
+      "Choisissez le trajet pour lequel vous voulez demander la sortie.",
     choices: [
       {
         id: "choose_hongik_gangnam",
@@ -546,10 +533,7 @@ function createAskTimeLesson(): MetroLesson {
           stepId: "ia_trip_time",
           keepChoiceIds: ["repeat_trip_time", "ask_station_count"],
           extraChoices: [
-            createThankChoice(
-              "thank_after_time",
-              "ask_time_myeongdong_ia_end",
-            ),
+            createThankChoice("thank_after_time", "ask_time_myeongdong_ia_end"),
           ],
         },
         {
@@ -696,7 +680,10 @@ function createAskDirectionLesson(): MetroLesson {
         },
         {
           stepId: "ia_repeat_transfer_info",
-          keepChoiceIds: ["repeat_transfer_again", "thank_after_transfer_repeat"],
+          keepChoiceIds: [
+            "repeat_transfer_again",
+            "thank_after_transfer_repeat",
+          ],
           extraChoices: [
             getSourceChoice(
               hongikLesson,
