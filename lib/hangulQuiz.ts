@@ -1,7 +1,4 @@
-import type {
-  HangulQuestion,
-  HangulQuizSession,
-} from "../data/hangul/types";
+import type { HangulQuestion, HangulQuizSession } from "../data/hangul/types";
 import { shuffleArray, type RandomSource } from "./choiceOrder.ts";
 
 const correctAnswerIndex = (question: HangulQuestion) =>
@@ -202,11 +199,20 @@ export function restoreHangulQuizSession(
     Array.isArray(session.roundIncorrectQuestionIds) &&
     typeof session.round === "number"
   ) {
+    const questionBankById = new Map(
+      questionBank.map((question) => [question.id, question] as const),
+    );
+
+    const restoredQuestions = session.questions
+      .map((question) => restoreQuestionFromBank(question, questionBankById))
+      .filter((question): question is HangulQuestion => question !== null);
+
     return {
       ...session,
+      questions: restoredQuestions,
       questionIndex: Math.min(
         session.questionIndex,
-        Math.max(session.questions.length - 1, 0),
+        Math.max(restoredQuestions.length - 1, 0),
       ),
       score: countCorrectQuestions(session.correctQuestionIds),
       correctQuestionIds: { ...session.correctQuestionIds },
@@ -231,8 +237,7 @@ export function restoreHangulQuizSession(
     }
   });
 
-  const currentQuestion =
-    legacySession.questions[legacySession.questionIndex];
+  const currentQuestion = legacySession.questions[legacySession.questionIndex];
   if (
     currentQuestion &&
     legacySession.answered === currentQuestion.answer &&
@@ -258,3 +263,30 @@ export function restoreHangulQuizSession(
     originalQuestionCount: legacySession.originalQuestionCount,
   };
 }
+
+const restoreQuestionFromBank = (
+  savedQuestion: HangulQuestion,
+  questionBankById: ReadonlyMap<string, HangulQuestion>,
+): HangulQuestion | null => {
+  const canonicalQuestion = questionBankById.get(savedQuestion.id);
+  if (!canonicalQuestion) return null;
+
+  const canonicalOptionsByValue = new Map(
+    canonicalQuestion.options.map((option) => [option.value, option] as const),
+  );
+
+  const restoredOptions = savedQuestion.options
+    .map((option) => canonicalOptionsByValue.get(option.value))
+    .filter(
+      (option): option is HangulQuestion["options"][number] =>
+        option !== undefined,
+    );
+
+  return {
+    ...canonicalQuestion,
+    options:
+      restoredOptions.length === canonicalQuestion.options.length
+        ? restoredOptions
+        : canonicalQuestion.options,
+  };
+};
