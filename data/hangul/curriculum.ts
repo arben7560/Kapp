@@ -44,7 +44,14 @@ const q = (
   audio?: string,
 ): HangulQuestion => ({ id, type, prompt, answer, options, explanation, characters, display, audio });
 
-type CardTuple = [string, string, string | undefined, string, string, string?];
+type CardTuple = [
+  string,
+  string,
+  string | undefined,
+  string,
+  string,
+  (string | null)?,
+];
 
 const cards = (items: CardTuple[], kind: HangulCard["kind"]): HangulCard[] =>
   items.map(([id, glyph, romanization, label, explanation, audio]) => ({
@@ -53,7 +60,7 @@ const cards = (items: CardTuple[], kind: HangulCard["kind"]): HangulCard[] =>
     romanization,
     label,
     explanation,
-    audio: audio ?? glyph,
+    audio: audio === null ? undefined : (audio ?? glyph),
     kind,
   }));
 
@@ -156,7 +163,7 @@ const blocksScene: HangulScene = {
   cards: cards([
     ["block-a", "아", "a", "Voyelle verticale", "ㅇ se place à gauche de ㅏ.", "아"],
     ["block-o", "오", "o", "Voyelle horizontale", "ㅇ se place au-dessus de ㅗ.", "오"],
-    ["guardian", "ㅇ", "muet", "Gardien initial", "Au début du bloc, ㅇ occupe la place de la consonne sans son.", "아"],
+    ["guardian", "ㅇ", "muet", "Gardien initial", "Au début du bloc, ㅇ occupe la place de la consonne sans son.", null],
   ], "syllable"),
   questions: [
     q("block-vertical", "layout", "Où va la consonne devant une voyelle verticale ?", "À gauche", [o("À gauche"), o("Au-dessus"), o("En dessous")], "La voyelle verticale se place à droite de l’initiale.", ["ㅇ", "ㅏ"], "ㅇ + ㅏ"),

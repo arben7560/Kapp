@@ -45,6 +45,7 @@ test("the foundations chapter has complete mini-lessons without filling later ch
     assert.ok(guide, stageId);
     assert.equal(guide.stageId, stageId);
     assert.ok(guide.introduction.length > 40, `${stageId}: introduction`);
+    assert.ok(guide.mainRule.length > 40, `${stageId}: main rule`);
     assert.ok(guide.formula.pattern.length > 10, `${stageId}: formula`);
     assert.ok(guide.formula.explanation.length > 30, `${stageId}: formula explanation`);
     assert.ok(guide.steps.length >= 3, `${stageId}: steps`);
@@ -60,18 +61,39 @@ test("the foundations chapter has complete mini-lessons without filling later ch
   assert.equal(getGrammarLessonGuide("present-actions"), undefined);
 });
 
-test("active practice can open theory and resume without replacing its session", () => {
+test("grammar theory opens in a reusable modal and resumes without replacing its session", () => {
   const lesson = readFileSync(
     join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"),
     "utf8",
   );
+  const modal = readFileSync(
+    join(projectRoot, "components/grammar/GrammarLessonGuideModal.tsx"),
+    "utf8",
+  );
+  const guideContent = readFileSync(
+    join(projectRoot, "components/grammar/GrammarLessonGuide.tsx"),
+    "utf8",
+  );
 
-  assert.match(lesson, /const \[theoryStageId, setTheoryStageId\] = React\.useState<GrammarStageId>\(\)/u);
-  assert.match(lesson, /const showTheory = theoryStageId === stageId/u);
-  assert.match(lesson, /onReviewExplanation=\{\(\) => setTheoryStageId\(stageId\)\}/u);
-  assert.match(lesson, /onStart=\{session \? \(\) => setTheoryStageId\(undefined\) : startPractice\}/u);
+  assert.match(lesson, /<GrammarLessonGuideModal/u);
+  assert.match(lesson, /const theoryModalVisible =/u);
+  assert.match(lesson, /!session && dismissedTheoryStageId !== stageId/u);
+  assert.match(lesson, /onReviewExplanation=\{\(\) => setRequestedTheoryStageId\(stageId\)\}/u);
+  assert.match(lesson, /if \(!session\) startPractice\(\)/u);
   assert.match(lesson, /Revoir l’explication/u);
-  assert.match(lesson, /REPRENDRE LES EXERCICES/u);
+  assert.match(modal, /export function GrammarLessonGuideModal/u);
+  assert.match(modal, /label="Accéder aux exercices"/u);
+  assert.match(modal, /onPress=\{onAccessExercises\}/u);
+  for (const section of [
+    "L’IDÉE ESSENTIELLE",
+    "RÈGLE PRINCIPALE",
+    "LA FORMULE",
+    "EXEMPLES DÉCOMPOSÉS",
+    "ERREURS FRÉQUENTES",
+    "ASTUCE MÉMOIRE",
+  ]) {
+    assert.match(guideContent, new RegExp(section, "u"), section);
+  }
 });
 
 test("the freemium boundary keeps A0 free and reserves A1 to Premium", () => {

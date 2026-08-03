@@ -30,6 +30,7 @@ export type GrammarLessonGuideMistake = {
 export type GrammarLessonGuide = {
   stageId: GrammarStageId;
   introduction: string;
+  mainRule: string;
   formula: GrammarLessonGuideFormula;
   steps: readonly GrammarLessonGuideStep[];
   examples: readonly GrammarLessonGuideExample[];
@@ -42,6 +43,8 @@ export const GRAMMAR_LESSON_GUIDES = {
     stageId: "sentence-structure",
     introduction:
       "En coréen, l'information principale arrive à la fin. Le sujet peut disparaître lorsqu'il est évident, mais le prédicat — ce que l'on dit ou fait — ferme toujours la phrase.",
+    mainRule:
+      "Le prédicat se place à la fin de la phrase. Le sujet et les compléments viennent avant lui et peuvent être omis lorsqu’ils sont déjà compris dans le contexte.",
     formula: {
       pattern: "(sujet / thème) + (compléments) + prédicat",
       explanation:
@@ -100,6 +103,8 @@ export const GRAMMAR_LESSON_GUIDES = {
     stageId: "identify-with-copula",
     introduction:
       "이에요 et 예요 permettent d'identifier une personne ou une chose dans le registre poli courant. Le choix dépend uniquement du dernier son du nom.",
+    mainRule:
+      "Ajoute 이에요 après un nom terminé par une consonne et 예요 après un nom terminé par une voyelle, sans insérer d’espace.",
     formula: {
       pattern: "nom + 이에요 (après consonne) / nom + 예요 (après voyelle)",
       explanation:
@@ -157,6 +162,8 @@ export const GRAMMAR_LESSON_GUIDES = {
     stageId: "polite-register",
     introduction:
       "Dans la plupart des échanges du quotidien avec une personne que l'on connaît peu, la terminaison en -요 est le choix sûr : elle reste naturelle tout en marquant le respect.",
+    mainRule:
+      "Dans le registre poli courant, le prédicat conjugué se termine par 요. La conjugaison vient avant cette marque de politesse.",
     formula: {
       pattern: "base conjuguée + 요",
       explanation:
@@ -214,6 +221,8 @@ export const GRAMMAR_LESSON_GUIDES = {
     stageId: "introduce-topic",
     introduction:
       "은 et 는 annoncent le thème : la personne, la chose ou le moment à propos duquel la suite apporte une information. En français, on peut souvent sentir « quant à… ».",
+    mainRule:
+      "Attache 은 après une consonne finale et 는 après une voyelle au nom que tu veux présenter comme thème de la phrase.",
     formula: {
       pattern: "nom + 은 (après consonne) / 는 (après voyelle) + commentaire",
       explanation:
@@ -272,6 +281,8 @@ export const GRAMMAR_LESSON_GUIDES = {
     stageId: "demonstratives",
     introduction:
       "Le coréen organise l'espace en trois zones : près de moi, près de toi ou déjà mentionné, et loin de nous deux. Cette distinction guide 이, 그 et 저.",
+    mainRule:
+      "Utilise 이 pour ce qui est près de toi, 그 pour ce qui est près de l’interlocuteur ou déjà évoqué, et 저 pour ce qui est loin des deux.",
     formula: {
       pattern: "이 / 그 / 저 + nom  ·  이거 / 그거 / 저거 (sans nom)",
       explanation:
@@ -329,6 +340,8 @@ export const GRAMMAR_LESSON_GUIDES = {
     stageId: "nominal-questions",
     introduction:
       "Les mots interrogatifs coréens restent à la place de l'information inconnue. 뭐 demande une chose, 누구 une personne et 몇 une quantité devant un classificateur.",
+    mainRule:
+      "Remplace l’élément inconnu par 뭐, 누구 ou 몇 sans bouleverser l’ordre normal de la phrase coréenne.",
     formula: {
       pattern: "mot interrogatif + structure ordinaire + terminaison polie ?",
       explanation:
@@ -387,6 +400,8 @@ export const GRAMMAR_LESSON_GUIDES = {
     stageId: "existence",
     introduction:
       "있어요 indique qu'une personne ou une chose existe, est présente ou est disponible ; 없어요 exprime l'absence. Cette structure sert aussi souvent à rendre le français « avoir ».",
+    mainRule:
+      "Marque avec 이/가 la chose présente ou absente, puis termine par 있어요 pour la présence ou 없어요 pour l’absence.",
     formula: {
       pattern: "nom + 이/가 + 있어요 / 없어요",
       explanation:
@@ -444,6 +459,8 @@ export const GRAMMAR_LESSON_GUIDES = {
     stageId: "locate-thing",
     introduction:
       "Pour situer une personne ou un objet, le lieu reçoit 에 et la phrase se termine par 있어요. La structure décrit une position stable, pas l'endroit où se déroule une action.",
+    mainRule:
+      "Pour une position statique, attache 에 au lieu et place 있어요 à la fin de la phrase.",
     formula: {
       pattern: "élément + 은/는 ou 이/가 + lieu + 에 + 있어요",
       explanation:

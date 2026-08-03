@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
-import { GrammarLessonGuide } from "../../../components/grammar/GrammarLessonGuide";
+import { GrammarLessonGuideModal } from "../../../components/grammar/GrammarLessonGuideModal";
 import { StatusBadge } from "../../../components/ui/status-badge";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 import { SeoulMidnightGlass } from "../../../constants/theme";
@@ -134,12 +134,15 @@ export default function GrammarLessonScreen() {
   const responsive = useResponsiveLayout({ maxWidth: 900 });
   const completionInFlight = React.useRef(new Set<string>());
   const scrollRef = React.useRef<ScrollView>(null);
-  const [theoryStageId, setTheoryStageId] = React.useState<GrammarStageId>();
+  const [dismissedTheoryStageId, setDismissedTheoryStageId] =
+    React.useState<GrammarStageId>();
+  const [requestedTheoryStageId, setRequestedTheoryStageId] =
+    React.useState<GrammarStageId>();
 
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
   const stageProgress = progress.grammarProgress.stages[stageId];
   const session = stageProgress?.activeSession;
-  const showTheory = theoryStageId === stageId;
+  const lessonGuide = getGrammarLessonGuide(stageId);
   const premiumLocked = !canAccessGrammarStage(stage, isPremium);
   const completedContentRefs = new Set(
     CONTENT_REFS.filter((contentRef) => {
@@ -150,17 +153,21 @@ export default function GrammarLessonScreen() {
   const access = getGrammarStageAccess(progress.grammarProgress, stageId, completedContentRefs);
   const completionRecorded = !!session && stageProgress?.completedSessionIds.includes(session.id);
   const streakRecorded = !!session && stageProgress?.streakSessionIds.includes(session.id);
+  const theoryModalVisible =
+    !premiumLocked &&
+    access.canOpen &&
+    !session?.completedAt &&
+    (requestedTheoryStageId === stageId ||
+      (!session && dismissedTheoryStageId !== stageId));
   const contentState = premiumLocked
     ? "premium-locked"
     : !access.canOpen
     ? "locked"
     : session?.completedAt
       ? "result"
-      : session && !showTheory
+      : session
         ? "practice"
-        : session
-          ? "lesson-review"
-          : "lesson";
+        : "lesson";
 
   React.useEffect(() => {
     if (isPaywallLoading || !premiumLocked) return;
@@ -285,7 +292,7 @@ export default function GrammarLessonScreen() {
         />
       );
     }
-    if (session && !showTheory) {
+    if (session) {
       return (
         <PracticePanel
           session={session}
@@ -293,18 +300,14 @@ export default function GrammarLessonScreen() {
           onAnswer={chooseAnswer}
           onDraft={updateDraft}
           onContinue={continuePractice}
-          onReviewExplanation={() => setTheoryStageId(stageId)}
+          onReviewExplanation={() => setRequestedTheoryStageId(stageId)}
         />
       );
     }
     return (
-      <LessonExplanation
-        stageId={stageId}
-        isPremium={isPremium}
-        isTablet={responsive.isTablet}
-        sessionActive={!!session}
-        onOpenPremium={() => router.push("/premium")}
-        onStart={session ? () => setTheoryStageId(undefined) : startPractice}
+      <LessonOverview
+        hasDetailedGuide={!!lessonGuide}
+        onOpenExplanation={() => setRequestedTheoryStageId(stageId)}
       />
     );
   };
@@ -364,24 +367,46 @@ export default function GrammarLessonScreen() {
           </View>
         </ScrollView>
       </ImageBackground>
+
+      <GrammarLessonGuideModal
+        visible={theoryModalVisible}
+        title={stage.title}
+        communicativeGoal={stage.communicativeGoal}
+        guide={lessonGuide}
+        isTablet={responsive.isTablet}
+        onRequestClose={() => {
+          setDismissedTheoryStageId(stageId);
+          setRequestedTheoryStageId(undefined);
+        }}
+        onAccessExercises={() => {
+          setDismissedTheoryStageId(stageId);
+          setRequestedTheoryStageId(undefined);
+          if (!session) startPractice();
+        }}
+      >
+        {!lessonGuide ? (
+          <GrammarLessonTheory
+            stageId={stageId}
+            isPremium={isPremium}
+            isTablet={responsive.isTablet}
+            onOpenPremium={() => router.push("/premium")}
+          />
+        ) : null}
+      </GrammarLessonGuideModal>
     </SafeAreaView>
   );
 }
 
-function LessonExplanation({
+function GrammarLessonTheory({
   stageId,
   isPremium,
   isTablet,
-  sessionActive,
   onOpenPremium,
-  onStart,
 }: {
   stageId: GrammarStageId;
   isPremium: boolean;
   isTablet: boolean;
-  sessionActive: boolean;
   onOpenPremium: () => void;
-  onStart: () => void;
 }) {
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
   const concepts = stage.conceptIds
@@ -390,12 +415,7 @@ function LessonExplanation({
   const receptiveConcepts = (stage.receptiveConceptIds ?? [])
     .map((conceptId) => GRAMMAR_CONCEPTS.find((concept) => concept.id === conceptId))
     .filter((concept): concept is GrammarConcept => !!concept);
-  const reuseLinks = stage.reuseContentRefIds
-    .map((contentRefId) => CONTENT_REFS.find((item) => item.id === contentRefId))
-    .filter((item) => item?.route && item.availability === "public")
-    .slice(0, 3);
   const lessonExamples = getGrammarLessonExamples(stageId);
-  const lessonGuide = getGrammarLessonGuide(stageId);
   const detailExamples = lessonExamples.slice(stage.canonicalExamples.length);
   const isGeneralReview = stage.mode === "review";
   const advancedForms = isGeneralReview
@@ -405,9 +425,6 @@ function LessonExplanation({
 
   return (
     <View style={styles.contentStack}>
-      {lessonGuide ? (
-        <GrammarLessonGuide guide={lessonGuide} isTablet={isTablet} />
-      ) : (
       <View style={[styles.explanationGrid, isTablet && styles.explanationGridTablet]}>
         <View style={[styles.explanationColumn, isTablet && styles.explanationColumnTablet]}>
           <AppText variant="sectionLabel" tone="soft">
@@ -463,7 +480,6 @@ function LessonExplanation({
           )) : null}
         </View>
       </View>
-      )}
 
       {receptiveConcepts.length > 0 || visibleAdvancedForms.length > 0 ? (
         <View style={styles.receptiveBox}>
@@ -510,36 +526,36 @@ function LessonExplanation({
         </Pressable>
       ) : null}
 
-      <BlurView intensity={55} tint="dark" style={styles.practiceLaunchCard}>
-        <AppText variant="sectionLabel" style={styles.accentText}>PRATIQUE GUIDÉE</AppText>
-        <AppText variant="sectionTitle">
-          {isGeneralReview ? "Revois cinq structures en contexte" : "Mets la règle en pratique"}
-        </AppText>
-        <AppText variant="bodySecondary" tone="muted">
-          {isGeneralReview
-            ? "Cinq situations courtes, renouvelées à chaque tentative. Cette révision ne constitue pas une validation du niveau A1."
-            : "Cinq exercices sur le sens, la forme et la construction. Quatre réponses correctes terminent l’étape."}
-        </AppText>
-        <PrimaryButton
-          label={sessionActive ? "REPRENDRE LES EXERCICES" : "COMMENCER LES EXERCICES"}
-          onPress={onStart}
-        />
-      </BlurView>
-
-      {reuseLinks.length > 0 ? (
-        <View style={styles.reuseSection}>
-          <AppText variant="sectionLabel" tone="soft">À RETROUVER DANS L’APP</AppText>
-          <View style={styles.reuseLinks}>
-            {reuseLinks.map((contentRef) => (
-              <Pressable key={contentRef!.id} onPress={() => router.push(contentRef!.route as never)} style={styles.reuseLink}>
-                <AppText variant="bodyStrong">{contentRef!.title}</AppText>
-                <AppText aria-hidden variant="symbol" style={styles.accentText}>›</AppText>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-      ) : null}
     </View>
+  );
+}
+
+function LessonOverview({
+  hasDetailedGuide,
+  onOpenExplanation,
+}: {
+  hasDetailedGuide: boolean;
+  onOpenExplanation: () => void;
+}) {
+  return (
+    <BlurView intensity={55} tint="dark" style={styles.practiceLaunchCard}>
+      <LinearGradient
+        colors={["rgba(45,212,191,0.14)", "rgba(255,255,255,0.02)"]}
+        style={ABSOLUTE_FILL}
+      />
+      <AppText variant="sectionLabel" style={styles.accentText}>
+        AVANT DE COMMENCER
+      </AppText>
+      <AppText variant="sectionTitle">
+        {hasDetailedGuide
+          ? "Comprends la logique, puis entraîne-toi"
+          : "Relis les repères de cette leçon"}
+      </AppText>
+      <AppText variant="bodySecondary" tone="muted">
+        L’explication s’ouvre dans une mini-leçon dédiée. Tu pourras la consulter à nouveau pendant les exercices sans perdre ta progression.
+      </AppText>
+      <PrimaryButton label="OUVRIR L’EXPLICATION" onPress={onOpenExplanation} />
+    </BlurView>
   );
 }
 
@@ -931,9 +947,6 @@ const styles = StyleSheet.create({
   advancedLockedCard: { minHeight: 84, borderRadius: 20, borderWidth: 1, borderColor: COLORS.premiumBorder, backgroundColor: COLORS.premiumSurface, padding: 16, flexDirection: "row", alignItems: "center", gap: 12 },
   advancedLockedCopy: { flex: 1, minWidth: 0, gap: 3 },
   practiceLaunchCard: { borderRadius: 24, borderWidth: 1, borderColor: "rgba(45,212,191,0.28)", padding: 20, gap: 10, overflow: "hidden" },
-  reuseSection: { gap: 10 },
-  reuseLinks: { gap: 8 },
-  reuseLink: { minHeight: 52, borderRadius: 15, borderWidth: 1, borderColor: "rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.04)", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingHorizontal: 16 },
   practiceStack: { gap: 16 },
   practiceMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 },
   practiceMetaActions: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end", gap: 8 },

@@ -94,6 +94,16 @@ test("every Hangul listening exercise exposes a playable audio source", () => {
   }
 });
 
+test("the silent initial ieung discovery card has no audio", () => {
+  const guardianCard = HANGUL_MODULES.flatMap((module) => module.scenes)
+    .flatMap((scene) => scene.cards)
+    .find((card) => card.id === "guardian");
+
+  assert.ok(guardianCard);
+  assert.equal(guardianCard.glyph, "ㅇ");
+  assert.equal(guardianCard.audio, undefined);
+});
+
 test("every consonant discovery explains the model vowel sound", () => {
   const consonantScenes = HANGUL_MODULES.flatMap((module) => module.scenes)
     .filter(

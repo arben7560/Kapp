@@ -203,8 +203,8 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
     updateLesson((current) => ({ ...current, currentSceneId: sceneId }));
   };
 
-  const discover = (cardId: string, audio: string) => {
-    playAudio(audio);
+  const discover = (cardId: string, audio?: string) => {
+    if (audio) playAudio(audio);
     Vibration.vibrate(8);
     updateLesson((current) => ({
       ...current,
@@ -559,7 +559,9 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                         >
                           {item.glyph}
                         </AppText>
-                        <HangulAudioBadge accent={activeScene.accent} />
+                        {item.audio ? (
+                          <HangulAudioBadge accent={activeScene.accent} />
+                        ) : null}
                       </View>
                       {showRomanization && item.romanization ? (
                         <AppText

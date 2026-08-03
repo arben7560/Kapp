@@ -6,7 +6,7 @@ export type HangulCard = {
   romanization?: string;
   label: string;
   explanation: string;
-  audio: string;
+  audio?: string;
   kind: HangulScriptKind;
 };
 

@@ -21,13 +21,6 @@ export function GrammarLessonGuide({
 }: GrammarLessonGuideProps) {
   return (
     <View style={styles.guideStack}>
-      <View style={styles.sectionHeading}>
-        <AppText variant="sectionLabel" style={styles.accentText}>
-          MINI-LEÇON
-        </AppText>
-        <AppText variant="sectionTitle">Comprendre avant de pratiquer</AppText>
-      </View>
-
       <BlurView intensity={54} tint="dark" style={styles.introductionCard}>
         <LinearGradient
           colors={["rgba(45,212,191,0.15)", "rgba(255,255,255,0.025)"]}
@@ -36,6 +29,13 @@ export function GrammarLessonGuide({
         <AppText variant="sectionLabel" tone="soft">L’IDÉE ESSENTIELLE</AppText>
         <AppText variant="body">{guide.introduction}</AppText>
       </BlurView>
+
+      <View style={styles.mainRuleCard}>
+        <AppText variant="sectionLabel" style={styles.accentText}>
+          RÈGLE PRINCIPALE
+        </AppText>
+        <AppText variant="bodyStrong">{guide.mainRule}</AppText>
+      </View>
 
       <BlurView intensity={58} tint="dark" style={styles.formulaCard}>
         <AppText variant="sectionLabel" style={styles.accentText}>LA FORMULE</AppText>
@@ -134,7 +134,6 @@ export function GrammarLessonGuide({
 
 const styles = StyleSheet.create({
   guideStack: { gap: 18 },
-  sectionHeading: { gap: 5 },
   accentText: { color: ACCENT },
   introductionCard: {
     borderRadius: 24,
@@ -143,6 +142,14 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 9,
     overflow: "hidden",
+  },
+  mainRuleCard: {
+    borderLeftWidth: 3,
+    borderLeftColor: ACCENT,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.035)",
+    padding: 16,
+    gap: 7,
   },
   formulaCard: {
     borderRadius: 22,
