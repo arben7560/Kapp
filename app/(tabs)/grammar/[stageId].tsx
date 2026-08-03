@@ -121,10 +121,15 @@ function QuestionDisplay({ value }: { value: string }) {
 }
 
 export default function GrammarLessonScreen() {
-  const params = useLocalSearchParams<{ stageId?: string | string[] }>();
+  const params = useLocalSearchParams<{
+    stageId?: string | string[];
+    theory?: string | string[];
+  }>();
   const rawStageId = Array.isArray(params.stageId) ? params.stageId[0] : params.stageId;
+  const rawTheory = Array.isArray(params.theory) ? params.theory[0] : params.theory;
   const validStageId = isGrammarStageId(rawStageId) ? rawStageId : undefined;
   const stageId = validStageId ?? GRAMMAR_STAGE_IDS[0];
+  const theoryEntryRequested = rawTheory === "open";
   const { progress, updateGrammarProgress, complete, setTrack } = useStore();
   const {
     hasPremiumAccess: isPremium,
@@ -156,8 +161,8 @@ export default function GrammarLessonScreen() {
   const theoryModalVisible =
     !premiumLocked &&
     access.canOpen &&
-    !session?.completedAt &&
-    (requestedTheoryStageId === stageId ||
+    (theoryEntryRequested ||
+      requestedTheoryStageId === stageId ||
       (!session && dismissedTheoryStageId !== stageId));
   const contentState = premiumLocked
     ? "premium-locked"
@@ -377,10 +382,16 @@ export default function GrammarLessonScreen() {
         onRequestClose={() => {
           setDismissedTheoryStageId(stageId);
           setRequestedTheoryStageId(undefined);
+          if (theoryEntryRequested) {
+            router.setParams({ theory: "closed" } as never);
+          }
         }}
         onAccessExercises={() => {
           setDismissedTheoryStageId(stageId);
           setRequestedTheoryStageId(undefined);
+          if (theoryEntryRequested) {
+            router.setParams({ theory: "closed" } as never);
+          }
           if (!session) startPractice();
         }}
       >

@@ -77,6 +77,9 @@ test("grammar theory opens in a reusable modal and resumes without replacing its
 
   assert.match(lesson, /<GrammarLessonGuideModal/u);
   assert.match(lesson, /const theoryModalVisible =/u);
+  assert.match(lesson, /const theoryEntryRequested = rawTheory === "open"/u);
+  assert.match(lesson, /theoryEntryRequested \|\|/u);
+  assert.match(lesson, /router\.setParams\(\{ theory: "closed" \}/u);
   assert.match(lesson, /!session && dismissedTheoryStageId !== stageId/u);
   assert.match(lesson, /onReviewExplanation=\{\(\) => setRequestedTheoryStageId\(stageId\)\}/u);
   assert.match(lesson, /if \(!session\) startPractice\(\)/u);
@@ -84,6 +87,10 @@ test("grammar theory opens in a reusable modal and resumes without replacing its
   assert.match(modal, /export function GrammarLessonGuideModal/u);
   assert.match(modal, /label="Accéder aux exercices"/u);
   assert.match(modal, /onPress=\{onAccessExercises\}/u);
+  assert.match(
+    readFileSync(join(projectRoot, "app/(tabs)/grammar/index.tsx"), "utf8"),
+    /onPress=\{\(\) => openStage\(stageId, true\)\}/u,
+  );
   for (const section of [
     "L’IDÉE ESSENTIELLE",
     "RÈGLE PRINCIPALE",

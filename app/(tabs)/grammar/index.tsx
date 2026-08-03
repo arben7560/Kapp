@@ -79,7 +79,10 @@ export default function GrammarHubScreen() {
   const nextStage = GRAMMAR_STAGE_BY_ID[nextStageId];
   const nextStageIsLocked = !canAccessGrammarStage(nextStage, isPremium);
 
-  const openStage = React.useCallback((stageId: GrammarStageId) => {
+  const openStage = React.useCallback((
+    stageId: GrammarStageId,
+    openTheory = false,
+  ) => {
     if (!canAccessGrammarStage(GRAMMAR_STAGE_BY_ID[stageId], isPremium)) {
       router.push("/premium");
       return;
@@ -87,7 +90,10 @@ export default function GrammarHubScreen() {
     const access = getGrammarStageAccess(grammarProgress, stageId, completedContentRefs);
     if (!access.canOpen) return;
     setTrack("grammar");
-    router.push({ pathname: "/grammar/[stageId]", params: { stageId } } as never);
+    router.push({
+      pathname: "/grammar/[stageId]",
+      params: openTheory ? { stageId, theory: "open" } : { stageId },
+    } as never);
   }, [completedContentRefs, grammarProgress, isPremium, setTrack]);
 
   return (
@@ -200,7 +206,7 @@ export default function GrammarHubScreen() {
                         accessibilityHint={premiumLocked ? "Ouvre l’offre Premium" : undefined}
                         accessibilityState={{ disabled }}
                         disabled={disabled}
-                        onPress={() => openStage(stageId)}
+                        onPress={() => openStage(stageId, true)}
                         style={({ pressed }) => [
                           styles.stagePressable,
                           responsive.isTablet && styles.stageTablet,
