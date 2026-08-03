@@ -1,8 +1,9 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
-import { Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Image, ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppText } from "../app-text";
+import { AppBackButton } from "../ui/app-back-button";
 
 type ImmersionPlaceholderProps = {
   title: string;
@@ -23,7 +24,9 @@ export function ImmersionPlaceholder({
 }: ImmersionPlaceholderProps) {
   return (
     <LinearGradient colors={[BG0, "#0b0b1d", "#0b0f22"]} style={styles.root}>
+      <SafeAreaView style={styles.root}>
       <ScrollView contentContainerStyle={styles.content}>
+        <AppBackButton style={styles.backButton} />
         <Image source={imageSource} style={styles.image} resizeMode="cover" />
 
         <AppText accessibilityRole="header" variant="screenTitle" style={styles.title}>{title}</AppText>
@@ -37,10 +40,8 @@ export function ImmersionPlaceholder({
           </AppText>
         </View>
 
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <AppText variant="button" align="center" style={styles.backButtonText}>Retour</AppText>
-        </Pressable>
       </ScrollView>
+      </SafeAreaView>
     </LinearGradient>
   );
 }
@@ -82,15 +83,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   backButton: {
-    alignItems: "center",
-    backgroundColor: CARD,
-    borderColor: LINE,
-    borderRadius: 18,
-    borderWidth: 1,
-    marginTop: 18,
-    paddingVertical: 14,
-  },
-  backButtonText: {
-    color: TXT,
+    marginBottom: 16,
   },
 });

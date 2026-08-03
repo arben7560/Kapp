@@ -1,7 +1,5 @@
-import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
 import React from "react";
 import {
   ImageBackground,
@@ -13,6 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../components/app-text";
+import { AppBackButton } from "../components/ui/app-back-button";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../lib/DailyStreakProvider";
 import {
@@ -62,9 +61,7 @@ export default function StreakScreen() {
       <View style={styles.bottomFade} />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.iconButton}>
-            <Ionicons name="chevron-back" size={24} color={COLORS.text} />
-          </Pressable>
+          <AppBackButton />
           <AppText
             variant="sectionLabel"
             tone="strong"

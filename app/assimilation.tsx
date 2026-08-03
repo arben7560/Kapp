@@ -1,9 +1,9 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { AppMixedText, AppText } from "../components/app-text";
+import { AppBackButton } from "../components/ui/app-back-button";
 
 const BG0 = "#070812";
 const TXT = "rgba(255,255,255,0.92)";
@@ -38,21 +38,7 @@ export default function AssimilationScreen() {
           paddingTop: 56,
         }}
       >
-        <Pressable
-          onPress={() => router.back()}
-          style={{
-            alignSelf: "flex-start",
-            paddingHorizontal: 12,
-            paddingVertical: 10,
-            borderRadius: 14,
-            borderWidth: 1,
-            borderColor: LINE,
-            backgroundColor: "rgba(255,255,255,0.06)",
-            marginBottom: 14,
-          }}
-        >
-          <AppText variant="button" style={{ color: TXT }}>← Retour</AppText>
-        </Pressable>
+        <AppBackButton style={{ marginBottom: 14 }} />
 
         <AppText accessibilityRole="header" variant="screenTitle" style={{ color: TXT }}>
           Assimilation (lecture naturelle)

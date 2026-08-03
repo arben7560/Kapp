@@ -2,7 +2,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../../components/app-text";
+import { AppBackButton } from "../../components/ui/app-back-button";
 import { getScene, Step } from "../../data/immersionScenes";
 
 const BG0 = "#070812";
@@ -219,7 +221,9 @@ export default function ImmersionScene() {
   if (!scene) {
     return (
       <LinearGradient colors={[BG0, "#0b0b1d", "#0b0f22"]} style={{ flex: 1 }}>
+        <SafeAreaView style={{ flex: 1 }}>
         <View style={{ padding: 16 }}>
+          <AppBackButton style={{ marginBottom: 16 }} />
           <AppText variant="sectionTitle" style={{ color: TXT}}>
             Scène introuvable
           </AppText>
@@ -241,13 +245,16 @@ export default function ImmersionScene() {
             <AppText variant="button" style={{ color: TXT}}>Retour à l’immersion</AppText>
           </Pressable>
         </View>
+        </SafeAreaView>
       </LinearGradient>
     );
   }
 
   return (
     <LinearGradient colors={[BG0, "#0b0b1d", "#0b0f22"]} style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 140 }}>
+        <AppBackButton style={{ marginBottom: 16 }} />
         <AppText variant="screenTitle" style={{ color: TXT}}>
           {scene.title}
         </AppText>
@@ -415,6 +422,7 @@ export default function ImmersionScene() {
           </Pressable>
         )}
       </ScrollView>
+      </SafeAreaView>
     </LinearGradient>
   );
 }

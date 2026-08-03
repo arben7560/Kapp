@@ -1,6 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
+import { AppBackButton } from "../../../components/ui/app-back-button";
 import React from "react";
 import {
   ImageBackground,
@@ -14,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
+import { GrammarLessonGuide } from "../../../components/grammar/GrammarLessonGuide";
 import { StatusBadge } from "../../../components/ui/status-badge";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 import { SeoulMidnightGlass } from "../../../constants/theme";
@@ -23,6 +25,7 @@ import {
   GRAMMAR_STAGE_BY_ID,
   GRAMMAR_STAGE_IDS,
   getGrammarLessonExamples,
+  getGrammarLessonGuide,
   type GrammarConcept,
   type GrammarPracticeAnswer,
   type GrammarPracticeQuestion,
@@ -131,10 +134,12 @@ export default function GrammarLessonScreen() {
   const responsive = useResponsiveLayout({ maxWidth: 900 });
   const completionInFlight = React.useRef(new Set<string>());
   const scrollRef = React.useRef<ScrollView>(null);
+  const [theoryStageId, setTheoryStageId] = React.useState<GrammarStageId>();
 
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
   const stageProgress = progress.grammarProgress.stages[stageId];
   const session = stageProgress?.activeSession;
+  const showTheory = theoryStageId === stageId;
   const premiumLocked = !canAccessGrammarStage(stage, isPremium);
   const completedContentRefs = new Set(
     CONTENT_REFS.filter((contentRef) => {
@@ -151,9 +156,11 @@ export default function GrammarLessonScreen() {
     ? "locked"
     : session?.completedAt
       ? "result"
-      : session
+      : session && !showTheory
         ? "practice"
-      : "lesson";
+        : session
+          ? "lesson-review"
+          : "lesson";
 
   React.useEffect(() => {
     if (isPaywallLoading || !premiumLocked) return;
@@ -278,7 +285,7 @@ export default function GrammarLessonScreen() {
         />
       );
     }
-    if (session) {
+    if (session && !showTheory) {
       return (
         <PracticePanel
           session={session}
@@ -286,6 +293,7 @@ export default function GrammarLessonScreen() {
           onAnswer={chooseAnswer}
           onDraft={updateDraft}
           onContinue={continuePractice}
+          onReviewExplanation={() => setTheoryStageId(stageId)}
         />
       );
     }
@@ -294,8 +302,9 @@ export default function GrammarLessonScreen() {
         stageId={stageId}
         isPremium={isPremium}
         isTablet={responsive.isTablet}
+        sessionActive={!!session}
         onOpenPremium={() => router.push("/premium")}
-        onStart={startPractice}
+        onStart={session ? () => setTheoryStageId(undefined) : startPractice}
       />
     );
   };
@@ -323,16 +332,9 @@ export default function GrammarLessonScreen() {
         >
           <View style={[styles.frame, { maxWidth: responsive.maxWidth }]}>
             <View style={styles.navRow}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Retour au parcours Grammaire"
-                onPress={() => router.back()}
-                hitSlop={8}
-                style={styles.backButton}
-              >
-                <AppText aria-hidden variant="screenTitle">‹</AppText>
-                <AppText variant="caption">PARCOURS GRAMMAIRE</AppText>
-              </Pressable>
+              <View style={styles.backButton}>
+                <AppBackButton accessibilityLabel="Retour au parcours Grammaire" />
+              </View>
               <AppText variant="caption" tone="soft">{stage.number} / {GRAMMAR_STAGE_IDS.length}</AppText>
             </View>
 
@@ -370,12 +372,14 @@ function LessonExplanation({
   stageId,
   isPremium,
   isTablet,
+  sessionActive,
   onOpenPremium,
   onStart,
 }: {
   stageId: GrammarStageId;
   isPremium: boolean;
   isTablet: boolean;
+  sessionActive: boolean;
   onOpenPremium: () => void;
   onStart: () => void;
 }) {
@@ -391,6 +395,7 @@ function LessonExplanation({
     .filter((item) => item?.route && item.availability === "public")
     .slice(0, 3);
   const lessonExamples = getGrammarLessonExamples(stageId);
+  const lessonGuide = getGrammarLessonGuide(stageId);
   const detailExamples = lessonExamples.slice(stage.canonicalExamples.length);
   const isGeneralReview = stage.mode === "review";
   const advancedForms = isGeneralReview
@@ -400,6 +405,9 @@ function LessonExplanation({
 
   return (
     <View style={styles.contentStack}>
+      {lessonGuide ? (
+        <GrammarLessonGuide guide={lessonGuide} isTablet={isTablet} />
+      ) : (
       <View style={[styles.explanationGrid, isTablet && styles.explanationGridTablet]}>
         <View style={[styles.explanationColumn, isTablet && styles.explanationColumnTablet]}>
           <AppText variant="sectionLabel" tone="soft">
@@ -455,6 +463,7 @@ function LessonExplanation({
           )) : null}
         </View>
       </View>
+      )}
 
       {receptiveConcepts.length > 0 || visibleAdvancedForms.length > 0 ? (
         <View style={styles.receptiveBox}>
@@ -511,7 +520,10 @@ function LessonExplanation({
             ? "Cinq situations courtes, renouvelées à chaque tentative. Cette révision ne constitue pas une validation du niveau A1."
             : "Cinq exercices sur le sens, la forme et la construction. Quatre réponses correctes terminent l’étape."}
         </AppText>
-        <PrimaryButton label="COMMENCER LES EXERCICES" onPress={onStart} />
+        <PrimaryButton
+          label={sessionActive ? "REPRENDRE LES EXERCICES" : "COMMENCER LES EXERCICES"}
+          onPress={onStart}
+        />
       </BlurView>
 
       {reuseLinks.length > 0 ? (
@@ -537,12 +549,14 @@ function PracticePanel({
   onAnswer,
   onDraft,
   onContinue,
+  onReviewExplanation,
 }: {
   session: GrammarPracticeSession;
   isTablet: boolean;
   onAnswer: (answer: GrammarPracticeAnswer) => void;
   onDraft: (answer: GrammarPracticeAnswer) => void;
   onContinue: () => void;
+  onReviewExplanation: () => void;
 }) {
   const question = session.questions[session.questionIndex];
   const response = session.responses.find((item) => item.questionId === question.id);
@@ -556,7 +570,22 @@ function PracticePanel({
         <AppText variant="sectionLabel" style={styles.accentText}>
           EXERCICE {session.questionIndex + 1} / {session.questions.length}
         </AppText>
-        <AppText variant="caption" tone="soft">{scoreLabel(session.score)}</AppText>
+        <View style={styles.practiceMetaActions}>
+          <AppText variant="caption" tone="soft">{scoreLabel(session.score)}</AppText>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Revoir l’explication sans quitter les exercices"
+            onPress={onReviewExplanation}
+            style={({ pressed }) => [
+              styles.reviewTheoryButton,
+              pressed && styles.pressed,
+            ]}
+          >
+            <AppText variant="caption" style={styles.accentText}>
+              Revoir l’explication
+            </AppText>
+          </Pressable>
+        </View>
       </View>
       <View style={styles.exerciseProgressTrack}>
         <View style={[styles.exerciseProgressFill, { width: `${((session.questionIndex + (response ? 1 : 0)) / session.questions.length) * 100}%` }]} />
@@ -906,7 +935,9 @@ const styles = StyleSheet.create({
   reuseLinks: { gap: 8 },
   reuseLink: { minHeight: 52, borderRadius: 15, borderWidth: 1, borderColor: "rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.04)", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingHorizontal: 16 },
   practiceStack: { gap: 16 },
-  practiceMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  practiceMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 },
+  practiceMetaActions: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end", gap: 8 },
+  reviewTheoryButton: { minHeight: 36, borderRadius: 999, borderWidth: 1, borderColor: "rgba(45,212,191,0.32)", backgroundColor: "rgba(45,212,191,0.07)", alignItems: "center", justifyContent: "center", paddingHorizontal: 12, paddingVertical: 8 },
   exerciseProgressTrack: { height: 5, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.09)", overflow: "hidden" },
   exerciseProgressFill: { height: "100%", borderRadius: 999, backgroundColor: ACCENT },
   questionCard: { minHeight: 190, borderRadius: 26, borderWidth: 1, borderColor: "rgba(45,212,191,0.22)", padding: 22, justifyContent: "center", gap: 12, overflow: "hidden" },

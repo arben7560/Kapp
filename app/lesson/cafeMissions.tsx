@@ -12,9 +12,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { GuidedMissionsHeader } from "../../components/immersion/GuidedMissionsHeader";
 import { MissionAccessBadge } from "../../components/immersion/MissionAccessBadge";
 import { MissionLaunchModal } from "../../components/immersion/MissionLaunchModal";
-import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import { SeoulMidnightGlass } from "../../constants/theme";
 import {
@@ -103,25 +103,6 @@ export default function CafeMissionsScreen() {
       <View pointerEvents="none" style={styles.overlay} />
 
       <SafeAreaView style={styles.safe}>
-        <View
-          style={[
-            styles.header,
-            styles.contentFrame,
-            {
-              maxWidth: responsive.maxWidth,
-              paddingHorizontal: responsive.horizontalPadding,
-            },
-          ]}
-        >
-          <Pressable onPress={handleBack} style={styles.backButton}>
-            <AppText variant="sectionTitle" lineContract="singleLine" style={styles.backText}>x</AppText>
-          </Pressable>
-          <View style={styles.headerCopy}>
-            <AppText variant="sectionLabel" style={styles.kicker}>MISSIONS</AppText>
-            <AppText accessibilityRole="header" variant="screenTitle" style={styles.title}>Café</AppText>
-          </View>
-        </View>
-
         <ScrollView
           contentContainerStyle={[
             styles.content,
@@ -129,11 +110,13 @@ export default function CafeMissionsScreen() {
           ]}
         >
           <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
-          <AppText variant="body" tone="muted" style={styles.intro}>
-            {
-              "Choisis une mission complète. Une fois lancée, elle reste jouable jusqu'à la fin."
-            }
-          </AppText>
+          <GuidedMissionsHeader
+            accent={PINK}
+            compact={responsive.isCompact}
+            intro="Apprends à commander un café en immersion"
+            onBack={handleBack}
+            title="Café"
+          />
 
           <View
             style={[
@@ -242,43 +225,9 @@ const styles = StyleSheet.create({
     width: "100%",
     alignSelf: "center",
   },
-  header: {
-    paddingTop: 10,
-    paddingBottom: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-  },
-  backButton: {
-    width: IMMERSIVE_MIN_TOUCH_TARGET,
-    height: IMMERSIVE_MIN_TOUCH_TARGET,
-    borderRadius: IMMERSIVE_MIN_TOUCH_TARGET / 2,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: LINE,
-    backgroundColor: "rgba(255,255,255,0.06)",
-  },
-  backText: {
-    color: TXT,
-  },
-  headerCopy: {
-    flex: 1,
-  },
-  kicker: {
-    color: PINK,
-  },
-  title: {
-    color: TXT,
-    marginTop: 4,
-  },
   content: {
-    paddingTop: 14,
+    paddingTop: 0,
     paddingBottom: 42,
-  },
-  intro: {
-    color: MUTED,
-    marginBottom: 18,
   },
   missionStack: {
     gap: 14,

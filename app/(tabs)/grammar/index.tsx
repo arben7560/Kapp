@@ -1,6 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { AppBackButton } from "../../../components/ui/app-back-button";
 import React from "react";
 import { ImageBackground, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -107,16 +108,9 @@ export default function GrammarHubScreen() {
         >
           <View style={[styles.frame, { maxWidth: responsive.maxWidth }]}>
             <View style={styles.navHeader}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Retour à l’accueil"
-                hitSlop={8}
-                onPress={() => router.back()}
-                style={styles.backButton}
-              >
-                <AppText aria-hidden variant="screenTitle">‹</AppText>
-                <AppText variant="caption">SÉOUL IMMERSION</AppText>
-              </Pressable>
+              <View style={styles.backButton}>
+                <AppBackButton accessibilityLabel="Retour à l’accueil" />
+              </View>
             </View>
 
             <HubHero

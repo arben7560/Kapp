@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../../components/app-text";
+import { AppBackButton } from "../../components/ui/app-back-button";
 import { RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../constants/layout";
 import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
 
@@ -342,10 +343,9 @@ export default function RestaurantLesson() {
 
         <ScrollView contentContainerStyle={styles.scroll}>
           <View style={styles.header}>
-            <Pressable onPress={handleBack} style={styles.backBtn}>
-              <AppText variant="screenTitle" lineContract="singleLine" style={styles.backArrow}>‹</AppText>
-              <AppText variant="sectionLabel" lineContract="singleLine" style={styles.backText}>RETOUR</AppText>
-            </Pressable>
+            <View style={styles.backBtn}>
+              <AppBackButton onPress={handleBack} />
+            </View>
 
             <AppText variant="sectionLabel" lineContract="singleLine" style={styles.headerTitle}>RESTAURANT</AppText>
           </View>
@@ -488,8 +488,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 25,
   },
-  backBtn: { flexDirection: "row", alignItems: "center" },
-  backArrow: { color: COLORS.txt, marginRight: 5 },
+  backBtn: { flexDirection: "row", alignItems: "center", gap: 8 },
   backText: {
     color: COLORS.muted,
   },

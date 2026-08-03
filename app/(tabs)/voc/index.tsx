@@ -1,11 +1,10 @@
 import { BlurView } from "expo-blur";
-import { router } from "expo-router";
+import { AppBackButton } from "../../../components/ui/app-back-button";
 import React, { useEffect, useMemo } from "react";
 import {
   Animated,
   Easing,
   ImageBackground,
-  Pressable,
   ScrollView,
   StyleSheet,
   View,
@@ -206,20 +205,9 @@ export default function VocabHub() {
 function UnifiedNavHeader() {
   return (
     <View style={styles.navHeader}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Retour"
-        hitSlop={8}
-        onPress={() => router.back()}
-        style={styles.backBtn}
-      >
-        <AppText aria-hidden variant="screenTitle" style={styles.backArrow}>
-          ‹
-        </AppText>
-        <AppText variant="caption" style={styles.backText}>
-          SÉOUL IMMERSION
-        </AppText>
-      </Pressable>
+      <View style={styles.backBtn}>
+        <AppBackButton />
+      </View>
 
     </View>
   );

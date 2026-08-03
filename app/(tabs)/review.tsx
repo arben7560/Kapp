@@ -4,6 +4,7 @@ import { Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { AppBackButton } from "../../components/ui/app-back-button";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 
 const BG0 = "#070812";
@@ -44,6 +45,7 @@ export default function Review() {
             width: "100%",
           }}
         >
+        <AppBackButton style={{ marginBottom: 16 }} />
         <AppText accessibilityRole="header" variant="screenTitle" style={{ color: TXT, marginTop: 8 }}>
           Carnet
         </AppText>

@@ -21,6 +21,7 @@ import {
 
 import { AppText } from "../../components/app-text";
 import { ModuleCard } from "../../components/ModuleCard";
+import { AppBackButton } from "../../components/ui/app-back-button";
 import { ABSOLUTE_FILL } from "../../constants/layout";
 
 const BACKGROUND_SOURCE = require("../../assets/images/speak.jpg");
@@ -175,6 +176,7 @@ export default function SpeakScreen() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
+            <AppBackButton />
             <View style={styles.heroBlock}>
               <AppText
                 variant="sectionLabel"

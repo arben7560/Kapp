@@ -1,5 +1,4 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Image,
@@ -9,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { AppText } from "../../components/app-text";
+import { AppBackButton } from "../../components/ui/app-back-button";
 import { shuffleArray } from "../../lib/choiceOrder";
 
 const BG0 = "#070812";
@@ -484,21 +484,9 @@ export default function GangnamRainRunScreen() {
               alignItems: "center",
             }}
           >
-            <Pressable
-              onPress={() => router.back()}
-              style={{
-                paddingHorizontal: 12,
-                paddingVertical: 10,
-                borderRadius: 14,
-                borderWidth: 1,
-                borderColor: LINE,
-                backgroundColor: "rgba(255,255,255,0.04)",
-              }}
-            >
-              <AppText variant="button" style={{ color: TXT}}>
-                ← {step > 0 ? "Quitter la scène" : "Retour au parcours"}
-              </AppText>
-            </Pressable>
+            <AppBackButton
+              accessibilityLabel={step > 0 ? "Quitter la scène" : "Retour au parcours"}
+            />
 
             <Pill tone="cyan">Capsule signature</Pill>
           </View>

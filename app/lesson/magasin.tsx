@@ -1,10 +1,10 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
 import * as Speech from "@/lib/speechPlayback";
 import React, { useMemo, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
 import { AppMixedText, AppText } from "@/components/app-text";
+import { AppBackButton } from "@/components/ui/app-back-button";
 import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
 
 const BG0 = "#070812";
@@ -531,16 +531,7 @@ export default function ShopLesson() {
       />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Retour"
-          onPress={() => router.back()}
-          style={{ minHeight: 44, justifyContent: "center" }}
-        >
-          <AppText variant="link" tone="muted" lineContract="singleLine">
-            ← Retour
-          </AppText>
-        </Pressable>
+        <AppBackButton style={{ marginBottom: 12 }} />
 
         <View style={{ height: 14 }} />
 

@@ -1,7 +1,7 @@
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { AppBackButton } from "../../../components/ui/app-back-button";
 import * as Speech from "@/lib/speechPlayback";
 import React, { useRef, useState } from "react";
 import {
@@ -157,14 +157,8 @@ export default function EmotionCyber() {
           >
             {/* Header Navigation */}
             <View style={styles.topNav}>
-              <Pressable
-                onPress={() => router.back()}
-                style={styles.backCircle}
-              >
-                <AppText variant="symbol" style={styles.backArrow}>‹</AppText>
-              </Pressable>
+              <AppBackButton />
               <View>
-                <AppText variant="sectionLabel" style={styles.navEyebrow}>SÉOUL IMMERSION</AppText>
                 <AppText variant="cardTitle" style={styles.navTitle}>Neural Mood Map</AppText>
               </View>
             </View>

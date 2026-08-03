@@ -1,6 +1,6 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { AppBackButton } from "../../../components/ui/app-back-button";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -478,13 +478,8 @@ export default function RomanceDating() {
         >
           {/* HEADER */}
           <View style={styles.topNav}>
-            <Pressable onPress={() => router.back()} style={styles.backCircle}>
-              <AppText variant="screenTitle" lineContract="singleLine" style={styles.backArrow}>‹</AppText>
-            </Pressable>
+            <AppBackButton />
             <View>
-              <AppText variant="sectionLabel" style={[styles.navEyebrow, { color: activeScene.accent }]}>
-                SÉOUL IMMERSION
-              </AppText>
               <AppText variant="cardTitle" style={styles.navTitle}>Rencontres</AppText>
             </View>
           </View>

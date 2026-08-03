@@ -32,6 +32,7 @@ import {
 } from "../../lib/hangulQuiz";
 import { trackHangulExerciseCompleted } from "../../lib/immersionStreak";
 import { AppText } from "../app-text";
+import { AppBackButton } from "../ui/app-back-button";
 import { HangulAudioBadge } from "./HangulAudioBadge";
 import { HangulReplayButton } from "./HangulReplayButton";
 
@@ -400,15 +401,9 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
         >
           <View style={[styles.frame, { maxWidth: responsive.maxWidth }]}>
             <View style={styles.header}>
-              <Pressable
-                onPress={() => router.back()}
-                style={styles.headerButton}
-              >
-                <AppText variant="screenTitle" style={styles.backArrow}>
-                  ‹
-                </AppText>
-                <AppText variant="sectionLabel">HANGUL</AppText>
-              </Pressable>
+              <View style={styles.headerButton}>
+                <AppBackButton />
+              </View>
               <Pressable
                 onPress={() => setShowRomanization((current) => !current)}
                 style={styles.helpToggle}
@@ -857,7 +852,6 @@ const styles = StyleSheet.create({
     marginBottom: 22,
   },
   headerButton: { flexDirection: "row", alignItems: "center", gap: 8 },
-  backArrow: { color: "#fff" },
   helpToggle: {
     paddingHorizontal: 12,
     paddingVertical: 10,

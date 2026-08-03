@@ -7,6 +7,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { AppText } from "../../components/app-text";
+import { AppBackButton } from "../../components/ui/app-back-button";
 import CafeAvatar from "../../components/ai/CafeAvatar";
 import {
   getImmersiveBottomPadding,
@@ -571,20 +572,10 @@ export default function CafeListenScreen() {
           }}
         >
           <View style={{ width: "100%", maxWidth: responsive.maxWidth }}>
-          <Pressable
-            accessibilityRole="button"
+          <AppBackButton
             accessibilityLabel="Quitter la scène"
-            onPress={() => router.back()}
-            hitSlop={10}
-            style={{
-              alignSelf: "flex-start",
-              minHeight: IMMERSIVE_MIN_TOUCH_TARGET,
-              justifyContent: "center",
-              marginBottom: 10,
-            }}
-          >
-            <AppText variant="button" style={{ color: MUTED }}>← Quitter la scène</AppText>
-          </Pressable>
+            style={{ marginBottom: 10 }}
+          />
 
           <View
             style={{

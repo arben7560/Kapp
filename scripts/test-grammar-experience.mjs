@@ -6,8 +6,10 @@ import { fileURLToPath } from "node:url";
 
 import {
   GRAMMAR_CONCEPTS,
+  GRAMMAR_LESSON_GUIDES,
   GRAMMAR_STAGE_BY_ID,
   GRAMMAR_STAGE_IDS,
+  getGrammarLessonGuide,
 } from "../data/grammar/index.ts";
 import {
   advanceGrammarPracticeSession,
@@ -30,6 +32,47 @@ import {
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
 const FIRST_STAGE = "sentence-structure";
 const SECOND_STAGE = "identify-with-copula";
+
+test("the foundations chapter has complete mini-lessons without filling later chapters", () => {
+  const foundationStageIds = GRAMMAR_STAGE_IDS.filter(
+    (stageId) => GRAMMAR_STAGE_BY_ID[stageId].chapterId === "foundations",
+  );
+
+  assert.deepEqual(Object.keys(GRAMMAR_LESSON_GUIDES), foundationStageIds);
+
+  for (const stageId of foundationStageIds) {
+    const guide = getGrammarLessonGuide(stageId);
+    assert.ok(guide, stageId);
+    assert.equal(guide.stageId, stageId);
+    assert.ok(guide.introduction.length > 40, `${stageId}: introduction`);
+    assert.ok(guide.formula.pattern.length > 10, `${stageId}: formula`);
+    assert.ok(guide.formula.explanation.length > 30, `${stageId}: formula explanation`);
+    assert.ok(guide.steps.length >= 3, `${stageId}: steps`);
+    assert.ok(guide.examples.length >= 2, `${stageId}: examples`);
+    assert.ok(
+      guide.examples.every((example) => example.parts.length >= 2),
+      `${stageId}: decomposed examples`,
+    );
+    assert.ok(guide.commonMistakes.length >= 2, `${stageId}: common mistakes`);
+    assert.ok(guide.memoryTip.length > 30, `${stageId}: memory tip`);
+  }
+
+  assert.equal(getGrammarLessonGuide("present-actions"), undefined);
+});
+
+test("active practice can open theory and resume without replacing its session", () => {
+  const lesson = readFileSync(
+    join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"),
+    "utf8",
+  );
+
+  assert.match(lesson, /const \[theoryStageId, setTheoryStageId\] = React\.useState<GrammarStageId>\(\)/u);
+  assert.match(lesson, /const showTheory = theoryStageId === stageId/u);
+  assert.match(lesson, /onReviewExplanation=\{\(\) => setTheoryStageId\(stageId\)\}/u);
+  assert.match(lesson, /onStart=\{session \? \(\) => setTheoryStageId\(undefined\) : startPractice\}/u);
+  assert.match(lesson, /Revoir l’explication/u);
+  assert.match(lesson, /REPRENDRE LES EXERCICES/u);
+});
 
 test("the freemium boundary keeps A0 free and reserves A1 to Premium", () => {
   const freeStages = GRAMMAR_STAGE_IDS.filter(

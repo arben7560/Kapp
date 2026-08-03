@@ -2,8 +2,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, type Href } from "expo-router";
 import React from "react";
 import { Image, Pressable, ScrollView, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppText } from "../../components/app-text";
+import { AppBackButton } from "../../components/ui/app-back-button";
 
 const BG0 = "#070812";
 const CARD = "rgba(255,255,255,0.06)";
@@ -109,7 +111,9 @@ function CapsuleCard({
 export default function ImmersionScreen() {
   return (
     <LinearGradient colors={[BG0, "#0b0f22", "#0e132d"]} style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 120 }}>
+        <AppBackButton style={{ marginBottom: 18 }} />
         <AppText
           accessibilityRole="header"
           variant="screenTitle"
@@ -180,6 +184,7 @@ export default function ImmersionScreen() {
           href="/immersion/social"
         />
       </ScrollView>
+      </SafeAreaView>
     </LinearGradient>
   );
 }

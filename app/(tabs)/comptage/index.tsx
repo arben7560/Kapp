@@ -1,11 +1,10 @@
 import { BlurView } from "expo-blur";
-import { router } from "expo-router";
+import { AppBackButton } from "../../../components/ui/app-back-button";
 import React, { useEffect, useMemo } from "react";
 import {
   Animated,
   Easing,
   ImageBackground,
-  Pressable,
   ScrollView,
   StyleSheet,
   type StyleProp,
@@ -129,14 +128,9 @@ export default function ComptageHub() {
           <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
           {/* HEADER */}
           <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.backBtn}>
-              <AppText aria-hidden variant="screenTitle" tone="soft" style={styles.backArrow}>
-                ‹
-              </AppText>
-              <AppText variant="caption" tone="soft" style={styles.backText}>
-                SÉOUL
-              </AppText>
-            </Pressable>
+            <View style={styles.backBtn}>
+              <AppBackButton />
+            </View>
             <View style={styles.settingsIcon} />
           </View>
 
@@ -289,7 +283,7 @@ const styles = StyleSheet.create({
 
   backArrow: { color: SOFT},
   backText: {
-    color: SOFT,
+    color: "#FFFFFF",
   },
 
   settingsIcon: {

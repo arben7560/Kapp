@@ -1,6 +1,5 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
 import * as Speech from "@/lib/speechPlayback";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -25,6 +24,7 @@ import {
 } from "../../lib/immersionStreak";
 import { buildProgressId } from "../../lib/progressIds";
 import { AnimatedAppText, AppText } from "../app-text";
+import { AppBackButton } from "../ui/app-back-button";
 
 type AudioAsset = number;
 
@@ -241,22 +241,9 @@ export default function CountingImmersionScreen({
           contentContainerStyle={styles.scroll}
         >
           <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.backBtn}>
-              <AppText
-                variant="screenTitle"
-                lineContract="singleLine"
-                style={styles.backArrow}
-              >
-                ‹
-              </AppText>
-              <AppText
-                variant="sectionLabel"
-                tone="muted"
-                lineContract="twoLines"
-              >
-                {backLabel}
-              </AppText>
-            </Pressable>
+            <View style={styles.backBtn}>
+              <AppBackButton accessibilityLabel={`Retour — ${backLabel}`} />
+            </View>
 
             <View
               style={[styles.badge, { borderColor: activeScene.accent }]}
@@ -578,8 +565,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginVertical: 15,
   },
-  backBtn: { flexDirection: "row", alignItems: "center" },
-  backArrow: { marginRight: 5 },
+  backBtn: { flexDirection: "row", alignItems: "center", gap: 8 },
   badge: {
     paddingHorizontal: 10,
     paddingVertical: 4,

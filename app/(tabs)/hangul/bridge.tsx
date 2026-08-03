@@ -1,6 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { AppBackButton } from "../../../components/ui/app-back-button";
 import { ImageBackground, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -30,7 +31,7 @@ export default function HangulBridgeScreen() {
         <LinearGradient colors={["rgba(2,3,6,0.65)", "rgba(2,3,6,0.94)"]} style={StyleSheet.absoluteFillObject} />
         <ScrollView contentContainerStyle={[styles.scroll, { paddingHorizontal: responsive.horizontalPadding }]}>
           <View style={[styles.frame, { maxWidth: responsive.maxWidth }]}>
-            <Pressable onPress={() => router.back()} style={styles.back}><AppText variant="screenTitle">‹</AppText><AppText variant="sectionLabel">ÉVALUATION HANGUL</AppText></Pressable>
+            <View style={styles.back}><AppBackButton /></View>
             <AppText variant="sectionLabel" style={styles.teal}>LECTURE GUIDÉE</AppText>
             <AppText variant="screenTitle" style={styles.title}>Lire des phrases complètes</AppText>
             <AppText variant="bodySecondary" tone="muted">Lis chaque ligne avant de lancer l’écoute lente. Aucun texte latin n’est nécessaire.</AppText>

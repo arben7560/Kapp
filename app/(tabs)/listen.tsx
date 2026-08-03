@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AccessibilityInfo,
@@ -12,6 +11,7 @@ import {
 } from "react-native";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { AppBackButton } from "../../components/ui/app-back-button";
 import {
   EXERCISES_BY_KIND,
   TRAINING_ORDER,
@@ -41,31 +41,31 @@ const COLORS = {
 };
 
 const LISTEN_AUDIO_BY_ID: Partial<Record<string, number>> = {
-  "cafe-dictation-01": require("../../assets/audio/listen/cafe-dictation-01.mp3"),
-  "cafe-dictation-02": require("../../assets/audio/listen/cafe-dictation-02.mp3"),
-  "metro-dictation-03": require("../../assets/audio/listen/metro-dictation-03.mp3"),
-  "shop-dictation-04": require("../../assets/audio/listen/shop-dictation-04.mp3"),
-  "hotel-dictation-05": require("../../assets/audio/listen/hotel-dictation-05.mp3"),
-  "bbq-situation-01": require("../../assets/audio/listen/bbq-situation-01.mp3"),
-  "cafe-situation-02": require("../../assets/audio/listen/cafe-situation-02.mp3"),
-  "metro-situation-03": require("../../assets/audio/listen/metro-situation-03.mp3"),
-  "shop-situation-04": require("../../assets/audio/listen/shop-situation-04.mp3"),
-  "street-situation-05": require("../../assets/audio/listen/street-situation-05.mp3"),
-  "restaurant-gap-01": require("../../assets/audio/listen/restaurant-gap-01.mp3"),
-  "cafe-gap-02": require("../../assets/audio/listen/cafe-gap-02.mp3"),
-  "shop-gap-03": require("../../assets/audio/listen/shop-gap-03.mp3"),
-  "metro-gap-04": require("../../assets/audio/listen/metro-gap-04.mp3"),
-  "hotel-gap-05": require("../../assets/audio/listen/hotel-gap-05.mp3"),
-  "metro-order-01": require("../../assets/audio/listen/metro-order-01.mp3"),
-  "cafe-order-02": require("../../assets/audio/listen/cafe-order-02.mp3"),
-  "shop-order-03": require("../../assets/audio/listen/shop-order-03.mp3"),
-  "restaurant-order-04": require("../../assets/audio/listen/restaurant-order-04.mp3"),
-  "street-order-05": require("../../assets/audio/listen/street-order-05.mp3"),
-  "cafe-reaction-01": require("../../assets/audio/listen/cafe-reaction-01.mp3"),
-  "restaurant-reaction-02": require("../../assets/audio/listen/restaurant-reaction-02.mp3"),
-  "shop-reaction-03": require("../../assets/audio/listen/shop-reaction-03.mp3"),
-  "hotel-reaction-04": require("../../assets/audio/listen/hotel-reaction-04.mp3"),
-  "street-reaction-05": require("../../assets/audio/listen/street-reaction-05.mp3"),
+  "cafe-dictation-01": require("../../assets/audio/listen/myeot-buniseyo-1.mp3"),
+  "cafe-dictation-02": require("../../assets/audio/listen/aiseu-amerikano-juseyo-1.mp3"),
+  "metro-dictation-03": require("../../assets/audio/listen/igoseuro-gaseyo.mp3"),
+  "shop-dictation-04": require("../../assets/audio/listen/eolmayeyo.mp3"),
+  "hotel-dictation-05": require("../../assets/audio/listen/yeyakhaesseoyo-1.mp3"),
+  "bbq-situation-01": require("../../assets/audio/listen/myeot-buniseyo-2.mp3"),
+  "cafe-situation-02": require("../../assets/audio/listen/mwo-deurilkkayo-1.mp3"),
+  "metro-situation-03": require("../../assets/audio/listen/ibeon-yeogeun-hongdaeipguyeogimnida.mp3"),
+  "shop-situation-04": require("../../assets/audio/listen/kadeuro-hasigesseoyo-hyeongeumeuro-hasigesseoyo.mp3"),
+  "street-situation-05": require("../../assets/audio/listen/jjuk-gaseo-oreunjjogeuro-gaseyo.mp3"),
+  "restaurant-gap-01": require("../../assets/audio/listen/samgyeopsal-iinbun-juseyo.mp3"),
+  "cafe-gap-02": require("../../assets/audio/listen/aiseu-ratte-juseyo.mp3"),
+  "shop-gap-03": require("../../assets/audio/listen/kadeuro-gyesanhalgeyo.mp3"),
+  "metro-gap-04": require("../../assets/audio/listen/hongdaeipgueseo-naeryeoyo.mp3"),
+  "hotel-gap-05": require("../../assets/audio/listen/yeyakhaesseoyo-2.mp3"),
+  "metro-order-01": require("../../assets/audio/listen/jjuk-ijjogeuro-gaseyo.mp3"),
+  "cafe-order-02": require("../../assets/audio/listen/aiseu-amerikano-juseyo-2.mp3"),
+  "shop-order-03": require("../../assets/audio/listen/igeo-eolmayeyo.mp3"),
+  "restaurant-order-04": require("../../assets/audio/listen/mul-jom-juseyo.mp3"),
+  "street-order-05": require("../../assets/audio/listen/hwajangsiri-eodiyeyo.mp3"),
+  "cafe-reaction-01": require("../../assets/audio/listen/mwo-deurilkkayo-2.mp3"),
+  "restaurant-reaction-02": require("../../assets/audio/listen/deo-piryohan-geo-isseuseyo.mp3"),
+  "shop-reaction-03": require("../../assets/audio/listen/mwo-chajeusineun-geo-isseuseyo.mp3"),
+  "hotel-reaction-04": require("../../assets/audio/listen/yeyakhasyeosseoyo.mp3"),
+  "street-reaction-05": require("../../assets/audio/listen/yeogiseo-oreunjjogeuro-gaseyo.mp3"),
 };
 
 const KIND_LABEL: Record<ExerciseKind, { mini: string; skill: string }> = {
@@ -178,12 +178,14 @@ export default function ListenScreen() {
   };
 
   const handleValidate = () => {
-    if (!canValidateListenAnswer({
-      hasAnswer: canCheck,
-      hasCompletedRequiredMedia: hasCompletedCurrentAudio,
-      isHydrated,
-      isLocked: checked || validationLockRef.current,
-    })) {
+    if (
+      !canValidateListenAnswer({
+        hasAnswer: canCheck,
+        hasCompletedRequiredMedia: hasCompletedCurrentAudio,
+        isHydrated,
+        isLocked: checked || validationLockRef.current,
+      })
+    ) {
       return;
     }
 
@@ -387,28 +389,7 @@ export default function ListenScreen() {
 
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Retour"
-            hitSlop={6}
-            onPress={() => router.back()}
-            style={styles.roundButton}
-          >
-            <Ionicons name="chevron-back" size={24} color={COLORS.text} />
-          </Pressable>
-
-          <View style={styles.headerTextWrap}>
-            <AppText variant="sectionLabel" tone="brand" style={styles.kicker}>
-              SÉOUL IMMERSION
-            </AppText>
-            <AppText
-              variant="sectionTitle"
-              tone="strong"
-              style={styles.headerTitle}
-            >
-              Écoute
-            </AppText>
-          </View>
+          <AppBackButton />
 
           <View style={styles.roundButton} />
         </View>
@@ -568,7 +549,7 @@ export default function ListenScreen() {
                     ? "Audio terminé · prêt à réécouter"
                     : hasPlayedCurrentAudio
                       ? "Lecture interrompue · réessaie"
-                    : "Prêt à écouter"
+                      : "Prêt à écouter"
                 : "Audio indisponible"}
             </AppText>
 
@@ -620,8 +601,7 @@ export default function ListenScreen() {
                 >
                   {isCorrect ? "Correct" : "À revoir"}
                 </AppText>
-                {(item.kind === "situation" ||
-                  item.kind === "reaction") && (
+                {(item.kind === "situation" || item.kind === "reaction") && (
                   <>
                     <AppText
                       variant="label"
@@ -709,9 +689,7 @@ export default function ListenScreen() {
                   onPress={handleValidate}
                   style={[
                     styles.actionButton,
-                    (!canCheck ||
-                      !hasCompletedCurrentAudio ||
-                      !isHydrated) &&
+                    (!canCheck || !hasCompletedCurrentAudio || !isHydrated) &&
                       styles.disabledButton,
                   ]}
                 >

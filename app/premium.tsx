@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
@@ -11,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../components/app-text";
+import { AppBackButton } from "../components/ui/app-back-button";
 import { ActionButton } from "../components/ui/action-button";
 import {
   PAYWALL_COPY,
@@ -93,14 +93,7 @@ export default function PremiumScreen() {
             },
           ]}
         >
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Fermer Premium"
-            onPress={() => router.back()}
-            style={styles.iconButton}
-          >
-            <Ionicons name="chevron-back" size={24} color={COLORS.text} />
-          </Pressable>
+          <AppBackButton accessibilityLabel="Fermer Premium" />
           <AppText variant="sectionLabel" style={styles.headerTitle}>Premium</AppText>
           <View style={styles.iconButtonGhost} />
         </View>

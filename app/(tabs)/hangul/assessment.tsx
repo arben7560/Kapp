@@ -1,6 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { AppBackButton } from "../../../components/ui/app-back-button";
 import React from "react";
 import { ImageBackground, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -119,10 +120,9 @@ export default function HangulAssessmentScreen() {
         <LinearGradient colors={["rgba(2,3,6,0.68)", "rgba(2,3,6,0.93)"]} style={StyleSheet.absoluteFillObject} />
         <ScrollView contentContainerStyle={[styles.scroll, { paddingHorizontal: responsive.horizontalPadding }]}>
           <View style={[styles.frame, { maxWidth: responsive.maxWidth }]}>
-            <Pressable onPress={() => router.back()} style={styles.back}>
-              <AppText variant="screenTitle">‹</AppText>
-              <AppText variant="sectionLabel">PARCOURS HANGUL</AppText>
-            </Pressable>
+            <View style={styles.back}>
+              <AppBackButton />
+            </View>
             <AppText variant="sectionLabel" style={styles.gold}>VALIDATION FINALE</AppText>
             <AppText variant="screenTitle" style={styles.title}>Lire sans romanisation</AppText>
             <AppText variant="bodySecondary" tone="muted">

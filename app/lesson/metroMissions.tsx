@@ -11,9 +11,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { GuidedMissionsHeader } from "../../components/immersion/GuidedMissionsHeader";
 import { MissionAccessBadge } from "../../components/immersion/MissionAccessBadge";
 import { MissionLaunchModal } from "../../components/immersion/MissionLaunchModal";
-import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import { SeoulMidnightGlass } from "../../constants/theme";
 import {
@@ -96,25 +96,6 @@ export default function MetroMissionsScreen() {
     <ImageBackground source={metroBackground} style={styles.background}>
       <View pointerEvents="none" style={styles.overlay} />
       <SafeAreaView style={styles.safe}>
-        <View
-          style={[
-            styles.header,
-            styles.contentFrame,
-            {
-              maxWidth: responsive.maxWidth,
-              paddingHorizontal: responsive.horizontalPadding,
-            },
-          ]}
-        >
-          <Pressable onPress={handleBack} style={styles.backButton}>
-            <AppText variant="sectionTitle" lineContract="singleLine" style={styles.backText}>x</AppText>
-          </Pressable>
-          <View style={styles.headerCopy}>
-            <AppText variant="sectionLabel" style={styles.kicker}>MISSIONS</AppText>
-            <AppText accessibilityRole="header" variant="screenTitle" style={styles.title}>Métro</AppText>
-          </View>
-        </View>
-
         <ScrollView
           contentContainerStyle={[
             styles.content,
@@ -122,11 +103,13 @@ export default function MetroMissionsScreen() {
           ]}
         >
           <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
-          <AppText variant="body" tone="muted" style={styles.intro}>
-            {
-              "Lance un vrai trajet dans Séoul, ou entraîne une compétence précise avec une mini-mission."
-            }
-          </AppText>
+          <GuidedMissionsHeader
+            accent={CYAN}
+            compact={responsive.isCompact}
+            intro="Apprends à te déplacer en métro en immersion"
+            onBack={handleBack}
+            title="Métro"
+          />
 
           <MissionSection
             title="Missions complètes"
@@ -194,7 +177,7 @@ function MissionSection({
   if (!missions.length) return null;
 
   return (
-    <View style={styles.section}>
+    <View style={[styles.section, featured && styles.firstSection]}>
       <View style={styles.sectionHeader}>
         <AppText variant="sectionTitle" style={styles.sectionTitle}>{title}</AppText>
         <AppText variant="bodySecondary" tone="muted" style={styles.sectionSubtitle}>{subtitle}</AppText>
@@ -277,35 +260,9 @@ const styles = StyleSheet.create({
     width: "100%",
     alignSelf: "center",
   },
-  header: {
-    paddingTop: 10,
-    paddingBottom: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-  },
-  backButton: {
-    width: IMMERSIVE_MIN_TOUCH_TARGET,
-    height: IMMERSIVE_MIN_TOUCH_TARGET,
-    borderRadius: IMMERSIVE_MIN_TOUCH_TARGET / 2,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: LINE,
-    backgroundColor: "rgba(255,255,255,0.06)",
-  },
-  backText: { color: TXT},
-  headerCopy: { flex: 1 },
-  kicker: {
-    color: CYAN,
-  },
-  title: { color: TXT, marginTop: 4 },
-  content: { paddingTop: 14, paddingBottom: 42 },
-  intro: {
-    color: MUTED,
-    marginBottom: 18,
-  },
-  section: { marginTop: 22 },
+  content: { paddingTop: 0, paddingBottom: 42 },
+  section: { marginTop: 30 },
+  firstSection: { marginTop: 0 },
   sectionHeader: { marginBottom: 12 },
   sectionTitle: {
     color: TXT,

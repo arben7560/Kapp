@@ -4,6 +4,7 @@ import { Pressable, ScrollView, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { AppBackButton } from "../../components/ui/app-back-button";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
 import { isCorrect } from "../../lib/answerCheck";
@@ -122,6 +123,7 @@ export default function ListeningScreen() {
             width: "100%",
           }}
         >
+        <AppBackButton style={{ marginBottom: 20 }} />
         <AppText accessibilityRole="header" variant="sectionTitle">Session terminée 🎉</AppText>
         </View>
       </SafeAreaView>
@@ -141,6 +143,7 @@ export default function ListeningScreen() {
           width: "100%",
         }}
       >
+      <AppBackButton style={{ marginBottom: 20 }} />
       <Pressable
         accessibilityRole="button"
         onPress={playAudio}

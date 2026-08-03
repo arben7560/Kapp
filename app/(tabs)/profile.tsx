@@ -4,6 +4,7 @@ import { Alert, Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { AppMixedText, AppText } from "../../components/app-text";
+import { AppBackButton } from "../../components/ui/app-back-button";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import { createEmptyHangulProgress } from "../../data/hangul/types";
@@ -32,6 +33,7 @@ export default function Profile() {
             width: "100%",
           }}
         >
+        <AppBackButton style={{ marginBottom: 16 }} />
         <AppText accessibilityRole="header" variant="screenTitle" style={{ color: TXT, marginTop: 8 }}>
           Profil
         </AppText>

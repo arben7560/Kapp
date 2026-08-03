@@ -1,8 +1,8 @@
-import { router } from "expo-router";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppText } from "../../components/app-text";
+import { AppBackButton } from "../../components/ui/app-back-button";
 
 export default function MetroListenScreen() {
   return (
@@ -10,10 +10,12 @@ export default function MetroListenScreen() {
       <View
         style={{
           flex: 1,
-          justifyContent: "center",
           paddingHorizontal: 24,
+          paddingTop: 16,
         }}
       >
+        <AppBackButton />
+        <View style={{ flex: 1, justifyContent: "center" }}>
         <AppText accessibilityRole="header" variant="screenTitle" style={{ color: "#fff" }}>
           Ecoute metro
         </AppText>
@@ -27,20 +29,7 @@ export default function MetroListenScreen() {
         >
           Cette scene d&apos;ecoute arrive bientot.
         </AppText>
-        <Pressable
-          onPress={() => router.back()}
-          style={{
-            alignSelf: "flex-start",
-            marginTop: 24,
-            borderRadius: 16,
-            borderWidth: 1,
-            borderColor: "rgba(255,255,255,0.12)",
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-          }}
-        >
-          <AppText variant="button" style={{ color: "#fff" }}>Retour</AppText>
-        </Pressable>
+        </View>
       </View>
     </SafeAreaView>
   );

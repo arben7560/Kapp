@@ -16,6 +16,7 @@ import {
 
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { AppBackButton } from "../../components/ui/app-back-button";
 import { ImmersiveMediaStatusOverlay } from "../../components/immersion/ImmersiveMediaStatusOverlay";
 import { ImmersiveStepProgress } from "../../components/immersion/ImmersiveStepProgress";
 import {
@@ -560,22 +561,7 @@ export default function RestaurantIaScreen() {
             { paddingTop: Math.max(6, insets.top * 0.15) },
           ]}
         >
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Quitter la scène"
-            hitSlop={8}
-            onPress={handleExit}
-            style={styles.backBtn}
-          >
-            <AppText
-              variant="button"
-              tone="strong"
-              script="latin"
-              style={styles.backTxt}
-            >
-              x
-            </AppText>
-          </Pressable>
+          <AppBackButton accessibilityLabel="Quitter la scène" onPress={handleExit} />
         </View>
 
         <View style={styles.body}>
