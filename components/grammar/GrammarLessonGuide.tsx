@@ -1,12 +1,13 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import { SeoulMidnightGlass } from "../../constants/theme";
 import type { GrammarLessonGuide as GrammarLessonGuideData } from "../../data/grammar/lessonGuides";
 import { AppText } from "../app-text";
+import { useGrammarModalLayout } from "./useGrammarModalLayout";
 
 const COLORS = SeoulMidnightGlass.colors;
 const ACCENT = "#2DD4BF";
@@ -15,7 +16,6 @@ const ERROR = "#FDA4AF";
 
 type GrammarLessonGuideProps = {
   guide: GrammarLessonGuideData;
-  isTablet: boolean;
 };
 
 type SectionHeadingProps = {
@@ -48,13 +48,11 @@ function SectionHeading({ index, label, detail }: SectionHeadingProps) {
 
 export function GrammarLessonGuide({
   guide,
-  isTablet,
 }: GrammarLessonGuideProps) {
-  const { width } = useWindowDimensions();
-  const isCompact = width <= 380;
+  const layout = useGrammarModalLayout();
 
   return (
-    <View style={[styles.guideStack, isCompact && styles.guideStackCompact]}>
+    <View style={[styles.guideStack, layout.isCompactWidth && styles.guideStackCompact]}>
       <BlurView intensity={62} tint="dark" style={styles.editorialCard}>
         <LinearGradient
           pointerEvents="none"
@@ -72,12 +70,12 @@ export function GrammarLessonGuide({
         <View
           style={[
             styles.editorialLayout,
-            isTablet && styles.editorialLayoutTablet,
+            layout.useWideLayout && styles.editorialLayoutTablet,
           ]}
         >
           <View style={styles.essentialBlock}>
             <SectionHeading index="01" label="L’IDÉE ESSENTIELLE" />
-            <AppText variant={isCompact ? "bodyStrong" : "subtitle"}>
+            <AppText variant={layout.isCompactWidth ? "bodyStrong" : "subtitle"}>
               {guide.introduction}
             </AppText>
           </View>
@@ -85,7 +83,7 @@ export function GrammarLessonGuide({
           <View
             style={[
               styles.editorialDivider,
-              isTablet && styles.editorialDividerTablet,
+              layout.useWideLayout && styles.editorialDividerTablet,
             ]}
           />
 
@@ -124,7 +122,7 @@ export function GrammarLessonGuide({
         <View style={styles.formulaPattern}>
           <View style={styles.formulaRail} />
           <AppText
-            variant={isCompact ? "cardTitle" : "sectionTitle"}
+            variant={layout.isCompactWidth ? "cardTitle" : "sectionTitle"}
             align="center"
           >
             {guide.formula.pattern}
@@ -142,12 +140,12 @@ export function GrammarLessonGuide({
           detail="Une construction en trois mouvements"
         />
         <View
-          style={[styles.stepsTrack, isTablet && styles.stepsTrackTablet]}
+          style={[styles.stepsTrack, layout.useWideLayout && styles.stepsTrackTablet]}
         >
           {guide.steps.map((step, index) => (
             <View
               key={step.title}
-              style={[styles.stepCard, isTablet && styles.stepCardTablet]}
+              style={[styles.stepCard, layout.useWideLayout && styles.stepCardTablet]}
             >
               <View style={styles.stepTopRow}>
                 <View style={styles.stepNumber}>
@@ -187,14 +185,14 @@ export function GrammarLessonGuide({
         </View>
 
         <View
-          style={[styles.examplesGrid, isTablet && styles.examplesGridTablet]}
+          style={[styles.examplesGrid, layout.useWideLayout && styles.examplesGridTablet]}
         >
           {guide.examples.map((example, exampleIndex) => (
             <BlurView
               key={example.korean}
               intensity={52}
               tint="dark"
-              style={[styles.exampleCard, isTablet && styles.exampleCardTablet]}
+              style={[styles.exampleCard, layout.useWideLayout && styles.exampleCardTablet]}
             >
               <LinearGradient
                 pointerEvents="none"
@@ -235,7 +233,7 @@ export function GrammarLessonGuide({
                     key={`${part.korean}-${index}`}
                     style={[
                       styles.examplePart,
-                      isCompact && styles.examplePartCompact,
+                      layout.isCompactWidth && styles.examplePartCompact,
                     ]}
                   >
                     <View style={styles.partTopRow}>
@@ -273,7 +271,7 @@ export function GrammarLessonGuide({
         <View
           style={[
             styles.comparisonGrid,
-            isTablet && styles.comparisonGridTablet,
+            layout.useWideLayout && styles.comparisonGridTablet,
           ]}
         >
           {guide.commonMistakes.map((item, index) => (
@@ -281,7 +279,7 @@ export function GrammarLessonGuide({
               key={item.mistake}
               style={[
                 styles.comparisonCard,
-                isTablet && styles.comparisonCardTablet,
+                layout.useWideLayout && styles.comparisonCardTablet,
               ]}
             >
               <View style={styles.mistakePanel}>

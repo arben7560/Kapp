@@ -4,8 +4,8 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Home, MoveRight } from "lucide-react-native";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, Check, Compass, MoveRight } from "lucide-react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Animated,
   Easing,
@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../components/app-text";
+import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 
 const HERO_IMAGE = require("../assets/images/hero.jpg");
 const CAFE_IMAGE = require("../assets/images/cafe.jpg");
@@ -42,6 +43,7 @@ type SceneOption = {
   eyebrow: string;
   title: string;
   subtitle: string;
+  phrase: string;
   accent: string;
   image: any;
 };
@@ -59,7 +61,8 @@ const SCENES: SceneOption[] = [
     key: "cafe",
     eyebrow: "HONGDAE",
     title: "Café",
-    subtitle: "Commander comme un local",
+    subtitle: "Commande comme si tu étais à Hongdae.",
+    phrase: "아메리카노 한 잔 주세요",
     accent: PINK,
     image: CAFE_IMAGE,
   },
@@ -67,7 +70,8 @@ const SCENES: SceneOption[] = [
     key: "metro",
     eyebrow: "LIGNE 2",
     title: "Métro",
-    subtitle: "Te déplacer dans Séoul",
+    subtitle: "Trouve ton chemin dans Séoul.",
+    phrase: "2호선은 어디예요?",
     accent: CYAN,
     image: METRO_IMAGE,
   },
@@ -75,7 +79,8 @@ const SCENES: SceneOption[] = [
     key: "restaurant",
     eyebrow: "ITAEWON",
     title: "Restaurant",
-    subtitle: "Dîner et échanger",
+    subtitle: "Commande naturellement à table.",
+    phrase: "이거 주세요",
     accent: GOLD,
     image: RESTAURANT_IMAGE,
   },
@@ -165,15 +170,25 @@ function BackgroundLayer({
 
 export default function OnboardingScreen() {
   const { fontScale, height, width } = useWindowDimensions();
+  const responsive = useResponsiveLayout({ maxWidth: 860 });
   const [step, setStep] = useState<Step>("arrival");
   const [selectedScene, setSelectedScene] = useState<SceneKey>("cafe");
   const [selectedMode, setSelectedMode] = useState<ModeKey>("guided");
   const isCompactScreen = height <= 700 || width <= 380;
   const isLargeText = fontScale > 1.15;
+  const isWideSceneLayout =
+    responsive.isLandscape && responsive.width >= 760 && !isLargeText;
+  const sceneHeroHeight = isWideSceneLayout
+    ? 340
+    : isCompactScreen
+      ? 205
+      : responsive.isTablet
+        ? 300
+        : 260;
 
-  const fade = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(24)).current;
-  const pulse = useRef(new Animated.Value(0)).current;
+  const fade = useMemo(() => new Animated.Value(0), []);
+  const translateY = useMemo(() => new Animated.Value(24), []);
+  const pulse = useMemo(() => new Animated.Value(0), []);
 
   const selectedSceneData = useMemo(
     () => SCENES.find((scene) => scene.key === selectedScene) ?? SCENES[0],
@@ -183,6 +198,11 @@ export default function OnboardingScreen() {
   const selectedModeData = useMemo(
     () => MODES.find((mode) => mode.key === selectedMode) ?? MODES[1],
     [selectedMode],
+  );
+
+  const alternativeScenes = useMemo(
+    () => SCENES.filter((scene) => scene.key !== selectedScene),
+    [selectedScene],
   );
 
   const backgroundSource = useMemo(() => {
@@ -195,9 +215,29 @@ export default function OnboardingScreen() {
   const backgroundDarkOverlayOpacity =
     step !== "arrival" && selectedScene === "cafe" ? 0.34 : 0;
 
+  const animateIn = useCallback(() => {
+    fade.setValue(0);
+    translateY.setValue(20);
+
+    Animated.parallel([
+      Animated.timing(fade, {
+        toValue: 1,
+        duration: STEP_DURATION,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: STEP_DURATION,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [fade, translateY]);
+
   useEffect(() => {
     animateIn();
-  }, [step]);
+  }, [animateIn, step]);
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -220,26 +260,6 @@ export default function OnboardingScreen() {
     loop.start();
     return () => loop.stop();
   }, [pulse]);
-
-  const animateIn = () => {
-    fade.setValue(0);
-    translateY.setValue(20);
-
-    Animated.parallel([
-      Animated.timing(fade, {
-        toValue: 1,
-        duration: STEP_DURATION,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: STEP_DURATION,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
 
   const animateOutAnd = (next: () => void) => {
     Animated.parallel([
@@ -445,306 +465,288 @@ export default function OnboardingScreen() {
         )}
 
         {step === "scene" && (
-          <Animated.View style={[styles.page, animatedStyle]}>
+          <Animated.View style={[styles.page, styles.scenePage, animatedStyle]}>
+            <View style={styles.sceneTopNav}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Retour à l’écran de bienvenue"
+                hitSlop={10}
+                style={({ pressed }) => [
+                  styles.sceneBackButton,
+                  pressed && styles.pressedControl,
+                ]}
+                onPress={() => goToStep("arrival")}
+              >
+                <ArrowLeft size={18} color={TXT} strokeWidth={2} />
+              </Pressable>
+
+              <View style={styles.sceneProgress} accessibilityLabel="Étape 2 sur 3">
+                <View style={styles.sceneProgressLine} />
+                <View style={[styles.sceneProgressLine, styles.sceneProgressLineActive]} />
+                <View style={styles.sceneProgressLine} />
+              </View>
+
+              <View style={styles.sceneNavSpacer} />
+            </View>
+
             <ScrollView
               style={styles.stepScroll}
               contentContainerStyle={[
-                styles.stepScrollContent,
-                isCompactScreen && styles.stepScrollContentCompact,
+                styles.sceneScrollContent,
+                isCompactScreen && styles.sceneScrollContentCompact,
               ]}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
-              nestedScrollEnabled
             >
-              <View style={styles.topRow}>
-                <View style={styles.badge}>
-                  <View style={[styles.badgeDot, { backgroundColor: PINK }]} />
-                  <AppText
-                    variant="label"
-                    lineContract="singleLine"
-                    style={styles.badgeText}
-                  >
-                    POINT DE DÉPART
-                  </AppText>
-                </View>
-              </View>
-
-              <View
-                style={[
-                  styles.sectionHead,
-                  isCompactScreen && styles.sectionHeadCompact,
-                ]}
-              >
-                <AppText variant="sectionLabel" style={styles.sectionEyebrow}>
-                  POUR COMMENCER
+              <View style={styles.sceneIntro}>
+                <AppText variant="sectionLabel" style={styles.sceneIntroEyebrow}>
+                  TON POINT DE DÉPART
                 </AppText>
                 <AppText
                   accessibilityRole="header"
                   variant="screenTitle"
+                  style={styles.sceneIntroTitle}
+                >
+                  Choisis ta première expérience
+                </AppText>
+                <AppText variant="body" style={styles.sceneIntroText}>
+                  Découvre une situation guidée ou explore librement le Hub.
+                </AppText>
+              </View>
+
+              <View
+                style={[
+                  styles.sceneExperienceLayout,
+                  isWideSceneLayout && styles.sceneExperienceLayoutWide,
+                ]}
+              >
+                <View
+                  accessibilityLabel={`${selectedSceneData.title}, scène sélectionnée. ${selectedSceneData.subtitle}${
+                    selectedScene === "cafe"
+                      ? " Guidée pas à pas, sans prérequis."
+                      : ""
+                  }`}
+                  accessibilityState={{ selected: true }}
+                  accessible
                   style={[
-                    styles.sectionTitle,
-                    styles.sectionTitleScene,
-                    isCompactScreen && styles.sectionTitleCompact,
+                    styles.featuredScene,
+                    isWideSceneLayout && styles.featuredSceneWide,
+                    { height: sceneHeroHeight },
                   ]}
                 >
-                  Choisis comment entrer
-                </AppText>
-              </View>
-
-              <Pressable
-                accessibilityRole="link"
-                accessibilityLabel="Explorer l’accueil"
-                accessibilityHint="Quitte l’onboarding et ouvre l’accueil de l’application"
-                hitSlop={8}
-                style={styles.exploreHomeAction}
-                onPress={openMoreScenes}
-              >
-                <BlurView
-                  intensity={26}
-                  tint="dark"
-                  style={styles.exploreHomeCard}
-                >
+                  <Image
+                    source={selectedSceneData.image}
+                    style={StyleSheet.absoluteFill}
+                    contentFit="cover"
+                    blurRadius={selectedScene === "cafe" ? 1 : 0}
+                  />
                   <LinearGradient
                     colors={[
-                      "rgba(255,255,255,0.12)",
-                      "rgba(255,255,255,0.045)",
+                      "rgba(2,3,6,0.06)",
+                      "rgba(2,3,6,0.24)",
+                      "rgba(2,3,6,0.96)",
                     ]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
+                    locations={[0, 0.42, 1]}
                     style={StyleSheet.absoluteFill}
                   />
-                  <View style={styles.exploreHomeIcon}>
-                    <Home size={18} color="#FFFFFF" strokeWidth={2.1} />
-                  </View>
-                  <View style={styles.exploreHomeCopy}>
-                    <AppText
-                      variant="sectionLabel"
-                      style={styles.exploreHomeEyebrow}
-                    >
-                      ACCÈS DIRECT
-                    </AppText>
-                    <AppText variant="cardTitle" style={styles.exploreHomeText}>
-                      Explorer l’accueil
-                    </AppText>
-                  </View>
-                  <View style={styles.exploreHomeArrow}>
-                    <MoveRight size={18} color="#FFFFFF" strokeWidth={2.1} />
-                  </View>
-                </BlurView>
-              </Pressable>
+                  <LinearGradient
+                    colors={[`${selectedSceneData.accent}32`, "transparent"]}
+                    start={{ x: 0, y: 1 }}
+                    end={{ x: 0.85, y: 0.15 }}
+                    style={StyleSheet.absoluteFill}
+                  />
 
-              <View
-                style={[
-                  styles.sceneChoiceHead,
-                  isCompactScreen && styles.sceneChoiceHeadCompact,
-                ]}
-              >
-                <View style={styles.choiceDivider} />
-                <AppText
-                  variant="sectionLabel"
-                  style={styles.sceneChoiceEyebrow}
-                >
-                  OU COMMENCER PAR UNE SITUATION
-                </AppText>
-                <AppText variant="sectionTitle" style={styles.sceneChoiceTitle}>
-                  Choisis ta première scène
-                </AppText>
-              </View>
-
-              <View
-                style={[
-                  styles.sceneList,
-                  isCompactScreen && styles.sceneListCompact,
-                ]}
-              >
-                {SCENES.map((scene) => {
-                  const active = selectedScene === scene.key;
-                  const sceneImageBlurRadius = scene.key === "cafe" ? 2 : 0;
-
-                  return (
-                    <Pressable
-                      key={scene.key}
-                      accessibilityRole="radio"
-                      accessibilityLabel={`${scene.title}. ${scene.subtitle}`}
-                      accessibilityState={{ checked: active, selected: active }}
-                      aria-checked={active}
-                      aria-selected={active}
-                      hitSlop={6}
-                      style={styles.scenePress}
-                      onPress={async () => {
-                        await tap();
-                        setSelectedScene(scene.key);
-                      }}
+                  <View style={styles.featuredTopRow}>
+                    <View
+                      style={[
+                        styles.recommendedPill,
+                        { borderColor: `${selectedSceneData.accent}72` },
+                      ]}
                     >
                       <View
                         style={[
-                          styles.sceneCardOuter,
-                          active && { transform: [{ scale: 1.012 }] },
+                          styles.recommendedDot,
+                          { backgroundColor: selectedSceneData.accent },
                         ]}
-                      >
-                        <BlurView
-                          intensity={30}
-                          tint="dark"
-                          style={[
-                            styles.sceneCard,
-                            isCompactScreen && styles.sceneCardCompact,
-                            active && { borderColor: "rgba(255,255,255,0.28)" },
-                          ]}
-                        >
-                          <Image
-                            source={scene.image}
-                            style={StyleSheet.absoluteFill}
-                            contentFit="cover"
-                            blurRadius={sceneImageBlurRadius}
-                          />
+                      />
+                      <AppText variant="label" style={styles.recommendedText}>
+                        {selectedScene === "cafe"
+                          ? "IDÉAL POUR DÉBUTER"
+                          : isCompactScreen
+                            ? "SÉLECTIONNÉE"
+                            : "TON IMMERSION"}
+                      </AppText>
+                    </View>
+                    <AppText variant="sectionLabel" style={styles.featuredLocation}>
+                      {selectedSceneData.eyebrow}
+                    </AppText>
+                  </View>
 
-                          <LinearGradient
-                            colors={[
-                              "rgba(0,0,0,0.15)",
-                              "rgba(5,5,8,0.50)",
-                              "rgba(5,5,8,0.92)",
-                            ]}
-                            locations={[0, 0.4, 0.95]}
-                            style={StyleSheet.absoluteFill}
-                          />
-
-                          <LinearGradient
-                            colors={[
-                              active
-                                ? `${scene.accent}25`
-                                : "rgba(255,255,255,0.04)",
-                              "transparent",
-                            ]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 0.6, y: 1 }}
-                            style={StyleSheet.absoluteFill}
-                          />
-
-                          <View
-                            style={[
-                              styles.sceneAccent,
-                              {
-                                backgroundColor: scene.accent,
-                                opacity: active ? 1 : 0.4,
-                              },
-                            ]}
-                          />
-
-                          <View style={styles.sceneContent}>
-                            <View style={{ flex: 1 }}>
-                              <View style={styles.sceneTopLine}>
-                                <AppText
-                                  variant="sectionLabel"
-                                  style={[
-                                    styles.sceneEyebrow,
-                                    active && { color: scene.accent },
-                                  ]}
-                                >
-                                  {scene.eyebrow}
-                                </AppText>
-
-                                {active && (
-                                  <View
-                                    style={[
-                                      styles.selectedPill,
-                                      { borderColor: `${scene.accent}44` },
-                                    ]}
-                                  >
-                                    <AppText
-                                      variant="label"
-                                      style={styles.selectedPillText}
-                                    >
-                                      SÉLECTIONNÉ
-                                    </AppText>
-                                  </View>
-                                )}
-                              </View>
-
-                              <AppText
-                                variant="cardTitle"
-                                style={styles.sceneTitleText}
-                              >
-                                {scene.title}
-                              </AppText>
-                              <AppText
-                                variant="bodySecondary"
-                                tone="muted"
-                                style={[
-                                  styles.sceneSubtitle,
-                                  isCompactScreen &&
-                                    styles.sceneSubtitleCompact,
-                                ]}
-                              >
-                                {scene.subtitle}
-                              </AppText>
-                            </View>
-
-                            <View
-                              style={[
-                                styles.radioWrap,
-                                active && {
-                                  borderColor: scene.accent,
-                                  backgroundColor: "rgba(255,255,255,0.04)",
-                                },
-                              ]}
-                            >
-                              {active && (
-                                <View
-                                  style={[
-                                    styles.radioDot,
-                                    { backgroundColor: scene.accent },
-                                  ]}
-                                />
-                              )}
-                            </View>
-                          </View>
-                        </BlurView>
+                  <View style={styles.featuredCopy}>
+                    <AppText
+                      accessibilityLanguage="ko-KR"
+                      variant="koreanSecondary"
+                      script="korean"
+                      style={[
+                        styles.featuredPhrase,
+                        { color: selectedSceneData.accent },
+                      ]}
+                    >
+                      {selectedSceneData.phrase}
+                    </AppText>
+                    <AppText variant="sceneTitle" style={styles.featuredTitle}>
+                      {selectedSceneData.title}
+                    </AppText>
+                    <AppText variant="bodyStrong" style={styles.featuredSubtitle}>
+                      {selectedSceneData.subtitle}
+                    </AppText>
+                    {selectedScene === "cafe" && (
+                      <View style={styles.beginnerNote}>
+                        <Check size={13} color="rgba(255,255,255,0.82)" strokeWidth={2.2} />
+                        <AppText variant="caption" style={styles.beginnerNoteText}>
+                          Guidée pas à pas · Aucun prérequis
+                        </AppText>
                       </View>
-                    </Pressable>
-                  );
-                })}
+                    )}
+                  </View>
+                </View>
+
+                <View
+                  style={[
+                    styles.alternativeRail,
+                    isWideSceneLayout && styles.alternativeRailWide,
+                  ]}
+                >
+                  <View style={styles.alternativeHeading}>
+                    <View style={styles.alternativeRule} />
+                    <AppText variant="sectionLabel" style={styles.alternativeLabel}>
+                      AUTRES IMMERSIONS
+                    </AppText>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.alternativeList,
+                      isWideSceneLayout && styles.alternativeListWide,
+                    ]}
+                  >
+                    {alternativeScenes.map((scene) => (
+                      <Pressable
+                        key={scene.key}
+                        accessibilityRole="radio"
+                        accessibilityLabel={`${scene.title}. ${scene.subtitle}`}
+                        accessibilityState={{ checked: false, selected: false }}
+                        aria-checked={false}
+                        aria-selected={false}
+                        style={({ pressed }) => [
+                          styles.alternativeScene,
+                          isWideSceneLayout && styles.alternativeSceneWide,
+                          pressed && styles.alternativeScenePressed,
+                        ]}
+                        onPress={async () => {
+                          await tap();
+                          setSelectedScene(scene.key);
+                        }}
+                      >
+                        <Image
+                          source={scene.image}
+                          style={StyleSheet.absoluteFill}
+                          contentFit="cover"
+                          blurRadius={scene.key === "cafe" ? 1 : 0}
+                        />
+                        <LinearGradient
+                          colors={[
+                            "rgba(2,3,6,0.16)",
+                            "rgba(2,3,6,0.90)",
+                          ]}
+                          style={StyleSheet.absoluteFill}
+                        />
+                        <View
+                          style={[
+                            styles.alternativeAccent,
+                            { backgroundColor: scene.accent },
+                          ]}
+                        />
+                        <View style={styles.alternativeCopy}>
+                          <AppText
+                            variant="sectionLabel"
+                            style={[styles.alternativePlace, { color: scene.accent }]}
+                          >
+                            {scene.eyebrow}
+                          </AppText>
+                          <AppText variant="cardTitle" style={styles.alternativeTitle}>
+                            {scene.title}
+                          </AppText>
+                        </View>
+                        <View style={styles.alternativeArrow}>
+                          <MoveRight size={16} color={TXT} strokeWidth={2} />
+                        </View>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
               </View>
             </ScrollView>
 
-            <View style={[styles.bottomBar, styles.bottomBarContained]}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Retour à l’écran de bienvenue"
-                hitSlop={6}
-                style={styles.secondaryButton}
-                onPress={() => goToStep("arrival")}
-              >
-                <AppText variant="button" style={styles.secondaryText}>
-                  Retour à l’introduction
-                </AppText>
-              </Pressable>
-
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Continuer avec la scène ${selectedSceneData.title}`}
-                hitSlop={6}
-                style={styles.primaryInlineWrap}
-                onPress={() => goToStep("mode")}
-              >
-                <BlurView
-                  intensity={20}
-                  tint="dark"
-                  style={styles.primaryInlineButton}
+            <View style={styles.sceneBottomDock}>
+              <View style={styles.sceneActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    selectedScene === "cafe"
+                      ? "Essayer l’expérience Café"
+                      : `Continuer avec la scène ${selectedSceneData.title}`
+                  }
+                  accessibilityHint="Ouvre le choix entre expressions utiles et scène guidée"
+                  hitSlop={6}
+                  style={({ pressed }) => [
+                    styles.scenePrimaryWrap,
+                    pressed && styles.scenePrimaryPressed,
+                  ]}
+                  onPress={() => goToStep("mode")}
                 >
-                  <LinearGradient
-                    colors={[
-                      `${selectedSceneData.accent}45`,
-                      "rgba(255,255,255,0.04)",
-                    ]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                  />
-                  <AppText variant="button" style={styles.primaryText}>
-                    Continuer
+                  <BlurView intensity={24} tint="dark" style={styles.scenePrimaryButton}>
+                    <LinearGradient
+                      colors={[
+                        `${selectedSceneData.accent}A8`,
+                        `${selectedSceneData.accent}52`,
+                        "rgba(255,255,255,0.08)",
+                      ]}
+                      start={{ x: 0, y: 0.4 }}
+                      end={{ x: 1, y: 0.6 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                    <AppText variant="button" style={styles.primaryText}>
+                      {selectedScene === "cafe"
+                        ? isCompactScreen
+                          ? "Essayer Café"
+                          : "Commencer par Café"
+                        : isCompactScreen
+                          ? "Continuer"
+                          : `Continuer avec ${selectedSceneData.title}`}
+                    </AppText>
+                    <MoveRight size={18} color="#FFFFFF" strokeWidth={2.2} />
+                  </BlurView>
+                </Pressable>
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Explorer le Hub"
+                  accessibilityHint="Quitte l’onboarding et ouvre l’accueil de l’application"
+                  hitSlop={6}
+                  style={({ pressed }) => [
+                    styles.sceneHubButton,
+                    isCompactScreen && styles.sceneHubButtonCompact,
+                    pressed && styles.scenePrimaryPressed,
+                  ]}
+                  onPress={openMoreScenes}
+                >
+                  <Compass size={17} color={TXT} strokeWidth={2} />
+                  <AppText variant="button" style={styles.sceneHubButtonText}>
+                    {isCompactScreen ? "Explorer" : "Explorer le Hub"}
                   </AppText>
-                </BlurView>
-              </Pressable>
+                </Pressable>
+              </View>
             </View>
           </Animated.View>
         )}
@@ -1108,6 +1110,299 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     textAlign: "center",
   },
+  scenePage: {
+    maxWidth: 920,
+  },
+  sceneTopNav: {
+    minHeight: 54,
+    paddingTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  sceneBackButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(2,3,6,0.32)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pressedControl: {
+    opacity: 0.68,
+  },
+  sceneProgress: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  sceneProgressLine: {
+    width: 16,
+    height: 2,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.18)",
+  },
+  sceneProgressLineActive: {
+    width: 28,
+    backgroundColor: "rgba(255,255,255,0.82)",
+  },
+  sceneNavSpacer: {
+    width: 40,
+    height: 40,
+  },
+  sceneScrollContent: {
+    width: "100%",
+    maxWidth: 860,
+    alignSelf: "center",
+    paddingTop: 18,
+    paddingBottom: 24,
+  },
+  sceneScrollContentCompact: {
+    paddingTop: 10,
+    paddingBottom: 18,
+  },
+  sceneIntro: {
+    maxWidth: 620,
+    marginBottom: 28,
+  },
+  sceneIntroEyebrow: {
+    color: PINK,
+    marginBottom: 8,
+  },
+  sceneIntroTitle: {
+    color: TXT,
+  },
+  sceneIntroText: {
+    maxWidth: 520,
+    color: "rgba(255,255,255,0.68)",
+    marginTop: 10,
+  },
+  sceneExperienceLayout: {
+    gap: 24,
+  },
+  sceneExperienceLayoutWide: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 18,
+  },
+  featuredScene: {
+    width: "100%",
+    borderRadius: 30,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.20)",
+    backgroundColor: "rgba(2,3,6,0.52)",
+    justifyContent: "space-between",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.26,
+    shadowRadius: 28,
+    elevation: 8,
+  },
+  featuredSceneWide: {
+    flex: 1.9,
+    width: "auto",
+  },
+  featuredTopRow: {
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  recommendedPill: {
+    minHeight: 28,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1,
+    backgroundColor: "rgba(2,3,6,0.60)",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+  },
+  recommendedDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 999,
+  },
+  recommendedText: {
+    color: "rgba(255,255,255,0.92)",
+  },
+  featuredLocation: {
+    color: "rgba(255,255,255,0.72)",
+    textAlign: "right",
+  },
+  featuredCopy: {
+    paddingHorizontal: 22,
+    paddingBottom: 20,
+    maxWidth: 520,
+  },
+  featuredPhrase: {
+    marginBottom: 4,
+    textShadowColor: "rgba(0,0,0,0.78)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 12,
+  },
+  featuredTitle: {
+    color: TXT,
+    textShadowColor: "rgba(0,0,0,0.78)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 18,
+  },
+  featuredSubtitle: {
+    color: "rgba(255,255,255,0.86)",
+    marginTop: 6,
+    maxWidth: 380,
+  },
+  beginnerNote: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  beginnerNoteText: {
+    color: "rgba(255,255,255,0.74)",
+  },
+  alternativeRail: {
+    gap: 14,
+  },
+  alternativeRailWide: {
+    flex: 1,
+    minWidth: 0,
+  },
+  alternativeHeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  alternativeRule: {
+    width: 24,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.22)",
+  },
+  alternativeLabel: {
+    color: "rgba(255,255,255,0.52)",
+  },
+  alternativeList: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  alternativeListWide: {
+    flex: 1,
+    flexDirection: "column",
+  },
+  alternativeScene: {
+    flex: 1,
+    minWidth: 0,
+    height: 96,
+    borderRadius: 22,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(2,3,6,0.50)",
+    justifyContent: "flex-end",
+  },
+  alternativeSceneWide: {
+    height: "auto",
+  },
+  alternativeScenePressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.985 }],
+  },
+  alternativeAccent: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 3,
+  },
+  alternativeCopy: {
+    paddingLeft: 14,
+    paddingRight: 34,
+    paddingBottom: 12,
+  },
+  alternativePlace: {
+    marginBottom: 2,
+  },
+  alternativeTitle: {
+    color: TXT,
+  },
+  alternativeArrow: {
+    position: "absolute",
+    right: 10,
+    bottom: 12,
+    width: 26,
+    height: 26,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sceneBottomDock: {
+    width: "100%",
+    maxWidth: 860,
+    alignSelf: "center",
+    paddingTop: 12,
+    paddingBottom: 14,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.10)",
+    backgroundColor: "rgba(5,5,8,0.42)",
+  },
+  sceneActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  scenePrimaryWrap: {
+    flex: 1,
+    minWidth: 0,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  scenePrimaryPressed: {
+    opacity: 0.92,
+    transform: [{ scale: 0.994 }],
+  },
+  scenePrimaryButton: {
+    minHeight: 56,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderTopWidth: 1.2,
+    borderColor: "rgba(255,255,255,0.18)",
+    borderTopColor: "rgba(255,255,255,0.38)",
+    overflow: "hidden",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  sceneHubButton: {
+    width: 138,
+    minHeight: 56,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.22)",
+    backgroundColor: "rgba(255,255,255,0.08)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  sceneHubButtonCompact: {
+    width: 108,
+    paddingHorizontal: 12,
+  },
+  sceneHubButtonText: {
+    color: TXT,
+  },
   sectionHead: {
     marginTop: 26,
     marginBottom: 20,
@@ -1123,19 +1418,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: TXT,
   },
-  sectionTitleScene: {
-    maxWidth: 320,
-  },
-  sectionTitleCompact: {
-    maxWidth: 300,
-  },
   sectionText: {
     color: "rgba(255,255,255,0.65)",
     marginTop: 6,
-  },
-  scroll: {
-    flex: 1,
-    marginHorizontal: -4,
   },
   stepScroll: {
     flex: 1,
@@ -1162,169 +1447,6 @@ const styles = StyleSheet.create({
   },
   stepScrollContentCompact: {
     paddingBottom: 10,
-  },
-  sceneList: {
-    paddingHorizontal: 4,
-    gap: 16,
-    paddingBottom: 152,
-  },
-  sceneListCompact: {
-    gap: 14,
-    paddingBottom: 196,
-  },
-  exploreHomeAction: {
-    alignSelf: "stretch",
-    marginHorizontal: 4,
-    marginTop: -2,
-    marginBottom: 32,
-    borderRadius: 22,
-    overflow: "hidden",
-  },
-  exploreHomeCard: {
-    minHeight: 76,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderTopWidth: 1.2,
-    borderColor: "rgba(255,255,255,0.16)",
-    borderTopColor: "rgba(255,255,255,0.32)",
-    backgroundColor: "rgba(255,255,255,0.055)",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    overflow: "hidden",
-  },
-  exploreHomeIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.20)",
-    backgroundColor: "rgba(244,114,182,0.22)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  exploreHomeCopy: {
-    flex: 1,
-    minWidth: 0,
-  },
-  exploreHomeEyebrow: {
-    color: PINK,
-    marginBottom: 3,
-  },
-  exploreHomeText: {
-    color: TXT,
-  },
-  exploreHomeArrow: {
-    width: 34,
-    height: 34,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.10)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  sceneChoiceHead: {
-    alignItems: "center",
-    marginBottom: 44,
-  },
-  sceneChoiceHeadCompact: {
-    marginBottom: 20,
-  },
-  choiceDivider: {
-    width: 44,
-    height: 1,
-    marginBottom: 18,
-    backgroundColor: "rgba(255,255,255,0.20)",
-  },
-  sceneChoiceEyebrow: {
-    color: "rgba(255,255,255,0.58)",
-    textAlign: "center",
-    marginBottom: 6,
-  },
-  sceneChoiceTitle: {
-    color: TXT,
-    textAlign: "center",
-  },
-  scenePress: {
-    borderRadius: 24,
-    overflow: "hidden",
-  },
-  sceneCardOuter: {
-    borderRadius: 24,
-    overflow: "hidden",
-  },
-  sceneCard: {
-    minHeight: 104,
-    borderRadius: 24,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    flexDirection: "row",
-  },
-  sceneCardCompact: {
-    minHeight: 80,
-    borderRadius: 20,
-  },
-  sceneAccent: {
-    width: 4,
-    height: "100%",
-    position: "absolute",
-    left: 0,
-    top: 0,
-  },
-  sceneContent: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: 22,
-    paddingRight: 18,
-    paddingVertical: 12,
-  },
-  sceneTopLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 4,
-  },
-  sceneEyebrow: {
-    color: "rgba(255,255,255,0.45)",
-  },
-  selectedPill: {
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    backgroundColor: "rgba(255,255,255,0.03)",
-  },
-  selectedPillText: {
-    color: TXT,
-  },
-  sceneTitleText: {
-    color: TXT,
-  },
-  sceneSubtitle: {
-    color: "rgba(255,255,255,0.58)",
-    marginTop: 2,
-  },
-  sceneSubtitleCompact: {
-    marginTop: 1,
-    opacity: 0.92,
-  },
-  radioWrap: {
-    width: 20,
-    height: 20,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: "rgba(255,255,255,0.22)",
-    backgroundColor: "rgba(255,255,255,0.02)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  radioDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 999,
   },
   modeList: {
     gap: 12,
@@ -1417,10 +1539,6 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 520,
     alignSelf: "center",
-  },
-  bottomBarContained: {
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.08)",
   },
   secondaryButton: {
     minHeight: 56,

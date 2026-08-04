@@ -16,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
 import { GrammarLessonGuideModal } from "../../../components/grammar/GrammarLessonGuideModal";
+import { useGrammarModalLayout } from "../../../components/grammar/useGrammarModalLayout";
 import { StatusBadge } from "../../../components/ui/status-badge";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 import { SeoulMidnightGlass } from "../../../constants/theme";
@@ -378,7 +379,6 @@ export default function GrammarLessonScreen() {
         title={stage.title}
         communicativeGoal={stage.communicativeGoal}
         guide={lessonGuide}
-        isTablet={responsive.isTablet}
         onRequestClose={() => {
           setDismissedTheoryStageId(stageId);
           setRequestedTheoryStageId(undefined);
@@ -399,7 +399,6 @@ export default function GrammarLessonScreen() {
           <GrammarLessonTheory
             stageId={stageId}
             isPremium={isPremium}
-            isTablet={responsive.isTablet}
             onOpenPremium={() => router.push("/premium")}
           />
         ) : null}
@@ -411,14 +410,13 @@ export default function GrammarLessonScreen() {
 function GrammarLessonTheory({
   stageId,
   isPremium,
-  isTablet,
   onOpenPremium,
 }: {
   stageId: GrammarStageId;
   isPremium: boolean;
-  isTablet: boolean;
   onOpenPremium: () => void;
 }) {
+  const modalLayout = useGrammarModalLayout();
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
   const concepts = stage.conceptIds
     .map((conceptId) => GRAMMAR_CONCEPTS.find((concept) => concept.id === conceptId))
@@ -436,8 +434,8 @@ function GrammarLessonTheory({
 
   return (
     <View style={styles.contentStack}>
-      <View style={[styles.explanationGrid, isTablet && styles.explanationGridTablet]}>
-        <View style={[styles.explanationColumn, isTablet && styles.explanationColumnTablet]}>
+      <View style={[styles.explanationGrid, modalLayout.useWideLayout && styles.explanationGridTablet]}>
+        <View style={[styles.explanationColumn, modalLayout.useWideLayout && styles.explanationColumnTablet]}>
           <AppText variant="sectionLabel" tone="soft">
             {isGeneralReview ? "REPÈRES DE RÉVISION" : "LA RÈGLE"}
           </AppText>
@@ -471,7 +469,7 @@ function GrammarLessonTheory({
           ))}
         </View>
 
-        <View style={[styles.explanationColumn, isTablet && styles.explanationColumnTablet]}>
+        <View style={[styles.explanationColumn, modalLayout.useWideLayout && styles.explanationColumnTablet]}>
           <AppText variant="sectionLabel" tone="soft">EXEMPLES</AppText>
           {stage.canonicalExamples.map((example, index) => (
             <BlurView key={`${example.korean}-${index}`} intensity={46} tint="dark" style={styles.exampleCard}>

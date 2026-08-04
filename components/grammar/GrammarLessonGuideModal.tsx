@@ -4,8 +4,8 @@ import {
   AccessibilityInfo,
   Animated,
   Pressable,
+  ScrollView,
   StyleSheet,
-  useWindowDimensions,
   View,
 } from "react-native";
 
@@ -16,6 +16,7 @@ import { AppText } from "../app-text";
 import { ActionButton } from "../ui/action-button";
 import { AppDialog, DialogActions } from "../ui/app-dialog";
 import { GrammarLessonGuide as GrammarLessonGuideContent } from "./GrammarLessonGuide";
+import { useGrammarModalLayout } from "./useGrammarModalLayout";
 
 const COLORS = SeoulMidnightGlass.colors;
 const ACCENT = "#2DD4BF";
@@ -25,7 +26,6 @@ type GrammarLessonGuideModalProps = React.PropsWithChildren<{
   title: string;
   communicativeGoal: string;
   guide?: GrammarLessonGuide;
-  isTablet: boolean;
   onRequestClose: () => void;
   onAccessExercises: () => void;
 }>;
@@ -35,14 +35,13 @@ export function GrammarLessonGuideModal({
   title,
   communicativeGoal,
   guide,
-  isTablet,
   onRequestClose,
   onAccessExercises,
   children,
 }: GrammarLessonGuideModalProps) {
   const [entrance] = React.useState(() => new Animated.Value(0));
-  const { width } = useWindowDimensions();
-  const isCompact = width <= 380;
+  const bodyScrollRef = React.useRef<ScrollView>(null);
+  const layout = useGrammarModalLayout();
 
   React.useEffect(() => {
     let active = true;
@@ -81,6 +80,16 @@ export function GrammarLessonGuideModal({
     };
   }, [entrance, visible]);
 
+  React.useEffect(() => {
+    if (!visible) return;
+
+    const frame = requestAnimationFrame(() => {
+      bodyScrollRef.current?.scrollTo({ y: 0, animated: false });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [title, visible]);
+
   return (
     <AppDialog
       visible={visible}
@@ -89,6 +98,10 @@ export function GrammarLessonGuideModal({
       animationType="fade"
       accessibilityLabel={`Explication de la leçon ${title}`}
       maxWidth={920}
+      maxHeight={1040}
+      fillAvailableHeight
+      respectHorizontalSafeArea
+      scrollable={false}
       cardStyle={styles.modalCard}
       contentContainerStyle={styles.modalContent}
     >
@@ -117,8 +130,10 @@ export function GrammarLessonGuideModal({
         <View
           style={[
             styles.hero,
-            isCompact && styles.heroCompact,
-            isTablet && styles.heroTablet,
+            layout.isCompactWidth && styles.heroCompact,
+            layout.useWideLayout && styles.heroWide,
+            layout.isShortHeight && styles.heroShort,
+            layout.isVeryShortHeight && styles.heroVeryShort,
           ]}
         >
           <LinearGradient
@@ -159,13 +174,24 @@ export function GrammarLessonGuideModal({
             </Pressable>
           </View>
 
-          <View style={styles.heroCopy}>
-            <AppText
-              accessibilityRole="header"
-              variant={isCompact ? "featureTitle" : "screenTitle"}
-            >
-              {title}
-            </AppText>
+          <View
+            style={[
+              styles.heroCopy,
+              layout.isVeryShortHeight && styles.heroCopyVeryShort,
+            ]}
+          >
+            <View style={styles.heroTitleWrapper}>
+              <AppText
+                accessibilityRole="header"
+                variant={
+                  layout.isCompactWidth || layout.isVeryShortHeight
+                    ? "featureTitle"
+                    : "screenTitle"
+                }
+              >
+                {title}
+              </AppText>
+            </View>
             <View style={styles.goalRow}>
               <View style={styles.goalRail} />
               <View style={styles.goalCopy}>
@@ -180,55 +206,85 @@ export function GrammarLessonGuideModal({
           </View>
         </View>
 
-        <View
-          style={[
+        <ScrollView
+          ref={bodyScrollRef}
+          style={styles.bodyScroller}
+          contentContainerStyle={[
             styles.body,
-            isCompact && styles.bodyCompact,
-            isTablet && styles.bodyTablet,
+            layout.isCompactWidth && styles.bodyCompact,
+            layout.useWideLayout && styles.bodyWide,
+            layout.isShortHeight && styles.bodyShort,
           ]}
+          showsVerticalScrollIndicator
+          keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled
+          contentInsetAdjustmentBehavior="never"
         >
           {guide ? (
-            <GrammarLessonGuideContent guide={guide} isTablet={isTablet} />
+            <GrammarLessonGuideContent guide={guide} />
           ) : (
             children
           )}
+        </ScrollView>
 
+        <View
+          style={[
+            styles.exerciseFooter,
+            layout.useHorizontalFooter && styles.exerciseFooterHorizontal,
+            layout.isVeryShortHeight && styles.exerciseFooterVeryShort,
+          ]}
+        >
           <LinearGradient
+            pointerEvents="none"
             colors={["rgba(45,212,191,0.12)", "rgba(45,212,191,0.035)"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.exerciseCallout}
+            style={ABSOLUTE_FILL}
+          />
+          <View
+            style={[
+              styles.exerciseCalloutTop,
+              layout.useHorizontalFooter && styles.exerciseCalloutTopHorizontal,
+            ]}
           >
-            <View style={styles.exerciseCalloutTop}>
-              <View style={styles.exerciseGlyph}>
-                <AppText
-                  aria-hidden
-                  variant="symbol"
-                  style={styles.accentText}
-                  align="center"
-                >
-                  →
-                </AppText>
-              </View>
-              <View style={styles.exerciseCopy}>
-                <AppText variant="bodyStrong">Passe à la pratique</AppText>
-                <AppText variant="bodySecondary" tone="muted">
-                  Applique ces repères dans une série d’exercices guidés.
-                </AppText>
-              </View>
+            <View
+              style={[
+                styles.exerciseGlyph,
+                layout.isVeryShortHeight && styles.exerciseGlyphVeryShort,
+              ]}
+            >
+              <AppText
+                aria-hidden
+                variant="symbol"
+                style={styles.accentText}
+                align="center"
+              >
+                →
+              </AppText>
             </View>
+            <View style={styles.exerciseCopy}>
+              <AppText variant="bodyStrong">Passe à la pratique</AppText>
+              <AppText variant="bodySecondary" tone="muted">
+                Applique ces repères dans une série d’exercices guidés.
+              </AppText>
+            </View>
+          </View>
 
-            <DialogActions style={styles.actions}>
-              <ActionButton
-                label="Accéder aux exercices"
-                accessibilityHint="Ferme l’explication et ouvre les exercices de cette leçon"
-                size="large"
-                accentColor={ACCENT}
-                onPress={onAccessExercises}
-                style={styles.exerciseButton}
-              />
-            </DialogActions>
-          </LinearGradient>
+          <DialogActions
+            style={[
+              styles.actions,
+              layout.useHorizontalFooter && styles.actionsHorizontal,
+            ]}
+          >
+            <ActionButton
+              label="Accéder aux exercices"
+              accessibilityHint="Ferme l’explication et ouvre les exercices de cette leçon"
+              size={layout.isVeryShortHeight ? "regular" : "large"}
+              accentColor={ACCENT}
+              onPress={onAccessExercises}
+              style={styles.exerciseButton}
+            />
+          </DialogActions>
         </View>
       </Animated.View>
     </AppDialog>
@@ -245,8 +301,8 @@ const styles = StyleSheet.create({
     shadowRadius: 38,
     elevation: 20,
   },
-  modalContent: { padding: 0 },
-  animatedContent: { width: "100%" },
+  modalContent: { padding: 0, flex: 1, minHeight: 0 },
+  animatedContent: { width: "100%", flex: 1, minHeight: 0 },
   hero: {
     minHeight: 250,
     paddingHorizontal: 24,
@@ -262,11 +318,22 @@ const styles = StyleSheet.create({
     paddingTop: 17,
     paddingBottom: 21,
   },
-  heroTablet: {
+  heroWide: {
     minHeight: 268,
     paddingHorizontal: 30,
     paddingTop: 26,
     paddingBottom: 30,
+  },
+  heroShort: {
+    minHeight: 190,
+    paddingTop: 17,
+    paddingBottom: 20,
+  },
+  heroVeryShort: {
+    minHeight: 0,
+    paddingHorizontal: 16,
+    paddingTop: 11,
+    paddingBottom: 12,
   },
   heroOrbLarge: {
     position: "absolute",
@@ -331,6 +398,12 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     maxWidth: 690,
   },
+  heroCopyVeryShort: {
+    flex: 0,
+    gap: 6,
+    paddingTop: 5,
+  },
+  heroTitleWrapper: { minWidth: 0 },
   goalRow: { flexDirection: "row", alignItems: "stretch", gap: 11 },
   goalRail: {
     width: 2,
@@ -338,22 +411,36 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(45,212,191,0.62)",
   },
   goalCopy: { flex: 1, minWidth: 0, gap: 4 },
+  bodyScroller: { flex: 1, minHeight: 0, width: "100%" },
   body: { padding: 22, gap: 26 },
   bodyCompact: { paddingHorizontal: 14, paddingVertical: 18, gap: 22 },
-  bodyTablet: { padding: 30, gap: 30 },
-  exerciseCallout: {
-    borderRadius: 26,
-    borderWidth: 1,
-    borderColor: "rgba(45,212,191,0.3)",
-    padding: 18,
-    gap: 17,
+  bodyWide: { padding: 30, gap: 30 },
+  bodyShort: { paddingVertical: 16 },
+  exerciseFooter: {
+    flexShrink: 0,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(45,212,191,0.28)",
+    paddingHorizontal: 22,
+    paddingVertical: 16,
+    gap: 14,
     overflow: "hidden",
+  },
+  exerciseFooterHorizontal: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+  exerciseFooterVeryShort: {
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+    gap: 12,
   },
   exerciseCalloutTop: {
     flexDirection: "row",
     alignItems: "center",
     gap: 13,
   },
+  exerciseCalloutTopHorizontal: { flex: 1, minWidth: 0 },
   exerciseGlyph: {
     width: 46,
     height: 46,
@@ -364,8 +451,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  exerciseGlyphVeryShort: { width: 40, height: 40, borderRadius: 20 },
   exerciseCopy: { flex: 1, minWidth: 0, gap: 3 },
   actions: { paddingTop: 0, paddingBottom: 0 },
+  actionsHorizontal: { width: 250, flexShrink: 0 },
   exerciseButton: {
     borderRadius: 18,
     shadowColor: ACCENT,

@@ -22,6 +22,9 @@ export type AppDialogProps = React.PropsWithChildren<{
   animationType?: ModalProps["animationType"];
   accessibilityLabel?: string;
   maxWidth?: number;
+  maxHeight?: number;
+  fillAvailableHeight?: boolean;
+  respectHorizontalSafeArea?: boolean;
   scrollable?: boolean;
   cardStyle?: StyleProp<ViewStyle>;
   contentContainerStyle?: StyleProp<ViewStyle>;
@@ -34,6 +37,9 @@ export function AppDialog({
   animationType = "fade",
   accessibilityLabel = "Boîte de dialogue",
   maxWidth = 460,
+  maxHeight,
+  fillAvailableHeight = false,
+  respectHorizontalSafeArea = false,
   scrollable = true,
   cardStyle,
   contentContainerStyle,
@@ -43,9 +49,18 @@ export function AppDialog({
   const insets = useSafeAreaInsets();
   const isCompact = width <= 380 || height <= 680;
   const edgeInset = isCompact ? 12 : 24;
+  const leftInset = respectHorizontalSafeArea
+    ? Math.max(edgeInset, insets.left + 8)
+    : edgeInset;
+  const rightInset = respectHorizontalSafeArea
+    ? Math.max(edgeInset, insets.right + 8)
+    : edgeInset;
   const topInset = Math.max(edgeInset, insets.top + 8);
   const bottomInset = Math.max(edgeInset, insets.bottom + 8);
-  const cardMaxHeight = Math.max(160, height - topInset - bottomInset);
+  const availableCardHeight = Math.max(160, height - topInset - bottomInset);
+  const cardMaxHeight = maxHeight
+    ? Math.min(availableCardHeight, maxHeight)
+    : availableCardHeight;
 
   const content = scrollable ? (
     <ScrollView
@@ -73,7 +88,8 @@ export function AppDialog({
         style={[
           styles.root,
           {
-            paddingHorizontal: edgeInset,
+            paddingLeft: leftInset,
+            paddingRight: rightInset,
             paddingTop: topInset,
             paddingBottom: bottomInset,
           },
@@ -90,7 +106,11 @@ export function AppDialog({
           accessibilityLabel={accessibilityLabel}
           style={[
             styles.card,
-            { maxHeight: cardMaxHeight, maxWidth },
+            {
+              maxHeight: cardMaxHeight,
+              maxWidth,
+              height: fillAvailableHeight ? cardMaxHeight : undefined,
+            },
             cardStyle,
           ]}
         >
