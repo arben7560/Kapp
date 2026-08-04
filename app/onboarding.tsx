@@ -510,7 +510,7 @@ export default function OnboardingScreen() {
                   Choisis ta première expérience
                 </AppText>
                 <AppText variant="body" style={styles.sceneIntroText}>
-                  Découvre une situation guidée ou explore librement le Hub.
+                  Commence par une expérience guidée, ou explore librement le Hub.
                 </AppText>
               </View>
 
@@ -1215,15 +1215,15 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   recommendedPill: {
-    minHeight: 28,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    minHeight: 24,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 999,
     borderWidth: 1,
     backgroundColor: "rgba(2,3,6,0.60)",
     flexDirection: "row",
     alignItems: "center",
-    gap: 7,
+    gap: 6,
   },
   recommendedDot: {
     width: 5,
@@ -1232,6 +1232,9 @@ const styles = StyleSheet.create({
   },
   recommendedText: {
     color: "rgba(255,255,255,0.92)",
+    fontSize: 11,
+    lineHeight: 14,
+    letterSpacing: 0.8,
   },
   featuredLocation: {
     color: "rgba(255,255,255,0.72)",
