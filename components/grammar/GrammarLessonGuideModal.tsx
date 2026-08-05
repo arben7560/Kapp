@@ -3,6 +3,8 @@ import React from "react";
 import {
   AccessibilityInfo,
   Animated,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,6 +22,9 @@ import { useGrammarModalLayout } from "./useGrammarModalLayout";
 
 const COLORS = SeoulMidnightGlass.colors;
 const ACCENT = "#2DD4BF";
+
+const COMPACT_HEADER_SCROLL_Y = 56;
+const EXPANDED_HEADER_SCROLL_Y = 16;
 
 type GrammarLessonGuideModalProps = React.PropsWithChildren<{
   visible: boolean;
@@ -40,8 +45,34 @@ export function GrammarLessonGuideModal({
   children,
 }: GrammarLessonGuideModalProps) {
   const [entrance] = React.useState(() => new Animated.Value(0));
+  const [isHeaderCompact, setIsHeaderCompact] = React.useState(false);
+
   const bodyScrollRef = React.useRef<ScrollView>(null);
+  const headerCompactRef = React.useRef(false);
   const layout = useGrammarModalLayout();
+
+  const updateHeaderCompactState = React.useCallback((compact: boolean) => {
+    if (headerCompactRef.current === compact) return;
+
+    headerCompactRef.current = compact;
+    setIsHeaderCompact(compact);
+  }, []);
+
+  const handleBodyScroll = React.useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const scrollY = Math.max(0, event.nativeEvent.contentOffset.y);
+
+      if (!headerCompactRef.current && scrollY >= COMPACT_HEADER_SCROLL_Y) {
+        updateHeaderCompactState(true);
+        return;
+      }
+
+      if (headerCompactRef.current && scrollY <= EXPANDED_HEADER_SCROLL_Y) {
+        updateHeaderCompactState(false);
+      }
+    },
+    [updateHeaderCompactState],
+  );
 
   React.useEffect(() => {
     let active = true;
@@ -49,6 +80,8 @@ export function GrammarLessonGuideModal({
     if (!visible) {
       entrance.stopAnimation();
       entrance.setValue(0);
+      updateHeaderCompactState(false);
+
       return () => {
         active = false;
       };
@@ -65,6 +98,7 @@ export function GrammarLessonGuideModal({
         }
 
         entrance.setValue(0);
+
         Animated.spring(entrance, {
           toValue: 1,
           damping: 22,
@@ -78,17 +112,22 @@ export function GrammarLessonGuideModal({
       active = false;
       entrance.stopAnimation();
     };
-  }, [entrance, visible]);
+  }, [entrance, updateHeaderCompactState, visible]);
 
   React.useEffect(() => {
     if (!visible) return;
 
+    updateHeaderCompactState(false);
+
     const frame = requestAnimationFrame(() => {
-      bodyScrollRef.current?.scrollTo({ y: 0, animated: false });
+      bodyScrollRef.current?.scrollTo({
+        y: 0,
+        animated: false,
+      });
     });
 
     return () => cancelAnimationFrame(frame);
-  }, [title, visible]);
+  }, [title, updateHeaderCompactState, visible]);
 
   return (
     <AppDialog
@@ -134,6 +173,10 @@ export function GrammarLessonGuideModal({
             layout.useWideLayout && styles.heroWide,
             layout.isShortHeight && styles.heroShort,
             layout.isVeryShortHeight && styles.heroVeryShort,
+            isHeaderCompact && styles.heroCollapsed,
+            isHeaderCompact &&
+              layout.isCompactWidth &&
+              styles.heroCollapsedCompact,
           ]}
         >
           <LinearGradient
@@ -147,12 +190,14 @@ export function GrammarLessonGuideModal({
             end={{ x: 0.78, y: 1 }}
             style={ABSOLUTE_FILL}
           />
+
           <View style={styles.heroOrbLarge} />
           <View style={styles.heroOrbSmall} />
 
           <View style={styles.headerTopRow}>
             <View style={styles.lessonBadge}>
               <View style={styles.lessonBadgeDot} />
+
               <AppText variant="sectionLabel" style={styles.accentText}>
                 GRAMMAIRE · MINI-LEÇON
               </AppText>
@@ -165,6 +210,7 @@ export function GrammarLessonGuideModal({
               onPress={onRequestClose}
               style={({ pressed }) => [
                 styles.closeButton,
+                isHeaderCompact && styles.closeButtonCompact,
                 pressed && styles.pressed,
               ]}
             >
@@ -178,13 +224,16 @@ export function GrammarLessonGuideModal({
             style={[
               styles.heroCopy,
               layout.isVeryShortHeight && styles.heroCopyVeryShort,
+              isHeaderCompact && styles.heroCopyCollapsed,
             ]}
           >
             <View style={styles.heroTitleWrapper}>
               <AppText
                 accessibilityRole="header"
                 variant={
-                  layout.isCompactWidth || layout.isVeryShortHeight
+                  isHeaderCompact ||
+                  layout.isCompactWidth ||
+                  layout.isVeryShortHeight
                     ? "featureTitle"
                     : "screenTitle"
                 }
@@ -192,17 +241,22 @@ export function GrammarLessonGuideModal({
                 {title}
               </AppText>
             </View>
-            <View style={styles.goalRow}>
-              <View style={styles.goalRail} />
-              <View style={styles.goalCopy}>
-                <AppText variant="sectionLabel" tone="soft">
-                  OBJECTIF DE LA LEÇON
-                </AppText>
-                <AppText variant="bodySecondary" tone="muted">
-                  {communicativeGoal}
-                </AppText>
+
+            {!isHeaderCompact && (
+              <View style={styles.goalRow}>
+                <View style={styles.goalRail} />
+
+                <View style={styles.goalCopy}>
+                  <AppText variant="sectionLabel" tone="soft">
+                    OBJECTIF DE LA LEÇON
+                  </AppText>
+
+                  <AppText variant="bodySecondary" tone="muted">
+                    {communicativeGoal}
+                  </AppText>
+                </View>
               </View>
-            </View>
+            )}
           </View>
         </View>
 
@@ -219,12 +273,10 @@ export function GrammarLessonGuideModal({
           keyboardShouldPersistTaps="handled"
           nestedScrollEnabled
           contentInsetAdjustmentBehavior="never"
+          scrollEventThrottle={16}
+          onScroll={handleBodyScroll}
         >
-          {guide ? (
-            <GrammarLessonGuideContent guide={guide} />
-          ) : (
-            children
-          )}
+          {guide ? <GrammarLessonGuideContent guide={guide} /> : children}
         </ScrollView>
 
         <View
@@ -241,6 +293,7 @@ export function GrammarLessonGuideModal({
             end={{ x: 1, y: 1 }}
             style={ABSOLUTE_FILL}
           />
+
           <View
             style={[
               styles.exerciseCalloutTop,
@@ -262,8 +315,10 @@ export function GrammarLessonGuideModal({
                 →
               </AppText>
             </View>
+
             <View style={styles.exerciseCopy}>
               <AppText variant="bodyStrong">Passe à la pratique</AppText>
+
               <AppText variant="bodySecondary" tone="muted">
                 Applique ces repères dans une série d’exercices guidés.
               </AppText>
@@ -296,13 +351,27 @@ const styles = StyleSheet.create({
     borderColor: "rgba(45,212,191,0.28)",
     backgroundColor: "rgba(5,7,13,0.985)",
     shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 24 },
+    shadowOffset: {
+      width: 0,
+      height: 24,
+    },
     shadowOpacity: 0.48,
     shadowRadius: 38,
     elevation: 20,
   },
-  modalContent: { padding: 0, flex: 1, minHeight: 0 },
-  animatedContent: { width: "100%", flex: 1, minHeight: 0 },
+
+  modalContent: {
+    padding: 0,
+    flex: 1,
+    minHeight: 0,
+  },
+
+  animatedContent: {
+    width: "100%",
+    flex: 1,
+    minHeight: 0,
+  },
+
   hero: {
     minHeight: 250,
     paddingHorizontal: 24,
@@ -312,29 +381,46 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.line,
     overflow: "hidden",
   },
+
   heroCompact: {
     minHeight: 232,
     paddingHorizontal: 17,
     paddingTop: 17,
     paddingBottom: 21,
   },
+
   heroWide: {
     minHeight: 268,
     paddingHorizontal: 30,
     paddingTop: 26,
     paddingBottom: 30,
   },
+
   heroShort: {
     minHeight: 190,
     paddingTop: 17,
     paddingBottom: 20,
   },
+
   heroVeryShort: {
     minHeight: 0,
     paddingHorizontal: 16,
     paddingTop: 11,
     paddingBottom: 12,
   },
+
+  heroCollapsed: {
+    minHeight: 0,
+    paddingTop: 14,
+    paddingBottom: 14,
+  },
+
+  heroCollapsedCompact: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
+  },
+
   heroOrbLarge: {
     position: "absolute",
     width: 260,
@@ -346,6 +432,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(45,212,191,0.12)",
     backgroundColor: "rgba(45,212,191,0.025)",
   },
+
   heroOrbSmall: {
     position: "absolute",
     width: 92,
@@ -356,12 +443,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.06)",
   },
+
   headerTopRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 14,
   },
+
   lessonBadge: {
     minHeight: 30,
     borderRadius: 999,
@@ -374,13 +463,18 @@ const styles = StyleSheet.create({
     gap: 7,
     flexShrink: 1,
   },
+
   lessonBadgeDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: ACCENT,
   },
-  accentText: { color: ACCENT },
+
+  accentText: {
+    color: ACCENT,
+  },
+
   closeButton: {
     width: 42,
     height: 42,
@@ -391,6 +485,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
+  closeButtonCompact: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+  },
+
   heroCopy: {
     flex: 1,
     justifyContent: "flex-end",
@@ -398,24 +499,67 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     maxWidth: 690,
   },
+
   heroCopyVeryShort: {
     flex: 0,
     gap: 6,
     paddingTop: 5,
   },
-  heroTitleWrapper: { minWidth: 0 },
-  goalRow: { flexDirection: "row", alignItems: "stretch", gap: 11 },
+
+  heroCopyCollapsed: {
+    flex: 0,
+    paddingTop: 10,
+    gap: 0,
+  },
+
+  heroTitleWrapper: {
+    minWidth: 0,
+  },
+
+  goalRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 11,
+  },
+
   goalRail: {
     width: 2,
     borderRadius: 2,
     backgroundColor: "rgba(45,212,191,0.62)",
   },
-  goalCopy: { flex: 1, minWidth: 0, gap: 4 },
-  bodyScroller: { flex: 1, minHeight: 0, width: "100%" },
-  body: { padding: 22, gap: 26 },
-  bodyCompact: { paddingHorizontal: 14, paddingVertical: 18, gap: 22 },
-  bodyWide: { padding: 30, gap: 30 },
-  bodyShort: { paddingVertical: 16 },
+
+  goalCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 4,
+  },
+
+  bodyScroller: {
+    flex: 1,
+    minHeight: 0,
+    width: "100%",
+  },
+
+  body: {
+    padding: 22,
+    gap: 26,
+  },
+
+  bodyCompact: {
+    paddingHorizontal: 14,
+    paddingVertical: 18,
+    gap: 22,
+  },
+
+  bodyWide: {
+    padding: 30,
+    gap: 30,
+  },
+
+  bodyShort: {
+    paddingVertical: 16,
+  },
+
   exerciseFooter: {
     flexShrink: 0,
     borderTopWidth: 1,
@@ -425,22 +569,30 @@ const styles = StyleSheet.create({
     gap: 14,
     overflow: "hidden",
   },
+
   exerciseFooterHorizontal: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 10,
   },
+
   exerciseFooterVeryShort: {
     paddingHorizontal: 14,
     paddingVertical: 4,
     gap: 12,
   },
+
   exerciseCalloutTop: {
     flexDirection: "row",
     alignItems: "center",
     gap: 13,
   },
-  exerciseCalloutTopHorizontal: { flex: 1, minWidth: 0 },
+
+  exerciseCalloutTopHorizontal: {
+    flex: 1,
+    minWidth: 0,
+  },
+
   exerciseGlyph: {
     width: 46,
     height: 46,
@@ -451,17 +603,43 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  exerciseGlyphVeryShort: { width: 40, height: 40, borderRadius: 20 },
-  exerciseCopy: { flex: 1, minWidth: 0, gap: 3 },
-  actions: { paddingTop: 0, paddingBottom: 0 },
-  actionsHorizontal: { width: 250, flexShrink: 0 },
+
+  exerciseGlyphVeryShort: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+
+  exerciseCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 3,
+  },
+
+  actions: {
+    paddingTop: 0,
+    paddingBottom: 0,
+  },
+
+  actionsHorizontal: {
+    width: 250,
+    flexShrink: 0,
+  },
+
   exerciseButton: {
     borderRadius: 18,
     shadowColor: ACCENT,
-    shadowOffset: { width: 0, height: 10 },
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
     shadowOpacity: 0.22,
     shadowRadius: 18,
     elevation: 5,
   },
-  pressed: { opacity: 0.82, transform: [{ scale: 0.97 }] },
+
+  pressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.97 }],
+  },
 });
