@@ -1,7 +1,14 @@
-import type { ActiveSubscription, ProductSubscription } from "expo-iap";
+import type {
+  CustomerInfo,
+  PurchasesPackage,
+} from "react-native-purchases";
+
 import type { SubscriptionOfferId } from "./config";
 
-export type EntitlementSource = "developer" | "store" | "none";
+export type EntitlementSource =
+  | "developer"
+  | "store"
+  | "none";
 
 export type PremiumEntitlement = {
   hasAccess: boolean;
@@ -24,14 +31,24 @@ export type PaywallContextValue = {
   isLoading: boolean;
   isPurchasing: boolean;
   isRestoring: boolean;
-  subscriptions: Partial<Record<SubscriptionOfferId, ProductSubscription>>;
+
+  customerInfo: CustomerInfo | null;
+
+  subscriptions: Partial<
+    Record<SubscriptionOfferId, PurchasesPackage>
+  >;
+
   displayPrices: Record<SubscriptionOfferId, string>;
   error: PaywallError | null;
-  activeSubscriptions: ActiveSubscription[];
+
+  activeSubscriptions: string[];
+
   refreshEntitlements: () => Promise<void>;
   subscribeMonthly: () => Promise<void>;
   subscribeYearly: () => Promise<void>;
-  subscribe: (offerId: SubscriptionOfferId) => Promise<void>;
+  subscribe: (
+    offerId: SubscriptionOfferId,
+  ) => Promise<void>;
   restorePurchases: () => Promise<void>;
   openSubscriptionManagement: () => Promise<void>;
   clearError: () => void;

@@ -1,0 +1,120 @@
+--- a/components/grammar/GrammarLessonGuideModal.tsx
++++ b/components/grammar/GrammarLessonGuideModal.tsx
+@@ -40,6 +40,7 @@
+   children,
+ }: GrammarLessonGuideModalProps) {
+   const [entrance] = React.useState(() => new Animated.Value(0));
++  const [isHeaderCompact, setIsHeaderCompact] = React.useState(false);
+   const bodyScrollRef = React.useRef<ScrollView>(null);
+   const layout = useGrammarModalLayout();
+ 
+@@ -81,8 +82,12 @@
+   }, [entrance, visible]);
+ 
+   React.useEffect(() => {
+-    if (!visible) return;
++    if (!visible) {
++      setIsHeaderCompact(false);
++      return;
++    }
+ 
++    setIsHeaderCompact(false);
+     const frame = requestAnimationFrame(() => {
+       bodyScrollRef.current?.scrollTo({ y: 0, animated: false });
+     });
+@@ -90,6 +95,19 @@
+     return () => cancelAnimationFrame(frame);
+   }, [title, visible]);
+ 
++  const handleBodyScroll = React.useCallback(
++    (event: { nativeEvent: { contentOffset: { y: number } } }) => {
++      const offsetY = event.nativeEvent.contentOffset.y;
++
++      setIsHeaderCompact((current) => {
++        if (!current && offsetY >= 56) return true;
++        if (current && offsetY <= 20) return false;
++        return current;
++      });
++    },
++    [],
++  );
++
+   return (
+     <AppDialog
+       visible={visible}
+@@ -134,6 +152,10 @@
+             layout.useWideLayout && styles.heroWide,
+             layout.isShortHeight && styles.heroShort,
+             layout.isVeryShortHeight && styles.heroVeryShort,
++            isHeaderCompact && styles.heroScrolled,
++            isHeaderCompact &&
++              layout.isCompactWidth &&
++              styles.heroScrolledCompact,
+           ]}
+         >
+           <LinearGradient
+@@ -178,6 +200,7 @@
+             style={[
+               styles.heroCopy,
+               layout.isVeryShortHeight && styles.heroCopyVeryShort,
++              isHeaderCompact && styles.heroCopyScrolled,
+             ]}
+           >
+             <View style={styles.heroTitleWrapper}>
+@@ -192,7 +215,13 @@
+                 {title}
+               </AppText>
+             </View>
+-            <View style={styles.goalRow}>
++            <View
++              style={[styles.goalRow, isHeaderCompact && styles.goalRowHidden]}
++              accessibilityElementsHidden={isHeaderCompact}
++              importantForAccessibility={
++                isHeaderCompact ? "no-hide-descendants" : "auto"
++              }
++            >
+               <View style={styles.goalRail} />
+               <View style={styles.goalCopy}>
+                 <AppText variant="sectionLabel" tone="soft">
+@@ -216,6 +245,8 @@
+             layout.isShortHeight && styles.bodyShort,
+           ]}
+           showsVerticalScrollIndicator
++          scrollEventThrottle={16}
++          onScroll={handleBodyScroll}
+           keyboardShouldPersistTaps="handled"
+           nestedScrollEnabled
+           contentInsetAdjustmentBehavior="never"
+@@ -335,6 +366,17 @@
+     paddingTop: 11,
+     paddingBottom: 12,
+   },
++  heroScrolled: {
++    minHeight: 142,
++    paddingTop: 16,
++    paddingBottom: 16,
++  },
++  heroScrolledCompact: {
++    minHeight: 130,
++    paddingHorizontal: 17,
++    paddingTop: 13,
++    paddingBottom: 13,
++  },
+   heroOrbLarge: {
+     position: "absolute",
+     width: 260,
+@@ -403,8 +445,14 @@
+     gap: 6,
+     paddingTop: 5,
+   },
++  heroCopyScrolled: {
++    flex: 0,
++    gap: 0,
++    paddingTop: 14,
++  },
+   heroTitleWrapper: { minWidth: 0 },
+   goalRow: { flexDirection: "row", alignItems: "stretch", gap: 11 },
++  goalRowHidden: { display: "none" },
+   goalRail: {
+     width: 2,
+     borderRadius: 2,

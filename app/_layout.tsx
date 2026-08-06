@@ -1,3 +1,4 @@
+import { configureRevenueCat } from "@/services/revenueCat";
 import {
   NotoSansKR_400Regular,
   NotoSansKR_700Bold,
@@ -136,8 +137,11 @@ export default function RootLayout() {
   useMediaSessionLifecycle();
 
   const customFontsAvailable = fontsLoaded && !fontError && !forceFontFallback;
-
   const appReady = fontsLoaded || Boolean(fontError) || forceFontFallback;
+
+  React.useEffect(() => {
+    configureRevenueCat();
+  }, []);
 
   React.useEffect(() => {
     if (!fontError && !forceFontFallback) {

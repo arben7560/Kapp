@@ -1,49 +1,137 @@
-import type { ProductSubscription } from "expo-iap";
+import type {
+  CustomerInfo,
+  PurchasesEntitlementInfo,
+  PurchasesError,
+  PurchasesPackage,
+} from "react-native-purchases";
+import Purchases from "react-native-purchases";
+import { Linking } from "react-native";
 import React from "react";
+
 import {
   DEV_UNLOCK_ALL,
   ENABLE_NATIVE_IAP,
+  PREMIUM_ENTITLEMENT_ID,
   PREMIUM_PRICE_FALLBACKS,
-  PREMIUM_PRODUCT_IDS,
-  PREMIUM_SUBSCRIPTION_OFFERS,
   type SubscriptionOfferId,
 } from "./config";
-import {
-  createDeveloperEntitlement,
-  derivePremiumEntitlement,
-  isPremiumPurchase,
-} from "./entitlements";
-import {
-  findSubscriptionOffer,
-  openStoreSubscriptionManagement,
-  requestSubscriptionPurchase,
-  toPaywallError,
-} from "./purchases";
-import type { PaywallContextValue, PaywallError } from "./types";
+import { createDeveloperEntitlement } from "./entitlements";
+import type {
+  PaywallContextValue,
+  PaywallError,
+  PremiumEntitlement,
+} from "./types";
 
 const PaywallContext = React.createContext<PaywallContextValue | undefined>(
-  undefined
+  undefined,
 );
 
-const emptySubscriptions = {} as Partial<
-  Record<SubscriptionOfferId, ProductSubscription>
->;
+const emptySubscriptions: Partial<
+  Record<SubscriptionOfferId, PurchasesPackage>
+> = {};
 
-const noopAsync = async () => undefined;
+const noopAsync = async (): Promise<void> => undefined;
 
-const getExpoIap = () => {
-  // Keep the native module out of Expo Go / preview runtimes.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return require("expo-iap") as typeof import("expo-iap");
-};
+function toRevenueCatError(error: unknown): PaywallError {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "userCancelled" in error &&
+    (error as PurchasesError).userCancelled
+  ) {
+    return {
+      code: "purchase-cancelled",
+      message: "",
+    };
+  }
 
-function DevPaywallProvider({ children }: { children: React.ReactNode }) {
-  const entitlement = React.useMemo(() => createDeveloperEntitlement(), []);
+  if (error instanceof Error) {
+    return {
+      code:
+        "code" in error && typeof error.code === "string"
+          ? error.code
+          : "revenuecat-error",
+      message:
+        error.message ||
+        "Une erreur est survenue pendant la gestion de l’abonnement.",
+    };
+  }
+
+  return {
+    code: "revenuecat-error",
+    message:
+      "Une erreur est survenue pendant la gestion de l’abonnement.",
+  };
+}
+
+function getPremiumEntitlementInfo(
+  customerInfo: CustomerInfo,
+): PurchasesEntitlementInfo | null {
+  return (
+    customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID] ?? null
+  );
+}
+
+function deriveRevenueCatEntitlement(
+  customerInfo: CustomerInfo | null,
+): PremiumEntitlement {
+  if (!customerInfo) {
+    return {
+      hasAccess: false,
+      source: "none",
+    };
+  }
+
+  const entitlementInfo = getPremiumEntitlementInfo(customerInfo);
+
+  if (!entitlementInfo) {
+    return {
+      hasAccess: false,
+      source: "none",
+    };
+  }
+
+  return {
+    hasAccess: entitlementInfo.isActive,
+    source: "store",
+    productId: entitlementInfo.productIdentifier,
+    expiresAt: entitlementInfo.expirationDate
+      ? Date.parse(entitlementInfo.expirationDate)
+      : null,
+    willAutoRenew: entitlementInfo.willRenew,
+  };
+}
+
+function mapPackages(
+  currentOffering:
+    | Awaited<ReturnType<typeof Purchases.getOfferings>>["current"]
+    | null,
+): Partial<Record<SubscriptionOfferId, PurchasesPackage>> {
+  if (!currentOffering) {
+    return {};
+  }
+
+  return {
+    monthly: currentOffering.monthly ?? undefined,
+    yearly: currentOffering.annual ?? undefined,
+  };
+}
+
+function DevPaywallProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const entitlement = React.useMemo(
+    () => createDeveloperEntitlement(),
+    [],
+  );
 
   const value = React.useMemo<PaywallContextValue>(
     () => ({
       activeSubscriptions: [],
-      clearError: () => null,
+      clearError: () => undefined,
+      customerInfo: null,
       displayPrices: PREMIUM_PRICE_FALLBACKS,
       entitlement,
       error: null,
@@ -61,11 +149,13 @@ function DevPaywallProvider({ children }: { children: React.ReactNode }) {
       subscribeYearly: noopAsync,
       subscriptions: emptySubscriptions,
     }),
-    [entitlement]
+    [entitlement],
   );
 
   return (
-    <PaywallContext.Provider value={value}>{children}</PaywallContext.Provider>
+    <PaywallContext.Provider value={value}>
+      {children}
+    </PaywallContext.Provider>
   );
 }
 
@@ -75,19 +165,20 @@ function LockedPreviewPaywallProvider({
   children: React.ReactNode;
 }) {
   const [error, setError] = React.useState<PaywallError | null>(null);
-  const entitlement = React.useMemo(
+
+  const entitlement = React.useMemo<PremiumEntitlement>(
     () => ({
       hasAccess: false,
-      source: "none" as const,
+      source: "none",
     }),
-    []
+    [],
   );
 
   const showNativeRuntimeError = React.useCallback(async () => {
     setError({
       code: "native-iap-disabled",
       message:
-        "Impossible de finaliser cette action pour le moment. Réessaie plus tard.",
+        "Le système d’abonnement est indisponible dans cet environnement.",
     });
   }, []);
 
@@ -95,6 +186,7 @@ function LockedPreviewPaywallProvider({
     () => ({
       activeSubscriptions: [],
       clearError: () => setError(null),
+      customerInfo: null,
       displayPrices: PREMIUM_PRICE_FALLBACKS,
       entitlement,
       error,
@@ -112,84 +204,38 @@ function LockedPreviewPaywallProvider({
       subscribeYearly: showNativeRuntimeError,
       subscriptions: emptySubscriptions,
     }),
-    [entitlement, error, showNativeRuntimeError]
+    [entitlement, error, showNativeRuntimeError],
   );
 
   return (
-    <PaywallContext.Provider value={value}>{children}</PaywallContext.Provider>
+    <PaywallContext.Provider value={value}>
+      {children}
+    </PaywallContext.Provider>
   );
 }
 
-function StorePaywallProvider({ children }: { children: React.ReactNode }) {
-  const { deepLinkToSubscriptions, useIAP } = getExpoIap();
+function StorePaywallProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [customerInfo, setCustomerInfo] =
+    React.useState<CustomerInfo | null>(null);
+
+  const [subscriptions, setSubscriptions] = React.useState<
+    Partial<Record<SubscriptionOfferId, PurchasesPackage>>
+  >(emptySubscriptions);
+
   const [error, setError] = React.useState<PaywallError | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isPurchasing, setIsPurchasing] = React.useState(false);
   const [isRestoring, setIsRestoring] = React.useState(false);
 
-  const {
-    activeSubscriptions,
-    connected,
-    fetchProducts,
-    finishTransaction,
-    getActiveSubscriptions,
-    requestPurchase,
-    restorePurchases: restoreNativePurchases,
-    subscriptions: nativeSubscriptions,
-  } = useIAP({
-    onError: (iapError) => {
-      setError(toPaywallError(iapError));
-      setIsLoading(false);
-      setIsPurchasing(false);
-      setIsRestoring(false);
+  const updateCustomerInfo = React.useCallback(
+    (nextCustomerInfo: CustomerInfo) => {
+      setCustomerInfo(nextCustomerInfo);
     },
-    onPurchaseError: (purchaseError) => {
-      setError(toPaywallError(purchaseError));
-      setIsPurchasing(false);
-    },
-    onPurchaseSuccess: async (purchase) => {
-      try {
-        if (isPremiumPurchase(purchase)) {
-          await finishTransaction({ purchase, isConsumable: false });
-          await getActiveSubscriptions(PREMIUM_PRODUCT_IDS);
-        }
-      } catch (finishError) {
-        setError(toPaywallError(finishError));
-      } finally {
-        setIsPurchasing(false);
-      }
-    },
-  });
-
-  const subscriptions = React.useMemo(
-    () =>
-      PREMIUM_SUBSCRIPTION_OFFERS.reduce(
-        (mappedSubscriptions, offer) => ({
-          ...mappedSubscriptions,
-          [offer.id]: findSubscriptionOffer(nativeSubscriptions, offer.id),
-        }),
-        {} as Partial<Record<SubscriptionOfferId, ProductSubscription>>
-      ),
-    [nativeSubscriptions]
-  );
-
-  const displayPrices = React.useMemo(
-    () =>
-      PREMIUM_SUBSCRIPTION_OFFERS.reduce(
-        (prices, offer) => ({
-          ...prices,
-          [offer.id]:
-            subscriptions[offer.id]?.displayPrice ??
-            PREMIUM_PRICE_FALLBACKS[offer.id],
-        }),
-        {} as Record<SubscriptionOfferId, string>
-      ),
-    [subscriptions]
-  );
-
-  const entitlement = React.useMemo(
-    () => derivePremiumEntitlement(activeSubscriptions),
-    [activeSubscriptions]
+    [],
   );
 
   const refreshEntitlements = React.useCallback(async () => {
@@ -197,101 +243,211 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
 
     try {
-      await getActiveSubscriptions(PREMIUM_PRODUCT_IDS);
+      const nextCustomerInfo = await Purchases.getCustomerInfo();
+      updateCustomerInfo(nextCustomerInfo);
     } catch (refreshError) {
-      setError(toPaywallError(refreshError));
+      setError(toRevenueCatError(refreshError));
     } finally {
       setIsLoading(false);
     }
-  }, [getActiveSubscriptions]);
+  }, [updateCustomerInfo]);
+
+  const loadRevenueCatState = React.useCallback(async () => {
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const [offerings, nextCustomerInfo] = await Promise.all([
+        Purchases.getOfferings(),
+        Purchases.getCustomerInfo(),
+      ]);
+
+      setSubscriptions(mapPackages(offerings.current));
+      updateCustomerInfo(nextCustomerInfo);
+
+      if (!offerings.current) {
+        setError({
+          code: "offering-unavailable",
+          message:
+            "Les abonnements sont momentanément indisponibles.",
+        });
+      }
+    } catch (loadError) {
+      setError(toRevenueCatError(loadError));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [updateCustomerInfo]);
 
   React.useEffect(() => {
-    if (!connected) return;
+    void loadRevenueCatState();
 
-    let mounted = true;
-
-    const loadStoreState = async () => {
-      setError(null);
-      setIsLoading(true);
-
-      try {
-        await fetchProducts({
-          skus: PREMIUM_PRODUCT_IDS,
-          type: "subs",
-        });
-        await getActiveSubscriptions(PREMIUM_PRODUCT_IDS);
-      } catch (loadError) {
-        if (mounted) {
-          setError(toPaywallError(loadError));
-        }
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void loadStoreState();
+    Purchases.addCustomerInfoUpdateListener(updateCustomerInfo);
 
     return () => {
-      mounted = false;
+      Purchases.removeCustomerInfoUpdateListener(updateCustomerInfo);
     };
-  }, [connected, fetchProducts, getActiveSubscriptions]);
+  }, [loadRevenueCatState, updateCustomerInfo]);
 
   const subscribe = React.useCallback(
     async (offerId: SubscriptionOfferId) => {
+      if (isPurchasing || isRestoring) {
+        return;
+      }
+
+      const selectedPackage = subscriptions[offerId];
+
+      if (!selectedPackage) {
+        setError({
+          code: "package-unavailable",
+          message:
+            "Cette formule d’abonnement est momentanément indisponible.",
+        });
+        return;
+      }
+
       setError(null);
       setIsPurchasing(true);
 
       try {
-        await requestSubscriptionPurchase({
-          offerId,
-          requestPurchase,
-          subscription: subscriptions[offerId],
-        });
+        const { customerInfo: purchasedCustomerInfo } =
+          await Purchases.purchasePackage(selectedPackage);
+
+        updateCustomerInfo(purchasedCustomerInfo);
+
+        const hasPremium =
+          purchasedCustomerInfo.entitlements.active[
+            PREMIUM_ENTITLEMENT_ID
+          ] !== undefined;
+
+        if (!hasPremium) {
+          setError({
+            code: "entitlement-not-granted",
+            message:
+              "L’achat a été enregistré, mais l’accès Premium n’a pas encore été activé. Utilise « Restaurer mes achats » dans quelques instants.",
+          });
+        }
       } catch (purchaseError) {
-        setError(toPaywallError(purchaseError));
+        const mappedError = toRevenueCatError(purchaseError);
+
+        // Une annulation volontaire ne doit pas apparaître comme une erreur.
+        if (mappedError.code !== "purchase-cancelled") {
+          setError(mappedError);
+        }
+      } finally {
         setIsPurchasing(false);
       }
     },
-    [requestPurchase, subscriptions]
+    [
+      isPurchasing,
+      isRestoring,
+      subscriptions,
+      updateCustomerInfo,
+    ],
   );
 
   const restorePurchases = React.useCallback(async () => {
+    if (isPurchasing || isRestoring) {
+      return;
+    }
+
     setError(null);
     setIsRestoring(true);
 
     try {
-      await restoreNativePurchases();
-      await getActiveSubscriptions(PREMIUM_PRODUCT_IDS);
+      const restoredCustomerInfo =
+        await Purchases.restorePurchases();
+
+      updateCustomerInfo(restoredCustomerInfo);
+
+      const hasPremium =
+        restoredCustomerInfo.entitlements.active[
+          PREMIUM_ENTITLEMENT_ID
+        ] !== undefined;
+
+      if (!hasPremium) {
+        setError({
+          code: "no-purchases-found",
+          message:
+            "Aucun abonnement Premium actif n’a été trouvé pour ce compte.",
+        });
+      }
     } catch (restoreError) {
-      setError(toPaywallError(restoreError));
+      setError(toRevenueCatError(restoreError));
     } finally {
       setIsRestoring(false);
     }
-  }, [getActiveSubscriptions, restoreNativePurchases]);
+  }, [
+    isPurchasing,
+    isRestoring,
+    updateCustomerInfo,
+  ]);
 
   const openSubscriptionManagement = React.useCallback(async () => {
     setError(null);
 
     try {
-      await openStoreSubscriptionManagement({
-        deepLinkToSubscriptions,
-        offerId: entitlement.productId
-          ? PREMIUM_SUBSCRIPTION_OFFERS.find(
-              (offer) => offer.productId === entitlement.productId
-            )?.id
-          : undefined,
-      });
+      const latestCustomerInfo =
+        customerInfo ?? (await Purchases.getCustomerInfo());
+
+      if (!customerInfo) {
+        updateCustomerInfo(latestCustomerInfo);
+      }
+
+      const managementUrl = latestCustomerInfo.managementURL;
+
+      if (!managementUrl) {
+        setError({
+          code: "management-url-unavailable",
+          message:
+            "Aucun abonnement actif ne peut être géré pour le moment.",
+        });
+        return;
+      }
+
+      const canOpen = await Linking.canOpenURL(managementUrl);
+
+      if (!canOpen) {
+        throw new Error(
+          "Le lien de gestion de l’abonnement ne peut pas être ouvert.",
+        );
+      }
+
+      await Linking.openURL(managementUrl);
     } catch (managementError) {
-      setError(toPaywallError(managementError));
+      setError(toRevenueCatError(managementError));
     }
-  }, [deepLinkToSubscriptions, entitlement.productId]);
+  }, [customerInfo, updateCustomerInfo]);
+
+  const displayPrices = React.useMemo<
+    Record<SubscriptionOfferId, string>
+  >(
+    () => ({
+      monthly:
+        subscriptions.monthly?.product.priceString ??
+        PREMIUM_PRICE_FALLBACKS.monthly,
+      yearly:
+        subscriptions.yearly?.product.priceString ??
+        PREMIUM_PRICE_FALLBACKS.yearly,
+    }),
+    [subscriptions],
+  );
+
+  const entitlement = React.useMemo(
+    () => deriveRevenueCatEntitlement(customerInfo),
+    [customerInfo],
+  );
+
+  const activeSubscriptions = React.useMemo(
+    () => customerInfo?.activeSubscriptions ?? [],
+    [customerInfo],
+  );
 
   const value = React.useMemo<PaywallContextValue>(
     () => ({
       activeSubscriptions,
       clearError: () => setError(null),
+      customerInfo,
       displayPrices,
       entitlement,
       error,
@@ -299,7 +455,7 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
       isDeveloperUnlocked: false,
       isLoading,
       isPurchasing,
-      isReady: connected && !isLoading,
+      isReady: !isLoading,
       isRestoring,
       openSubscriptionManagement,
       refreshEntitlements,
@@ -311,7 +467,7 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       activeSubscriptions,
-      connected,
+      customerInfo,
       displayPrices,
       entitlement,
       error,
@@ -323,33 +479,51 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
       restorePurchases,
       subscribe,
       subscriptions,
-    ]
+    ],
   );
 
   return (
-    <PaywallContext.Provider value={value}>{children}</PaywallContext.Provider>
+    <PaywallContext.Provider value={value}>
+      {children}
+    </PaywallContext.Provider>
   );
 }
 
-export function PaywallProvider({ children }: { children: React.ReactNode }) {
+export function PaywallProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   if (DEV_UNLOCK_ALL) {
-    return <DevPaywallProvider>{children}</DevPaywallProvider>;
+    return (
+      <DevPaywallProvider>
+        {children}
+      </DevPaywallProvider>
+    );
   }
 
   if (!ENABLE_NATIVE_IAP) {
     return (
-      <LockedPreviewPaywallProvider>{children}</LockedPreviewPaywallProvider>
+      <LockedPreviewPaywallProvider>
+        {children}
+      </LockedPreviewPaywallProvider>
     );
   }
 
-  return <StorePaywallProvider>{children}</StorePaywallProvider>;
+  return (
+    <StorePaywallProvider>
+      {children}
+    </StorePaywallProvider>
+  );
 }
 
-export function usePaywall() {
+export function usePaywall(): PaywallContextValue {
   const context = React.useContext(PaywallContext);
 
   if (!context) {
-    throw new Error("usePaywall must be used inside PaywallProvider.");
+    throw new Error(
+      "usePaywall must be used inside PaywallProvider.",
+    );
   }
 
   return context;
