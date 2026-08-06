@@ -3,6 +3,7 @@ import React from "react";
 import {
   AccessibilityInfo,
   Animated,
+  Easing,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Pressable,
@@ -23,8 +24,10 @@ import { useGrammarModalLayout } from "./useGrammarModalLayout";
 const COLORS = SeoulMidnightGlass.colors;
 const ACCENT = "#2DD4BF";
 
-const COMPACT_HEADER_SCROLL_Y = 56;
-const EXPANDED_HEADER_SCROLL_Y = 16;
+const COMPACT_HEADER_SCROLL_Y = 72;
+const EXPANDED_HEADER_SCROLL_Y = 1;
+const HEADER_ANIMATION_DURATION = 320;
+const HEADER_EXPANSION_LOCK_DURATION = 380;
 
 type GrammarLessonGuideModalProps = React.PropsWithChildren<{
   visible: boolean;
@@ -45,29 +48,68 @@ export function GrammarLessonGuideModal({
   children,
 }: GrammarLessonGuideModalProps) {
   const [entrance] = React.useState(() => new Animated.Value(0));
+  const [headerProgress] = React.useState(() => new Animated.Value(0));
   const [isHeaderCompact, setIsHeaderCompact] = React.useState(false);
 
   const bodyScrollRef = React.useRef<ScrollView>(null);
   const headerCompactRef = React.useRef(false);
+  const compactStartedAtRef = React.useRef(0);
+  const previousScrollYRef = React.useRef(0);
+
   const layout = useGrammarModalLayout();
 
-  const updateHeaderCompactState = React.useCallback((compact: boolean) => {
-    if (headerCompactRef.current === compact) return;
+  const updateHeaderCompactState = React.useCallback(
+    (compact: boolean, animated = true) => {
+      if (headerCompactRef.current === compact) return;
 
-    headerCompactRef.current = compact;
-    setIsHeaderCompact(compact);
-  }, []);
+      headerCompactRef.current = compact;
+      setIsHeaderCompact(compact);
+
+      if (compact) {
+        compactStartedAtRef.current = Date.now();
+      }
+
+      headerProgress.stopAnimation();
+
+      if (!animated) {
+        headerProgress.setValue(compact ? 1 : 0);
+        return;
+      }
+
+      Animated.timing(headerProgress, {
+        toValue: compact ? 1 : 0,
+        duration: HEADER_ANIMATION_DURATION,
+        easing: Easing.bezier(0.22, 1, 0.36, 1),
+        useNativeDriver: false,
+      }).start();
+    },
+    [headerProgress],
+  );
 
   const handleBodyScroll = React.useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const scrollY = Math.max(0, event.nativeEvent.contentOffset.y);
+      const previousScrollY = previousScrollYRef.current;
+      const isScrollingUp = scrollY < previousScrollY;
+
+      previousScrollYRef.current = scrollY;
 
       if (!headerCompactRef.current && scrollY >= COMPACT_HEADER_SCROLL_Y) {
         updateHeaderCompactState(true);
         return;
       }
 
-      if (headerCompactRef.current && scrollY <= EXPANDED_HEADER_SCROLL_Y) {
+      if (!headerCompactRef.current) return;
+
+      const compactDuration = Date.now() - compactStartedAtRef.current;
+      const expansionUnlocked =
+        compactDuration >= HEADER_EXPANSION_LOCK_DURATION;
+
+      if (
+        expansionUnlocked &&
+        isScrollingUp &&
+        scrollY <= EXPANDED_HEADER_SCROLL_Y
+      ) {
         updateHeaderCompactState(false);
       }
     },
@@ -80,7 +122,10 @@ export function GrammarLessonGuideModal({
     if (!visible) {
       entrance.stopAnimation();
       entrance.setValue(0);
-      updateHeaderCompactState(false);
+
+      previousScrollYRef.current = 0;
+      compactStartedAtRef.current = 0;
+      updateHeaderCompactState(false, false);
 
       return () => {
         active = false;
@@ -117,7 +162,9 @@ export function GrammarLessonGuideModal({
   React.useEffect(() => {
     if (!visible) return;
 
-    updateHeaderCompactState(false);
+    previousScrollYRef.current = 0;
+    compactStartedAtRef.current = 0;
+    updateHeaderCompactState(false, false);
 
     const frame = requestAnimationFrame(() => {
       bodyScrollRef.current?.scrollTo({
@@ -128,6 +175,90 @@ export function GrammarLessonGuideModal({
 
     return () => cancelAnimationFrame(frame);
   }, [title, updateHeaderCompactState, visible]);
+
+  const expandedHeroHeight = layout.isVeryShortHeight
+    ? 150
+    : layout.isShortHeight
+      ? 190
+      : layout.useWideLayout
+        ? 268
+        : layout.isCompactWidth
+          ? 232
+          : 250;
+
+  const compactHeroHeight = layout.isCompactWidth ? 118 : 126;
+
+  const expandedHeroPaddingTop = layout.isVeryShortHeight
+    ? 11
+    : layout.isShortHeight
+      ? 17
+      : layout.useWideLayout
+        ? 26
+        : layout.isCompactWidth
+          ? 17
+          : 22;
+
+  const expandedHeroPaddingBottom = layout.isVeryShortHeight
+    ? 12
+    : layout.isShortHeight
+      ? 20
+      : layout.useWideLayout
+        ? 30
+        : layout.isCompactWidth
+          ? 21
+          : 26;
+
+  const expandedTitlePaddingTop = layout.isVeryShortHeight ? 5 : 24;
+
+  const animatedHeroHeight = headerProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [expandedHeroHeight, compactHeroHeight],
+  });
+
+  const animatedHeroPaddingTop = headerProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [expandedHeroPaddingTop, 12],
+  });
+
+  const animatedHeroPaddingBottom = headerProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [expandedHeroPaddingBottom, 12],
+  });
+
+  const animatedTitlePaddingTop = headerProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [expandedTitlePaddingTop, 8],
+  });
+
+  const animatedTitleScale = headerProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0.88],
+  });
+
+  const animatedTitleTranslateY = headerProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -2],
+  });
+
+  const animatedGoalOpacity = headerProgress.interpolate({
+    inputRange: [0, 0.45, 1],
+    outputRange: [1, 0, 0],
+  });
+
+  const animatedGoalHeight = headerProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [88, 0],
+  });
+
+  const animatedGoalMarginTop = headerProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [17, 0],
+  });
+
+  const animatedOrbOpacity = headerProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0.55],
+  });
 
   return (
     <AppDialog
@@ -166,17 +297,18 @@ export function GrammarLessonGuideModal({
           },
         ]}
       >
-        <View
+        <Animated.View
           style={[
             styles.hero,
             layout.isCompactWidth && styles.heroCompact,
             layout.useWideLayout && styles.heroWide,
             layout.isShortHeight && styles.heroShort,
             layout.isVeryShortHeight && styles.heroVeryShort,
-            isHeaderCompact && styles.heroCollapsed,
-            isHeaderCompact &&
-              layout.isCompactWidth &&
-              styles.heroCollapsedCompact,
+            {
+              height: animatedHeroHeight,
+              paddingTop: animatedHeroPaddingTop,
+              paddingBottom: animatedHeroPaddingBottom,
+            },
           ]}
         >
           <LinearGradient
@@ -191,8 +323,18 @@ export function GrammarLessonGuideModal({
             style={ABSOLUTE_FILL}
           />
 
-          <View style={styles.heroOrbLarge} />
-          <View style={styles.heroOrbSmall} />
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.heroDecoration,
+              {
+                opacity: animatedOrbOpacity,
+              },
+            ]}
+          >
+            <View style={styles.heroOrbLarge} />
+            <View style={styles.heroOrbSmall} />
+          </Animated.View>
 
           <View style={styles.headerTopRow}>
             <View style={styles.lessonBadge}>
@@ -210,7 +352,6 @@ export function GrammarLessonGuideModal({
               onPress={onRequestClose}
               style={({ pressed }) => [
                 styles.closeButton,
-                isHeaderCompact && styles.closeButtonCompact,
                 pressed && styles.pressed,
               ]}
             >
@@ -220,29 +361,57 @@ export function GrammarLessonGuideModal({
             </Pressable>
           </View>
 
-          <View
+          <Animated.View
             style={[
               styles.heroCopy,
               layout.isVeryShortHeight && styles.heroCopyVeryShort,
-              isHeaderCompact && styles.heroCopyCollapsed,
+              {
+                paddingTop: animatedTitlePaddingTop,
+              },
             ]}
           >
-            <View style={styles.heroTitleWrapper}>
+            <Animated.View
+              style={[
+                styles.heroTitleWrapper,
+                {
+                  transform: [
+                    {
+                      translateY: animatedTitleTranslateY,
+                    },
+                    {
+                      scale: animatedTitleScale,
+                    },
+                  ],
+                },
+              ]}
+            >
               <AppText
                 accessibilityRole="header"
                 variant={
-                  isHeaderCompact ||
-                  layout.isCompactWidth ||
-                  layout.isVeryShortHeight
+                  layout.isCompactWidth || layout.isVeryShortHeight
                     ? "featureTitle"
                     : "screenTitle"
                 }
               >
                 {title}
               </AppText>
-            </View>
+            </Animated.View>
 
-            {!isHeaderCompact && (
+            <Animated.View
+              pointerEvents={isHeaderCompact ? "none" : "auto"}
+              accessibilityElementsHidden={isHeaderCompact}
+              importantForAccessibility={
+                isHeaderCompact ? "no-hide-descendants" : "auto"
+              }
+              style={[
+                styles.goalAnimatedContainer,
+                {
+                  opacity: animatedGoalOpacity,
+                  maxHeight: animatedGoalHeight,
+                  marginTop: animatedGoalMarginTop,
+                },
+              ]}
+            >
               <View style={styles.goalRow}>
                 <View style={styles.goalRail} />
 
@@ -256,9 +425,9 @@ export function GrammarLessonGuideModal({
                   </AppText>
                 </View>
               </View>
-            )}
-          </View>
-        </View>
+            </Animated.View>
+          </Animated.View>
+        </Animated.View>
 
         <ScrollView
           ref={bodyScrollRef}
@@ -373,7 +542,6 @@ const styles = StyleSheet.create({
   },
 
   hero: {
-    minHeight: 250,
     paddingHorizontal: 24,
     paddingTop: 22,
     paddingBottom: 26,
@@ -383,42 +551,23 @@ const styles = StyleSheet.create({
   },
 
   heroCompact: {
-    minHeight: 232,
     paddingHorizontal: 17,
-    paddingTop: 17,
-    paddingBottom: 21,
   },
 
   heroWide: {
-    minHeight: 268,
     paddingHorizontal: 30,
-    paddingTop: 26,
-    paddingBottom: 30,
   },
 
   heroShort: {
-    minHeight: 190,
-    paddingTop: 17,
-    paddingBottom: 20,
+    paddingHorizontal: 24,
   },
 
   heroVeryShort: {
-    minHeight: 0,
     paddingHorizontal: 16,
-    paddingTop: 11,
-    paddingBottom: 12,
   },
 
-  heroCollapsed: {
-    minHeight: 0,
-    paddingTop: 14,
-    paddingBottom: 14,
-  },
-
-  heroCollapsedCompact: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
+  heroDecoration: {
+    ...StyleSheet.absoluteFillObject,
   },
 
   heroOrbLarge: {
@@ -486,34 +635,26 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  closeButtonCompact: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-  },
-
   heroCopy: {
     flex: 1,
     justifyContent: "flex-end",
-    gap: 17,
+    gap: 0,
     paddingTop: 24,
     maxWidth: 690,
   },
 
   heroCopyVeryShort: {
     flex: 0,
-    gap: 6,
-    paddingTop: 5,
-  },
-
-  heroCopyCollapsed: {
-    flex: 0,
-    paddingTop: 10,
-    gap: 0,
   },
 
   heroTitleWrapper: {
     minWidth: 0,
+    alignSelf: "flex-start",
+    transformOrigin: "left bottom",
+  },
+
+  goalAnimatedContainer: {
+    overflow: "hidden",
   },
 
   goalRow: {

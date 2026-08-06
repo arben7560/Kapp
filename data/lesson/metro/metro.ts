@@ -1009,13 +1009,14 @@ export const myeongdongToItaewonLesson: MetroLesson = {
       id: "ia_end_summary",
       speaker: "ai",
       phase: "Fin",
-      text: "Pour résumer : à la station Myeongdong, prenez la ligne 4 en direction de Sadang ou d'Oido. À la station Samgakji, changez pour la ligne 6 en direction de Bonghwasan ou de Sinnae, puis descendez à la station Itaewon. Pour rejoindre la rue principale, c'est la sortie n°1.",
+      text: "À la station Myeongdong, prenez la ligne 4 en direction de Sadang ou Oido. À Samgakji, changez pour la ligne 6 en direction de Bonghwasan ou Sinnae, puis descendez à Itaewon et prenez la sortie 1.",
       korean:
-        "정리해 드리면, 명동역에서 4호선 사당이나 오이도 방면 열차를 타세요. 삼각지역에서 내려서 6호선 봉화산이나 신내 방면으로 갈아타고, 이태원역에서 내리시면 됩니다. 메인 거리로 가시려면 1번 출구가 편해요.",
+        "명동역에서 사당이나 오이도 방면 사호선을 타세요. 삼각지역에서 봉화산이나 신내 방면 육호선으로 갈아타고, 이태원역에서 내려 일 번 출구로 가시면 돼요.",
       french:
-        "Pour résumer : à la station Myeongdong, prenez la ligne 4 en direction de Sadang ou d'Oido. À la station Samgakji, changez pour la ligne 6 en direction de Bonghwasan ou de Sinnae, puis descendez à la station Itaewon. Pour rejoindre la rue principale, c'est la sortie n°1.",
+        "À la station Myeongdong, prenez la ligne 4 en direction de Sadang ou Oido. À Samgakji, changez pour la ligne 6 en direction de Bonghwasan ou Sinnae, puis descendez à Itaewon et prenez la sortie 1.",
       romanization:
-        "Jeongnihae deurimyeon, Myeongdong-yeogeseo sahoseon Sadang-ina Oido bangmyeon yeolchareul taseyo.Samgakji-yeogeseo naeryeoseo yukhoseon Bonghwasan-ina Sinnae bangmyeoneuro garatago,Itaewon-yeogeseo naerisimyeon doemnida.Mein georiro gasiryeomyeon ilbeon chulguga pyeonhaeyo.",
+        "Myeongdong-yeogeseo Sadang-ina Oido bangmyeon sahoseoneul taseyo. Samgakji-yeogeseo Bonghwasan-ina Sinnae bangmyeon yukoseoneuro garatago, Itaewon-yeogeseo naeryeo il beon chulguro gasimyeon dwaeyo.",
+
       choices: [
         {
           id: "thank_after_summary",
@@ -1462,13 +1463,14 @@ export const hongikToGangnamLesson: MetroLesson = {
       id: "ia_exit_landmark_info",
       speaker: "ai",
       phase: "Sortie",
-      text: "Teheran-ro commence à Gangnam. En revanche, le COEX se trouve à Samseong. Restez sur la ligne 2 pendant trois stations supplémentaires, descendez à Samseong, puis dirigez-vous vers les sorties 5 ou 6.",
+      text: "Le COEX se trouve à Samseong. Continuez sur la ligne 2 pendant trois stations, puis prenez la sortie 5 ou 6.",
       korean:
-        "테헤란로는 강남역에서 이어져요. 하지만 코엑스는 삼성역에 있어요. 2호선을 세 정거장 더 타고 삼성역에서 내려 5번이나 6번 출구 쪽으로 가세요.",
+        "코엑스는 삼성역에 있어요. 2호선을 세 정거장 더 타고 내려서 5번이나 6번 출구로 가세요.",
       french:
-        "Teheran-ro commence à Gangnam. En revanche, le COEX se trouve à Samseong. Restez sur la ligne 2 pendant trois stations supplémentaires, descendez à Samseong, puis dirigez-vous vers les sorties 5 ou 6.",
+        "Le COEX se trouve à Samseong. Continuez sur la ligne 2 pendant trois stations, puis prenez la sortie 5 ou 6.",
       romanization:
-        "Teheran-roneun Gangnam-yeogeseo ieojyeoyo. Hajiman Koekseuneun Samseong-yeoge isseoyo. Ihoseoneul se jeonggeojang deo tago Samseong-yeogeseo naeryeo obeon-ina yukbeon chulgu jjogeuro gaseyo.",
+        "Koekseuneun Samseong-yeoge isseoyo. Ihoseoneul se jeonggeojang deo tago naeryeoseo obeon-ina yukbeon chulguro gaseyo.",
+
       choices: [
         {
           id: "repeat_landmark",

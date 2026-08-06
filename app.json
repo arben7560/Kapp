@@ -7,7 +7,9 @@
     "icon": "./assets/images/icon.png",
     "scheme": "kapp",
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": ["assets/**/*"],
+    "assetBundlePatterns": [
+      "assets/**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.arben60.kapp",
@@ -88,7 +90,8 @@
         }
       ],
       "expo-status-bar",
-      "expo-iap"
+      "expo-iap",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,
