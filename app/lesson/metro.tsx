@@ -1,7 +1,6 @@
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
-import * as Speech from "@/lib/speechPlayback";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -10,16 +9,14 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Vibration,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../../components/app-text";
 import { AppBackButton } from "../../components/ui/app-back-button";
 import { RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../constants/layout";
-import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
-
 import { metroLessons } from "../../data/lesson/metroLessons";
+import { useVocAudio } from "../../hooks/useVocAudio";
 
 const COLORS = {
   bg: "#020306",
@@ -60,6 +57,31 @@ type Scene = {
   image: ImageSourcePropType;
   dialogue: DialogueLine[];
   expressions: Expression[];
+};
+
+const METRO_EXPRESSION_AUDIO: Record<Scene["id"], readonly number[]> = {
+  ai: [
+    require("../../assets/ai/metro-memo/agent-1.mp3"),
+    require("../../assets/ai/metro-memo/agent-2.mp3"),
+    require("../../assets/ai/metro-memo/agent-3.mp3"),
+    require("../../assets/ai/metro-memo/agent-4.mp3"),
+    require("../../assets/ai/metro-memo/agent-5.mp3"),
+    require("../../assets/ai/metro-memo/agent-6.mp3"),
+    require("../../assets/ai/metro-memo/agent-7.mp3"),
+    require("../../assets/ai/metro-memo/agent-8.mp3"),
+    require("../../assets/ai/metro-memo/agent-9.mp3"),
+  ],
+  user: [
+    require("../../assets/ai/metro-memo/voyageur-1.mp3"),
+    require("../../assets/ai/metro-memo/voyageur-2.mp3"),
+    require("../../assets/ai/metro-memo/voyageur-3.mp3"),
+    require("../../assets/ai/metro-memo/voyageur-4.mp3"),
+    require("../../assets/ai/metro-memo/voyageur-5.mp3"),
+    require("../../assets/ai/metro-memo/voyageur-6.mp3"),
+    require("../../assets/ai/metro-memo/voyageur-7.mp3"),
+    require("../../assets/ai/metro-memo/voyageur-8.mp3"),
+    require("../../assets/ai/metro-memo/voyageur-9.mp3"),
+  ],
 };
 
 const AGENT_TOOLBOX_EXPRESSIONS: Expression[] = [
@@ -227,28 +249,19 @@ const buildScenes = (): Scene[] => {
 };
 
 export default function MetroLesson() {
-  useSpeechLifecycle();
   const scenes = useMemo(() => buildScenes(), []);
   const [activeScene, setActiveScene] = useState<Scene>(scenes[0]);
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const { playAudio, stopAudio } = useVocAudio(setSelectedWord, {
+    trackPlayback: false,
+  });
 
   const bgFadeAnim = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    setSelectedWord(null);
-    Speech.stop();
-  }, [activeScene]);
-
-  useEffect(() => {
-    return () => {
-      Speech.stop();
-    };
-  }, []);
-
   const handleBack = useCallback(() => {
-    Speech.stop();
+    stopAudio();
 
     if (router.canGoBack()) {
       router.back();
@@ -256,30 +269,15 @@ export default function MetroLesson() {
     }
 
     router.replace("/(tabs)");
-  }, []);
-
-  const speak = (text: string, id: string) => {
-    Speech.stop();
-    setSelectedWord(id);
-    Vibration.vibrate(8);
-
-    Speech.speak(text, {
-      language: "ko-KR",
-      rate: 0.78,
-      pitch: 1,
-      onDone: () => setSelectedWord(null),
-      onStopped: () => setSelectedWord(null),
-      onError: () => setSelectedWord(null),
-    });
-  };
+  }, [stopAudio]);
 
   const handleSceneChange = (scene: Scene) => {
     if (scene.id === activeScene.id) return;
 
+    stopAudio();
     setPreviousBackground(activeScene.image);
     bgFadeAnim.setValue(1);
     setActiveScene(scene);
-
     Animated.timing(bgFadeAnim, {
       toValue: 0,
       duration: 420,
@@ -314,16 +312,20 @@ export default function MetroLesson() {
           </Animated.View>
         ) : null}
         <View style={styles.overlay} />
-
         <ScrollView contentContainerStyle={styles.scroll}>
           <View style={styles.header}>
             <View style={styles.backBtn}>
               <AppBackButton onPress={handleBack} />
             </View>
 
-            <AppText variant="sectionLabel" lineContract="singleLine" style={styles.headerTitle}>MÉTRO</AppText>
+            <AppText
+              variant="sectionLabel"
+              lineContract="singleLine"
+              style={styles.headerTitle}
+            >
+              MÉTRO
+            </AppText>
           </View>
-
           <View style={styles.selectorRow}>
             {scenes.map((scene) => (
               <Pressable
@@ -337,7 +339,9 @@ export default function MetroLesson() {
                   },
                 ]}
               >
-                <AppText variant="label" lineContract="singleLine"
+                <AppText
+                  variant="label"
+                  lineContract="singleLine"
                   style={[
                     styles.selectorText,
                     activeScene.id === scene.id && { color: scene.accent },
@@ -350,7 +354,9 @@ export default function MetroLesson() {
           </View>
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <AppText variant="sectionLabel" style={styles.toolboxTitle}>Expressions clés</AppText>
+              <AppText variant="sectionLabel" style={styles.toolboxTitle}>
+                Expressions clés
+              </AppText>
               <View
                 style={[
                   styles.toolboxLine,
@@ -358,16 +364,15 @@ export default function MetroLesson() {
                 ]}
               />
             </View>
-
             <View style={styles.expressionGrid}>
               {activeScene.expressions.map((exp, i) => {
                 const cardId = `${activeScene.id}-${i}`;
+                const audioSource = METRO_EXPRESSION_AUDIO[activeScene.id][i];
                 const isActive = selectedWord === cardId;
-
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() => speak(exp.word, cardId)}
+                    onPress={() => void playAudio(audioSource, cardId)}
                     style={({ pressed }) => [
                       styles.expPressable,
                       pressed && { transform: [{ scale: 0.985 }] },
@@ -394,9 +399,21 @@ export default function MetroLesson() {
                       />
                       <View style={styles.expContent}>
                         <View style={styles.expTopRow}>
-                          <View style={{ flex: 1, minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH }}>
-                            <AppText variant="koreanPrimary" script="korean" style={styles.expWord}>{exp.word}</AppText>
-                            <AppText variant="caption"
+                          <View
+                            style={{
+                              flex: 1,
+                              minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH,
+                            }}
+                          >
+                            <AppText
+                              variant="koreanPrimary"
+                              script="korean"
+                              style={styles.expWord}
+                            >
+                              {exp.word}
+                            </AppText>
+                            <AppText
+                              variant="caption"
                               style={[
                                 styles.expRom,
                                 { color: activeScene.accent },
@@ -405,7 +422,6 @@ export default function MetroLesson() {
                               {exp.rom}
                             </AppText>
                           </View>
-
                           <View
                             style={[
                               styles.listenPill,
@@ -415,7 +431,9 @@ export default function MetroLesson() {
                               },
                             ]}
                           >
-                            <AppText variant="caption" lineContract="singleLine"
+                            <AppText
+                              variant="caption"
+                              lineContract="singleLine"
                               style={[
                                 styles.listenIcon,
                                 { color: activeScene.accent },
@@ -423,12 +441,25 @@ export default function MetroLesson() {
                             >
                               {isActive ? "●" : "▶"}
                             </AppText>
-                            <AppText variant="label" lineContract="singleLine" style={styles.listenText}>ÉCOUTER</AppText>
+                            <AppText
+                              variant="label"
+                              lineContract="singleLine"
+                              style={styles.listenText}
+                            >
+                              ÉCOUTER
+                            </AppText>
                           </View>
                         </View>
-
-                        <AppText variant="bodyStrong" style={styles.expMean}>{exp.mean}</AppText>
-                        <AppText variant="bodySecondary" tone="muted" style={styles.expContext}>{exp.context}</AppText>
+                        <AppText variant="bodyStrong" style={styles.expMean}>
+                          {exp.mean}
+                        </AppText>
+                        <AppText
+                          variant="bodySecondary"
+                          tone="muted"
+                          style={styles.expContext}
+                        >
+                          {exp.context}
+                        </AppText>
                       </View>
                     </BlurView>
                   </Pressable>
@@ -453,7 +484,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(2,3,6,0.85)",
   },
   scroll: { paddingHorizontal: 20, paddingBottom: 50 },
-
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -468,7 +498,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: COLORS.pink,
   },
-
   selectorRow: {
     flexDirection: "row",
     justifyContent: "center",
@@ -487,7 +516,6 @@ const styles = StyleSheet.create({
   },
 
   toolbox: { marginTop: 40 },
-
   toolboxHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -498,7 +526,6 @@ const styles = StyleSheet.create({
     color: COLORS.muted,
   },
   toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
-
   expressionGrid: { gap: 14 },
   expPressable: { width: "100%" },
   expCard: {
@@ -526,8 +553,7 @@ const styles = StyleSheet.create({
     color: COLORS.txt,
     marginBottom: 2,
   },
-  expRom: {
-  },
+  expRom: {},
   expMean: {
     color: COLORS.txt,
     marginBottom: 4,
@@ -544,8 +570,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  listenIcon: {
-  },
+  listenIcon: {},
   listenText: {
     color: "rgba(255,255,255,0.78)",
   },

@@ -1,7 +1,6 @@
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
-import * as Speech from "@/lib/speechPlayback";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -10,14 +9,13 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Vibration,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../../components/app-text";
 import { AppBackButton } from "../../components/ui/app-back-button";
 import { RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../constants/layout";
-import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
+import { useVocAudio } from "../../hooks/useVocAudio";
 
 const COLORS = {
   bg: "#020306",
@@ -30,6 +28,33 @@ const COLORS = {
 };
 
 const CAFE_IMAGE = require("../../assets/images/cafe.jpg");
+
+const CAFE_EXPRESSION_AUDIO = {
+  server: [
+    require("../../assets/ai/cafe-memo/barista-1.mp3"),
+    require("../../assets/ai/cafe-memo/barista-2.mp3"),
+    require("../../assets/ai/cafe-memo/barista-3.mp3"),
+    require("../../assets/ai/cafe-memo/barista-4.mp3"),
+    require("../../assets/ai/cafe-memo/barista-5.mp3"),
+    require("../../assets/ai/cafe-memo/barista-6.mp3"),
+    require("../../assets/ai/cafe-memo/barista-7.mp3"),
+  ],
+  client: [
+    require("../../assets/ai/cafe-memo/client-1.mp3"),
+    require("../../assets/ai/cafe-memo/client-2.mp3"),
+    require("../../assets/ai/cafe-memo/client-3.mp3"),
+    require("../../assets/ai/cafe-memo/client-4.mp3"),
+    require("../../assets/ai/cafe-memo/client-5.mp3"),
+    require("../../assets/ai/cafe-memo/client-6.mp3"),
+    require("../../assets/ai/cafe-memo/client-7.mp3"),
+    require("../../assets/ai/cafe-memo/client-8.mp3"),
+    require("../../assets/ai/cafe-memo/client-9.mp3"),
+    require("../../assets/ai/cafe-memo/client-10.mp3"),
+    require("../../assets/ai/cafe-memo/client-11.mp3"),
+    require("../../assets/ai/cafe-memo/client-12.mp3"),
+    require("../../assets/ai/cafe-memo/client-13.mp3"),
+  ],
+} as const;
 
 const SCENES = [
   {
@@ -260,27 +285,18 @@ const SCENES = [
 ];
 
 export default function CafeLesson() {
-  useSpeechLifecycle();
   const [activeScene, setActiveScene] = useState(SCENES[0]);
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const { playAudio, stopAudio } = useVocAudio(setSelectedWord, {
+    trackPlayback: false,
+  });
 
   const bgFadeAnim = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    setSelectedWord(null);
-    Speech.stop();
-  }, [activeScene]);
-
-  useEffect(() => {
-    return () => {
-      Speech.stop();
-    };
-  }, []);
-
   const handleBack = useCallback(() => {
-    Speech.stop();
+    stopAudio();
 
     if (router.canGoBack()) {
       router.back();
@@ -288,30 +304,15 @@ export default function CafeLesson() {
     }
 
     router.replace("/(tabs)");
-  }, []);
-
-  const speak = (text: string, id: string) => {
-    Speech.stop();
-    setSelectedWord(id);
-    Vibration.vibrate(8);
-
-    Speech.speak(text, {
-      language: "ko-KR",
-      rate: 0.78,
-      pitch: 1,
-      onDone: () => setSelectedWord(null),
-      onStopped: () => setSelectedWord(null),
-      onError: () => setSelectedWord(null),
-    });
-  };
+  }, [stopAudio]);
 
   const handleSceneChange = (scene: (typeof SCENES)[number]) => {
     if (scene.id === activeScene.id) return;
 
+    stopAudio();
     setPreviousBackground(activeScene.image);
     bgFadeAnim.setValue(1);
     setActiveScene(scene);
-
     Animated.timing(bgFadeAnim, {
       toValue: 0,
       duration: 420,
@@ -346,16 +347,20 @@ export default function CafeLesson() {
           </Animated.View>
         ) : null}
         <View style={styles.overlay} />
-
         <ScrollView contentContainerStyle={styles.scroll}>
           <View style={styles.header}>
             <View style={styles.backBtn}>
               <AppBackButton onPress={handleBack} />
             </View>
 
-            <AppText variant="sectionLabel" lineContract="singleLine" style={styles.headerTitle}>CAFÉ</AppText>
+            <AppText
+              variant="sectionLabel"
+              lineContract="singleLine"
+              style={styles.headerTitle}
+            >
+              CAFÉ
+            </AppText>
           </View>
-
           <View style={styles.selectorRow}>
             {SCENES.map((scene) => (
               <Pressable
@@ -369,7 +374,9 @@ export default function CafeLesson() {
                   },
                 ]}
               >
-                <AppText variant="label" lineContract="singleLine"
+                <AppText
+                  variant="label"
+                  lineContract="singleLine"
                   style={[
                     styles.selectorText,
                     activeScene.id === scene.id && { color: scene.accent },
@@ -382,7 +389,9 @@ export default function CafeLesson() {
           </View>
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <AppText variant="sectionLabel" style={styles.toolboxTitle}>Expressions clés</AppText>
+              <AppText variant="sectionLabel" style={styles.toolboxTitle}>
+                Expressions clés
+              </AppText>
               <View
                 style={[
                   styles.toolboxLine,
@@ -390,16 +399,18 @@ export default function CafeLesson() {
                 ]}
               />
             </View>
-
             <View style={styles.expressionGrid}>
               {activeScene.expressions.map((exp, i) => {
                 const cardId = `${activeScene.id}-${i}`;
+                const audioSource =
+                  CAFE_EXPRESSION_AUDIO[
+                    activeScene.id as keyof typeof CAFE_EXPRESSION_AUDIO
+                  ][i];
                 const isActive = selectedWord === cardId;
-
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() => speak(exp.word, cardId)}
+                    onPress={() => void playAudio(audioSource, cardId)}
                     style={({ pressed }) => [
                       styles.expPressable,
                       pressed && { transform: [{ scale: 0.985 }] },
@@ -426,9 +437,21 @@ export default function CafeLesson() {
                       />
                       <View style={styles.expContent}>
                         <View style={styles.expTopRow}>
-                          <View style={{ flex: 1, minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH }}>
-                            <AppText variant="koreanPrimary" script="korean" style={styles.expWord}>{exp.word}</AppText>
-                            <AppText variant="caption"
+                          <View
+                            style={{
+                              flex: 1,
+                              minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH,
+                            }}
+                          >
+                            <AppText
+                              variant="koreanPrimary"
+                              script="korean"
+                              style={styles.expWord}
+                            >
+                              {exp.word}
+                            </AppText>
+                            <AppText
+                              variant="caption"
                               style={[
                                 styles.expRom,
                                 { color: activeScene.accent },
@@ -437,7 +460,6 @@ export default function CafeLesson() {
                               {exp.rom}
                             </AppText>
                           </View>
-
                           <View
                             style={[
                               styles.listenPill,
@@ -447,7 +469,9 @@ export default function CafeLesson() {
                               },
                             ]}
                           >
-                            <AppText variant="caption" lineContract="singleLine"
+                            <AppText
+                              variant="caption"
+                              lineContract="singleLine"
                               style={[
                                 styles.listenIcon,
                                 { color: activeScene.accent },
@@ -455,12 +479,25 @@ export default function CafeLesson() {
                             >
                               {isActive ? "●" : "▶"}
                             </AppText>
-                            <AppText variant="label" lineContract="singleLine" style={styles.listenText}>ÉCOUTER</AppText>
+                            <AppText
+                              variant="label"
+                              lineContract="singleLine"
+                              style={styles.listenText}
+                            >
+                              ÉCOUTER
+                            </AppText>
                           </View>
                         </View>
-
-                        <AppText variant="bodyStrong" style={styles.expMean}>{exp.mean}</AppText>
-                        <AppText variant="bodySecondary" tone="muted" style={styles.expContext}>{exp.context}</AppText>
+                        <AppText variant="bodyStrong" style={styles.expMean}>
+                          {exp.mean}
+                        </AppText>
+                        <AppText
+                          variant="bodySecondary"
+                          tone="muted"
+                          style={styles.expContext}
+                        >
+                          {exp.context}
+                        </AppText>
                       </View>
                     </BlurView>
                   </Pressable>
@@ -485,7 +522,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(2,3,6,0.85)",
   },
   scroll: { paddingHorizontal: 20, paddingBottom: 50 },
-
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -500,7 +536,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: COLORS.pink,
   },
-
   selectorRow: {
     flexDirection: "row",
     justifyContent: "center",
@@ -519,7 +554,6 @@ const styles = StyleSheet.create({
   },
 
   toolbox: { marginTop: 40 },
-
   toolboxHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -530,7 +564,6 @@ const styles = StyleSheet.create({
     color: COLORS.muted,
   },
   toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
-
   expressionGrid: { gap: 14 },
   expPressable: { width: "100%" },
   expCard: {
@@ -558,8 +591,7 @@ const styles = StyleSheet.create({
     color: COLORS.txt,
     marginBottom: 2,
   },
-  expRom: {
-  },
+  expRom: {},
   expMean: {
     color: COLORS.txt,
     marginBottom: 4,
@@ -576,8 +608,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  listenIcon: {
-  },
+  listenIcon: {},
   listenText: {
     color: "rgba(255,255,255,0.78)",
   },
