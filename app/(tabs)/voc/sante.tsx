@@ -694,7 +694,7 @@ const styles = StyleSheet.create({
   bg: { flex: 1 },
   overlay: {
     ...ABSOLUTE_FILL,
-    backgroundColor: "rgba(2,3,6,0.85)",
+    backgroundColor: "rgba(2,3,6,0.56)",
   },
   scroll: { paddingHorizontal: 22, paddingBottom: 60 },
 

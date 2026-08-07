@@ -752,7 +752,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...ABSOLUTE_FILL,
-    backgroundColor: "rgba(2,3,6,0.54)",
+    backgroundColor: "rgba(2,3,6,0.56)",
   },
   scroll: { paddingHorizontal: 20, paddingBottom: 80 },
 

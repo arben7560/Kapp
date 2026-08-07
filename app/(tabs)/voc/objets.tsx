@@ -152,14 +152,9 @@ export default function ObjectsCyber() {
       <ImageBackground
         source={BACKGROUND_SOURCE}
         style={ABSOLUTE_FILL}
-        blurRadius={4}
         resizeMode="cover"
       >
-        <LinearGradient
-          colors={["rgba(5,5,10,0.58)", "rgba(10,10,30,0.76)"]}
-          style={ABSOLUTE_FILL}
-        />
-
+        <View style={styles.overlay} />
         <SafeAreaView style={{ flex: 1 }}>
           <ScrollView
             showsVerticalScrollIndicator={false}
@@ -367,6 +362,10 @@ export default function ObjectsCyber() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#050508" },
+  overlay: {
+    ...ABSOLUTE_FILL,
+    backgroundColor: "rgba(2,3,6,0.56)",
+  },
   scrollContent: { paddingHorizontal: 25, paddingTop: 10 },
 
   // Header

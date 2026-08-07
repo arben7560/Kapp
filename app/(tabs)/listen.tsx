@@ -50,7 +50,7 @@ const LISTEN_AUDIO_BY_ID: Partial<Record<string, number>> = {
   "cafe-situation-02": require("../../assets/audio/listen/mwo-deurilkkayo-1.mp3"),
   "metro-situation-03": require("../../assets/audio/listen/ibeon-yeogeun-hongdaeipguyeogimnida.mp3"),
   "shop-situation-04": require("../../assets/audio/listen/kadeuro-hasigesseoyo-hyeongeumeuro-hasigesseoyo.mp3"),
-  "street-situation-05": require("../../assets/audio/listen/jjuk-gaseo-oreunjjogeuro-gaseyo.mp3"),
+  "street-situation-05": require("../../assets/audio/listen/yeogiseo-jjuk-gasimyeon-dwaeyo.mp3"),
   "restaurant-gap-01": require("../../assets/audio/listen/samgyeopsal-iinbun-juseyo.mp3"),
   "cafe-gap-02": require("../../assets/audio/listen/aiseu-ratte-juseyo.mp3"),
   "shop-gap-03": require("../../assets/audio/listen/kadeuro-gyesanhalgeyo.mp3"),
@@ -65,7 +65,7 @@ const LISTEN_AUDIO_BY_ID: Partial<Record<string, number>> = {
   "restaurant-reaction-02": require("../../assets/audio/listen/deo-piryohan-geo-isseuseyo.mp3"),
   "shop-reaction-03": require("../../assets/audio/listen/mwo-chajeusineun-geo-isseuseyo.mp3"),
   "hotel-reaction-04": require("../../assets/audio/listen/yeyakhasyeosseoyo.mp3"),
-  "street-reaction-05": require("../../assets/audio/listen/yeogiseo-oreunjjogeuro-gaseyo.mp3"),
+  "street-reaction-05": require("../../assets/audio/listen/yeogiseo-jjuk-gasimyeon-dwaeyo.mp3"),
 };
 
 const KIND_LABEL: Record<ExerciseKind, { mini: string; skill: string }> = {
@@ -344,7 +344,7 @@ export default function ListenScreen() {
           <View style={styles.choiceStack}>
             {item.options.map((option, optionIndex) => (
               <ChoiceButton
-                key={option}
+                key={`${option}-${optionIndex}`}
                 label={option}
                 active={selected === optionIndex}
                 locked={checked}
@@ -364,7 +364,7 @@ export default function ListenScreen() {
       <View style={styles.choiceStack}>
         {item.options.map((option, optionIndex) => (
           <ChoiceButton
-            key={option}
+            key={`${option}-${optionIndex}`}
             label={option}
             active={selected === optionIndex}
             locked={checked}
@@ -709,22 +709,26 @@ export default function ListenScreen() {
                       ? isLastExercise
                         ? "Recommencer l’entraînement"
                         : "Passer à la question suivante"
-                      : "Réessayer cette question"
+                      : "Question suivante indisponible tant que la réponse est incorrecte"
                   }
+                  accessibilityState={{ disabled: !isCorrect }}
+                  aria-disabled={!isCorrect}
                   hitSlop={6}
-                  onPress={isCorrect ? goNext : resetAnswer}
-                  style={styles.actionButton}
+                  disabled={!isCorrect}
+                  onPress={goNext}
+                  style={[
+                    styles.actionButton,
+                    !isCorrect && styles.disabledButton,
+                  ]}
                 >
                   <AppText
                     variant="button"
                     tone="strong"
                     style={styles.actionText}
                   >
-                    {isCorrect
-                      ? isLastExercise
-                        ? "Recommencer l’entraînement"
-                        : "Suivant"
-                      : "Réessayer"}
+                    {isLastExercise && isCorrect
+                      ? "Recommencer l’entraînement"
+                      : "Suivant"}
                   </AppText>
                 </Pressable>
               )}

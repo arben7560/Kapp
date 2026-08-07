@@ -497,7 +497,6 @@ export default function TransportCity() {
   return (
     <SafeAreaView style={styles.container}>
       <ImageBackground source={activeScene.image} style={styles.bg}>
-        <BlurView intensity={40} tint="dark" style={ABSOLUTE_FILL} />
         <View style={styles.overlay} />
 
         <ScrollView
@@ -772,7 +771,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     ...ABSOLUTE_FILL,
-    backgroundColor: "rgba(2,3,6,0.85)",
+    backgroundColor: "rgba(2,3,6,0.56)",
   },
 
   scroll: {
