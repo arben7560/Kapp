@@ -157,6 +157,39 @@ export type GrammarExample = {
   format?: "sentence" | "dialogue";
 };
 
+export type GrammarPracticeSkill =
+  | "particles"
+  | "conjugation"
+  | "modality"
+  | "connectors"
+  | "syntax"
+  | "register"
+  | "forms";
+
+type GrammarPracticeDrillBase = {
+  id: string;
+  skill: GrammarPracticeSkill;
+  prompt: string;
+  stimulus: string;
+  displayLabel: string;
+  context?: string;
+  explanation: string;
+  ruleAspect?: string;
+};
+
+export type GrammarPracticeDrill = GrammarPracticeDrillBase &
+  (
+    | {
+        kind: "choice" | "gap" | "transformation" | "scene";
+        answer: string;
+        distractors: readonly [string, string, string];
+      }
+    | {
+        kind: "order";
+        answer: readonly string[];
+      }
+  );
+
 export type GrammarPracticeProfile = {
   distractorGroup:
     | "identity"
@@ -168,6 +201,7 @@ export type GrammarPracticeProfile = {
   formDistractors: readonly [string, string, string];
   scenario: string;
   scene: GrammarExample;
+  drills: readonly GrammarPracticeDrill[];
 };
 
 export type GrammarRulePart = {
@@ -294,6 +328,8 @@ export type GrammarPracticeQuestion = GrammarExercise & {
   answer: GrammarPracticeAnswer;
   explanation: string;
   memo?: string;
+  skill?: GrammarPracticeSkill;
+  ruleAspect?: string;
 };
 
 export type GrammarPracticeResponse = {

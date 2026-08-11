@@ -280,9 +280,10 @@ export default function CafeListenScreen() {
     }
 
     completionAttemptedRef.current = true;
-    const awarded = complete(buildProgressId("listen", "cafe_session"));
-    setDidAwardXp(awarded);
-    void completeDailyActivity("listen_exercise");
+    void Promise.all([
+      complete(buildProgressId("listen", "cafe_session")),
+      completeDailyActivity("listen_exercise"),
+    ]).then(([awarded]) => setDidAwardXp(awarded));
   }, [complete, isHydrated, listenProgress.status]);
 
   useEffect(() => {

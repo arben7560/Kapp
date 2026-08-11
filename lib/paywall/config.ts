@@ -40,7 +40,7 @@ export const PREMIUM_SUBSCRIPTION_OFFERS = [
     title: "Premium annuel",
     cta: "Choisir l’abonnement annuel",
     fallbackPrice: "59,99 EUR / an",
-    caption: "Environ 5 EUR / mois. Abonnement annuel, résiliable depuis l’App Store ou Google Play.",
+    caption: "Abonnement annuel, résiliable depuis l’App Store ou Google Play.",
   },
 ] as const satisfies readonly PremiumSubscriptionOffer[];
 

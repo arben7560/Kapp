@@ -178,7 +178,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
   }, [answered, currentQuestion, playAudio, quizActive, quizComplete]);
 
   React.useEffect(() => {
-    if (allScenesMastered) complete(module.id);
+    if (allScenesMastered) void complete(module.id);
   }, [allScenesMastered, complete, module.id]);
 
   const updateLesson = (
@@ -266,18 +266,19 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
       hadCorrections: completedSession.round > 1,
     });
     setQuizComplete(true);
-    updateLesson((current) => {
-      const previousScore = current.scores[activeScene.id];
-      const next: HangulLessonProgress = {
-        ...current,
+    const progressWrite = updateHangulProgress((current) => {
+      const lesson = normalizeLesson(current.lessons[module.id]);
+      const previousScore = lesson.scores[activeScene.id];
+      const nextLesson: HangulLessonProgress = {
+        ...lesson,
         currentSceneId: activeScene.id,
         activeQuiz: undefined,
-        completedScenes: { ...current.completedScenes, [activeScene.id]: true },
+        completedScenes: { ...lesson.completedScenes, [activeScene.id]: true },
         masteredScenes: mastered
-          ? { ...current.masteredScenes, [activeScene.id]: true }
-          : current.masteredScenes,
+          ? { ...lesson.masteredScenes, [activeScene.id]: true }
+          : lesson.masteredScenes,
         scores: {
-          ...current.scores,
+          ...lesson.scores,
           [activeScene.id]: {
             bestScore: Math.max(previousScore?.bestScore ?? 0, finalScore),
             total,
@@ -285,25 +286,32 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
           },
         },
       };
-      return next;
-    });
-    complete(`${module.id}_${activeScene.id}`);
-    void trackHangulExerciseCompleted(`${module.id}_${activeScene.id}`);
-    if (mastered) {
-      updateHangulProgress((current) => ({
+
+      return {
         ...current,
-        masteredCharacters: {
-          ...current.masteredCharacters,
-          ...Object.fromEntries(
-            [
-              ...(activeScene.introducedConsonants ?? []),
-              ...(activeScene.introducedVowels ?? []),
-              ...(activeScene.introducedFinals ?? []),
-            ].map((item) => [item, true as const]),
-          ),
+        lessons: {
+          ...current.lessons,
+          [module.id]: nextLesson,
         },
-      }));
-    }
+        masteredCharacters: mastered
+          ? {
+              ...current.masteredCharacters,
+              ...Object.fromEntries(
+                [
+                  ...(activeScene.introducedConsonants ?? []),
+                  ...(activeScene.introducedVowels ?? []),
+                  ...(activeScene.introducedFinals ?? []),
+                ].map((item) => [item, true as const]),
+              ),
+            }
+          : current.masteredCharacters,
+      };
+    });
+    void Promise.all([
+      progressWrite,
+      complete(`${module.id}_${activeScene.id}`),
+      trackHangulExerciseCompleted(`${module.id}_${activeScene.id}`),
+    ]);
   };
 
   const continueQuiz = () => {

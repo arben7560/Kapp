@@ -7,8 +7,11 @@ import type {
   GrammarConcept,
   GrammarExample,
   GrammarPracticeAnswer,
+  GrammarPracticeDrill,
   GrammarPracticeQuestion,
   GrammarPracticeSession,
+  GrammarPracticeSkill,
+  GrammarConceptId,
   GrammarStageId,
 } from "../../data/grammar/types";
 import { toIsoTimestamp, type TimestampInput } from "./progress.ts";
@@ -75,9 +78,14 @@ function getOrderSource(
 ) {
   const candidates = concepts.flatMap((concept) =>
     concept.examples
-      .filter(isSimpleSentence)
+      .filter(
+        (example) =>
+          isSimpleSentence(example) &&
+          example.korean.split(/\s+/u).filter(Boolean).length > 1,
+      )
       .map((example) => ({ concept, example })),
   );
+  if (candidates.length === 0) return undefined;
   return candidates[(attemptNumber - 1) % candidates.length];
 }
 
@@ -105,116 +113,169 @@ function formatExample(
   return formatPromptBlock(example.note, label, phrase);
 }
 
+function getConcept(conceptId: GrammarConceptId): GrammarConcept {
+  const concept = GRAMMAR_CONCEPTS.find(({ id }) => id === conceptId);
+  if (!concept) throw new RangeError(`Unknown grammar concept: ${conceptId}`);
+  return concept;
+}
+
+function buildDrillQuestion(
+  stageId: GrammarStageId,
+  attemptNumber: number,
+  concept: GrammarConcept,
+  drill: GrammarPracticeDrill,
+  index: number,
+  phase: "manipulation" | "review",
+  random: RandomSource,
+): GrammarPracticeQuestion {
+  const seed = `${stageId}:${attemptNumber}:drill-${concept.id}-${drill.id}`;
+  const answerLabel = Array.isArray(drill.answer)
+    ? drill.answer.join(" ")
+    : drill.answer;
+  const options = drill.kind === "order"
+    ? shuffleArray(drill.answer, random)
+    : buildOptions(drill.answer, drill.distractors, seed, random);
+  return {
+    id: `${seed}-${index + 1}`,
+    stageId,
+    conceptIds: [concept.id],
+    phase,
+    kind: drill.kind,
+    criterion: drill.kind === "scene" ? "P" : drill.kind === "choice" ? "R" : "M",
+    prompt: `${drill.prompt}\nObjectif : ${concept.shortFunction}`,
+    display: drill.context
+      ? formatScenario(drill.context, drill.displayLabel, drill.stimulus)
+      : formatPromptBlock(undefined, drill.displayLabel, drill.stimulus),
+    options,
+    answer: drill.answer,
+    explanation: conceptReason(
+      concept,
+      `${drill.explanation} Réponse attendue : « ${answerLabel} ».`,
+    ),
+    skill: drill.skill,
+    ...(drill.ruleAspect ? { ruleAspect: drill.ruleAspect } : {}),
+  };
+}
+
+function getInterleavedDrills(
+  concepts: readonly GrammarConcept[],
+  attemptNumber: number,
+) {
+  if (concepts.some(({ practice }) => practice.drills.length < 5)) return [];
+
+  const pools = concepts.map((concept) => ({
+    concept,
+    drills: rotate(concept.practice.drills, Math.max(0, attemptNumber - 1)),
+  }));
+  const result: { concept: GrammarConcept; drill: GrammarPracticeDrill }[] = [];
+  const maximum = Math.max(...pools.map(({ drills }) => drills.length));
+
+  for (let drillIndex = 0; drillIndex < maximum; drillIndex += 1) {
+    for (const pool of pools) {
+      const drill = pool.drills[drillIndex];
+      if (drill) result.push({ concept: pool.concept, drill });
+    }
+  }
+  return result;
+}
+
+const REVIEW_SECTIONS: readonly {
+  skill: GrammarPracticeSkill;
+  count: number;
+  conceptIds: readonly GrammarConceptId[];
+}[] = [
+  {
+    skill: "particles",
+    count: 3,
+    conceptIds: [
+      "topic-eun-neun",
+      "object-eul-reul",
+      "action-location-eseo",
+      "destination-time-e",
+      "direction-means-ro-euro",
+      "subject-i-ga",
+    ],
+  },
+  {
+    skill: "conjugation",
+    count: 3,
+    conceptIds: ["present-a-eoyo", "past-ass-eosseoyo", "future-eul-geoyeyo"],
+  },
+  {
+    skill: "modality",
+    count: 1,
+    conceptIds: ["request-v-a-eo-juseyo", "polite-instruction-euseyo"],
+  },
+  {
+    skill: "modality",
+    count: 1,
+    conceptIds: [
+      "negation-an",
+      "inability-mot",
+      "ability-eul-su-isseoyo",
+      "permission-a-eodo-dwaeyo",
+      "obligation-a-eoya-haeyo",
+      "suggestion-eulkkayo",
+    ],
+  },
+  {
+    skill: "connectors",
+    count: 2,
+    conceptIds: ["sequence-go", "reason-a-eoseo", "contrast-jiman", "condition-eumyeon"],
+  },
+  {
+    skill: "register",
+    count: 1,
+    conceptIds: ["polite-style-yo", "possession-ui-je-nae", "honorific-si"],
+  },
+  {
+    skill: "syntax",
+    count: 1,
+    conceptIds: ["comparison-boda-deo-jeil"],
+  },
+] as const;
+
 function buildReviewQuestions(
   stageId: GrammarStageId,
   attemptNumber: number,
   random: RandomSource,
 ): readonly GrammarPracticeQuestion[] {
-  const stage = GRAMMAR_STAGE_BY_ID[stageId];
-  const offset = Math.max(0, attemptNumber - 1) * 5;
-  const concepts = Array.from({ length: 5 }, (_, index) =>
-    GRAMMAR_CONCEPTS.find(
-      ({ id }) => id === stage.conceptIds[(offset + index * 9) % stage.conceptIds.length],
-    ),
-  ).filter((concept): concept is GrammarConcept => !!concept);
+  const questions: GrammarPracticeQuestion[] = [];
+  let questionIndex = 0;
 
-  return concepts.map((concept, index) => {
-    const { scene, scenario } = concept.practice;
-    const base = {
-      id: `${stageId}:${attemptNumber}:review-${index + 1}`,
-      stageId,
-      conceptIds: [concept.id],
-      phase: "review",
-    } as const;
-    const seed = `${stageId}:${attemptNumber}:review-${concept.id}`;
+  for (const [sectionIndex, section] of REVIEW_SECTIONS.entries()) {
+    for (let localIndex = 0; localIndex < section.count; localIndex += 1) {
+      const concept = getConcept(
+        section.conceptIds[
+          (Math.max(0, attemptNumber - 1) + localIndex) % section.conceptIds.length
+        ],
+      );
+      const matchingDrills = concept.practice.drills.filter(
+        ({ skill }) => skill === section.skill,
+      );
+      if (matchingDrills.length === 0) {
+        throw new RangeError(`Missing ${section.skill} review drill for ${concept.id}`);
+      }
+      const drill = matchingDrills[
+        (Math.max(0, attemptNumber - 1) + localIndex + sectionIndex) %
+          matchingDrills.length
+      ];
+      questions.push(
+        buildDrillQuestion(
+          stageId,
+          attemptNumber,
+          concept,
+          drill,
+          questionIndex,
+          "review",
+          random,
+        ),
+      );
+      questionIndex += 1;
+    }
+  }
 
-    if (index === 2) {
-      return {
-        ...base,
-        kind: "transformation",
-        criterion: "M",
-        prompt: "Choisis la forme qui exprime précisément cette phrase.",
-        display: formatScenario(scenario, "PHRASE À EXPRIMER", scene.french),
-        korean: scene.korean,
-        french: scene.french,
-        options: buildOptions(
-          concept.practice.focusForm,
-          concept.practice.formDistractors,
-          `${seed}:form`,
-          random,
-        ),
-        answer: concept.practice.focusForm,
-        explanation: conceptReason(
-          concept,
-          `Dans cet exemple, la forme ciblée est ${concept.practice.focusForm}.`,
-        ),
-      };
-    }
-    if (index === 1) {
-      return {
-        ...base,
-        kind: "choice",
-        criterion: "R",
-        prompt: "Choisis la phrase coréenne qui exprime exactement la situation.",
-        display: formatScenario(scenario, "PHRASE À TRADUIRE", scene.french),
-        korean: scene.korean,
-        french: scene.french,
-        options: buildOptions(
-          scene.korean,
-          concept.examples.map((example) => example.korean),
-          `${seed}:ko`,
-          random,
-        ),
-        answer: scene.korean,
-        explanation: conceptReason(
-          concept,
-          `La phrase attendue est « ${scene.korean} ».`,
-        ),
-      };
-    }
-    if (index === 3) {
-      return {
-        ...base,
-        kind: "scene",
-        criterion: "P",
-        prompt: "Choisis la phrase adaptée à la situation.",
-        display: formatScenario(scenario, "PHRASE À EXPRIMER", scene.french),
-        korean: scene.korean,
-        french: scene.french,
-        options: buildOptions(
-          scene.korean,
-          concept.examples.map((example) => example.korean),
-          `${seed}:scene`,
-          random,
-        ),
-        answer: scene.korean,
-        explanation: conceptReason(
-          concept,
-          `Ici, « ${scene.korean} » répond précisément à la situation.`,
-        ),
-      };
-    }
-    return {
-      ...base,
-      kind: "matching",
-      criterion: "R",
-      prompt: "Choisis la traduction adaptée à cette situation.",
-      display: formatScenario(scenario, "PHRASE CORÉENNE", scene.korean),
-      korean: scene.korean,
-      french: scene.french,
-      options: buildOptions(
-        scene.french,
-        concept.examples.map((example) => example.french),
-        `${seed}:fr`,
-        random,
-      ),
-      answer: scene.french,
-      explanation: conceptReason(
-        concept,
-        `« ${scene.korean} » signifie « ${scene.french} ».`,
-      ),
-    };
-  });
+  return questions;
 }
 
 export function areGrammarAnswersEqual(
@@ -243,14 +304,29 @@ export function buildGrammarPracticeQuestions(
   }
 
   const concepts = getConcepts(stageId);
+  const drillEntries = getInterleavedDrills(concepts, attemptNumber);
+  if (drillEntries.length >= 5) {
+    return drillEntries
+      .slice(0, 5)
+      .map(({ concept, drill }, index) =>
+        buildDrillQuestion(
+          stageId,
+          attemptNumber,
+          concept,
+          drill,
+          index,
+          "manipulation",
+          random,
+        ),
+      );
+  }
+
   const first = getExample(concepts, Math.max(0, attemptNumber - 1));
   const second = getExample(concepts, attemptNumber);
   const formConcept = concepts[(attemptNumber - 1) % concepts.length];
   const sceneConcept = concepts[attemptNumber % concepts.length];
   const order = getOrderSource(concepts, attemptNumber);
-  const orderConcept = order.concept;
-  const orderSource = order.example;
-  const orderTokens = orderSource.korean.split(/\s+/u).filter(Boolean);
+  const orderTokens = order?.example.korean.split(/\s+/u).filter(Boolean) ?? [];
   const seed = `${stageId}:${attemptNumber}`;
 
   const questions: GrammarPracticeQuestion[] = [
@@ -333,25 +409,25 @@ export function buildGrammarPracticeQuestions(
         `Dans cet exemple, la forme ciblée est ${formConcept.practice.focusForm}.`,
       ),
     },
-    orderTokens.length > 1
+    order && orderTokens.length > 1
       ? {
           id: `${seed}:order`,
           stageId,
-          conceptIds: [orderConcept.id],
+          conceptIds: [order.concept.id],
           phase: "manipulation",
           kind: "order",
           criterion: "M",
           prompt: "Remets les éléments dans l’ordre pour former la phrase coréenne indiquée.",
-          display: formatExample(orderSource, "PHRASE À FORMER", orderSource.french),
-          korean: orderSource.korean,
-          french: orderSource.french,
+          display: formatExample(order.example, "PHRASE À FORMER", order.example.french),
+          korean: order.example.korean,
+          french: order.example.french,
           options: shuffleArray(orderTokens, random),
           answer: orderTokens,
           explanation: conceptReason(
-            orderConcept,
-            `L’ordre attendu donne « ${orderSource.korean} ».`,
+            order.concept,
+            `L’ordre attendu donne « ${order.example.korean} ».`,
           ),
-          ...(orderSource.note ? { memo: orderSource.note } : {}),
+          ...(order.example.note ? { memo: order.example.note } : {}),
         }
       : {
           id: `${seed}:order-fallback`,

@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../components/app-text";
 import { AppBackButton } from "../components/ui/app-back-button";
+import { HubModuleAccents } from "../constants/theme";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../lib/DailyStreakProvider";
 import {
@@ -23,7 +24,6 @@ import {
 const COLORS = {
   bg: "#020306",
   card: "rgba(2,3,6,0.34)",
-  cyan: "#67E8F9",
   gold: "#FDE047",
   line: "rgba(255,255,255,0.10)",
   muted: "rgba(241,245,249,0.62)",
@@ -31,6 +31,7 @@ const COLORS = {
   soft: "rgba(241,245,249,0.44)",
   text: "#F1F5F9",
 };
+const STREAK_ACCENT = HubModuleAccents.streak;
 
 const CALENDAR_DAYS = 35;
 const BACKGROUND_SOURCE = require("../assets/images/seoulhub.jpg");
@@ -87,8 +88,8 @@ export default function StreakScreen() {
           <BlurView intensity={54} tint="dark" style={styles.heroCard}>
             <LinearGradient
               colors={[
-                "rgba(103,232,249,0.18)",
-                "rgba(244,114,182,0.09)",
+                STREAK_ACCENT.surfaceStrong,
+                STREAK_ACCENT.surface,
                 "rgba(2,3,6,0.16)",
               ]}
               start={{ x: 0, y: 0 }}
@@ -359,7 +360,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     height: 46,
     justifyContent: "center",
-    shadowColor: COLORS.cyan,
+    shadowColor: STREAK_ACCENT.base,
     shadowOpacity: 0.16,
     shadowRadius: 16,
     width: 46,
@@ -371,12 +372,12 @@ const styles = StyleSheet.create({
   content: { padding: 20, paddingBottom: 42 },
   heroCard: {
     backgroundColor: "rgba(2,3,6,0.24)",
-    borderColor: "rgba(103,232,249,0.22)",
+    borderColor: STREAK_ACCENT.cardBorder,
     borderRadius: 26,
     borderWidth: 1,
     overflow: "hidden",
     padding: 22,
-    shadowColor: COLORS.cyan,
+    shadowColor: STREAK_ACCENT.base,
     shadowOpacity: 0.18,
     shadowRadius: 24,
   },
@@ -388,18 +389,18 @@ const styles = StyleSheet.create({
     width: 3,
     borderTopRightRadius: 8,
     borderBottomRightRadius: 8,
-    backgroundColor: COLORS.cyan,
+    backgroundColor: STREAK_ACCENT.base,
     opacity: 0.9,
   },
   kicker: {
-    color: COLORS.cyan,
-    textShadowColor: "rgba(103,232,249,0.38)",
+    color: STREAK_ACCENT.base,
+    textShadowColor: STREAK_ACCENT.selectedShadow,
     textShadowRadius: 12,
   },
   bigNumber: {
     color: COLORS.text,
     marginTop: 8,
-    textShadowColor: "rgba(103,232,249,0.18)",
+    textShadowColor: STREAK_ACCENT.surface,
     textShadowRadius: 18,
   },
   heroTitle: { color: COLORS.text},
@@ -450,9 +451,9 @@ const styles = StyleSheet.create({
     width: "11.5%",
   },
   calendarCompleted: {
-    backgroundColor: "rgba(103,232,249,0.18)",
-    borderColor: "rgba(103,232,249,0.58)",
-    shadowColor: COLORS.cyan,
+    backgroundColor: STREAK_ACCENT.surface,
+    borderColor: STREAK_ACCENT.selectedBorder,
+    shadowColor: STREAK_ACCENT.base,
     shadowOpacity: 0.25,
     shadowRadius: 8,
   },
@@ -469,13 +470,13 @@ const styles = StyleSheet.create({
   actionRow: { gap: 10, marginTop: 14 },
   actionButton: {
     alignItems: "center",
-    backgroundColor: "rgba(103,232,249,0.92)",
+    backgroundColor: STREAK_ACCENT.base,
     borderRadius: 16,
     justifyContent: "center",
     minHeight: 50,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    shadowColor: COLORS.cyan,
+    shadowColor: STREAK_ACCENT.base,
     shadowOpacity: 0.26,
     shadowRadius: 16,
   },

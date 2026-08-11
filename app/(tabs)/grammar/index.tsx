@@ -12,7 +12,10 @@ import { HubHero } from "../../../components/hub/HubHero";
 import { SectionHeader } from "../../../components/hub/SectionHeader";
 import { StatusBadge } from "../../../components/ui/status-badge";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
-import { SeoulMidnightGlass } from "../../../constants/theme";
+import {
+  HubModuleAccents,
+  SeoulMidnightGlass,
+} from "../../../constants/theme";
 import {
   CONTENT_REFS,
   GRAMMAR_CHAPTERS,
@@ -32,7 +35,7 @@ import {
 import { usePaywall } from "../../../lib/paywall/PaywallProvider";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
-const ACCENT = "#2DD4BF";
+const GRAMMAR_ACCENT = HubModuleAccents.grammar;
 const COLORS = SeoulMidnightGlass.colors;
 
 function getCompletedContentRefs(completed: Record<string, boolean>) {
@@ -57,7 +60,16 @@ function prerequisiteLabel(prerequisite: GrammarPrerequisite): string {
 export default function GrammarHubScreen() {
   const { progress, setTrack } = useStore();
   const { hasPremiumAccess: isPremium } = usePaywall();
-  const responsive = useResponsiveLayout({ maxWidth: 960 });
+  const responsive = useResponsiveLayout({ maxWidth: 920 });
+  const gridColumns = responsive.getColumns({
+    minColumnWidth: 330,
+    maxColumns: 2,
+    gap: responsive.gridGap,
+  });
+  const gridItemWidth = responsive.getGridItemWidth(
+    gridColumns,
+    responsive.gridGap,
+  );
   const grammarProgress = progress.grammarProgress;
   const completedContentRefs = React.useMemo(
     () => getCompletedContentRefs(progress.completed),
@@ -124,13 +136,20 @@ export default function GrammarHubScreen() {
               title="Grammaire"
               subtitle="Comprendre la structure. Construire. Parler avec justesse."
               badgeLabel={`${completedStages} / ${GRAMMAR_STAGE_IDS.length} ÉTAPES`}
-              accentColor={ACCENT}
-              animateGlow
+              accentColor={GRAMMAR_ACCENT.base}
+              accentBadge
+              layeredGlow={false}
+              badgeBlurIntensity={50}
+              style={styles.hero}
+              koreanStyle={styles.heroKorean}
             />
 
-            <BlurView intensity={54} tint="dark" style={styles.overviewCard}>
+            <BlurView intensity={30} tint="dark" style={styles.overviewCard}>
               <LinearGradient
-                colors={["rgba(45,212,191,0.16)", "rgba(255,255,255,0.025)"]}
+                colors={[
+                  GRAMMAR_ACCENT.surfaceStrong,
+                  "rgba(255,255,255,0.025)",
+                ]}
                 style={ABSOLUTE_FILL}
               />
               <View style={styles.overviewTop}>
@@ -165,8 +184,17 @@ export default function GrammarHubScreen() {
 
             {GRAMMAR_CHAPTERS.map((chapter) => (
               <View key={chapter.id} style={styles.chapter}>
-                <SectionHeader title={`${String(chapter.number).padStart(2, "0")} · ${chapter.title}`} />
-                <View style={[styles.grid, responsive.isTablet && styles.gridTablet]}>
+                <SectionHeader
+                  title={`${String(chapter.number).padStart(2, "0")} · ${chapter.title}`}
+                  accentColor={GRAMMAR_ACCENT.base}
+                />
+                <View
+                  style={[
+                    styles.grid,
+                    gridColumns > 1 && styles.gridWide,
+                    { gap: responsive.gridGap },
+                  ]}
+                >
                   {chapter.stageIds.map((stageId) => {
                     const stage = GRAMMAR_STAGE_BY_ID[stageId];
                     const state = getGrammarStageState(grammarProgress, stageId);
@@ -209,13 +237,13 @@ export default function GrammarHubScreen() {
                         onPress={() => openStage(stageId, true)}
                         style={({ pressed }) => [
                           styles.stagePressable,
-                          responsive.isTablet && styles.stageTablet,
+                          gridColumns > 1 ? { width: gridItemWidth } : undefined,
                           pressed && styles.pressed,
                           locked && styles.locked,
                         ]}
                       >
                         <BlurView
-                          intensity={44}
+                          intensity={30}
                           tint="dark"
                           style={[styles.stageCard, isPremiumStage && styles.premiumStageCard]}
                         >
@@ -251,7 +279,7 @@ export default function GrammarHubScreen() {
                                   tone={isPremiumStage ? "premium" : "accent"}
                                   appearance="soft"
                                   size="compact"
-                                  accentColor={ACCENT}
+                                  accentColor={GRAMMAR_ACCENT.base}
                                 />
                               </View>
                             </View>
@@ -292,42 +320,43 @@ export default function GrammarHubScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bgDeep },
-  background: { flex: 1, backgroundColor: COLORS.bgDeep },
+  background: { flex: 1, overflow: "hidden", backgroundColor: COLORS.bgDeep },
   backgroundBlur: { ...ABSOLUTE_FILL },
   scroll: { paddingTop: 10, paddingBottom: 120 },
   frame: { width: "100%", alignSelf: "center" },
-  navHeader: { marginBottom: 12 },
-  backButton: { flexDirection: "row", alignItems: "center", gap: 8, alignSelf: "flex-start" },
-  overviewCard: { borderRadius: 24, borderWidth: 1, borderColor: "rgba(45,212,191,0.28)", padding: 20, overflow: "hidden", gap: 16, marginBottom: 28 },
+  navHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 0 },
+  backButton: { flexDirection: "row", alignItems: "center", gap: 8 },
+  hero: { marginTop: 0 },
+  heroKorean: { color: "rgba(255,248,236,0.98)" },
+  overviewCard: { borderRadius: 20, borderWidth: 1, borderColor: GRAMMAR_ACCENT.cardBorder, padding: 18, overflow: "hidden", gap: 16, marginBottom: 28 },
   overviewTop: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 16 },
   overviewCopy: { flex: 1, gap: 5 },
-  accentText: { color: ACCENT },
+  accentText: { color: GRAMMAR_ACCENT.base },
   completedText: { color: "#86EFAC" },
   lockedText: { color: "rgba(255,255,255,0.34)" },
   premiumText: { color: COLORS.premiumGold },
-  progressNumber: { color: ACCENT },
+  progressNumber: { color: GRAMMAR_ACCENT.base },
   progressTrack: { height: 5, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 999, overflow: "hidden" },
-  progressFill: { height: "100%", backgroundColor: ACCENT, borderRadius: 999 },
-  primaryButton: { minHeight: 50, borderRadius: 15, alignItems: "center", justifyContent: "center", paddingHorizontal: 18, backgroundColor: ACCENT },
-  primaryButtonText: { color: "#02110F" },
+  progressFill: { height: "100%", backgroundColor: GRAMMAR_ACCENT.base, borderRadius: 999 },
+  primaryButton: { minHeight: 50, borderRadius: 15, alignItems: "center", justifyContent: "center", paddingHorizontal: 18, backgroundColor: GRAMMAR_ACCENT.base },
+  primaryButtonText: { color: COLORS.bgDeep },
   chapter: { marginTop: 8, marginBottom: 22 },
-  grid: { gap: 10 },
-  gridTablet: { flexDirection: "row", flexWrap: "wrap" },
+  grid: { gap: 12 },
+  gridWide: { flexDirection: "row", flexWrap: "wrap", alignItems: "stretch" },
   stagePressable: { width: "100%", borderRadius: 20, overflow: "hidden" },
-  stageTablet: { width: "49%", flexGrow: 1 },
-  stageCard: { minHeight: 126, borderRadius: 20, borderWidth: 1, borderColor: "rgba(255,255,255,0.1)", padding: 16, overflow: "hidden", flexDirection: "row", alignItems: "flex-start", gap: 13 },
+  stageCard: { minHeight: 90, borderRadius: 20, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", paddingVertical: 18, paddingHorizontal: 18, overflow: "hidden", flexDirection: "row", alignItems: "center", gap: 13 },
   premiumStageCard: { borderColor: COLORS.premiumBorder, backgroundColor: COLORS.premiumSurface },
-  stageAccent: { position: "absolute", left: 0, top: 18, bottom: 18, width: 3, backgroundColor: ACCENT, borderTopRightRadius: 4, borderBottomRightRadius: 4 },
+  stageAccent: { position: "absolute", left: 0, top: 14, bottom: 14, width: 3, backgroundColor: GRAMMAR_ACCENT.base, borderTopRightRadius: 4, borderBottomRightRadius: 4 },
   stageAccentPremium: { backgroundColor: COLORS.premiumGold },
   stageAccentCompleted: { backgroundColor: "#86EFAC" },
-  stageNumber: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: "rgba(45,212,191,0.28)", backgroundColor: "rgba(45,212,191,0.08)", alignItems: "center", justifyContent: "center" },
+  stageNumber: { width: 44, height: 44, borderRadius: SeoulMidnightGlass.radii.icon, borderWidth: 1, borderColor: GRAMMAR_ACCENT.cardBorder, backgroundColor: GRAMMAR_ACCENT.iconSurface, alignItems: "center", justifyContent: "center" },
   stageNumberPremium: { borderColor: COLORS.premiumBorder, backgroundColor: COLORS.premiumSurfaceStrong },
-  stageNumberText: { color: ACCENT },
+  stageNumberText: { color: GRAMMAR_ACCENT.base },
   stageCopy: { flex: 1, minWidth: 0, gap: 4 },
   stageMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
   stageAccessRow: { flexDirection: "row", alignItems: "center", gap: 7 },
   forms: { marginTop: 4 },
-  arrow: { color: ACCENT, opacity: 0.8, alignSelf: "center" },
+  arrow: { color: GRAMMAR_ACCENT.base, opacity: 0.8, alignSelf: "center" },
   locked: { opacity: 0.58 },
   pressed: { opacity: 0.88, transform: [{ scale: 0.995 }] },
 });

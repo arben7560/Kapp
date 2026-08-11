@@ -20,9 +20,13 @@ import {
 } from "react-native-safe-area-context";
 
 import { AppText } from "../../components/app-text";
+import { HubHero } from "../../components/hub/HubHero";
+import { SectionHeader } from "../../components/hub/SectionHeader";
 import { ModuleCard } from "../../components/ModuleCard";
 import { AppBackButton } from "../../components/ui/app-back-button";
 import { ABSOLUTE_FILL } from "../../constants/layout";
+import { HubModuleAccents } from "../../constants/theme";
+import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 
 const BACKGROUND_SOURCE = require("../../assets/images/speak.jpg");
 const SPEAK_BACKGROUND_DARKNESS = 0.72;
@@ -31,6 +35,7 @@ const BG_DEEP = "#020306";
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
 const ORANGE = "#FB923C";
+const CONVERSATION_ACCENT = HubModuleAccents.conversation;
 
 const ASSETS = {
   cafe: require("../../assets/images/cafeIA.jpg"),
@@ -128,6 +133,16 @@ const PUBLIC_THEME_KEYS: readonly ThemeKey[] = [
 export default function SpeakScreen() {
   const [sheetVisible, setSheetVisible] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<ThemeKey | null>(null);
+  const responsive = useResponsiveLayout({ maxWidth: 920 });
+  const gridColumns = responsive.getColumns({
+    minColumnWidth: 330,
+    maxColumns: 2,
+    gap: responsive.gridGap,
+  });
+  const gridItemWidth = responsive.getGridItemWidth(
+    gridColumns,
+    responsive.gridGap,
+  );
 
   const [screenEntryScale] = useState(() => new Animated.Value(1.05));
   const [screenEntryOpacity] = useState(() => new Animated.Value(0));
@@ -174,85 +189,49 @@ export default function SpeakScreen() {
         >
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingHorizontal: responsive.horizontalPadding },
+            ]}
           >
-            <AppBackButton />
-            <View style={styles.heroBlock}>
-              <AppText
-                variant="sectionLabel"
-                tone="brand"
-                align="center"
-                lineContract="singleLine"
-                style={styles.heroEyebrow}
-              >
-                SÉOUL IMMERSION
-              </AppText>
-
-              <View style={styles.heroVisualWrap}>
-                <View style={styles.krHeroWrap}>
-                  <AppText
-                    accessible={false}
-                    variant="koreanHero"
-                    script="korean"
-                    align="center"
-                    style={[styles.krHero, styles.krHeroGlowOuter]}
-                  >
-                    대화
-                  </AppText>
-                  <AppText
-                    accessible={false}
-                    variant="koreanHero"
-                    script="korean"
-                    align="center"
-                    style={[styles.krHero, styles.krHeroGlowInner]}
-                  >
-                    대화
-                  </AppText>
-                  <AppText
-                    accessibilityLanguage="ko-KR"
-                    variant="koreanHero"
-                    script="korean"
-                    align="center"
-                    style={styles.krHero}
-                  >
-                    대화
-                  </AppText>
+            <View
+              style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
+            >
+              <View style={styles.navHeader}>
+                <View style={styles.backBtn}>
+                  <AppBackButton />
                 </View>
-
-                <BlurView intensity={18} tint="dark" style={styles.levelPill}>
-                  <AppText
-                    variant="label"
-                    tone="muted"
-                    align="center"
-                    lineContract="singleLine"
-                  >
-                    CONVERSATION
-                  </AppText>
-                </BlurView>
-
-                <AppText
-                  variant="subtitle"
-                  tone="muted"
-                  align="center"
-                  style={styles.heroQuote}
-                >
-                  Choisir un lieu, vivre une situation, parler coréen.
-                </AppText>
               </View>
-            </View>
 
-            <View style={styles.sectionDivider}>
-              <AppText
-                variant="sectionLabel"
-                tone="soft"
-                style={styles.sectionDividerLabel}
-              >
-                SCÈNES DISPONIBLES
-              </AppText>
-              <View style={styles.dividerLine} />
-            </View>
+              <HubHero
+                korean="대화"
+                title=""
+                subtitle="Choisir un lieu, vivre une situation, parler coréen."
+                badgeLabel="CONVERSATION"
+                accentColor={CONVERSATION_ACCENT.base}
+                accentBadge
+                layeredGlow={false}
+                badgeBlurIntensity={50}
+                badgeBorderColor={CONVERSATION_ACCENT.cardBorder}
+                badgeBackgroundColor={CONVERSATION_ACCENT.iconSurface}
+                badgeTextColor={CONVERSATION_ACCENT.base}
+                reserveTitleSpaceWhenEmpty
+                style={styles.hero}
+                koreanStyle={styles.heroKorean}
+              />
 
-            <Scenes onSelectTheme={openThemeSheet} />
+              <SectionHeader
+                title="SCÈNES DISPONIBLES"
+                accentColor={CONVERSATION_ACCENT.base}
+              />
+
+              <Scenes
+                onSelectTheme={openThemeSheet}
+                gridColumns={gridColumns}
+                gridItemWidth={gridItemWidth}
+                gridGap={responsive.gridGap}
+              />
+            </View>
           </ScrollView>
         </Animated.View>
 
@@ -268,22 +247,39 @@ export default function SpeakScreen() {
 
 function Scenes({
   onSelectTheme,
+  gridColumns,
+  gridItemWidth,
+  gridGap,
 }: {
   onSelectTheme: (theme: ThemeKey) => void;
+  gridColumns: number;
+  gridItemWidth: number | "100%";
+  gridGap: number;
 }) {
   return (
-    <View style={styles.scenesGrid}>
+    <View
+      style={[
+        styles.scenesGrid,
+        gridColumns > 1 && styles.scenesGridWide,
+        { gap: gridGap },
+      ]}
+    >
       {PUBLIC_THEME_KEYS.map((key) => (
-        <ModuleCard
+        <View
           key={key}
-          title={THEME_CONFIG[key].title}
-          subtitle={THEME_CONFIG[key].sub}
-          icon={THEME_CONFIG[key].icon}
-          accentColor={THEME_CONFIG[key].accent}
-          metaLabel="SCÈNE"
-          accessibilityContext={`les options de la scène ${THEME_CONFIG[key].title}`}
-          onPress={() => onSelectTheme(key)}
-        />
+          style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
+        >
+          <ModuleCard
+            title={THEME_CONFIG[key].title}
+            subtitle={THEME_CONFIG[key].sub}
+            icon={THEME_CONFIG[key].icon}
+            accentColor={THEME_CONFIG[key].accent}
+            metaLabel="SCÈNE"
+            accessibilityContext={`les options de la scène ${THEME_CONFIG[key].title}`}
+            onPress={() => onSelectTheme(key)}
+            visualVariant="legacyGlass"
+          />
+        </View>
       ))}
     </View>
   );
@@ -591,7 +587,7 @@ function ThemeModeSheet({
 
                 <View style={styles.sheetOptions}>
                   <SheetOptionCard
-                    title="Scène guidée"
+                    title="Entre dans la scène"
                     subtitle="Entre dans la situation, écoute et réponds comme sur place."
                     icon="IA"
                     accent={config.accent}
@@ -661,10 +657,7 @@ function SheetOptionCard({
       onPressOut={pressOut}
     >
       <Animated.View
-        style={[
-          styles.optionCard,
-          { transform: [{ scale: scaleAnim }] },
-        ]}
+        style={[styles.optionCard, { transform: [{ scale: scaleAnim }] }]}
       >
         <BlurView intensity={76} tint="dark" style={styles.optionBlur}>
           <LinearGradient
@@ -716,7 +709,6 @@ function SheetOptionCard({
               >
                 {title}
               </AppText>
-
             </View>
 
             <AppText
@@ -744,69 +736,30 @@ const styles = StyleSheet.create({
   bgImage: { flex: 1, overflow: "hidden" },
   bgImageAsset: { width: "100%", height: "100%" },
 
-  scrollContent: { paddingHorizontal: 22, paddingTop: 10, paddingBottom: 100 },
-  heroBlock: {
-    marginTop: 34,
-    alignItems: "center",
+  scrollContent: {
+    paddingTop: 10,
+    paddingBottom: 120,
   },
-
-  heroEyebrow: {
-    marginBottom: 48,
-    opacity: 0.9,
-  },
-
-  heroVisualWrap: {
+  contentFrame: {
     width: "100%",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    minHeight: 340,
-    position: "relative",
+    alignSelf: "center",
   },
-
-  krHeroWrap: {
-    position: "relative",
+  navHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    justifyContent: "center",
+    marginBottom: 0,
   },
-
-  krHero: {
+  backBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  hero: {
+    marginTop: 0,
+  },
+  heroKorean: {
     color: "rgba(245,252,255,0.98)",
-    textShadowColor: "rgba(56,189,248,0.92)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 22,
-    marginBottom: 2,
-  },
-
-  krHeroGlowOuter: {
-    position: "absolute",
-    color: "rgba(56,189,248,0.18)",
-    textShadowColor: "rgba(56,189,248,1)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 42,
-  },
-
-  krHeroGlowInner: {
-    position: "absolute",
-    color: "rgba(180,238,255,0.36)",
-    textShadowColor: "rgba(103,232,249,0.95)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 18,
-  },
-
-  levelPill: {
-    marginTop: 18,
-    paddingHorizontal: 28,
-    paddingVertical: 10,
-    borderRadius: 999,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.16)",
-  },
-
-  heroQuote: {
-    marginTop: 30,
-    maxWidth: "82%",
-    fontStyle: "italic",
   },
 
   bgDarkOverlay: {
@@ -818,25 +771,12 @@ const styles = StyleSheet.create({
     ...ABSOLUTE_FILL,
   },
 
-  sectionDivider: {
-    marginTop: -30,
+  scenesGrid: { gap: 12 },
+  scenesGridWide: {
     flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 35,
-    gap: 15,
+    flexWrap: "wrap",
+    alignItems: "stretch",
   },
-
-  sectionDividerLabel: {
-    flexShrink: 1,
-  },
-
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.1)",
-  },
-
-  scenesGrid: { gap: 20 },
 
   // ──────────────────────────────────────────────
   // REFINED SHEET

@@ -1,8 +1,8 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
-import { Compass, MessageCircleMore } from "lucide-react-native";
-import React, { useCallback, useEffect, useRef } from "react";
+import { Compass, MessageCircleMore, Settings } from "lucide-react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -17,7 +17,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
-import { AppTypography } from "../../constants/theme";
+import { AppTypography, HubModuleAccents } from "../../constants/theme";
 import { HANGUL_PROGRESS_IDS } from "../../data/hangul/curriculum";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
@@ -37,6 +37,18 @@ const HUB_BACKGROUND_DARKNESS = 0.58;
 
 const CYAN = "#67E8F9";
 const PINK = "#F472B6";
+const STREAK_ACCENT = HubModuleAccents.streak;
+
+const SEOUL_TIME_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+  timeZone: "Asia/Seoul",
+});
+
+function formatSeoulTime(date = new Date()) {
+  return SEOUL_TIME_FORMATTER.format(date);
+}
 
 const ABSOLUTE_FILL = {
   position: "absolute" as const,
@@ -60,7 +72,7 @@ const SEQUENCES: any[] = [
   {
     title: "Hangul",
     label: "Hangul",
-    color: CYAN,
+    hubAccent: HubModuleAccents.hangul,
     route: "/hangul",
     trackKey: "hangul",
     place: "CENTRE D'APPRENTISSAGE",
@@ -70,7 +82,7 @@ const SEQUENCES: any[] = [
   {
     title: "Grammaire",
     label: "Grammaire",
-    color: "#2DD4BF",
+    hubAccent: HubModuleAccents.grammar,
     route: "/grammar",
     trackKey: "grammar",
     place: "SÉOUL • A0 → A1",
@@ -80,7 +92,7 @@ const SEQUENCES: any[] = [
   {
     title: "Vocabulaire",
     label: "Vocabulaire",
-    color: "#F59E0B",
+    hubAccent: HubModuleAccents.vocabulary,
     route: "/voc",
     trackKey: "vocab",
     place: "SÉOUL • VOCABULAIRE",
@@ -90,7 +102,7 @@ const SEQUENCES: any[] = [
   {
     title: "Comptage",
     label: "Comptage",
-    color: CYAN,
+    hubAccent: HubModuleAccents.counting,
     route: "/comptage",
     trackKey: "numbers",
     place: "HONGDAE • QUANTITÉS",
@@ -100,7 +112,7 @@ const SEQUENCES: any[] = [
   {
     title: "Conversation",
     label: "Conversation",
-    color: PINK,
+    hubAccent: HubModuleAccents.conversation,
     route: "/speak",
     trackKey: "dialogs",
     place: "SÉOUL • CONVERSATION",
@@ -110,7 +122,7 @@ const SEQUENCES: any[] = [
   {
     title: "Écoute",
     label: "Écoute",
-    color: "#8B5CF6",
+    hubAccent: HubModuleAccents.listening,
     route: "/listen",
     trackKey: "listen",
     place: "LIGNE 2 • ÉCOUTER",
@@ -123,7 +135,7 @@ const RESUME_SEQUENCES: Record<string, any> = {
   aeroport_ia: {
     title: "Mission aéroport",
     label: "Mission aéroport",
-    color: CYAN,
+    hubAccent: HubModuleAccents.hangul,
     route: "/lesson/aeroportMissions",
     routeParams: { mode: "guided" },
     trackKey: "aeroport_ia",
@@ -134,7 +146,7 @@ const RESUME_SEQUENCES: Record<string, any> = {
   cafe_ia: {
     title: "Mission café",
     label: "Mission café",
-    color: PINK,
+    hubAccent: HubModuleAccents.conversation,
     route: "/lesson/cafeMissions",
     routeParams: { mode: "guided" },
     trackKey: "cafe_ia",
@@ -145,7 +157,7 @@ const RESUME_SEQUENCES: Record<string, any> = {
   metro_ia: {
     title: "Mission métro",
     label: "Mission métro",
-    color: CYAN,
+    hubAccent: HubModuleAccents.counting,
     route: "/lesson/metroMissions",
     routeParams: { mode: "guided" },
     trackKey: "metro_ia",
@@ -156,7 +168,7 @@ const RESUME_SEQUENCES: Record<string, any> = {
   restaurant_ia: {
     title: "Mission restaurant",
     label: "Mission restaurant",
-    color: "#F59E0B",
+    hubAccent: HubModuleAccents.vocabulary,
     route: "/lesson/restaurantMissions",
     routeParams: { mode: "guided" },
     trackKey: "restaurant_ia",
@@ -204,6 +216,7 @@ export default function Home() {
   const immersionSequences = SEQUENCES.filter((s) => s.type === "immersion");
 
   const pulseAnim = useRef(new Animated.Value(0.4)).current;
+  const [seoulTime, setSeoulTime] = useState(formatSeoulTime);
 
   useEffect(() => {
     Animated.loop(
@@ -223,6 +236,25 @@ export default function Home() {
       ]),
     ).start();
   }, [pulseAnim]);
+
+  useEffect(() => {
+    let minuteInterval: ReturnType<typeof setInterval> | undefined;
+    let minuteTimeout: ReturnType<typeof setTimeout> | undefined;
+
+    const updateSeoulTime = () => setSeoulTime(formatSeoulTime());
+    const delayUntilNextMinute = 60_000 - (Date.now() % 60_000);
+
+    updateSeoulTime();
+    minuteTimeout = setTimeout(() => {
+      updateSeoulTime();
+      minuteInterval = setInterval(updateSeoulTime, 60_000);
+    }, delayUntilNextMinute);
+
+    return () => {
+      if (minuteTimeout) clearTimeout(minuteTimeout);
+      if (minuteInterval) clearInterval(minuteInterval);
+    };
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -283,7 +315,12 @@ export default function Home() {
                 responsive.isCompact && styles.headerCompact,
               ]}
             >
-              <View style={styles.headerIdentity}>
+              <View
+                style={[
+                  styles.headerIdentity,
+                  responsive.isCompact && styles.headerIdentityCompact,
+                ]}
+              >
                 <View style={styles.brandGroup}>
                   <AppText
                     variant="koreanPrimary"
@@ -315,7 +352,7 @@ export default function Home() {
                       style={[styles.liveDot, { opacity: pulseAnim }]}
                     />
                     <AppText
-                      variant="caption"
+                      variant="sectionLabel"
                       lineContract="singleLine"
                       style={styles.statusText}
                     >
@@ -323,14 +360,41 @@ export default function Home() {
                     </AppText>
                   </View>
                   <AppText
-                    variant="caption"
+                    accessibilityLabel={`Heure à Séoul : ${seoulTime}`}
+                    variant="label"
                     lineContract="singleLine"
                     style={styles.locationText}
                   >
-                    HEURE DE SÉOUL
+                    {seoulTime} · SÉOUL
                   </AppText>
                 </View>
               </View>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Paramètres"
+                accessibilityState={{ disabled: true }}
+                aria-disabled={true}
+                disabled
+                hitSlop={8}
+                style={({ pressed }) => [
+                  styles.settingsTrigger,
+                  responsive.isCompact && styles.settingsTriggerCompact,
+                  pressed && styles.settingsTriggerPressed,
+                ]}
+              >
+                <BlurView
+                  intensity={34}
+                  tint="dark"
+                  style={styles.settingsBlur}
+                >
+                  <Settings
+                    size={20}
+                    strokeWidth={2.15}
+                    color="rgba(241,245,249,0.84)"
+                  />
+                </BlurView>
+              </Pressable>
             </View>
 
             {/* HERO - SEOUL IMMERSION */}
@@ -585,6 +649,7 @@ function AnimatedFragment({
 function MainActionCard({ sequence, narrative, progress, onPress }: any) {
   const displayLabel = sequence.label;
   const isMission = sequence.trackKey.endsWith("_ia");
+  const accent = sequence.hubAccent;
 
   return (
     <Pressable
@@ -596,8 +661,8 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
       style={[
         styles.mainCardWrap,
         {
-          borderColor: `${sequence.color}70`,
-          boxShadow: `0px 8px 18px ${sequence.color}3D`,
+          borderColor: accent.featuredBorder,
+          boxShadow: `0px 8px 18px ${accent.featuredShadow}`,
         },
       ]}
     >
@@ -624,7 +689,7 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
                     styles.progressFill,
                     {
                       width: `${progress * 100}%`,
-                      backgroundColor: sequence.color,
+                      backgroundColor: accent.base,
                     },
                   ]}
                 />
@@ -669,8 +734,8 @@ function DailyStreakCard({
       <BlurView intensity={42} tint="dark" style={styles.streakCard}>
         <LinearGradient
           colors={[
-            "rgba(103,232,249,0.16)",
-            "rgba(244,114,182,0.08)",
+            STREAK_ACCENT.surfaceStrong,
+            STREAK_ACCENT.surface,
             "rgba(2,3,6,0.16)",
           ]}
           start={{ x: 0, y: 0 }}
@@ -837,6 +902,7 @@ function SequenceIconGlyph({ icon, color }: { icon: string; color: string }) {
 
 function SequenceCard({ item, isActive, onPress }: any) {
   const icon = getSequenceIcon(item.trackKey);
+  const accent = item.hubAccent;
 
   return (
     <Pressable
@@ -850,8 +916,8 @@ function SequenceCard({ item, isActive, onPress }: any) {
       style={[
         styles.seqCard,
         isActive && {
-          borderColor: `${item.color}66`,
-          boxShadow: `0px 8px 18px ${item.color}38`,
+          borderColor: accent.selectedBorder,
+          boxShadow: `0px 8px 18px ${accent.selectedShadow}`,
         },
       ]}
     >
@@ -861,13 +927,13 @@ function SequenceCard({ item, isActive, onPress }: any) {
         style={[
           styles.seqBlur,
           isActive && {
-            borderColor: `${item.color}55`,
+            borderColor: accent.iconBorder,
           },
         ]}
       >
         <LinearGradient
           colors={[
-            `${item.color}18`,
+            accent.surface,
             "rgba(2,3,6,0.48)",
             "rgba(255,255,255,0.035)",
           ]}
@@ -888,18 +954,20 @@ function SequenceCard({ item, isActive, onPress }: any) {
 
         <View style={styles.seqRainA} />
         <View
-          style={[styles.seqRainB, { backgroundColor: `${item.color}14` }]}
+          style={[styles.seqRainB, { backgroundColor: accent.rain }]}
         />
-        <View style={styles.seqRainC} />
-        <View style={[styles.seqRainDrop, { backgroundColor: item.color }]} />
+        <View
+          style={[styles.seqRainC, { backgroundColor: accent.decorative }]}
+        />
+        <View style={[styles.seqRainDrop, { backgroundColor: accent.base }]} />
 
         <View
           style={[
             styles.seqAccent,
             {
-              backgroundColor: item.color,
+              backgroundColor: accent.base,
               opacity: isActive ? 1 : 0.9,
-              boxShadow: `0px 0px 10px ${item.color}BF`,
+              boxShadow: `0px 0px 10px ${accent.glow}`,
             },
           ]}
         />
@@ -909,9 +977,11 @@ function SequenceCard({ item, isActive, onPress }: any) {
             style={[
               styles.seqIconBox,
               {
-                borderColor: `${item.color}55`,
-                backgroundColor: `${item.color}12`,
-                boxShadow: `0px 0px 12px ${item.color}${isActive ? "57" : "38"}`,
+                borderColor: accent.iconBorder,
+                backgroundColor: accent.iconSurface,
+                boxShadow: `0px 0px 12px ${
+                  isActive ? accent.iconShadowSelected : accent.iconShadow
+                }`,
               },
             ]}
           >
@@ -925,7 +995,7 @@ function SequenceCard({ item, isActive, onPress }: any) {
               style={styles.seqIconLight}
             />
 
-            <SequenceIconGlyph icon={icon} color={item.color} />
+            <SequenceIconGlyph icon={icon} color={accent.base} />
           </View>
         </View>
 
@@ -949,10 +1019,10 @@ function SequenceCard({ item, isActive, onPress }: any) {
           style={[
             styles.seqArrow,
             isActive && {
-              color: item.color,
+              color: accent.base,
               opacity: 0.9,
             },
-            isActive && textGlow(item.color, 8),
+            isActive && textGlow(accent.base, 8),
           ]}
         >
           ›
@@ -987,7 +1057,7 @@ const styles = StyleSheet.create({
     height: 240,
     backgroundColor: "rgba(2,3,6,0.40)",
   },
-  scrollContent: { paddingTop: 12, paddingBottom: 100 },
+  scrollContent: { paddingTop: 8, paddingBottom: 100 },
   contentFrame: {
     width: "100%",
     alignSelf: "center",
@@ -998,18 +1068,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 8,
-    marginBottom: 40,
+    minHeight: 40,
+    marginTop: 4,
+    marginBottom: 38,
     paddingHorizontal: 4,
     position: "relative",
   },
   headerCompact: {
+    marginTop: 2,
     marginBottom: 16,
   },
   headerIdentity: {
     flexDirection: "row",
     alignItems: "center",
     maxWidth: "100%",
+  },
+  headerIdentityCompact: {
+    paddingRight: 34,
   },
   brandGroup: { alignItems: "flex-start" },
   headerCityKr: {
@@ -1021,12 +1096,13 @@ const styles = StyleSheet.create({
   },
   headerDivider: {
     width: 1,
-    height: 28,
-    backgroundColor: "rgba(255,255,255,0.18)",
-    marginHorizontal: 18,
+    height: 24,
+    backgroundColor: "rgba(255,255,255,0.09)",
+    marginHorizontal: 16,
   },
   headerDividerCompact: {
-    marginHorizontal: 10,
+    height: 22,
+    marginHorizontal: 9,
   },
   statusGroup: { justifyContent: "center", flexShrink: 1 },
   liveIndicatorRow: {
@@ -1035,17 +1111,43 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
     backgroundColor: CYAN,
-    marginRight: 7,
+    marginRight: 6,
   },
   statusText: {
-    color: "#E0F2FE",
+    color: "rgba(224,242,254,0.74)",
   },
   locationText: {
-    color: "rgba(224, 242, 254, 0.55)",
+    color: "rgba(224,242,254,0.40)",
+    marginLeft: 11,
+  },
+  settingsTrigger: {
+    position: "absolute",
+    right: 4,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    backgroundColor: "rgba(2,3,6,0.42)",
+  },
+  settingsTriggerCompact: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+  },
+  settingsTriggerPressed: {
+    opacity: 0.72,
+  },
+  settingsBlur: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(2,3,6,0.30)",
   },
   // HERO - SEOUL IMMERSION
   heroBlock: {
@@ -1155,7 +1257,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(103,232,249,0.20)",
+    borderColor: STREAK_ACCENT.cardBorder,
     padding: 18,
     marginTop: -14,
     marginBottom: 28,
@@ -1168,7 +1270,7 @@ const styles = StyleSheet.create({
     width: 3,
     borderTopRightRadius: 8,
     borderBottomRightRadius: 8,
-    backgroundColor: CYAN,
+    backgroundColor: STREAK_ACCENT.base,
     opacity: 0.85,
   },
   streakTopRow: {
@@ -1197,12 +1299,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "rgba(103,232,249,0.45)",
-    backgroundColor: "rgba(103,232,249,0.12)",
+    borderColor: STREAK_ACCENT.iconBorder,
+    backgroundColor: STREAK_ACCENT.iconSurface,
     marginBottom: 6,
   },
   streakSymbolText: {
-    color: CYAN,
+    color: STREAK_ACCENT.base,
   },
   streakNumber: {
     color: TXT,
@@ -1220,14 +1322,14 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.04)",
   },
   streakStatusValidated: {
-    borderColor: "rgba(103,232,249,0.55)",
-    backgroundColor: "rgba(103,232,249,0.12)",
+    borderColor: STREAK_ACCENT.selectedBorder,
+    backgroundColor: STREAK_ACCENT.surface,
   },
   streakStatusText: {
     color: "rgba(241,245,249,0.55)",
   },
   streakStatusTextValidated: {
-    color: CYAN,
+    color: STREAK_ACCENT.base,
   },
   streakMessageBox: {
     marginTop: 14,
@@ -1270,7 +1372,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   streakOpenHint: {
-    color: "rgba(103,232,249,0.72)",
+    color: STREAK_ACCENT.mutedText,
     marginTop: 12,
     textAlign: "center",
   },
@@ -1422,7 +1524,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: 40,
     width: 1,
-    backgroundColor: "rgba(244,114,182,0.035)",
   },
   seqRainDrop: {
     position: "absolute",

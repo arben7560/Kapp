@@ -848,7 +848,7 @@ test("only the root media policy owns AppState playback interruption", () => {
 });
 
 test("speech recognition uses an explicit safe iOS category", () => {
-  const hook = source("hooks/useKoreanSpeechRecognition.ts");
+  const hook = source("hooks/useKoreanSpeechRecognition.nativeImpl.ts");
 
   assert.match(hook, /category: "playAndRecord"/u);
 
@@ -869,10 +869,33 @@ test("speech recognition uses an explicit safe iOS category", () => {
   assert.match(hook, /Native events have no session id[\s\S]*?return;/u);
 });
 
+test("Expo Go speech recognition stays behind a dependency-free facade", () => {
+  const facade = source("hooks/useKoreanSpeechRecognition.ts");
+  const fallback = source("hooks/useKoreanSpeechRecognition.expoGo.ts");
+  const nativeImplementation = source(
+    "hooks/useKoreanSpeechRecognition.nativeImpl.ts",
+  );
+
+  assert.match(facade, /isRunningInExpoGo\(\)/u);
+  assert.match(
+    facade,
+    /isRunningInExpoGo\(\)[\s\S]*?\?[\s\S]*?useExpoGoSpeechRecognition[\s\S]*?:[\s\S]*?require\("\.\/useKoreanSpeechRecognition\.nativeImpl"\)/u,
+  );
+  assert.doesNotMatch(facade, /from "expo-speech-recognition"/u);
+  assert.doesNotMatch(fallback, /expo-speech-recognition/u);
+  assert.match(fallback, /Utilisez un Development Build/u);
+  assert.match(
+    nativeImplementation,
+    /from "expo-speech-recognition"/u,
+  );
+});
+
 test("all immersive speech starts carry the current node context", () => {
   for (const path of ["app/lesson/cafeIA.tsx", "app/lesson/metroIA.tsx"]) {
     const scene = source(path);
 
+    assert.match(scene, /from "\.\.\/\.\.\/hooks\/useKoreanSpeechRecognition"/u, path);
+    assert.doesNotMatch(scene, /hooks\/hooks\/useKoreanSpeechRecognition/u, path);
     assert.match(scene, /contextId: currentNodeId/u, path);
 
     assert.match(scene, /session\.contextId !== currentNodeId/u, path);

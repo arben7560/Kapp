@@ -69,7 +69,7 @@ const SESSION: Exercise[] = [
 
 export default function ListeningScreen() {
   useSpeechLifecycle();
-  const { complete } = useStore();
+  const { complete, isHydrated } = useStore();
   const responsive = useResponsiveLayout({ maxWidth: 680 });
   const [index, setIndex] = useState(0);
   const [input, setInput] = useState("");
@@ -83,12 +83,14 @@ export default function ListeningScreen() {
   );
 
   useEffect(() => {
-    if (exercise || isDailyActivityReportedRef.current) return;
+    if (exercise || isDailyActivityReportedRef.current || !isHydrated) return;
 
     isDailyActivityReportedRef.current = true;
-    complete(buildProgressId("listen", "index_quiz"));
-    void completeDailyActivity("listen_exercise");
-  }, [complete, exercise]);
+    void Promise.all([
+      complete(buildProgressId("listen", "index_quiz")),
+      completeDailyActivity("listen_exercise"),
+    ]);
+  }, [complete, exercise, isHydrated]);
 
   function playAudio() {
     if (!exercise?.audio) return;

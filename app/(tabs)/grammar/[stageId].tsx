@@ -19,7 +19,10 @@ import { GrammarLessonGuideModal } from "../../../components/grammar/GrammarLess
 import { useGrammarModalLayout } from "../../../components/grammar/useGrammarModalLayout";
 import { StatusBadge } from "../../../components/ui/status-badge";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
-import { SeoulMidnightGlass } from "../../../constants/theme";
+import {
+  HubModuleAccents,
+  SeoulMidnightGlass,
+} from "../../../constants/theme";
 import {
   CONTENT_REFS,
   GRAMMAR_CONCEPTS,
@@ -52,7 +55,7 @@ import { usePaywall } from "../../../lib/paywall/PaywallProvider";
 import { buildProgressId } from "../../../lib/progressIds";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
-const ACCENT = "#2DD4BF";
+const GRAMMAR_ACCENT = HubModuleAccents.grammar;
 const SUCCESS = "#86EFAC";
 const ERROR = "#FDA4AF";
 const COLORS = SeoulMidnightGlass.colors;
@@ -131,7 +134,13 @@ export default function GrammarLessonScreen() {
   const validStageId = isGrammarStageId(rawStageId) ? rawStageId : undefined;
   const stageId = validStageId ?? GRAMMAR_STAGE_IDS[0];
   const theoryEntryRequested = rawTheory === "open";
-  const { progress, updateGrammarProgress, complete, setTrack } = useStore();
+  const {
+    progress,
+    updateGrammarProgress,
+    complete,
+    setTrack,
+    isHydrated,
+  } = useStore();
   const {
     hasPremiumAccess: isPremium,
     isLoading: isPaywallLoading,
@@ -187,6 +196,7 @@ export default function GrammarLessonScreen() {
   React.useEffect(() => {
     if (
       !session?.completedAt ||
+      !isHydrated ||
       !completionRecorded ||
       streakRecorded ||
       premiumLocked ||
@@ -197,13 +207,14 @@ export default function GrammarLessonScreen() {
 
     completionInFlight.current.add(session.id);
     const ratio = session.questions.length > 0 ? session.score / session.questions.length : 0;
-    if (ratio >= GRAMMAR_PRACTICE_PASS_RATIO) {
-      complete(buildProgressId("grammar", stageId));
-    }
-
-    completeDailyActivity("grammar_exercise")
+    Promise.all([
+      ratio >= GRAMMAR_PRACTICE_PASS_RATIO
+        ? complete(buildProgressId("grammar", stageId))
+        : Promise.resolve(false),
+      completeDailyActivity("grammar_exercise"),
+    ])
       .then(() => {
-        updateGrammarProgress((current) =>
+        return updateGrammarProgress((current) =>
           markGrammarSessionStreakRecorded(current, stageId, session.id),
         );
       })
@@ -217,6 +228,7 @@ export default function GrammarLessonScreen() {
     complete,
     completeDailyActivity,
     completionRecorded,
+    isHydrated,
     premiumLocked,
     session,
     stageId,
@@ -229,6 +241,7 @@ export default function GrammarLessonScreen() {
   }, [updateGrammarProgress]);
 
   const startPractice = React.useCallback(() => {
+    if (!isHydrated) return;
     if (!canRepeatGrammarPractice(stage, isPremium)) {
       router.push("/premium");
       return;
@@ -239,6 +252,7 @@ export default function GrammarLessonScreen() {
     updateGrammarProgress((current) => setGrammarActiveSession(current, nextSession));
   }, [
     isPremium,
+    isHydrated,
     setTrack,
     stage,
     stageId,
@@ -259,20 +273,20 @@ export default function GrammarLessonScreen() {
   }, [isPremium]);
 
   const chooseAnswer = React.useCallback((answer: GrammarPracticeAnswer) => {
-    if (!session) return;
+    if (!isHydrated || !session) return;
     const next = answerGrammarPracticeQuestion(session, answer);
     if (next === session) return;
     Vibration.vibrate(next.score > session.score ? 12 : [0, 45]);
     replaceSession(next);
-  }, [replaceSession, session]);
+  }, [isHydrated, replaceSession, session]);
 
   const updateDraft = React.useCallback((answer: GrammarPracticeAnswer) => {
-    if (!session) return;
+    if (!isHydrated || !session) return;
     replaceSession(setGrammarPracticeDraft(session, answer));
-  }, [replaceSession, session]);
+  }, [isHydrated, replaceSession, session]);
 
   const continuePractice = React.useCallback(() => {
-    if (!session) return;
+    if (!isHydrated || !session) return;
     const next = advanceGrammarPracticeSession(session);
     if (next === session) return;
     if (next.completedAt) {
@@ -280,7 +294,7 @@ export default function GrammarLessonScreen() {
     } else {
       replaceSession(next);
     }
-  }, [replaceSession, session, updateGrammarProgress]);
+  }, [isHydrated, replaceSession, session, updateGrammarProgress]);
 
   const renderContent = () => {
     if (premiumLocked) {
@@ -357,7 +371,7 @@ export default function GrammarLessonScreen() {
                   tone={stage.access === "premium" ? "premium" : "accent"}
                   appearance="soft"
                   size="compact"
-                  accentColor={ACCENT}
+                  accentColor={GRAMMAR_ACCENT.base}
                 />
               </View>
               <AppText accessibilityRole="header" variant={responsive.isCompact ? "featureTitle" : "screenTitle"}>
@@ -441,7 +455,7 @@ function GrammarLessonTheory({
           </AppText>
           {isGeneralReview ? (
             <BlurView intensity={50} tint="dark" style={styles.ruleCard}>
-              <LinearGradient colors={["rgba(45,212,191,0.13)", "rgba(255,255,255,0.02)"]} style={ABSOLUTE_FILL} />
+              <LinearGradient colors={[GRAMMAR_ACCENT.surfaceStrong, "rgba(255,255,255,0.02)"]} style={ABSOLUTE_FILL} />
               <AppText variant="sectionTitle">Observe, choisis, puis construis</AppText>
               <AppText variant="bodySecondary" tone="muted">
                 Repère la particule ou la terminaison utile, vérifie sa place, puis lis la phrase entière avant de répondre.
@@ -449,7 +463,7 @@ function GrammarLessonTheory({
             </BlurView>
           ) : concepts.map((concept) => (
             <BlurView key={concept.id} intensity={50} tint="dark" style={styles.ruleCard}>
-              <LinearGradient colors={["rgba(45,212,191,0.13)", "rgba(255,255,255,0.02)"]} style={ABSOLUTE_FILL} />
+              <LinearGradient colors={[GRAMMAR_ACCENT.surfaceStrong, "rgba(255,255,255,0.02)"]} style={ABSOLUTE_FILL} />
               <AppText variant="koreanPrimary" script="korean" style={styles.accentText}>{concept.form}</AppText>
               <AppText variant="bodySecondary">{concept.rule}</AppText>
               {concept.ruleParts?.length ? (
@@ -549,7 +563,7 @@ function LessonOverview({
   return (
     <BlurView intensity={55} tint="dark" style={styles.practiceLaunchCard}>
       <LinearGradient
-        colors={["rgba(45,212,191,0.14)", "rgba(255,255,255,0.02)"]}
+        colors={[GRAMMAR_ACCENT.surfaceStrong, "rgba(255,255,255,0.02)"]}
         style={ABSOLUTE_FILL}
       />
       <AppText variant="sectionLabel" style={styles.accentText}>
@@ -774,7 +788,7 @@ function LessonResult({
         <AppText variant="bodySecondary" tone="muted">
           {passed
             ? isGeneralReview
-              ? "Tu as revu cinq structures. Reviens à cette révision pour en rencontrer d’autres."
+              ? `Tu as revu ${session.questions.length} structures clés couvrant tout le niveau A1.`
               : "Objectif atteint. Tu peux poursuivre ou refaire la leçon."
             : "Revois les corrections ci-dessous, puis essaie de nouveau."}
         </AppText>
@@ -932,37 +946,37 @@ const styles = StyleSheet.create({
   backButton: { flexDirection: "row", alignItems: "center", gap: 8 },
   lessonHeader: { gap: 7, marginBottom: 26 },
   lessonMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 },
-  accentText: { color: ACCENT },
+  accentText: { color: GRAMMAR_ACCENT.base },
   premiumText: { color: COLORS.premiumGold },
   successText: { color: SUCCESS },
   errorText: { color: ERROR },
   pinkText: { color: "#F9A8D4" },
   headerProgressTrack: { height: 3, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 999, marginTop: 8, overflow: "hidden" },
-  headerProgressFill: { height: "100%", backgroundColor: ACCENT, borderRadius: 999 },
+  headerProgressFill: { height: "100%", backgroundColor: GRAMMAR_ACCENT.base, borderRadius: 999 },
   contentStack: { gap: 22 },
   explanationGrid: { gap: 22 },
   explanationGridTablet: { flexDirection: "row", alignItems: "flex-start" },
   explanationColumn: { gap: 10 },
   explanationColumnTablet: { flex: 1 },
-  ruleCard: { borderRadius: 22, borderWidth: 1, borderColor: "rgba(45,212,191,0.24)", padding: 18, gap: 7, overflow: "hidden" },
+  ruleCard: { borderRadius: 22, borderWidth: 1, borderColor: GRAMMAR_ACCENT.featuredShadow, padding: 18, gap: 7, overflow: "hidden" },
   ruleParts: { gap: 10 },
   rulePart: { gap: 3, paddingTop: 2 },
   exampleCard: { borderRadius: 22, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", padding: 18, gap: 7, overflow: "hidden" },
-  exampleLine: { borderLeftWidth: 2, borderLeftColor: "rgba(45,212,191,0.32)", paddingLeft: 14, gap: 3 },
+  exampleLine: { borderLeftWidth: 2, borderLeftColor: GRAMMAR_ACCENT.iconBorder, paddingLeft: 14, gap: 3 },
   editorialNote: { marginTop: 4, gap: 2 },
-  memoBox: { marginTop: 4, borderRadius: 10, padding: 10, backgroundColor: "rgba(45,212,191,0.09)" },
+  memoBox: { marginTop: 4, borderRadius: 10, padding: 10, backgroundColor: GRAMMAR_ACCENT.surface },
   receptiveBox: { borderRadius: 20, borderWidth: 1, borderColor: "rgba(244,114,182,0.2)", backgroundColor: "rgba(244,114,182,0.06)", padding: 18, gap: 12 },
   receptiveRow: { gap: 2 },
   advancedLockedCard: { minHeight: 84, borderRadius: 20, borderWidth: 1, borderColor: COLORS.premiumBorder, backgroundColor: COLORS.premiumSurface, padding: 16, flexDirection: "row", alignItems: "center", gap: 12 },
   advancedLockedCopy: { flex: 1, minWidth: 0, gap: 3 },
-  practiceLaunchCard: { borderRadius: 24, borderWidth: 1, borderColor: "rgba(45,212,191,0.28)", padding: 20, gap: 10, overflow: "hidden" },
+  practiceLaunchCard: { borderRadius: 24, borderWidth: 1, borderColor: GRAMMAR_ACCENT.cardBorder, padding: 20, gap: 10, overflow: "hidden" },
   practiceStack: { gap: 16 },
   practiceMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 },
   practiceMetaActions: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end", gap: 8 },
-  reviewTheoryButton: { minHeight: 36, borderRadius: 999, borderWidth: 1, borderColor: "rgba(45,212,191,0.32)", backgroundColor: "rgba(45,212,191,0.07)", alignItems: "center", justifyContent: "center", paddingHorizontal: 12, paddingVertical: 8 },
+  reviewTheoryButton: { minHeight: 36, borderRadius: 999, borderWidth: 1, borderColor: GRAMMAR_ACCENT.iconBorder, backgroundColor: GRAMMAR_ACCENT.iconSurface, alignItems: "center", justifyContent: "center", paddingHorizontal: 12, paddingVertical: 8 },
   exerciseProgressTrack: { height: 5, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.09)", overflow: "hidden" },
-  exerciseProgressFill: { height: "100%", borderRadius: 999, backgroundColor: ACCENT },
-  questionCard: { minHeight: 190, borderRadius: 26, borderWidth: 1, borderColor: "rgba(45,212,191,0.22)", padding: 22, justifyContent: "center", gap: 12, overflow: "hidden" },
+  exerciseProgressFill: { height: "100%", borderRadius: 999, backgroundColor: GRAMMAR_ACCENT.base },
+  questionCard: { minHeight: 190, borderRadius: 26, borderWidth: 1, borderColor: GRAMMAR_ACCENT.selectedShadow, padding: 22, justifyContent: "center", gap: 12, overflow: "hidden" },
   questionSections: { marginTop: 5, gap: 14 },
   questionSection: { gap: 4 },
   optionGrid: { gap: 10 },
@@ -972,10 +986,10 @@ const styles = StyleSheet.create({
   optionCorrect: { borderColor: "rgba(134,239,172,0.7)", backgroundColor: "rgba(134,239,172,0.12)" },
   optionWrong: { borderColor: "rgba(253,164,175,0.7)", backgroundColor: "rgba(253,164,175,0.1)" },
   orderStack: { gap: 12 },
-  orderAnswerZone: { minHeight: 92, borderRadius: 18, borderWidth: 1, borderColor: "rgba(45,212,191,0.24)", backgroundColor: "rgba(45,212,191,0.05)", padding: 12, flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 },
+  orderAnswerZone: { minHeight: 92, borderRadius: 18, borderWidth: 1, borderColor: GRAMMAR_ACCENT.featuredShadow, backgroundColor: GRAMMAR_ACCENT.decorative, padding: 12, flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 },
   tokenBank: { minHeight: 54, flexDirection: "row", flexWrap: "wrap", gap: 8 },
   tokenButton: { borderRadius: 13, borderWidth: 1, borderColor: "rgba(255,255,255,0.16)", backgroundColor: "rgba(255,255,255,0.06)", paddingVertical: 9, paddingHorizontal: 13 },
-  tokenSelected: { borderRadius: 13, borderWidth: 1, borderColor: "rgba(45,212,191,0.5)", backgroundColor: "rgba(45,212,191,0.12)", paddingVertical: 9, paddingHorizontal: 13 },
+  tokenSelected: { borderRadius: 13, borderWidth: 1, borderColor: GRAMMAR_ACCENT.featuredBorder, backgroundColor: GRAMMAR_ACCENT.surface, paddingVertical: 9, paddingHorizontal: 13 },
   feedbackCard: { borderRadius: 24, borderWidth: 1, padding: 20, gap: 10, overflow: "hidden" },
   feedbackCorrect: { borderColor: "rgba(134,239,172,0.36)" },
   feedbackWrong: { borderColor: "rgba(253,164,175,0.36)" },
@@ -991,11 +1005,11 @@ const styles = StyleSheet.create({
   resultActions: { gap: 10 },
   lockedCard: { borderRadius: 26, borderWidth: 1, borderColor: "rgba(255,255,255,0.14)", padding: 22, gap: 12, overflow: "hidden" },
   premiumLockedCard: { borderColor: COLORS.premiumBorder, backgroundColor: COLORS.premiumSurface },
-  primaryButton: { minHeight: 52, borderRadius: 16, backgroundColor: ACCENT, alignItems: "center", justifyContent: "center", paddingHorizontal: 18, marginTop: 6 },
-  primaryButtonText: { color: "#02110F" },
+  primaryButton: { minHeight: 52, borderRadius: 16, backgroundColor: GRAMMAR_ACCENT.base, alignItems: "center", justifyContent: "center", paddingHorizontal: 18, marginTop: 6 },
+  primaryButtonText: { color: COLORS.bgDeep },
   primaryButtonPremium: { backgroundColor: COLORS.premiumGold },
   primaryButtonPremiumText: { color: COLORS.premiumInk },
-  secondaryButton: { minHeight: 52, borderRadius: 16, borderWidth: 1, borderColor: "rgba(45,212,191,0.5)", alignItems: "center", justifyContent: "center", paddingHorizontal: 18 },
+  secondaryButton: { minHeight: 52, borderRadius: 16, borderWidth: 1, borderColor: GRAMMAR_ACCENT.featuredBorder, alignItems: "center", justifyContent: "center", paddingHorizontal: 18 },
   textButton: { alignItems: "center", justifyContent: "center", padding: 14 },
   buttonDisabled: { opacity: 0.35 },
   pressed: { opacity: 0.86, transform: [{ scale: 0.995 }] },

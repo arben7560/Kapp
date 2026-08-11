@@ -126,6 +126,10 @@ test("cafe-reaction-01 asks for a command and has no bare ambiguous refusal", ()
   );
 
   assert.ok(exercise);
+  assert.equal(
+    exercise.audioAsset,
+    "assets/audio/listen/mwo-deurilkkayo.mp3",
+  );
   assert.match(exercise.instruction, /commande/u);
   assert.ok(!exercise.options.includes("괜찮아요."));
 });

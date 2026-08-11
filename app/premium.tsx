@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
@@ -59,7 +60,9 @@ export default function PremiumScreen() {
     openSubscriptionManagement,
     restorePurchases,
     subscribe,
+    subscriptions,
   } = usePaywall();
+  const isMountedRef = React.useRef(true);
 
   const busy = isPurchasing || isRestoring;
   const highlightedOfferId =
@@ -68,14 +71,73 @@ export default function PremiumScreen() {
     PREMIUM_SUBSCRIPTION_OFFERS[0]?.id;
   const [selectedOfferId, setSelectedOfferId] =
     React.useState(highlightedOfferId);
+  const availableOffer = React.useMemo(
+    () =>
+      PREMIUM_SUBSCRIPTION_OFFERS.find(
+        (offer) => subscriptions[offer.id] !== undefined,
+      ),
+    [subscriptions],
+  );
+  const effectiveSelectedOfferId =
+    isLoading || subscriptions[selectedOfferId]
+      ? selectedOfferId
+      : (availableOffer?.id ?? selectedOfferId);
   const selectedOffer = React.useMemo(
     () =>
       PREMIUM_SUBSCRIPTION_OFFERS.find(
-        (offer) => offer.id === selectedOfferId,
+        (offer) => offer.id === effectiveSelectedOfferId,
       ) ?? PREMIUM_SUBSCRIPTION_OFFERS[0],
-    [selectedOfferId],
+    [effectiveSelectedOfferId],
   );
-  const canSubscribe = !!selectedOffer && !busy && !hasPremiumAccess;
+  const canSubscribe =
+    !!selectedOffer &&
+    !!subscriptions[selectedOffer.id] &&
+    !busy &&
+    !hasPremiumAccess;
+  const annualSavingsPercent = React.useMemo(() => {
+    const monthlyProduct = subscriptions.monthly?.product;
+    const yearlyProduct = subscriptions.yearly?.product;
+
+    if (
+      !monthlyProduct ||
+      !yearlyProduct ||
+      monthlyProduct.currencyCode !== yearlyProduct.currencyCode ||
+      monthlyProduct.price <= 0
+    ) {
+      return null;
+    }
+
+    const percent = Math.round(
+      (1 - yearlyProduct.price / (monthlyProduct.price * 12)) * 100,
+    );
+    return percent > 0 ? percent : null;
+  }, [subscriptions]);
+
+  React.useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const closePaywall = React.useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
+  }, []);
+
+  const handleSubscribe = React.useCallback(async () => {
+    if (!selectedOffer) return;
+    const premiumGranted = await subscribe(selectedOffer.id);
+    if (premiumGranted && isMountedRef.current) closePaywall();
+  }, [closePaywall, selectedOffer, subscribe]);
+
+  const handleRestore = React.useCallback(async () => {
+    const premiumRestored = await restorePurchases();
+    if (premiumRestored && isMountedRef.current) closePaywall();
+  }, [closePaywall, restorePurchases]);
 
   return (
     <LinearGradient
@@ -123,13 +185,18 @@ export default function PremiumScreen() {
               {PREMIUM_SUBSCRIPTION_OFFERS.map((offer) => (
                 <Pressable
                   key={offer.id}
-                  disabled={busy || hasPremiumAccess}
+                  disabled={
+                    busy ||
+                    hasPremiumAccess ||
+                    (!isLoading && !subscriptions[offer.id])
+                  }
                   onPress={() => setSelectedOfferId(offer.id)}
                   style={({ pressed }) => [
                     styles.priceBox,
                     responsive.isCompact && styles.priceBoxCompact,
                     offer.id === highlightedOfferId && styles.priceBoxFeatured,
-                    offer.id === selectedOfferId && styles.priceBoxSelected,
+                    offer.id === effectiveSelectedOfferId &&
+                      styles.priceBoxSelected,
                     pressed && !busy && !hasPremiumAccess && styles.planPressed,
                   ]}
                 >
@@ -140,10 +207,11 @@ export default function PremiumScreen() {
                       <View style={styles.offerHeader}>
                         <View style={styles.offerTitleWrap}>
                           <AppText variant="cardTitle" style={styles.offerTitle}>{offer.title}</AppText>
-                          {offer.id === highlightedOfferId && (
+                          {offer.id === highlightedOfferId &&
+                            annualSavingsPercent !== null && (
                             <View style={styles.savingBadge}>
                               <AppText variant="caption" style={styles.savingBadgeText}>
-                                Économisez 17 %
+                                Économisez {annualSavingsPercent} %
                               </AppText>
                             </View>
                           )}
@@ -151,13 +219,13 @@ export default function PremiumScreen() {
 
                         <Ionicons
                           name={
-                            offer.id === selectedOfferId
+                            offer.id === effectiveSelectedOfferId
                               ? "checkmark-circle"
                               : "ellipse-outline"
                           }
                           size={22}
                           color={
-                            offer.id === selectedOfferId
+                            offer.id === effectiveSelectedOfferId
                               ? COLORS.cyan
                               : COLORS.faint
                           }
@@ -221,7 +289,7 @@ export default function PremiumScreen() {
             disabled={!canSubscribe}
             loading={isPurchasing}
             loadingIndicatorColor={COLORS.text}
-            onPress={() => selectedOffer && subscribe(selectedOffer.id)}
+            onPress={() => void handleSubscribe()}
             style={styles.primaryAction}
           />
 
@@ -238,14 +306,15 @@ export default function PremiumScreen() {
             disabled={busy}
             loading={isRestoring}
             loadingIndicatorColor={COLORS.text}
-            onPress={restorePurchases}
+            onPress={() => void handleRestore()}
             style={styles.secondaryAction}
           />
 
           <ActionButton
             label={PAYWALL_COPY.manage}
             variant="ghost"
-            onPress={openSubscriptionManagement}
+            disabled={busy}
+            onPress={() => void openSubscriptionManagement()}
             style={styles.manageAction}
           />
 

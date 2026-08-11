@@ -7,7 +7,10 @@ import type {
 type GrammarEditorialContent = {
   rule: string;
   ruleParts?: GrammarConcept["ruleParts"];
-  practice: Omit<GrammarPracticeProfile, "focusForm" | "formDistractors">;
+  practice: Omit<
+    GrammarPracticeProfile,
+    "focusForm" | "formDistractors" | "drills"
+  >;
 };
 
 function practice(
@@ -15,7 +18,10 @@ function practice(
   scenario: string,
   korean: string,
   french: string,
-): Omit<GrammarPracticeProfile, "focusForm" | "formDistractors"> {
+): Omit<
+  GrammarPracticeProfile,
+  "focusForm" | "formDistractors" | "drills"
+> {
   return {
     distractorGroup,
     scenario,

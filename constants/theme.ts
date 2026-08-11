@@ -386,6 +386,41 @@ export const SeoulMidnightGlass = {
   },
 } as const;
 
+function createHubModuleAccent(base: string) {
+  return {
+    base,
+    surfaceStrong: `${base}29`,
+    surface: `${base}18`,
+    rain: `${base}14`,
+    decorative: `${base}09`,
+    iconSurface: `${base}12`,
+    iconBorder: `${base}55`,
+    cardBorder: `${base}33`,
+    selectedBorder: `${base}66`,
+    featuredBorder: `${base}70`,
+    featuredShadow: `${base}3D`,
+    selectedShadow: `${base}38`,
+    iconShadow: `${base}38`,
+    iconShadowSelected: `${base}57`,
+    glow: `${base}BF`,
+    mutedText: `${base}B8`,
+  } as const;
+}
+
+/** Primary identities shared by the main Hub and each module landing page. */
+export const HubModuleAccents = {
+  streak: createHubModuleAccent('#4FB9B7'),
+  hangul: createHubModuleAccent('#5598C4'),
+  grammar: createHubModuleAccent('#7772AA'),
+  vocabulary: createHubModuleAccent('#C69A58'),
+  counting: createHubModuleAccent('#8294AF'),
+  conversation: createHubModuleAccent('#BE7591'),
+  listening: createHubModuleAccent('#976FA6'),
+} as const;
+
+export type HubModuleAccent =
+  (typeof HubModuleAccents)[keyof typeof HubModuleAccents];
+
 export const AppTextTones = {
   default: SeoulMidnightGlass.colors.text,
   strong: SeoulMidnightGlass.colors.textStrong,

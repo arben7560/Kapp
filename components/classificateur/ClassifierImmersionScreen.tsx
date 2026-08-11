@@ -15,12 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
 import { useStore } from "../../_store";
-import {
-  trackAudioPlayed,
-  trackSceneCompleted,
-  trackSubModuleVisited,
-  trackToolboxOpened,
-} from "../../lib/immersionStreak";
+import { trackSceneCompleted } from "../../lib/immersionStreak";
 import { buildProgressId } from "../../lib/progressIds";
 import { AnimatedAppText, AppText } from "../app-text";
 import { AppBackButton } from "../ui/app-back-button";
@@ -136,8 +131,6 @@ export default function ClassifierImmersionScreen({
     Speech.stop();
     setSelectedWord(id);
     Vibration.vibrate(8);
-    void trackAudioPlayed();
-
     Speech.speak(text, {
       language: "ko-KR",
       rate: 0.78,
@@ -154,8 +147,10 @@ export default function ClassifierImmersionScreen({
     if (visibleMessages >= activeScene.dialogue.length) {
       if (!completedSceneIdsRef.current.has(activeScene.id)) {
         completedSceneIdsRef.current.add(activeScene.id);
-        complete(buildProgressId(completionPrefix, activeScene.id));
-        void trackSceneCompleted(activeScene.id);
+        void Promise.all([
+          complete(buildProgressId(completionPrefix, activeScene.id)),
+          trackSceneCompleted(activeScene.id),
+        ]);
       }
 
       Vibration.vibrate(8);
@@ -233,10 +228,7 @@ export default function ClassifierImmersionScreen({
             {scenes.map((scene) => (
               <Pressable
                 key={scene.id}
-                onPress={() => {
-                  setActiveScene(scene);
-                  void trackSubModuleVisited(scene.id);
-                }}
+                onPress={() => setActiveScene(scene)}
                 style={[
                   styles.tab,
                   activeScene.id === scene.id && {
@@ -417,10 +409,7 @@ export default function ClassifierImmersionScreen({
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() => {
-                      void trackToolboxOpened();
-                      speak(exp.speak ?? exp.word, cardId);
-                    }}
+                    onPress={() => speak(exp.speak ?? exp.word, cardId)}
                     style={({ pressed }) => [
                       styles.cardPressable,
                       pressed && { transform: [{ scale: 0.985 }] },

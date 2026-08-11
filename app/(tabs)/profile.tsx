@@ -1,4 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import React from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,6 +10,7 @@ import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import { createEmptyHangulProgress } from "../../data/hangul/types";
 import { createEmptyGrammarLearningProgress } from "../../lib/grammar";
+import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
 const BG0 = "#070812";
 const TXT = "rgba(255,255,255,0.92)";
@@ -17,7 +19,8 @@ const LINE = "rgba(255,255,255,0.12)";
 const CARD = "rgba(255,255,255,0.06)";
 
 export default function Profile() {
-  const { progress, setProgress, togglePremium } = useStore();
+  const { progress, setProgress } = useStore();
+  const { hasPremiumAccess, isDeveloperUnlocked } = usePaywall();
   const { resetStreak, streak } = useDailyStreak();
   const responsive = useResponsiveLayout({ maxWidth: 760 });
 
@@ -77,7 +80,7 @@ export default function Profile() {
             ]}
           />
           <AppText variant="bodySecondary" tone="muted" style={{ color: MUTED, marginTop: 2 }}>
-            Premium : {progress.isPremium ? "Actif" : "Non"}
+            Premium : {hasPremiumAccess ? "Actif" : "Non"}
           </AppText>
         </View>
 
@@ -101,7 +104,7 @@ export default function Profile() {
           <View style={{ height: 12 }} />
 
           <Pressable
-            onPress={togglePremium}
+            onPress={() => router.push("/premium")}
             style={({ pressed }) => ({
               opacity: pressed ? 0.9 : 1,
               backgroundColor: "rgba(34,211,238,0.14)",
@@ -113,9 +116,11 @@ export default function Profile() {
             })}
           >
             <AppText variant="button" align="center" style={{ color: TXT }}>
-              {progress.isPremium
-                ? "Desactiver Premium (prototype)"
-                : "Activer Premium (prototype)"}
+              {hasPremiumAccess
+                ? isDeveloperUnlocked
+                  ? "Premium actif (développement)"
+                  : "Gérer Premium"
+                : "Découvrir Premium"}
             </AppText>
           </Pressable>
         </View>
@@ -152,7 +157,6 @@ export default function Profile() {
                       grammarProgress: createEmptyGrammarLearningProgress(),
                       hangulProgress: createEmptyHangulProgress(),
                       hangulLevel: 1,
-                      isPremium: false,
                       learningTrack: null,
                       streak: 0,
                       xp: 0,

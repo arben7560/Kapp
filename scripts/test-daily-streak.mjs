@@ -89,6 +89,30 @@ test("l'état persisté est restauré après une fermeture logique", async (t) =
   assert.deepEqual(restored.completedDates, completed.completedDates);
 });
 
+test("une ancienne série conserve son total et son objectif du jour", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: JULY_21 });
+  persistedValues.clear();
+  persistedValues.set(
+    "kapp:immersion-streak:v1",
+    JSON.stringify({
+      currentStreak: 4,
+      lastValidatedDate: "2026-07-21",
+      longestStreak: 7,
+      totalImmersionDays: 12,
+    }),
+  );
+
+  const restored = await getDailyStreakState();
+
+  assert.equal(restored.currentStreak, 4);
+  assert.equal(restored.longestStreak, 7);
+  assert.equal(restored.totalCompletedDays, 12);
+  assert.equal(restored.isTodayCompleted, true);
+  assert.deepEqual(restored.completedDates["2026-07-21"].activities, [
+    "pedagogical_activity",
+  ]);
+});
+
 test("un jour manqué utilise la protection disponible sans double comptage", async (t) => {
   t.mock.timers.enable({ apis: ["Date"], now: JULY_21 });
   await completeDailyActivity("hangul_exercise");

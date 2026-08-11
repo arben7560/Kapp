@@ -57,6 +57,10 @@ type LegacyImmersionState = {
   longestStreak?: number;
   lastValidatedDate?: string | null;
   totalImmersionDays?: number;
+  today?: {
+    date?: string;
+    validated?: boolean;
+  };
 };
 
 export function getStreakDateKey(date = new Date()): string {
@@ -159,18 +163,33 @@ export function normalizeDailyStreakState(
     isTodayCompleted,
     longestStreak: Math.max(0, state.longestStreak ?? 0),
     todayDate,
-    totalCompletedDays: Object.keys(state.completedDates ?? {}).length,
+    totalCompletedDays: Math.max(
+      state.totalCompletedDays ?? 0,
+      Object.keys(state.completedDates ?? {}).length,
+    ),
   };
 }
 
 function migrateLegacyState(legacy: LegacyImmersionState): DailyStreakState {
   const initialState = createDailyStreakState();
-  const lastCompletedDate = legacy.lastValidatedDate ?? null;
+  const lastCompletedDate =
+    legacy.lastValidatedDate ??
+    (legacy.today?.validated ? legacy.today.date ?? null : null);
   const currentStreak = Math.max(0, legacy.currentStreak ?? 0);
   const longestStreak = Math.max(currentStreak, legacy.longestStreak ?? 0);
+  const completedDates = lastCompletedDate
+    ? {
+        [lastCompletedDate]: {
+          activities: ["pedagogical_activity" as const],
+          completedAt: `${lastCompletedDate}T12:00:00.000Z`,
+          date: lastCompletedDate,
+        },
+      }
+    : {};
 
   return normalizeDailyStreakState({
     ...initialState,
+    completedDates,
     currentStreak,
     lastCompletedDate,
     longestStreak,
@@ -308,7 +327,7 @@ export function completeDailyStreakState(
     lastCompletionResult: result,
     longestStreak: Math.max(state.longestStreak, nextCurrentStreak),
     todayDate,
-    totalCompletedDays: Object.keys(state.completedDates).length + 1,
+    totalCompletedDays: state.totalCompletedDays + 1,
   }, now);
 }
 

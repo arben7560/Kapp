@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../../components/app-text";
 import { AppBackButton } from "../../components/ui/app-back-button";
 import { getScene, Step } from "../../data/immersionScenes";
+import { resolveAutomaticScenePath } from "../../lib/immersionSceneFlow";
 
 const BG0 = "#070812";
 const TXT = "rgba(255,255,255,0.92)";
@@ -27,6 +28,24 @@ type RenderEnd = {
   keyPhrases: { kr: string; fr: string }[];
 };
 type RenderItem = RenderLine | RenderEnd;
+
+function toRenderItem(step: Exclude<Step, { type: "choice" }>): RenderItem {
+  if (step.type === "line") {
+    return {
+      kind: "line",
+      speaker: step.speaker,
+      kr: step.kr,
+      fr: step.fr,
+    };
+  }
+
+  return {
+    kind: "end",
+    summaryKr: step.summaryKr,
+    summaryFr: step.summaryFr,
+    keyPhrases: step.keyPhrases,
+  };
+}
 
 function Bubble({
   side,
@@ -144,79 +163,78 @@ export default function ImmersionScene() {
     scene ? scene.start : "",
   );
   const [items, setItems] = useState<RenderItem[]>(() => []);
+  const interactionLockRef = React.useRef(false);
+  const exitLockRef = React.useRef(false);
 
   const current = cursor ? stepById.get(cursor) : undefined;
 
-  function pushStepToTranscript(st: Step) {
-    if (st.type === "line") {
-      setItems((prev) => [
-        ...prev,
-        { kind: "line", speaker: st.speaker, kr: st.kr, fr: st.fr },
-      ]);
-    } else if (st.type === "end") {
-      setItems((prev) => [
-        ...prev,
-        {
-          kind: "end",
-          summaryKr: st.summaryKr,
-          summaryFr: st.summaryFr,
-          keyPhrases: st.keyPhrases,
-        },
-      ]);
-    }
-  }
-
-  // Initialize first line(s) lazily when opening
   React.useEffect(() => {
-    if (!scene) return;
-    if (items.length > 0) return;
+    interactionLockRef.current = false;
+    exitLockRef.current = false;
 
-    const first = stepById.get(scene.start);
-    if (!first) return;
-    pushStepToTranscript(first);
-
-    // Auto-advance through consecutive "line" steps until a "choice" or "end"
-    if (first.type === "line") {
-      const idx = scene.steps.findIndex((s) => s.id === first.id);
-      let i = idx;
-      while (i >= 0 && i < scene.steps.length - 1) {
-        const next = scene.steps[i + 1];
-        if (next.type === "line") {
-          pushStepToTranscript(next);
-          i++;
-          continue;
-        }
-        setCursor(next.id);
-        break;
-      }
-      if (idx === scene.steps.length - 1) setCursor(first.id);
-    } else {
-      setCursor(first.id);
+    if (!scene) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- A route id change must clear the previous scene atomically.
+      setCursor("");
+      setItems([]);
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene, stepById]);
+
+    const initialPath = resolveAutomaticScenePath(scene, scene.start);
+    setCursor(initialPath.cursor);
+    setItems(
+      initialPath.transcriptSteps
+        .filter((step) => step.type !== "choice")
+        .map((step) => toRenderItem(step)),
+    );
+  }, [scene]);
+
+  React.useEffect(() => {
+    interactionLockRef.current = false;
+    exitLockRef.current = false;
+  }, [cursor]);
 
   function restart() {
     if (!scene) return;
-    setItems([]);
-    setCursor(scene.start);
+    const initialPath = resolveAutomaticScenePath(scene, scene.start);
+    interactionLockRef.current = false;
+    setItems(
+      initialPath.transcriptSteps
+        .filter((step) => step.type !== "choice")
+        .map((step) => toRenderItem(step)),
+    );
+    setCursor(initialPath.cursor);
   }
 
   function advanceFromLine(lineId: string) {
-    if (!scene) return;
-    const idx = scene.steps.findIndex((s) => s.id === lineId);
-    if (idx < 0 || idx >= scene.steps.length - 1) return;
+    if (!scene || interactionLockRef.current) return;
+    const line = stepById.get(lineId);
+    if (!line || line.type !== "line") return;
 
-    const next = scene.steps[idx + 1];
-    if (!next) return;
+    const lineIndex = scene.steps.findIndex((step) => step.id === lineId);
+    const nextStepId = line.goTo ?? scene.steps[lineIndex + 1]?.id;
+    if (!nextStepId) return;
 
-    if (next.type === "line") {
-      pushStepToTranscript(next);
-      setCursor(next.id);
-    } else {
-      setCursor(next.id);
-    }
+    interactionLockRef.current = true;
+    const path = resolveAutomaticScenePath(scene, nextStepId);
+    setItems((previous) => [
+      ...previous,
+      ...path.transcriptSteps
+        .filter((step) => step.type !== "choice")
+        .map((step) => toRenderItem(step)),
+    ]);
+    setCursor(path.cursor);
   }
+
+  const handleExit = React.useCallback(() => {
+    if (exitLockRef.current) return;
+    exitLockRef.current = true;
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/(tabs)/immersion");
+  }, []);
 
   if (!scene) {
     return (
@@ -232,7 +250,7 @@ export default function ImmersionScene() {
           </AppText>
           <View style={{ height: 12 }} />
           <Pressable
-            onPress={() => router.back()}
+            onPress={handleExit}
             style={{
               paddingVertical: 12,
               borderRadius: 16,
@@ -321,7 +339,7 @@ export default function ImmersionScene() {
                 </Pressable>
 
                 <Pressable
-                  onPress={() => router.back()}
+                  onPress={handleExit}
                   style={{
                     paddingHorizontal: 12,
                     paddingVertical: 10,
@@ -368,36 +386,25 @@ export default function ImmersionScene() {
                 fr={opt.fr}
                 tone={opt.tone}
                 onPress={() => {
-                  // 1) show user's answer as a right bubble
-                  setItems((prev) => [
-                    ...prev,
-                    { kind: "line", speaker: "user", kr: opt.kr, fr: opt.fr },
-                  ]);
-
-                  // 2) go to next node
+                  if (interactionLockRef.current) return;
                   const next = stepById.get(opt.goTo);
                   if (!next) return;
 
-                  // 3) push next and auto-advance through consecutive lines
-                  pushStepToTranscript(next);
-
-                  if (next.type === "line") {
-                    const idx = scene.steps.findIndex((s) => s.id === next.id);
-                    let i = idx;
-                    while (i >= 0 && i < scene.steps.length - 1) {
-                      const n = scene.steps[i + 1];
-                      if (n.type === "line") {
-                        pushStepToTranscript(n);
-                        i++;
-                        continue;
-                      }
-                      setCursor(n.id);
-                      break;
-                    }
-                    if (idx === scene.steps.length - 1) setCursor(next.id);
-                  } else {
-                    setCursor(next.id);
-                  }
+                  interactionLockRef.current = true;
+                  const path = resolveAutomaticScenePath(scene, next.id);
+                  setItems((previous) => [
+                    ...previous,
+                    {
+                      kind: "line",
+                      speaker: "user",
+                      kr: opt.kr,
+                      fr: opt.fr,
+                    },
+                    ...path.transcriptSteps
+                      .filter((step) => step.type !== "choice")
+                      .map((step) => toRenderItem(step)),
+                  ]);
+                  setCursor(path.cursor);
                 }}
               />
             ))}

@@ -10,17 +10,12 @@ import {
   releaseAudioResources,
   type RemovableAudioSubscription,
 } from "../lib/audioPlayerLifecycle";
-import { trackAudioPlayed } from "../lib/immersionStreak";
 import { mediaSession } from "../lib/mediaSession";
 import type { MediaSessionLease } from "../lib/mediaSessionCore";
 
 type AudioAsset = number;
 
 type SetSelectedAudio = (id: string | null) => void;
-
-type UseVocAudioOptions = {
-  trackPlayback?: boolean;
-};
 
 export type VocAudioPlaybackState =
   | "idle"
@@ -59,7 +54,6 @@ function normalizeCallbacks(
 
 export function useVocAudio(
   setSelectedAudio: SetSelectedAudio,
-  { trackPlayback = true }: UseVocAudioOptions = {},
 ) {
   const ownerIdRef = useRef(`expo-audio-${++audioOwnerSequence}`);
   const playerRef = useRef<AudioPlayer | null>(null);
@@ -249,9 +243,6 @@ export function useVocAudio(
               }
 
               Vibration.vibrate(8);
-              if (trackPlayback) {
-                void trackAudioPlayed();
-              }
               playbackCallbacksRef.current.onStarted?.();
             }
 
@@ -339,7 +330,6 @@ export function useVocAudio(
       releasePlayer,
       setSelectedAudio,
       stopAudio,
-      trackPlayback,
     ],
   );
 

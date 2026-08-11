@@ -1,21 +1,26 @@
+import React from "react";
+import { AppState, Linking } from "react-native";
 import type {
   CustomerInfo,
-  PurchasesEntitlementInfo,
-  PurchasesError,
   PurchasesPackage,
 } from "react-native-purchases";
 import Purchases from "react-native-purchases";
-import { Linking } from "react-native";
-import React from "react";
+import { configureRevenueCat } from "../../services/revenueCat";
 
 import {
   DEV_UNLOCK_ALL,
   ENABLE_NATIVE_IAP,
-  PREMIUM_ENTITLEMENT_ID,
   PREMIUM_PRICE_FALLBACKS,
   type SubscriptionOfferId,
 } from "./config";
 import { createDeveloperEntitlement } from "./entitlements";
+import {
+  createPaywallOperationGuard,
+  deriveRevenueCatEntitlement,
+  hasActivePremiumEntitlement,
+  mapSubscriptionPackages,
+  toRevenueCatError,
+} from "./revenueCatLogic";
 import type {
   PaywallContextValue,
   PaywallError,
@@ -31,101 +36,9 @@ const emptySubscriptions: Partial<
 > = {};
 
 const noopAsync = async (): Promise<void> => undefined;
-
-function toRevenueCatError(error: unknown): PaywallError {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "userCancelled" in error &&
-    (error as PurchasesError).userCancelled
-  ) {
-    return {
-      code: "purchase-cancelled",
-      message: "",
-    };
-  }
-
-  if (error instanceof Error) {
-    return {
-      code:
-        "code" in error && typeof error.code === "string"
-          ? error.code
-          : "revenuecat-error",
-      message:
-        error.message ||
-        "Une erreur est survenue pendant la gestion de l’abonnement.",
-    };
-  }
-
-  return {
-    code: "revenuecat-error",
-    message:
-      "Une erreur est survenue pendant la gestion de l’abonnement.",
-  };
-}
-
-function getPremiumEntitlementInfo(
-  customerInfo: CustomerInfo,
-): PurchasesEntitlementInfo | null {
-  return (
-    customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID] ?? null
-  );
-}
-
-function deriveRevenueCatEntitlement(
-  customerInfo: CustomerInfo | null,
-): PremiumEntitlement {
-  if (!customerInfo) {
-    return {
-      hasAccess: false,
-      source: "none",
-    };
-  }
-
-  const entitlementInfo = getPremiumEntitlementInfo(customerInfo);
-
-  if (!entitlementInfo) {
-    return {
-      hasAccess: false,
-      source: "none",
-    };
-  }
-
-  return {
-    hasAccess: entitlementInfo.isActive,
-    source: "store",
-    productId: entitlementInfo.productIdentifier,
-    expiresAt: entitlementInfo.expirationDate
-      ? Date.parse(entitlementInfo.expirationDate)
-      : null,
-    willAutoRenew: entitlementInfo.willRenew,
-  };
-}
-
-function mapPackages(
-  currentOffering:
-    | Awaited<ReturnType<typeof Purchases.getOfferings>>["current"]
-    | null,
-): Partial<Record<SubscriptionOfferId, PurchasesPackage>> {
-  if (!currentOffering) {
-    return {};
-  }
-
-  return {
-    monthly: currentOffering.monthly ?? undefined,
-    yearly: currentOffering.annual ?? undefined,
-  };
-}
-
-function DevPaywallProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const entitlement = React.useMemo(
-    () => createDeveloperEntitlement(),
-    [],
-  );
+const succeedAsync = async (): Promise<boolean> => true;
+function DevPaywallProvider({ children }: { children: React.ReactNode }) {
+  const entitlement = React.useMemo(() => createDeveloperEntitlement(), []);
 
   const value = React.useMemo<PaywallContextValue>(
     () => ({
@@ -143,19 +56,17 @@ function DevPaywallProvider({
       isRestoring: false,
       openSubscriptionManagement: noopAsync,
       refreshEntitlements: noopAsync,
-      restorePurchases: noopAsync,
-      subscribe: noopAsync,
-      subscribeMonthly: noopAsync,
-      subscribeYearly: noopAsync,
+      restorePurchases: succeedAsync,
+      subscribe: succeedAsync,
+      subscribeMonthly: succeedAsync,
+      subscribeYearly: succeedAsync,
       subscriptions: emptySubscriptions,
     }),
     [entitlement],
   );
 
   return (
-    <PaywallContext.Provider value={value}>
-      {children}
-    </PaywallContext.Provider>
+    <PaywallContext.Provider value={value}>{children}</PaywallContext.Provider>
   );
 }
 
@@ -182,6 +93,11 @@ function LockedPreviewPaywallProvider({
     });
   }, []);
 
+  const failNativeSubscription = React.useCallback(async () => {
+    await showNativeRuntimeError();
+    return false;
+  }, [showNativeRuntimeError]);
+
   const value = React.useMemo<PaywallContextValue>(
     () => ({
       activeSubscriptions: [],
@@ -198,113 +114,203 @@ function LockedPreviewPaywallProvider({
       isRestoring: false,
       openSubscriptionManagement: showNativeRuntimeError,
       refreshEntitlements: noopAsync,
-      restorePurchases: showNativeRuntimeError,
-      subscribe: showNativeRuntimeError,
-      subscribeMonthly: showNativeRuntimeError,
-      subscribeYearly: showNativeRuntimeError,
+      restorePurchases: failNativeSubscription,
+      subscribe: failNativeSubscription,
+      subscribeMonthly: failNativeSubscription,
+      subscribeYearly: failNativeSubscription,
       subscriptions: emptySubscriptions,
     }),
-    [entitlement, error, showNativeRuntimeError],
+    [entitlement, error, failNativeSubscription, showNativeRuntimeError],
   );
 
   return (
-    <PaywallContext.Provider value={value}>
-      {children}
-    </PaywallContext.Provider>
+    <PaywallContext.Provider value={value}>{children}</PaywallContext.Provider>
   );
 }
 
-function StorePaywallProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const [customerInfo, setCustomerInfo] =
-    React.useState<CustomerInfo | null>(null);
+function StorePaywallProvider({ children }: { children: React.ReactNode }) {
+  const [customerInfo, setCustomerInfo] = React.useState<CustomerInfo | null>(
+    null,
+  );
 
-  const [subscriptions, setSubscriptions] = React.useState<
-    Partial<Record<SubscriptionOfferId, PurchasesPackage>>
-  >(emptySubscriptions);
+  const [subscriptions, setSubscriptions] =
+    React.useState<Partial<Record<SubscriptionOfferId, PurchasesPackage>>>(
+      emptySubscriptions,
+    );
 
   const [error, setError] = React.useState<PaywallError | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isPurchasing, setIsPurchasing] = React.useState(false);
   const [isRestoring, setIsRestoring] = React.useState(false);
+  const isMountedRef = React.useRef(true);
+  const isConfiguredRef = React.useRef(false);
+  const refreshInFlightRef = React.useRef(false);
+  const operationGuardRef = React.useRef(createPaywallOperationGuard());
 
   const updateCustomerInfo = React.useCallback(
     (nextCustomerInfo: CustomerInfo) => {
-      setCustomerInfo(nextCustomerInfo);
+      if (isMountedRef.current) setCustomerInfo(nextCustomerInfo);
     },
     [],
   );
 
-  const refreshEntitlements = React.useCallback(async () => {
-    setError(null);
-    setIsLoading(true);
+  const refreshCustomerInfo = React.useCallback(
+    async (showLoader: boolean) => {
+      if (
+        !isConfiguredRef.current ||
+        refreshInFlightRef.current ||
+        operationGuardRef.current.isBusy()
+      ) {
+        return;
+      }
+
+      refreshInFlightRef.current = true;
+      if (isMountedRef.current && showLoader) {
+        setError(null);
+        setIsLoading(true);
+      }
+
+      try {
+        const nextCustomerInfo = await Purchases.getCustomerInfo();
+        updateCustomerInfo(nextCustomerInfo);
+      } catch (refreshError) {
+        if (isMountedRef.current && showLoader) {
+          setError(toRevenueCatError(refreshError));
+        }
+      } finally {
+        refreshInFlightRef.current = false;
+        if (isMountedRef.current && showLoader) setIsLoading(false);
+      }
+    },
+    [updateCustomerInfo],
+  );
+
+  const refreshEntitlements = React.useCallback(
+    () => refreshCustomerInfo(true),
+    [refreshCustomerInfo],
+  );
+
+  const loadRevenueCatState = React.useCallback(async () => {
+    if (isMountedRef.current) {
+      setError(null);
+      setIsLoading(true);
+    }
 
     try {
       const nextCustomerInfo = await Purchases.getCustomerInfo();
       updateCustomerInfo(nextCustomerInfo);
-    } catch (refreshError) {
-      setError(toRevenueCatError(refreshError));
-    } finally {
-      setIsLoading(false);
+    } catch (customerInfoError) {
+      if (isMountedRef.current) {
+        setError(toRevenueCatError(customerInfoError));
+      }
     }
-  }, [updateCustomerInfo]);
-
-  const loadRevenueCatState = React.useCallback(async () => {
-    setError(null);
-    setIsLoading(true);
 
     try {
-      const [offerings, nextCustomerInfo] = await Promise.all([
-        Purchases.getOfferings(),
-        Purchases.getCustomerInfo(),
-      ]);
+      const offerings = await Purchases.getOfferings();
+      const nextSubscriptions = mapSubscriptionPackages(offerings.current);
 
-      setSubscriptions(mapPackages(offerings.current));
-      updateCustomerInfo(nextCustomerInfo);
+      if (isMountedRef.current) {
+        setSubscriptions(nextSubscriptions);
 
-      if (!offerings.current) {
+        if (!offerings.current) {
+          setError({
+            code: "offering-unavailable",
+            message: "Aucune offre RevenueCat active n’est disponible.",
+          });
+        } else if (Object.keys(nextSubscriptions).length === 0) {
+          setError({
+            code: "packages-unavailable",
+            message:
+              "Aucune formule Premium compatible n’est disponible sur le Store.",
+          });
+        }
+      }
+    } catch (offeringsError) {
+      if (isMountedRef.current) {
+        setSubscriptions({});
         setError({
-          code: "offering-unavailable",
+          code: "offerings-load-failed",
           message:
-            "Les abonnements sont momentanément indisponibles.",
+            toRevenueCatError(offeringsError).code === "network-unavailable"
+              ? "Les abonnements ne peuvent pas être chargés hors ligne. Ton accès Premium existant reste disponible."
+              : "Les abonnements sont momentanément indisponibles.",
         });
       }
-    } catch (loadError) {
-      setError(toRevenueCatError(loadError));
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) setIsLoading(false);
     }
   }, [updateCustomerInfo]);
 
   React.useEffect(() => {
-    void loadRevenueCatState();
+    isMountedRef.current = true;
+    let cancelled = false;
+    let listenerInstalled = false;
+    let previousAppState = AppState.currentState;
 
-    Purchases.addCustomerInfoUpdateListener(updateCustomerInfo);
+    const initializeRevenueCatState = async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+
+      try {
+        isConfiguredRef.current = configureRevenueCat();
+
+        if (!isConfiguredRef.current) {
+          setSubscriptions({});
+          setError({
+            code: "revenuecat-not-configured",
+            message:
+              "Le service d’abonnement n’est pas configuré pour cette plateforme.",
+          });
+          setIsLoading(false);
+        } else {
+          Purchases.addCustomerInfoUpdateListener(updateCustomerInfo);
+          listenerInstalled = true;
+          await loadRevenueCatState();
+        }
+      } catch (initializationError) {
+        if (!cancelled) {
+          setError(toRevenueCatError(initializationError));
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void initializeRevenueCatState();
+
+    const appStateSubscription = AppState.addEventListener(
+      "change",
+      (nextAppState) => {
+        const becameActive =
+          nextAppState === "active" && previousAppState !== "active";
+        previousAppState = nextAppState;
+
+        if (becameActive) void refreshCustomerInfo(false);
+      },
+    );
 
     return () => {
-      Purchases.removeCustomerInfoUpdateListener(updateCustomerInfo);
+      cancelled = true;
+      isMountedRef.current = false;
+      appStateSubscription.remove();
+      if (listenerInstalled) {
+        Purchases.removeCustomerInfoUpdateListener(updateCustomerInfo);
+      }
     };
-  }, [loadRevenueCatState, updateCustomerInfo]);
+  }, [loadRevenueCatState, refreshCustomerInfo, updateCustomerInfo]);
 
   const subscribe = React.useCallback(
     async (offerId: SubscriptionOfferId) => {
-      if (isPurchasing || isRestoring) {
-        return;
-      }
-
       const selectedPackage = subscriptions[offerId];
 
       if (!selectedPackage) {
         setError({
           code: "package-unavailable",
-          message:
-            "Cette formule d’abonnement est momentanément indisponible.",
+          message: "Cette formule d’abonnement est momentanément indisponible.",
         });
-        return;
+        return false;
       }
+
+      if (!operationGuardRef.current.begin("purchase")) return false;
 
       setError(null);
       setIsPurchasing(true);
@@ -315,73 +321,63 @@ function StorePaywallProvider({
 
         updateCustomerInfo(purchasedCustomerInfo);
 
-        const hasPremium =
-          purchasedCustomerInfo.entitlements.active[
-            PREMIUM_ENTITLEMENT_ID
-          ] !== undefined;
+        const hasPremium = hasActivePremiumEntitlement(purchasedCustomerInfo);
 
-        if (!hasPremium) {
+        if (!hasPremium && isMountedRef.current) {
           setError({
             code: "entitlement-not-granted",
             message:
               "L’achat a été enregistré, mais l’accès Premium n’a pas encore été activé. Utilise « Restaurer mes achats » dans quelques instants.",
           });
         }
+
+        return hasPremium;
       } catch (purchaseError) {
         const mappedError = toRevenueCatError(purchaseError);
 
         // Une annulation volontaire ne doit pas apparaître comme une erreur.
         if (mappedError.code !== "purchase-cancelled") {
-          setError(mappedError);
+          if (isMountedRef.current) setError(mappedError);
         }
+        return false;
       } finally {
-        setIsPurchasing(false);
+        operationGuardRef.current.end("purchase");
+        if (isMountedRef.current) setIsPurchasing(false);
       }
     },
-    [
-      isPurchasing,
-      isRestoring,
-      subscriptions,
-      updateCustomerInfo,
-    ],
+    [subscriptions, updateCustomerInfo],
   );
 
   const restorePurchases = React.useCallback(async () => {
-    if (isPurchasing || isRestoring) {
-      return;
-    }
+    if (!operationGuardRef.current.begin("restore")) return false;
 
     setError(null);
     setIsRestoring(true);
 
     try {
-      const restoredCustomerInfo =
-        await Purchases.restorePurchases();
+      const restoredCustomerInfo = await Purchases.restorePurchases();
 
       updateCustomerInfo(restoredCustomerInfo);
 
-      const hasPremium =
-        restoredCustomerInfo.entitlements.active[
-          PREMIUM_ENTITLEMENT_ID
-        ] !== undefined;
+      const hasPremium = hasActivePremiumEntitlement(restoredCustomerInfo);
 
-      if (!hasPremium) {
+      if (!hasPremium && isMountedRef.current) {
         setError({
           code: "no-purchases-found",
           message:
             "Aucun abonnement Premium actif n’a été trouvé pour ce compte.",
         });
       }
+
+      return hasPremium;
     } catch (restoreError) {
-      setError(toRevenueCatError(restoreError));
+      if (isMountedRef.current) setError(toRevenueCatError(restoreError));
+      return false;
     } finally {
-      setIsRestoring(false);
+      operationGuardRef.current.end("restore");
+      if (isMountedRef.current) setIsRestoring(false);
     }
-  }, [
-    isPurchasing,
-    isRestoring,
-    updateCustomerInfo,
-  ]);
+  }, [updateCustomerInfo]);
 
   const openSubscriptionManagement = React.useCallback(async () => {
     setError(null);
@@ -399,8 +395,7 @@ function StorePaywallProvider({
       if (!managementUrl) {
         setError({
           code: "management-url-unavailable",
-          message:
-            "Aucun abonnement actif ne peut être géré pour le moment.",
+          message: "Aucun abonnement actif ne peut être géré pour le moment.",
         });
         return;
       }
@@ -415,22 +410,20 @@ function StorePaywallProvider({
 
       await Linking.openURL(managementUrl);
     } catch (managementError) {
-      setError(toRevenueCatError(managementError));
+      if (isMountedRef.current) setError(toRevenueCatError(managementError));
     }
   }, [customerInfo, updateCustomerInfo]);
 
-  const displayPrices = React.useMemo<
-    Record<SubscriptionOfferId, string>
-  >(
+  const displayPrices = React.useMemo<Record<SubscriptionOfferId, string>>(
     () => ({
       monthly:
         subscriptions.monthly?.product.priceString ??
-        PREMIUM_PRICE_FALLBACKS.monthly,
+        (isLoading ? PREMIUM_PRICE_FALLBACKS.monthly : "Indisponible"),
       yearly:
         subscriptions.yearly?.product.priceString ??
-        PREMIUM_PRICE_FALLBACKS.yearly,
+        (isLoading ? PREMIUM_PRICE_FALLBACKS.yearly : "Indisponible"),
     }),
-    [subscriptions],
+    [isLoading, subscriptions],
   );
 
   const entitlement = React.useMemo(
@@ -483,47 +476,29 @@ function StorePaywallProvider({
   );
 
   return (
-    <PaywallContext.Provider value={value}>
-      {children}
-    </PaywallContext.Provider>
+    <PaywallContext.Provider value={value}>{children}</PaywallContext.Provider>
   );
 }
 
-export function PaywallProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function PaywallProvider({ children }: { children: React.ReactNode }) {
   if (DEV_UNLOCK_ALL) {
-    return (
-      <DevPaywallProvider>
-        {children}
-      </DevPaywallProvider>
-    );
+    return <DevPaywallProvider>{children}</DevPaywallProvider>;
   }
 
   if (!ENABLE_NATIVE_IAP) {
     return (
-      <LockedPreviewPaywallProvider>
-        {children}
-      </LockedPreviewPaywallProvider>
+      <LockedPreviewPaywallProvider>{children}</LockedPreviewPaywallProvider>
     );
   }
 
-  return (
-    <StorePaywallProvider>
-      {children}
-    </StorePaywallProvider>
-  );
+  return <StorePaywallProvider>{children}</StorePaywallProvider>;
 }
 
 export function usePaywall(): PaywallContextValue {
   const context = React.useContext(PaywallContext);
 
   if (!context) {
-    throw new Error(
-      "usePaywall must be used inside PaywallProvider.",
-    );
+    throw new Error("usePaywall must be used inside PaywallProvider.");
   }
 
   return context;

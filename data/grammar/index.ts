@@ -3,6 +3,7 @@ export * from "./contentLinks.ts";
 export * from "./editorial.ts";
 export * from "./lessonContent.ts";
 export * from "./lessonGuides.ts";
+export * from "./practiceDrills.ts";
 export * from "./registryValidation.ts";
 export * from "./stages.ts";
 export * from "./types.ts";

@@ -13,7 +13,10 @@ import {
 } from "react-native";
 
 import { ABSOLUTE_FILL } from "../../constants/layout";
-import { SeoulMidnightGlass } from "../../constants/theme";
+import {
+  HubModuleAccents,
+  SeoulMidnightGlass,
+} from "../../constants/theme";
 import type { GrammarLessonGuide } from "../../data/grammar/lessonGuides";
 import { AppText } from "../app-text";
 import { ActionButton } from "../ui/action-button";
@@ -22,7 +25,7 @@ import { GrammarLessonGuide as GrammarLessonGuideContent } from "./GrammarLesson
 import { useGrammarModalLayout } from "./useGrammarModalLayout";
 
 const COLORS = SeoulMidnightGlass.colors;
-const ACCENT = "#2DD4BF";
+const GRAMMAR_ACCENT = HubModuleAccents.grammar;
 
 const COMPACT_HEADER_SCROLL_Y = 72;
 const EXPANDED_HEADER_SCROLL_Y = 1;
@@ -264,7 +267,7 @@ export function GrammarLessonGuideModal({
     <AppDialog
       visible={visible}
       onRequestClose={onRequestClose}
-      accentColor={ACCENT}
+      accentColor={GRAMMAR_ACCENT.base}
       animationType="fade"
       accessibilityLabel={`Explication de la leçon ${title}`}
       maxWidth={920}
@@ -314,8 +317,8 @@ export function GrammarLessonGuideModal({
           <LinearGradient
             pointerEvents="none"
             colors={[
-              "rgba(45,212,191,0.19)",
-              "rgba(45,212,191,0.045)",
+              GRAMMAR_ACCENT.surfaceStrong,
+              GRAMMAR_ACCENT.decorative,
               "transparent",
             ]}
             start={{ x: 0, y: 0 }}
@@ -457,7 +460,7 @@ export function GrammarLessonGuideModal({
         >
           <LinearGradient
             pointerEvents="none"
-            colors={["rgba(45,212,191,0.12)", "rgba(45,212,191,0.035)"]}
+            colors={[GRAMMAR_ACCENT.surface, GRAMMAR_ACCENT.decorative]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={ABSOLUTE_FILL}
@@ -504,7 +507,7 @@ export function GrammarLessonGuideModal({
               label="Accéder aux exercices"
               accessibilityHint="Ferme l’explication et ouvre les exercices de cette leçon"
               size={layout.isVeryShortHeight ? "regular" : "large"}
-              accentColor={ACCENT}
+              accentColor={GRAMMAR_ACCENT.base}
               onPress={onAccessExercises}
               style={styles.exerciseButton}
             />
@@ -517,7 +520,7 @@ export function GrammarLessonGuideModal({
 
 const styles = StyleSheet.create({
   modalCard: {
-    borderColor: "rgba(45,212,191,0.28)",
+    borderColor: GRAMMAR_ACCENT.cardBorder,
     backgroundColor: "rgba(5,7,13,0.985)",
     shadowColor: "#000000",
     shadowOffset: {
@@ -578,8 +581,8 @@ const styles = StyleSheet.create({
     right: -112,
     top: -138,
     borderWidth: 1,
-    borderColor: "rgba(45,212,191,0.12)",
-    backgroundColor: "rgba(45,212,191,0.025)",
+    borderColor: GRAMMAR_ACCENT.cardBorder,
+    backgroundColor: GRAMMAR_ACCENT.decorative,
   },
 
   heroOrbSmall: {
@@ -604,8 +607,8 @@ const styles = StyleSheet.create({
     minHeight: 30,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(45,212,191,0.25)",
-    backgroundColor: "rgba(45,212,191,0.075)",
+    borderColor: GRAMMAR_ACCENT.selectedShadow,
+    backgroundColor: GRAMMAR_ACCENT.rain,
     paddingHorizontal: 11,
     flexDirection: "row",
     alignItems: "center",
@@ -617,11 +620,11 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: ACCENT,
+    backgroundColor: GRAMMAR_ACCENT.base,
   },
 
   accentText: {
-    color: ACCENT,
+    color: GRAMMAR_ACCENT.base,
   },
 
   closeButton: {
@@ -666,7 +669,7 @@ const styles = StyleSheet.create({
   goalRail: {
     width: 2,
     borderRadius: 2,
-    backgroundColor: "rgba(45,212,191,0.62)",
+    backgroundColor: GRAMMAR_ACCENT.mutedText,
   },
 
   goalCopy: {
@@ -704,7 +707,7 @@ const styles = StyleSheet.create({
   exerciseFooter: {
     flexShrink: 0,
     borderTopWidth: 1,
-    borderTopColor: "rgba(45,212,191,0.28)",
+    borderTopColor: GRAMMAR_ACCENT.cardBorder,
     paddingHorizontal: 22,
     paddingVertical: 16,
     gap: 14,
@@ -739,8 +742,8 @@ const styles = StyleSheet.create({
     height: 46,
     borderRadius: 23,
     borderWidth: 1,
-    borderColor: "rgba(45,212,191,0.27)",
-    backgroundColor: "rgba(45,212,191,0.09)",
+    borderColor: GRAMMAR_ACCENT.cardBorder,
+    backgroundColor: GRAMMAR_ACCENT.surface,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -769,7 +772,7 @@ const styles = StyleSheet.create({
 
   exerciseButton: {
     borderRadius: 18,
-    shadowColor: ACCENT,
+    shadowColor: GRAMMAR_ACCENT.base,
     shadowOffset: {
       width: 0,
       height: 10,

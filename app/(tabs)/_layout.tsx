@@ -43,6 +43,7 @@ export default function Layout() {
       screenOptions={{
         headerShown: false,
         animation: "fade",
+        animationDuration: 220,
         contentStyle: { backgroundColor: "#040509" },
       }}
     />

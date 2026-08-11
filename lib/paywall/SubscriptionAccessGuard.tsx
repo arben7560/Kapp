@@ -3,7 +3,11 @@ import React from "react";
 import { DEV_UNLOCK_ALL, PREMIUM_ROUTE_PATHS } from "./config";
 import { usePaywall } from "./PaywallProvider";
 
-export function SubscriptionAccessGuard() {
+export function SubscriptionAccessGuard({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const { hasPremiumAccess, isLoading } = usePaywall();
 
@@ -14,5 +18,15 @@ export function SubscriptionAccessGuard() {
     router.replace("/premium");
   }, [hasPremiumAccess, isLoading, pathname]);
 
-  return null;
+  const routeRequiresPremium = PREMIUM_ROUTE_PATHS.has(pathname);
+
+  if (
+    routeRequiresPremium &&
+    !DEV_UNLOCK_ALL &&
+    (isLoading || !hasPremiumAccess)
+  ) {
+    return null;
+  }
+
+  return <>{children}</>;
 }

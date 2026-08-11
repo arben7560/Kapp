@@ -11,12 +11,14 @@ import { SeoulMidnightGlass } from "@/constants/theme";
 
 export type SectionHeaderProps = {
   title: string;
+  accentColor?: string;
   style?: StyleProp<ViewStyle>;
   trailing?: React.ReactNode;
 };
 
 export function SectionHeader({
   title,
+  accentColor,
   style,
   trailing,
 }: SectionHeaderProps) {
@@ -30,7 +32,13 @@ export function SectionHeader({
       >
         {title}
       </AppText>
-      <View pointerEvents="none" style={styles.line} />
+      <View
+        pointerEvents="none"
+        style={[
+          styles.line,
+          accentColor ? { backgroundColor: `${accentColor}33` } : undefined,
+        ]}
+      />
       {trailing}
     </View>
   );

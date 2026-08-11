@@ -202,7 +202,7 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     ]),
     canonicalExamples: [
       { korean: "누구예요?", french: "Qui est cette personne ?", note: "REGISTRE\nPoli courant" },
-      { korean: "몇 명이에요?", french: "Combien de personnes êtes-vous ?", note: "REGISTRE\nPoli courant" },
+      { korean: "몇 명이에요?", french: "Vous êtes combien ?", note: "REGISTRE\nPoli courant" },
     ],
     reuseContentRefIds: [
       "scene:cafe",
@@ -893,7 +893,7 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     conceptIds: ["condition-eumyeon"],
     prerequisites: recommendedStages(["present-actions", "link-actions"]),
     canonicalExamples: [
-      { korean: "시간이 있으면 가요.", french: "J’y vais si j’ai le temps.", note: "CONTEXTE\nVous parlez d’une sortie déjà prévue." },
+      { korean: "시간이 있으면 가요.", french: "J’y vais si j’ai le temps.", note: "CONTEXTE\nTu parles d’une sortie déjà prévue." },
     ],
     reuseContentRefIds: [
       "scene:metro",

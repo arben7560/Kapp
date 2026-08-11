@@ -21,16 +21,17 @@ import { AppText } from "../components/app-text";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 
 const HERO_IMAGE = require("../assets/images/hero.jpg");
-const CAFE_IMAGE = require("../assets/images/cafe.jpg");
-const METRO_IMAGE = require("../assets/images/metro.jpg");
-const RESTAURANT_IMAGE = require("../assets/images/restaurant.jpg");
+const CAFE_IMAGE = require("../assets/images/cafeIA.jpg");
+const METRO_IMAGE = require("../assets/images/metroIA.jpg");
+const RESTAURANT_IMAGE = require("../assets/images/restaurantIA.jpg");
 
-const BG_DEEP = "#050508";
 const TXT = "rgba(255,255,255,0.98)";
 const TXT_SOFT = "rgba(255,255,255,0.76)";
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
 const GOLD = "#F59E0B";
+const MODE_PEARL = "#C7D2D4";
+const MODE_CYAN = "#70AEB8";
 
 const STEP_DURATION = 760;
 const ONBOARDING_KEY = "kapp_onboarding_completed";
@@ -91,13 +92,13 @@ const MODES: ModeOption[] = [
     key: "text",
     title: "Expressions utiles",
     subtitle: "Revois les mots et expressions utilisés couramment",
-    accent: "rgba(255,255,255,0.85)",
+    accent: MODE_PEARL,
   },
   {
     key: "guided",
-    title: "Scène guidée",
+    title: "Entre dans la scène",
     subtitle: "Entre dans la situation, écoute et réponds comme sur place",
-    accent: CYAN,
+    accent: MODE_CYAN,
     highlighted: true,
   },
 ];
@@ -122,48 +123,115 @@ function BackgroundLayer({
   blur = 20,
   imageBlurRadius = 0,
   darkOverlayOpacity = 0,
+  abstract = false,
+  onLoad,
 }: {
   source: any;
   blur?: number;
   imageBlurRadius?: number;
   darkOverlayOpacity?: number;
+  abstract?: boolean;
+  onLoad?: () => void;
 }) {
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <Image
-        source={source}
-        style={StyleSheet.absoluteFill}
-        contentFit="cover"
-        blurRadius={imageBlurRadius}
-      />
+    <View
+      pointerEvents="none"
+      style={[StyleSheet.absoluteFill, styles.backgroundBase]}
+    >
+      {abstract ? (
+        <>
+          <LinearGradient
+            colors={["#050609", "#07101A", "#050609"]}
+            locations={[0, 0.48, 1]}
+            start={{ x: 0.08, y: 0 }}
+            end={{ x: 0.92, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <LinearGradient
+            colors={[
+              "transparent",
+              "rgba(244,114,182,0.10)",
+              "rgba(244,114,182,0.035)",
+              "transparent",
+            ]}
+            locations={[0, 0.34, 0.58, 1]}
+            start={{ x: 0, y: 0.02 }}
+            end={{ x: 1, y: 0.72 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <LinearGradient
+            colors={[
+              "transparent",
+              "rgba(34,211,238,0.045)",
+              "rgba(34,211,238,0.075)",
+              "transparent",
+            ]}
+            locations={[0, 0.48, 0.72, 1]}
+            start={{ x: 1, y: 0.38 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <LinearGradient
+            colors={[
+              "rgba(0,0,0,0.34)",
+              "transparent",
+              "transparent",
+              "rgba(0,0,0,0.34)",
+            ]}
+            locations={[0, 0.18, 0.82, 1]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <LinearGradient
+            colors={["transparent", "rgba(5,6,9,0.36)", "#050609"]}
+            locations={[0, 0.72, 1]}
+            style={StyleSheet.absoluteFill}
+          />
+        </>
+      ) : (
+        <>
+          <Image
+            source={source}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            blurRadius={imageBlurRadius}
+            onLoad={onLoad}
+          />
 
-      {darkOverlayOpacity > 0 && (
-        <View
-          style={[
-            StyleSheet.absoluteFill,
-            { backgroundColor: `rgba(0,0,0,${darkOverlayOpacity})` },
-          ]}
-        />
+          {darkOverlayOpacity > 0 && (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: `rgba(0,0,0,${darkOverlayOpacity})` },
+              ]}
+            />
+          )}
+
+          <LinearGradient
+            colors={["rgba(5,5,8,0.25)", "rgba(5,5,8,0.65)", "#050508"]}
+            locations={[0, 0.45, 0.95]}
+            style={StyleSheet.absoluteFill}
+          />
+
+          <LinearGradient
+            colors={[
+              "rgba(244,114,182,0.12)",
+              "rgba(34,211,238,0.08)",
+              "transparent",
+            ]}
+            start={{ x: 0.05, y: 0 }}
+            end={{ x: 0.95, y: 0.8 }}
+            style={StyleSheet.absoluteFill}
+          />
+
+          <BlurView
+            intensity={blur}
+            tint="dark"
+            style={StyleSheet.absoluteFill}
+          />
+        </>
       )}
-
-      <LinearGradient
-        colors={["rgba(5,5,8,0.25)", "rgba(5,5,8,0.65)", "#050508"]}
-        locations={[0, 0.45, 0.95]}
-        style={StyleSheet.absoluteFill}
-      />
-
-      <LinearGradient
-        colors={[
-          "rgba(244,114,182,0.12)",
-          "rgba(34,211,238,0.08)",
-          "transparent",
-        ]}
-        start={{ x: 0.05, y: 0 }}
-        end={{ x: 0.95, y: 0.8 }}
-        style={StyleSheet.absoluteFill}
-      />
-
-      <BlurView intensity={blur} tint="dark" style={StyleSheet.absoluteFill} />
     </View>
   );
 }
@@ -175,20 +243,34 @@ export default function OnboardingScreen() {
   const [selectedScene, setSelectedScene] = useState<SceneKey>("cafe");
   const [selectedMode, setSelectedMode] = useState<ModeKey>("guided");
   const isCompactScreen = height <= 700 || width <= 380;
+  const isShortScreen = height <= 700;
   const isLargeText = fontScale > 1.15;
   const isWideSceneLayout =
     responsive.isLandscape && responsive.width >= 760 && !isLargeText;
   const sceneHeroHeight = isWideSceneLayout
-    ? 340
-    : isCompactScreen
-      ? 205
+    ? 350
+    : isShortScreen
+      ? 210
+      : width <= 380
+        ? 244
+        : responsive.isTablet
+          ? 320
+          : height >= 820
+            ? 286
+            : 270;
+  const alternativeSceneHeight = isShortScreen
+    ? 96
+    : width <= 380
+      ? 108
       : responsive.isTablet
-        ? 300
-        : 260;
+        ? 128
+        : 116;
 
   const fade = useMemo(() => new Animated.Value(0), []);
   const translateY = useMemo(() => new Animated.Value(24), []);
   const pulse = useMemo(() => new Animated.Value(0), []);
+  const entryOverlayOpacity = useMemo(() => new Animated.Value(1), []);
+  const [entryBackgroundReady, setEntryBackgroundReady] = useState(false);
 
   const selectedSceneData = useMemo(
     () => SCENES.find((scene) => scene.key === selectedScene) ?? SCENES[0],
@@ -209,11 +291,6 @@ export default function OnboardingScreen() {
     if (step === "arrival") return HERO_IMAGE;
     return selectedSceneData.image;
   }, [step, selectedSceneData.image]);
-
-  const backgroundImageBlurRadius =
-    step !== "arrival" && selectedScene === "cafe" ? 2 : 0;
-  const backgroundDarkOverlayOpacity =
-    step !== "arrival" && selectedScene === "cafe" ? 0.34 : 0;
 
   const animateIn = useCallback(() => {
     fade.setValue(0);
@@ -238,6 +315,38 @@ export default function OnboardingScreen() {
   useEffect(() => {
     animateIn();
   }, [animateIn, step]);
+
+  useEffect(() => {
+    let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+    let entrance: Animated.CompositeAnimation | null = null;
+
+    const reveal = () => {
+      entrance = Animated.sequence([
+        Animated.delay(40),
+        Animated.timing(entryOverlayOpacity, {
+          toValue: 0,
+          duration: 680,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]);
+
+      entrance.start();
+    };
+
+    if (entryBackgroundReady) {
+      reveal();
+    } else {
+      // Safety fallback: never leave the onboarding covered if image loading
+      // doesn't emit an event in a specific Expo/runtime environment.
+      fallbackTimer = setTimeout(reveal, 900);
+    }
+
+    return () => {
+      entrance?.stop();
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+    };
+  }, [entryBackgroundReady, entryOverlayOpacity]);
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -331,17 +440,33 @@ export default function OnboardingScreen() {
 
   return (
     <View style={styles.screen}>
-      <StatusBar barStyle="light-content" translucent />
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#000000"
+        translucent
+      />
 
       <BackgroundLayer
         source={backgroundSource}
+        abstract={step === "scene"}
         blur={step === "transition" ? 32 : step === "arrival" ? 18 : 24}
-        imageBlurRadius={backgroundImageBlurRadius}
-        darkOverlayOpacity={backgroundDarkOverlayOpacity}
+        onLoad={
+          step === "arrival" ? () => setEntryBackgroundReady(true) : undefined
+        }
       />
 
       <SafeAreaView
-        style={[styles.safe, isCompactScreen && styles.safeCompact]}
+        style={[
+          styles.safe,
+          {
+            paddingHorizontal:
+              step === "scene"
+                ? responsive.horizontalPadding
+                : isCompactScreen
+                  ? 16
+                  : 24,
+          },
+        ]}
         edges={["top", "bottom"]}
       >
         {step === "arrival" && (
@@ -480,9 +605,17 @@ export default function OnboardingScreen() {
                 <ArrowLeft size={18} color={TXT} strokeWidth={2} />
               </Pressable>
 
-              <View style={styles.sceneProgress} accessibilityLabel="Étape 2 sur 3">
+              <View
+                style={styles.sceneProgress}
+                accessibilityLabel="Étape 2 sur 3"
+              >
                 <View style={styles.sceneProgressLine} />
-                <View style={[styles.sceneProgressLine, styles.sceneProgressLineActive]} />
+                <View
+                  style={[
+                    styles.sceneProgressLine,
+                    styles.sceneProgressLineActive,
+                  ]}
+                />
                 <View style={styles.sceneProgressLine} />
               </View>
 
@@ -499,7 +632,10 @@ export default function OnboardingScreen() {
               keyboardShouldPersistTaps="handled"
             >
               <View style={styles.sceneIntro}>
-                <AppText variant="sectionLabel" style={styles.sceneIntroEyebrow}>
+                <AppText
+                  variant="sectionLabel"
+                  style={styles.sceneIntroEyebrow}
+                >
                   TON POINT DE DÉPART
                 </AppText>
                 <AppText
@@ -510,7 +646,7 @@ export default function OnboardingScreen() {
                   Choisis ta première expérience
                 </AppText>
                 <AppText variant="body" style={styles.sceneIntroText}>
-                  Commence par une expérience guidée, ou explore librement le Hub.
+                  Lance une scène guidée ou explore librement le Hub.
                 </AppText>
               </View>
 
@@ -538,21 +674,21 @@ export default function OnboardingScreen() {
                     source={selectedSceneData.image}
                     style={StyleSheet.absoluteFill}
                     contentFit="cover"
-                    blurRadius={selectedScene === "cafe" ? 1 : 0}
                   />
                   <LinearGradient
                     colors={[
-                      "rgba(2,3,6,0.06)",
-                      "rgba(2,3,6,0.24)",
-                      "rgba(2,3,6,0.96)",
+                      "rgba(2,3,6,0.02)",
+                      "rgba(2,3,6,0.08)",
+                      "rgba(2,3,6,0.54)",
+                      "rgba(2,3,6,0.97)",
                     ]}
-                    locations={[0, 0.42, 1]}
+                    locations={[0, 0.48, 0.72, 1]}
                     style={StyleSheet.absoluteFill}
                   />
                   <LinearGradient
-                    colors={[`${selectedSceneData.accent}32`, "transparent"]}
+                    colors={[`${selectedSceneData.accent}24`, "transparent"]}
                     start={{ x: 0, y: 1 }}
-                    end={{ x: 0.85, y: 0.15 }}
+                    end={{ x: 0.78, y: 0.2 }}
                     style={StyleSheet.absoluteFill}
                   />
 
@@ -577,7 +713,10 @@ export default function OnboardingScreen() {
                             : "TON IMMERSION"}
                       </AppText>
                     </View>
-                    <AppText variant="sectionLabel" style={styles.featuredLocation}>
+                    <AppText
+                      variant="sectionLabel"
+                      style={styles.featuredLocation}
+                    >
                       {selectedSceneData.eyebrow}
                     </AppText>
                   </View>
@@ -597,14 +736,24 @@ export default function OnboardingScreen() {
                     <AppText variant="sceneTitle" style={styles.featuredTitle}>
                       {selectedSceneData.title}
                     </AppText>
-                    <AppText variant="bodyStrong" style={styles.featuredSubtitle}>
+                    <AppText
+                      variant="bodyStrong"
+                      style={styles.featuredSubtitle}
+                    >
                       {selectedSceneData.subtitle}
                     </AppText>
                     {selectedScene === "cafe" && (
                       <View style={styles.beginnerNote}>
-                        <Check size={13} color="rgba(255,255,255,0.82)" strokeWidth={2.2} />
-                        <AppText variant="caption" style={styles.beginnerNoteText}>
-                          Guidée pas à pas · Aucun prérequis
+                        <Check
+                          size={13}
+                          color="rgba(255,255,255,0.82)"
+                          strokeWidth={2.2}
+                        />
+                        <AppText
+                          variant="caption"
+                          style={styles.beginnerNoteText}
+                        >
+                          Aucun prérequis
                         </AppText>
                       </View>
                     )}
@@ -619,7 +768,10 @@ export default function OnboardingScreen() {
                 >
                   <View style={styles.alternativeHeading}>
                     <View style={styles.alternativeRule} />
-                    <AppText variant="sectionLabel" style={styles.alternativeLabel}>
+                    <AppText
+                      variant="sectionLabel"
+                      style={styles.alternativeLabel}
+                    >
                       AUTRES IMMERSIONS
                     </AppText>
                   </View>
@@ -640,6 +792,7 @@ export default function OnboardingScreen() {
                         aria-selected={false}
                         style={({ pressed }) => [
                           styles.alternativeScene,
+                          { height: alternativeSceneHeight },
                           isWideSceneLayout && styles.alternativeSceneWide,
                           pressed && styles.alternativeScenePressed,
                         ]}
@@ -652,29 +805,36 @@ export default function OnboardingScreen() {
                           source={scene.image}
                           style={StyleSheet.absoluteFill}
                           contentFit="cover"
-                          blurRadius={scene.key === "cafe" ? 1 : 0}
                         />
                         <LinearGradient
                           colors={[
-                            "rgba(2,3,6,0.16)",
-                            "rgba(2,3,6,0.90)",
+                            "rgba(2,3,6,0.02)",
+                            "rgba(2,3,6,0.18)",
+                            "rgba(2,3,6,0.94)",
                           ]}
+                          locations={[0, 0.45, 1]}
                           style={StyleSheet.absoluteFill}
                         />
-                        <View
-                          style={[
-                            styles.alternativeAccent,
-                            { backgroundColor: scene.accent },
-                          ]}
+                        <LinearGradient
+                          colors={[`${scene.accent}1F`, "transparent"]}
+                          start={{ x: 0, y: 1 }}
+                          end={{ x: 0.72, y: 0.18 }}
+                          style={StyleSheet.absoluteFill}
                         />
                         <View style={styles.alternativeCopy}>
                           <AppText
                             variant="sectionLabel"
-                            style={[styles.alternativePlace, { color: scene.accent }]}
+                            style={[
+                              styles.alternativePlace,
+                              { color: scene.accent },
+                            ]}
                           >
                             {scene.eyebrow}
                           </AppText>
-                          <AppText variant="cardTitle" style={styles.alternativeTitle}>
+                          <AppText
+                            variant="cardTitle"
+                            style={styles.alternativeTitle}
+                          >
                             {scene.title}
                           </AppText>
                         </View>
@@ -689,7 +849,12 @@ export default function OnboardingScreen() {
             </ScrollView>
 
             <View style={styles.sceneBottomDock}>
-              <View style={styles.sceneActions}>
+              <View
+                style={[
+                  styles.sceneActions,
+                  isLargeText && styles.sceneActionsStacked,
+                ]}
+              >
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={
@@ -705,7 +870,11 @@ export default function OnboardingScreen() {
                   ]}
                   onPress={() => goToStep("mode")}
                 >
-                  <BlurView intensity={24} tint="dark" style={styles.scenePrimaryButton}>
+                  <BlurView
+                    intensity={24}
+                    tint="dark"
+                    style={styles.scenePrimaryButton}
+                  >
                     <LinearGradient
                       colors={[
                         `${selectedSceneData.accent}A8`,
@@ -718,14 +887,14 @@ export default function OnboardingScreen() {
                     />
                     <AppText variant="button" style={styles.primaryText}>
                       {selectedScene === "cafe"
-                        ? isCompactScreen
-                          ? "Essayer Café"
-                          : "Commencer par Café"
+                        ? "Commencer par Café"
                         : isCompactScreen
                           ? "Continuer"
                           : `Continuer avec ${selectedSceneData.title}`}
                     </AppText>
-                    <MoveRight size={18} color="#FFFFFF" strokeWidth={2.2} />
+                    {!isCompactScreen && !isLargeText && (
+                      <MoveRight size={18} color="#FFFFFF" strokeWidth={2.2} />
+                    )}
                   </BlurView>
                 </Pressable>
 
@@ -737,13 +906,16 @@ export default function OnboardingScreen() {
                   style={({ pressed }) => [
                     styles.sceneHubButton,
                     isCompactScreen && styles.sceneHubButtonCompact,
+                    isLargeText && styles.sceneHubButtonStacked,
                     pressed && styles.scenePrimaryPressed,
                   ]}
                   onPress={openMoreScenes}
                 >
-                  <Compass size={17} color={TXT} strokeWidth={2} />
+                  {!isCompactScreen && (
+                    <Compass size={16} color={TXT} strokeWidth={2} />
+                  )}
                   <AppText variant="button" style={styles.sceneHubButtonText}>
-                    {isCompactScreen ? "Explorer" : "Explorer le Hub"}
+                    Explorer le Hub
                   </AppText>
                 </Pressable>
               </View>
@@ -818,17 +990,14 @@ export default function OnboardingScreen() {
                       <BlurView
                         intensity={25}
                         tint="dark"
-                        style={[
-                          styles.modeCard,
-                          active && { borderColor: "rgba(255,255,255,0.22)" },
-                        ]}
+                        style={styles.modeCard}
                       >
                         <LinearGradient
                           colors={[
                             active
-                              ? `${mode.accent}20`
-                              : "rgba(255,255,255,0.03)",
-                            "rgba(255,255,255,0.01)",
+                              ? `${mode.accent}16`
+                              : "rgba(255,255,255,0.025)",
+                            "rgba(4,8,13,0.20)",
                           ]}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 1 }}
@@ -840,7 +1009,7 @@ export default function OnboardingScreen() {
                             styles.modeAccent,
                             {
                               backgroundColor: mode.accent,
-                              opacity: active ? 1 : 0.35,
+                              opacity: active ? 0.82 : 0.24,
                             },
                           ]}
                         />
@@ -849,10 +1018,7 @@ export default function OnboardingScreen() {
                           <View style={styles.modeCopy}>
                             <AppText
                               variant="cardTitle"
-                              style={[
-                                styles.modeTitle,
-                                active && { color: mode.accent },
-                              ]}
+                              style={styles.modeTitle}
                             >
                               {mode.title}
                             </AppText>
@@ -868,7 +1034,7 @@ export default function OnboardingScreen() {
                           {mode.highlighted && (
                             <View style={styles.signatureBadge}>
                               <AppText
-                                variant="caption"
+                                variant="sectionLabel"
                                 style={styles.signatureText}
                               >
                                 SIGNATURE
@@ -881,7 +1047,7 @@ export default function OnboardingScreen() {
                           <View
                             style={[
                               styles.modeActiveRing,
-                              { borderColor: `${mode.accent}66` },
+                              { borderColor: `${mode.accent}4A` },
                             ]}
                           />
                         )}
@@ -893,10 +1059,7 @@ export default function OnboardingScreen() {
 
               <BlurView intensity={20} tint="dark" style={styles.previewCard}>
                 <LinearGradient
-                  colors={[
-                    `${selectedSceneData.accent}15`,
-                    "rgba(255,255,255,0.02)",
-                  ]}
+                  colors={["rgba(112,174,184,0.07)", "rgba(255,255,255,0.015)"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={StyleSheet.absoluteFill}
@@ -904,7 +1067,7 @@ export default function OnboardingScreen() {
                 <AppText variant="sectionLabel" style={styles.previewEyebrow}>
                   PRÊT À ENTRER
                 </AppText>
-                <AppText variant="sectionTitle" style={styles.previewTitle}>
+                <AppText variant="cardTitle" style={styles.previewTitle}>
                   {selectedSceneData.title} · {selectedModeData.title}
                 </AppText>
               </BlurView>
@@ -936,9 +1099,11 @@ export default function OnboardingScreen() {
                   >
                     <LinearGradient
                       colors={[
-                        "rgba(244,114,182,0.45)",
-                        "rgba(34,211,238,0.30)",
+                        "rgba(125,63,96,0.42)",
+                        "rgba(45,72,94,0.40)",
+                        "rgba(35,91,102,0.34)",
                       ]}
+                      locations={[0, 0.52, 1]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={StyleSheet.absoluteFill}
@@ -986,6 +1151,15 @@ export default function OnboardingScreen() {
           </Animated.View>
         )}
       </SafeAreaView>
+
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFill,
+          styles.entryOverlay,
+          { opacity: entryOverlayOpacity },
+        ]}
+      />
     </View>
   );
 }
@@ -993,14 +1167,18 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: BG_DEEP,
+    backgroundColor: "#000000",
+  },
+  backgroundBase: {
+    backgroundColor: "#000000",
+  },
+  entryOverlay: {
+    backgroundColor: "#000000",
+    zIndex: 1000,
+    elevation: 1000,
   },
   safe: {
     flex: 1,
-    paddingHorizontal: 24,
-  },
-  safeCompact: {
-    paddingHorizontal: 16,
   },
   page: {
     flex: 1,
@@ -1157,8 +1335,8 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 860,
     alignSelf: "center",
-    paddingTop: 18,
-    paddingBottom: 24,
+    paddingTop: 16,
+    paddingBottom: 22,
   },
   sceneScrollContentCompact: {
     paddingTop: 10,
@@ -1166,22 +1344,22 @@ const styles = StyleSheet.create({
   },
   sceneIntro: {
     maxWidth: 620,
-    marginBottom: 28,
+    marginBottom: 24,
   },
   sceneIntroEyebrow: {
     color: PINK,
-    marginBottom: 8,
+    marginBottom: 7,
   },
   sceneIntroTitle: {
     color: TXT,
   },
   sceneIntroText: {
     maxWidth: 520,
-    color: "rgba(255,255,255,0.68)",
-    marginTop: 10,
+    color: "rgba(255,255,255,0.64)",
+    marginTop: 8,
   },
   sceneExperienceLayout: {
-    gap: 24,
+    gap: 22,
   },
   sceneExperienceLayoutWide: {
     flexDirection: "row",
@@ -1190,25 +1368,25 @@ const styles = StyleSheet.create({
   },
   featuredScene: {
     width: "100%",
-    borderRadius: 30,
+    borderRadius: 28,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.20)",
-    backgroundColor: "rgba(2,3,6,0.52)",
+    borderColor: "rgba(255,255,255,0.11)",
+    backgroundColor: "rgba(2,3,6,0.60)",
     justifyContent: "space-between",
     shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 18 },
-    shadowOpacity: 0.26,
-    shadowRadius: 28,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.24,
+    shadowRadius: 24,
+    elevation: 6,
   },
   featuredSceneWide: {
     flex: 1.9,
     width: "auto",
   },
   featuredTopRow: {
-    paddingHorizontal: 18,
-    paddingTop: 18,
+    paddingHorizontal: 17,
+    paddingTop: 17,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -1220,7 +1398,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 999,
     borderWidth: 1,
-    backgroundColor: "rgba(2,3,6,0.60)",
+    backgroundColor: "rgba(2,3,6,0.68)",
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
@@ -1232,21 +1410,18 @@ const styles = StyleSheet.create({
   },
   recommendedText: {
     color: "rgba(255,255,255,0.92)",
-    fontSize: 11,
-    lineHeight: 14,
-    letterSpacing: 0.8,
   },
   featuredLocation: {
     color: "rgba(255,255,255,0.72)",
     textAlign: "right",
   },
   featuredCopy: {
-    paddingHorizontal: 22,
-    paddingBottom: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 18,
     maxWidth: 520,
   },
   featuredPhrase: {
-    marginBottom: 4,
+    marginBottom: 3,
     textShadowColor: "rgba(0,0,0,0.78)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 12,
@@ -1258,12 +1433,12 @@ const styles = StyleSheet.create({
     textShadowRadius: 18,
   },
   featuredSubtitle: {
-    color: "rgba(255,255,255,0.86)",
-    marginTop: 6,
+    color: "rgba(255,255,255,0.82)",
+    marginTop: 5,
     maxWidth: 380,
   },
   beginnerNote: {
-    marginTop: 8,
+    marginTop: 7,
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
@@ -1272,7 +1447,7 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.74)",
   },
   alternativeRail: {
-    gap: 14,
+    gap: 13,
   },
   alternativeRailWide: {
     flex: 1,
@@ -1284,7 +1459,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   alternativeRule: {
-    width: 24,
+    width: 20,
     height: 1,
     backgroundColor: "rgba(255,255,255,0.22)",
   },
@@ -1293,7 +1468,7 @@ const styles = StyleSheet.create({
   },
   alternativeList: {
     flexDirection: "row",
-    gap: 12,
+    gap: 11,
   },
   alternativeListWide: {
     flex: 1,
@@ -1302,12 +1477,12 @@ const styles = StyleSheet.create({
   alternativeScene: {
     flex: 1,
     minWidth: 0,
-    height: 96,
-    borderRadius: 22,
+    height: 108,
+    borderRadius: 20,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    backgroundColor: "rgba(2,3,6,0.50)",
+    borderColor: "rgba(255,255,255,0.10)",
+    backgroundColor: "rgba(2,3,6,0.58)",
     justifyContent: "flex-end",
   },
   alternativeSceneWide: {
@@ -1317,17 +1492,10 @@ const styles = StyleSheet.create({
     opacity: 0.88,
     transform: [{ scale: 0.985 }],
   },
-  alternativeAccent: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 3,
-  },
   alternativeCopy: {
     paddingLeft: 14,
-    paddingRight: 34,
-    paddingBottom: 12,
+    paddingRight: 38,
+    paddingBottom: 13,
   },
   alternativePlace: {
     marginBottom: 2,
@@ -1339,10 +1507,12 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 10,
     bottom: 12,
-    width: 26,
-    height: 26,
+    width: 24,
+    height: 24,
     borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.10)",
+    backgroundColor: "rgba(4,6,10,0.54)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.09)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1350,21 +1520,25 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 860,
     alignSelf: "center",
-    paddingTop: 12,
-    paddingBottom: 14,
+    paddingTop: 11,
+    paddingBottom: 13,
     borderTopWidth: 1,
     borderTopColor: "rgba(255,255,255,0.10)",
-    backgroundColor: "rgba(5,5,8,0.42)",
+    backgroundColor: "rgba(5,6,9,0.62)",
   },
   sceneActions: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
   },
+  sceneActionsStacked: {
+    flexDirection: "column",
+    alignItems: "stretch",
+  },
   scenePrimaryWrap: {
     flex: 1,
     minWidth: 0,
-    borderRadius: 999,
+    borderRadius: 18,
     overflow: "hidden",
   },
   scenePrimaryPressed: {
@@ -1372,36 +1546,39 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.994 }],
   },
   scenePrimaryButton: {
-    minHeight: 56,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: 999,
+    minHeight: 54,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    borderRadius: 18,
     borderWidth: 1,
     borderTopWidth: 1.2,
-    borderColor: "rgba(255,255,255,0.18)",
-    borderTopColor: "rgba(255,255,255,0.38)",
+    borderColor: "rgba(255,255,255,0.15)",
+    borderTopColor: "rgba(255,255,255,0.28)",
     overflow: "hidden",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
+    gap: 8,
   },
   sceneHubButton: {
     width: 138,
-    minHeight: 56,
-    paddingHorizontal: 16,
-    borderRadius: 999,
+    minHeight: 54,
+    paddingHorizontal: 14,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.22)",
-    backgroundColor: "rgba(255,255,255,0.08)",
+    borderColor: "rgba(255,255,255,0.13)",
+    backgroundColor: "rgba(255,255,255,0.055)",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
   },
   sceneHubButtonCompact: {
-    width: 108,
-    paddingHorizontal: 12,
+    width: 118,
+    paddingHorizontal: 10,
+  },
+  sceneHubButtonStacked: {
+    width: "100%",
   },
   sceneHubButtonText: {
     color: TXT,
@@ -1464,7 +1641,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
+    borderColor: "rgba(255,255,255,0.085)",
+    backgroundColor: "rgba(4,8,13,0.66)",
     flexDirection: "row",
     alignItems: "center",
   },
@@ -1496,16 +1674,16 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   signatureBadge: {
-    borderRadius: 6,
-    backgroundColor: "rgba(254,190,224,0.15)",
+    borderRadius: 999,
+    backgroundColor: "rgba(184,140,164,0.07)",
     borderWidth: 1,
-    borderColor: "rgba(244,114,182,0.25)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    borderColor: "rgba(215,174,195,0.18)",
+    paddingHorizontal: 7,
+    paddingVertical: 2,
     flexShrink: 0,
   },
   signatureText: {
-    color: PINK,
+    color: "rgba(232,199,215,0.78)",
   },
   modeActiveRing: {
     position: "absolute",
@@ -1514,20 +1692,22 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     borderRadius: 20,
-    borderWidth: 1.5,
+    borderWidth: 1,
     pointerEvents: "none",
   },
   previewCard: {
-    borderRadius: 20,
+    borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-    padding: 16,
+    borderColor: "rgba(255,255,255,0.07)",
+    backgroundColor: "rgba(4,8,13,0.48)",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     marginBottom: "auto",
   },
   previewEyebrow: {
     color: "rgba(255,255,255,0.40)",
-    marginBottom: 4,
+    marginBottom: 2,
   },
   previewTitle: {
     color: TXT,
@@ -1567,8 +1747,9 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderTopWidth: 1.2,
-    borderColor: "rgba(255,255,255,0.16)",
-    borderTopColor: "rgba(255,255,255,0.35)",
+    borderColor: "rgba(255,255,255,0.13)",
+    borderTopColor: "rgba(255,255,255,0.25)",
+    backgroundColor: "rgba(5,9,15,0.62)",
     alignItems: "center",
     justifyContent: "center",
   },

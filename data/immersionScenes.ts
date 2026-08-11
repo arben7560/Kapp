@@ -2,7 +2,14 @@
 export type Speaker = "narrator" | "npc" | "user";
 
 export type Step =
-  | { id: string; type: "line"; speaker: Speaker; kr: string; fr: string }
+  | {
+      id: string;
+      type: "line";
+      speaker: Speaker;
+      kr: string;
+      fr: string;
+      goTo?: string;
+    }
   | {
       id: string;
       type: "choice";
@@ -478,6 +485,7 @@ const S3: Scene = {
       speaker: "npc",
       kr: "예쁘죠? 사이즈는 S, M, L 있어요.",
       fr: "C’est joli, hein ? Tailles S, M, L.",
+      goTo: "c3",
     },
     {
       id: "npc3",
@@ -514,6 +522,7 @@ const S3: Scene = {
       speaker: "npc",
       kr: "네, M 있어요. 가져다 드릴게요.",
       fr: "Oui, on a du M. Je vous l’apporte.",
+      goTo: "taxfree_intro",
     },
     {
       id: "npc_color",

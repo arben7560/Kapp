@@ -1,4 +1,3 @@
-import { configureRevenueCat } from "@/services/revenueCat";
 import {
   NotoSansKR_400Regular,
   NotoSansKR_700Bold,
@@ -13,12 +12,18 @@ import {
 } from "@expo-google-fonts/outfit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFonts } from "expo-font";
-import { Redirect, Stack, router, usePathname } from "expo-router";
+import {
+  DarkTheme,
+  Redirect,
+  Stack,
+  ThemeProvider,
+  router,
+  usePathname,
+} from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React from "react";
 import { StoreProvider } from "../_store";
 import { AppTextProvider } from "../components/app-text";
-import { useImmersionActiveTime } from "../hooks/useImmersionActiveTime";
 import { useMediaSessionLifecycle } from "../hooks/useMediaSessionLifecycle";
 import { DailyStreakProvider } from "../lib/DailyStreakProvider";
 import { PaywallProvider } from "../lib/paywall/PaywallProvider";
@@ -27,6 +32,15 @@ import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard"
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const ONBOARDING_KEY = "kapp_onboarding_completed";
+
+const KAPP_NAVIGATION_THEME = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    background: "#000000",
+    card: "#000000",
+  },
+};
 
 const forceFontFallback = process.env.EXPO_PUBLIC_FORCE_FONT_FALLBACK === "1";
 
@@ -97,15 +111,18 @@ function InitialOnboardingRoute() {
 
         hasCheckedInitialRoute.current = true;
 
-        if (completed !== "true" && pathname !== "/onboarding") {
+        if (
+          completed !== "true" &&
+          pathname !== "/" &&
+          pathname !== "/onboarding"
+        ) {
           router.replace("/onboarding");
         }
       } catch (error) {
         hasCheckedInitialRoute.current = true;
 
         console.warn("Unable to read the onboarding state.", error);
-
-        if (active && pathname !== "/onboarding") {
+        if (active && pathname !== "/" && pathname !== "/onboarding") {
           router.replace("/onboarding");
         }
       }
@@ -133,15 +150,10 @@ export default function RootLayout() {
     NotoSansKR_700Bold,
   });
 
-  useImmersionActiveTime();
   useMediaSessionLifecycle();
 
   const customFontsAvailable = fontsLoaded && !fontError && !forceFontFallback;
   const appReady = fontsLoaded || Boolean(fontError) || forceFontFallback;
-
-  React.useEffect(() => {
-    configureRevenueCat();
-  }, []);
 
   React.useEffect(() => {
     if (!fontError && !forceFontFallback) {
@@ -169,31 +181,49 @@ export default function RootLayout() {
   }
 
   return (
-    <AppTextProvider customFontsAvailable={customFontsAvailable}>
-      <StoreProvider>
-        <DailyStreakProvider>
-          <PaywallProvider>
-            <SubscriptionAccessGuard />
+    <ThemeProvider value={KAPP_NAVIGATION_THEME}>
+      <AppTextProvider customFontsAvailable={customFontsAvailable}>
+        <StoreProvider>
+          <DailyStreakProvider>
+            <PaywallProvider>
+              <SubscriptionAccessGuard>
+                <ReleaseRouteGuard>
+                  <InitialOnboardingRoute />
 
-            <ReleaseRouteGuard>
-              <InitialOnboardingRoute />
-
-              <Stack
-                initialRouteName="onboarding"
-                screenOptions={{ headerShown: false }}
-              >
-                <Stack.Screen name="index" />
-                <Stack.Screen name="onboarding" />
-                <Stack.Screen name="premium" />
-                <Stack.Screen name="streak" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="listen/teacherIA" />
-                <Stack.Screen name="listen/teacherIARealtime" />
-              </Stack>
-            </ReleaseRouteGuard>
-          </PaywallProvider>
-        </DailyStreakProvider>
-      </StoreProvider>
-    </AppTextProvider>
+                  <Stack
+                    initialRouteName="index"
+                    screenOptions={{
+                      headerShown: false,
+                      contentStyle: {
+                        backgroundColor: "#000000",
+                      },
+                      animation: "fade",
+                      animationDuration: 220,
+                    }}
+                  >
+                    <Stack.Screen
+                      name="index"
+                      options={{ animation: "none" }}
+                    />
+                    <Stack.Screen
+                      name="onboarding"
+                      options={{ animation: "none" }}
+                    />
+                    <Stack.Screen name="premium" />
+                    <Stack.Screen name="streak" />
+                    <Stack.Screen name="(tabs)" />
+                    <Stack.Screen
+                      name="listen/teacherIA"
+                      options={{ animation: "none" }}
+                    />
+                    <Stack.Screen name="listen/teacherIARealtime" />
+                  </Stack>
+                </ReleaseRouteGuard>
+              </SubscriptionAccessGuard>
+            </PaywallProvider>
+          </DailyStreakProvider>
+        </StoreProvider>
+      </AppTextProvider>
+    </ThemeProvider>
   );
 }

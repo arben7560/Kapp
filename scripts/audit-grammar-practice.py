@@ -91,15 +91,16 @@ def restart_and_resume() -> None:
 
 
 def run_attempt(correct: bool, name: str) -> None:
-    for index in range(5):
+    question_count = len(active_session()["questions"])
+    for index in range(question_count):
         answer_question(correct=correct)
         time.sleep(0.4)
         if name == "failure" and index == 0:
             harness.screenshot("grammar-a1-long-feedback")
             restart_and_resume()
         capture_then_click(
-            "VOIR MON BILAN" if index == 4 else "CONTINUER",
-            f"grammar-a1-{name}-feedback-{index + 1:02d}" if index in (0, 4) else f"grammar-a1-{name}-progress",
+            "VOIR MON BILAN" if index == question_count - 1 else "CONTINUER",
+            f"grammar-a1-{name}-feedback-{index + 1:02d}" if index in (0, question_count - 1) else f"grammar-a1-{name}-progress",
         )
         time.sleep(0.5)
     harness.scroll_top(5)
@@ -121,10 +122,11 @@ def main() -> None:
     run_attempt(correct=True, name="success")
     session = active_session()
     assert session["completedAt"]
-    assert session["score"] == 5
-    assert len(session["responses"]) == 5
+    question_count = len(session["questions"])
+    assert session["score"] == question_count
+    assert len(session["responses"]) == question_count
     print(
-        f"GRAMMAR PERSISTED: id={session['id']} score={session['score']}/5 "
+        f"GRAMMAR PERSISTED: id={session['id']} score={session['score']}/{question_count} "
         f"responses={len(session['responses'])}",
         flush=True,
     )

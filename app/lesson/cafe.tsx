@@ -289,9 +289,7 @@ export default function CafeLesson() {
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
-  const { playAudio, stopAudio } = useVocAudio(setSelectedWord, {
-    trackPlayback: false,
-  });
+  const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
 
   const bgFadeAnim = useRef(new Animated.Value(0)).current;
 

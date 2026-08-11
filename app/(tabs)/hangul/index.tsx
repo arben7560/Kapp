@@ -14,12 +14,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../../_store";
-import { AppText } from "../../../components/app-text";
 import { HubHero } from "../../../components/hub/HubHero";
 import { SectionHeader } from "../../../components/hub/SectionHeader";
 import { ModuleCard } from "../../../components/ModuleCard";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
-import { SeoulMidnightGlass } from "../../../constants/theme";
+import {
+  HubModuleAccents,
+  SeoulMidnightGlass,
+} from "../../../constants/theme";
 import { HANGUL_MODULES as HANGUL_CURRICULUM_MODULES } from "../../../data/hangul/curriculum";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
 
@@ -30,7 +32,7 @@ const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
 // ──────────────────────────────────────────────
 const BG_DEEP = SeoulMidnightGlass.colors.bgDeep;
 const TXT = SeoulMidnightGlass.colors.text;
-const CYAN = SeoulMidnightGlass.colors.cyan;
+const HANGUL_ACCENT = HubModuleAccents.hangul.base;
 
 type HangulHubModule = {
   id: string;
@@ -122,54 +124,63 @@ export default function HangulHub() {
             { paddingHorizontal: responsive.horizontalPadding },
           ]}
         >
-          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
-          <UnifiedNavHeader />
-
-          <HubHero
-            korean="한글"
-            title="Hangul"
-            subtitle={`"Apprendre l'alphabet pour lire l'âme de la ville."`}
-            badgeLabel={`NIVEAU ${displayLevel}`}
-            accentColor={CYAN}
-            animateGlow
-          />
-
-          <SectionHeader title="TON PARCOURS DE DÉCRYPTAGE" />
-
           <View
-            style={[
-              styles.grid,
-              gridColumns > 1 && styles.gridWide,
-              { gap: responsive.gridGap },
-            ]}
+            style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
           >
-            {HANGUL_MODULES.map((module, i) => {
-              const requirement = requiredBefore(i);
-              const completed = module.id === "hangul_assessment"
-                ? assessmentPassed
-                : !!progress.completed[module.id];
-              return (
-              <AnimatedFragment
-                key={module.href}
-                index={i}
-                style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
-              >
-                <ModuleCard
-                  title={module.title}
-                  subtitle={requirement ? `À commencer après ${requirement.title}` : completed ? `Terminé · ${module.sub}` : module.sub}
-                  icon={module.icon}
-                  onPress={() => router.push((requirement?.route ?? module.href) as never)}
-                  accentColor={module.color ?? CYAN}
-                  requiresPremium={module.isLocked}
-                  metaLabel="ÉTAPE HANGUL"
-                  accessibilityContext="cette étape Hangul"
-                  iconScript="korean"
-                  visualVariant="legacyGlass"
-                />
-              </AnimatedFragment>
-              );
-            })}
-          </View>
+            <UnifiedNavHeader />
+
+            <HubHero
+              korean="한글"
+              title="Hangul"
+              subtitle={`"Apprendre l'alphabet pour lire l'âme de la ville."`}
+              badgeLabel={`NIVEAU ${displayLevel}`}
+              accentColor={HANGUL_ACCENT}
+              accentBadge
+              layeredGlow={false}
+              badgeBlurIntensity={50}
+              style={styles.hero}
+              koreanStyle={styles.heroKorean}
+            />
+
+            <SectionHeader
+              title="TON PARCOURS DE DÉCRYPTAGE"
+              accentColor={HANGUL_ACCENT}
+            />
+
+            <View
+              style={[
+                styles.grid,
+                gridColumns > 1 && styles.gridWide,
+                { gap: responsive.gridGap },
+              ]}
+            >
+              {HANGUL_MODULES.map((module, i) => {
+                const requirement = requiredBefore(i);
+                const completed = module.id === "hangul_assessment"
+                  ? assessmentPassed
+                  : !!progress.completed[module.id];
+                return (
+                <AnimatedFragment
+                  key={module.href}
+                  index={i}
+                  style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
+                >
+                  <ModuleCard
+                    title={module.title}
+                    subtitle={requirement ? `À commencer après ${requirement.title}` : completed ? `Terminé · ${module.sub}` : module.sub}
+                    icon={module.icon}
+                    onPress={() => router.push((requirement?.route ?? module.href) as never)}
+                    accentColor={module.color ?? HANGUL_ACCENT}
+                    requiresPremium={module.isLocked}
+                    metaLabel="ÉTAPE HANGUL"
+                    accessibilityContext="cette étape Hangul"
+                    iconScript="korean"
+                    visualVariant="legacyGlass"
+                  />
+                </AnimatedFragment>
+                );
+              })}
+            </View>
           </View>
         </ScrollView>
       </ImageBackground>
@@ -296,7 +307,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 14,
+    marginBottom: 0,
   },
 
   backBtn: {
@@ -311,6 +322,14 @@ const styles = StyleSheet.create({
 
   backText: {
     color: "rgba(255,255,255,0.92)",
+  },
+
+  hero: {
+    marginTop: 0,
+  },
+
+  heroKorean: {
+    color: "rgba(255,248,236,0.98)",
   },
 
   // GRID

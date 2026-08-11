@@ -11,7 +11,7 @@ import {
 
 import { AppText } from "@/components/app-text";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { SeoulMidnightGlass } from "@/constants/theme";
+import { AppTypography, SeoulMidnightGlass } from "@/constants/theme";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 
 export type HubHeroProps = {
@@ -24,6 +24,11 @@ export type HubHeroProps = {
   layeredGlow?: boolean;
   animateGlow?: boolean;
   badgeBlurIntensity?: number;
+  accentBadge?: boolean;
+  badgeBorderColor?: string;
+  badgeBackgroundColor?: string;
+  badgeTextColor?: string;
+  reserveTitleSpaceWhenEmpty?: boolean;
   style?: StyleProp<ViewStyle>;
   contentStyle?: StyleProp<ViewStyle>;
   koreanStyle?: StyleProp<TextStyle>;
@@ -39,6 +44,11 @@ export function HubHero({
   layeredGlow = true,
   animateGlow = false,
   badgeBlurIntensity = 28,
+  accentBadge = false,
+  badgeBorderColor,
+  badgeBackgroundColor,
+  badgeTextColor,
+  reserveTitleSpaceWhenEmpty = false,
   style,
   contentStyle,
   koreanStyle,
@@ -114,7 +124,15 @@ export function HubHero({
                 variant={koreanVariant}
                 script="korean"
                 align="center"
-                style={[styles.korean, styles.outerGlow, koreanStyle]}
+                style={[
+                  styles.korean,
+                  styles.outerGlow,
+                  {
+                    color: `${accentColor}2E`,
+                    textShadowColor: accentColor,
+                  },
+                  koreanStyle,
+                ]}
               >
                 {korean}
               </AppText>
@@ -124,7 +142,15 @@ export function HubHero({
                 variant={koreanVariant}
                 script="korean"
                 align="center"
-                style={[styles.korean, styles.innerGlow, koreanStyle]}
+                style={[
+                  styles.korean,
+                  styles.innerGlow,
+                  {
+                    color: `${accentColor}5C`,
+                    textShadowColor: `${accentColor}F2`,
+                  },
+                  koreanStyle,
+                ]}
               >
                 {korean}
               </AppText>
@@ -146,19 +172,28 @@ export function HubHero({
           </AppText>
         </Animated.View>
 
-        <AppText
-          accessibilityRole="header"
-          variant="screenTitle"
-          align="center"
-          style={styles.title}
-        >
-          {title}
-        </AppText>
+        {title ? (
+          <AppText
+            accessibilityRole="header"
+            variant="screenTitle"
+            align="center"
+            style={styles.title}
+          >
+            {title}
+          </AppText>
+        ) : reserveTitleSpaceWhenEmpty ? (
+          <View style={styles.titleSpacer} />
+        ) : null}
 
         <StatusBadge
           label={badgeLabel}
+          tone={accentBadge ? "accent" : "neutral"}
+          accentColor={accentColor}
           appearance="glass"
           blurIntensity={badgeBlurIntensity}
+          borderColor={badgeBorderColor}
+          backgroundColor={badgeBackgroundColor}
+          textColor={badgeTextColor}
           style={styles.badge}
         />
 
@@ -203,18 +238,17 @@ const styles = StyleSheet.create({
   },
   outerGlow: {
     position: "absolute",
-    color: "rgba(56,189,248,0.18)",
-    textShadowColor: "rgba(56,189,248,1)",
     textShadowRadius: 42,
   },
   innerGlow: {
     position: "absolute",
-    color: "rgba(180,238,255,0.36)",
-    textShadowColor: "rgba(103,232,249,0.95)",
     textShadowRadius: 18,
   },
   title: {
     marginTop: 0,
+  },
+  titleSpacer: {
+    height: AppTypography.screenTitle.lineHeight,
   },
   badge: {
     alignSelf: "center",

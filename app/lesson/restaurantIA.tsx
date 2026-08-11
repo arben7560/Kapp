@@ -209,6 +209,11 @@ export default function RestaurantIaScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const mountedRef = useRef(true);
   const iaAutoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const choiceTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const transitionLockRef = useRef(false);
+  const exitLockRef = useRef(false);
   const hasAdvancedFromVideoRef = useRef(false);
   const hasReportedMissionCompleteRef = useRef(false);
 
@@ -315,6 +320,12 @@ export default function RestaurantIaScreen() {
   }, []);
 
   useEffect(() => {
+    if (choiceTransitionTimerRef.current) {
+      clearTimeout(choiceTransitionTimerRef.current);
+      choiceTransitionTimerRef.current = null;
+    }
+    transitionLockRef.current = false;
+    exitLockRef.current = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Route parameters select a new mission and require one atomic local reset.
     setCurrentNodeId(currentScenario.startNodeId);
     setMaxProgressIndex(getProgressIndex(currentScenario.startNodeId));
@@ -331,8 +342,10 @@ export default function RestaurantIaScreen() {
     if (!isSceneEnded || hasReportedMissionCompleteRef.current) return;
 
     hasReportedMissionCompleteRef.current = true;
-    complete(buildProgressId("restaurant", mode, missionId));
-    void completeDailyActivity("ai_mission");
+    void Promise.all([
+      complete(buildProgressId("restaurant", mode, missionId)),
+      completeDailyActivity("ai_mission"),
+    ]);
   }, [complete, isSceneEnded, missionId, mode]);
 
   useEffect(() => {
@@ -340,6 +353,9 @@ export default function RestaurantIaScreen() {
     return () => {
       mountedRef.current = false;
       if (iaAutoTimerRef.current) clearTimeout(iaAutoTimerRef.current);
+      if (choiceTransitionTimerRef.current) {
+        clearTimeout(choiceTransitionTimerRef.current);
+      }
     };
   }, []);
 
@@ -474,12 +490,14 @@ export default function RestaurantIaScreen() {
   }, [currentNodeId]);
 
   const handleChoice = (choice: DialogueChoice) => {
-    if (isTransitioning || isSceneEnded) return;
+    if (transitionLockRef.current || isTransitioning || isSceneEnded) return;
 
+    transitionLockRef.current = true;
     setIsTransitioning(true);
     setSelectedChoiceId(choice.id);
 
-    setTimeout(() => {
+    choiceTransitionTimerRef.current = setTimeout(() => {
+      choiceTransitionTimerRef.current = null;
       if (!mountedRef.current) return;
       setMaxProgressIndex((current) =>
         Math.max(current, getProgressIndex(choice.nextNodeId)),
@@ -487,10 +505,17 @@ export default function RestaurantIaScreen() {
       setCurrentNodeId(choice.nextNodeId);
       setSelectedChoiceId(null);
       setIsTransitioning(false);
+      transitionLockRef.current = false;
     }, 320);
   };
 
   const handleRestart = () => {
+    if (choiceTransitionTimerRef.current) {
+      clearTimeout(choiceTransitionTimerRef.current);
+      choiceTransitionTimerRef.current = null;
+    }
+    transitionLockRef.current = false;
+    exitLockRef.current = false;
     setCurrentNodeId(currentScenario.startNodeId);
     setMaxProgressIndex(getProgressIndex(currentScenario.startNodeId));
     setSelectedChoiceId(null);
@@ -503,6 +528,13 @@ export default function RestaurantIaScreen() {
   };
 
   const handleExit = useCallback(() => {
+    if (exitLockRef.current) return;
+    exitLockRef.current = true;
+    if (choiceTransitionTimerRef.current) {
+      clearTimeout(choiceTransitionTimerRef.current);
+      choiceTransitionTimerRef.current = null;
+    }
+    transitionLockRef.current = false;
     if (router.canGoBack()) {
       router.back();
       return;
@@ -541,7 +573,7 @@ export default function RestaurantIaScreen() {
     typeof transcriptFrench === "string" &&
     transcriptFrench.trim().length > 0;
 
-  if (!isPaywallLoading && !canEnterMission) {
+  if (!canEnterMission) {
     return null;
   }
 
@@ -837,10 +869,14 @@ export default function RestaurantIaScreen() {
                         key={choice.id}
                         accessibilityRole="button"
                         accessibilityLabel={`${choice.korean}. ${choice.label}`}
-                        accessibilityState={{ selected: isSelected }}
+                        accessibilityState={{
+                          disabled: isTransitioning,
+                          selected: isSelected,
+                        }}
                         aria-selected={isSelected}
                         hitSlop={6}
                         onPress={() => handleChoice(choice)}
+                        disabled={isTransitioning}
                         style={({ pressed }) => [
                           styles.choiceBtn,
                           isSelected && {

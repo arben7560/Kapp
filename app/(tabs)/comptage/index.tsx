@@ -12,11 +12,14 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppText } from "../../../components/app-text";
 import { HubHero } from "../../../components/hub/HubHero";
 import { SectionHeader } from "../../../components/hub/SectionHeader";
 import { ModuleCard } from "../../../components/ModuleCard";
-import { SeoulMidnightGlass } from "../../../constants/theme";
+import { ABSOLUTE_FILL } from "../../../constants/layout";
+import {
+  HubModuleAccents,
+  SeoulMidnightGlass,
+} from "../../../constants/theme";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/comptage.jpg");
@@ -24,10 +27,9 @@ const BACKGROUND_SOURCE = require("../../../assets/images/comptage.jpg");
 // ----------------------------------------------
 // DESIGN TOKENS
 // ----------------------------------------------
-const BG_DEEP = "#020306";
-const MUTED = "rgba(255,255,255,0.60)";
-const SOFT = SeoulMidnightGlass.colors.soft;
-const CYAN = "#22D3EE";
+const BG_DEEP = SeoulMidnightGlass.colors.bgDeep;
+const TXT = SeoulMidnightGlass.colors.text;
+const COUNTING_ACCENT = HubModuleAccents.counting.base;
 
 // ----------------------------------------------
 // MODULES (STRATÉGIE PRODUIT OPTIMISÉE)
@@ -36,7 +38,7 @@ const MODULES = [
   {
     title: "Nombres de base",
     sub: "Système coréen natif",
-    color: CYAN,
+    color: COUNTING_ACCENT,
     route: "/comptage/base",
     isLocked: false,
   },
@@ -108,12 +110,8 @@ export default function ComptageHub() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground
-        source={BACKGROUND_SOURCE}
-        style={styles.bgImage}
-        resizeMode="cover"
-      >
-        <BlurView intensity={30} tint="dark" style={styles.bgBlur} />
+      <ImageBackground source={BACKGROUND_SOURCE} style={styles.bgImage}>
+        <BlurView intensity={50} tint="dark" style={styles.bgBlur} />
         <View style={styles.vignetteOverlay} />
         <View style={styles.topFade} />
         <View style={styles.bottomFade} />
@@ -121,62 +119,75 @@ export default function ComptageHub() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
-            styles.scroll,
+            styles.scrollContent,
             { paddingHorizontal: responsive.horizontalPadding },
           ]}
         >
-          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
-          {/* HEADER */}
-          <View style={styles.header}>
-            <View style={styles.backBtn}>
-              <AppBackButton />
-            </View>
-            <View style={styles.settingsIcon} />
-          </View>
-
-          <HubHero
-            korean="숫자"
-            title="Comptage"
-            subtitle={'"Comprendre le rythme numérique de la ville."'}
-            badgeLabel="PARCOURS · NIVEAU 1"
-            accentColor={CYAN}
-            badgeBlurIntensity={18}
-          />
-
-          <SectionHeader title="FONDATIONS NUMÉRIQUES" />
-
-          {/* CARDS */}
           <View
-            style={[
-              styles.grid,
-              gridColumns > 1 && styles.gridWide,
-              { gap: responsive.gridGap },
-            ]}
+            style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
           >
-            {MODULES.map((m, i) => (
-              <AnimatedItem
-                key={m.route}
-                index={i}
-                style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
-              >
-                <ModuleCard
-                  title={m.title}
-                  subtitle={m.sub}
-                  href={m.route}
-                  accentColor={m.color}
-                  icon={m.title.charAt(0)}
-                  requiresPremium={m.isLocked}
-                  metaLabel="PARCOURS DE COMPTAGE"
-                  accessibilityContext="ce parcours de comptage"
-                  visualVariant="legacyGlass"
-                />
-              </AnimatedItem>
-            ))}
-          </View>
+            <UnifiedNavHeader />
+
+            <HubHero
+              korean="숫자"
+              title="Comptage"
+              subtitle={'"Comprendre le rythme numérique de la ville."'}
+              badgeLabel="PARCOURS · NIVEAU 1"
+              accentColor={COUNTING_ACCENT}
+              accentBadge
+              layeredGlow={false}
+              badgeBlurIntensity={50}
+              style={styles.hero}
+              koreanStyle={styles.heroKorean}
+            />
+
+            <SectionHeader
+              title="FONDATIONS NUMÉRIQUES"
+              accentColor={COUNTING_ACCENT}
+            />
+
+            {/* CARDS */}
+            <View
+              style={[
+                styles.grid,
+                gridColumns > 1 && styles.gridWide,
+                { gap: responsive.gridGap },
+              ]}
+            >
+              {MODULES.map((m, i) => (
+                <AnimatedItem
+                  key={m.route}
+                  index={i}
+                  style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
+                >
+                  <ModuleCard
+                    title={m.title}
+                    subtitle={m.sub}
+                    href={m.route}
+                    accentColor={m.color}
+                    icon={m.title.charAt(0)}
+                    requiresPremium={m.isLocked}
+                    metaLabel="PARCOURS DE COMPTAGE"
+                    accessibilityContext="ce parcours de comptage"
+                    visualVariant="legacyGlass"
+                  />
+                </AnimatedItem>
+              ))}
+            </View>
           </View>
         </ScrollView>
       </ImageBackground>
     </SafeAreaView>
+  );
+}
+
+function UnifiedNavHeader() {
+  return (
+    <View style={styles.navHeader}>
+      <View style={styles.backBtn}>
+        <AppBackButton />
+      </View>
+    </View>
   );
 }
 
@@ -233,19 +244,25 @@ function AnimatedItem({
 // STYLES
 // ----------------------------------------------
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: BG_DEEP },
-  bgImage: { flex: 1 },
+  safe: {
+    flex: 1,
+    backgroundColor: BG_DEEP,
+  },
+  bgImage: {
+    flex: 1,
+    overflow: "hidden",
+  },
   bgBlur: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
   },
 
   vignetteOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     backgroundColor: "rgba(2,3,6,0.46)",
   },
 
   topFade: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     backgroundColor: "rgba(0,0,0,0.04)",
   },
 
@@ -258,9 +275,9 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(2,3,6,0.30)",
   },
 
-  scroll: {
+  scrollContent: {
     paddingTop: 10,
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
 
   contentFrame: {
@@ -268,11 +285,11 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
 
-  header: {
+  navHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 0,
   },
 
   backBtn: {
@@ -281,18 +298,19 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 
-  backArrow: { color: SOFT},
+  backArrow: {
+    color: TXT,
+  },
   backText: {
-    color: "#FFFFFF",
+    color: "rgba(255,255,255,0.92)",
   },
 
-  settingsIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: MUTED,
-    opacity: 0.3,
+  hero: {
+    marginTop: 0,
+  },
+
+  heroKorean: {
+    color: "rgba(255,248,236,0.98)",
   },
 
   grid: {

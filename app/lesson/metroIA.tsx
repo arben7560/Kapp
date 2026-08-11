@@ -3,57 +3,57 @@ import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ImageBackground,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
+    ImageBackground,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    View,
 } from "react-native";
 import {
-  SafeAreaView,
-  useSafeAreaInsets,
+    SafeAreaView,
+    useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
-import { AppBackButton } from "../../components/ui/app-back-button";
 import { GuidedSpeechTurn } from "../../components/GuidedSpeechTurn";
 import { ImmersiveMediaStatusOverlay } from "../../components/immersion/ImmersiveMediaStatusOverlay";
 import { ImmersiveStepProgress } from "../../components/immersion/ImmersiveStepProgress";
 import { MetroConversationSummaryModal } from "../../components/metro/MetroConversationSummaryModal";
+import { AppBackButton } from "../../components/ui/app-back-button";
 import {
-  getImmersiveBottomPadding,
-  getImmersivePortraitMediaLayout,
-  IMMERSIVE_CONTENT_MAX_WIDTH,
-  IMMERSIVE_MIN_TOUCH_TARGET,
-  IMMERSIVE_VIDEO_VIEW_PROPS,
+    getImmersiveBottomPadding,
+    getImmersivePortraitMediaLayout,
+    IMMERSIVE_CONTENT_MAX_WIDTH,
+    IMMERSIVE_MIN_TOUCH_TARGET,
+    IMMERSIVE_VIDEO_VIEW_PROPS,
 } from "../../constants/immersive-layout";
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import { metroLessons } from "../../data/lesson/metro/metro";
 import {
-  DEFAULT_METRO_MISSION_ID,
-  getMetroMissionById,
-  getMetroMissionLesson,
+    DEFAULT_METRO_MISSION_ID,
+    getMetroMissionById,
+    getMetroMissionLesson,
 } from "../../data/lesson/metro/metroMissions";
 import {
-  useKoreanSpeechRecognition,
-  type SpeechTranscriptSession,
-} from "../../hooks/hooks/useKoreanSpeechRecognition";
+    useKoreanSpeechRecognition,
+    type SpeechTranscriptSession,
+} from "../../hooks/useKoreanSpeechRecognition";
 import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
 import {
-  createMetroConversationMemory,
-  recordMetroAudioReplay,
-  recordMetroHelpRequest,
-  recordMetroSpeechAttempt,
+    createMetroConversationMemory,
+    recordMetroAudioReplay,
+    recordMetroHelpRequest,
+    recordMetroSpeechAttempt,
 } from "../../lib/metroConversationMemory";
 import {
-  getMetroSpeechChoiceIntent,
-  getMetroSpeechContextualStrings,
-  matchMetroSpeechIntent,
-  METRO_SPEECH_PILOT_MISSION_ID,
+    getMetroSpeechChoiceIntent,
+    getMetroSpeechContextualStrings,
+    matchMetroSpeechIntent,
+    METRO_SPEECH_PILOT_MISSION_ID,
 } from "../../lib/metroSpeechIntents";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { buildProgressId } from "../../lib/progressIds";
@@ -373,6 +373,11 @@ export default function MetroIaScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const mountedRef = useRef(true);
   const iaAutoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const choiceTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const transitionLockRef = useRef(false);
+  const exitLockRef = useRef(false);
   const hasAdvancedFromVideoRef = useRef(false);
   const hasReportedMissionCompleteRef = useRef(false);
   const speechAttemptCountRef = useRef<Record<string, number>>({});
@@ -484,6 +489,12 @@ export default function MetroIaScreen() {
   );
 
   useEffect(() => {
+    if (choiceTransitionTimerRef.current) {
+      clearTimeout(choiceTransitionTimerRef.current);
+      choiceTransitionTimerRef.current = null;
+    }
+    transitionLockRef.current = false;
+    exitLockRef.current = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Route parameters select a new mission and require one atomic local reset.
     setCurrentNodeId(currentScenario.startNodeId);
     setDisplayedVideoSource(getScenarioInitialVideoSource(currentScenario));
@@ -507,10 +518,12 @@ export default function MetroIaScreen() {
     if (!isSceneEnded || hasReportedMissionCompleteRef.current) return;
 
     hasReportedMissionCompleteRef.current = true;
-    complete(buildProgressId("metro", mode, missionId));
-    void completeDailyActivity(
-      isMetroSpeechPilot ? "voice_immersion" : "ai_mission",
-    );
+    void Promise.all([
+      complete(buildProgressId("metro", mode, missionId)),
+      completeDailyActivity(
+        isMetroSpeechPilot ? "voice_immersion" : "ai_mission",
+      ),
+    ]);
   }, [complete, isMetroSpeechPilot, isSceneEnded, missionId, mode]);
 
   useEffect(() => {
@@ -521,6 +534,9 @@ export default function MetroIaScreen() {
 
       if (iaAutoTimerRef.current) {
         clearTimeout(iaAutoTimerRef.current);
+      }
+      if (choiceTransitionTimerRef.current) {
+        clearTimeout(choiceTransitionTimerRef.current);
       }
     };
   }, []);
@@ -671,12 +687,21 @@ export default function MetroIaScreen() {
 
   const handleChoice = useCallback(
     (choice: DialogueChoice, delay = 320) => {
-      if (isTransitioning || isSceneEnded || isReplayingLastIa) return;
+      if (
+        transitionLockRef.current ||
+        isTransitioning ||
+        isSceneEnded ||
+        isReplayingLastIa
+      ) {
+        return;
+      }
 
+      transitionLockRef.current = true;
       setIsTransitioning(true);
       setSelectedChoiceId(choice.id);
 
-      setTimeout(() => {
+      choiceTransitionTimerRef.current = setTimeout(() => {
+        choiceTransitionTimerRef.current = null;
         if (!mountedRef.current) return;
 
         const nextNode = currentScenario.nodes[choice.nextNodeId];
@@ -686,6 +711,7 @@ export default function MetroIaScreen() {
         setCurrentNodeId(choice.nextNodeId);
         setSelectedChoiceId(null);
         setIsTransitioning(false);
+        transitionLockRef.current = false;
       }, delay);
     },
     [currentScenario, isReplayingLastIa, isSceneEnded, isTransitioning],
@@ -763,6 +789,7 @@ export default function MetroIaScreen() {
       !isMetroSpeechPilot ||
       currentNode?.type !== "user_choice" ||
       isTransitioning ||
+      transitionLockRef.current ||
       isReplayingLastIa
     ) {
       return;
@@ -787,12 +814,20 @@ export default function MetroIaScreen() {
   ]);
 
   const handleNeedHelp = useCallback(() => {
+    if (isTransitioning || isReplayingLastIa || transitionLockRef.current) {
+      return;
+    }
     cancelSpeechRecognition();
     setSpeechUiNodeId(currentNodeId);
     setShowSpeechChoices(true);
     setPendingSpeechChoice(null);
     setConversationMemory(recordMetroHelpRequest);
-  }, [cancelSpeechRecognition, currentNodeId]);
+  }, [
+    cancelSpeechRecognition,
+    currentNodeId,
+    isReplayingLastIa,
+    isTransitioning,
+  ]);
 
   const handleConfirmSpeechIntent = useCallback(() => {
     if (!pendingSpeechChoice || speechUiNodeId !== currentNodeId) return;
@@ -804,16 +839,34 @@ export default function MetroIaScreen() {
   }, [currentNodeId, handleChoice, pendingSpeechChoice, speechUiNodeId]);
 
   const handleReplayLastIa = useCallback(() => {
-    if (!lastIaVideoSource || currentNode?.type !== "user_choice") return;
+    if (
+      !lastIaVideoSource ||
+      currentNode?.type !== "user_choice" ||
+      isTransitioning ||
+      transitionLockRef.current
+    ) {
+      return;
+    }
 
     cancelSpeechRecognition();
     setDisplayedVideoSource(lastIaVideoSource);
     setIsReplayingLastIa(true);
     setConversationMemory(recordMetroAudioReplay);
-  }, [cancelSpeechRecognition, currentNode, lastIaVideoSource]);
+  }, [
+    cancelSpeechRecognition,
+    currentNode,
+    isTransitioning,
+    lastIaVideoSource,
+  ]);
 
   const handleRestart = () => {
     cancelSpeechRecognition();
+    if (choiceTransitionTimerRef.current) {
+      clearTimeout(choiceTransitionTimerRef.current);
+      choiceTransitionTimerRef.current = null;
+    }
+    transitionLockRef.current = false;
+    exitLockRef.current = false;
     setCurrentNodeId(currentScenario.startNodeId);
     setDisplayedVideoSource(getScenarioInitialVideoSource(currentScenario));
     setSelectedChoiceId(null);
@@ -833,7 +886,14 @@ export default function MetroIaScreen() {
   };
 
   const handleExit = useCallback(() => {
+    if (exitLockRef.current) return;
+    exitLockRef.current = true;
     cancelSpeechRecognition();
+    if (choiceTransitionTimerRef.current) {
+      clearTimeout(choiceTransitionTimerRef.current);
+      choiceTransitionTimerRef.current = null;
+    }
+    transitionLockRef.current = false;
     if (router.canGoBack()) {
       router.back();
       return;
@@ -893,10 +953,14 @@ export default function MetroIaScreen() {
             key={choice.id}
             accessibilityRole="button"
             accessibilityLabel={`${choice.korean}. ${choice.label}`}
-            accessibilityState={{ selected: isSelected }}
+            accessibilityState={{
+              disabled: isTransitioning || isReplayingLastIa,
+              selected: isSelected,
+            }}
             aria-selected={isSelected}
             hitSlop={6}
             onPress={() => handleChoice(choice)}
+            disabled={isTransitioning || isReplayingLastIa}
             style={({ pressed }) => [
               styles.choiceBtn,
               isSelected && {
@@ -942,7 +1006,7 @@ export default function MetroIaScreen() {
     </View>
   );
 
-  if (!isPaywallLoading && !canEnterMission) {
+  if (!canEnterMission) {
     return null;
   }
 
@@ -998,7 +1062,10 @@ export default function MetroIaScreen() {
             { paddingTop: Math.max(6, insets.top * 0.15) },
           ]}
         >
-          <AppBackButton accessibilityLabel="Quitter la scène" onPress={handleExit} />
+          <AppBackButton
+            accessibilityLabel="Quitter la scène"
+            onPress={handleExit}
+          />
         </View>
 
         <View style={styles.body}>

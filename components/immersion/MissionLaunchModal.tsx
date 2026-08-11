@@ -42,9 +42,20 @@ export function MissionLaunchModal({
   onCancel,
   onStart,
 }: MissionLaunchModalProps) {
+  const startLockRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (visible) startLockRef.current = false;
+  }, [mission?.id, visible]);
+
   if (!mission) return null;
 
   const highlights = mission.goals?.length ? mission.goals : mission.skills;
+  const handleStart = () => {
+    if (startLockRef.current) return;
+    startLockRef.current = true;
+    onStart();
+  };
 
   return (
     <AppDialog
@@ -86,7 +97,7 @@ export function MissionLaunchModal({
           label="Commencer la mission"
           size="large"
           accentColor={accent}
-          onPress={onStart}
+          onPress={handleStart}
         />
         <ActionButton label="Annuler" variant="secondary" onPress={onCancel} />
       </DialogActions>

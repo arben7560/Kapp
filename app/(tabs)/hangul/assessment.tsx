@@ -24,7 +24,7 @@ const createAssessmentQuestions = () =>
   shuffleHangulQuestions(HANGUL_ASSESSMENT_QUESTIONS);
 
 export default function HangulAssessmentScreen() {
-  const { progress, updateHangulProgress, complete } = useStore();
+  const { progress, updateHangulProgress, complete, isHydrated } = useStore();
   const responsive = useResponsiveLayout({ maxWidth: 760 });
   const { playAudio } = useHangulAudio();
   const [started, setStarted] = React.useState(false);
@@ -33,6 +33,7 @@ export default function HangulAssessmentScreen() {
   const [answered, setAnswered] = React.useState<string | null>(null);
   const [finished, setFinished] = React.useState(false);
   const [questions, setQuestions] = React.useState(createAssessmentQuestions);
+  const completionReportedRef = React.useRef(false);
   const current = questions[index];
   const correctAnswerLabel = current?.options.find(
     (option) => option.value === current.answer,
@@ -49,6 +50,7 @@ export default function HangulAssessmentScreen() {
   }, [answered, current, finished, playAudio, started]);
 
   const start = () => {
+    if (!isHydrated) return;
     if (missingModule && !saved?.passed) {
       router.replace(missingModule.route as never);
       return;
@@ -58,11 +60,12 @@ export default function HangulAssessmentScreen() {
     setAnswered(null);
     setFinished(false);
     setQuestions(createAssessmentQuestions());
+    completionReportedRef.current = false;
     setStarted(true);
   };
 
   const answer = (value: string) => {
-    if (answered !== null) return;
+    if (!isHydrated || answered !== null) return;
     setAnswered(value);
     if (value === current.answer) setScore((value) => value + 1);
     else {
@@ -91,14 +94,17 @@ export default function HangulAssessmentScreen() {
   };
 
   const next = () => {
+    if (!isHydrated) return;
     const finalScore = score;
     if (index + 1 < HANGUL_ASSESSMENT_QUESTIONS.length) {
       setIndex((value) => value + 1);
       setAnswered(null);
       return;
     }
+    if (completionReportedRef.current) return;
+    completionReportedRef.current = true;
     const passed = finalScore >= HANGUL_ASSESSMENT_PASS_SCORE;
-    updateHangulProgress((state) => ({
+    const progressWrite = updateHangulProgress((state) => ({
       ...state,
       assessment: {
         attempts: (state.assessment?.attempts ?? 0) + 1,
@@ -107,10 +113,11 @@ export default function HangulAssessmentScreen() {
         passed: state.assessment?.passed || passed,
       },
     }));
-    if (passed) {
-      complete("hangul_assessment");
-      void trackHangulExerciseCompleted("hangul_assessment");
-    }
+    void Promise.all([
+      progressWrite,
+      passed ? complete("hangul_assessment") : Promise.resolve(false),
+      trackHangulExerciseCompleted("hangul_assessment"),
+    ]);
     setFinished(true);
   };
 

@@ -16,12 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { useVocAudio } from "../../hooks/useVocAudio";
 import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
-import {
-  trackAudioPlayed,
-  trackSceneCompleted,
-  trackSubModuleVisited,
-  trackToolboxOpened,
-} from "../../lib/immersionStreak";
+import { trackSceneCompleted } from "../../lib/immersionStreak";
 import { buildProgressId } from "../../lib/progressIds";
 import { AnimatedAppText, AppText } from "../app-text";
 import { AppBackButton } from "../ui/app-back-button";
@@ -149,8 +144,6 @@ export default function CountingImmersionScreen({
     stopAudio();
     setSelectedWord(id);
     Vibration.vibrate(8);
-    void trackAudioPlayed();
-
     Speech.speak(text, {
       language: "ko-KR",
       rate: 0.78,
@@ -190,8 +183,10 @@ export default function CountingImmersionScreen({
     if (visibleMessages >= activeScene.dialogue.length) {
       if (!completedSceneIdsRef.current.has(activeScene.id)) {
         completedSceneIdsRef.current.add(activeScene.id);
-        complete(buildProgressId(completionPrefix, activeScene.id));
-        void trackSceneCompleted(activeScene.id);
+        void Promise.all([
+          complete(buildProgressId(completionPrefix, activeScene.id)),
+          trackSceneCompleted(activeScene.id),
+        ]);
       }
 
       Vibration.vibrate(8);
@@ -263,10 +258,7 @@ export default function CountingImmersionScreen({
             {scenes.map((scene) => (
               <Pressable
                 key={scene.id}
-                onPress={() => {
-                  setActiveScene(scene);
-                  void trackSubModuleVisited(scene.id);
-                }}
+                onPress={() => setActiveScene(scene)}
                 style={[
                   styles.tab,
                   activeScene.id === scene.id && {
@@ -454,10 +446,9 @@ export default function CountingImmersionScreen({
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() => {
-                      void trackToolboxOpened();
-                      playOrSpeak(exp.audio, exp.speak ?? exp.word, cardId);
-                    }}
+                    onPress={() =>
+                      playOrSpeak(exp.audio, exp.speak ?? exp.word, cardId)
+                    }
                     style={({ pressed }) => [
                       styles.cardPressable,
                       pressed && { transform: [{ scale: 0.985 }] },

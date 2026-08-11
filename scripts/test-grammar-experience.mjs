@@ -193,16 +193,23 @@ function answerRemainingCorrectly(session, completedAt = "2026-07-21T10:10:00.00
   return current;
 }
 
-test("every registered stage produces a five-exercise practice", () => {
+test("lessons keep five exercises and the general review covers twelve structures", () => {
   for (const stageId of GRAMMAR_STAGE_IDS) {
     const questions = buildGrammarPracticeQuestions(stageId);
-    assert.equal(questions.length, 5, stageId);
+    const isReview = GRAMMAR_STAGE_BY_ID[stageId].mode === "review";
+    assert.equal(questions.length, isReview ? 12 : 5, stageId);
+    assert.ok(questions.every(({ skill }) => !!skill), `${stageId}: targeted drills`);
     if (GRAMMAR_STAGE_BY_ID[stageId].mode === "review") {
       assert.ok(questions.every(({ kind }) => kind !== "order"), stageId);
     } else {
-      assert.ok(questions.some(({ kind }) => kind === "order" || kind === "gap"), stageId);
+      assert.ok(
+        questions.every(({ skill }) => !!skill) ||
+          questions.some(({ kind }) =>
+            kind === "order" || kind === "gap" || kind === "transformation"
+          ),
+        stageId,
+      );
     }
-    assert.ok(questions.some(({ kind }) => kind === "scene"), stageId);
     for (const question of questions) {
       assert.ok(question.options.length >= 2, question.id);
       if (typeof question.answer === "string") {
@@ -216,7 +223,11 @@ test("every registered stage produces a five-exercise practice", () => {
 test("distractors stay specific to the notion and corrections are question-specific", () => {
   for (const stageId of GRAMMAR_STAGE_IDS) {
     const questions = buildGrammarPracticeQuestions(stageId, 2, () => 0.42);
-    assert.equal(new Set(questions.map(({ explanation }) => explanation)).size, 5, stageId);
+    assert.equal(
+      new Set(questions.map(({ explanation }) => explanation)).size,
+      questions.length,
+      stageId,
+    );
 
     for (const question of questions) {
       if (question.kind === "order" || Array.isArray(question.answer)) continue;
@@ -229,6 +240,11 @@ test("distractors stay specific to the notion and corrections are question-speci
           concept.practice.scene.korean,
           concept.practice.scene.french,
           ...concept.examples.flatMap((example) => [example.korean, example.french]),
+          ...concept.practice.drills.flatMap((drill) =>
+            drill.kind === "order"
+              ? []
+              : [drill.answer, ...drill.distractors]
+          ),
         ],
       );
       for (const option of question.options) {
@@ -244,17 +260,12 @@ test("context-dependent questions display their situation before the choices", (
   for (const stageId of GRAMMAR_STAGE_IDS) {
     const questions = buildGrammarPracticeQuestions(stageId, 1, () => 0.42);
 
-    if (GRAMMAR_STAGE_BY_ID[stageId].mode === "review") {
-      for (const question of questions) {
-        const concept = GRAMMAR_CONCEPTS.find(({ id }) => id === question.conceptIds[0]);
-        assert.ok(concept, question.id);
-        assert.ok(question.display.includes(concept.practice.scenario), question.id);
-      }
-      continue;
+    for (const question of questions.filter(({ kind }) => kind === "scene")) {
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
     }
 
-    for (const question of questions.filter(({ kind }) =>
-      kind === "transformation" || kind === "scene"
+    for (const question of questions.filter(({ kind, skill }) =>
+      !skill && (kind === "transformation" || kind === "scene")
     )) {
       const concept = GRAMMAR_CONCEPTS.find(({ id }) => id === question.conceptIds[0]);
       assert.ok(concept, question.id);
@@ -262,16 +273,14 @@ test("context-dependent questions display their situation before the choices", (
     }
   }
 
-  const reassurance = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
-  assert.match(reassurance.display, /CONTEXTE\nUn proche s’inquiète pour toi\./u);
-  assert.match(reassurance.display, /PHRASE CORÉENNE\n« 괜찮아요\. »/u);
+  const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
+  assert.match(dailyRegister.display, /CONTEXTE\n/u);
+  assert.match(dailyRegister.prompt, /style poli courant/u);
 
-  const recharge = buildGrammarPracticeQuestions("express-ability", 1, () => 0.42)[0];
-  assert.match(recharge.display, /guichet T-money/u);
-
-  const registerLabel = buildGrammarPracticeQuestions("identify-with-copula", 1, () => 0.42)[1];
-  assert.match(registerLabel.display, /REGISTRE\nPoli courant/u);
-  assert.match(registerLabel.display, /PHRASE À TRADUIRE/u);
+  const technicalAbility = buildGrammarPracticeQuestions("express-ability", 3, () => 0.42)
+    .find(({ ruleAspect }) => ruleAspect === "ability-vs-permission");
+  assert.ok(technicalAbility);
+  assert.match(technicalAbility.display, /terminal accepte techniquement/u);
 });
 
 test("all rotated question wordings keep one answer and a coherent correction", () => {
@@ -297,6 +306,174 @@ test("all rotated question wordings keep one answer and a coherent correction", 
       }
     }
   }
+});
+
+test("받침-sensitive forms evaluate both consonant and vowel variants", () => {
+  for (const [stageId, expectedAnswers] of [
+    ["identify-with-copula", ["이에요", "예요"]],
+    ["introduce-topic", ["은", "는"]],
+    ["object-actions", ["을", "를"]],
+    ["direction-and-means", ["으로", "로"]],
+  ]) {
+    const questions = buildGrammarPracticeQuestions(stageId, 1, () => 0.42);
+    const aspects = new Set(questions.map(({ ruleAspect }) => ruleAspect));
+    assert.ok(
+      aspects.has("batchim") || [...aspects].some((value) => value?.includes("batchim")),
+      `${stageId}: consonant-final item`,
+    );
+    assert.ok(
+      aspects.has("no-batchim") || [...aspects].some((value) => value?.includes("no-batchim")),
+      `${stageId}: vowel-final item`,
+    );
+    for (const answer of expectedAnswers) {
+      assert.ok(questions.some((question) => question.answer === answer), `${stageId}: ${answer}`);
+    }
+  }
+});
+
+test("negation and inability use the same vocabulary with an explicit semantic contrast", () => {
+  const shortNegation = buildGrammarPracticeQuestions("simple-negation", 1, () => 0.42)
+    .find((question) => question.answer === "안 가요");
+  const inability = buildGrammarPracticeQuestions("express-inability", 1, () => 0.42)
+    .find((question) => question.answer === "못 가요");
+
+  assert.ok(shortNegation);
+  assert.ok(inability);
+  assert.ok(shortNegation.options.includes("못 가요"));
+  assert.ok(inability.options.includes("안 가요"));
+  assert.match(shortNegation.prompt, /négation courte 안/u);
+  assert.match(inability.display, /empêche/u);
+});
+
+test("register and request distractors are disambiguated by explicit situations", () => {
+  const dailyPolite = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)
+    .find(({ options }) => options.includes("좋습니다"));
+  assert.ok(dailyPolite);
+  assert.match(dailyPolite.prompt, /style poli courant/u);
+  assert.match(dailyPolite.display, /conversation quotidienne/u);
+
+  const politeMy = buildGrammarPracticeQuestions("possession", 1, () => 0.42)
+    .filter(({ answer }) => answer === "제");
+  assert.ok(politeMy.length > 0);
+  assert.ok(politeMy.every(({ display }) => /contrôleur|professeur|agent/u.test(display)));
+  const casualMy = buildGrammarPracticeQuestions("possession", 1, () => 0.42)
+    .find(({ answer }) => answer === "내");
+  assert.ok(casualMy);
+  assert.match(casualMy.display, /ami proche/u);
+
+  const actionRequest = buildGrammarPracticeQuestions("request-action", 1, () => 0.42)
+    .find(({ options }) => options.includes("말하세요"));
+  assert.ok(actionRequest);
+  assert.match(actionRequest.prompt, /demande d’action/u);
+  const instruction = buildGrammarPracticeQuestions("polite-instructions", 1, () => 0.42)
+    .find(({ options }) => options.includes("펴 주세요"));
+  assert.ok(instruction);
+  assert.match(instruction.display, /consigne/u);
+});
+
+test("present, past and future lessons require real conjugation", () => {
+  const present = buildGrammarPracticeQuestions("present-actions", 1, () => 0.42);
+  const past = buildGrammarPracticeQuestions("past-event", 1, () => 0.42);
+  const future = buildGrammarPracticeQuestions("future-plan", 1, () => 0.42);
+
+  assert.ok(present.every(({ kind }) => kind === "transformation"));
+  assert.ok(past.every(({ kind }) => kind === "transformation"));
+  assert.ok(future.some(({ kind }) => kind === "transformation"));
+  assert.ok(present.some(({ answer }) => answer === "먹어요"));
+  assert.ok(past.some(({ answer }) => answer === "먹었어요"));
+  assert.ok(future.some(({ answer }) => answer === "먹을 거예요"));
+  assert.ok(future.some(({ options }) => options.includes("먹을게요")));
+});
+
+test("에 and 에서 are contrasted on stable vocabulary", () => {
+  const staticLocation = buildGrammarPracticeQuestions("locate-thing", 1, () => 0.42)
+    .find(({ display }) => display.includes("카페__"));
+  const actionLocation = buildGrammarPracticeQuestions("action-location", 1, () => 0.42)
+    .find(({ display }) => display.includes("카페__"));
+
+  assert.ok(staticLocation);
+  assert.ok(actionLocation);
+  assert.equal(staticLocation.answer, "에");
+  assert.equal(actionLocation.answer, "에서");
+  assert.ok(staticLocation.options.includes("에서"));
+  assert.ok(actionLocation.options.includes("에"));
+});
+
+test("single-token copula examples never become artificial ordering exercises", () => {
+  const questions = buildGrammarPracticeQuestions("identify-with-copula", 1, () => 0.42);
+  assert.ok(questions.every(({ kind }) => kind !== "order"));
+  assert.ok(questions.every(({ kind }) => kind === "gap"));
+});
+
+test("every grammar QCM has unique options and exactly one declared correct answer", () => {
+  for (const stageId of GRAMMAR_STAGE_IDS) {
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      for (const question of buildGrammarPracticeQuestions(stageId, attempt, () => 0.42)) {
+        if (Array.isArray(question.answer)) continue;
+        assert.equal(new Set(question.options).size, question.options.length, question.id);
+        assert.equal(
+          question.options.filter((option) => option === question.answer).length,
+          1,
+          question.id,
+        );
+      }
+    }
+  }
+});
+
+test("the A1 review is diverse and reserves questions for every core family", () => {
+  const reviewedConcepts = new Set();
+  for (let attempt = 1; attempt <= 6; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("a1-validation", attempt, () => 0.42);
+    const skills = questions.map(({ skill }) => skill);
+    questions.flatMap(({ conceptIds }) => conceptIds).forEach((id) => reviewedConcepts.add(id));
+
+    assert.equal(questions.length, 12);
+    assert.ok(new Set(questions.flatMap(({ conceptIds }) => conceptIds)).size >= 10);
+    for (const skill of [
+      "particles",
+      "conjugation",
+      "modality",
+      "connectors",
+      "register",
+      "syntax",
+    ]) {
+      assert.ok(skills.includes(skill), `${attempt}: ${skill}`);
+    }
+    assert.ok(
+      questions.some(({ conceptIds }) =>
+        conceptIds.includes("request-v-a-eo-juseyo") ||
+        conceptIds.includes("polite-instruction-euseyo")
+      ),
+      `${attempt}: request or instruction`,
+    );
+  }
+  assert.ok(reviewedConcepts.has("honorific-si"), "receptive honorific coverage");
+});
+
+test("lessons with two rule aspects evaluate both halves", () => {
+  for (const [stageId, expectedAspects] of [
+    ["destination-and-time", ["destination", "time"]],
+    ["direction-and-means", ["direction-batchim", "means-no-batchim", "means-rieul"]],
+    ["choose-alternative", ["batchim", "clause-alternative"]],
+    ["range-and-limit", ["range-start", "range-end", "limit-only"]],
+    ["simple-condition", ["condition", "sufficiency"]],
+    ["necessity-and-obligation", ["verbal-obligation", "nominal-need"]],
+    ["simple-comparison", ["comparison", "superlative"]],
+  ]) {
+    const questions = buildGrammarPracticeQuestions(stageId, 1, () => 0.42);
+    const aspects = new Set(questions.map(({ ruleAspect }) => ruleAspect));
+    for (const aspect of expectedAspects) {
+      assert.ok(aspects.has(aspect), `${stageId}: ${aspect}`);
+    }
+  }
+
+  const quantityConcepts = new Set(
+    buildGrammarPracticeQuestions("request-quantity", 1, () => 0.42)
+      .flatMap(({ conceptIds }) => conceptIds),
+  );
+  assert.ok(quantityConcepts.has("native-numbers"));
+  assert.ok(quantityConcepts.has("classifiers-basic"));
 });
 
 test("wrong and correct answers persist while a first lesson is resumed", () => {

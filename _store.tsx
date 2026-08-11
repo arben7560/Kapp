@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React from "react";
 import {
   createEmptyHangulProgress,
@@ -13,6 +12,10 @@ import {
   COMPLETION_XP,
   reserveCompletion,
 } from "./lib/progressCompletion";
+import {
+  persistPedagogicalProgress,
+  readPedagogicalProgress,
+} from "./lib/pedagogicalProgressStorage";
 
 export type LearningTrack =
   | "hangul"
@@ -33,20 +36,16 @@ export type Progress = {
   learningTrack: LearningTrack;
   xp: number;
   streak: number;
-  isPremium: boolean;
   completed: Record<string, boolean>;
   hangulLevel: number;
   hangulProgress: HangulDetailedProgress;
   grammarProgress: GrammarLearningProgress;
 };
 
-const STORE_KEY = "@k_app/pedagogical_progress_v1";
-
 const initialProgress: Progress = {
   learningTrack: null,
   xp: 120,
   streak: 0,
-  isPremium: false,
   completed: {},
   hangulLevel: 1,
   hangulProgress: createEmptyHangulProgress(),
@@ -54,48 +53,55 @@ const initialProgress: Progress = {
 };
 
 type StoreValue = {
-  setTrack: (t: LearningTrack) => void;
+  setTrack: (t: LearningTrack) => Promise<void>;
   progress: Progress;
-  setProgress: React.Dispatch<React.SetStateAction<Progress>>;
-  complete: (id: string) => boolean;
-  togglePremium: () => void;
-  bumpHangul: () => void;
+  setProgress: (updater: React.SetStateAction<Progress>) => Promise<void>;
+  complete: (id: string) => Promise<boolean>;
+  bumpHangul: () => Promise<void>;
   updateHangulProgress: (
     updater: (current: HangulDetailedProgress) => HangulDetailedProgress,
-  ) => void;
+  ) => Promise<void>;
   updateGrammarProgress: (
     updater: (current: GrammarLearningProgress) => GrammarLearningProgress,
-  ) => void;
+  ) => Promise<void>;
   isHydrated: boolean;
 };
 
 const StoreContext = React.createContext<StoreValue | undefined>(undefined);
 
 function mergeProgress(saved: Partial<Progress>): Progress {
+  const savedWithoutLegacyPremium = { ...saved } as Partial<Progress> & {
+    isPremium?: boolean;
+  };
+  delete savedWithoutLegacyPremium.isPremium;
+
   return {
     ...initialProgress,
-    ...saved,
+    ...savedWithoutLegacyPremium,
     completed: {
-      ...(saved.completed ?? {}),
+      ...(savedWithoutLegacyPremium.completed ?? {}),
     },
     hangulProgress: {
       ...createEmptyHangulProgress(),
-      ...(saved.hangulProgress ?? {}),
+      ...(savedWithoutLegacyPremium.hangulProgress ?? {}),
       lessons: {
-        ...(saved.hangulProgress?.lessons ?? {}),
+        ...(savedWithoutLegacyPremium.hangulProgress?.lessons ?? {}),
       },
       masteredCharacters: {
-        ...(saved.hangulProgress?.masteredCharacters ?? {}),
+        ...(savedWithoutLegacyPremium.hangulProgress?.masteredCharacters ?? {}),
       },
     },
-    grammarProgress: normalizeGrammarLearningProgress(saved.grammarProgress),
+    grammarProgress: normalizeGrammarLearningProgress(
+      savedWithoutLegacyPremium.grammarProgress,
+    ),
   };
 }
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [progress, setProgress] = React.useState<Progress>(initialProgress);
+  const [progress, setProgressState] = React.useState<Progress>(initialProgress);
   const [isHydrated, setIsHydrated] = React.useState(false);
   const isHydratedRef = React.useRef(false);
+  const progressRef = React.useRef(initialProgress);
   const completedRef = React.useRef<Record<string, boolean>>(
     initialProgress.completed,
   );
@@ -105,16 +111,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     async function hydrateStore() {
       try {
-        const raw = await AsyncStorage.getItem(STORE_KEY);
+        const saved = await readPedagogicalProgress<Partial<Progress>>();
 
         if (!mounted) return;
 
-        if (raw) {
-          const saved = JSON.parse(raw) as Partial<Progress>;
+        if (saved) {
           const restoredProgress = mergeProgress(saved);
 
-          setProgress(restoredProgress);
+          progressRef.current = restoredProgress;
           completedRef.current = restoredProgress.completed;
+          setProgressState(restoredProgress);
         }
       } catch (error) {
         console.warn("Impossible de restaurer le store pédagogique:", error);
@@ -133,29 +139,38 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  React.useEffect(() => {
-    completedRef.current = progress.completed;
-  }, [progress.completed]);
-
-  React.useEffect(() => {
-    if (!isHydrated) return;
-
-    async function persistStore() {
-      try {
-        await AsyncStorage.setItem(STORE_KEY, JSON.stringify(progress));
-      } catch (error) {
-        console.warn("Impossible de sauvegarder le store pédagogique:", error);
-      }
+  const persistProgress = React.useCallback(async (next: Progress) => {
+    try {
+      await persistPedagogicalProgress(next);
+    } catch (error) {
+      console.warn("Impossible de sauvegarder le store pédagogique:", error);
     }
+  }, []);
 
-    void persistStore();
-  }, [progress, isHydrated]);
+  const setProgress = React.useCallback(
+    (updater: React.SetStateAction<Progress>) => {
+      if (!isHydratedRef.current) return Promise.resolve();
 
-  const setTrack = (t: LearningTrack) => {
-    setProgress((p) => ({ ...p, learningTrack: t }));
-  };
+      const current = progressRef.current;
+      const next = typeof updater === "function" ? updater(current) : updater;
 
-  const complete = React.useCallback((id: string) => {
+      if (Object.is(current, next)) return Promise.resolve();
+
+      progressRef.current = next;
+      completedRef.current = next.completed;
+      setProgressState(next);
+      return persistProgress(next);
+    },
+    [persistProgress],
+  );
+
+  const setTrack = React.useCallback(
+    (t: LearningTrack) =>
+      setProgress((current) => ({ ...current, learningTrack: t })),
+    [setProgress],
+  );
+
+  const complete = React.useCallback(async (id: string) => {
     const nextCompleted = reserveCompletion(
       completedRef.current,
       id,
@@ -166,56 +181,54 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     completedRef.current = nextCompleted;
 
-    setProgress((p) => {
-      if (p.completed[id]) return p;
+    const current = progressRef.current;
+    const completedCoreModules = [
+      "hangul_vowels_basic",
+      "hangul_consonants_basic",
+      "hangul_consonants_tense",
+      "hangul_vowels_compound",
+      "hangul_batchim",
+    ].filter((moduleId) => nextCompleted[moduleId]).length;
+    const next = {
+      ...current,
+      completed: nextCompleted,
+      xp: current.xp + COMPLETION_XP,
+      hangulLevel: Math.min(5, Math.max(1, completedCoreModules)),
+    };
 
-      const completedCoreModules = [
-        "hangul_vowels_basic",
-        "hangul_consonants_basic",
-        "hangul_consonants_tense",
-        "hangul_vowels_compound",
-        "hangul_batchim",
-      ].filter((moduleId) => nextCompleted[moduleId]).length;
-
-      return {
-        ...p,
-        completed: nextCompleted,
-        xp: p.xp + COMPLETION_XP,
-        hangulLevel: Math.min(5, Math.max(1, completedCoreModules)),
-      };
-    });
+    progressRef.current = next;
+    setProgressState(next);
+    await persistProgress(next);
 
     return true;
-  }, []);
+  }, [persistProgress]);
 
-  const togglePremium = () => {
-    setProgress((p) => ({ ...p, isPremium: !p.isPremium }));
-  };
+  const bumpHangul = React.useCallback(
+    () =>
+      setProgress((current) => ({
+        ...current,
+        hangulLevel: Math.min(5, current.hangulLevel + 1),
+      })),
+    [setProgress],
+  );
 
-  const bumpHangul = () => {
-    setProgress((p) => ({
-      ...p,
-      hangulLevel: Math.min(5, p.hangulLevel + 1),
-    }));
-  };
+  const updateHangulProgress = React.useCallback(
+    (updater: (current: HangulDetailedProgress) => HangulDetailedProgress) =>
+      setProgress((current) => ({
+        ...current,
+        hangulProgress: updater(current.hangulProgress),
+      })),
+    [setProgress],
+  );
 
-  const updateHangulProgress = (
-    updater: (current: HangulDetailedProgress) => HangulDetailedProgress,
-  ) => {
-    setProgress((current) => ({
-      ...current,
-      hangulProgress: updater(current.hangulProgress),
-    }));
-  };
-
-  const updateGrammarProgress = (
-    updater: (current: GrammarLearningProgress) => GrammarLearningProgress,
-  ) => {
-    setProgress((current) => ({
-      ...current,
-      grammarProgress: updater(current.grammarProgress),
-    }));
-  };
+  const updateGrammarProgress = React.useCallback(
+    (updater: (current: GrammarLearningProgress) => GrammarLearningProgress) =>
+      setProgress((current) => ({
+        ...current,
+        grammarProgress: updater(current.grammarProgress),
+      })),
+    [setProgress],
+  );
 
   return (
     <StoreContext.Provider
@@ -223,7 +236,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         progress,
         setProgress,
         complete,
-        togglePremium,
         bumpHangul,
         updateHangulProgress,
         updateGrammarProgress,

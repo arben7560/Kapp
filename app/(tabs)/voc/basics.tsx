@@ -375,9 +375,7 @@ const SCENES: Scene[] = [
 export default function FirstStepsImmersion() {
   const [activeScene, setActiveScene] = useState<Scene>(SCENES[0]);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
-  const { playAudio, stopAudio } = useVocAudio(setSelectedWord, {
-    trackPlayback: false,
-  });
+  const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
   const {
     advanceDialogue,
     hintText,

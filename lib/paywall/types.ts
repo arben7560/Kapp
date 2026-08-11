@@ -44,12 +44,12 @@ export type PaywallContextValue = {
   activeSubscriptions: string[];
 
   refreshEntitlements: () => Promise<void>;
-  subscribeMonthly: () => Promise<void>;
-  subscribeYearly: () => Promise<void>;
+  subscribeMonthly: () => Promise<boolean>;
+  subscribeYearly: () => Promise<boolean>;
   subscribe: (
     offerId: SubscriptionOfferId,
-  ) => Promise<void>;
-  restorePurchases: () => Promise<void>;
+  ) => Promise<boolean>;
+  restorePurchases: () => Promise<boolean>;
   openSubscriptionManagement: () => Promise<void>;
   clearError: () => void;
 };

@@ -12,12 +12,14 @@ import {
   type ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppText } from "../../../components/app-text";
 import { HubHero } from "../../../components/hub/HubHero";
 import { SectionHeader } from "../../../components/hub/SectionHeader";
 import { ModuleCard } from "../../../components/ModuleCard";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
-import { SeoulMidnightGlass } from "../../../constants/theme";
+import {
+  HubModuleAccents,
+  SeoulMidnightGlass,
+} from "../../../constants/theme";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vocabulaire.jpg");
@@ -27,7 +29,7 @@ const BACKGROUND_SOURCE = require("../../../assets/images/vocabulaire.jpg");
 // ──────────────────────────────────────────────
 const BG_DEEP = SeoulMidnightGlass.colors.bgDeep;
 const TXT = SeoulMidnightGlass.colors.text;
-const AMBER = "#F6C27A";
+const VOCABULARY_ACCENT = HubModuleAccents.vocabulary.base;
 
 const THEMES = [
   {
@@ -156,14 +158,18 @@ export default function VocabHub() {
               title="Vocabulaire"
               subtitle={`"Chaque mot devient une scène."`}
               badgeLabel="COLLECTIONS · NIVEAU 1"
-              accentColor={AMBER}
+              accentColor={VOCABULARY_ACCENT}
+              accentBadge
               layeredGlow={false}
               badgeBlurIntensity={50}
               style={styles.hero}
               koreanStyle={styles.heroKorean}
             />
 
-            <SectionHeader title="COLLECTIONS THÉMATIQUES" />
+            <SectionHeader
+              title="COLLECTIONS THÉMATIQUES"
+              accentColor={VOCABULARY_ACCENT}
+            />
 
             <View
               style={[

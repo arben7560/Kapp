@@ -417,9 +417,7 @@ export default function GastronomyImmersion() {
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
-  const { playAudio, stopAudio } = useVocAudio(setSelectedWord, {
-    trackPlayback: false,
-  });
+  const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
   const {
     advanceDialogue,
     hintText,

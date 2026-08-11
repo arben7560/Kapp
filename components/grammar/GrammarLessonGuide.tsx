@@ -4,13 +4,16 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 
 import { ABSOLUTE_FILL } from "../../constants/layout";
-import { SeoulMidnightGlass } from "../../constants/theme";
+import {
+  HubModuleAccents,
+  SeoulMidnightGlass,
+} from "../../constants/theme";
 import type { GrammarLessonGuide as GrammarLessonGuideData } from "../../data/grammar/lessonGuides";
 import { AppText } from "../app-text";
 import { useGrammarModalLayout } from "./useGrammarModalLayout";
 
 const COLORS = SeoulMidnightGlass.colors;
-const ACCENT = "#2DD4BF";
+const GRAMMAR_ACCENT = HubModuleAccents.grammar;
 const SUCCESS = "#86EFAC";
 const ERROR = "#FDA4AF";
 
@@ -57,8 +60,8 @@ export function GrammarLessonGuide({
         <LinearGradient
           pointerEvents="none"
           colors={[
-            "rgba(45,212,191,0.18)",
-            "rgba(45,212,191,0.045)",
+            GRAMMAR_ACCENT.surfaceStrong,
+            GRAMMAR_ACCENT.decorative,
             "rgba(255,255,255,0.015)",
           ]}
           start={{ x: 0, y: 0 }}
@@ -107,7 +110,7 @@ export function GrammarLessonGuide({
       <BlurView intensity={58} tint="dark" style={styles.formulaCard}>
         <LinearGradient
           pointerEvents="none"
-          colors={["rgba(255,255,255,0.045)", "rgba(45,212,191,0.025)"]}
+          colors={["rgba(255,255,255,0.045)", GRAMMAR_ACCENT.decorative]}
           style={ABSOLUTE_FILL}
         />
         <View style={styles.formulaHeader}>
@@ -197,7 +200,7 @@ export function GrammarLessonGuide({
               <LinearGradient
                 pointerEvents="none"
                 colors={[
-                  "rgba(45,212,191,0.09)",
+                  GRAMMAR_ACCENT.surface,
                   "rgba(255,255,255,0.018)",
                 ]}
                 start={{ x: 0, y: 0 }}
@@ -347,7 +350,7 @@ export function GrammarLessonGuide({
       <BlurView intensity={60} tint="dark" style={styles.memoryCard}>
         <LinearGradient
           pointerEvents="none"
-          colors={["rgba(45,212,191,0.14)", "rgba(45,212,191,0.025)"]}
+          colors={[GRAMMAR_ACCENT.surfaceStrong, GRAMMAR_ACCENT.decorative]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={ABSOLUTE_FILL}
@@ -379,7 +382,7 @@ const styles = StyleSheet.create({
   guideStack: { gap: 26 },
   guideStackCompact: { gap: 22 },
   sectionStack: { gap: 14 },
-  accentText: { color: ACCENT },
+  accentText: { color: GRAMMAR_ACCENT.base },
   successText: { color: SUCCESS },
   errorText: { color: ERROR },
   sectionHeading: {
@@ -393,8 +396,8 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: "rgba(45,212,191,0.3)",
-    backgroundColor: "rgba(45,212,191,0.09)",
+    borderColor: GRAMMAR_ACCENT.iconBorder,
+    backgroundColor: GRAMMAR_ACCENT.surface,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -402,7 +405,7 @@ const styles = StyleSheet.create({
   editorialCard: {
     borderRadius: 28,
     borderWidth: 1,
-    borderColor: "rgba(45,212,191,0.3)",
+    borderColor: GRAMMAR_ACCENT.iconBorder,
     backgroundColor: COLORS.glassSurface,
     padding: 20,
     overflow: "hidden",
@@ -415,8 +418,8 @@ const styles = StyleSheet.create({
     top: -98,
     right: -55,
     borderWidth: 1,
-    borderColor: "rgba(45,212,191,0.13)",
-    backgroundColor: "rgba(45,212,191,0.035)",
+    borderColor: GRAMMAR_ACCENT.cardBorder,
+    backgroundColor: GRAMMAR_ACCENT.decorative,
   },
   editorialLayout: { gap: 20 },
   editorialLayoutTablet: {
@@ -443,8 +446,8 @@ const styles = StyleSheet.create({
     minHeight: 26,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(45,212,191,0.22)",
-    backgroundColor: "rgba(45,212,191,0.07)",
+    borderColor: GRAMMAR_ACCENT.selectedShadow,
+    backgroundColor: GRAMMAR_ACCENT.iconSurface,
     paddingHorizontal: 9,
     flexDirection: "row",
     alignItems: "center",
@@ -454,7 +457,7 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 3,
-    backgroundColor: ACCENT,
+    backgroundColor: GRAMMAR_ACCENT.base,
   },
   formulaCard: {
     borderRadius: 26,
@@ -486,8 +489,8 @@ const styles = StyleSheet.create({
     minHeight: 76,
     borderRadius: 19,
     borderWidth: 1,
-    borderColor: "rgba(45,212,191,0.28)",
-    backgroundColor: "rgba(45,212,191,0.075)",
+    borderColor: GRAMMAR_ACCENT.cardBorder,
+    backgroundColor: GRAMMAR_ACCENT.rain,
     paddingHorizontal: 18,
     paddingVertical: 16,
     alignItems: "center",
@@ -502,7 +505,7 @@ const styles = StyleSheet.create({
     width: 3,
     borderTopRightRadius: 3,
     borderBottomRightRadius: 3,
-    backgroundColor: ACCENT,
+    backgroundColor: GRAMMAR_ACCENT.base,
   },
   stepsTrack: { gap: 10 },
   stepsTrackTablet: { flexDirection: "row", alignItems: "stretch" },
@@ -528,15 +531,15 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(45,212,191,0.34)",
-    backgroundColor: "rgba(45,212,191,0.09)",
+    borderColor: GRAMMAR_ACCENT.iconBorder,
+    backgroundColor: GRAMMAR_ACCENT.surface,
     alignItems: "center",
     justifyContent: "center",
   },
   stepLine: {
     width: 24,
     height: 1,
-    backgroundColor: "rgba(45,212,191,0.22)",
+    backgroundColor: GRAMMAR_ACCENT.selectedShadow,
   },
   stepCopy: { flex: 1, minWidth: 0, gap: 4 },
   sectionTitleRow: {
@@ -550,8 +553,8 @@ const styles = StyleSheet.create({
     minHeight: 30,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(45,212,191,0.2)",
-    backgroundColor: "rgba(45,212,191,0.06)",
+    borderColor: GRAMMAR_ACCENT.cardBorder,
+    backgroundColor: GRAMMAR_ACCENT.iconSurface,
     paddingHorizontal: 11,
     alignItems: "center",
     justifyContent: "center",
@@ -579,7 +582,7 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 3,
-    backgroundColor: "rgba(45,212,191,0.55)",
+    backgroundColor: GRAMMAR_ACCENT.selectedBorder,
   },
   examplePhrase: { gap: 3 },
   exampleDivider: { height: 1, backgroundColor: COLORS.lineSoft },
@@ -590,8 +593,8 @@ const styles = StyleSheet.create({
     flexBasis: 0,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(45,212,191,0.16)",
-    backgroundColor: "rgba(45,212,191,0.05)",
+    borderColor: GRAMMAR_ACCENT.cardBorder,
+    backgroundColor: GRAMMAR_ACCENT.decorative,
     padding: 11,
     gap: 3,
   },
@@ -668,14 +671,14 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 11,
     borderWidth: 1,
-    borderColor: "rgba(45,212,191,0.2)",
+    borderColor: GRAMMAR_ACCENT.cardBorder,
     alignItems: "center",
     justifyContent: "center",
   },
   memoryCard: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "rgba(45,212,191,0.27)",
+    borderColor: GRAMMAR_ACCENT.cardBorder,
     backgroundColor: COLORS.glassSurface,
     padding: 18,
     flexDirection: "row",
@@ -688,8 +691,8 @@ const styles = StyleSheet.create({
     height: 54,
     borderRadius: 27,
     borderWidth: 1,
-    borderColor: "rgba(45,212,191,0.2)",
-    backgroundColor: "rgba(45,212,191,0.055)",
+    borderColor: GRAMMAR_ACCENT.cardBorder,
+    backgroundColor: GRAMMAR_ACCENT.iconSurface,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -697,7 +700,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: "rgba(45,212,191,0.09)",
+    backgroundColor: GRAMMAR_ACCENT.surface,
     alignItems: "center",
     justifyContent: "center",
   },

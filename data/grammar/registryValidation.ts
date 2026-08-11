@@ -175,6 +175,45 @@ export function validateGrammarRegistry(): string[] {
     ) {
       errors.push(`Distracteurs de forme invalides : ${concept.id}`);
     }
+    if (concept.practice.drills.length > 0 && concept.practice.drills.length < 5) {
+      errors.push(`Série de drills trop courte : ${concept.id}`);
+    }
+    for (const duplicate of duplicateValues(
+      concept.practice.drills.map(({ id }) => id),
+    )) {
+      errors.push(`Identifiant de drill dupliqué : ${concept.id} -> ${duplicate}`);
+    }
+    for (const drill of concept.practice.drills) {
+      if (
+        !drill.id.trim() ||
+        !drill.prompt.trim() ||
+        !drill.stimulus.trim() ||
+        !drill.displayLabel.trim() ||
+        !drill.explanation.trim()
+      ) {
+        errors.push(`Drill incomplet : ${concept.id} -> ${drill.id}`);
+      }
+      if (drill.kind === "order") {
+        if (
+          drill.answer.length < 2 ||
+          drill.answer.some((value) => !value.trim())
+        ) {
+          errors.push(`Remise en ordre invalide : ${concept.id} -> ${drill.id}`);
+        }
+      } else {
+        if (
+          !drill.answer.trim() ||
+          drill.distractors.some((value) => !value.trim()) ||
+          new Set(drill.distractors).size !== 3 ||
+          drill.distractors.includes(drill.answer)
+        ) {
+          errors.push(`Distracteurs de drill invalides : ${concept.id} -> ${drill.id}`);
+        }
+      }
+      if (drill.kind === "scene" && !drill.context?.trim()) {
+        errors.push(`Drill de situation sans contexte : ${concept.id} -> ${drill.id}`);
+      }
+    }
     const group = practiceGroups.get(concept.practice.distractorGroup) ?? [];
     group.push(concept);
     practiceGroups.set(concept.practice.distractorGroup, group);
@@ -287,6 +326,11 @@ export function validateGrammarRegistry(): string[] {
     ]) {
       if (!conceptIdSet.has(conceptId)) {
         errors.push(`Notion d’étape absente : ${stage.id} -> ${conceptId}`);
+      }
+    }
+    for (const conceptId of stage.conceptIds) {
+      if ((conceptById.get(conceptId)?.practice.drills.length ?? 0) < 5) {
+        errors.push(`Notion productive sans série de drills : ${stage.id} -> ${conceptId}`);
       }
     }
     for (const contentRefId of stage.reuseContentRefIds) {

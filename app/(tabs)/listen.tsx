@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
 import { AppBackButton } from "../../components/ui/app-back-button";
+import { HubModuleAccents } from "../../constants/theme";
 import {
   EXERCISES_BY_KIND,
   TRAINING_ORDER,
@@ -36,9 +37,9 @@ const COLORS = {
   faint: "rgba(255,255,255,0.42)",
   red: "#ff4f66",
   redSoft: "rgba(255,79,102,0.18)",
-  purple: "#a855f7",
   green: "#8df0b5",
 };
+const LISTEN_ACCENT = HubModuleAccents.listening;
 
 const LISTEN_AUDIO_BY_ID: Partial<Record<string, number>> = {
   "cafe-dictation-01": require("../../assets/audio/listen/myeot-buniseyo-1.mp3"),
@@ -47,7 +48,7 @@ const LISTEN_AUDIO_BY_ID: Partial<Record<string, number>> = {
   "shop-dictation-04": require("../../assets/audio/listen/eolmayeyo.mp3"),
   "hotel-dictation-05": require("../../assets/audio/listen/yeyakhaesseoyo-1.mp3"),
   "bbq-situation-01": require("../../assets/audio/listen/myeot-buniseyo-2.mp3"),
-  "cafe-situation-02": require("../../assets/audio/listen/mwo-deurilkkayo-1.mp3"),
+  "cafe-situation-02": require("../../assets/audio/listen/chumun-hasigesseoyeo.mp3"),
   "metro-situation-03": require("../../assets/audio/listen/ibeon-yeogeun-hongdaeipguyeogimnida.mp3"),
   "shop-situation-04": require("../../assets/audio/listen/kadeuro-hasigesseoyo-hyeongeumeuro-hasigesseoyo.mp3"),
   "street-situation-05": require("../../assets/audio/listen/yeogiseo-jjuk-gasimyeon-dwaeyo.mp3"),
@@ -61,7 +62,7 @@ const LISTEN_AUDIO_BY_ID: Partial<Record<string, number>> = {
   "shop-order-03": require("../../assets/audio/listen/igeo-eolmayeyo.mp3"),
   "restaurant-order-04": require("../../assets/audio/listen/mul-jom-juseyo.mp3"),
   "street-order-05": require("../../assets/audio/listen/hwajangsiri-eodiyeyo.mp3"),
-  "cafe-reaction-01": require("../../assets/audio/listen/mwo-deurilkkayo-2.mp3"),
+  "cafe-reaction-01": require("../../assets/audio/listen/mwo-deurilkkayo.mp3"),
   "restaurant-reaction-02": require("../../assets/audio/listen/deo-piryohan-geo-isseuseyo.mp3"),
   "shop-reaction-03": require("../../assets/audio/listen/mwo-chajeusineun-geo-isseuseyo.mp3"),
   "hotel-reaction-04": require("../../assets/audio/listen/yeyakhasyeosseoyo.mp3"),
@@ -80,6 +81,9 @@ export default function ListenScreen() {
   const { complete, isHydrated } = useStore();
   const scrollRef = useRef<ScrollView | null>(null);
   const validationLockRef = useRef(false);
+  const dailyActivityPromiseRef = useRef<ReturnType<
+    typeof completeDailyActivity
+  > | null>(null);
   const [trainingIndex, setTrainingIndex] = useState(0);
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -166,6 +170,12 @@ export default function ListenScreen() {
     resetAnswer();
   };
 
+  const restartTraining = () => {
+    clearAudioError();
+    setExerciseIndex(0);
+    resetAnswer();
+  };
+
   const changeTraining = (direction: -1 | 1) => {
     const nextTrainingIndex =
       (trainingIndex + direction + TRAINING_ORDER.length) %
@@ -175,6 +185,10 @@ export default function ListenScreen() {
     setTrainingIndex(nextTrainingIndex);
     setExerciseIndex(0);
     resetAnswer();
+  };
+
+  const goToNextExercise = () => {
+    changeTraining(1);
   };
 
   const handleValidate = () => {
@@ -192,6 +206,10 @@ export default function ListenScreen() {
     validationLockRef.current = true;
     const correct = isAnswerCorrect();
     const expectedAnswer = getExpectedAnswer();
+    const dailyActivityPromise =
+      dailyActivityPromiseRef.current ??
+      completeDailyActivity("listen_exercise");
+    dailyActivityPromiseRef.current = dailyActivityPromise;
 
     setChecked(true);
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 120);
@@ -199,13 +217,14 @@ export default function ListenScreen() {
     AccessibilityInfo.announceForAccessibility(
       correct
         ? `Correct. Réponse attendue : ${expectedAnswer}.`
-        : `À revoir. Réponse attendue : ${expectedAnswer}.`,
+        : "À revoir. Ce n’est pas la bonne réponse. Réessaie.",
     );
 
     if (correct) {
-      complete(buildProgressId("listen", item.id));
-
-      void completeDailyActivity("listen_exercise").then((state) => {
+      void Promise.all([
+        complete(buildProgressId("listen", item.id)),
+        dailyActivityPromise,
+      ]).then(([, state]) => {
         setDailyMessage(
           state.lastCompletionResult === "completed_with_freeze"
             ? "Protection de série utilisée. Série conservée."
@@ -217,6 +236,8 @@ export default function ListenScreen() {
         );
         setTimeout(() => setDailyMessage(null), 2200);
       });
+    } else {
+      void dailyActivityPromise;
     }
   };
 
@@ -236,12 +257,24 @@ export default function ListenScreen() {
   };
 
   const pickOrderWord = (wordIndex: number) => {
-    if (checked || picked.includes(wordIndex)) return;
+    if ((checked && isCorrect) || picked.includes(wordIndex)) return;
+
+    if (checked) {
+      validationLockRef.current = false;
+      setChecked(false);
+    }
+
     setPicked((prev) => [...prev, wordIndex]);
   };
 
   const removeOrderWord = (wordIndex: number) => {
-    if (checked) return;
+    if (checked && isCorrect) return;
+
+    if (checked) {
+      validationLockRef.current = false;
+      setChecked(false);
+    }
+
     setPicked((prev) => prev.filter((id) => id !== wordIndex));
   };
 
@@ -289,13 +322,13 @@ export default function ListenScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={`Ajouter ${word} a la phrase`}
                   accessibilityState={{
-                    disabled: used || checked,
+                    disabled: used || (checked && isCorrect),
                     selected: used,
                   }}
-                  aria-disabled={used || checked}
+                  aria-disabled={used || (checked && isCorrect)}
                   aria-selected={used}
                   hitSlop={6}
-                  disabled={used || checked}
+                  disabled={used || (checked && isCorrect)}
                   onPress={() => pickOrderWord(wordIndex)}
                   style={[styles.wordOption, used && styles.disabledOption]}
                 >
@@ -347,12 +380,21 @@ export default function ListenScreen() {
                 key={`${option}-${optionIndex}`}
                 label={option}
                 active={selected === optionIndex}
-                locked={checked}
-                correct={checked && option === item.answer}
-                wrong={
-                  checked && selected === optionIndex && option !== item.answer
+                locked={checked && isCorrect}
+                correct={
+                  checked &&
+                  isCorrect &&
+                  selected === optionIndex &&
+                  option === item.answer
                 }
-                onPress={() => !checked && setSelected(optionIndex)}
+                wrong={checked && !isCorrect && selected === optionIndex}
+                onPress={() => {
+                  if (!isCorrect) {
+                    validationLockRef.current = false;
+                    setSelected(optionIndex);
+                    setChecked(false);
+                  }
+                }}
               />
             ))}
           </View>
@@ -364,15 +406,24 @@ export default function ListenScreen() {
       <View style={styles.choiceStack}>
         {item.options.map((option, optionIndex) => (
           <ChoiceButton
-            key={`${option}-${optionIndex}`}
+            key={option}
             label={option}
             active={selected === optionIndex}
-            locked={checked}
-            correct={checked && optionIndex === item.answer}
-            wrong={
-              checked && selected === optionIndex && optionIndex !== item.answer
+            locked={checked && isCorrect}
+            correct={
+              checked &&
+              isCorrect &&
+              selected === optionIndex &&
+              optionIndex === item.answer
             }
-            onPress={() => !checked && setSelected(optionIndex)}
+            wrong={checked && !isCorrect && selected === optionIndex}
+            onPress={() => {
+              if (!isCorrect) {
+                validationLockRef.current = false;
+                setSelected(optionIndex);
+                setChecked(false);
+              }
+            }}
           />
         ))}
       </View>
@@ -400,7 +451,11 @@ export default function ListenScreen() {
           contentContainerStyle={styles.content}
         >
           <View style={styles.modePill}>
-            <Ionicons name="volume-high" size={16} color={COLORS.purple} />
+            <Ionicons
+              name="volume-high"
+              size={16}
+              color={LISTEN_ACCENT.base}
+            />
             <AppText variant="label" tone="strong" style={styles.modeText}>
               ÉCOUTE
             </AppText>
@@ -546,10 +601,10 @@ export default function ListenScreen() {
                 ? isPlayingCurrentAudio
                   ? "Lecture en cours"
                   : hasCompletedCurrentAudio
-                    ? "Audio terminé · prêt à réécouter"
+                    ? ""
                     : hasPlayedCurrentAudio
                       ? "Lecture interrompue · réessaie"
-                      : "Prêt à écouter"
+                      : ""
                 : "Audio indisponible"}
             </AppText>
 
@@ -587,11 +642,15 @@ export default function ListenScreen() {
                 accessibilityLiveRegion="polite"
                 accessible
                 accessibilityRole="alert"
-                accessibilityLabel={`${isCorrect ? "Correct" : "À revoir"}. ${
-                  item.kind === "situation" || item.kind === "reaction"
-                    ? `Phrase entendue : ${item.sourceText}. `
-                    : ""
-                }Réponse attendue : ${getExpectedAnswer()}. ${item.explanation}`}
+                accessibilityLabel={
+                  isCorrect
+                    ? `Correct. ${
+                        item.kind === "situation" || item.kind === "reaction"
+                          ? `Phrase entendue : ${item.sourceText}. `
+                          : ""
+                      }Réponse attendue : ${getExpectedAnswer()}. ${item.explanation}`
+                    : "À revoir. Ce n’est pas la bonne réponse. Réessaie."
+                }
                 style={[styles.feedback, isCorrect ? styles.good : styles.bad]}
               >
                 <AppText
@@ -601,15 +660,40 @@ export default function ListenScreen() {
                 >
                   {isCorrect ? "Correct" : "À revoir"}
                 </AppText>
-                {(item.kind === "situation" || item.kind === "reaction") && (
+
+                {isCorrect ? (
                   <>
+                    {(item.kind === "situation" ||
+                      item.kind === "reaction") && (
+                      <>
+                        <AppText
+                          variant="label"
+                          tone="strong"
+                          style={styles.expectedLabel}
+                        >
+                          Phrase entendue
+                        </AppText>
+
+                        <AppText
+                          variant="koreanSecondary"
+                          tone="accent"
+                          script="korean"
+                          accessibilityLanguage="ko"
+                          style={styles.expectedText}
+                        >
+                          {item.sourceText}
+                        </AppText>
+                      </>
+                    )}
+
                     <AppText
                       variant="label"
                       tone="strong"
                       style={styles.expectedLabel}
                     >
-                      Phrase entendue
+                      Réponse attendue
                     </AppText>
+
                     <AppText
                       variant="koreanSecondary"
                       tone="accent"
@@ -617,49 +701,61 @@ export default function ListenScreen() {
                       accessibilityLanguage="ko"
                       style={styles.expectedText}
                     >
-                      {item.sourceText}
+                      {getExpectedAnswer()}
+                    </AppText>
+
+                    <AppText
+                      variant="body"
+                      tone="muted"
+                      style={styles.feedbackText}
+                    >
+                      {item.explanation}
                     </AppText>
                   </>
+                ) : (
+                  <AppText
+                    variant="body"
+                    tone="muted"
+                    style={styles.feedbackText}
+                  >
+                    Ce n’est pas la bonne réponse. Réessaie.
+                  </AppText>
                 )}
-                <AppText
-                  variant="label"
-                  tone="strong"
-                  style={styles.expectedLabel}
-                >
-                  Réponse attendue
-                </AppText>
-                <AppText
-                  variant="koreanSecondary"
-                  tone="accent"
-                  script="korean"
-                  accessibilityLanguage="ko"
-                  style={styles.expectedText}
-                >
-                  {getExpectedAnswer()}
-                </AppText>
-                <AppText
-                  variant="body"
-                  tone="muted"
-                  style={styles.feedbackText}
-                >
-                  {item.explanation}
-                </AppText>
               </View>
             )}
 
             <View style={styles.actionRow}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Réessayer cette question"
-                accessibilityState={{ disabled: !hasAttempt }}
-                aria-disabled={!hasAttempt}
+                accessibilityLabel={
+                  checked && isCorrect && isLastExercise
+                    ? "Recommencer l’entraînement"
+                    : "Réessayer cette question"
+                }
+                accessibilityState={{
+                  disabled:
+                    checked && isCorrect && isLastExercise
+                      ? false
+                      : !hasAttempt,
+                }}
+                aria-disabled={
+                  checked && isCorrect && isLastExercise ? false : !hasAttempt
+                }
                 hitSlop={6}
-                disabled={!hasAttempt}
-                onPress={resetAnswer}
+                disabled={
+                  checked && isCorrect && isLastExercise ? false : !hasAttempt
+                }
+                onPress={
+                  checked && isCorrect && isLastExercise
+                    ? restartTraining
+                    : resetAnswer
+                }
                 style={[
                   styles.actionButton,
                   styles.secondaryButton,
-                  !hasAttempt && styles.disabledButton,
+                  !(checked && isCorrect && isLastExercise) &&
+                    !hasAttempt &&
+                    styles.disabledButton,
                 ]}
               >
                 <AppText
@@ -667,7 +763,9 @@ export default function ListenScreen() {
                   tone="muted"
                   style={styles.secondaryText}
                 >
-                  Réessayer
+                  {checked && isCorrect && isLastExercise
+                    ? "Recommencer l’entraînement"
+                    : "Réessayer"}
                 </AppText>
               </Pressable>
 
@@ -705,17 +803,17 @@ export default function ListenScreen() {
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={
-                    isCorrect
-                      ? isLastExercise
-                        ? "Recommencer l’entraînement"
+                    !isCorrect
+                      ? "Question suivante indisponible tant que la réponse est incorrecte"
+                      : isLastExercise
+                        ? "Passer à l’exercice suivant"
                         : "Passer à la question suivante"
-                      : "Question suivante indisponible tant que la réponse est incorrecte"
                   }
                   accessibilityState={{ disabled: !isCorrect }}
                   aria-disabled={!isCorrect}
                   hitSlop={6}
                   disabled={!isCorrect}
-                  onPress={goNext}
+                  onPress={isLastExercise ? goToNextExercise : goNext}
                   style={[
                     styles.actionButton,
                     !isCorrect && styles.disabledButton,
@@ -726,14 +824,11 @@ export default function ListenScreen() {
                     tone="strong"
                     style={styles.actionText}
                   >
-                    {isLastExercise && isCorrect
-                      ? "Recommencer l’entraînement"
-                      : "Suivant"}
+                    {isLastExercise ? "Exercice suivant" : "Suivant"}
                   </AppText>
                 </Pressable>
               )}
             </View>
-
             {!isHydrated && (
               <AppText
                 accessibilityLiveRegion="polite"
@@ -893,8 +988,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: COLORS.purple,
-    backgroundColor: "rgba(168,85,247,0.12)",
+    borderColor: LISTEN_ACCENT.iconBorder,
+    backgroundColor: LISTEN_ACCENT.iconSurface,
     marginBottom: 22,
   },
   modeText: {
@@ -957,7 +1052,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.22)",
   },
   dotActive: {
-    backgroundColor: COLORS.purple,
+    backgroundColor: LISTEN_ACCENT.base,
     transform: [{ scale: 1.2 }],
   },
   card: {
@@ -982,7 +1077,7 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
   theme: {
-    color: COLORS.red,
+    color: LISTEN_ACCENT.base,
   },
   title: {
     color: COLORS.text,
@@ -1005,7 +1100,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 999,
-    backgroundColor: COLORS.redSoft,
+    backgroundColor: LISTEN_ACCENT.surface,
     overflow: "hidden",
   },
   skillText: {
@@ -1020,9 +1115,9 @@ const styles = StyleSheet.create({
     minHeight: 56,
     paddingVertical: 14,
     borderRadius: 28,
-    backgroundColor: COLORS.redSoft,
+    backgroundColor: LISTEN_ACCENT.surface,
     borderWidth: 1,
-    borderColor: "rgba(255,79,102,0.55)",
+    borderColor: LISTEN_ACCENT.selectedBorder,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -1073,8 +1168,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   choiceActive: {
-    borderColor: COLORS.red,
-    backgroundColor: COLORS.redSoft,
+    borderColor: LISTEN_ACCENT.base,
+    backgroundColor: LISTEN_ACCENT.surface,
   },
   choiceCorrect: {
     borderColor: COLORS.green,
@@ -1109,7 +1204,7 @@ const styles = StyleSheet.create({
     width: 82,
     height: 3,
     borderRadius: 3,
-    backgroundColor: COLORS.red,
+    backgroundColor: LISTEN_ACCENT.base,
     marginHorizontal: 8,
     marginTop: 18,
   },
@@ -1148,9 +1243,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 11,
     borderRadius: 16,
-    backgroundColor: COLORS.redSoft,
+    backgroundColor: LISTEN_ACCENT.surface,
     borderWidth: 1,
-    borderColor: COLORS.red,
+    borderColor: LISTEN_ACCENT.base,
   },
   wordText: {
     color: COLORS.text,
@@ -1218,7 +1313,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 12,
     borderRadius: 18,
-    backgroundColor: COLORS.red,
+    backgroundColor: LISTEN_ACCENT.base,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1228,7 +1323,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.line,
   },
   actionText: {
-    color: COLORS.text,
+    color: COLORS.bg,
   },
   secondaryText: {
     color: COLORS.muted,
@@ -1250,7 +1345,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.line,
   },
   footerTitle: {
-    color: COLORS.red,
+    color: LISTEN_ACCENT.base,
     marginBottom: 8,
   },
   footerText: {

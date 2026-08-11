@@ -20,23 +20,11 @@ import {
   type SpeechSessionPhase,
   type SpeechSessionTerminal,
 } from "../lib/speechSessionCore";
-
-export type SpeechTranscriptSession = Readonly<{
-  contextId: string | null;
-  generation: number;
-}>;
-
-type StartListeningOptions = {
-  contextualStrings?: readonly string[];
-  contextId?: string;
-};
-
-type UseKoreanSpeechRecognitionOptions = {
-  onFinalTranscript?: (
-    transcript: string,
-    session: SpeechTranscriptSession,
-  ) => void;
-};
+import type {
+  SpeechTranscriptSession,
+  StartListeningOptions,
+  UseKoreanSpeechRecognitionOptions,
+} from "./useKoreanSpeechRecognition.types";
 
 type StopNativeOptions = Readonly<{
   abort: boolean;

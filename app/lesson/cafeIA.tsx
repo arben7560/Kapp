@@ -3,65 +3,65 @@ import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ImageBackground,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
+    ImageBackground,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    View,
 } from "react-native";
 import {
-  SafeAreaView,
-  useSafeAreaInsets,
+    SafeAreaView,
+    useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
-import { AppBackButton } from "../../components/ui/app-back-button";
 import { CafeConversationSummaryModal } from "../../components/cafe/CafeConversationSummaryModal";
 import { GuidedSpeechTurn } from "../../components/GuidedSpeechTurn";
 import { ImmersiveMediaStatusOverlay } from "../../components/immersion/ImmersiveMediaStatusOverlay";
 import { ImmersiveStepProgress } from "../../components/immersion/ImmersiveStepProgress";
+import { AppBackButton } from "../../components/ui/app-back-button";
 import {
-  getImmersiveBottomPadding,
-  getImmersivePortraitMediaLayout,
-  IMMERSIVE_CONTENT_MAX_WIDTH,
-  IMMERSIVE_MIN_TOUCH_TARGET,
-  IMMERSIVE_VIDEO_VIEW_PROPS,
+    getImmersiveBottomPadding,
+    getImmersivePortraitMediaLayout,
+    IMMERSIVE_CONTENT_MAX_WIDTH,
+    IMMERSIVE_MIN_TOUCH_TARGET,
+    IMMERSIVE_VIDEO_VIEW_PROPS,
 } from "../../constants/immersive-layout";
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import {
-  cafeDialogueData,
-  type DialogueChoice,
-  type DialogueNode,
-  type DialogueScenario,
+    cafeDialogueData,
+    type DialogueChoice,
+    type DialogueNode,
+    type DialogueScenario,
 } from "../../data/lesson/cafe/cafe";
 import {
-  DEFAULT_CAFE_MISSION_ID,
-  getCafeMissionById,
-  getCafeMissionScenario,
+    DEFAULT_CAFE_MISSION_ID,
+    getCafeMissionById,
+    getCafeMissionScenario,
 } from "../../data/lesson/cafe/cafeMissions";
 import {
-  useKoreanSpeechRecognition,
-  type SpeechTranscriptSession,
-} from "../../hooks/hooks/useKoreanSpeechRecognition";
+    useKoreanSpeechRecognition,
+    type SpeechTranscriptSession,
+} from "../../hooks/useKoreanSpeechRecognition";
 import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import {
-  createCafeConversationMemory,
-  markCafeSpeechNodeCorrected,
-  recordCafeSpeechAttempt,
+    createCafeConversationMemory,
+    markCafeSpeechNodeCorrected,
+    recordCafeSpeechAttempt,
 } from "../../lib/cafeConversationMemory";
 import {
-  applyCafeOrderProductSelection,
-  EMPTY_CAFE_ORDER_STATE,
-  type CafeOrderState,
+    applyCafeOrderProductSelection,
+    EMPTY_CAFE_ORDER_STATE,
+    type CafeOrderState,
 } from "../../lib/cafeOrderState";
 import {
-  CAFE_SPEECH_PILOT_MISSION_ID,
-  getCafeSpeechAttemptPedagogy,
-  getCafeSpeechContextualStrings,
-  matchCafeSpeechIntent,
-  recordCafeSpeechRecoveryEvent,
+    CAFE_SPEECH_PILOT_MISSION_ID,
+    getCafeSpeechAttemptPedagogy,
+    getCafeSpeechContextualStrings,
+    matchCafeSpeechIntent,
+    recordCafeSpeechRecoveryEvent,
 } from "../../lib/cafeSpeechIntents";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
@@ -204,6 +204,11 @@ export default function CafeIaScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const mountedRef = useRef(true);
   const iaAutoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const choiceTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const transitionLockRef = useRef(false);
+  const exitLockRef = useRef(false);
   const hasAdvancedFromVideoRef = useRef(false);
   const hasReportedMissionCompleteRef = useRef(false);
 
@@ -308,6 +313,12 @@ export default function CafeIaScreen() {
   }, []);
 
   useEffect(() => {
+    if (choiceTransitionTimerRef.current) {
+      clearTimeout(choiceTransitionTimerRef.current);
+      choiceTransitionTimerRef.current = null;
+    }
+    transitionLockRef.current = false;
+    exitLockRef.current = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Route parameters select a new mission and require one atomic local reset.
     setCurrentNodeId(currentScenario.startNodeId);
     setOrderState(EMPTY_CAFE_ORDER_STATE);
@@ -326,10 +337,12 @@ export default function CafeIaScreen() {
     if (!isSceneEnded || hasReportedMissionCompleteRef.current) return;
 
     hasReportedMissionCompleteRef.current = true;
-    complete(buildProgressId("cafe", mode, missionId));
-    void completeDailyActivity(
-      isCafeSpeechPilot ? "voice_immersion" : "ai_mission",
-    );
+    void Promise.all([
+      complete(buildProgressId("cafe", mode, missionId)),
+      completeDailyActivity(
+        isCafeSpeechPilot ? "voice_immersion" : "ai_mission",
+      ),
+    ]);
   }, [complete, isCafeSpeechPilot, isSceneEnded, missionId, mode]);
 
   useEffect(() => {
@@ -337,6 +350,9 @@ export default function CafeIaScreen() {
     return () => {
       mountedRef.current = false;
       if (iaAutoTimerRef.current) clearTimeout(iaAutoTimerRef.current);
+      if (choiceTransitionTimerRef.current) {
+        clearTimeout(choiceTransitionTimerRef.current);
+      }
     };
   }, []);
 
@@ -470,17 +486,22 @@ export default function CafeIaScreen() {
 
   const handleChoice = useCallback(
     (choice: DialogueChoice, transitionDelay = 320) => {
-      if (isTransitioning || isSceneEnded) return;
+      if (transitionLockRef.current || isTransitioning || isSceneEnded) {
+        return;
+      }
 
+      transitionLockRef.current = true;
       setIsTransitioning(true);
       setSelectedChoiceId(choice.id);
       setOrderState((state) => applyCafeOrderProductSelection(state, choice));
 
-      setTimeout(() => {
+      choiceTransitionTimerRef.current = setTimeout(() => {
+        choiceTransitionTimerRef.current = null;
         if (!mountedRef.current) return;
         setCurrentNodeId(choice.nextNodeId);
         setSelectedChoiceId(null);
         setIsTransitioning(false);
+        transitionLockRef.current = false;
       }, transitionDelay);
     },
     [isSceneEnded, isTransitioning],
@@ -569,6 +590,15 @@ export default function CafeIaScreen() {
   );
 
   const handleStartSpeech = useCallback(() => {
+    if (
+      !isCafeSpeechPilot ||
+      currentNode?.type !== "user_choice" ||
+      isTransitioning ||
+      transitionLockRef.current
+    ) {
+      return;
+    }
+
     setSpeechUiNodeId(currentNodeId);
     setShowSpeechChoices(false);
     setSpeechFeedback(null);
@@ -577,14 +607,22 @@ export default function CafeIaScreen() {
       contextualStrings: speechContextualStrings,
       contextId: currentNodeId,
     });
-  }, [currentNodeId, speechContextualStrings, startListening]);
+  }, [
+    currentNode,
+    currentNodeId,
+    isCafeSpeechPilot,
+    isTransitioning,
+    speechContextualStrings,
+    startListening,
+  ]);
 
   const handleNeedHelp = useCallback(() => {
+    if (isTransitioning || transitionLockRef.current) return;
     cancelSpeechRecognition();
     setSpeechUiNodeId(currentNodeId);
     setShowSpeechChoices(true);
     setPendingSpeechChoice(null);
-  }, [cancelSpeechRecognition, currentNodeId]);
+  }, [cancelSpeechRecognition, currentNodeId, isTransitioning]);
 
   const handleConfirmSpeechIntent = useCallback(() => {
     if (!pendingSpeechChoice || speechUiNodeId !== currentNodeId) return;
@@ -605,6 +643,12 @@ export default function CafeIaScreen() {
 
   const handleRestart = () => {
     cancelSpeechRecognition();
+    if (choiceTransitionTimerRef.current) {
+      clearTimeout(choiceTransitionTimerRef.current);
+      choiceTransitionTimerRef.current = null;
+    }
+    transitionLockRef.current = false;
+    exitLockRef.current = false;
     setCurrentNodeId(currentScenario.startNodeId);
     setOrderState(EMPTY_CAFE_ORDER_STATE);
     setSelectedChoiceId(null);
@@ -620,7 +664,14 @@ export default function CafeIaScreen() {
   };
 
   const handleExit = useCallback(() => {
+    if (exitLockRef.current) return;
+    exitLockRef.current = true;
     cancelSpeechRecognition();
+    if (choiceTransitionTimerRef.current) {
+      clearTimeout(choiceTransitionTimerRef.current);
+      choiceTransitionTimerRef.current = null;
+    }
+    transitionLockRef.current = false;
     if (router.canGoBack()) {
       router.back();
       return;
@@ -685,10 +736,14 @@ export default function CafeIaScreen() {
             key={choice.id}
             accessibilityRole="button"
             accessibilityLabel={`${choice.korean}. ${choice.label}`}
-            accessibilityState={{ selected: isSelected }}
+            accessibilityState={{
+              disabled: isTransitioning,
+              selected: isSelected,
+            }}
             aria-selected={isSelected}
             hitSlop={6}
             onPress={() => handleChoice(choice)}
+            disabled={isTransitioning}
             style={({ pressed }) => [
               styles.choiceBtn,
               isSelected && {
@@ -734,7 +789,7 @@ export default function CafeIaScreen() {
     </View>
   ) : null;
 
-  if (!isPaywallLoading && !canEnterMission) {
+  if (!canEnterMission) {
     return null;
   }
 
@@ -790,7 +845,10 @@ export default function CafeIaScreen() {
             { paddingTop: Math.max(6, insets.top * 0.15) },
           ]}
         >
-          <AppBackButton accessibilityLabel="Quitter la scène" onPress={handleExit} />
+          <AppBackButton
+            accessibilityLabel="Quitter la scène"
+            onPress={handleExit}
+          />
         </View>
 
         <View style={styles.body}>
@@ -1060,6 +1118,7 @@ export default function CafeIaScreen() {
                     accent={PURPLE}
                     confirmationLabel={displayedConfirmationLabel}
                     feedback={displayedSpeechFeedback}
+                    interactionDisabled={isTransitioning}
                     intentionLabels={speechChoices.map(
                       (choice) => choice.label,
                     )}
