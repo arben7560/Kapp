@@ -673,3 +673,20 @@ test("Restaurant engage la source NPC dans la même transition que le node", () 
     /displayed native source follows the active IA node/u,
   );
 });
+
+test("Restaurant reprend la réponse vidéo une fois la session micro libérée", () => {
+  const runtime = readFileSync(
+    new URL("../app/lesson/restaurantIA.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(runtime, /phase: speechPhase/u);
+  assert.match(
+    runtime,
+    /speechPhase === "ended"[\s\S]*?speechPhase === "error"[\s\S]*?mediaStatus === "loaded"[\s\S]*?mediaStatus === "interrupted"/u,
+  );
+  assert.match(
+    runtime,
+    /currentNode\?\.type !== "ia"[\s\S]*?!currentVideoSource[\s\S]*?void resumeVideo\(\)/u,
+  );
+});

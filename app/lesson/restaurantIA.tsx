@@ -615,6 +615,7 @@ export default function RestaurantIaScreen() {
   );
 
   const {
+    phase: speechPhase,
     state: speechState,
     startListening,
     stopListening,
@@ -622,6 +623,34 @@ export default function RestaurantIaScreen() {
   } = useKoreanSpeechRecognition({
     onFinalTranscript: handleSpeechTranscript,
   });
+
+  useEffect(() => {
+    const microphoneHasReleased =
+      speechPhase === "ended" || speechPhase === "error";
+    const responseVideoIsWaiting =
+      mediaStatus === "loaded" || mediaStatus === "interrupted";
+
+    if (
+      !microphoneHasReleased ||
+      !responseVideoIsWaiting ||
+      currentNode?.type !== "ia" ||
+      !currentVideoSource ||
+      isTransitioning ||
+      isSceneEnded
+    ) {
+      return;
+    }
+
+    void resumeVideo();
+  }, [
+    currentNode,
+    currentVideoSource,
+    isSceneEnded,
+    isTransitioning,
+    mediaStatus,
+    resumeVideo,
+    speechPhase,
+  ]);
 
   useEffect(() => {
     cancelSpeechRecognition();

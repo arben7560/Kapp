@@ -77,6 +77,11 @@ export function useKoreanSpeechRecognition(
   );
   const transcriptRef = useRef("");
   const contextRef = useRef<SpeechTranscriptSession | null>(null);
+  const pendingFinalTranscriptRef = useRef<{
+    generation: number;
+    transcript: string;
+    session: SpeechTranscriptSession;
+  } | null>(null);
   const onFinalTranscriptRef = useRef(options.onFinalTranscript);
 
   const handlePhaseChange = useCallback((nextPhase: SpeechSessionPhase) => {
@@ -139,6 +144,17 @@ export function useKoreanSpeechRecognition(
     return promise;
   }, []);
 
+  const flushPendingFinalTranscript = useCallback((generation: number) => {
+    const pending = pendingFinalTranscriptRef.current;
+    if (!pending || pending.generation !== generation) return false;
+
+    pendingFinalTranscriptRef.current = null;
+    if (!mountedRef.current) return false;
+
+    onFinalTranscriptRef.current?.(pending.transcript, pending.session);
+    return true;
+  }, []);
+
   const handleTerminal = useCallback(
     ({ generation, reason }: SpeechSessionTerminal) => {
       if (reason === "timeout") {
@@ -150,14 +166,25 @@ export function useKoreanSpeechRecognition(
 
       if (coordinatorOwnsReleaseGenerationRef.current === generation) {
         dropOwnedLeaseForCoordinator(generation);
+        if (pendingFinalTranscriptRef.current?.generation === generation) {
+          pendingFinalTranscriptRef.current = null;
+        }
         return;
       }
 
-      void restoreOwnedLease(generation);
+      /*
+       * The dialogue must not advance until the recording lease has been
+       * restored. Otherwise the next NPC video races the microphone session.
+       */
+      void restoreOwnedLease(generation).then((released) => {
+        if (!released) return;
+        flushPendingFinalTranscript(generation);
+      });
     },
     [
       clearNativeGenerationRefs,
       dropOwnedLeaseForCoordinator,
+      flushPendingFinalTranscript,
       restoreOwnedLease,
     ],
   );
@@ -216,6 +243,9 @@ export function useKoreanSpeechRecognition(
       }
 
       transcriptRef.current = "";
+      if (pendingFinalTranscriptRef.current?.generation === generation) {
+        pendingFinalTranscriptRef.current = null;
+      }
       lifecycle.suppressFurtherResults(generation);
 
       const currentPhase = lifecycle.getPhase();
@@ -263,7 +293,11 @@ export function useKoreanSpeechRecognition(
 
       const session = contextRef.current;
       if (finalTranscript && session?.generation === generation) {
-        onFinalTranscriptRef.current?.(finalTranscript, session);
+        pendingFinalTranscriptRef.current = {
+          generation,
+          transcript: finalTranscript,
+          session,
+        };
       }
 
       return true;
@@ -287,13 +321,22 @@ export function useKoreanSpeechRecognition(
 
     if (event.isFinal) {
       const generation = lifecycle.getGeneration();
+
       if (deliverFinalTranscript(transcript)) {
-        void requestNativeStop(generation, {
-          abort: false,
+        /*
+         * `continuous: false` already makes Android finish the recognizer when
+         * a final result is emitted. Calling ExpoSpeechRecognitionModule.stop()
+         * again here can leave the native service permanently in "stopping".
+         *
+         * We only move the JS lifecycle into `stopping` and wait for the native
+         * `end` event that naturally follows the final result.
+         */
+        void lifecycle.beginStopping(generation, {
           acceptFinalResult: false,
           terminalPhase: "ended",
         });
       }
+
       return;
     }
 
@@ -389,11 +432,16 @@ export function useKoreanSpeechRecognition(
       }
 
       clearNativeGenerationRefs(generation);
-      return clearLifecycle();
+      const cleared = clearLifecycle();
+      if (cleared) {
+        flushPendingFinalTranscript(generation);
+      }
+      return cleared;
     },
     [
       clearNativeGenerationRefs,
       dropOwnedLeaseForCoordinator,
+      flushPendingFinalTranscript,
       lifecycle,
       restoreOwnedLease,
     ],
@@ -416,6 +464,28 @@ export function useKoreanSpeechRecognition(
       observedPhase === "starting" &&
       nativeActiveGenerationRef.current !== observedGeneration
     ) {
+      return;
+    }
+
+    const pendingFinal = pendingFinalTranscriptRef.current;
+
+    /*
+     * A final result in `continuous: false` is followed by the recognizer's own
+     * native `end`. On some Android services getStateAsync() still reports
+     * "stopping" while that `end` event is being dispatched. The event itself
+     * is the stronger signal here: it is documented as the final event after
+     * the recognition service disconnects.
+     *
+     * This fast path is generation-bound and only applies when this exact
+     * session already produced the final transcript that is waiting to advance
+     * the dialogue.
+     */
+    if (
+      observedPhase === "stopping" &&
+      pendingFinal?.generation === observedGeneration &&
+      lifecycle.getGeneration() === observedGeneration
+    ) {
+      finalizeNativeEnd();
       return;
     }
 
@@ -534,6 +604,9 @@ export function useKoreanSpeechRecognition(
       }
 
       transcriptRef.current = "";
+      if (pendingFinalTranscriptRef.current?.generation === generation) {
+        pendingFinalTranscriptRef.current = null;
+      }
       lifecycle.suppressFurtherResults(generation);
 
       if (currentPhase === "quarantined") {
@@ -579,14 +652,7 @@ export function useKoreanSpeechRecognition(
 
   const startListening = useCallback(
     async (startOptions: StartListeningOptions = {}) => {
-      let currentPhase = lifecycle.getPhase();
-
-      if (currentPhase === "stopping") {
-        const stoppingGeneration = lifecycle.getGeneration();
-        await lifecycle.waitForTerminal(stoppingGeneration);
-        currentPhase = lifecycle.getPhase();
-      }
-
+      const currentPhase = lifecycle.getPhase();
       const staleLease = leaseRef.current;
       if (
         staleLease &&
@@ -608,6 +674,7 @@ export function useKoreanSpeechRecognition(
 
       if (generation === null) return false;
 
+      pendingFinalTranscriptRef.current = null;
       transcriptRef.current = "";
       contextRef.current = {
         contextId: startOptions.contextId ?? null,
