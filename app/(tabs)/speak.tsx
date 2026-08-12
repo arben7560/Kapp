@@ -1,13 +1,15 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Image,
   ImageBackground,
   ImageSourcePropType,
   Modal,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -22,7 +24,6 @@ import {
 import { AppText } from "../../components/app-text";
 import { HubHero } from "../../components/hub/HubHero";
 import { SectionHeader } from "../../components/hub/SectionHeader";
-import { ModuleCard } from "../../components/ModuleCard";
 import { AppBackButton } from "../../components/ui/app-back-button";
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import { HubModuleAccents } from "../../constants/theme";
@@ -134,16 +135,6 @@ export default function SpeakScreen() {
   const [sheetVisible, setSheetVisible] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<ThemeKey | null>(null);
   const responsive = useResponsiveLayout({ maxWidth: 920 });
-  const gridColumns = responsive.getColumns({
-    minColumnWidth: 330,
-    maxColumns: 2,
-    gap: responsive.gridGap,
-  });
-  const gridItemWidth = responsive.getGridItemWidth(
-    gridColumns,
-    responsive.gridGap,
-  );
-
   const [screenEntryScale] = useState(() => new Animated.Value(1.05));
   const [screenEntryOpacity] = useState(() => new Animated.Value(0));
 
@@ -205,7 +196,7 @@ export default function SpeakScreen() {
 
               <HubHero
                 korean="대화"
-                title=""
+                title="Scène guidée"
                 subtitle="Choisir un lieu, vivre une situation, parler coréen."
                 badgeLabel="CONVERSATION"
                 accentColor={CONVERSATION_ACCENT.base}
@@ -225,12 +216,7 @@ export default function SpeakScreen() {
                 accentColor={CONVERSATION_ACCENT.base}
               />
 
-              <Scenes
-                onSelectTheme={openThemeSheet}
-                gridColumns={gridColumns}
-                gridItemWidth={gridItemWidth}
-                gridGap={responsive.gridGap}
-              />
+              <Scenes onSelectTheme={openThemeSheet} />
             </View>
           </ScrollView>
         </Animated.View>
@@ -247,40 +233,290 @@ export default function SpeakScreen() {
 
 function Scenes({
   onSelectTheme,
-  gridColumns,
-  gridItemWidth,
-  gridGap,
 }: {
   onSelectTheme: (theme: ThemeKey) => void;
-  gridColumns: number;
-  gridItemWidth: number | "100%";
-  gridGap: number;
 }) {
+  const listRef = useRef<Animated.FlatList<ThemeKey>>(null);
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const [viewportWidth, setViewportWidth] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const cardWidth = Math.min(Math.max(viewportWidth - 48, 260), 620);
+  const cardSpacing = (viewportWidth - cardWidth) / 2;
+  const mediaHeight = Math.min(Math.max(cardWidth * 1.05, 300), 460);
+
+  const scrollToIndex = (index: number) => {
+    const nextIndex =
+      (index + PUBLIC_THEME_KEYS.length) % PUBLIC_THEME_KEYS.length;
+
+    listRef.current?.scrollToOffset({
+      offset: nextIndex * cardWidth,
+      animated: true,
+    });
+    setActiveIndex(nextIndex);
+  };
+
+  const handleMomentumEnd = (
+    event: NativeSyntheticEvent<NativeScrollEvent>,
+  ) => {
+    if (!cardWidth) return;
+
+    const nextIndex = Math.round(event.nativeEvent.contentOffset.x / cardWidth);
+    setActiveIndex(
+      Math.max(0, Math.min(nextIndex, PUBLIC_THEME_KEYS.length - 1)),
+    );
+  };
+
   return (
     <View
-      style={[
-        styles.scenesGrid,
-        gridColumns > 1 && styles.scenesGridWide,
-        { gap: gridGap },
-      ]}
+      style={styles.carouselSection}
+      onLayout={(event) => setViewportWidth(event.nativeEvent.layout.width)}
     >
-      {PUBLIC_THEME_KEYS.map((key) => (
-        <View
-          key={key}
-          style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
-        >
-          <ModuleCard
-            title={THEME_CONFIG[key].title}
-            subtitle={THEME_CONFIG[key].sub}
-            icon={THEME_CONFIG[key].icon}
-            accentColor={THEME_CONFIG[key].accent}
-            metaLabel="SCÈNE"
-            accessibilityContext={`les options de la scène ${THEME_CONFIG[key].title}`}
-            onPress={() => onSelectTheme(key)}
-            visualVariant="legacyGlass"
-          />
-        </View>
-      ))}
+      {viewportWidth > 0 ? (
+        <Animated.FlatList
+          ref={listRef}
+          data={PUBLIC_THEME_KEYS}
+          keyExtractor={(item) => item}
+          horizontal
+          snapToInterval={cardWidth}
+          decelerationRate="fast"
+          showsHorizontalScrollIndicator={false}
+          overScrollMode="never"
+          scrollEventThrottle={16}
+          contentContainerStyle={{
+            paddingHorizontal: cardSpacing,
+          }}
+          onMomentumScrollEnd={handleMomentumEnd}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+            { useNativeDriver: true },
+          )}
+          getItemLayout={(_, index) => ({
+            length: cardWidth,
+            offset: cardWidth * index,
+            index,
+          })}
+          renderItem={({ item, index }) => {
+            const config = THEME_CONFIG[item];
+            const inputRange = [
+              (index - 1) * cardWidth,
+              index * cardWidth,
+              (index + 1) * cardWidth,
+            ];
+            const scale = scrollX.interpolate({
+              inputRange,
+              outputRange: [0.93, 1, 0.93],
+              extrapolate: "clamp",
+            });
+            const opacity = scrollX.interpolate({
+              inputRange,
+              outputRange: [0.55, 1, 0.55],
+              extrapolate: "clamp",
+            });
+
+            return (
+              <View style={{ width: cardWidth }}>
+                <Animated.View
+                  style={[
+                    styles.sceneCardMotion,
+                    {
+                      width: cardWidth - 12,
+                      alignSelf: "center",
+                      opacity,
+                      transform: [{ scale }],
+                      shadowColor: config.accent,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.sceneCard,
+                      { borderColor: `${config.accent}40` },
+                    ]}
+                  >
+                    <View style={[styles.sceneMedia, { height: mediaHeight }]}>
+                      <Image
+                        source={config.image}
+                        resizeMode="cover"
+                        style={styles.sceneImage}
+                      />
+
+                      <LinearGradient
+                        colors={[
+                          "rgba(2,3,6,0.1)",
+                          "rgba(2,3,6,0.2)",
+                          "rgba(2,3,6,0.75)",
+                        ]}
+                        locations={[0, 0.5, 1]}
+                        style={StyleSheet.absoluteFill}
+                      />
+
+                      <LinearGradient
+                        colors={[`${config.accent}20`, "transparent"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 0.9, y: 0.7 }}
+                        style={StyleSheet.absoluteFill}
+                      />
+
+                      <View style={styles.sceneTopRow}>
+                        <View
+                          style={[
+                            styles.sceneBadge,
+                            {
+                              borderColor: `${config.accent}52`,
+                              backgroundColor: `${config.accent}1C`,
+                            },
+                          ]}
+                        >
+                          <View
+                            style={[
+                              styles.sceneBadgeDot,
+                              { backgroundColor: config.accent },
+                            ]}
+                          />
+                          <AppText
+                            variant="sectionLabel"
+                            tone="strong"
+                            lineContract="singleLine"
+                          >
+                            IMMERSION
+                          </AppText>
+                        </View>
+                      </View>
+                    </View>
+
+                    <BlurView
+                      intensity={82}
+                      tint="dark"
+                      style={styles.sceneDock}
+                    >
+                      <LinearGradient
+                        colors={[
+                          `${config.accent}17`,
+                          "rgba(10,12,18,0.9)",
+                          "rgba(5,7,11,0.97)",
+                        ]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                      />
+
+                      <View
+                        pointerEvents="none"
+                        style={[
+                          styles.sceneDockAccent,
+                          { backgroundColor: config.accent },
+                        ]}
+                      >
+                        <View
+                          style={[
+                            styles.sceneDockAccentGlow,
+                            { backgroundColor: config.accent },
+                          ]}
+                        />
+                      </View>
+
+                      <View style={styles.sceneDockHeader}>
+                        <View style={styles.sceneDockCopy}>
+                          <AppText
+                            variant="sceneTitle"
+                            tone="strong"
+                            lineContract="singleLine"
+                          >
+                            {config.title}
+                          </AppText>
+                          <AppText
+                            variant="subtitle"
+                            tone="muted"
+                            lineContract="singleLine"
+                            style={styles.sceneSubtitle}
+                          >
+                            {config.sub}
+                          </AppText>
+                        </View>
+                      </View>
+
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Ouvrir les options de la scène ${config.title}`}
+                        onPress={() => onSelectTheme(item)}
+                        style={({ pressed }) => [
+                          styles.sceneAction,
+                          {
+                            borderColor: `${config.accent}42`,
+                            backgroundColor: pressed
+                              ? `${config.accent}26`
+                              : `${config.accent}14`,
+                            transform: [{ scale: pressed ? 0.985 : 1 }],
+                          },
+                        ]}
+                      >
+                        <AppText variant="button" tone="strong">
+                          Explorer la scène
+                        </AppText>
+
+                        <View
+                          style={[
+                            styles.sceneActionArrow,
+                            {
+                              borderColor: `${config.accent}48`,
+                              backgroundColor: `${config.accent}16`,
+                            },
+                          ]}
+                        >
+                          <View
+                            style={[
+                              styles.inlineChevron,
+                              {
+                                borderColor: config.accent,
+                                transform: [{ rotate: "45deg" }],
+                              },
+                            ]}
+                          />
+                        </View>
+                      </Pressable>
+                    </BlurView>
+                  </View>
+                </Animated.View>
+              </View>
+            );
+          }}
+        />
+      ) : null}
+
+      <View
+        style={styles.pagination}
+        accessibilityRole="tablist"
+        accessibilityLabel="Sélection des scènes"
+      >
+        {PUBLIC_THEME_KEYS.map((key, index) => {
+          const active = index === activeIndex;
+          const accent = THEME_CONFIG[key].accent;
+
+          return (
+            <Pressable
+              key={key}
+              accessibilityRole="tab"
+              accessibilityLabel={THEME_CONFIG[key].title}
+              accessibilityState={{ selected: active }}
+              onPress={() => scrollToIndex(index)}
+              hitSlop={8}
+              style={styles.paginationHitArea}
+            >
+              <View
+                style={[
+                  styles.paginationDot,
+                  active && styles.paginationDotActive,
+                  active && {
+                    backgroundColor: accent,
+                    shadowColor: accent,
+                  },
+                ]}
+              />
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -587,7 +823,7 @@ function ThemeModeSheet({
 
                 <View style={styles.sheetOptions}>
                   <SheetOptionCard
-                    title="Entre dans la scène"
+                    title="Choisi la scène"
                     subtitle="Entre dans la situation, écoute et réponds comme sur place."
                     icon="IA"
                     accent={config.accent}
@@ -657,356 +893,394 @@ function SheetOptionCard({
       onPressOut={pressOut}
     >
       <Animated.View
-        style={[styles.optionCard, { transform: [{ scale: scaleAnim }] }]}
+        style={[
+          styles.sheetOptionCard,
+          {
+            borderColor: `${accent}33`,
+            transform: [{ scale: scaleAnim }],
+          },
+        ]}
       >
-        <BlurView intensity={76} tint="dark" style={styles.optionBlur}>
-          <LinearGradient
-            colors={[
-              `${accent}14`,
-              `${accent}06`,
-              "rgba(255,255,255,0.018)",
-              "transparent",
-            ]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={StyleSheet.absoluteFill}
-          />
+        <View
+          style={[
+            styles.sheetOptionIconBox,
+            {
+              borderColor: `${accent}40`,
+              backgroundColor: `${accent}14`,
+            },
+          ]}
+        >
+          <AppText variant="label" tone="strong" align="center">
+            {icon}
+          </AppText>
+        </View>
 
-          <LinearGradient
-            colors={["rgba(255,255,255,0.05)", "transparent"]}
-            start={{ x: 0.1, y: 0 }}
-            end={{ x: 0.85, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
+        <View style={styles.sheetOptionText}>
+          <AppText variant="button" tone="strong">
+            {title}
+          </AppText>
+          <AppText variant="caption" tone="soft" style={styles.sheetOptionSub}>
+            {subtitle}
+          </AppText>
+        </View>
 
-          <View style={[styles.optionAccent, { backgroundColor: accent }]} />
-
+        <View
+          style={[
+            styles.sheetOptionChevron,
+            {
+              borderColor: `${accent}48`,
+              backgroundColor: `${accent}12`,
+            },
+          ]}
+        >
           <View
             style={[
-              styles.optionIconBox,
+              styles.inlineChevron,
               {
-                borderColor: `${accent}38`,
-                backgroundColor: `${accent}13`,
+                borderColor: accent,
+                transform: [{ rotate: "45deg" }],
               },
             ]}
-          >
-            <AppText
-              variant="label"
-              tone="strong"
-              align="center"
-              lineContract="singleLine"
-            >
-              {icon}
-            </AppText>
-          </View>
-
-          <View style={styles.optionTextBlock}>
-            <View style={styles.optionTitleRow}>
-              <AppText
-                variant="cardTitle"
-                tone="strong"
-                lineContract="twoLines"
-              >
-                {title}
-              </AppText>
-            </View>
-
-            <AppText
-              variant="bodySecondary"
-              tone="muted"
-              lineContract="twoLines"
-            >
-              {subtitle}
-            </AppText>
-          </View>
-
-          <View style={styles.optionArrowWrap}>
-            <AppText variant="sectionTitle" tone="soft" align="end">
-              ›
-            </AppText>
-          </View>
-        </BlurView>
+          />
+        </View>
       </Animated.View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: BG_DEEP },
-  bgImage: { flex: 1, overflow: "hidden" },
-  bgImageAsset: { width: "100%", height: "100%" },
-
-  scrollContent: {
-    paddingTop: 10,
-    paddingBottom: 120,
+  safe: {
+    flex: 1,
+    backgroundColor: BG_DEEP,
   },
-  contentFrame: {
-    width: "100%",
-    alignSelf: "center",
+  bgImage: {
+    flex: 1,
   },
-  navHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 0,
+  bgImageAsset: {
+    opacity: 0.38,
   },
-  backBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  hero: {
-    marginTop: 0,
-  },
-  heroKorean: {
-    color: "rgba(245,252,255,0.98)",
-  },
-
-  bgDarkOverlay: {
-    ...ABSOLUTE_FILL,
-    backgroundColor: `rgba(0,0,0,${SPEAK_BACKGROUND_DARKNESS})`,
-  },
-
   bgBlur: {
     ...ABSOLUTE_FILL,
   },
-
-  scenesGrid: { gap: 12 },
-  scenesGridWide: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "stretch",
+  bgDarkOverlay: {
+    ...ABSOLUTE_FILL,
+    backgroundColor: `rgba(2, 3, 6, ${SPEAK_BACKGROUND_DARKNESS})`,
+  },
+  scrollContent: {
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  contentFrame: {
+    width: "100%",
+  },
+  navHeader: {
+    marginBottom: 8,
+  },
+  backBtn: {
+    alignSelf: "flex-start",
+  },
+  hero: {
+    marginBottom: 20,
+  },
+  heroKorean: {
+    fontSize: 32,
   },
 
-  // ──────────────────────────────────────────────
-  // REFINED SHEET
-  // ──────────────────────────────────────────────
-  sheetRoot: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-
-  sheetBackdrop: {
-    backgroundColor: "rgba(0,0,0,0.76)",
-  },
-
-  sheetAnimatedWrap: {
+  // Carousel Layout & Styling
+  carouselSection: {
     width: "100%",
     alignItems: "center",
-    justifyContent: "flex-end",
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    marginTop: 8,
   },
-
-  sheetAmbientGlow: {
-    position: "absolute",
-    bottom: 210,
-    alignSelf: "center",
-    width: 260,
-    height: 160,
-    borderRadius: 999,
-    opacity: 0.62,
-  },
-
-  sheetWrap: {
-    overflow: "hidden",
-    borderRadius: 28,
-    paddingHorizontal: 10,
-    paddingTop: 8,
-    paddingBottom: 14,
-    borderWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.16)",
-    borderLeftColor: "rgba(255,255,255,0.07)",
-    borderRightColor: "rgba(255,255,255,0.07)",
-    borderBottomColor: "rgba(255,255,255,0.05)",
-    backgroundColor: "rgba(7,9,14,0.78)",
-  },
-
-  sheetScroll: {
-    flexShrink: 1,
-  },
-
-  sheetScrollContent: {
-    paddingBottom: 2,
-  },
-
-  sheetTopSpecular: {
-    position: "absolute",
-    top: 0,
-    left: 46,
-    right: 46,
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.22)",
-    opacity: 0.7,
-  },
-
-  sheetHandle: {
-    width: 40,
-    height: 4,
-    backgroundColor: "rgba(255,255,255,0.22)",
-    borderRadius: 999,
-    alignSelf: "center",
-    marginTop: 4,
-    marginBottom: 10,
-  },
-
-  sheetHeroFrame: {
-    borderRadius: 22,
-    overflow: "hidden",
-    borderWidth: 1,
-    backgroundColor: "rgba(255,255,255,0.04)",
+  sceneCardMotion: {
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.28,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 12 },
+    shadowRadius: 20,
+    elevation: 8,
   },
-
-  sheetHeroImg: {
-    ...StyleSheet.absoluteFillObject,
+  sceneCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    overflow: "hidden",
+    backgroundColor: "#080B11",
+  },
+  sceneMedia: {
+    width: "100%",
+    position: "relative",
+    justifyContent: "flex-end",
+  },
+  sceneImage: {
+    ...ABSOLUTE_FILL,
     width: "100%",
     height: "100%",
   },
+  sceneTopRow: {
+    position: "absolute",
+    top: 14,
+    left: 14,
+    right: 14,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  sceneBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 6,
+  },
+  sceneBadgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  sceneModePillTop: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
 
-  sheetHeroCopy: {
+  // Scene Dock Bottom Area
+  sceneDock: {
+    padding: 16,
+    position: "relative",
+    overflow: "hidden",
+  },
+  sceneDockAccent: {
+    position: "absolute",
+    top: 0,
+    left: 16,
+    right: 16,
+    height: 2,
+    borderRadius: 1,
+  },
+  sceneDockAccentGlow: {
+    ...ABSOLUTE_FILL,
+    opacity: 0.6,
+    transform: [{ scaleY: 3 }],
+  },
+  sceneDockHeader: {
+    marginBottom: 14,
+  },
+  sceneDockCopy: {
+    width: "100%",
+  },
+  sceneSubtitle: {
+    marginTop: 2,
+  },
+  sceneAction: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  sceneActionArrow: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  inlineChevron: {
+    width: 7,
+    height: 7,
+    borderTopWidth: 2,
+    borderRightWidth: 2,
+    marginRight: 2,
+  },
+
+  // Pagination
+  pagination: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 18,
+    marginBottom: 8,
+  },
+  paginationHitArea: {
+    padding: 4,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "rgba(255,255,255,0.22)",
+  },
+  paginationDotActive: {
+    width: 24,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+
+  // Modal Sheet
+  sheetRoot: {
     flex: 1,
     justifyContent: "flex-end",
-    paddingHorizontal: 16,
-    paddingTop: 44,
-    paddingBottom: 14,
+    alignItems: "center",
   },
-
+  sheetBackdrop: {
+    backgroundColor: "rgba(2,3,6,0.78)",
+  },
+  sheetAnimatedWrap: {
+    width: "100%",
+    alignItems: "center",
+  },
+  sheetAmbientGlow: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    height: 240,
+    borderRadius: 120,
+    transform: [{ scaleX: 1.5 }],
+    opacity: 0.8,
+  },
+  sheetWrap: {
+    borderRadius: 32,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    overflow: "hidden",
+    backgroundColor: "rgba(10,13,20,0.85)",
+  },
+  sheetTopSpecular: {
+    position: "absolute",
+    top: 0,
+    left: 24,
+    right: 24,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.25)",
+  },
+  sheetHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignSelf: "center",
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  sheetScroll: {
+    width: "100%",
+  },
+  sheetScrollContent: {
+    padding: 16,
+  },
+  sheetHeroFrame: {
+    width: "100%",
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: "hidden",
+    position: "relative",
+    justifyContent: "flex-end",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+  },
+  sheetHeroImg: {
+    ...ABSOLUTE_FILL,
+    width: "100%",
+    height: "100%",
+  },
   sheetCloseIcon: {
     position: "absolute",
-    top: 4,
-    right: 4,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    top: 10,
+    right: 12,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "rgba(0,0,0,0.45)",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(8,10,16,0.58)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.16)",
+    zIndex: 10,
   },
-
-  sheetMetaRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 7,
-    marginTop: 10,
-    paddingHorizontal: 2,
+  sheetHeroCopy: {
+    padding: 14,
   },
-
-  sheetMetaPill: {
-    flexGrow: 1,
-    flexBasis: 96,
-    minHeight: 30,
-    borderRadius: 999,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.035)",
-  },
-
-  sheetBody: {
-    paddingHorizontal: 4,
-    paddingTop: 14,
-  },
-
   sheetKickerRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 7,
-    marginBottom: 5,
+    gap: 6,
+    marginBottom: 2,
   },
-
   sheetStatusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 999,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
-
   sheetSub: {
+    marginTop: 1,
+  },
+  sheetMetaRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  sheetMetaPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    backgroundColor: "rgba(255,255,255,0.04)",
+  },
+  sheetBody: {
+    gap: 12,
+  },
+  sheetModeHeader: {
+    gap: 2,
+  },
+  sheetSectionHint: {
     marginTop: 2,
   },
-
-  sheetModeHeader: {
-    marginBottom: 12,
-  },
-
-  sheetSectionHint: {
-    marginTop: 4,
-  },
-
   sheetOptions: {
     gap: 10,
+    marginTop: 8,
   },
-
-  optionCard: {
-    borderRadius: 24,
-    overflow: "hidden",
-  },
-
-  optionBlur: {
-    minHeight: 78,
-    borderRadius: 24,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    backgroundColor: "rgba(255,255,255,0.035)",
+  sheetOptionCard: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 13,
-    paddingLeft: 16,
-    paddingRight: 13,
-    position: "relative",
+    padding: 12,
+    borderRadius: 18,
+    borderWidth: 1,
+    backgroundColor: "rgba(255,255,255,0.03)",
+    gap: 12,
   },
-
-  optionAccent: {
-    position: "absolute",
-    left: 0,
-    top: 15,
-    bottom: 15,
-    width: 3.5,
-    borderTopRightRadius: 8,
-    borderBottomRightRadius: 8,
-  },
-
-  optionIconBox: {
+  sheetOptionIconBox: {
     width: 42,
     height: 42,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 12,
   },
-
-  optionTextBlock: {
+  sheetOptionText: {
     flex: 1,
-    paddingRight: 10,
   },
-
-  optionTitleRow: {
-    flexDirection: "row",
+  sheetOptionSub: {
+    marginTop: 2,
+  },
+  sheetOptionChevron: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
     alignItems: "center",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 5,
-  },
-
-  optionArrowWrap: {
-    width: 24,
-    alignItems: "flex-end",
     justifyContent: "center",
   },
-
   sheetCloseButton: {
-    marginTop: 12,
-    alignSelf: "center",
-    paddingHorizontal: 22,
-    paddingVertical: 10,
-    borderRadius: 999,
+    marginTop: 16,
+    paddingVertical: 12,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.06)",
   },
 });

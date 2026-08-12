@@ -1,7 +1,6 @@
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
-import * as Speech from "@/lib/speechPlayback";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   Animated,
   Easing,
@@ -17,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../../components/app-text";
 import { AppBackButton } from "../../components/ui/app-back-button";
 import { RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../constants/layout";
-import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
+import { useVocAudio } from "../../hooks/useVocAudio";
 
 import { restaurantDialogueData } from "../../data/lesson/restaurantLesson";
 
@@ -32,6 +31,38 @@ const COLORS = {
 };
 
 const RESTAURANT_IMAGE = require("../../assets/images/restaurant.jpg");
+
+const RESTAURANT_EXPRESSION_AUDIO: Record<Scene["id"], readonly number[]> = {
+  ai: [
+    require("../../assets/ai/restaurant-memo/serveur-1.mp3"),
+    require("../../assets/ai/restaurant-memo/serveur-2.mp3"),
+    require("../../assets/ai/restaurant-memo/serveur-3.mp3"),
+    require("../../assets/ai/restaurant-memo/serveur-4.mp3"),
+    require("../../assets/ai/restaurant-memo/serveur-5.mp3"),
+    require("../../assets/ai/restaurant-memo/serveur-6.mp3"),
+    require("../../assets/ai/restaurant-memo/serveur-7.mp3"),
+    require("../../assets/ai/restaurant-memo/serveur-8.mp3"),
+    require("../../assets/ai/restaurant-memo/serveur-9.mp3"),
+    require("../../assets/ai/restaurant-memo/serveur-10.mp3"),
+    require("../../assets/ai/restaurant-memo/serveur-11.mp3"),
+    require("../../assets/ai/restaurant-memo/serveur-12.mp3"),
+    require("../../assets/ai/restaurant-memo/serveur-13.mp3"),
+    require("../../assets/ai/restaurant-memo/serveur-14.mp3"),
+    require("../../assets/ai/restaurant-memo/serveur-15.mp3"),
+    require("../../assets/ai/restaurant-memo/serveur-16.mp3"),
+  ],
+  user: [
+    require("../../assets/ai/restaurant-memo/client-1.mp3"),
+    require("../../assets/ai/restaurant-memo/client-2.mp3"),
+    require("../../assets/ai/restaurant-memo/client-3.mp3"),
+    require("../../assets/ai/restaurant-memo/client-4.mp3"),
+    require("../../assets/ai/restaurant-memo/client-5.mp3"),
+    require("../../assets/ai/restaurant-memo/client-6.mp3"),
+    require("../../assets/ai/restaurant-memo/client-7.mp3"),
+    require("../../assets/ai/restaurant-memo/client-8.mp3"),
+    require("../../assets/ai/restaurant-memo/client-9.mp3"),
+  ],
+};
 
 type DialogueLine = {
   char: string;
@@ -253,28 +284,17 @@ const buildScenes = (): Scene[] => {
 };
 
 export default function RestaurantLesson() {
-  useSpeechLifecycle();
   const scenes = useMemo(() => buildScenes(), []);
   const [activeScene, setActiveScene] = useState<Scene>(scenes[0]);
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
 
-  const bgFadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    setSelectedWord(null);
-    Speech.stop();
-  }, [activeScene]);
-
-  useEffect(() => {
-    return () => {
-      Speech.stop();
-    };
-  }, []);
+  const [bgFadeAnim] = useState(() => new Animated.Value(0));
 
   const handleBack = useCallback(() => {
-    Speech.stop();
+    stopAudio();
 
     if (router.canGoBack()) {
       router.back();
@@ -282,26 +302,17 @@ export default function RestaurantLesson() {
     }
 
     router.replace("/(tabs)");
-  }, []);
+  }, [stopAudio]);
 
-  const speak = (text: string, id: string) => {
-    Speech.stop();
-    setSelectedWord(id);
+  const playExpression = (audioSource: number, id: string) => {
     Vibration.vibrate(8);
-
-    Speech.speak(text, {
-      language: "ko-KR",
-      rate: 0.78,
-      pitch: 1,
-      onDone: () => setSelectedWord(null),
-      onStopped: () => setSelectedWord(null),
-      onError: () => setSelectedWord(null),
-    });
+    void playAudio(audioSource, id);
   };
 
   const handleSceneChange = (scene: Scene) => {
     if (scene.id === activeScene.id) return;
 
+    stopAudio();
     setPreviousBackground(activeScene.image);
     bgFadeAnim.setValue(1);
     setActiveScene(scene);
@@ -389,12 +400,13 @@ export default function RestaurantLesson() {
             <View style={styles.expressionGrid}>
               {activeScene.expressions.map((exp, i) => {
                 const cardId = `${activeScene.id}-${i}`;
+                const audioSource = RESTAURANT_EXPRESSION_AUDIO[activeScene.id][i];
                 const isActive = selectedWord === cardId;
 
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() => speak(exp.word, cardId)}
+                    onPress={() => playExpression(audioSource, cardId)}
                     style={({ pressed }) => [
                       styles.expPressable,
                       pressed && { transform: [{ scale: 0.985 }] },

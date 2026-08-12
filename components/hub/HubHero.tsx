@@ -11,7 +11,7 @@ import {
 
 import { AppText } from "@/components/app-text";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { AppTypography, SeoulMidnightGlass } from "@/constants/theme";
+import { SeoulMidnightGlass } from "@/constants/theme";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 
 export type HubHeroProps = {
@@ -28,7 +28,6 @@ export type HubHeroProps = {
   badgeBorderColor?: string;
   badgeBackgroundColor?: string;
   badgeTextColor?: string;
-  reserveTitleSpaceWhenEmpty?: boolean;
   style?: StyleProp<ViewStyle>;
   contentStyle?: StyleProp<ViewStyle>;
   koreanStyle?: StyleProp<TextStyle>;
@@ -48,7 +47,6 @@ export function HubHero({
   badgeBorderColor,
   badgeBackgroundColor,
   badgeTextColor,
-  reserveTitleSpaceWhenEmpty = false,
   style,
   contentStyle,
   koreanStyle,
@@ -172,18 +170,14 @@ export function HubHero({
           </AppText>
         </Animated.View>
 
-        {title ? (
-          <AppText
-            accessibilityRole="header"
-            variant="screenTitle"
-            align="center"
-            style={styles.title}
-          >
-            {title}
-          </AppText>
-        ) : reserveTitleSpaceWhenEmpty ? (
-          <View style={styles.titleSpacer} />
-        ) : null}
+        <AppText
+          accessibilityRole="header"
+          variant="screenTitle"
+          align="center"
+          style={styles.title}
+        >
+          {title}
+        </AppText>
 
         <StatusBadge
           label={badgeLabel}
@@ -246,9 +240,6 @@ const styles = StyleSheet.create({
   },
   title: {
     marginTop: 0,
-  },
-  titleSpacer: {
-    height: AppTypography.screenTitle.lineHeight,
   },
   badge: {
     alignSelf: "center",

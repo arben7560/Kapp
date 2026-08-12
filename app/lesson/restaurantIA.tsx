@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -15,6 +15,7 @@ import {
 } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
+import { GuidedSpeechTurn } from "../../components/GuidedSpeechTurn";
 import { AppText } from "../../components/app-text";
 import { AppBackButton } from "../../components/ui/app-back-button";
 import { ImmersiveMediaStatusOverlay } from "../../components/immersion/ImmersiveMediaStatusOverlay";
@@ -35,15 +36,24 @@ import {
 } from "../../data/lesson/restaurant/restaurant";
 import {
   DEFAULT_RESTAURANT_MISSION_ID,
+  RESTAURANT_SPEECH_MISSION_ID,
   getRestaurantMissionById,
   getRestaurantMissionScenario,
 } from "../../data/lesson/restaurant/restaurantMissions";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
+import {
+  useKoreanSpeechRecognition,
+  type SpeechTranscriptSession,
+} from "../../hooks/useKoreanSpeechRecognition";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { buildProgressId } from "../../lib/progressIds";
 import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
+import {
+  getRestaurantSpeechContextualStrings,
+  matchRestaurantSpeechIntent,
+} from "../../lib/restaurantSpeechIntents";
 
 // ==================== DESIGN SYSTEM ====================
 const BG_DEEP = "#050508";
@@ -77,6 +87,10 @@ const RESTAURANT_MISSION_PHRASES: Record<
   "pay-receipt": {
     korean: "영수증 주세요.",
     french: "Le reçu, s’il vous plaît.",
+  },
+  [RESTAURANT_SPEECH_MISSION_ID]: {
+    korean: "감사합니다. 잘 먹었습니다.",
+    french: "Merci, j’ai bien mangé.",
   },
 };
 
@@ -199,6 +213,9 @@ export default function RestaurantIaScreen() {
   const currentMission =
     getRestaurantMissionById(missionId) ??
     getRestaurantMissionById(DEFAULT_RESTAURANT_MISSION_ID);
+  const isRestaurantSpeechEnabled =
+    mode === "guided" &&
+    currentMission?.id === RESTAURANT_SPEECH_MISSION_ID;
   const missionPhrase =
     RESTAURANT_MISSION_PHRASES[currentMission?.id ?? ""] ??
     RESTAURANT_MISSION_PHRASES[DEFAULT_RESTAURANT_MISSION_ID];
@@ -216,6 +233,7 @@ export default function RestaurantIaScreen() {
   const exitLockRef = useRef(false);
   const hasAdvancedFromVideoRef = useRef(false);
   const hasReportedMissionCompleteRef = useRef(false);
+  const speechAttemptCountRef = useRef<Record<string, number>>({});
 
   const currentScenario = useMemo(() => {
     const missionScenario = currentMission
@@ -238,6 +256,11 @@ export default function RestaurantIaScreen() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isSceneEnded, setIsSceneEnded] = useState(false);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
+  const [showSpeechChoices, setShowSpeechChoices] = useState(false);
+  const [speechFeedback, setSpeechFeedback] = useState<string | null>(null);
+  const [speechUiNodeId, setSpeechUiNodeId] = useState<string | null>(null);
+  const [pendingSpeechChoice, setPendingSpeechChoice] =
+    useState<DialogueChoice | null>(null);
   const [videoRetryKey, setVideoRetryKey] = useState(0);
 
   const [lastIaTranscript, setLastIaTranscript] = useState<{
@@ -334,6 +357,11 @@ export default function RestaurantIaScreen() {
     setIsSceneEnded(false);
     setIsTranscriptOpen(false);
     setLastIaTranscript(null);
+    setShowSpeechChoices(false);
+    setSpeechFeedback(null);
+    setSpeechUiNodeId(null);
+    setPendingSpeechChoice(null);
+    speechAttemptCountRef.current = {};
     hasAdvancedFromVideoRef.current = false;
     hasReportedMissionCompleteRef.current = false;
   }, [currentScenario]);
@@ -344,9 +372,17 @@ export default function RestaurantIaScreen() {
     hasReportedMissionCompleteRef.current = true;
     void Promise.all([
       complete(buildProgressId("restaurant", mode, missionId)),
-      completeDailyActivity("ai_mission"),
+      completeDailyActivity(
+        isRestaurantSpeechEnabled ? "voice_immersion" : "ai_mission",
+      ),
     ]);
-  }, [complete, isSceneEnded, missionId, mode]);
+  }, [
+    complete,
+    isRestaurantSpeechEnabled,
+    isSceneEnded,
+    missionId,
+    mode,
+  ]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -489,27 +525,144 @@ export default function RestaurantIaScreen() {
     return () => clearTimeout(t);
   }, [currentNodeId]);
 
-  const handleChoice = (choice: DialogueChoice) => {
-    if (transitionLockRef.current || isTransitioning || isSceneEnded) return;
+  const handleChoice = useCallback(
+    (choice: DialogueChoice, transitionDelay = 320) => {
+      if (transitionLockRef.current || isTransitioning || isSceneEnded) return;
 
-    transitionLockRef.current = true;
-    setIsTransitioning(true);
-    setSelectedChoiceId(choice.id);
+      transitionLockRef.current = true;
+      setIsTransitioning(true);
+      setSelectedChoiceId(choice.id);
 
-    choiceTransitionTimerRef.current = setTimeout(() => {
-      choiceTransitionTimerRef.current = null;
-      if (!mountedRef.current) return;
-      setMaxProgressIndex((current) =>
-        Math.max(current, getProgressIndex(choice.nextNodeId)),
+      choiceTransitionTimerRef.current = setTimeout(() => {
+        choiceTransitionTimerRef.current = null;
+        if (!mountedRef.current) return;
+        setMaxProgressIndex((current) =>
+          Math.max(current, getProgressIndex(choice.nextNodeId)),
+        );
+        setCurrentNodeId(choice.nextNodeId);
+        setSelectedChoiceId(null);
+        setIsTransitioning(false);
+        transitionLockRef.current = false;
+      }, transitionDelay);
+    },
+    [isSceneEnded, isTransitioning],
+  );
+
+  const isUserChoice = currentNode?.type === "user_choice";
+  const speechChoices = useMemo(
+    () => (isUserChoice ? currentNode.choices || [] : []),
+    [currentNode, isUserChoice],
+  );
+  const speechContextualStrings = useMemo(
+    () => getRestaurantSpeechContextualStrings(speechChoices),
+    [speechChoices],
+  );
+
+  const handleSpeechTranscript = useCallback(
+    (transcript: string, session: SpeechTranscriptSession) => {
+      if (session.contextId !== currentNodeId) return;
+      if (
+        !isRestaurantSpeechEnabled ||
+        currentNode?.type !== "user_choice"
+      ) {
+        return;
+      }
+
+      const attemptNumber =
+        (speechAttemptCountRef.current[currentNode.id] ?? 0) + 1;
+      speechAttemptCountRef.current[currentNode.id] = attemptNumber;
+      const result = matchRestaurantSpeechIntent(
+        transcript,
+        currentNode.choices || [],
+        attemptNumber,
       );
-      setCurrentNodeId(choice.nextNodeId);
-      setSelectedChoiceId(null);
-      setIsTransitioning(false);
-      transitionLockRef.current = false;
-    }, 320);
-  };
+
+      setSpeechUiNodeId(currentNode.id);
+      setSpeechFeedback(result.feedback);
+
+      if (result.reason === "matched" && result.choice) {
+        setPendingSpeechChoice(null);
+        handleChoice(result.choice, result.feedback ? 1750 : 320);
+        return;
+      }
+
+      setPendingSpeechChoice(
+        result.reason === "uncertain" ? result.choice : null,
+      );
+    },
+    [
+      currentNode,
+      currentNodeId,
+      handleChoice,
+      isRestaurantSpeechEnabled,
+    ],
+  );
+
+  const {
+    state: speechState,
+    startListening,
+    stopListening,
+    cancel: cancelSpeechRecognition,
+  } = useKoreanSpeechRecognition({
+    onFinalTranscript: handleSpeechTranscript,
+  });
+
+  useEffect(() => {
+    cancelSpeechRecognition();
+  }, [cancelSpeechRecognition, currentNodeId, currentScenario]);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => cancelSpeechRecognition();
+    }, [cancelSpeechRecognition]),
+  );
+
+  const handleStartSpeech = useCallback(() => {
+    if (
+      !isRestaurantSpeechEnabled ||
+      currentNode?.type !== "user_choice" ||
+      isTransitioning ||
+      transitionLockRef.current
+    ) {
+      return;
+    }
+
+    setSpeechUiNodeId(currentNodeId);
+    setShowSpeechChoices(false);
+    setSpeechFeedback(null);
+    setPendingSpeechChoice(null);
+    void startListening({
+      contextualStrings: speechContextualStrings,
+      contextId: currentNodeId,
+    });
+  }, [
+    currentNode,
+    currentNodeId,
+    isRestaurantSpeechEnabled,
+    isTransitioning,
+    speechContextualStrings,
+    startListening,
+  ]);
+
+  const handleNeedHelp = useCallback(() => {
+    if (isTransitioning || transitionLockRef.current) return;
+    cancelSpeechRecognition();
+    setSpeechUiNodeId(currentNodeId);
+    setShowSpeechChoices(true);
+    setPendingSpeechChoice(null);
+  }, [cancelSpeechRecognition, currentNodeId, isTransitioning]);
+
+  const handleConfirmSpeechIntent = useCallback(() => {
+    if (!pendingSpeechChoice || speechUiNodeId !== currentNodeId) return;
+
+    const confirmedChoice = pendingSpeechChoice;
+    setSpeechFeedback(null);
+    setPendingSpeechChoice(null);
+    handleChoice(confirmedChoice);
+  }, [currentNodeId, handleChoice, pendingSpeechChoice, speechUiNodeId]);
 
   const handleRestart = () => {
+    cancelSpeechRecognition();
     if (choiceTransitionTimerRef.current) {
       clearTimeout(choiceTransitionTimerRef.current);
       choiceTransitionTimerRef.current = null;
@@ -523,6 +676,11 @@ export default function RestaurantIaScreen() {
     setIsSceneEnded(false);
     setIsTranscriptOpen(false);
     setLastIaTranscript(null);
+    setShowSpeechChoices(false);
+    setSpeechFeedback(null);
+    setSpeechUiNodeId(null);
+    setPendingSpeechChoice(null);
+    speechAttemptCountRef.current = {};
     hasAdvancedFromVideoRef.current = false;
     hasReportedMissionCompleteRef.current = false;
   };
@@ -530,6 +688,7 @@ export default function RestaurantIaScreen() {
   const handleExit = useCallback(() => {
     if (exitLockRef.current) return;
     exitLockRef.current = true;
+    cancelSpeechRecognition();
     if (choiceTransitionTimerRef.current) {
       clearTimeout(choiceTransitionTimerRef.current);
       choiceTransitionTimerRef.current = null;
@@ -541,15 +700,13 @@ export default function RestaurantIaScreen() {
     }
 
     router.replace("/(tabs)");
-  }, []);
+  }, [cancelSpeechRecognition]);
 
   const handleRetryVideo = useCallback(() => {
     hasAdvancedFromVideoRef.current = false;
     markMediaLoading();
     setVideoRetryKey((current) => current + 1);
   }, [markMediaLoading]);
-
-  const isUserChoice = currentNode?.type === "user_choice";
 
   const isReviewableTranscript =
     currentNode?.type === "user_choice" && !!lastIaTranscript;
@@ -572,6 +729,86 @@ export default function RestaurantIaScreen() {
     !shouldCollapseTranscript &&
     typeof transcriptFrench === "string" &&
     transcriptFrench.trim().length > 0;
+
+  const speechUiMatchesCurrentNode = speechUiNodeId === currentNodeId;
+  const displayedSpeechFeedback = speechUiMatchesCurrentNode
+    ? speechFeedback
+    : null;
+  const displayedConfirmationLabel =
+    speechUiMatchesCurrentNode && pendingSpeechChoice
+      ? pendingSpeechChoice.label
+          .replace(/[.!?]+$/u, "")
+          .toLocaleLowerCase("fr-FR")
+      : null;
+  const shouldShowSpeechChoices =
+    speechUiMatchesCurrentNode &&
+    (showSpeechChoices ||
+      speechState.status === "permission-denied" ||
+      speechState.status === "unavailable");
+
+  const currentChoicesGrid = (
+    <View style={styles.choicesGrid}>
+      {currentNode?.choices?.map((choice) => {
+        const isSelected = selectedChoiceId === choice.id;
+        const accent = mode === "real" ? CYAN : PURPLE;
+
+        return (
+          <Pressable
+            key={choice.id}
+            accessibilityRole="button"
+            accessibilityLabel={`${choice.korean}. ${choice.label}`}
+            accessibilityState={{
+              disabled: isTransitioning,
+              selected: isSelected,
+            }}
+            aria-selected={isSelected}
+            hitSlop={6}
+            onPress={() => handleChoice(choice)}
+            disabled={isTransitioning}
+            style={({ pressed }) => [
+              styles.choiceBtn,
+              isSelected && {
+                borderColor: accent,
+                backgroundColor: "rgba(255,255,255,0.08)",
+              },
+              pressed && { opacity: 0.92 },
+            ]}
+          >
+            <View
+              pointerEvents="none"
+              style={[
+                styles.choiceGlow,
+                {
+                  backgroundColor:
+                    mode === "real"
+                      ? "rgba(34,211,238,0.08)"
+                      : "rgba(168,85,247,0.10)",
+                },
+              ]}
+            />
+
+            <AppText
+              variant="koreanSecondary"
+              tone="strong"
+              script="korean"
+              accessibilityLanguage="ko-KR"
+              style={styles.choiceKr}
+            >
+              {choice.korean}
+            </AppText>
+            <AppText
+              variant="bodySecondary"
+              tone="muted"
+              script="latin"
+              style={styles.choiceFr}
+            >
+              {choice.label}
+            </AppText>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
 
   if (!canEnterMission) {
     return null;
@@ -859,67 +1096,28 @@ export default function RestaurantIaScreen() {
                   </View>
                 </View>
               ) : isUserChoice ? (
-                <View style={styles.choicesGrid}>
-                  {currentNode?.choices?.map((choice) => {
-                    const isSelected = selectedChoiceId === choice.id;
-                    const accent = mode === "real" ? CYAN : PURPLE;
-
-                    return (
-                      <Pressable
-                        key={choice.id}
-                        accessibilityRole="button"
-                        accessibilityLabel={`${choice.korean}. ${choice.label}`}
-                        accessibilityState={{
-                          disabled: isTransitioning,
-                          selected: isSelected,
-                        }}
-                        aria-selected={isSelected}
-                        hitSlop={6}
-                        onPress={() => handleChoice(choice)}
-                        disabled={isTransitioning}
-                        style={({ pressed }) => [
-                          styles.choiceBtn,
-                          isSelected && {
-                            borderColor: accent,
-                            backgroundColor: "rgba(255,255,255,0.08)",
-                          },
-                          pressed && { opacity: 0.92 },
-                        ]}
-                      >
-                        <View
-                          pointerEvents="none"
-                          style={[
-                            styles.choiceGlow,
-                            {
-                              backgroundColor:
-                                mode === "real"
-                                  ? "rgba(34,211,238,0.08)"
-                                  : "rgba(168,85,247,0.10)",
-                            },
-                          ]}
-                        />
-
-                        <AppText
-                          variant="koreanSecondary"
-                          tone="strong"
-                          script="korean"
-                          accessibilityLanguage="ko-KR"
-                          style={styles.choiceKr}
-                        >
-                          {choice.korean}
-                        </AppText>
-                        <AppText
-                          variant="bodySecondary"
-                          tone="muted"
-                          script="latin"
-                          style={styles.choiceFr}
-                        >
-                          {choice.label}
-                        </AppText>
-                      </Pressable>
-                    );
-                  })}
-                </View>
+                isRestaurantSpeechEnabled ? (
+                  <GuidedSpeechTurn
+                    accent={PURPLE}
+                    confirmationLabel={displayedConfirmationLabel}
+                    feedback={displayedSpeechFeedback}
+                    interactionDisabled={isTransitioning}
+                    intentionLabels={speechChoices.map(
+                      (choice) => choice.label,
+                    )}
+                    onConfirm={handleConfirmSpeechIntent}
+                    onHelp={handleNeedHelp}
+                    onRetry={handleStartSpeech}
+                    onStart={handleStartSpeech}
+                    onStop={stopListening}
+                    showChoices={shouldShowSpeechChoices}
+                    speechState={speechState}
+                  >
+                    {currentChoicesGrid}
+                  </GuidedSpeechTurn>
+                ) : (
+                  currentChoicesGrid
+                )
               ) : (
                 <View style={styles.waitingCard}>
                   <View style={styles.waitingPulseRow}>

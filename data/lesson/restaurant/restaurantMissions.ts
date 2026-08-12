@@ -6,11 +6,16 @@ export type RestaurantMissionScenarioKey =
   | "ask_recommendation"
   | "choose_grill"
   | "add_sides"
-  | "pay_receipt";
+  | "pay_receipt"
+  | "restaurant_vocal";
 
-export type RestaurantMission = ImmersionMission<RestaurantMissionScenarioKey>;
+export type RestaurantMission =
+  ImmersionMission<RestaurantMissionScenarioKey> & {
+    missionKind: "complete" | "mini";
+  };
 
 export const DEFAULT_RESTAURANT_MISSION_ID = "order-simple";
+export const RESTAURANT_SPEECH_MISSION_ID = "restaurant-vocal";
 
 export const restaurantMissions: RestaurantMission[] = [
   {
@@ -22,6 +27,7 @@ export const restaurantMissions: RestaurantMission[] = [
     objective: "Commander sans te perdre.",
     goals: ["Commander", "Confirmer", "Payer"],
     scenarioKey: "order_simple",
+    missionKind: "complete",
   },
   {
     id: "ask-recommendation",
@@ -32,6 +38,7 @@ export const restaurantMissions: RestaurantMission[] = [
     objective: "Choisir après conseil.",
     goals: ["Demander", "Choisir", "Confirmer"],
     scenarioKey: "ask_recommendation",
+    missionKind: "complete",
   },
   {
     id: "choose-grill",
@@ -42,6 +49,7 @@ export const restaurantMissions: RestaurantMission[] = [
     objective: "Réagir pendant le repas.",
     goals: ["Commander", "Demander de l’aide", "Continuer"],
     scenarioKey: "choose_grill",
+    missionKind: "complete",
   },
   {
     id: "add-sides",
@@ -52,6 +60,7 @@ export const restaurantMissions: RestaurantMission[] = [
     objective: "Ajouter quelque chose naturellement.",
     goals: ["Choisir", "Ajouter", "Confirmer"],
     scenarioKey: "add_sides",
+    missionKind: "complete",
   },
   {
     id: "pay-receipt",
@@ -62,6 +71,19 @@ export const restaurantMissions: RestaurantMission[] = [
     objective: "Payer sans hésitation.",
     goals: ["Payer", "Reçu", "Remercier"],
     scenarioKey: "pay_receipt",
+    missionKind: "complete",
+  },
+  {
+    id: RESTAURANT_SPEECH_MISSION_ID,
+    title: "Commander au restaurant",
+    subtitle: "Commande ton repas et réponds au serveur à l’oral.",
+    access: "premium",
+    duration: "5-7 min",
+    objective:
+      "Commander oralement dans un BBQ coréen, de la viande jusqu’au reçu.",
+    goals: ["Commande", "Cuisson", "Accompagnements", "Paiement"],
+    scenarioKey: "restaurant_vocal",
+    missionKind: "mini",
   },
 ];
 
@@ -105,6 +127,8 @@ export function getRestaurantMissionScenario(
   const missionScenario = cloneScenario(scenario);
 
   switch (scenarioKey) {
+    case "restaurant_vocal":
+      break;
     case "order_simple":
       keepChoices(missionScenario, "ped_meat_choice", [
         "ped_order_samgyeopsal",

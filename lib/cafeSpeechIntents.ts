@@ -174,7 +174,7 @@ const ORDER_ACTION_TOKENS = [
   "조각",
 ] as const;
 
-const CAFE_SPEECH_MORPHOLOGY_FAMILIES = {
+export const CAFE_SPEECH_MORPHOLOGY_FAMILIES = {
   calculate: {
     radical: "계산하-",
     forms: ["계산하", "계산해", "계산할", "계산합", "계산했", "계산하겠"],
@@ -372,8 +372,8 @@ export const CAFE_SPEECH_LINGUISTIC_RULES = {
   },
 } as const satisfies Record<string, CafeSpeechLinguisticRule>;
 
-const CAFE_CLASSIFIERS = ["잔", "조각", "개", "병", "그릇", "명", "분", "대"] as const;
-const CAFE_QUANTITIES = [
+export const CAFE_CLASSIFIERS = ["잔", "조각", "개", "병", "그릇", "명", "분", "대"] as const;
+export const CAFE_QUANTITIES = [
   "한",
   "두",
   "세",
@@ -392,7 +392,7 @@ const CAFE_QUANTITIES = [
   "4",
 ] as const;
 
-const NEGATION_TOKENS = [
+export const NEGATION_TOKENS = [
   "안",
   "않",
   "아니",

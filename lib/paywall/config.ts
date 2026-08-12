@@ -6,7 +6,8 @@ const IS_DEVELOPMENT =
     : process.env.NODE_ENV !== "production";
 
 export const DEV_UNLOCK_ALL =
-  IS_DEVELOPMENT && process.env.EXPO_PUBLIC_DEV_UNLOCK_ALL !== "0";
+  (IS_DEVELOPMENT && process.env.EXPO_PUBLIC_DEV_UNLOCK_ALL !== "0") ||
+  process.env.EXPO_PUBLIC_INTERNAL_PREMIUM_ACCESS === "1";
 
 export const ENABLE_NATIVE_IAP =
   process.env.EXPO_PUBLIC_ENABLE_NATIVE_IAP === "1" ||

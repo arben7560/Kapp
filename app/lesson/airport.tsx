@@ -1,6 +1,5 @@
 import { BlurView } from "expo-blur";
-import * as Speech from "@/lib/speechPlayback";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Animated,
   Easing,
@@ -15,7 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../../components/app-text";
 import { AppBackButton } from "../../components/ui/app-back-button";
-import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
+import { useVocAudio } from "../../hooks/useVocAudio";
 
 import { ABSOLUTE_FILL, RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../constants/layout";
 
@@ -29,6 +28,33 @@ const COLORS = {
 };
 
 const AIRPORT_IMAGE = require("../../assets/images/airport.jpg");
+
+const AIRPORT_EXPRESSION_AUDIO: Record<Scene["id"], readonly number[]> = {
+  agent: [
+    require("../../assets/ai/aeroport-memo/agent-1.mp3"),
+    require("../../assets/ai/aeroport-memo/agent-2.mp3"),
+    require("../../assets/ai/aeroport-memo/agent-3.mp3"),
+    require("../../assets/ai/aeroport-memo/agent-4.mp3"),
+    require("../../assets/ai/aeroport-memo/agent-5.mp3"),
+    require("../../assets/ai/aeroport-memo/agent-6.mp3"),
+    require("../../assets/ai/aeroport-memo/agent-7.mp3"),
+    require("../../assets/ai/aeroport-memo/agent-8.mp3"),
+    require("../../assets/ai/aeroport-memo/agent-9.mp3"),
+    require("../../assets/ai/aeroport-memo/agent-10.mp3"),
+  ],
+  traveler: [
+    require("../../assets/ai/aeroport-memo/voyageur-1.mp3"),
+    require("../../assets/ai/aeroport-memo/voyageur-2.mp3"),
+    require("../../assets/ai/aeroport-memo/voyageur-3.mp3"),
+    require("../../assets/ai/aeroport-memo/voyageur-4.mp3"),
+    require("../../assets/ai/aeroport-memo/voyageur-5.mp3"),
+    require("../../assets/ai/aeroport-memo/voyageur-6.mp3"),
+    require("../../assets/ai/aeroport-memo/voyageur-7.mp3"),
+    require("../../assets/ai/aeroport-memo/voyageur-8.mp3"),
+    require("../../assets/ai/aeroport-memo/voyageur-9.mp3"),
+    require("../../assets/ai/aeroport-memo/voyageur-10.mp3"),
+  ],
+};
 
 type Expression = {
   word: string;
@@ -200,39 +226,22 @@ const SCENES: Scene[] = [
 ];
 
 export default function AirportLessonScreen() {
-  useSpeechLifecycle();
   const [activeScene, setActiveScene] = useState<Scene>(SCENES[0]);
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
   const [bgFadeAnim] = useState(() => new Animated.Value(0));
 
-  useEffect(() => {
-    return () => {
-      Speech.stop();
-    };
-  }, []);
-
-  const speak = (text: string, id: string) => {
-    Speech.stop();
-    setSelectedWord(id);
+  const playExpression = (audioSource: number, id: string) => {
     Vibration.vibrate(8);
-
-    Speech.speak(text, {
-      language: "ko-KR",
-      rate: 0.78,
-      pitch: 1,
-      onDone: () => setSelectedWord(null),
-      onStopped: () => setSelectedWord(null),
-      onError: () => setSelectedWord(null),
-    });
+    void playAudio(audioSource, id);
   };
 
   const handleSceneChange = (scene: Scene) => {
     if (scene.id === activeScene.id) return;
 
-    setSelectedWord(null);
-    Speech.stop();
+    stopAudio();
     setPreviousBackground(activeScene.image);
     bgFadeAnim.setValue(1);
     setActiveScene(scene);
@@ -320,12 +329,13 @@ export default function AirportLessonScreen() {
             <View style={styles.expressionGrid}>
               {activeScene.expressions.map((exp, i) => {
                 const cardId = `${activeScene.id}-${i}`;
+                const audioSource = AIRPORT_EXPRESSION_AUDIO[activeScene.id][i];
                 const isActive = selectedWord === cardId;
 
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() => speak(exp.word, cardId)}
+                    onPress={() => playExpression(audioSource, cardId)}
                     style={({ pressed }) => [
                       styles.expPressable,
                       pressed && { transform: [{ scale: 0.985 }] },
