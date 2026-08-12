@@ -338,6 +338,27 @@ test("un mauvais nombre important ne peut pas faire avancer la commande", () => 
   }
 });
 
+test("une bonne quantité après retry reste sur le même tour puis rejoint le NPC", () => {
+  const invalid = matchRestaurantSpeechIntent(
+    "삼겹살 한 인분 주세요.",
+    meatChoices,
+    1,
+  );
+  assert.equal(invalid.reason, "needs-help");
+  assert.equal(invalid.category, "wrong-quantity");
+  assert.equal(invalid.choice, null);
+
+  const retried = matchRestaurantSpeechIntent(
+    "삼겹살 두 인분 주세요.",
+    meatChoices,
+    2,
+  );
+  assert.equal(retried.reason, "matched");
+  assert.equal(retried.choice?.id, "ped_order_samgyeopsal");
+  assert.equal(retried.choice?.nextNodeId, "ped_confirm_samgyeopsal");
+  assert.equal(scenario.nodes[retried.choice?.nextNodeId]?.type, "ia");
+});
+
 test("une viande sans quantité demande confirmation au lieu d’inventer deux portions", () => {
   const result = matchRestaurantSpeechIntent("삼겹살 주세요", meatChoices);
   assert.equal(result.reason, "uncertain");
@@ -609,5 +630,46 @@ test("le runtime Restaurant réutilise l’UI et le hook vocaux communs", () => 
   assert.match(
     source,
     /currentMission\?\.id === RESTAURANT_SPEECH_MISSION_ID/,
+  );
+});
+
+test("chaque succès vocal Restaurant cible un NPC avec une vidéo déclarée", () => {
+  const runtime = readFileSync(
+    new URL("../app/lesson/restaurantIA.tsx", import.meta.url),
+    "utf8",
+  );
+
+  for (const node of Object.values(scenario.nodes)) {
+    if (node.type !== "user_choice") continue;
+
+    for (const choice of node.choices ?? []) {
+      const nextNode = scenario.nodes[choice.nextNodeId];
+      assert.equal(nextNode?.type, "ia", `${node.id}.${choice.id}`);
+      assert.match(
+        runtime,
+        new RegExp(`\\b${choice.nextNodeId}:`, "u"),
+        `${choice.nextNodeId} doit résoudre un asset vidéo`,
+      );
+    }
+  }
+});
+
+test("Restaurant engage la source NPC dans la même transition que le node", () => {
+  const runtime = readFileSync(
+    new URL("../app/lesson/restaurantIA.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    runtime,
+    /const nextNode = currentScenario\.nodes\[choice\.nextNodeId\][\s\S]*?const nextVideoSource = getNodeVideoSource\(nextNode\)[\s\S]*?setDisplayedVideoSource\(nextVideoSource\)[\s\S]*?setCurrentNodeId\(choice\.nextNodeId\)/u,
+  );
+  assert.match(
+    runtime,
+    /setShowSpeechChoices\(false\);[\s\S]*?setSpeechFeedback\(null\);[\s\S]*?setSpeechUiNodeId\(null\);[\s\S]*?setPendingSpeechChoice\(null\);[\s\S]*?\}, \[currentNodeId\]\);/u,
+  );
+  assert.doesNotMatch(
+    runtime,
+    /displayed native source follows the active IA node/u,
   );
 });

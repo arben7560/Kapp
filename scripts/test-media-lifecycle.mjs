@@ -402,6 +402,37 @@ test("session B and a double microphone press are blocked while A is live", () =
   assert.ok(generationB > generationA);
 });
 
+test("an explicit retry waits for the stopping speech generation", async () => {
+  const { lifecycle } = createSpeechHarness();
+  const generationA = lifecycle.request();
+
+  lifecycle.markStarting(generationA);
+  lifecycle.markActive(generationA);
+  void lifecycle.beginStopping(generationA, {
+    acceptFinalResult: false,
+    terminalPhase: "ended",
+  });
+
+  let retryRequested = false;
+  const retry = (async () => {
+    const stoppingGeneration = lifecycle.getGeneration();
+    await lifecycle.waitForTerminal(stoppingGeneration);
+    retryRequested = true;
+    return lifecycle.request();
+  })();
+
+  await Promise.resolve();
+  assert.equal(retryRequested, false);
+  assert.equal(lifecycle.getPhase(), "stopping");
+
+  lifecycle.end();
+
+  const generationB = await retry;
+  assert.equal(retryRequested, true);
+  assert.ok(generationB > generationA);
+  assert.equal(lifecycle.getPhase(), "requested");
+});
+
 test("a speech timeout quarantines A and blocks B until A end is absorbed", () => {
   const { lifecycle, terminals, timers } = createSpeechHarness();
 
@@ -866,6 +897,11 @@ test("speech recognition uses an explicit safe iOS category", () => {
 
   assert.match(hook, /return lifecycle\.waitForTerminal\(generation\)/u);
 
+  assert.match(
+    hook,
+    /currentPhase === "stopping"[\s\S]*?await lifecycle\.waitForTerminal\(stoppingGeneration\)[\s\S]*?lifecycle\.request\(\)/u,
+  );
+
   assert.match(hook, /Native events have no session id[\s\S]*?return;/u);
 });
 
@@ -891,7 +927,11 @@ test("Expo Go speech recognition stays behind a dependency-free facade", () => {
 });
 
 test("all immersive speech starts carry the current node context", () => {
-  for (const path of ["app/lesson/cafeIA.tsx", "app/lesson/metroIA.tsx"]) {
+  for (const path of [
+    "app/lesson/cafeIA.tsx",
+    "app/lesson/metroIA.tsx",
+    "app/lesson/restaurantIA.tsx",
+  ]) {
     const scene = source(path);
 
     assert.match(scene, /from "\.\.\/\.\.\/hooks\/useKoreanSpeechRecognition"/u, path);

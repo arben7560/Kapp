@@ -6,15 +6,18 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
-    },
-    "preview": {
-      "developmentClient": false,
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_INTERNAL_PREMIUM_ACCESS": "1",
         "EXPO_PUBLIC_ENABLE_NATIVE_IAP": "0"
       },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "preview": {
+      "developmentClient": false,
+      "distribution": "internal",
       "android": {
         "buildType": "apk"
       }

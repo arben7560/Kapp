@@ -579,7 +579,14 @@ export function useKoreanSpeechRecognition(
 
   const startListening = useCallback(
     async (startOptions: StartListeningOptions = {}) => {
-      const currentPhase = lifecycle.getPhase();
+      let currentPhase = lifecycle.getPhase();
+
+      if (currentPhase === "stopping") {
+        const stoppingGeneration = lifecycle.getGeneration();
+        await lifecycle.waitForTerminal(stoppingGeneration);
+        currentPhase = lifecycle.getPhase();
+      }
+
       const staleLease = leaseRef.current;
       if (
         staleLease &&

@@ -190,6 +190,10 @@ function attachRestaurantVideosToScenario(
   return { ...scenario, nodes };
 }
 
+function getNodeVideoSource(node?: DialogueNodeWithVideo) {
+  return node?.videoSources?.[0] ?? node?.videoSource ?? null;
+}
+
 function getAutoAdvanceDelay(node: DialogueNodeWithVideo, mode: ModeType) {
   const textLength = (node.korean?.length || 0) + (node.french?.length || 0);
   const base = mode === "real" ? 2600 : 2200;
@@ -278,11 +282,7 @@ export default function RestaurantIaScreen() {
   );
   const steps = ["Commande", "Viande", "Accomp.", "Paiement", "Final"];
 
-  const videoSources =
-    currentNode?.videoSources ||
-    (currentNode?.videoSource ? [currentNode.videoSource] : []);
-
-  const currentVideoSource = videoSources.length > 0 ? videoSources[0] : null;
+  const currentVideoSource = getNodeVideoSource(currentNode);
 
   const player = useVideoPlayer(null, (playerInstance) => {
     playerInstance.loop = false;
@@ -305,14 +305,6 @@ export default function RestaurantIaScreen() {
     router.replace("/premium");
   }, [canEnterMission, isPaywallLoading]);
 
-  useEffect(() => {
-    if (!canEnterMission) return;
-    if (currentNode?.type === "ia" && currentVideoSource) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- The displayed native source follows the active IA node.
-      setDisplayedVideoSource(currentVideoSource);
-    }
-  }, [canEnterMission, currentNode, currentVideoSource]);
-
   const { width: avatarFrameWidth, height: avatarFrameHeight } =
     getImmersivePortraitMediaLayout({
       contentWidth: responsive.contentWidth,
@@ -320,27 +312,35 @@ export default function RestaurantIaScreen() {
     });
   const avatarVideoHeight = avatarFrameHeight;
 
-  const goToNextNode = useCallback((node?: DialogueNodeWithVideo) => {
-    if (!node || !mountedRef.current) return;
+  const goToNextNode = useCallback(
+    (node?: DialogueNodeWithVideo) => {
+      if (!node || !mountedRef.current) return;
 
-    if (node.type === "ia") {
-      setLastIaTranscript({
-        korean: node.korean || "...",
-        french: node.french,
-      });
-    }
+      if (node.type === "ia") {
+        setLastIaTranscript({
+          korean: node.korean || "...",
+          french: node.french,
+        });
+      }
 
-    const nextNodeId = node.nextNodeId;
+      const nextNodeId = node.nextNodeId;
 
-    if (nextNodeId) {
-      setMaxProgressIndex((current) =>
-        Math.max(current, getProgressIndex(nextNodeId)),
-      );
-      setCurrentNodeId(nextNodeId);
-    } else {
-      setIsSceneEnded(true);
-    }
-  }, []);
+      if (nextNodeId) {
+        const nextNode = currentScenario.nodes[nextNodeId] as
+          | DialogueNodeWithVideo
+          | undefined;
+        const nextVideoSource = getNodeVideoSource(nextNode);
+        if (nextVideoSource) setDisplayedVideoSource(nextVideoSource);
+        setMaxProgressIndex((current) =>
+          Math.max(current, getProgressIndex(nextNodeId)),
+        );
+        setCurrentNodeId(nextNodeId);
+      } else {
+        setIsSceneEnded(true);
+      }
+    },
+    [currentScenario],
+  );
 
   useEffect(() => {
     if (choiceTransitionTimerRef.current) {
@@ -351,6 +351,13 @@ export default function RestaurantIaScreen() {
     exitLockRef.current = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Route parameters select a new mission and require one atomic local reset.
     setCurrentNodeId(currentScenario.startNodeId);
+    setDisplayedVideoSource(
+      getNodeVideoSource(
+        currentScenario.nodes[
+          currentScenario.startNodeId
+        ] as DialogueNodeWithVideo,
+      ),
+    );
     setMaxProgressIndex(getProgressIndex(currentScenario.startNodeId));
     setSelectedChoiceId(null);
     setIsTransitioning(false);
@@ -397,8 +404,12 @@ export default function RestaurantIaScreen() {
 
   useEffect(() => {
     hasAdvancedFromVideoRef.current = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Transcript visibility is scoped to the active dialogue node.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Node-scoped transcript and speech UI must not leak into the next turn.
     setIsTranscriptOpen(false);
+    setShowSpeechChoices(false);
+    setSpeechFeedback(null);
+    setSpeechUiNodeId(null);
+    setPendingSpeechChoice(null);
 
     if (iaAutoTimerRef.current) {
       clearTimeout(iaAutoTimerRef.current);
@@ -536,6 +547,11 @@ export default function RestaurantIaScreen() {
       choiceTransitionTimerRef.current = setTimeout(() => {
         choiceTransitionTimerRef.current = null;
         if (!mountedRef.current) return;
+        const nextNode = currentScenario.nodes[choice.nextNodeId] as
+          | DialogueNodeWithVideo
+          | undefined;
+        const nextVideoSource = getNodeVideoSource(nextNode);
+        if (nextVideoSource) setDisplayedVideoSource(nextVideoSource);
         setMaxProgressIndex((current) =>
           Math.max(current, getProgressIndex(choice.nextNodeId)),
         );
@@ -545,7 +561,7 @@ export default function RestaurantIaScreen() {
         transitionLockRef.current = false;
       }, transitionDelay);
     },
-    [isSceneEnded, isTransitioning],
+    [currentScenario, isSceneEnded, isTransitioning],
   );
 
   const isUserChoice = currentNode?.type === "user_choice";
@@ -670,6 +686,13 @@ export default function RestaurantIaScreen() {
     transitionLockRef.current = false;
     exitLockRef.current = false;
     setCurrentNodeId(currentScenario.startNodeId);
+    setDisplayedVideoSource(
+      getNodeVideoSource(
+        currentScenario.nodes[
+          currentScenario.startNodeId
+        ] as DialogueNodeWithVideo,
+      ),
+    );
     setMaxProgressIndex(getProgressIndex(currentScenario.startNodeId));
     setSelectedChoiceId(null);
     setIsTransitioning(false);
