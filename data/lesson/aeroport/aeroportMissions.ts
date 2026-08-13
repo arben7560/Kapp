@@ -2,6 +2,7 @@ import type { ImmersionMission } from "../../../lib/immersion/missions";
 
 export type AeroportMissionScenarioKey =
   | "go_seoul_station"
+  | "arrival_voice"
   | "buy_tmoney"
   | "choose_arex"
   | "find_platform"
@@ -21,6 +22,17 @@ export const aeroportMissions: AeroportMission[] = [
     objective: "Trouver le train vers Seoul Station.",
     goals: ["Demander", "Comprendre", "Partir"],
     scenarioKey: "go_seoul_station",
+  },
+  {
+    id: "arrival-assistance",
+    title: "Arrivée guidée à Incheon",
+    subtitle: "Demande ton chemin à l’oral, étape par étape.",
+    access: "premium",
+    duration: "4-6 min",
+    objective: "Trouver l’AREX et le quai vers Seoul Station.",
+    skills: ["Demander", "Choisir", "Vérifier"],
+    goals: ["Demander le chemin", "Choisir le train", "Trouver le quai"],
+    scenarioKey: "arrival_voice",
   },
   {
     id: "buy-tmoney",
@@ -250,6 +262,56 @@ export function applyAeroportMissionToScenario<TScenario extends ScenarioLike>(
         "ia_time_repeat",
         "user_after_time",
         "user_after_time_after_repeat",
+        [],
+        thanksChoice ? [thanksChoice] : [],
+      );
+      break;
+    case "arrival_voice":
+      keepChoices(scenario, "user_start", ["choice_ask_seoul_station"]);
+      keepChoices(scenario, "user_after_welcome", [
+        "repeat_welcome",
+        "choice_ready",
+      ]);
+      redirectRepeatToCleanChoices(
+        scenario,
+        "ia_welcome_repeat",
+        "user_after_welcome",
+        "user_after_welcome_after_repeat",
+        ["choice_ready"],
+      );
+      keepChoices(scenario, "user_after_transport", [
+        "repeat_transport",
+        "choice_which_train",
+      ]);
+      redirectRepeatToCleanChoices(
+        scenario,
+        "ia_transport_repeat",
+        "user_after_transport",
+        "user_after_transport_after_repeat",
+        ["choice_which_train"],
+      );
+      keepChoices(scenario, "user_after_recommend", [
+        "repeat_recommend",
+        "choice_platform_after_recommend",
+      ]);
+      redirectRepeatToCleanChoices(
+        scenario,
+        "ia_recommend_repeat",
+        "user_after_recommend",
+        "user_after_recommend_after_repeat",
+        ["choice_platform_after_recommend"],
+      );
+      keepChoices(
+        scenario,
+        "user_after_platform",
+        ["repeat_platform"],
+        thanksChoice ? [thanksChoice] : [],
+      );
+      redirectRepeatToCleanChoices(
+        scenario,
+        "ia_platform_repeat",
+        "user_after_platform",
+        "user_after_platform_after_repeat",
         [],
         thanksChoice ? [thanksChoice] : [],
       );

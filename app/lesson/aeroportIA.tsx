@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -16,6 +16,8 @@ import {
 
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { AeroportConversationSummaryModal } from "../../components/aeroport/AeroportConversationSummaryModal";
+import { GuidedSpeechTurn } from "../../components/GuidedSpeechTurn";
 import { AppBackButton } from "../../components/ui/app-back-button";
 import { ImmersiveMediaStatusOverlay } from "../../components/immersion/ImmersiveMediaStatusOverlay";
 import { ImmersiveStepProgress } from "../../components/immersion/ImmersiveStepProgress";
@@ -35,6 +37,22 @@ import {
 } from "../../data/lesson/aeroport/aeroportMissions";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
+import {
+  useKoreanSpeechRecognition,
+  type SpeechTranscriptSession,
+} from "../../hooks/useKoreanSpeechRecognition";
+import {
+  createAeroportConversationMemory,
+  recordAeroportAudioReplay,
+  recordAeroportHelpRequest,
+  recordAeroportSpeechAttempt,
+} from "../../lib/aeroportConversationMemory";
+import {
+  AEROPORT_SPEECH_PILOT_MISSION_ID,
+  getAeroportSpeechChoiceIntent,
+  getAeroportSpeechContextualStrings,
+  matchAeroportSpeechIntent,
+} from "../../lib/aeroportSpeechIntents";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { buildProgressId } from "../../lib/progressIds";
@@ -70,6 +88,10 @@ const AEROPORT_MISSION_PHRASES: Record<
   "lost-help": {
     korean: "길을 잃으면 어떻게 해요?",
     french: "Que faire si je me perds ?",
+  },
+  "arrival-assistance": {
+    korean: "실례합니다, 서울역까지 어떻게 가요?",
+    french: "Excusez-moi, comment aller à Seoul Station ?",
   },
 };
 
@@ -274,6 +296,9 @@ export default function AeroportIaScreen() {
   const currentMission =
     getAeroportMissionById(missionId) ??
     getAeroportMissionById(DEFAULT_AEROPORT_MISSION_ID);
+  const isAeroportSpeechPilot =
+    mode === "guided" &&
+    currentMission?.id === AEROPORT_SPEECH_PILOT_MISSION_ID;
   const missionPhrase =
     AEROPORT_MISSION_PHRASES[currentMission?.id ?? ""] ??
     AEROPORT_MISSION_PHRASES[DEFAULT_AEROPORT_MISSION_ID];
@@ -291,6 +316,7 @@ export default function AeroportIaScreen() {
   const exitLockRef = useRef(false);
   const hasAdvancedFromVideoRef = useRef(false);
   const hasReportedMissionCompleteRef = useRef(false);
+  const speechAttemptCountRef = useRef<Record<string, number>>({});
 
   const currentScenario = useMemo(() => {
     const scenario = buildAeroportScenarioFromScript();
@@ -309,6 +335,19 @@ export default function AeroportIaScreen() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isSceneEnded, setIsSceneEnded] = useState(false);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
+  const [showSpeechChoices, setShowSpeechChoices] = useState(false);
+  const [speechFeedback, setSpeechFeedback] = useState<string | null>(null);
+  const [speechUiNodeId, setSpeechUiNodeId] = useState<string | null>(null);
+  const [pendingSpeechChoice, setPendingSpeechChoice] =
+    useState<DialogueChoice | null>(null);
+  const [lastIaVideoSource, setLastIaVideoSource] = useState<number | null>(
+    null,
+  );
+  const [isReplayingLastIa, setIsReplayingLastIa] = useState(false);
+  const [conversationMemory, setConversationMemory] = useState(
+    createAeroportConversationMemory,
+  );
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [videoRetryKey, setVideoRetryKey] = useState(0);
   const [lastIaTranscript, setLastIaTranscript] = useState<{
     korean: string;
@@ -328,6 +367,8 @@ export default function AeroportIaScreen() {
     (currentNode?.videoSource ? [currentNode.videoSource] : []);
 
   const currentVideoSource = videoSources.length > 0 ? videoSources[0] : null;
+  const isAvatarSpeaking =
+    currentNode?.type === "ia" && Boolean(currentVideoSource) && !isSceneEnded;
 
   const player = useVideoPlayer(null, (playerInstance) => {
     playerInstance.loop = false;
@@ -341,8 +382,7 @@ export default function AeroportIaScreen() {
   } = useImmersiveVideoLifecycle(
     player,
     displayedVideoSource,
-    currentNode?.type === "ia" &&
-      Boolean(currentVideoSource),
+    isAvatarSpeaking || isReplayingLastIa,
   );
 
   useEffect(() => {
@@ -361,6 +401,8 @@ export default function AeroportIaScreen() {
     if (!node || !mountedRef.current) return;
 
     if (node.type === "ia") {
+      const source = node.videoSources?.[0] ?? node.videoSource ?? null;
+      if (source) setLastIaVideoSource(source);
       setLastIaTranscript({
         korean: node.korean || "...",
         french: node.french,
@@ -377,8 +419,9 @@ export default function AeroportIaScreen() {
       setCurrentNodeId(nextNodeId);
     } else {
       setIsSceneEnded(true);
+      if (isAeroportSpeechPilot) setIsSummaryOpen(true);
     }
-  }, []);
+  }, [isAeroportSpeechPilot]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -411,6 +454,15 @@ export default function AeroportIaScreen() {
     setIsSceneEnded(false);
     setIsTranscriptOpen(false);
     setLastIaTranscript(null);
+    setShowSpeechChoices(false);
+    setSpeechFeedback(null);
+    setSpeechUiNodeId(null);
+    setPendingSpeechChoice(null);
+    setLastIaVideoSource(null);
+    setIsReplayingLastIa(false);
+    setConversationMemory(createAeroportConversationMemory());
+    setIsSummaryOpen(false);
+    speechAttemptCountRef.current = {};
     hasAdvancedFromVideoRef.current = false;
     hasReportedMissionCompleteRef.current = false;
   }, [currentScenario]);
@@ -421,12 +473,20 @@ export default function AeroportIaScreen() {
     hasReportedMissionCompleteRef.current = true;
     void Promise.all([
       complete(buildProgressId("aeroport", mode, missionId)),
-      completeDailyActivity("ai_mission"),
+      completeDailyActivity(
+        isAeroportSpeechPilot ? "voice_immersion" : "ai_mission",
+      ),
     ]);
-  }, [complete, isSceneEnded, missionId, mode]);
+  }, [complete, isAeroportSpeechPilot, isSceneEnded, missionId, mode]);
 
   useEffect(() => {
     hasAdvancedFromVideoRef.current = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Speech feedback and confirmation are scoped to the current dialogue node.
+    setShowSpeechChoices(false);
+    setSpeechFeedback(null);
+    setSpeechUiNodeId(null);
+    setPendingSpeechChoice(null);
+    setIsReplayingLastIa(false);
 
     if (iaAutoTimerRef.current) {
       clearTimeout(iaAutoTimerRef.current);
@@ -451,7 +511,7 @@ export default function AeroportIaScreen() {
 
         if (isCancelled || !replaced) return;
 
-        if (currentNode?.type === "ia" && currentVideoSource) {
+        if (isAvatarSpeaking || isReplayingLastIa) {
           player.currentTime = 0;
         } else {
           player.pause();
@@ -478,6 +538,8 @@ export default function AeroportIaScreen() {
     currentNodeId,
     currentVideoSource,
     displayedVideoSource,
+    isAvatarSpeaking,
+    isReplayingLastIa,
     canEnterMission,
     markMediaError,
     markMediaLoading,
@@ -493,6 +555,7 @@ export default function AeroportIaScreen() {
     if (currentNode.type !== "ia") return;
     if (!currentVideoSource) return;
     if (isTransitioning || isSceneEnded) return;
+    if (isReplayingLastIa) return;
 
     if (
       !canAdvanceAfterRequiredVideo({
@@ -512,9 +575,16 @@ export default function AeroportIaScreen() {
     isTransitioning,
     isSceneEnded,
     canEnterMission,
+    isReplayingLastIa,
     mediaStatus,
     goToNextNode,
   ]);
+
+  useEffect(() => {
+    if (!isReplayingLastIa || mediaStatus !== "ended") return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Native playToEnd terminates the explicit replay mode.
+    setIsReplayingLastIa(false);
+  }, [isReplayingLastIa, mediaStatus]);
 
   useEffect(() => {
     if (!canEnterMission) return;
@@ -554,8 +624,13 @@ export default function AeroportIaScreen() {
     return () => clearTimeout(t);
   }, [currentNodeId]);
 
-  const handleChoice = (choice: DialogueChoice) => {
-    if (transitionLockRef.current || isTransitioning || isSceneEnded) return;
+  const handleChoice = useCallback((choice: DialogueChoice, delay = 320) => {
+    if (
+      transitionLockRef.current ||
+      isTransitioning ||
+      isSceneEnded ||
+      isReplayingLastIa
+    ) return;
 
     transitionLockRef.current = true;
     setIsTransitioning(true);
@@ -582,10 +657,152 @@ export default function AeroportIaScreen() {
       setSelectedChoiceId(null);
       setIsTransitioning(false);
       transitionLockRef.current = false;
-    }, 320);
-  };
+    }, delay);
+  }, [currentScenario, isReplayingLastIa, isSceneEnded, isTransitioning]);
+
+  const isUserChoice = currentNode?.type === "user_choice";
+  const speechChoices = useMemo(
+    () => (isUserChoice ? currentNode.choices || [] : []),
+    [currentNode, isUserChoice],
+  );
+  const speechContextualStrings = useMemo(
+    () => getAeroportSpeechContextualStrings(speechChoices),
+    [speechChoices],
+  );
+
+  const handleSpeechTranscript = useCallback(
+    (transcript: string, session: SpeechTranscriptSession) => {
+      if (session.contextId !== currentNodeId) return;
+      if (!isAeroportSpeechPilot || currentNode?.type !== "user_choice") return;
+
+      const attemptNumber =
+        (speechAttemptCountRef.current[currentNode.id] ?? 0) + 1;
+      speechAttemptCountRef.current[currentNode.id] = attemptNumber;
+      const result = matchAeroportSpeechIntent(
+        transcript,
+        currentNode.choices || [],
+        attemptNumber,
+      );
+
+      setConversationMemory((memory) =>
+        recordAeroportSpeechAttempt(memory, {
+          nodeId: currentNode.id,
+          transcript,
+          result,
+        }),
+      );
+      setSpeechUiNodeId(currentNode.id);
+      setSpeechFeedback(result.feedback);
+
+      if (result.reason === "matched" && result.choice) {
+        setPendingSpeechChoice(null);
+        handleChoice(result.choice, result.feedback ? 1750 : 320);
+        return;
+      }
+
+      setPendingSpeechChoice(
+        result.reason === "uncertain" ? result.choice : null,
+      );
+    },
+    [
+      currentNode,
+      currentNodeId,
+      handleChoice,
+      isAeroportSpeechPilot,
+    ],
+  );
+
+  const {
+    state: speechState,
+    startListening,
+    stopListening,
+    cancel: cancelSpeechRecognition,
+  } = useKoreanSpeechRecognition({
+    onFinalTranscript: handleSpeechTranscript,
+  });
+
+  useEffect(() => {
+    cancelSpeechRecognition();
+  }, [cancelSpeechRecognition, currentNodeId, currentScenario]);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => cancelSpeechRecognition();
+    }, [cancelSpeechRecognition]),
+  );
+
+  const handleStartSpeech = useCallback(() => {
+    if (
+      !isAeroportSpeechPilot ||
+      currentNode?.type !== "user_choice" ||
+      isTransitioning ||
+      transitionLockRef.current ||
+      isReplayingLastIa
+    ) return;
+
+    setSpeechUiNodeId(currentNodeId);
+    setShowSpeechChoices(false);
+    setSpeechFeedback(null);
+    setPendingSpeechChoice(null);
+    void startListening({
+      contextualStrings: speechContextualStrings,
+      contextId: currentNodeId,
+    });
+  }, [
+    currentNode,
+    currentNodeId,
+    isAeroportSpeechPilot,
+    isReplayingLastIa,
+    isTransitioning,
+    speechContextualStrings,
+    startListening,
+  ]);
+
+  const handleNeedHelp = useCallback(() => {
+    if (isTransitioning || isReplayingLastIa || transitionLockRef.current) {
+      return;
+    }
+    cancelSpeechRecognition();
+    setSpeechUiNodeId(currentNodeId);
+    setShowSpeechChoices(true);
+    setPendingSpeechChoice(null);
+    setConversationMemory(recordAeroportHelpRequest);
+  }, [
+    cancelSpeechRecognition,
+    currentNodeId,
+    isReplayingLastIa,
+    isTransitioning,
+  ]);
+
+  const handleConfirmSpeechIntent = useCallback(() => {
+    if (!pendingSpeechChoice || speechUiNodeId !== currentNodeId) return;
+    const confirmedChoice = pendingSpeechChoice;
+    setSpeechFeedback(null);
+    setPendingSpeechChoice(null);
+    handleChoice(confirmedChoice);
+  }, [currentNodeId, handleChoice, pendingSpeechChoice, speechUiNodeId]);
+
+  const handleReplayLastIa = useCallback(() => {
+    if (
+      !lastIaVideoSource ||
+      currentNode?.type !== "user_choice" ||
+      isTransitioning ||
+      transitionLockRef.current
+    ) return;
+
+    cancelSpeechRecognition();
+    setDisplayedVideoSource(lastIaVideoSource);
+    setIsReplayingLastIa(true);
+    setConversationMemory(recordAeroportAudioReplay);
+  }, [
+    cancelSpeechRecognition,
+    currentNode,
+    isTransitioning,
+    lastIaVideoSource,
+  ]);
 
   const handleRestart = () => {
+    cancelSpeechRecognition();
     if (choiceTransitionTimerRef.current) {
       clearTimeout(choiceTransitionTimerRef.current);
       choiceTransitionTimerRef.current = null;
@@ -600,6 +817,15 @@ export default function AeroportIaScreen() {
     setIsSceneEnded(false);
     setIsTranscriptOpen(false);
     setLastIaTranscript(null);
+    setShowSpeechChoices(false);
+    setSpeechFeedback(null);
+    setSpeechUiNodeId(null);
+    setPendingSpeechChoice(null);
+    setLastIaVideoSource(null);
+    setIsReplayingLastIa(false);
+    setConversationMemory(createAeroportConversationMemory());
+    setIsSummaryOpen(false);
+    speechAttemptCountRef.current = {};
     hasAdvancedFromVideoRef.current = false;
     hasReportedMissionCompleteRef.current = false;
   };
@@ -612,13 +838,14 @@ export default function AeroportIaScreen() {
       choiceTransitionTimerRef.current = null;
     }
     transitionLockRef.current = false;
+    cancelSpeechRecognition();
     if (router.canGoBack()) {
       router.back();
       return;
     }
 
     router.replace("/(tabs)");
-  }, []);
+  }, [cancelSpeechRecognition]);
 
   const handleRetryVideo = useCallback(() => {
     hasAdvancedFromVideoRef.current = false;
@@ -626,7 +853,7 @@ export default function AeroportIaScreen() {
     setVideoRetryKey((current) => current + 1);
   }, [markMediaLoading]);
 
-  const isStartChoiceNode = currentNodeId === "welcome_choices";
+  const isStartChoiceNode = currentNodeId === "user_start";
 
   const isReviewableTranscript =
     currentNode?.type === "user_choice" &&
@@ -652,7 +879,94 @@ export default function AeroportIaScreen() {
     !isStartChoiceNode &&
     typeof transcriptFrench === "string" &&
     transcriptFrench.trim().length > 0;
-  const isUserChoice = currentNode?.type === "user_choice";
+  const displayedSpeechFeedback =
+    speechUiNodeId === currentNodeId ? speechFeedback : null;
+  const pendingSpeechIntent =
+    speechUiNodeId === currentNodeId && pendingSpeechChoice
+      ? getAeroportSpeechChoiceIntent(pendingSpeechChoice)
+      : null;
+  const displayedConfirmationLabel = pendingSpeechChoice
+    ? pendingSpeechIntent === "route"
+      ? "le trajet vers Seoul Station"
+      : pendingSpeechIntent === "continue"
+        ? "la demande de l’étape suivante"
+        : pendingSpeechIntent === "train-choice"
+          ? "la demande de recommandation du train"
+          : pendingSpeechIntent === "platform"
+            ? "la demande du quai"
+            : pendingSpeechIntent === "repeat"
+              ? "la demande de répétition"
+              : pendingSpeechIntent === "thanks"
+                ? "le remerciement"
+                : null
+    : null;
+  const shouldShowSpeechChoices =
+    showSpeechChoices ||
+    speechState.status === "permission-denied" ||
+    speechState.status === "unavailable";
+
+  const currentChoicesGrid = (
+    <View style={styles.choicesGrid}>
+      {currentNode?.choices?.map((choice) => {
+        const isSelected = selectedChoiceId === choice.id;
+        const accent = mode === "real" ? CYAN : PURPLE;
+
+        return (
+          <Pressable
+            key={choice.id}
+            accessibilityRole="button"
+            accessibilityLabel={`${choice.korean}. ${choice.label}`}
+            accessibilityState={{
+              disabled: isTransitioning || isReplayingLastIa,
+              selected: isSelected,
+            }}
+            aria-selected={isSelected}
+            hitSlop={6}
+            onPress={() => handleChoice(choice)}
+            disabled={isTransitioning || isReplayingLastIa}
+            style={({ pressed }) => [
+              styles.choiceBtn,
+              isSelected && {
+                borderColor: accent,
+                backgroundColor: "rgba(5,5,8,0.92)",
+              },
+              pressed && { opacity: 0.92 },
+            ]}
+          >
+            <View
+              pointerEvents="none"
+              style={[
+                styles.choiceGlow,
+                {
+                  backgroundColor:
+                    mode === "real"
+                      ? "rgba(34,211,238,0.08)"
+                      : "rgba(168,85,247,0.10)",
+                },
+              ]}
+            />
+            <AppText
+              variant="koreanSecondary"
+              tone="strong"
+              script="korean"
+              accessibilityLanguage="ko-KR"
+              style={styles.choiceKr}
+            >
+              {choice.korean}
+            </AppText>
+            <AppText
+              variant="bodySecondary"
+              tone="muted"
+              script="latin"
+              style={styles.choiceFr}
+            >
+              {choice.label}
+            </AppText>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
 
   if (!canEnterMission) {
     return null;
@@ -913,65 +1227,60 @@ export default function AeroportIaScreen() {
                   </View>
                 </View>
               ) : isUserChoice ? (
-                <View style={styles.choicesGrid}>
-                  {currentNode?.choices?.map((choice) => {
-                    const isSelected = selectedChoiceId === choice.id;
-                    const accent = mode === "real" ? CYAN : PURPLE;
-
-                    return (
+                isAeroportSpeechPilot ? (
+                  <View style={styles.speechTurnBlock}>
+                    {lastIaVideoSource ? (
                       <Pressable
-                        key={choice.id}
                         accessibilityRole="button"
-                        accessibilityLabel={`${choice.korean}. ${choice.label}`}
-                        accessibilityState={{
-                          disabled: isTransitioning,
-                          selected: isSelected,
-                        }}
-                        onPress={() => handleChoice(choice)}
-                        disabled={isTransitioning}
+                        accessibilityLabel="Réécouter la dernière intervention"
+                        accessibilityState={{ disabled: isReplayingLastIa }}
+                        aria-disabled={isReplayingLastIa}
+                        disabled={isReplayingLastIa}
+                        onPress={handleReplayLastIa}
                         style={({ pressed }) => [
-                          styles.choiceBtn,
-                          isSelected && {
-                            borderColor: accent,
-                            backgroundColor: "rgba(5,5,8,0.92)",
-                          },
-                          pressed && { opacity: 0.92 },
+                          styles.replayButton,
+                          pressed && { opacity: 0.88 },
+                          isReplayingLastIa && { opacity: 0.55 },
                         ]}
                       >
-                        <View
-                          pointerEvents="none"
-                          style={[
-                            styles.choiceGlow,
-                            {
-                              backgroundColor:
-                                mode === "real"
-                                  ? "rgba(34,211,238,0.08)"
-                                  : "rgba(168,85,247,0.10)",
-                            },
-                          ]}
-                        />
-
                         <AppText
-                          variant="koreanSecondary"
+                          variant="button"
                           tone="strong"
-                          script="korean"
-                          accessibilityLanguage="ko-KR"
-                          style={styles.choiceKr}
-                        >
-                          {choice.korean}
-                        </AppText>
-                        <AppText
-                          variant="bodySecondary"
-                          tone="muted"
                           script="latin"
-                          style={styles.choiceFr}
+                          align="center"
                         >
-                          {choice.label}
+                          {isReplayingLastIa
+                            ? "Lecture en cours…"
+                            : "Réécouter l’interlocuteur"}
                         </AppText>
                       </Pressable>
-                    );
-                  })}
-                </View>
+                    ) : null}
+
+                    <GuidedSpeechTurn
+                      accent={PURPLE}
+                      confirmationLabel={displayedConfirmationLabel}
+                      feedback={displayedSpeechFeedback}
+                      interactionDisabled={isReplayingLastIa || isTransitioning}
+                      interactionDisabledLabel={
+                        isReplayingLastIa
+                          ? "Écoute l’interlocuteur…"
+                          : undefined
+                      }
+                      intentionLabels={speechChoices.map(({ label }) => label)}
+                      onConfirm={handleConfirmSpeechIntent}
+                      onHelp={handleNeedHelp}
+                      onRetry={handleStartSpeech}
+                      onStart={handleStartSpeech}
+                      onStop={stopListening}
+                      showChoices={shouldShowSpeechChoices}
+                      speechState={speechState}
+                    >
+                      {currentChoicesGrid}
+                    </GuidedSpeechTurn>
+                  </View>
+                ) : (
+                  currentChoicesGrid
+                )
               ) : (
                 <View style={styles.waitingCard}>
                   <View style={styles.waitingPulseRow}>
@@ -1002,6 +1311,11 @@ export default function AeroportIaScreen() {
           </ScrollView>
         </View>
       </SafeAreaView>
+      <AeroportConversationSummaryModal
+        memory={conversationMemory}
+        onClose={() => setIsSummaryOpen(false)}
+        visible={isAeroportSpeechPilot && isSummaryOpen}
+      />
     </ImageBackground>
   );
 }
@@ -1142,6 +1456,21 @@ const styles = StyleSheet.create({
 
   choicesGrid: {
     gap: 12,
+  },
+
+  speechTurnBlock: {
+    gap: 12,
+  },
+
+  replayButton: {
+    minHeight: IMMERSIVE_MIN_TOUCH_TARGET,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(168,85,247,0.34)",
+    backgroundColor: "rgba(168,85,247,0.10)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
   },
 
   choiceBtn: {
