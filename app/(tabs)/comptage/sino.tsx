@@ -107,7 +107,7 @@ const SCENES = withSceneAudio(
           fr: "Combien coûte ce t-shirt ?",
         },
         {
-          char: "Vendeur",
+          char: "Vendeuse",
           kr: "삼만 오천 원입니다.",
           fr: "C'est trente-cinq mille (Sam-man Oh-cheon) won.",
         },
@@ -117,7 +117,7 @@ const SCENES = withSceneAudio(
           fr: "Si j'en achète deux, ça fait 70 000 won ?",
         },
         {
-          char: "Vendeur",
+          char: "Vendeuse",
           kr: "네, 두 장이면 칠만 원입니다.",
           fr: "Oui, pour deux pièces, cela fait 70 000 won.",
         },

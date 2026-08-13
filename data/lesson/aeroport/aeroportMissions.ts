@@ -24,17 +24,6 @@ export const aeroportMissions: AeroportMission[] = [
     scenarioKey: "go_seoul_station",
   },
   {
-    id: "arrival-assistance",
-    title: "Arrivée guidée à Incheon",
-    subtitle: "Demande ton chemin à l’oral, étape par étape.",
-    access: "premium",
-    duration: "4-6 min",
-    objective: "Trouver l’AREX et le quai vers Seoul Station.",
-    skills: ["Demander", "Choisir", "Vérifier"],
-    goals: ["Demander le chemin", "Choisir le train", "Trouver le quai"],
-    scenarioKey: "arrival_voice",
-  },
-  {
     id: "buy-tmoney",
     title: "Acheter une T-money",
     subtitle: "Demande et recharge une carte.",
@@ -74,6 +63,17 @@ export const aeroportMissions: AeroportMission[] = [
     goals: ["Expliquer", "Comprendre", "Repartir"],
     scenarioKey: "lost_help",
   },
+  {
+    id: "arrival-assistance",
+    title: "Arrivée guidée à Incheon",
+    subtitle: "Demande ton chemin à l’oral, étape par étape.",
+    access: "premium",
+    duration: "4-6 min",
+    objective: "Trouver l’AREX et le quai vers Seoul Station.",
+    skills: ["Demander", "Choisir", "Vérifier"],
+    goals: ["Demander le chemin", "Choisir le train", "Trouver le quai"],
+    scenarioKey: "arrival_voice",
+  },
 ];
 
 export function getAeroportMissionById(
@@ -104,11 +104,7 @@ function cloneChoice(choice: ChoiceLike | undefined): ChoiceLike | undefined {
   return choice ? { ...choice } : undefined;
 }
 
-function getChoice(
-  scenario: ScenarioLike,
-  nodeId: string,
-  choiceId: string,
-) {
+function getChoice(scenario: ScenarioLike, nodeId: string, choiceId: string) {
   return scenario.nodes[nodeId]?.choices?.find(
     (choice) => choice.id === choiceId,
   );
@@ -266,6 +262,7 @@ export function applyAeroportMissionToScenario<TScenario extends ScenarioLike>(
         thanksChoice ? [thanksChoice] : [],
       );
       break;
+
     case "arrival_voice":
       keepChoices(scenario, "user_start", ["choice_ask_seoul_station"]);
       keepChoices(scenario, "user_after_welcome", [
@@ -316,6 +313,7 @@ export function applyAeroportMissionToScenario<TScenario extends ScenarioLike>(
         thanksChoice ? [thanksChoice] : [],
       );
       break;
+
     case "buy_tmoney":
       keepChoices(scenario, "user_start", ["choice_want_seoul_station"]);
       keepChoices(scenario, "user_after_welcome", [
@@ -355,6 +353,7 @@ export function applyAeroportMissionToScenario<TScenario extends ScenarioLike>(
         thanksChoice ? [thanksChoice] : [],
       );
       break;
+
     case "choose_arex":
       keepChoices(scenario, "user_start", ["choice_ask_arex"]);
       keepChoices(scenario, "user_after_welcome", [
@@ -427,6 +426,7 @@ export function applyAeroportMissionToScenario<TScenario extends ScenarioLike>(
         thanksChoice ? [thanksChoice] : [],
       );
       break;
+
     case "find_platform":
       keepChoices(scenario, "user_start", ["choice_ask_arex"]);
       keepChoices(scenario, "user_after_welcome", [
@@ -477,6 +477,7 @@ export function applyAeroportMissionToScenario<TScenario extends ScenarioLike>(
         thanksChoice ? [thanksChoice] : [],
       );
       break;
+
     case "lost_help":
       {
         const lostChoice = cloneChoice(

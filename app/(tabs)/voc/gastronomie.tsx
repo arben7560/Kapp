@@ -1,6 +1,5 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { AppBackButton } from "../../../components/ui/app-back-button";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -14,7 +13,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AnimatedAppText, AppText } from "../../../components/app-text";
-import { ABSOLUTE_FILL, RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../../constants/layout";
+import { AppBackButton } from "../../../components/ui/app-back-button";
+import {
+  ABSOLUTE_FILL,
+  RESPONSIVE_AUDIO_COPY_MIN_WIDTH,
+} from "../../../constants/layout";
 import { useVocAudio } from "../../../hooks/useVocAudio";
 import { useVocDialogue } from "../../../hooks/useVocDialogue";
 
@@ -227,7 +230,7 @@ const SCENES: Scene[] = [
         audio: STREET_FOOD_AUDIO.message1,
       },
       {
-        char: "Vendeur",
+        char: "Vendeuse",
         kr: "조금 매워요. 그래도 맛있어요.",
         fr: "C'est un peu épicé. Mais c'est très bon.",
         side: "server",
@@ -241,7 +244,7 @@ const SCENES: Scene[] = [
         audio: STREET_FOOD_AUDIO.message3,
       },
       {
-        char: "Vendeur",
+        char: "Vendeuse",
         kr: "네, 여기 있어요. 조심해서 드세요.",
         fr: "Oui, voici. Mangez doucement.",
         side: "server",
@@ -446,7 +449,6 @@ export default function GastronomyImmersion() {
       easing: Easing.out(Easing.back(1)),
       useNativeDriver: true,
     }).start();
-
   }, [activeScene, fadeAnim]);
 
   useEffect(() => {
@@ -528,7 +530,9 @@ export default function GastronomyImmersion() {
           <View style={styles.topNav}>
             <AppBackButton />
             <View>
-              <AppText variant="cardTitle" style={styles.navTitle}>Gastronomie</AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>
+                Gastronomie
+              </AppText>
             </View>
           </View>
 
@@ -545,7 +549,9 @@ export default function GastronomyImmersion() {
                   },
                 ]}
               >
-                <AppText variant="label" lineContract="singleLine"
+                <AppText
+                  variant="label"
+                  lineContract="singleLine"
                   style={[
                     styles.tabText,
                     activeScene.id === scene.id && {
@@ -579,13 +585,26 @@ export default function GastronomyImmersion() {
               />
 
               <View style={styles.cardHeader}>
-                <AppText variant="koreanSecondary" script="korean" lineContract="singleLine" style={[styles.krLabel, { color: activeScene.accent }]}>
+                <AppText
+                  variant="koreanSecondary"
+                  script="korean"
+                  lineContract="singleLine"
+                  style={[styles.krLabel, { color: activeScene.accent }]}
+                >
                   {activeScene.koreanTitle}
                 </AppText>
-                <AppText accessibilityRole="header" variant="sceneTitle" style={styles.sceneMainTitle}>{activeScene.title}</AppText>
+                <AppText
+                  accessibilityRole="header"
+                  variant="sceneTitle"
+                  style={styles.sceneMainTitle}
+                >
+                  {activeScene.title}
+                </AppText>
               </View>
 
-              <AppText variant="body" style={styles.sceneDesc}>{activeScene.description}</AppText>
+              <AppText variant="body" style={styles.sceneDesc}>
+                {activeScene.description}
+              </AppText>
 
               <View style={styles.dialogueList}>
                 {activeScene.dialogue
@@ -613,7 +632,8 @@ export default function GastronomyImmersion() {
                           },
                         ]}
                       >
-                        <AppText variant="label"
+                        <AppText
+                          variant="label"
                           style={[
                             styles.bubbleChar,
                             { color: activeScene.accent },
@@ -621,8 +641,20 @@ export default function GastronomyImmersion() {
                         >
                           {chat.char}
                         </AppText>
-                        <AppText variant="koreanSecondary" script="korean" style={styles.bubbleKr}>{chat.kr}</AppText>
-                        <AppText variant="bodySecondary" tone="muted" style={styles.bubbleFr}>{chat.fr}</AppText>
+                        <AppText
+                          variant="koreanSecondary"
+                          script="korean"
+                          style={styles.bubbleKr}
+                        >
+                          {chat.kr}
+                        </AppText>
+                        <AppText
+                          variant="bodySecondary"
+                          tone="muted"
+                          style={styles.bubbleFr}
+                        >
+                          {chat.fr}
+                        </AppText>
                       </Pressable>
                     );
                   })}
@@ -635,7 +667,8 @@ export default function GastronomyImmersion() {
                       styles.typingBubble,
                     ]}
                   >
-                    <AppText variant="label"
+                    <AppText
+                      variant="label"
                       style={[styles.bubbleChar, { color: activeScene.accent }]}
                     >
                       {activeScene.dialogue[visibleMessages]?.char}
@@ -665,7 +698,8 @@ export default function GastronomyImmersion() {
                 )}
 
                 <Pressable onPress={advanceDialogue} disabled={isTyping}>
-                  <AnimatedAppText variant="caption"
+                  <AnimatedAppText
+                    variant="caption"
                     style={[
                       styles.tapHint,
                       shouldHighlightHint && {
@@ -694,7 +728,9 @@ export default function GastronomyImmersion() {
 
           <View style={styles.toolbox}>
             <View style={styles.toolboxTitleRow}>
-              <AppText variant="sectionTitle" style={styles.toolboxTitle}>Expressions clés</AppText>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>
+                Expressions clés
+              </AppText>
               <View
                 style={[
                   styles.toolboxLine,
@@ -739,9 +775,21 @@ export default function GastronomyImmersion() {
 
                       <View style={styles.vocabContent}>
                         <View style={styles.vocabTopRow}>
-                          <View style={{ flex: 1, minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH }}>
-                            <AppText variant="koreanPrimary" script="korean" style={styles.vocabKr}>{exp.word}</AppText>
-                            <AppText variant="caption"
+                          <View
+                            style={{
+                              flex: 1,
+                              minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH,
+                            }}
+                          >
+                            <AppText
+                              variant="koreanPrimary"
+                              script="korean"
+                              style={styles.vocabKr}
+                            >
+                              {exp.word}
+                            </AppText>
+                            <AppText
+                              variant="caption"
                               style={[
                                 styles.vocabRom,
                                 { color: activeScene.accent },
@@ -760,7 +808,9 @@ export default function GastronomyImmersion() {
                               },
                             ]}
                           >
-                            <AppText variant="caption" lineContract="singleLine"
+                            <AppText
+                              variant="caption"
+                              lineContract="singleLine"
                               style={[
                                 styles.listenIcon,
                                 { color: activeScene.accent },
@@ -768,12 +818,26 @@ export default function GastronomyImmersion() {
                             >
                               {isActive ? "●" : "▶"}
                             </AppText>
-                            <AppText variant="label" lineContract="singleLine" style={styles.listenText}>ÉCOUTER</AppText>
+                            <AppText
+                              variant="label"
+                              lineContract="singleLine"
+                              style={styles.listenText}
+                            >
+                              ÉCOUTER
+                            </AppText>
                           </View>
                         </View>
 
-                        <AppText variant="bodyStrong" style={styles.vocabMean}>{exp.mean}</AppText>
-                        <AppText variant="bodySecondary" tone="muted" style={styles.vocabCtx}>{exp.context}</AppText>
+                        <AppText variant="bodyStrong" style={styles.vocabMean}>
+                          {exp.mean}
+                        </AppText>
+                        <AppText
+                          variant="bodySecondary"
+                          tone="muted"
+                          style={styles.vocabCtx}
+                        >
+                          {exp.context}
+                        </AppText>
                       </View>
                     </BlurView>
                   </Pressable>
@@ -816,8 +880,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.15)",
   },
   backArrow: { color: "#fff", marginTop: -2 },
-  navEyebrow: {
-  },
+  navEyebrow: {},
   navTitle: {
     color: "#fff",
     opacity: 0.8,
@@ -967,8 +1030,7 @@ const styles = StyleSheet.create({
     color: COLORS.txt,
     marginBottom: 2,
   },
-  vocabRom: {
-  },
+  vocabRom: {},
   vocabMean: {
     color: COLORS.txt,
     marginBottom: 4,
@@ -985,8 +1047,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  listenIcon: {
-  },
+  listenIcon: {},
   listenText: {
     color: "rgba(255,255,255,0.78)",
   },

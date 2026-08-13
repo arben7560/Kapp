@@ -32,7 +32,10 @@ const MUTED = "rgba(255,255,255,0.66)";
 const SOFT = "rgba(255,255,255,0.46)";
 const LINE = "rgba(255,255,255,0.10)";
 const CYAN = "#22D3EE";
+const VOCAL_VIOLET = "#A78BFA";
 const GOLD = SeoulMidnightGlass.colors.premiumGold;
+
+const AEROPORT_VOCAL_MISSION_ID = "arrival-assistance";
 
 function normalizeMode(rawMode: string | string[] | undefined) {
   const value = Array.isArray(rawMode) ? rawMode[0] : rawMode;
@@ -46,12 +49,15 @@ export default function AeroportMissionsScreen() {
   const { hasPremiumAccess } = usePaywall();
   const [selectedMission, setSelectedMission] =
     React.useState<AeroportMission | null>(null);
+
   const responsive = useResponsiveLayout({ maxWidth: 860 });
+
   const missionColumns = responsive.getColumns({
     minColumnWidth: 320,
     maxColumns: 2,
     gap: responsive.gridGap,
   });
+
   const missionItemWidth = responsive.getGridItemWidth(
     missionColumns,
     responsive.gridGap,
@@ -62,23 +68,32 @@ export default function AeroportMissionsScreen() {
       router.push("/premium");
       return;
     }
+
     setSelectedMission(mission);
   };
 
   const startSelectedMission = () => {
     if (!selectedMission) return;
+
     const mission = selectedMission;
+    const isVocal = mission.id === AEROPORT_VOCAL_MISSION_ID;
+
     setSelectedMission(null);
     setTrack("aeroport_ia");
+
     router.push({
       pathname: "/lesson/aeroportIA",
-      params: { mode, mission: mission.id },
+      params: {
+        mode: isVocal ? "guided" : mode,
+        mission: mission.id,
+      },
     });
   };
 
   return (
     <ImageBackground source={airportBackground} style={styles.background}>
       <View pointerEvents="none" style={styles.overlay} />
+
       <SafeAreaView style={styles.safe}>
         <ScrollView
           contentContainerStyle={[
@@ -86,67 +101,91 @@ export default function AeroportMissionsScreen() {
             { paddingHorizontal: responsive.horizontalPadding },
           ]}
         >
-          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
-          <GuidedMissionsHeader
-            accent={CYAN}
-            compact={responsive.isCompact}
-            intro="Apprends à rejoindre Séoul depuis l’aéroport en immersion"
-            title="Aéroport"
-          />
           <View
-            style={[
-              styles.missionStack,
-              missionColumns > 1 && styles.missionGrid,
-              { gap: responsive.gridGap },
-            ]}
+            style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
           >
-            {aeroportMissions.map((mission) => {
-              const isPremium = mission.access === "premium";
-              const isLocked = isPremium && !hasPremiumAccess;
-              return (
-                <Pressable
-                  key={mission.id}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${mission.title}. ${
-                    isLocked
-                      ? "Mission premium verrouillée"
-                      : isPremium
-                        ? "Mission premium incluse"
-                        : "Mission gratuite"
-                  }. ${mission.subtitle}. ${
-                    isLocked ? "Ouvre l'écran Premium" : "Ouvre cette mission"
-                  }`}
-                  accessibilityHint={
-                    isLocked
-                      ? "Ouvre l'offre Premium"
-                      : "Prépare le lancement de cette mission"
-                  }
-                  hitSlop={6}
-                  onPress={() => openMission(mission)}
-                  style={({ pressed }) => [
-                    styles.missionCard,
-                    missionColumns > 1 && { width: missionItemWidth },
-                    isPremium && styles.premiumCard,
-                    pressed && styles.pressedCard,
-                  ]}
-                >
-                  <View style={styles.cardTop}>
-                    <MissionAccessBadge access={mission.access} accent={CYAN} />
-                    <AppText variant="caption" lineContract="singleLine"
-                      style={[
-                        styles.cardArrow,
-                        isLocked && styles.cardArrowPremium,
-                      ]}
-                    >
-                      {isLocked ? "Premium" : "Ouvrir"}
+            <GuidedMissionsHeader
+              accent={CYAN}
+              compact={responsive.isCompact}
+              intro="Apprends à rejoindre Séoul depuis l’aéroport en immersion"
+              title="Aéroport"
+            />
+
+            <View
+              style={[
+                styles.missionStack,
+                missionColumns > 1 && styles.missionGrid,
+                { gap: responsive.gridGap },
+              ]}
+            >
+              {aeroportMissions.map((mission) => {
+                const isPremium = mission.access === "premium";
+                const isLocked = isPremium && !hasPremiumAccess;
+                const isVocal = mission.id === AEROPORT_VOCAL_MISSION_ID;
+
+                return (
+                  <Pressable
+                    key={mission.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${mission.title}. ${
+                      isLocked
+                        ? "Mission premium verrouillée"
+                        : isVocal
+                          ? "Mission vocale"
+                          : isPremium
+                            ? "Mission premium incluse"
+                            : "Mission gratuite"
+                    }. ${mission.subtitle}. ${
+                      isLocked ? "Ouvre l'écran Premium" : "Ouvre cette mission"
+                    }`}
+                    accessibilityHint={
+                      isLocked
+                        ? "Ouvre l'offre Premium"
+                        : "Prépare le lancement de cette mission"
+                    }
+                    hitSlop={6}
+                    onPress={() => openMission(mission)}
+                    style={({ pressed }) => [
+                      styles.missionCard,
+                      missionColumns > 1 && { width: missionItemWidth },
+                      isPremium && styles.premiumCard,
+                      pressed && styles.pressedCard,
+                    ]}
+                  >
+                    <View style={styles.cardTop}>
+                      <MissionAccessBadge
+                        access={mission.access}
+                        accent={isVocal ? VOCAL_VIOLET : CYAN}
+                        variant={isVocal ? "vocal" : "access"}
+                      />
+
+                      <AppText
+                        variant="caption"
+                        lineContract="singleLine"
+                        style={[
+                          styles.cardArrow,
+                          isLocked && styles.cardArrowPremium,
+                        ]}
+                      >
+                        {isLocked ? "Premium" : "Ouvrir"}
+                      </AppText>
+                    </View>
+
+                    <AppText variant="cardTitle" style={styles.missionTitle}>
+                      {mission.title}
                     </AppText>
-                  </View>
-                  <AppText variant="cardTitle" style={styles.missionTitle}>{mission.title}</AppText>
-                  <AppText variant="bodySecondary" tone="muted" style={styles.missionSubtitle}>{mission.subtitle}</AppText>
-                </Pressable>
-              );
-            })}
-          </View>
+
+                    <AppText
+                      variant="bodySecondary"
+                      tone="muted"
+                      style={styles.missionSubtitle}
+                    >
+                      {mission.subtitle}
+                    </AppText>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
         </ScrollView>
 
@@ -163,15 +202,29 @@ export default function AeroportMissionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1, backgroundColor: BG_DEEP, overflow: "hidden" },
-  overlay: { ...ABSOLUTE_FILL, backgroundColor: "rgba(5,5,8,0.70)" },
-  safe: { flex: 1 },
+  background: {
+    flex: 1,
+    backgroundColor: BG_DEEP,
+    overflow: "hidden",
+  },
+  overlay: {
+    ...ABSOLUTE_FILL,
+    backgroundColor: "rgba(5,5,8,0.70)",
+  },
+  safe: {
+    flex: 1,
+  },
   contentFrame: {
     width: "100%",
     alignSelf: "center",
   },
-  content: { paddingTop: 0, paddingBottom: 42 },
-  missionStack: { gap: 14 },
+  content: {
+    paddingTop: 0,
+    paddingBottom: 42,
+  },
+  missionStack: {
+    gap: 14,
+  },
   missionGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -186,8 +239,13 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.05)",
     padding: 18,
   },
-  premiumCard: { borderColor: SeoulMidnightGlass.colors.premiumBorder },
-  pressedCard: { opacity: 0.88, transform: [{ scale: 0.99 }] },
+  premiumCard: {
+    borderColor: SeoulMidnightGlass.colors.premiumBorder,
+  },
+  pressedCard: {
+    opacity: 0.88,
+    transform: [{ scale: 0.99 }],
+  },
   cardTop: {
     flexDirection: "row",
     alignItems: "center",
@@ -197,7 +255,9 @@ const styles = StyleSheet.create({
   cardArrow: {
     color: SOFT,
   },
-  cardArrowPremium: { color: GOLD },
+  cardArrowPremium: {
+    color: GOLD,
+  },
   missionTitle: {
     color: TXT,
   },

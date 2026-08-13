@@ -1,7 +1,6 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { AppBackButton } from "../../../components/ui/app-back-button";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -15,9 +14,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AnimatedAppText, AppText } from "../../../components/app-text";
+import { AppBackButton } from "../../../components/ui/app-back-button";
+import {
+  ABSOLUTE_FILL,
+  RESPONSIVE_AUDIO_COPY_MIN_WIDTH,
+} from "../../../constants/layout";
 import { useVocAudio } from "../../../hooks/useVocAudio";
 import { VOC_DIALOGUE_COPY } from "../../../hooks/useVocDialogue";
-import { ABSOLUTE_FILL, RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../../constants/layout";
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — NIGHTLIFE EDITION
@@ -82,28 +85,28 @@ const SCENES = [
     image: require("../../../assets/images/pocha2.jpg"),
     dialogue: [
       {
-        char: "Ji-hun",
+        char: "Min-a",
         kr: "한 잔 더 할까요? 제가 따를게요.",
         fr: "On en reprend un verre ? Je vous sers.",
         side: "server",
         audio: POCHA_AUDIO.message1,
       },
       {
-        char: "Min-a",
+        char: "Ji-hun",
         kr: "좋아요! 안주도 더 시킬까요?",
         fr: "D’accord ! On commande aussi plus d’anju ?",
         side: "me",
         audio: POCHA_AUDIO.message2,
       },
       {
-        char: "Ji-hun",
+        char: "Min-a",
         kr: "네, 떡볶이 하나 더 시켜요.",
         fr: "Oui, commandons encore un tteokbokki.",
         side: "server",
         audio: POCHA_AUDIO.message3,
       },
       {
-        char: "Min-a",
+        char: "Ji-hun",
         kr: "좋아요. 그럼 건배할까요?",
         fr: "Très bien. Alors on trinque ?",
         side: "me",
@@ -249,28 +252,28 @@ const SCENES = [
     image: require("../../../assets/images/2cha.jpg"),
     dialogue: [
       {
-        char: "Jun",
+        char: "Yuna",
         kr: "벌써 끝이에요? 2차 갑시다!",
         fr: "C'est déjà fini ? Allons au deuxième endroit !",
         side: "server",
         audio: NUIT_AUDIO.message1,
       },
       {
-        char: "Yuna",
+        char: "Jun",
         kr: "좋아요. 근처로 가요.",
         fr: "D’accord. Allons dans les environs.",
         side: "me",
         audio: NUIT_AUDIO.message2,
       },
       {
-        char: "Jun",
+        char: "Yuna",
         kr: "근처에 좋은 노래방 있어요.",
         fr: "Il y a un bon noraebang juste à côté.",
         side: "server",
         audio: NUIT_AUDIO.message3,
       },
       {
-        char: "Yuna",
+        char: "Jun",
         kr: "좋아요. 내일 해장국 먹어야겠어요.",
         fr: "D’accord. Demain, il va falloir manger du haejangguk.",
         side: "me",
@@ -477,7 +480,9 @@ export default function NightlifeImmersion() {
           <View style={styles.topNav}>
             <AppBackButton />
             <View>
-              <AppText variant="cardTitle" style={styles.navTitle}>Vie nocturne</AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>
+                Vie nocturne
+              </AppText>
             </View>
           </View>
 
@@ -495,7 +500,9 @@ export default function NightlifeImmersion() {
                   },
                 ]}
               >
-                <AppText variant="label" lineContract="singleLine"
+                <AppText
+                  variant="label"
+                  lineContract="singleLine"
                   style={[
                     styles.tabText,
                     activeScene.id === scene.id && {
@@ -530,15 +537,26 @@ export default function NightlifeImmersion() {
               />
 
               <View style={styles.cardHeader}>
-                <AppText variant="koreanSecondary" script="korean" lineContract="singleLine"
+                <AppText
+                  variant="koreanSecondary"
+                  script="korean"
+                  lineContract="singleLine"
                   style={[styles.koreanHeader, { color: activeScene.accent }]}
                 >
                   {activeScene.koreanTitle}
                 </AppText>
-                <AppText accessibilityRole="header" variant="sceneTitle" style={styles.sceneTitle}>{activeScene.title}</AppText>
+                <AppText
+                  accessibilityRole="header"
+                  variant="sceneTitle"
+                  style={styles.sceneTitle}
+                >
+                  {activeScene.title}
+                </AppText>
               </View>
 
-              <AppText variant="body" style={styles.sceneDesc}>{activeScene.description}</AppText>
+              <AppText variant="body" style={styles.sceneDesc}>
+                {activeScene.description}
+              </AppText>
 
               <Pressable onPress={advanceDialogue} style={styles.dialogueWrap}>
                 {activeScene.dialogue
@@ -561,20 +579,34 @@ export default function NightlifeImmersion() {
                           isActive && { borderColor: activeScene.accent },
                         ]}
                       >
-                        <AppText variant="label"
+                        <AppText
+                          variant="label"
                           style={[styles.sender, { color: activeScene.accent }]}
                         >
                           {line.char}
                         </AppText>
-                        <AppText variant="koreanSecondary" script="korean" style={styles.krTxt}>{line.kr}</AppText>
-                        <AppText variant="bodySecondary" tone="muted" style={styles.frTxt}>{line.fr}</AppText>
+                        <AppText
+                          variant="koreanSecondary"
+                          script="korean"
+                          style={styles.krTxt}
+                        >
+                          {line.kr}
+                        </AppText>
+                        <AppText
+                          variant="bodySecondary"
+                          tone="muted"
+                          style={styles.frTxt}
+                        >
+                          {line.fr}
+                        </AppText>
                       </Pressable>
                     );
                   })}
 
                 {isTyping && (
                   <View style={[styles.msg, styles.msgLeft, styles.typingMsg]}>
-                    <AppText variant="label"
+                    <AppText
+                      variant="label"
                       style={[styles.sender, { color: activeScene.accent }]}
                     >
                       {activeScene.dialogue[visibleMessages]?.char}
@@ -603,7 +635,8 @@ export default function NightlifeImmersion() {
                   </View>
                 )}
 
-                <AnimatedAppText variant="caption"
+                <AnimatedAppText
+                  variant="caption"
                   style={[
                     styles.tapHint,
                     shouldHighlightHint && {
@@ -623,11 +656,11 @@ export default function NightlifeImmersion() {
                     },
                   ]}
                 >
-                    {visibleMessages >= activeScene.dialogue.length
-                      ? VOC_DIALOGUE_COPY.restart
-                      : isTyping
-                        ? VOC_DIALOGUE_COPY.typing
-                        : VOC_DIALOGUE_COPY.continue}
+                  {visibleMessages >= activeScene.dialogue.length
+                    ? VOC_DIALOGUE_COPY.restart
+                    : isTyping
+                      ? VOC_DIALOGUE_COPY.typing
+                      : VOC_DIALOGUE_COPY.continue}
                 </AnimatedAppText>
               </Pressable>
 
@@ -637,7 +670,8 @@ export default function NightlifeImmersion() {
                   { borderColor: `${activeScene.accent}35` },
                 ]}
               >
-                <AppText variant="bodySecondary"
+                <AppText
+                  variant="bodySecondary"
                   style={[
                     styles.cultureHintText,
                     { color: activeScene.accent },
@@ -652,7 +686,9 @@ export default function NightlifeImmersion() {
           {/* NIGHTLIFE TOOLBOX */}
           <View style={styles.toolbox}>
             <View style={styles.toolboxTitleRow}>
-              <AppText variant="sectionTitle" style={styles.toolboxTitle}>Expressions clés</AppText>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>
+                Expressions clés
+              </AppText>
               <View
                 style={[
                   styles.toolboxLine,
@@ -696,9 +732,21 @@ export default function NightlifeImmersion() {
                       />
                       <View style={styles.expContent}>
                         <View style={styles.expTopRow}>
-                          <View style={{ flex: 1, minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH }}>
-                            <AppText variant="koreanPrimary" script="korean" style={styles.expWord}>{exp.word}</AppText>
-                            <AppText variant="caption"
+                          <View
+                            style={{
+                              flex: 1,
+                              minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH,
+                            }}
+                          >
+                            <AppText
+                              variant="koreanPrimary"
+                              script="korean"
+                              style={styles.expWord}
+                            >
+                              {exp.word}
+                            </AppText>
+                            <AppText
+                              variant="caption"
                               style={[
                                 styles.expRom,
                                 { color: activeScene.accent },
@@ -717,7 +765,9 @@ export default function NightlifeImmersion() {
                               },
                             ]}
                           >
-                            <AppText variant="caption" lineContract="singleLine"
+                            <AppText
+                              variant="caption"
+                              lineContract="singleLine"
                               style={[
                                 styles.listenIcon,
                                 { color: activeScene.accent },
@@ -725,12 +775,26 @@ export default function NightlifeImmersion() {
                             >
                               {isActive ? "●" : "▶"}
                             </AppText>
-                            <AppText variant="label" lineContract="singleLine" style={styles.listenText}>ÉCOUTER</AppText>
+                            <AppText
+                              variant="label"
+                              lineContract="singleLine"
+                              style={styles.listenText}
+                            >
+                              ÉCOUTER
+                            </AppText>
                           </View>
                         </View>
 
-                        <AppText variant="bodyStrong" style={styles.expMean}>{exp.mean}</AppText>
-                        <AppText variant="bodySecondary" tone="muted" style={styles.expCtx}>{exp.context}</AppText>
+                        <AppText variant="bodyStrong" style={styles.expMean}>
+                          {exp.mean}
+                        </AppText>
+                        <AppText
+                          variant="bodySecondary"
+                          tone="muted"
+                          style={styles.expCtx}
+                        >
+                          {exp.context}
+                        </AppText>
                       </View>
                     </BlurView>
                   </Pressable>
@@ -773,8 +837,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.15)",
   },
   backArrow: { color: "#fff", marginTop: -2 },
-  navEyebrow: {
-  },
+  navEyebrow: {},
   navTitle: { color: "#fff", opacity: 0.8 },
 
   header: {
@@ -793,8 +856,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
   },
-  neonBadgeText: {
-  },
+  neonBadgeText: {},
 
   tabContainer: {
     flexDirection: "row",
@@ -897,8 +959,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: "rgba(255,255,255,0.04)",
   },
-  cultureHintText: {
-  },
+  cultureHintText: {},
 
   toolbox: { marginTop: 40 },
   toolboxTitleRow: {
@@ -933,13 +994,12 @@ const styles = StyleSheet.create({
     color: COLORS.txt,
     marginBottom: 2,
   },
-  expRom: {
-  },
+  expRom: {},
   expMean: {
     color: COLORS.txt,
     marginBottom: 4,
   },
-  expCtx: { color: COLORS.muted},
+  expCtx: { color: COLORS.muted },
   listenPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -949,8 +1009,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  listenIcon: {
-  },
+  listenIcon: {},
   listenText: {
     color: "rgba(255,255,255,0.78)",
   },

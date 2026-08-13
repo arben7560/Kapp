@@ -99,7 +99,7 @@ const SCENES = withSceneAudio(
         "https://images.unsplash.com/photo-1562280963-8a5475740a10?auto=format&fit=crop&w=800&q=80",
       dialogue: [
         {
-          char: "Client",
+          char: "Cliente",
           kr: "이 가방은 얼마예요?",
           fr: "Combien coûte ce sac ?",
         },
@@ -109,7 +109,7 @@ const SCENES = withSceneAudio(
           fr: "C'est 258 000 won (I-sip-oh-man pal-cheon). Voulez-vous payer en plusieurs fois ?",
         },
         {
-          char: "Client",
+          char: "Cliente",
           kr: "삼 개월 할부도 가능해요?",
           fr: "Un paiement en trois mois est possible aussi ?",
         },

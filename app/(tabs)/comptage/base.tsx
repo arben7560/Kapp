@@ -191,7 +191,8 @@ const SCENES = [
         word: "다섯, 여섯, 일곱",
         rom: "Daseot, Yeoseot, Ilgob",
         mean: "5, 6, 7",
-        context: "Le milieu de la progression numérique.",
+        context:
+          "le 't' final ne doit pas être prononcé, il est à peine perceptible",
         audio: ENTRAINEMENT_AUDIO.toolbox3,
       },
       {
