@@ -15,6 +15,9 @@ export type MetroSpeechCategory =
   | "exit-confusion"
   | "duration-confusion"
   | "transfer-confusion"
+  | "line-confusion"
+  | "negation-conflict"
+  | "contextual-interpretation"
   | "wrong-destination"
   | "french"
   | "uncertain"
@@ -34,6 +37,24 @@ export type MetroSpeechCategory =
   | "not-understood"
   | "relevant-question";
 
+export type MetroSpeechIntent =
+  | "direction"
+  | "thanks"
+  | "repeat"
+  | "transfer"
+  | "duration"
+  | "unknown";
+
+type MetroContextualInterpretationRule = Readonly<{
+  targetIntent: Exclude<MetroSpeechIntent, "unknown">;
+  examples: readonly string[];
+  confidence: "matched" | "uncertain";
+  understood: string;
+  guidance: string;
+  allowNegation?: boolean;
+  matches: (value: string, transcript: string) => boolean;
+}>;
+
 export type MetroSpeechChoice = {
   id: string;
   label: string;
@@ -47,6 +68,7 @@ export type MetroSpeechMatch = {
   choice: MetroSpeechChoice | null;
   feedback: string;
   understoodWithCorrection: boolean;
+  interpretedIntent?: Exclude<MetroSpeechIntent, "unknown">;
 };
 
 const DIRECTION_CHOICE_ID = "choose_hongik_direction";
@@ -84,6 +106,86 @@ function includesAny(value: string, candidates: readonly string[]) {
   return candidates.some((candidate) => value.includes(compactKorean(candidate)));
 }
 
+function hasMetroNegation(value: string) {
+  return includesAny(value, [
+    "안",
+    "못",
+    "않",
+    "아니",
+    "말고",
+    "필요없",
+    "생각없",
+  ]);
+}
+
+function hasMetroQuestionShape(value: string, transcript: string) {
+  return /[?？]/u.test(transcript) || includesAny(value, [
+    "어디",
+    "어느",
+    "어떻게",
+    "얼마나",
+    "몇",
+    "뭐",
+    "무엇",
+    "나요",
+    "까요",
+    "해야",
+    "있어요",
+    "맞아요",
+    "예요",
+    "이에요",
+    "돼요",
+  ]);
+}
+
+function normalizeMetroLineNumbers(value: string) {
+  return value
+    .replace(/일호선/g, "1호선")
+    .replace(/이호선/g, "2호선")
+    .replace(/삼호선/g, "3호선")
+    .replace(/사호선/g, "4호선")
+    .replace(/오호선/g, "5호선")
+    .replace(/육호선/g, "6호선")
+    .replace(/칠호선/g, "7호선")
+    .replace(/팔호선/g, "8호선")
+    .replace(/구호선/g, "9호선");
+}
+
+function findEffectiveMetroLineNumbers(value: string) {
+  const normalized = normalizeMetroLineNumbers(value);
+  const mentions = [...normalized.matchAll(/([1-9])호선/gu)].map((match) => ({
+    line: Number(match[1]),
+    index: match.index ?? -1,
+  }));
+  const correctionIndex = [...normalized.matchAll(
+    /(?:아니라|아니요?|말고)(?=[1-9]호선)/gu,
+  )].at(-1)?.index ?? -1;
+  const effectiveMentions = correctionIndex >= 0
+    ? mentions.filter(({ index }) => index > correctionIndex)
+    : mentions;
+
+  return [...new Set(effectiveMentions.map(({ line }) => line))];
+}
+
+function getMetroCurrentExpectation(choices: readonly MetroSpeechChoice[]) {
+  const intents = new Set(choices.map(getMetroSpeechChoiceIntent));
+
+  if (intents.has("direction")) {
+    return "Ici, tu dois demander comment aller vers Gangnam depuis Hongik University.";
+  }
+
+  const actions = [
+    intents.has("duration") ? "demander la durée" : null,
+    intents.has("transfer") ? "demander s’il faut changer de ligne" : null,
+    intents.has("repeat") ? "demander de répéter" : null,
+    intents.has("thanks") ? "indiquer que tu as compris et terminer l’échange" : null,
+  ].filter(Boolean);
+
+  return actions.length > 0
+    ? `Ici, les choix proposés permettent de ${actions.join(", ")}.`
+    : "Ici, ta réponse doit correspondre à l’action proposée à cette étape.";
+}
+
 function findChoice(
   choices: readonly MetroSpeechChoice[],
   predicate: (choice: MetroSpeechChoice) => boolean,
@@ -91,7 +193,9 @@ function findChoice(
   return choices.find(predicate) ?? null;
 }
 
-export function getMetroSpeechChoiceIntent(choice: MetroSpeechChoice) {
+export function getMetroSpeechChoiceIntent(
+  choice: MetroSpeechChoice,
+): MetroSpeechIntent {
   if (choice.id === DIRECTION_CHOICE_ID) return "direction";
   if (/감사|고마/.test(choice.korean) || /^thank/.test(choice.id)) {
     return "thanks";
@@ -110,6 +214,215 @@ export function getMetroSpeechChoiceIntent(choice: MetroSpeechChoice) {
   }
 
   return "unknown";
+}
+
+const METRO_CONTEXTUAL_INTERPRETATIONS: readonly MetroContextualInterpretationRule[] = [
+  {
+    targetIntent: "direction",
+    examples: [
+      "강남행은 어디예요?",
+      "강남 가는 플랫폼이 어디예요?",
+      "강남 쪽 승강장이 어디예요?",
+    ],
+    confidence: "matched",
+    understood: "tu cherches le quai ou le train qui va vers Gangnam",
+    guidance:
+      "Dans cette situation, une formulation naturelle est : « 강남 방향은 어느 쪽이에요? »",
+    matches: (value, transcript) =>
+      includesAny(value, ["강남행", "강남가는플랫폼", "강남쪽승강장", "강남가는열차", "강남쪽타는곳"]) &&
+      hasMetroQuestionShape(value, transcript),
+  },
+  {
+    targetIntent: "direction",
+    examples: ["강남에 가고 싶어요.", "강남역을 찾고 있어요."],
+    confidence: "uncertain",
+    understood: "tu veux aller à Gangnam ou que tu cherches le trajet vers Gangnam",
+    guidance:
+      "L’intention est proche, mais transforme-la en question : « 강남에 어떻게 가요? »",
+    matches: (value) =>
+      includesAny(value, ["강남에가고싶", "강남가고싶", "강남역을찾", "강남가는길을찾", "강남가야해"]) &&
+      !includesAny(value, ["어떻게", "어디", "어느쪽"]),
+  },
+  {
+    targetIntent: "duration",
+    examples: ["강남까지 몇 분이에요?", "강남까지 오래 걸려요?"],
+    confidence: "matched",
+    understood: "tu demandes combien de temps il faut pour arriver à Gangnam",
+    guidance: "La formulation la plus claire est : « 강남까지 얼마나 걸려요? »",
+    matches: (value, transcript) =>
+      includesAny(value, ["몇분이에요", "몇분쯤", "소요시간", "오래걸려", "금방가요", "빨리가요"]) &&
+      hasMetroQuestionShape(value, transcript),
+  },
+  {
+    targetIntent: "duration",
+    examples: ["강남까지 오래 안 걸려요?"],
+    confidence: "matched",
+    understood: "tu demandes si le trajet vers Gangnam ne prend pas trop longtemps",
+    guidance: "Une question plus neutre est : « 강남까지 얼마나 걸려요? »",
+    allowNegation: true,
+    matches: (value, transcript) =>
+      includesAny(value, ["오래안걸려", "시간이많이안걸려"]) &&
+      hasMetroQuestionShape(value, transcript),
+  },
+  {
+    targetIntent: "transfer",
+    examples: ["다른 노선으로 바꿔야 해요?", "중간에 내려야 해요?"],
+    confidence: "uncertain",
+    understood: "tu demandes s’il faut descendre en route ou prendre une autre ligne",
+    guidance:
+      "Cela correspond probablement à une correspondance. Dis : « 갈아타야 하나요? »",
+    matches: (value, transcript) =>
+      includesAny(value, ["다른노선", "다른라인", "중간에내려", "중간에바꿔", "다른지하철", "한번내려"]) &&
+      includesAny(value, ["바꿔", "타", "내려", "갈아"]) &&
+      hasMetroQuestionShape(value, transcript),
+  },
+  {
+    targetIntent: "transfer",
+    examples: ["갈아타지 않아도 돼요?", "환승 안 해도 돼요?"],
+    confidence: "matched",
+    understood: "tu demandes si tu peux rester sur la même ligne sans correspondance",
+    guidance: "Tu peux aussi demander directement : « 갈아타야 하나요? »",
+    allowNegation: true,
+    matches: (value, transcript) =>
+      includesAny(value, ["갈아타지않아도돼", "환승안해도돼", "바꿔타지않아도돼"]) &&
+      hasMetroQuestionShape(value, transcript),
+  },
+  {
+    targetIntent: "repeat",
+    examples: ["방금 뭐라고 하셨어요?", "조금 더 천천히 부탁드려요."],
+    confidence: "matched",
+    understood: "tu n’as pas bien entendu et demandes que l’explication soit répétée",
+    guidance:
+      "Tu peux répondre simplement : « 다시 한번 말씀해 주세요. »",
+    allowNegation: true,
+    matches: (value) => includesAny(value, [
+      "뭐라고하셨어",
+      "잘안들려",
+      "잘못들었",
+      "못들었",
+      "다시설명",
+      "한번만더",
+      "조금더천천히",
+    ]),
+  },
+  {
+    targetIntent: "thanks",
+    examples: ["도움이 됐어요.", "이제 길을 알겠어요."],
+    confidence: "matched",
+    understood: "tu indiques que l’explication t’a aidé et que tu sais maintenant où aller",
+    guidance:
+      "Pour terminer poliment, tu peux ajouter : « 감사합니다. »",
+    matches: (value) => includesAny(value, [
+      "도움이됐",
+      "이제길을알겠",
+      "어디로갈지알겠",
+      "이제찾을수있",
+      "덕분에알겠",
+    ]),
+  },
+] as const;
+
+function getMetroContextualRulesForValue(value: string, transcript: string) {
+  const hasNegation = hasMetroNegation(value);
+  return METRO_CONTEXTUAL_INTERPRETATIONS.filter(
+    ({ allowNegation, matches }) =>
+      matches(value, transcript) && (!hasNegation || allowNegation),
+  );
+}
+
+function getMetroContextualInterpretation(
+  value: string,
+  transcript: string,
+  choices: readonly MetroSpeechChoice[],
+): MetroSpeechMatch | null {
+  const availableRules = getMetroContextualRulesForValue(value, transcript)
+    .flatMap((rule) => {
+      const choice = findChoice(
+        choices,
+        (candidate) => getMetroSpeechChoiceIntent(candidate) === rule.targetIntent,
+      );
+      return choice ? [{ rule, choice }] : [];
+    });
+
+  if (availableRules.length > 1) {
+    return {
+      reason: "needs-help",
+      category: "uncertain",
+      choice: null,
+      feedback: withAvailableChoices(
+        `J’ai compris plusieurs intentions possibles. ${getMetroCurrentExpectation(choices)}`,
+        choices,
+      ),
+      understoodWithCorrection: false,
+    };
+  }
+
+  if (availableRules.length !== 1) return null;
+
+  const [{ rule, choice }] = availableRules;
+  const feedback = `J’ai compris que ${rule.understood}. ${getMetroCurrentExpectation(choices)} ${rule.guidance}`;
+
+  if (rule.confidence === "matched") {
+    return {
+      ...matched("contextual-interpretation", choice, feedback, true),
+      interpretedIntent: rule.targetIntent,
+    };
+  }
+
+  return {
+    reason: "uncertain",
+    category: "contextual-interpretation",
+    choice,
+    feedback: withAvailableChoices(feedback, choices),
+    understoodWithCorrection: false,
+    interpretedIntent: rule.targetIntent,
+  };
+}
+
+function getMetroUnavailableContextualFeedback(
+  value: string,
+  transcript: string,
+  choices: readonly MetroSpeechChoice[],
+) {
+  const availableIntents = new Set(choices.map(getMetroSpeechChoiceIntent));
+  const unavailableRules = getMetroContextualRulesForValue(value, transcript)
+    .filter(({ targetIntent }) => !availableIntents.has(targetIntent));
+
+  if (unavailableRules.length !== 1) return null;
+
+  const [rule] = unavailableRules;
+  return `J’ai compris que ${rule.understood}. ${getMetroCurrentExpectation(choices)}`;
+}
+
+function getMetroIncompleteContextualFeedback(
+  value: string,
+  choices: readonly MetroSpeechChoice[],
+) {
+  const intents = new Set(choices.map(getMetroSpeechChoiceIntent));
+  const expectation = getMetroCurrentExpectation(choices);
+
+  if (
+    intents.has("direction") &&
+    includesAny(value, ["지하철", "플랫폼", "승강장", "가는길", "방향"]) &&
+    !includesAny(value, ["강남", ...DESTINATION_CONFUSIONS])
+  ) {
+    return `J’ai compris que tu cherches un métro, un quai ou une direction, mais tu n’as pas indiqué la destination. ${expectation}`;
+  }
+  if (
+    intents.has("duration") &&
+    includesAny(value, ["강남까지", "시간", "몇분"]) &&
+    !includesAny(value, ["걸", "분이에요", "얼마나", "오래"])
+  ) {
+    return `J’ai compris que tu parles du temps de trajet, mais la question est incomplète. ${expectation}`;
+  }
+  if (
+    intents.has("transfer") &&
+    includesAny(value, ["다른노선", "다른라인", "중간에", "환승역"]) &&
+    !includesAny(value, ["바꿔", "타야", "내려", "어디", "있어요"])
+  ) {
+    return `J’ai compris que tu évoques une autre ligne ou une étape intermédiaire, mais tu n’as pas formulé la question. ${expectation}`;
+  }
+  return null;
 }
 
 function withAvailableChoices(
@@ -210,6 +523,13 @@ export function getMetroSpeechContextualStrings(
   choices: readonly MetroSpeechChoice[],
 ) {
   const available = choices.map((choice) => choice.korean);
+  const contextualExamples = METRO_CONTEXTUAL_INTERPRETATIONS
+    .filter(({ targetIntent }) =>
+      choices.some(
+        (choice) => getMetroSpeechChoiceIntent(choice) === targetIntent,
+      ),
+    )
+    .flatMap(({ examples }) => examples);
 
   if (
     choices.some(
@@ -218,6 +538,7 @@ export function getMetroSpeechContextualStrings(
   ) {
     return [
       ...available,
+      ...contextualExamples,
       "강남",
       "강남역",
       "홍대입구",
@@ -257,6 +578,7 @@ export function getMetroSpeechContextualStrings(
 
     return [
       ...available,
+      ...contextualExamples,
       "다시요",
       "한 번 더요",
       "다시 말해 주세요",
@@ -298,7 +620,7 @@ export function getMetroSpeechContextualStrings(
     ];
   }
 
-  return available;
+  return [...available, ...contextualExamples];
 }
 
 export function getMetroSpeechModelPhrase() {
@@ -352,6 +674,48 @@ export function matchMetroSpeechIntent(
     choices,
     (choice) => getMetroSpeechChoiceIntent(choice) === "transfer",
   );
+  const effectiveLineNumbers = findEffectiveMetroLineNumbers(korean);
+
+  if (
+    directionChoice &&
+    (effectiveLineNumbers.length > 1 ||
+      effectiveLineNumbers.some((line) => line !== 2))
+  ) {
+    return help(
+      "line-confusion",
+      effectiveLineNumbers.length > 1
+        ? `J’ai entendu plusieurs lignes (${effectiveLineNumbers
+            .map((line) => `${line}호선`)
+            .join(" et ")}). Ici, le trajet vers Gangnam utilise la ligne 2.`
+        : `J’ai entendu la ligne ${effectiveLineNumbers[0]}. Ici, le trajet vers Gangnam utilise la ligne 2 : demande où prendre « 2호선 » vers Gangnam.`,
+      attemptNumber,
+    );
+  }
+
+  const contextualInterpretation = getMetroContextualInterpretation(
+    korean,
+    transcript,
+    choices,
+  );
+
+  if (contextualInterpretation) {
+    return contextualInterpretation;
+  }
+
+  const unavailableContextualFeedback = getMetroUnavailableContextualFeedback(
+    korean,
+    transcript,
+    choices,
+  );
+
+  if (unavailableContextualFeedback) {
+    return help(
+      "out-of-scope",
+      unavailableContextualFeedback,
+      attemptNumber,
+      directionChoice ? "direction" : "follow-up",
+    );
+  }
 
   if (!directionChoice) {
     const hasExactDurationQuestion = includesAny(korean, [
@@ -392,6 +756,8 @@ export function matchMetroSpeechIntent(
       "모르겠",
       "잘못들었",
       "못들었",
+      "이해하지못",
+      "이해하지않",
     ]);
     const hasRepeat = includesAny(korean, [
       "다시",
@@ -414,6 +780,13 @@ export function matchMetroSpeechIntent(
       includesAny(korean, ["맞", "어디", "뭐", "이에요", "예요", "호선"]);
     const isOnlyAcknowledgement = includesAny(korean, ["네", "예"]) &&
       ["네", "예", "아네", "아예"].includes(korean);
+    const hasNegativeDuration =
+      hasDurationQuestion &&
+      includesAny(korean, ["시간안", "시간은안", "몇분안", "오래안", "궁금하지않", "묻지않", "물어보지않"]);
+    const hasNegativeTransfer =
+      hasTransferQuestion &&
+      includesAny(korean, ["환승안", "갈아타지않", "갈아타면안", "바꿔타지않", "묻지않"]) &&
+      !includesAny(korean, ["환승안해도돼", "갈아타지않아도돼", "바꿔타지않아도돼"]);
 
     if (hasExitQuestion) {
       return help(
@@ -428,6 +801,15 @@ export function matchMetroSpeechIntent(
       return help(
         "uncertain",
         "Tu as posé deux questions : la durée et la correspondance. Pose-les l’une après l’autre.",
+        attemptNumber,
+        "follow-up",
+      );
+    }
+
+    if (hasNegativeDuration || hasNegativeTransfer) {
+      return help(
+        "negation-conflict",
+        `J’ai entendu que tu nies ou refuses cette question. ${getMetroCurrentExpectation(choices)}`,
         attemptNumber,
         "follow-up",
       );
@@ -668,6 +1050,19 @@ export function matchMetroSpeechIntent(
       return matched("natural", exactChoice, "Réponse comprise.");
     }
 
+    const incompleteContextualFeedback = getMetroIncompleteContextualFeedback(
+      korean,
+      choices,
+    );
+    if (incompleteContextualFeedback) {
+      return help(
+        "incomplete",
+        incompleteContextualFeedback,
+        attemptNumber,
+        "follow-up",
+      );
+    }
+
     return help(
       "out-of-scope",
       "Choisis une des réponses proposées.",
@@ -730,6 +1125,17 @@ export function matchMetroSpeechIntent(
     "오래걸",
   ]);
   const hasTransfer = includesAny(korean, ["환승", "갈아타", "바꿔타"]);
+  const hasNegativeDirection =
+    hasGangnam &&
+    includesAny(korean, [
+      "강남안가",
+      "강남에안가",
+      "강남가지않",
+      "강남못가",
+      "강남가면안",
+      "강남방향아니",
+      "강남말고",
+    ]);
   const wrongDestination = WRONG_DESTINATIONS.find((station) =>
     korean.includes(compactKorean(station)),
   );
@@ -741,14 +1147,19 @@ export function matchMetroSpeechIntent(
     ]),
   );
   const selfCorrectionStation = WRONG_DESTINATIONS.find((station) => {
-    const stationIndex = korean.indexOf(compactKorean(station));
-    const correctionIndex = korean.indexOf("아니", stationIndex + 1);
-    const gangnamIndex = korean.indexOf("강남", correctionIndex + 1);
-    return (
-      stationIndex >= 0 &&
-      correctionIndex > stationIndex &&
-      gangnamIndex > correctionIndex
+    const normalizedStation = compactKorean(station);
+    const stationIndex = korean.indexOf(normalizedStation);
+    const gangnamIndex = korean.indexOf(
+      "강남",
+      stationIndex + normalizedStation.length,
     );
+    if (stationIndex < 0 || gangnamIndex < 0) return false;
+
+    const correctionSegment = korean.slice(
+      stationIndex + normalizedStation.length,
+      gangnamIndex,
+    );
+    return /(?:아니라|아니(?!면)|말고)/u.test(correctionSegment);
   });
   const hasSelfCorrection = !!selfCorrectionStation;
   const isFrench = /[a-zàâçéèêëîïôûùüÿœ]/i.test(transcript);
@@ -757,6 +1168,14 @@ export function matchMetroSpeechIntent(
     ["direction", "cote", "quai", "train", "metro"].some((token) =>
       latin.includes(token),
     );
+
+  if (hasNegativeDirection) {
+    return help(
+      "negation-conflict",
+      `J’ai compris que tu nies ou écartes le trajet vers Gangnam. ${getMetroCurrentExpectation(choices)}`,
+      attemptNumber,
+    );
+  }
 
   if (hasExit) {
     return help(
@@ -977,6 +1396,18 @@ export function matchMetroSpeechIntent(
     return help(
       "direction-only",
       "Il manque la destination. Ajoute « 강남 ».",
+      attemptNumber,
+    );
+  }
+
+  const incompleteContextualFeedback = getMetroIncompleteContextualFeedback(
+    korean,
+    choices,
+  );
+  if (incompleteContextualFeedback) {
+    return help(
+      "incomplete",
+      incompleteContextualFeedback,
       attemptNumber,
     );
   }

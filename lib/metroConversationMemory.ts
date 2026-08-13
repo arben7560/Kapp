@@ -1,5 +1,6 @@
 import type {
   MetroSpeechCategory,
+  MetroSpeechIntent,
   MetroSpeechMatch,
 } from "./metroSpeechIntents";
 
@@ -11,6 +12,7 @@ export type MetroConversationAttempt = {
   feedback: string;
   matched: boolean;
   understoodWithCorrection: boolean;
+  interpretedIntent?: Exclude<MetroSpeechIntent, "unknown">;
 };
 
 export type MetroConversationMemory = {
@@ -54,6 +56,7 @@ export function recordMetroSpeechAttempt(
         feedback: input.result.feedback,
         matched: input.result.reason === "matched",
         understoodWithCorrection: input.result.understoodWithCorrection,
+        interpretedIntent: input.result.interpretedIntent,
       },
     ],
   };
@@ -97,10 +100,16 @@ export function buildMetroConversationSummary(
       .filter(({ matched }) => matched)
       .map(({ category }) => category),
   );
+  const successfulInterpretedIntents = new Set(
+    memory.attempts
+      .filter(({ matched }) => matched)
+      .flatMap(({ interpretedIntent }) => interpretedIntent ? [interpretedIntent] : []),
+  );
   const achievements: string[] = [];
   const vocabularyToReview = new Set<string>();
 
   if (
+    successfulInterpretedIntents.has("direction") ||
     [...successfulCategories].some((category) =>
       [
         "natural",
@@ -115,6 +124,7 @@ export function buildMetroConversationSummary(
     achievements.push("Demande vers Gangnam comprise");
   }
   if (
+    successfulInterpretedIntents.has("repeat") ||
     [...successfulCategories].some((category) =>
       [
         "repeat",
@@ -126,13 +136,22 @@ export function buildMetroConversationSummary(
   ) {
     achievements.push("Demande de répétition réussie");
   }
-  if (successfulCategories.has("duration") || successfulCategories.has("duration-imperfection")) {
+  if (
+    successfulInterpretedIntents.has("duration") ||
+    successfulCategories.has("duration") ||
+    successfulCategories.has("duration-imperfection")
+  ) {
     achievements.push("Durée du trajet demandée");
   }
-  if (successfulCategories.has("transfer") || successfulCategories.has("transfer-imperfection")) {
+  if (
+    successfulInterpretedIntents.has("transfer") ||
+    successfulCategories.has("transfer") ||
+    successfulCategories.has("transfer-imperfection")
+  ) {
     achievements.push("Correspondance vérifiée");
   }
   if (
+    successfulInterpretedIntents.has("thanks") ||
     [...successfulCategories].some((category) =>
       ["thanks", "understood", "thanks-informal"].includes(category),
     )
@@ -187,6 +206,15 @@ export function buildMetroConversationSummary(
   }
   if (categories.has("transfer-imperfection")) {
     vocabularyToReview.add("Correspondance : 환승해야 해요?");
+  }
+  if (categories.has("contextual-interpretation")) {
+    vocabularyToReview.add("Reformuler précisément l’intention comprise");
+  }
+  if (categories.has("line-confusion")) {
+    vocabularyToReview.add("Ligne de la mission : 2호선");
+  }
+  if (categories.has("negation-conflict")) {
+    vocabularyToReview.add("Négation : vérifier le sens affirmé ou refusé");
   }
 
   if (categories.has("exit-confusion")) {

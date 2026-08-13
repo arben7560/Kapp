@@ -577,6 +577,153 @@ test("les erreurs phonétiques de correspondance sont récupérées sans bloquer
   }
 });
 
+test("Métro interprète les formulations proches selon le nœud courant", () => {
+  for (const [transcript, nodeChoices, expectedChoice, expectedReason] of [
+    ["강남행은 어디예요?", [direction], direction, "matched"],
+    ["강남 가는 플랫폼이 어디예요?", [direction], direction, "matched"],
+    ["강남에 가고 싶어요.", [direction], direction, "uncertain"],
+    ["강남까지 몇 분쯤이에요?", [repeat, duration, transfer, thanks], duration, "matched"],
+    ["강남까지 오래 안 걸려요?", [repeat, duration, transfer, thanks], duration, "matched"],
+    ["다른 노선으로 바꿔야 해요?", [repeat, duration, transfer, thanks], transfer, "uncertain"],
+    ["환승 안 해도 돼요?", [repeat, duration, transfer, thanks], transfer, "matched"],
+    ["방금 뭐라고 하셨어요?", [repeat, thanks], repeat, "matched"],
+    ["도움이 됐어요.", [repeat, thanks], thanks, "matched"],
+  ]) {
+    const result = matchMetroSpeechIntent(transcript, nodeChoices);
+    assert.equal(result.reason, expectedReason, transcript);
+    assert.equal(result.choice?.id, expectedChoice.id, transcript);
+    assert.equal(result.category, "contextual-interpretation", transcript);
+    assert.match(result.feedback, /J’ai compris/u, transcript);
+    assert.match(result.feedback, /Ici,/u, transcript);
+  }
+});
+
+test("une intention proche au mauvais tour est expliquée sans fuite de branche", () => {
+  const result = matchMetroSpeechIntent("강남행은 어디예요?", [
+    repeat,
+    duration,
+    transfer,
+    thanks,
+  ]);
+
+  assert.equal(result.reason, "needs-help");
+  assert.equal(result.category, "out-of-scope");
+  assert.equal(result.choice, null);
+  assert.match(result.feedback, /quai ou le train.*Gangnam/u);
+  assert.match(result.feedback, /choix proposés/u);
+});
+
+test("les intentions proches mais incomplètes reçoivent une analyse du tour", () => {
+  const directionResult = matchMetroSpeechIntent("승강장 어디예요?", [direction]);
+  assert.equal(directionResult.reason, "needs-help");
+  assert.equal(directionResult.category, "incomplete");
+  assert.match(directionResult.feedback, /pas indiqué la destination/u);
+
+  const transferResult = matchMetroSpeechIntent("다른 노선이에요.", [
+    repeat,
+    duration,
+    transfer,
+    thanks,
+  ]);
+  assert.equal(transferResult.reason, "needs-help");
+  assert.equal(transferResult.category, "incomplete");
+  assert.match(transferResult.feedback, /autre ligne.*pas formulé la question/u);
+});
+
+test("la négation reste prioritaire sur une intention lexicale proche", () => {
+  for (const [transcript, nodeChoices] of [
+    ["강남에 안 가요.", [direction]],
+    ["시간은 안 물어봐요.", [repeat, duration, transfer, thanks]],
+    ["환승 안 해요.", [repeat, duration, transfer, thanks]],
+  ]) {
+    const result = matchMetroSpeechIntent(transcript, nodeChoices);
+    assert.equal(result.reason, "needs-help", transcript);
+    assert.equal(result.category, "negation-conflict", transcript);
+    assert.equal(result.choice, null, transcript);
+  }
+
+  const notUnderstood = matchMetroSpeechIntent("이해하지 못했어요.", [
+    repeat,
+    thanks,
+  ]);
+  assert.equal(notUnderstood.reason, "matched");
+  assert.equal(notUnderstood.category, "not-understood");
+  assert.equal(notUnderstood.choice?.id, repeat.id);
+});
+
+test("les numéros de ligne contradictoires sont bloqués et l’auto-correction est conservée", () => {
+  for (const transcript of [
+    "3호선 어디서 타요?",
+    "2호선하고 6호선 어디서 타요?",
+    "6호선 아니면 2호선 어디서 타요?",
+  ]) {
+    const result = matchMetroSpeechIntent(transcript, [direction]);
+    assert.equal(result.reason, "needs-help", transcript);
+    assert.equal(result.category, "line-confusion", transcript);
+    assert.equal(result.choice, null, transcript);
+  }
+
+  const corrected = matchMetroSpeechIntent(
+    "6호선 아니, 2호선 어디서 타요?",
+    [direction],
+  );
+  assert.equal(corrected.reason, "matched");
+  assert.equal(corrected.choice?.id, direction.id);
+
+  const alternativeDestinations = matchMetroSpeechIntent(
+    "이태원 아니면 강남에 어떻게 가요?",
+    [direction],
+  );
+  assert.equal(alternativeDestinations.reason, "needs-help");
+  assert.equal(alternativeDestinations.category, "wrong-destination");
+  assert.equal(alternativeDestinations.choice, null);
+});
+
+test("les nouvelles proximités enrichissent uniquement le contexte vocal du bon tour", () => {
+  const directionContext = getMetroSpeechContextualStrings([direction]);
+  assert.ok(directionContext.includes("강남행은 어디예요?"));
+  assert.ok(directionContext.includes("강남 가는 플랫폼이 어디예요?"));
+  assert.ok(!directionContext.includes("다른 노선으로 바꿔야 해요?"));
+
+  const followUpContext = getMetroSpeechContextualStrings([
+    repeat,
+    duration,
+    transfer,
+    thanks,
+  ]);
+  assert.ok(followUpContext.includes("다른 노선으로 바꿔야 해요?"));
+  assert.ok(followUpContext.includes("방금 뭐라고 하셨어요?"));
+  assert.ok(!followUpContext.includes("강남행은 어디예요?"));
+});
+
+test("le bilan conserve l’intention métier derrière une interprétation contextuelle", () => {
+  let memory = createMetroConversationMemory();
+  memory = recordMetroSpeechAttempt(memory, {
+    nodeId: "start",
+    transcript: "강남행은 어디예요?",
+    result: matchMetroSpeechIntent("강남행은 어디예요?", [direction]),
+  });
+  memory = recordMetroSpeechAttempt(memory, {
+    nodeId: "follow-up",
+    transcript: "강남까지 몇 분쯤이에요?",
+    result: matchMetroSpeechIntent("강남까지 몇 분쯤이에요?", [
+      repeat,
+      duration,
+      transfer,
+      thanks,
+    ]),
+  });
+
+  const summary = buildMetroConversationSummary(memory);
+  assert.ok(summary.achievements.includes("Demande vers Gangnam comprise"));
+  assert.ok(summary.achievements.includes("Durée du trajet demandée"));
+  assert.ok(
+    summary.vocabularyToReview.includes(
+      "Reformuler précisément l’intention comprise",
+    ),
+  );
+});
+
 test("la mission vocale réutilise ask-direction et conserve son accès premium", () => {
   const source = readFileSync(
     new URL("../data/lesson/metro/metroMissions.ts", import.meta.url),
