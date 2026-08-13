@@ -1024,6 +1024,12 @@ function evaluateDefinition(
   const hasConcept = containsExplicitConcept(value, definition);
   const hasPredicate = hasCompatiblePredicate(value, definition);
   const terse = definition.allowTerse && isTerseConcept(value, definition);
+  const hasExpectedOrderQuantity =
+    (definition.kind === "meat-order" || definition.kind === "side-order") &&
+    definition.expectedQuantity !== undefined &&
+    findQuantityMentions(value).some(
+      ({ quantity }) => quantity === definition.expectedQuantity,
+    );
 
   if (definition.kind === "repeat") {
     if (!hasConcept && !explicit) return null;
@@ -1069,7 +1075,10 @@ function evaluateDefinition(
     }
   } else if (definition.kind === "payment") {
     if (!explicit && !(hasConcept && (hasPredicate || terse))) return null;
-  } else if (!explicit && !(hasConcept && (hasPredicate || terse))) {
+  } else if (
+    !explicit &&
+    !(hasConcept && (hasPredicate || terse || hasExpectedOrderQuantity))
+  ) {
     return null;
   }
 
