@@ -21,6 +21,7 @@ import {
   type AeroportMission,
 } from "../../data/lesson/aeroport/aeroportMissions";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
+import { AEROPORT_SPEECH_PILOT_MISSION_ID } from "../../lib/aeroportSpeechIntents";
 import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
@@ -32,6 +33,7 @@ const MUTED = "rgba(255,255,255,0.66)";
 const SOFT = "rgba(255,255,255,0.46)";
 const LINE = "rgba(255,255,255,0.10)";
 const CYAN = "#22D3EE";
+const VOCAL_VIOLET = "#A78BFA";
 const GOLD = SeoulMidnightGlass.colors.premiumGold;
 
 function normalizeMode(rawMode: string | string[] | undefined) {
@@ -72,7 +74,13 @@ export default function AeroportMissionsScreen() {
     setTrack("aeroport_ia");
     router.push({
       pathname: "/lesson/aeroportIA",
-      params: { mode, mission: mission.id },
+      params: {
+        mode:
+          mission.id === AEROPORT_SPEECH_PILOT_MISSION_ID
+            ? "guided"
+            : mode,
+        mission: mission.id,
+      },
     });
   };
 
@@ -103,6 +111,8 @@ export default function AeroportMissionsScreen() {
             {aeroportMissions.map((mission) => {
               const isPremium = mission.access === "premium";
               const isLocked = isPremium && !hasPremiumAccess;
+              const isVocal =
+                mission.id === AEROPORT_SPEECH_PILOT_MISSION_ID;
               return (
                 <Pressable
                   key={mission.id}
@@ -131,7 +141,11 @@ export default function AeroportMissionsScreen() {
                   ]}
                 >
                   <View style={styles.cardTop}>
-                    <MissionAccessBadge access={mission.access} accent={CYAN} />
+                    <MissionAccessBadge
+                      access={mission.access}
+                      accent={isVocal ? VOCAL_VIOLET : CYAN}
+                      variant={isVocal ? "vocal" : "access"}
+                    />
                     <AppText variant="caption" lineContract="singleLine"
                       style={[
                         styles.cardArrow,
