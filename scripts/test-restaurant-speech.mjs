@@ -513,6 +513,76 @@ test("le contexte natif contient les variantes valides mais pas les confusions A
   assert.ok(!paymentContext.includes("삼겹살 2인분 주세요."));
 });
 
+test("les formulations proches sont interprétées selon la question courante", () => {
+  for (const [transcript, nodeChoices, expectedChoiceId, expectedReason] of [
+    ["돼지고기 두 명", meatChoices, "ped_order_samgyeopsal", "uncertain"],
+    ["메뉴 중에 뭐 먹을까요?", meatChoices, "ped_order_recommendation", "matched"],
+    ["직원분한테 맡길게요", grillChoices, "ped_staff_grill_samgyeopsal", "uncertain"],
+    ["된장국 하나 주세요", sideChoices, "ped_add_doenjang", "uncertain"],
+    ["달걀 요리 주세요", sideChoices, "ped_add_egg", "uncertain"],
+    ["순한 맛으로 해 주세요", spiceChoices, "ped_not_spicy", "matched"],
+    ["야채 넣어 주세요", extraChoices, "ped_more_lettuce", "uncertain"],
+    ["김치 좀 가져다 주세요", extraChoices, "ped_more_banchan", "uncertain"],
+    ["현찰로 낼게요", paymentChoices, "ped_pay_cash", "matched"],
+    ["삼성페이로 할게요", paymentChoices, "ped_pay_card", "uncertain"],
+    ["종이로 주세요", receiptChoices, "ped_receipt_yes", "uncertain"],
+    ["버려 주세요", receiptChoices, "ped_receipt_no", "matched"],
+    ["안 줘도 돼요", receiptChoices, "ped_receipt_no", "matched"],
+    ["충분해요", extraChoices, "ped_no_extra", "matched"],
+    ["더 필요하지 않아요", extraChoices, "ped_no_extra", "matched"],
+  ]) {
+    const result = matchRestaurantSpeechIntent(transcript, nodeChoices);
+    assert.equal(result.reason, expectedReason, transcript);
+    assert.equal(result.choice?.id, expectedChoiceId, transcript);
+    assert.equal(result.category, "contextual-interpretation", transcript);
+    assert.match(result.feedback, /J’ai compris/u, transcript);
+  }
+});
+
+test("la demande de légumes reçoit une analyse fidèle et une reformulation ciblée", () => {
+  const result = matchRestaurantSpeechIntent("야채 넣어 주세요", extraChoices);
+  assert.equal(result.reason, "uncertain");
+  assert.equal(result.choice?.id, "ped_more_lettuce");
+  assert.match(result.feedback, /ajouter des légumes/u);
+  assert.match(result.feedback, /salade/u);
+  assert.match(result.feedback, /accompagnements/u);
+  assert.match(result.feedback, /상추 좀 더 주세요/u);
+});
+
+test("une intention proche au mauvais moment est comprise sans changer de branche", () => {
+  const result = matchRestaurantSpeechIntent("야채 넣어 주세요", meatChoices);
+  assert.equal(result.reason, "needs-help");
+  assert.equal(result.category, "wrong-concept");
+  assert.equal(result.choice, null);
+  assert.match(result.feedback, /ajouter des légumes/u);
+  assert.match(result.feedback, /quelle viande/u);
+});
+
+test("les intentions proches mais incomplètes obtiennent une aide liée au tour", () => {
+  for (const [transcript, nodeChoices, expectedFeedback] of [
+    ["고기 주세요", meatChoices, /quelle viande/u],
+    ["더 주세요", extraChoices, /davantage.*précisé quoi/u],
+    ["계산할게요", paymentChoices, /moyen de paiement/u],
+    ["보통 맛으로 해 주세요", spiceChoices, /niveau de piquant/u],
+  ]) {
+    const result = matchRestaurantSpeechIntent(transcript, nodeChoices);
+    assert.equal(result.reason, "needs-help", transcript);
+    assert.equal(result.category, "ambiguous", transcript);
+    assert.equal(result.choice, null, transcript);
+    assert.match(result.feedback, expectedFeedback, transcript);
+  }
+});
+
+test("les nouveaux exemples contextuels sont transmis à la reconnaissance du bon tour", () => {
+  const extraContext = getRestaurantSpeechContextualStrings(extraChoices);
+  assert.ok(extraContext.includes("야채 넣어 주세요."));
+  assert.ok(extraContext.includes("김치 좀 가져다 주세요."));
+
+  const meatContext = getRestaurantSpeechContextualStrings(meatChoices);
+  assert.ok(meatContext.includes("돼지고기 두 명"));
+  assert.ok(!meatContext.includes("야채 넣어 주세요."));
+});
+
 test("chaque mission Restaurant conserve un graphe complet et terminable", () => {
   for (const mission of restaurantMissions) {
     const missionScenario = getRestaurantMissionScenario(

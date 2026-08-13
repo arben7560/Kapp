@@ -32,6 +32,7 @@ export type RestaurantSpeechCategory =
   | "register-imperfection"
   | "conjugation-imperfection"
   | "word-order"
+  | "contextual-interpretation"
   | "mixed-language"
   | "incomplete"
   | "ambiguous"
@@ -618,6 +619,15 @@ type DefinitionEvaluation = Readonly<{
   score: number;
 }>;
 
+type ContextualInterpretationRule = Readonly<{
+  targetId: RestaurantIntentId;
+  examples: readonly string[];
+  severity: "minor" | "moderate";
+  understood: string;
+  guidance: string;
+  matches: (value: string) => boolean;
+}>;
+
 function normalizeRestaurantInput(value: string): NormalizedRestaurantInput {
   const replacements: CodeSwitchReplacement[] = [];
   let expanded = value.normalize("NFKC").toLocaleLowerCase("fr-FR");
@@ -642,6 +652,224 @@ function includesAny(value: string, candidates: readonly string[]) {
     value.includes(normalizeKoreanSpeech(candidate)),
   );
 }
+
+function hasRequestSpeechAct(value: string) {
+  return includesAny(value, [
+    "주세요",
+    "줘요",
+    "줘",
+    "부탁",
+    "넣어",
+    "추가",
+    "가져",
+    "원해",
+    "먹을게",
+    "할게",
+    "해 주세요",
+    "주실",
+    "낼게",
+    "결제",
+    "계산",
+    "받을게",
+    "챙겨",
+    "버려",
+    "필요해",
+  ]);
+}
+
+function hasExpectedQuantityFor(
+  value: string,
+  targetId: "samgyeopsal-order" | "galbi-order",
+) {
+  const definition = RESTAURANT_SPEECH_INTENTS.find(({ id }) => id === targetId);
+  return findQuantityMentions(value).some(
+    ({ quantity }) => quantity === definition?.expectedQuantity,
+  );
+}
+
+const RESTAURANT_CONTEXTUAL_INTERPRETATIONS: readonly ContextualInterpretationRule[] = [
+  {
+    targetId: "samgyeopsal-order",
+    examples: ["돼지고기 두 명", "돼지고기 2인분 주세요."],
+    severity: "moderate",
+    understood: "tu veux commander du porc pour deux personnes",
+    guidance:
+      "« 돼지고기 » désigne le porc en général. Pour choisir le samgyeopsal, dis plutôt : « 삼겹살 2인분 주세요. »",
+    matches: (value) =>
+      includesAny(value, ["돼지고기", "돼지배고기"]) &&
+      (hasExpectedQuantityFor(value, "samgyeopsal-order") || hasRequestSpeechAct(value)),
+  },
+  {
+    targetId: "galbi-order",
+    examples: ["소고기 두 명", "소고기 2인분 주세요."],
+    severity: "moderate",
+    understood: "tu veux commander du bœuf pour deux personnes",
+    guidance:
+      "« 소고기 » désigne le bœuf en général. Pour choisir les galbi, dis plutôt : « 갈비 2인분 주세요. »",
+    matches: (value) =>
+      includesAny(value, ["소고기", "쇠고기"]) &&
+      (hasExpectedQuantityFor(value, "galbi-order") || hasRequestSpeechAct(value)),
+  },
+  {
+    targetId: "recommendation",
+    examples: ["메뉴 중에 뭐 먹을까요?", "제일 잘 나가는 메뉴가 뭐예요?"],
+    severity: "minor",
+    understood: "tu demandes quel plat choisir",
+    guidance:
+      "C’est bien une demande de recommandation. Une formulation simple est : « 추천 메뉴가 있어요? »",
+    matches: (value) =>
+      includesAny(value, [
+        "뭐먹을까요",
+        "뭐먹으면돼요",
+        "메뉴가뭐예요",
+        "잘나가는메뉴",
+        "인기메뉴",
+        "맛있는메뉴",
+      ]),
+  },
+  {
+    targetId: "staff-grill",
+    examples: ["직원분한테 맡길게요.", "직원분이 해 주세요."],
+    severity: "moderate",
+    understood: "tu veux confier la cuisson au personnel",
+    guidance:
+      "La réponse est compréhensible, mais précise la cuisson : « 네, 구워 주세요. »",
+    matches: (value) =>
+      includesAny(value, ["직원분", "직원한테", "사장님", "맡길게"]) &&
+      includesAny(value, ["해주", "해주세요", "맡길", "구워", "부탁"]),
+  },
+  {
+    targetId: "self-grill",
+    examples: ["저희끼리 할게요.", "우리끼리 구울게요."],
+    severity: "minor",
+    understood: "tu dis que vous vous occuperez vous-mêmes de la cuisson",
+    guidance:
+      "Pour être plus précis, tu peux dire : « 저희가 구울게요. »",
+    matches: (value) =>
+      includesAny(value, ["저희끼리", "우리끼리"]) &&
+      includesAny(value, ["할게", "구울", "구워", "굽"]),
+  },
+  {
+    targetId: "doenjang-order",
+    examples: ["된장국 하나 주세요.", "된장국도 주세요."],
+    severity: "moderate",
+    understood: "tu demandes une soupe au doenjang",
+    guidance:
+      "Le choix proposé est précisément le doenjang jjigae. Dis plutôt : « 된장찌개 하나 주세요. »",
+    matches: (value) =>
+      includesAny(value, ["된장국", "된장수프"]) && hasRequestSpeechAct(value),
+  },
+  {
+    targetId: "egg-order",
+    examples: ["달걀 요리 주세요.", "계란 요리도 주세요."],
+    severity: "moderate",
+    understood: "tu demandes un accompagnement à base d’œuf",
+    guidance:
+      "Le choix proposé est l’œuf vapeur. Dis plutôt : « 계란찜 하나 주세요. »",
+    matches: (value) =>
+      includesAny(value, ["달걀", "계란요리"]) && hasRequestSpeechAct(value),
+  },
+  {
+    targetId: "decline",
+    examples: ["충분해요.", "이제 됐습니다."],
+    severity: "minor",
+    understood: "tu dis que tu en as déjà assez et ne veux rien ajouter",
+    guidance: "Dans ce contexte, tu peux aussi répondre : « 아니요, 괜찮아요. »",
+    matches: (value) => includesAny(value, ["충분해", "이제됐", "더필요하지않"]),
+  },
+  {
+    targetId: "spicy",
+    examples: ["매운맛으로 해 주세요.", "아주 맵게 해 주세요."],
+    severity: "minor",
+    understood: "tu choisis une préparation épicée",
+    guidance: "La formulation la plus directe est : « 맵게 해 주세요. »",
+    matches: (value) =>
+      includesAny(value, ["매운맛", "아주맵", "제일맵", "많이맵"]) &&
+      hasRequestSpeechAct(value),
+  },
+  {
+    targetId: "less-spicy",
+    examples: ["살짝 맵게 해 주세요.", "조금 매운맛으로 주세요."],
+    severity: "minor",
+    understood: "tu demandes que ce soit seulement un peu épicé",
+    guidance: "Une formulation plus naturelle est : « 덜 맵게 해 주세요. »",
+    matches: (value) =>
+      includesAny(value, ["살짝맵", "조금매운맛", "약하게맵"]) &&
+      hasRequestSpeechAct(value),
+  },
+  {
+    targetId: "not-spicy",
+    examples: ["순한 맛으로 해 주세요.", "하나도 맵지 않은 걸로 주세요."],
+    severity: "minor",
+    understood: "tu demandes une préparation douce, non épicée",
+    guidance: "Dans cette scène, dis plutôt : « 안 맵게 해 주세요. »",
+    matches: (value) =>
+      includesAny(value, ["순한맛", "순하게", "하나도맵지않", "맵지않은걸로"]) &&
+      hasRequestSpeechAct(value),
+  },
+  {
+    targetId: "more-lettuce",
+    examples: ["야채 넣어 주세요.", "쌈 채소 좀 주세요."],
+    severity: "moderate",
+    understood: "tu demandes d’ajouter des légumes",
+    guidance:
+      "« 야채 » est général et tu n’as pas précisé « davantage ». Si tu veux plus de salade pour les ssam, dis plutôt : « 상추 좀 더 주세요. »",
+    matches: (value) =>
+      includesAny(value, ["야채", "채소", "쌈채소", "샐러드", "깻잎"]) &&
+      hasRequestSpeechAct(value),
+  },
+  {
+    targetId: "more-banchan",
+    examples: ["김치 좀 가져다 주세요.", "쌈장 더 주세요."],
+    severity: "moderate",
+    understood: "tu demandes un accompagnement précis en plus",
+    guidance:
+      "La serveuse regroupe ici ces petits accompagnements sous « 반찬 ». Tu peux dire : « 반찬 좀 더 주세요. »",
+    matches: (value) =>
+      includesAny(value, ["밑반찬", "김치", "마늘", "쌈장", "소스"]) &&
+      hasRequestSpeechAct(value),
+  },
+  {
+    targetId: "card-payment",
+    examples: ["삼성페이로 할게요.", "휴대폰으로 결제할게요."],
+    severity: "moderate",
+    understood: "tu veux utiliser un paiement électronique",
+    guidance:
+      "La scène propose carte ou espèces. Pour suivre la branche carte, dis : « 카드로 할게요. »",
+    matches: (value) =>
+      includesAny(value, ["삼성페이", "애플페이", "휴대폰으로", "모바일페이"]) &&
+      includesAny(value, ["할게", "결제", "계산", "낼게"]),
+  },
+  {
+    targetId: "cash-payment",
+    examples: ["현찰로 낼게요.", "지폐로 계산할게요."],
+    severity: "minor",
+    understood: "tu veux payer en espèces",
+    guidance: "Le mot le plus courant ici est « 현금 » : « 현금으로 할게요. »",
+    matches: (value) =>
+      includesAny(value, ["현찰", "지폐로", "돈으로"]) &&
+      includesAny(value, ["할게", "낼게", "결제", "계산"]),
+  },
+  {
+    targetId: "receipt-yes",
+    examples: ["종이로 주세요.", "출력해 주세요."],
+    severity: "moderate",
+    understood: "tu demandes une version papier du reçu",
+    guidance: "Pour nommer clairement le reçu, dis : « 네, 영수증 주세요. »",
+    matches: (value) =>
+      includesAny(value, ["종이로", "출력해", "프린트해", "챙겨주세요"]) &&
+      hasRequestSpeechAct(value),
+  },
+  {
+    targetId: "receipt-no",
+    examples: ["버려 주세요.", "안 줘도 돼요."],
+    severity: "minor",
+    understood: "tu refuses le reçu",
+    guidance: "Une réponse plus polie et explicite est : « 아니요, 괜찮아요. »",
+    matches: (value) =>
+      includesAny(value, ["버려주세요", "안줘도돼", "안챙겨도돼", "출력안해도돼"]),
+  },
+] as const;
 
 function matchesSharedMorphology(
   value: string,
@@ -1011,6 +1239,124 @@ function getPolarityConcepts(value: string) {
     less: includesAny(value, ["덜맵", "조금만맵", "약간만맵"]),
     not: includesAny(value, ["안맵", "맵지않", "안매운", "매운거말고"]),
   };
+}
+
+function getCurrentQuestionExplanation(
+  definitions: readonly RestaurantSpeechIntentDefinition[],
+) {
+  const ids = new Set(definitions.map(({ id }) => id));
+
+  if (ids.has("samgyeopsal-order") || ids.has("galbi-order")) {
+    return "Ici, la serveuse te demande quelle viande tu veux commander, ou si tu souhaites une recommandation.";
+  }
+  if (ids.has("staff-grill") || ids.has("self-grill")) {
+    return "Ici, la serveuse te demande si le personnel doit griller la viande ou si vous préférez le faire vous-mêmes.";
+  }
+  if (ids.has("doenjang-order") || ids.has("egg-order")) {
+    return "Ici, la serveuse te propose un doenjang jjigae, des œufs vapeur, ou aucun accompagnement supplémentaire.";
+  }
+  if (ids.has("spicy") || ids.has("less-spicy") || ids.has("not-spicy")) {
+    return "Ici, la serveuse te demande de choisir un seul niveau de piquant : épicé, moins épicé ou non épicé.";
+  }
+  if (ids.has("more-lettuce") || ids.has("more-banchan")) {
+    return "Ici, la serveuse te demande si tu veux davantage de salade, davantage d’accompagnements, ou rien d’autre.";
+  }
+  if (ids.has("card-payment") || ids.has("cash-payment")) {
+    return "Ici, la serveuse te demande comment tu souhaites payer : par carte ou en espèces.";
+  }
+  if (ids.has("receipt-yes") || ids.has("receipt-no")) {
+    return "Ici, la serveuse te demande si tu veux le reçu ou si tu le refuses.";
+  }
+  return "La formulation est liée à la scène, mais elle ne répond pas encore précisément à la question posée.";
+}
+
+function getContextualRulesForValue(value: string) {
+  const hasNegation = containsActionNegation(value);
+  return RESTAURANT_CONTEXTUAL_INTERPRETATIONS.filter(
+    ({ targetId, matches }) =>
+      matches(value) &&
+      (!hasNegation || ["decline", "receipt-no", "not-spicy"].includes(targetId)),
+  );
+}
+
+function findContextualEvaluations(
+  value: string,
+  definitions: readonly RestaurantSpeechIntentDefinition[],
+  choices: readonly RestaurantSpeechChoice[],
+) {
+  const questionExplanation = getCurrentQuestionExplanation(definitions);
+  return getContextualRulesForValue(value).flatMap((rule) => {
+    const definition = definitions.find(({ id }) => id === rule.targetId);
+    if (!definition) return [];
+    const choice = findChoiceForDefinition(definition, choices);
+    if (!choice) return [];
+
+    return [{
+      definition,
+      choice,
+      category: "contextual-interpretation" as const,
+      severity: rule.severity,
+      feedback: `J’ai compris que ${rule.understood}. ${questionExplanation} ${rule.guidance}`,
+      score: rule.severity === "minor" ? 7 : 5,
+    }];
+  });
+}
+
+function getIncompleteContextualFeedback(
+  value: string,
+  definitions: readonly RestaurantSpeechIntentDefinition[],
+) {
+  const ids = new Set(definitions.map(({ id }) => id));
+  const questionExplanation = getCurrentQuestionExplanation(definitions);
+
+  if (
+    (ids.has("samgyeopsal-order") || ids.has("galbi-order")) &&
+    includesAny(value, ["고기", "육류"]) &&
+    hasRequestSpeechAct(value)
+  ) {
+    return `J’ai compris que tu veux commander de la viande, mais tu n’as pas indiqué laquelle. ${questionExplanation}`;
+  }
+  if (
+    (ids.has("staff-grill") || ids.has("self-grill")) &&
+    includesAny(value, ["고기", "굽", "구워", "해주"]) &&
+    hasRequestSpeechAct(value)
+  ) {
+    return `J’ai compris que tu parles de la cuisson, mais je ne sais pas clairement qui doit s’en charger. ${questionExplanation}`;
+  }
+  if (
+    (ids.has("doenjang-order") || ids.has("egg-order")) &&
+    includesAny(value, ["국", "사이드", "추가", "곁들임"]) &&
+    hasRequestSpeechAct(value)
+  ) {
+    return `J’ai compris que tu veux ajouter un accompagnement, mais tu ne l’as pas identifié. ${questionExplanation}`;
+  }
+  if (
+    (ids.has("spicy") || ids.has("less-spicy") || ids.has("not-spicy")) &&
+    includesAny(value, ["보통맛", "기본맛", "그냥해주세요"])
+  ) {
+    return `J’ai compris que tu demandes le goût standard, mais ce niveau n’est pas assez précis dans cette scène. ${questionExplanation}`;
+  }
+  if (
+    (ids.has("more-lettuce") || ids.has("more-banchan")) &&
+    includesAny(value, ["더주세요", "추가해주세요", "좀더요"]) &&
+    !includesAny(value, ["상추", "반찬", "야채", "채소", "김치", "마늘", "쌈장"])
+  ) {
+    return `J’ai compris que tu en veux davantage, mais tu n’as pas précisé quoi. ${questionExplanation}`;
+  }
+  if (
+    (ids.has("card-payment") || ids.has("cash-payment")) &&
+    includesAny(value, ["계산할게", "결제할게", "낼게"]) &&
+    !includesAny(value, ["카드", "현금", "현찰", "삼성페이", "애플페이"])
+  ) {
+    return `J’ai compris que tu veux payer, mais tu n’as pas indiqué le moyen de paiement. ${questionExplanation}`;
+  }
+  if (
+    (ids.has("receipt-yes") || ids.has("receipt-no")) &&
+    /^(?:주세요|줘요|부탁드려요)$/u.test(value)
+  ) {
+    return `J’ai compris que tu demandes qu’on te donne quelque chose, mais tu n’as pas nommé le reçu. ${questionExplanation}`;
+  }
+  return null;
 }
 
 function evaluateDefinition(
@@ -1465,6 +1811,38 @@ export function matchRestaurantSpeechIntent(
     );
   }
 
+  const contextualEvaluations = findContextualEvaluations(
+    corrected,
+    availableDefinitions,
+    choices,
+  );
+  if (contextualEvaluations.length > 1) {
+    return needsHelp(
+      "ambiguous",
+      "major",
+      `J’ai reconnu plusieurs sens proches, mais je ne peux pas choisir à ta place. ${getCurrentQuestionExplanation(availableDefinitions)}`,
+      choices,
+      attemptNumber,
+    );
+  }
+  if (contextualEvaluations.length === 1) {
+    return matched(contextualEvaluations[0]);
+  }
+
+  const incompleteContextualFeedback = getIncompleteContextualFeedback(
+    corrected,
+    availableDefinitions,
+  );
+  if (incompleteContextualFeedback) {
+    return needsHelp(
+      "ambiguous",
+      "major",
+      incompleteContextualFeedback,
+      choices,
+      attemptNumber,
+    );
+  }
+
   const unavailableIntent = findUnavailableIntent(corrected);
   if (
     unavailableIntent &&
@@ -1473,7 +1851,22 @@ export function matchRestaurantSpeechIntent(
     return needsHelp(
       "wrong-concept",
       "major",
-      `Ta phrase signifie « ${unavailableIntent.helpLabel} », mais ce n’est pas la réponse attendue à cette étape.`,
+      `J’ai compris que tu veux ${unavailableIntent.helpLabel}. ${getCurrentQuestionExplanation(availableDefinitions)}`,
+      choices,
+      attemptNumber,
+    );
+  }
+
+  const unavailableContextualRules = getContextualRulesForValue(corrected)
+    .filter((rule) =>
+      !availableDefinitions.some(({ id }) => id === rule.targetId),
+    );
+  if (unavailableContextualRules.length === 1) {
+    const [rule] = unavailableContextualRules;
+    return needsHelp(
+      "wrong-concept",
+      "major",
+      `J’ai compris que ${rule.understood}. ${getCurrentQuestionExplanation(availableDefinitions)}`,
       choices,
       attemptNumber,
     );
@@ -1503,6 +1896,11 @@ export function getRestaurantSpeechContextualStrings(
           canonical,
           ...validVariants,
         ]),
+        ...RESTAURANT_CONTEXTUAL_INTERPRETATIONS
+          .filter(({ targetId }) =>
+            definitions.some(({ id }) => id === targetId),
+          )
+          .flatMap(({ examples }) => examples),
       ]
         .map((value) => value.trim())
         .filter(Boolean),
