@@ -130,6 +130,16 @@ export type CafeSpeechAttemptPedagogy = Readonly<{
   canonicalFormulation: string;
 }>;
 
+type CafeContextualInterpretationRule = Readonly<{
+  targetId: string;
+  examples: readonly string[];
+  confidence: "matched" | "uncertain";
+  understood: string;
+  guidance: string;
+  contextOnly?: boolean;
+  matches: (value: string) => boolean;
+}>;
+
 const AMBIGUOUS_PRODUCT_FEEDBACK =
   "J’ai entendu plusieurs produits. Choisis-en un seul.";
 const AMBIGUOUS_CONSUMPTION_FEEDBACK =
@@ -1047,6 +1057,129 @@ const CAFE_UNAVAILABLE_PRODUCTS = [
   },
 ] as const;
 
+const CAFE_CONTEXTUAL_INTERPRETATIONS: readonly CafeContextualInterpretationRule[] = [
+  {
+    targetId: "americano-order",
+    examples: ["아아 한 잔 주세요.", "블랙커피 한 잔 주세요."],
+    confidence: "matched",
+    understood: "tu commandes un americano, notamment avec l’abréviation coréenne « 아아 »",
+    guidance:
+      "Au café, « 아아 » est naturel pour « 아이스 아메리카노 ». La formulation complète est : « 아이스 아메리카노 한 잔 주세요. »",
+    matches: (value) =>
+      containsAnyToken(value, ["아아", "블랙커피"]) &&
+      (hasCafeRequestSpeechAct(value) || hasCafeQuantityMarker(value) || isCafeTerseContextualAnswer(value, ["아아", "블랙커피"])),
+  },
+  {
+    targetId: "orange-juice-order",
+    examples: ["오렌지 음료 주세요.", "과일 주스 한 잔 주세요."],
+    confidence: "uncertain",
+    understood: "tu demandes une boisson fruitée ou à l’orange",
+    guidance:
+      "Le produit proposé ici est précisément le jus d’orange. Si c’est bien ton choix, dis : « 오렌지 주스 한 잔 주세요. »",
+    matches: (value) =>
+      containsAnyToken(value, ["오렌지음료", "과일주스", "과일음료"]) &&
+      hasCafeRequestSpeechAct(value),
+  },
+  {
+    targetId: "latte-order",
+    examples: ["우유 커피 한 잔 주세요.", "밀크커피 주세요."],
+    confidence: "uncertain",
+    understood: "tu demandes un café au lait",
+    guidance:
+      "Le choix correspondant dans cette scène est le latte. Dis plutôt : « 라떼 한 잔 주세요. »",
+    matches: (value) =>
+      containsAnyToken(value, ["우유커피", "밀크커피", "카페오레"]) &&
+      hasCafeRequestSpeechAct(value),
+  },
+  {
+    targetId: "cheesecake-order",
+    examples: ["치즈 디저트 주세요.", "치즈가 들어간 디저트 주세요."],
+    confidence: "uncertain",
+    understood: "tu demandes un dessert au fromage",
+    guidance:
+      "Le dessert proposé est le cheesecake. Dis plutôt : « 치즈케이크 한 조각 주세요. »",
+    matches: (value) =>
+      containsAnyToken(value, ["치즈디저트", "치즈가들어간디저트"]) &&
+      hasCafeRequestSpeechAct(value),
+  },
+  {
+    targetId: "repeat",
+    examples: ["잘 못 들었어요.", "뭐라고요?", "천천히 말씀해 주세요."],
+    confidence: "matched",
+    understood: "tu signales que tu n’as pas bien entendu et demandes de répéter",
+    guidance:
+      "Une formulation polie à retenir est : « 다시 한번 말씀해 주세요. »",
+    matches: (value) =>
+      containsAnyToken(value, ["못들었", "잘안들려", "뭐라고요", "천천히말씀", "천천히말해"]),
+  },
+  {
+    targetId: "eat-here",
+    examples: ["안에서 먹을게요.", "카페에서 마실게요.", "여기 앉을게요."],
+    confidence: "uncertain",
+    contextOnly: true,
+    understood: "tu indiques que tu resteras à l’intérieur du café",
+    guidance:
+      "Pour répondre sans ambiguïté à la question, dis plutôt : « 먹고 갈게요. »",
+    matches: (value) =>
+      containsAnyToken(value, ["안에서먹", "안에서마실", "카페에서먹", "카페에서마실", "여기앉을", "여기요"]) &&
+      (hasCafeRequestSpeechAct(value) || containsAnyToken(value, ["먹을게", "마실게", "앉을게"]) || isCafeTerseContextualAnswer(value, ["여기"])),
+  },
+  {
+    targetId: "takeout",
+    examples: ["들고 갈게요.", "밖에서 먹을게요."],
+    confidence: "matched",
+    understood: "tu indiques que tu partiras avec la commande",
+    guidance:
+      "Dans un café, la formulation la plus directe est : « 포장해 주세요. »",
+    matches: (value) =>
+      containsAnyToken(value, ["들고갈", "밖에서먹", "밖에서마실", "밖으로가져"]) &&
+      containsAnyToken(value, ["갈게", "먹을게", "마실게", "가져"]),
+  },
+  {
+    targetId: "card-payment",
+    examples: ["삼성페이로 할게요.", "휴대폰으로 결제할게요."],
+    confidence: "uncertain",
+    understood: "tu veux utiliser un paiement électronique",
+    guidance:
+      "La scène propose carte ou espèces. Pour suivre la branche carte, dis : « 카드로 할게요. »",
+    matches: (value) =>
+      containsAnyToken(value, ["삼성페이", "애플페이", "휴대폰으로", "모바일페이"]) &&
+      containsAnyToken(value, ["할게", "결제", "계산", "낼게"]),
+  },
+  {
+    targetId: "cash-payment",
+    examples: ["현찰로 낼게요.", "지폐로 계산할게요."],
+    confidence: "matched",
+    understood: "tu veux payer en espèces",
+    guidance: "Le mot le plus courant est « 현금 » : « 현금으로 할게요. »",
+    matches: (value) =>
+      containsAnyToken(value, ["현찰", "지폐로", "돈으로"]) &&
+      containsAnyToken(value, ["할게", "낼게", "결제", "계산"]),
+  },
+  {
+    targetId: "receipt-yes",
+    examples: ["종이로 주세요.", "출력해 주세요.", "필요합니다."],
+    confidence: "uncertain",
+    contextOnly: true,
+    understood: "tu demandes une version papier du reçu ou indiques que tu en as besoin",
+    guidance: "Pour nommer clairement le reçu, dis : « 네, 영수증 주세요. »",
+    matches: (value) =>
+      (containsAnyToken(value, ["종이로", "출력해", "프린트해", "챙겨주세요", "필요합니다"]) &&
+        hasCafeRequestSpeechAct(value)) ||
+      value === "주세요",
+  },
+  {
+    targetId: "receipt-no",
+    examples: ["버려 주세요.", "안 줘도 돼요.", "됐어요."],
+    confidence: "matched",
+    contextOnly: true,
+    understood: "tu refuses le reçu",
+    guidance: "Une réponse plus polie et explicite est : « 아니요, 괜찮아요. »",
+    matches: (value) =>
+      containsAnyToken(value, ["버려주세요", "안줘도돼", "안챙겨도돼", "출력안해도돼", "됐어요"]),
+  },
+] as const;
+
 export function normalizeKoreanSpeech(value: string) {
   return value
     .normalize("NFKC")
@@ -1114,6 +1247,43 @@ function containsAnyToken(value: string, tokens: readonly string[]) {
   return tokens.some((token) => includesNormalized(value, token));
 }
 
+function hasCafeRequestSpeechAct(value: string) {
+  return containsAnyToken(value, [
+    "주세요",
+    "줘요",
+    "줘",
+    "부탁",
+    "주문",
+    "할게",
+    "하겠습니다",
+    "먹을게",
+    "마실게",
+    "가져",
+    "포장",
+    "결제",
+    "계산",
+    "낼게",
+    "받을게",
+    "필요",
+    "출력",
+    "챙겨",
+  ]);
+}
+
+function hasCafeQuantityMarker(value: string) {
+  return containsQuantityWithClassifier(value);
+}
+
+function isCafeTerseContextualAnswer(
+  value: string,
+  concepts: readonly string[],
+) {
+  return concepts.some((concept) => {
+    const normalized = normalizeKoreanSpeech(concept);
+    return value === normalized || value === `${normalized}요` || value === `${normalized}이요`;
+  });
+}
+
 function getLinguisticRule(definition: CafeSpeechIntentDefinition) {
   return CAFE_SPEECH_LINGUISTIC_RULES[
     definition.id as keyof typeof CAFE_SPEECH_LINGUISTIC_RULES
@@ -1162,6 +1332,46 @@ function containsQuantityWithClassifier(value: string) {
       ),
     ),
   );
+}
+
+function findCafeQuantityMentions(value: string) {
+  const quantityForms = [
+    { quantity: 1, forms: ["한", "하나", "1", "일"] },
+    { quantity: 2, forms: ["두", "둘", "2", "이"] },
+    { quantity: 3, forms: ["세", "셋", "3", "삼"] },
+    { quantity: 4, forms: ["네", "넷", "4", "사"] },
+  ] as const;
+  const mentions: { quantity: number; classifier: string }[] = [];
+
+  for (const { quantity, forms } of quantityForms) {
+    for (const form of forms) {
+      for (const classifier of CAFE_CLASSIFIERS) {
+        if (
+          value.includes(
+            `${normalizeKoreanSpeech(form)}${normalizeKoreanSpeech(classifier)}`,
+          )
+        ) {
+          mentions.push({ quantity, classifier });
+        }
+      }
+    }
+  }
+
+  return Array.from(
+    new Map(
+      mentions.map((mention) => [
+        `${mention.quantity}:${mention.classifier}`,
+        mention,
+      ]),
+    ).values(),
+  );
+}
+
+function hasConflictingCafeQuantities(value: string) {
+  const quantities = new Set(
+    findCafeQuantityMentions(value).map(({ quantity }) => quantity),
+  );
+  return quantities.size > 1;
 }
 
 function containsAffirmativeMarker(
@@ -2236,6 +2446,124 @@ function formatCafeExamples(examples: readonly string[]) {
   return `« ${examples[0]} » ou « ${examples[1]} »`;
 }
 
+function getCafeContextualRulesForValue(
+  normalizedTranscript: string,
+  includeContextOnly = true,
+) {
+  const hasNegation = containsActionNegation(normalizedTranscript);
+  return CAFE_CONTEXTUAL_INTERPRETATIONS.filter(
+    ({ targetId, contextOnly, matches }) =>
+      matches(normalizedTranscript) &&
+      (includeContextOnly || !contextOnly) &&
+      (!hasNegation || ["repeat", "receipt-no"].includes(targetId)),
+  );
+}
+
+function matchCafeContextualInterpretation(
+  normalizedTranscript: string,
+  choices: readonly CafeSpeechChoice[],
+): CafeSpeechIntentMatch | null {
+  const context = getCafeConversationStepContext(choices);
+  const availableDefinitions = getAvailableIntentDefinitions(choices);
+  const interpretations = getCafeContextualRulesForValue(
+    normalizedTranscript,
+  ).flatMap((rule) => {
+    const definition = availableDefinitions.find(({ id }) => id === rule.targetId);
+    if (!definition) return [];
+    const choice = findChoiceForDefinition(definition, choices);
+    return choice ? [{ rule, definition, choice }] : [];
+  });
+
+  if (interpretations.length > 1) {
+    return {
+      reason: "ambiguous",
+      choice: null,
+      feedback: `J’ai reconnu plusieurs sens proches, mais je ne peux pas choisir à ta place. Ici, ${context.expectation}.`,
+    };
+  }
+  if (interpretations.length === 0) return null;
+
+  const [{ rule, definition, choice }] = interpretations;
+  const feedback = `J’ai compris que ${rule.understood}. Ici, ${context.expectation}. ${rule.guidance}`;
+  return rule.confidence === "matched"
+    ? {
+        reason: "matched",
+        choice,
+        feedback,
+      }
+    : {
+        reason: "uncertain",
+        choice,
+        confirmationLabel: definition.confirmationLabel,
+        feedback,
+      };
+}
+
+function getCafeIncompleteContextualAnalysis(
+  normalizedTranscript: string,
+  context: CafeConversationStepContext,
+): CafeContextualResponseAnalysis | null {
+  const examples = formatCafeExamples(context.examples);
+
+  if (
+    context.id === "product-order" &&
+    containsAnyToken(normalizedTranscript, ["커피", "음료", "디저트"]) &&
+    hasCafeRequestSpeechAct(normalizedTranscript)
+  ) {
+    const heard = includesNormalized(normalizedTranscript, "커피")
+      ? "du café"
+      : includesNormalized(normalizedTranscript, "음료")
+        ? "une boisson"
+        : "un dessert";
+    return {
+      intentId: "contextual:generic-product",
+      detectedIntent: `Commander ${heard}`,
+      canonicalFormulation: context.examples[0] ?? "",
+      feedback: `J’ai compris que tu veux commander ${heard}, mais ce terme ne permet pas de choisir un seul produit. Ici, ${context.expectation}. Essaie ${examples}.`,
+    };
+  }
+  if (
+    context.id === "consumption-mode" &&
+    containsAnyToken(normalizedTranscript, ["먹을게", "마실게", "주문할게"]) &&
+    !containsAnyToken(normalizedTranscript, [
+      "여기",
+      "매장",
+      "안에서",
+      "카페에서",
+      "포장",
+      "가져",
+      "들고갈",
+      "밖에서",
+    ])
+  ) {
+    return {
+      intentId: "contextual:missing-consumption-mode",
+      detectedIntent: "Dire que tu vas consommer la commande sans préciser où",
+      canonicalFormulation: context.examples[0] ?? "",
+      feedback: `J’ai compris que tu vas consommer la commande, mais tu n’as pas indiqué où. Ici, ${context.expectation}. Essaie ${examples}.`,
+    };
+  }
+  if (
+    context.id === "payment-method" &&
+    containsAnyToken(normalizedTranscript, ["계산할게", "결제할게", "낼게"]) &&
+    !containsAnyToken(normalizedTranscript, [
+      "카드",
+      "현금",
+      "현찰",
+      "삼성페이",
+      "애플페이",
+    ])
+  ) {
+    return {
+      intentId: "contextual:missing-payment-method",
+      detectedIntent: "Payer sans préciser le moyen de paiement",
+      canonicalFormulation: context.examples[0] ?? "",
+      feedback: `J’ai compris que tu veux payer, mais tu n’as pas indiqué comment. Ici, ${context.expectation}. Essaie ${examples}.`,
+    };
+  }
+  return null;
+}
+
 function findDetectedCafeIntent(normalizedTranscript: string) {
   const exactMatches = CAFE_SPEECH_INTENTS.filter((definition) =>
     matchesExplicitVariant(normalizedTranscript, [
@@ -2319,6 +2647,23 @@ function buildCafeContextualResponseAnalysis(
     };
   }
 
+  const contextualInterpretations = getCafeContextualRulesForValue(
+    normalizedTranscript,
+    false,
+  );
+  if (contextualInterpretations.length === 1) {
+    const [interpretation] = contextualInterpretations;
+    const isAvailableNow = availableIntentIds.has(interpretation.targetId);
+    return {
+      intentId: `contextual:${interpretation.targetId}`,
+      detectedIntent: interpretation.understood,
+      canonicalFormulation: context.examples[0] ?? "",
+      feedback: isAvailableNow
+        ? `J’ai compris que ${interpretation.understood}. Ici, ${context.expectation}. ${interpretation.guidance}`
+        : `J’ai compris que ${interpretation.understood}. Ici, ${context.expectation}. Essaie ${examples}.`,
+    };
+  }
+
   const blockedIntent = findBlockedCafeIntent(normalizedTranscript);
   if (blockedIntent) {
     return {
@@ -2339,6 +2684,12 @@ function buildCafeContextualResponseAnalysis(
       feedback: `${knownExpression.explanation}. Ici, ${context.expectation} ; essaie ${examples}.`,
     };
   }
+
+  const incompleteContextualAnalysis = getCafeIncompleteContextualAnalysis(
+    normalizedTranscript,
+    context,
+  );
+  if (incompleteContextualAnalysis) return incompleteContextualAnalysis;
 
   const requestedObject = getRequestedCafeObject(transcript);
   if (requestedObject) {
@@ -2507,6 +2858,18 @@ export function matchCafeSpeechIntent(
       reason: "ambiguous",
       choice: null,
       feedback: contradictionFeedback,
+    };
+  }
+
+  if (
+    isProductOrderNode(choices) &&
+    hasConflictingCafeQuantities(correctedTranscript)
+  ) {
+    return {
+      reason: "ambiguous",
+      choice: null,
+      feedback:
+        "J’ai entendu plusieurs quantités différentes pour la commande. Indique une seule quantité avant de continuer.",
     };
   }
 
@@ -2852,6 +3215,12 @@ export function matchCafeSpeechIntent(
     };
   }
 
+  const contextualInterpretation = matchCafeContextualInterpretation(
+    correctedTranscript,
+    choices,
+  );
+  if (contextualInterpretation) return contextualInterpretation;
+
   const detectedDefinitions = CAFE_SPEECH_INTENTS.filter(
     (definition) =>
       matchesExplicitVariant(rawNormalizedTranscript, definition.validVariants) ||
@@ -2880,6 +3249,9 @@ export function getCafeSpeechContextualStrings(
     return [
       choice.korean,
       ...(definition ? [definition.canonical, ...definition.validVariants] : []),
+      ...CAFE_CONTEXTUAL_INTERPRETATIONS
+        .filter(({ targetId }) => targetId === definition?.id)
+        .flatMap(({ examples }) => examples),
     ];
   });
 

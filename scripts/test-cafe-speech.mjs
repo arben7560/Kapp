@@ -1596,6 +1596,87 @@ test("le contexte natif contient les variantes valides, pas les confusions", () 
   );
 });
 
+test("Café interprète les formulations proches selon l’étape courante", () => {
+  for (const [transcript, choices, expectedChoice, expectedReason] of [
+    ["아아 한 잔 주세요", orderChoices, americano, "matched"],
+    ["오렌지 음료 주세요", orderChoices, orangeJuice, "uncertain"],
+    ["우유 커피 한 잔 주세요", orderChoices, latte, "uncertain"],
+    ["치즈 디저트 주세요", orderChoices, cheesecake, "uncertain"],
+    ["잘 못 들었어요", orderChoices, repeat, "matched"],
+    ["안에서 먹을게요", [eatHere, takeout], eatHere, "uncertain"],
+    ["들고 갈게요", [eatHere, takeout], takeout, "matched"],
+    ["삼성페이로 할게요", [card, cash], card, "uncertain"],
+    ["현찰로 낼게요", [card, cash], cash, "matched"],
+    ["종이로 주세요", [receiptYes, receiptNo], receiptYes, "uncertain"],
+    ["안 줘도 돼요", [receiptYes, receiptNo], receiptNo, "matched"],
+    ["됐어요", [receiptYes, receiptNo], receiptNo, "matched"],
+  ]) {
+    const result = matchCafeSpeechIntent(transcript, choices);
+    assert.equal(result.reason, expectedReason, transcript);
+    assert.equal(result.choice?.id, expectedChoice.id, transcript);
+    assert.match(result.feedback, /J’ai compris/u, transcript);
+    assert.match(result.feedback, /Ici, le serveur/u, transcript);
+  }
+});
+
+test("les formulations proches au mauvais tour sont comprises sans fuite de branche", () => {
+  const result = matchCafeSpeechIntent("삼성페이로 할게요", orderChoices);
+  assert.equal(result.reason, "out-of-scope");
+  assert.equal(result.choice, null);
+  assert.match(result.feedback, /paiement électronique/u);
+  assert.match(result.feedback, /produit.*commander/u);
+});
+
+test("les réponses proches mais incomplètes reçoivent une explication liée au tour", () => {
+  for (const [transcript, choices, feedbackPattern] of [
+    ["커피 주세요", orderChoices, /terme ne permet pas de choisir un seul produit/u],
+    ["먹을게요", [eatHere, takeout], /pas indiqué où/u],
+    ["계산할게요", [card, cash], /pas indiqué comment/u],
+  ]) {
+    const result = matchCafeSpeechIntent(transcript, choices);
+    assert.equal(result.reason, "out-of-scope", transcript);
+    assert.equal(result.choice, null, transcript);
+    assert.match(result.feedback, /J’ai compris/u, transcript);
+    assert.match(result.feedback, feedbackPattern, transcript);
+  }
+});
+
+test("deux quantités contradictoires ne peuvent pas sélectionner un produit", () => {
+  const result = matchCafeSpeechIntent(
+    "아메리카노 한 잔 두 잔 주세요",
+    orderChoices,
+  );
+  assert.equal(result.reason, "ambiguous");
+  assert.equal(result.choice, null);
+  assert.match(result.feedback, /plusieurs quantités/u);
+
+  const coherent = matchCafeSpeechIntent("아메리카노 두 잔 주세요", orderChoices);
+  assert.equal(coherent.reason, "matched");
+  assert.equal(coherent.choice.id, americano.id);
+});
+
+test("la négation reste prioritaire sur les nouvelles proximités contextuelles", () => {
+  for (const [transcript, choices] of [
+    ["아아 안 주세요", orderChoices],
+    ["현찰로 안 할게요", [card, cash]],
+  ]) {
+    const result = matchCafeSpeechIntent(transcript, choices);
+    assert.notEqual(result.reason, "matched", transcript);
+    assert.equal(result.choice, null, transcript);
+  }
+});
+
+test("les exemples proches enrichissent uniquement le contexte vocal du bon tour", () => {
+  const productContext = getCafeSpeechContextualStrings(orderChoices);
+  assert.ok(productContext.includes("아아 한 잔 주세요."));
+  assert.ok(productContext.includes("우유 커피 한 잔 주세요."));
+
+  const paymentContext = getCafeSpeechContextualStrings([card, cash]);
+  assert.ok(paymentContext.includes("삼성페이로 할게요."));
+  assert.ok(paymentContext.includes("현찰로 낼게요."));
+  assert.ok(!paymentContext.includes("아아 한 잔 주세요."));
+});
+
 test("le MP4 générique existe et contient une structure MP4 lisible", () => {
   const videoUrl = new URL(
     "../assets/ai/cafe/orderConfirmation.mp4",
