@@ -83,6 +83,7 @@ const SEMAINE_AUDIO = {
     require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-3.mp3"),
     require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-4.mp3"),
     require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-6.mp3"),
   ],
 };
 

@@ -21,6 +21,7 @@ import {
   type AeroportMission,
 } from "../../data/lesson/aeroport/aeroportMissions";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
+import { AEROPORT_SPEECH_PILOT_MISSION_ID } from "../../lib/aeroportSpeechIntents";
 import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
@@ -84,7 +85,14 @@ export default function AeroportMissionsScreen() {
     router.push({
       pathname: "/lesson/aeroportIA",
       params: {
+<<<<<<< HEAD
         mode: isVocal ? "guided" : mode,
+=======
+        mode:
+          mission.id === AEROPORT_SPEECH_PILOT_MISSION_ID
+            ? "guided"
+            : mode,
+>>>>>>> 1a40d41bef1c9693e4e5da783764768546ab2ab1
         mission: mission.id,
       },
     });
@@ -104,6 +112,7 @@ export default function AeroportMissionsScreen() {
           <View
             style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
           >
+<<<<<<< HEAD
             <GuidedMissionsHeader
               accent={CYAN}
               compact={responsive.isCompact}
@@ -179,6 +188,51 @@ export default function AeroportMissionsScreen() {
                       variant="bodySecondary"
                       tone="muted"
                       style={styles.missionSubtitle}
+=======
+            {aeroportMissions.map((mission) => {
+              const isPremium = mission.access === "premium";
+              const isLocked = isPremium && !hasPremiumAccess;
+              const isVocal =
+                mission.id === AEROPORT_SPEECH_PILOT_MISSION_ID;
+              return (
+                <Pressable
+                  key={mission.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${mission.title}. ${
+                    isLocked
+                      ? "Mission premium verrouillée"
+                      : isPremium
+                        ? "Mission premium incluse"
+                        : "Mission gratuite"
+                  }. ${mission.subtitle}. ${
+                    isLocked ? "Ouvre l'écran Premium" : "Ouvre cette mission"
+                  }`}
+                  accessibilityHint={
+                    isLocked
+                      ? "Ouvre l'offre Premium"
+                      : "Prépare le lancement de cette mission"
+                  }
+                  hitSlop={6}
+                  onPress={() => openMission(mission)}
+                  style={({ pressed }) => [
+                    styles.missionCard,
+                    missionColumns > 1 && { width: missionItemWidth },
+                    isPremium && styles.premiumCard,
+                    pressed && styles.pressedCard,
+                  ]}
+                >
+                  <View style={styles.cardTop}>
+                    <MissionAccessBadge
+                      access={mission.access}
+                      accent={isVocal ? VOCAL_VIOLET : CYAN}
+                      variant={isVocal ? "vocal" : "access"}
+                    />
+                    <AppText variant="caption" lineContract="singleLine"
+                      style={[
+                        styles.cardArrow,
+                        isLocked && styles.cardArrowPremium,
+                      ]}
+>>>>>>> 1a40d41bef1c9693e4e5da783764768546ab2ab1
                     >
                       {mission.subtitle}
                     </AppText>

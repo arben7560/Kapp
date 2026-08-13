@@ -1,6 +1,5 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Speech from "@/lib/speechPlayback";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -15,7 +14,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { useVocAudio } from "../../hooks/useVocAudio";
-import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
 import { trackSceneCompleted } from "../../lib/immersionStreak";
 import { buildProgressId } from "../../lib/progressIds";
 import { AnimatedAppText, AppText } from "../app-text";
@@ -27,7 +25,7 @@ type DialogueLine = {
   char: string;
   kr: string;
   fr: string;
-  audio?: AudioAsset;
+  audio: AudioAsset;
 };
 
 type ExpressionItem = {
@@ -35,8 +33,7 @@ type ExpressionItem = {
   rom: string;
   mean: string;
   context: string;
-  speak?: string;
-  audio?: AudioAsset;
+  audio: AudioAsset;
 };
 
 type Scene = {
@@ -56,7 +53,6 @@ type Props = {
   badgeLabel: string;
   toolboxTitle: string;
   completionPrefix?: string;
-  fallbackToSpeechOnAudioError?: boolean;
   stopAudioOnDialogueChange?: boolean;
 };
 
@@ -72,10 +68,8 @@ export default function CountingImmersionScreen({
   badgeLabel,
   toolboxTitle,
   completionPrefix = "numbers",
-  fallbackToSpeechOnAudioError = false,
   stopAudioOnDialogueChange = false,
 }: Props) {
-  useSpeechLifecycle();
   const { complete } = useStore();
   const [activeScene, setActiveScene] = useState(scenes[0]);
   const [visibleMessages, setVisibleMessages] = useState(1);
@@ -93,7 +87,6 @@ export default function CountingImmersionScreen({
     setVisibleMessages(1);
     setIsTyping(false);
     setSelectedWord(null);
-    Speech.stop();
     stopAudio();
 
     if (typingTimer.current) {
@@ -135,47 +128,19 @@ export default function CountingImmersionScreen({
         clearTimeout(typingTimer.current);
       }
 
-      Speech.stop();
       stopAudio();
     };
   }, [tapHintPulse, stopAudio]);
 
-  const speakFallback = (text: string, id: string) => {
-    stopAudio();
-    setSelectedWord(id);
+  const playRecordedAudio = (audio: AudioAsset, id: string) => {
     Vibration.vibrate(8);
-    Speech.speak(text, {
-      language: "ko-KR",
-      rate: 0.78,
-      pitch: 1,
-      onDone: () => setSelectedWord(null),
-      onStopped: () => setSelectedWord(null),
-      onError: () => setSelectedWord(null),
-    });
-  };
-
-  const playOrSpeak = (audio: AudioAsset | undefined, text: string, id: string) => {
-    Speech.stop();
-
-    if (audio) {
-      playAudio(
-        audio,
-        id,
-        fallbackToSpeechOnAudioError
-          ? () => speakFallback(text, id)
-          : undefined,
-      );
-      return;
-    }
-
-    speakFallback(text, id);
+    void playAudio(audio, id);
   };
 
   const advanceDialogue = () => {
     if (isTyping) return;
 
     if (stopAudioOnDialogueChange) {
-      Speech.stop();
       stopAudio();
       setSelectedWord(null);
     }
@@ -333,7 +298,7 @@ export default function CountingImmersionScreen({
                   return (
                     <Pressable
                       key={dialogueId}
-                      onPress={() => playOrSpeak(line.audio, line.kr, dialogueId)}
+                      onPress={() => playRecordedAudio(line.audio, dialogueId)}
                       style={[
                         styles.bubble,
                         idx % 2 === 0 ? styles.bubbleL : styles.bubbleR,
@@ -446,9 +411,7 @@ export default function CountingImmersionScreen({
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() =>
-                      playOrSpeak(exp.audio, exp.speak ?? exp.word, cardId)
-                    }
+                    onPress={() => playRecordedAudio(exp.audio, cardId)}
                     style={({ pressed }) => [
                       styles.cardPressable,
                       pressed && { transform: [{ scale: 0.985 }] },

@@ -314,7 +314,6 @@ export default function AgeLifeImmersion() {
       backLabel="CYCLE DE VIE"
       badgeLabel="USAGES SOCIAUX"
       toolboxTitle="Expressions clés"
-      fallbackToSpeechOnAudioError
       stopAudioOnDialogueChange
     />
   );

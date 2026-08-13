@@ -346,3 +346,22 @@ test("l’écran Aéroport branche la reconnaissance, l’aide et le bilan uniqu
   assert.match(summarySource, /buildAeroportConversationSummary/u);
   assert.match(summarySource, /Speech\.speak/u);
 });
+
+test("la liste Aéroport affiche une carte VOCAL et ouvre obligatoirement le mode guidé", () => {
+  const missionsSource = readFileSync(
+    new URL("../app/lesson/aeroportMissions.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    missionsSource,
+    /mission\.id === AEROPORT_SPEECH_PILOT_MISSION_ID/u,
+  );
+  assert.match(missionsSource, /variant=\{isVocal \? "vocal" : "access"\}/u);
+  assert.match(missionsSource, /accent=\{isVocal \? VOCAL_VIOLET : CYAN\}/u);
+  assert.match(
+    missionsSource,
+    /mission\.id === AEROPORT_SPEECH_PILOT_MISSION_ID[\s\S]*?\? "guided"[\s\S]*?: mode/u,
+  );
+  assert.match(missionsSource, /mission: mission\.id/u);
+});

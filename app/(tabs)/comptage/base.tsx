@@ -34,7 +34,7 @@ const ENTRAINEMENT_AUDIO = {
   toolbox3: require("../../../assets/audio/comptage/nombres de bases/entrainement/toolbox/entrainement-toolbox-3.mp3"),
   toolbox4: require("../../../assets/audio/comptage/nombres de bases/entrainement/toolbox/entrainement-toolbox-4.mp3"),
   toolbox5: require("../../../assets/audio/comptage/nombres de bases/entrainement/toolbox/entrainement-toolbox-5.mp3"),
-  toolbox6: undefined,
+  toolbox6: require("../../../assets/audio/comptage/nombres de bases/entrainement/toolbox/entrainement-toolbox-6.mp3"),
 };
 
 const ANNIVERSAIRE_AUDIO = {
@@ -43,10 +43,10 @@ const ANNIVERSAIRE_AUDIO = {
   message3: require("../../../assets/audio/comptage/nombres de bases/anniversaire/anniversaire-bulle-3.mp3"),
   message4: require("../../../assets/audio/comptage/nombres de bases/anniversaire/anniversaire-bulle-4.mp3"),
   toolbox1: require("../../../assets/audio/comptage/nombres de bases/anniversaire/toolbox/anniversaire-toolbox-1.mp3"),
-  toolbox2: undefined,
-  toolbox3: undefined,
-  toolbox4: undefined,
-  toolbox5: undefined,
+  toolbox2: require("../../../assets/audio/comptage/nombres de bases/anniversaire/toolbox/anniversaire-toolbox-2.mp3"),
+  toolbox3: require("../../../assets/audio/comptage/nombres de bases/anniversaire/toolbox/anniversaire-toolbox-3.mp3"),
+  toolbox4: require("../../../assets/audio/comptage/nombres de bases/anniversaire/toolbox/anniversaire-toolbox-4.mp3"),
+  toolbox5: require("../../../assets/audio/comptage/nombres de bases/anniversaire/toolbox/anniversaire-toolbox-5.mp3"),
   toolbox6: require("../../../assets/audio/comptage/nombres de bases/anniversaire/toolbox/anniversaire-toolbox-6.mp3"),
 };
 
