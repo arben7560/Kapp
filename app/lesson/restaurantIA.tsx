@@ -236,6 +236,7 @@ export default function RestaurantIaScreen() {
   const transitionLockRef = useRef(false);
   const exitLockRef = useRef(false);
   const hasAdvancedFromVideoRef = useRef(false);
+  const confirmedVideoNodeIdRef = useRef<string | null>(null);
   const hasReportedMissionCompleteRef = useRef(false);
   const speechAttemptCountRef = useRef<Record<string, number>>({});
 
@@ -349,6 +350,7 @@ export default function RestaurantIaScreen() {
     }
     transitionLockRef.current = false;
     exitLockRef.current = false;
+    confirmedVideoNodeIdRef.current = null;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Route parameters select a new mission and require one atomic local reset.
     setCurrentNodeId(currentScenario.startNodeId);
     setDisplayedVideoSource(
@@ -403,6 +405,7 @@ export default function RestaurantIaScreen() {
   }, []);
 
   useEffect(() => {
+    confirmedVideoNodeIdRef.current = null;
     hasAdvancedFromVideoRef.current = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Node-scoped transcript and speech UI must not leak into the next turn.
     setIsTranscriptOpen(false);
@@ -433,6 +436,8 @@ export default function RestaurantIaScreen() {
         const replaced = await replaceVideoSource(nextVideoSource);
 
         if (isCancelled || !replaced) return;
+
+        confirmedVideoNodeIdRef.current = currentNodeId;
 
         if (currentNode?.type === "ia" && currentVideoSource) {
           player.currentTime = 0;
@@ -476,6 +481,7 @@ export default function RestaurantIaScreen() {
     if (currentNode.type !== "ia") return;
     if (!currentVideoSource) return;
     if (isTransitioning || isSceneEnded) return;
+    if (confirmedVideoNodeIdRef.current !== currentNodeId) return;
 
     if (
       !canAdvanceAfterRequiredVideo({
@@ -491,6 +497,7 @@ export default function RestaurantIaScreen() {
     goToNextNode(currentNode);
   }, [
     currentNode,
+    currentNodeId,
     currentVideoSource,
     isTransitioning,
     isSceneEnded,
@@ -714,6 +721,7 @@ export default function RestaurantIaScreen() {
     }
     transitionLockRef.current = false;
     exitLockRef.current = false;
+    confirmedVideoNodeIdRef.current = null;
     setCurrentNodeId(currentScenario.startNodeId);
     setDisplayedVideoSource(
       getNodeVideoSource(
@@ -755,6 +763,7 @@ export default function RestaurantIaScreen() {
   }, [cancelSpeechRecognition]);
 
   const handleRetryVideo = useCallback(() => {
+    confirmedVideoNodeIdRef.current = null;
     hasAdvancedFromVideoRef.current = false;
     markMediaLoading();
     setVideoRetryKey((current) => current + 1);
