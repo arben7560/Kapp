@@ -1,5 +1,5 @@
 import { BlurView } from "expo-blur";
-import { AppBackButton } from "../../../components/ui/app-back-button";
+import { router } from "expo-router";
 import React, { useEffect, useMemo } from "react";
 import {
   Animated,
@@ -12,26 +12,38 @@ import {
   type ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import { useStore } from "../../../_store";
 import { HubHero } from "../../../components/hub/HubHero";
 import { SectionHeader } from "../../../components/hub/SectionHeader";
 import { ModuleCard } from "../../../components/ModuleCard";
+import { AppBackButton } from "../../../components/ui/app-back-button";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 import {
   HubModuleAccents,
   SeoulMidnightGlass,
 } from "../../../constants/theme";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
+import { saveHomeResumeContext } from "../../../lib/homeResume";
+import { usePaywall } from "../../../lib/paywall/PaywallProvider";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vocabulaire.jpg");
 
-// ──────────────────────────────────────────────
-// DESIGN SYSTEM — SEOUL MIDNIGHT GLASS
-// ──────────────────────────────────────────────
 const BG_DEEP = SeoulMidnightGlass.colors.bgDeep;
 const TXT = SeoulMidnightGlass.colors.text;
 const VOCABULARY_ACCENT = HubModuleAccents.vocabulary.base;
 
-const THEMES = [
+type VocabularyTheme = {
+  id: number;
+  title: string;
+  sub: string;
+  color: string;
+  route: string;
+  image: { uri: string };
+  isLocked: boolean;
+};
+
+const THEMES: VocabularyTheme[] = [
   {
     id: 1,
     title: "Gastronomie",
@@ -121,17 +133,41 @@ const THEMES = [
     isLocked: true,
   },
 ];
+
 export default function VocabHub() {
   const responsive = useResponsiveLayout({ maxWidth: 920 });
+  const { hasPremiumAccess } = usePaywall();
+  const { setTrack } = useStore();
+
   const gridColumns = responsive.getColumns({
     minColumnWidth: 330,
     maxColumns: 2,
     gap: responsive.gridGap,
   });
+
   const gridItemWidth = responsive.getGridItemWidth(
     gridColumns,
     responsive.gridGap,
   );
+
+  const openTheme = async (theme: VocabularyTheme) => {
+    if (theme.isLocked && !hasPremiumAccess) {
+      router.push("/premium");
+      return;
+    }
+
+    await Promise.all([
+      setTrack("vocab"),
+      saveHomeResumeContext({
+        track: "vocab",
+        title: theme.title,
+        detail: theme.sub,
+        route: theme.route,
+      }),
+    ]);
+
+    router.push(theme.route as any);
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -187,7 +223,9 @@ export default function VocabHub() {
                   <ModuleCard
                     title={theme.title}
                     subtitle={theme.sub}
-                    href={theme.route}
+                    onPress={() => {
+                      void openTheme(theme);
+                    }}
                     accentColor={theme.color}
                     icon={theme.title.charAt(0)}
                     requiresPremium={theme.isLocked}
@@ -205,23 +243,16 @@ export default function VocabHub() {
   );
 }
 
-// ──────────────────────────────────────────────
-// NAV HEADER
-// ──────────────────────────────────────────────
 function UnifiedNavHeader() {
   return (
     <View style={styles.navHeader}>
       <View style={styles.backBtn}>
         <AppBackButton />
       </View>
-
     </View>
   );
 }
 
-// ──────────────────────────────────────────────
-// ANIMATED FRAGMENT
-// ──────────────────────────────────────────────
 function AnimatedFragment({
   children,
   index,
@@ -284,6 +315,7 @@ const styles = StyleSheet.create({
     flex: 1,
     overflow: "hidden",
   },
+
   bgBlur: {
     ...ABSOLUTE_FILL,
   },
@@ -311,6 +343,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 120,
   },
+
   contentFrame: {
     width: "100%",
     alignSelf: "center",
@@ -348,6 +381,7 @@ const styles = StyleSheet.create({
   grid: {
     gap: 12,
   },
+
   gridWide: {
     flexDirection: "row",
     flexWrap: "wrap",

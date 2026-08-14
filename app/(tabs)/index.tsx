@@ -30,6 +30,10 @@ import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import type { DailyStreakState } from "../../lib/dailyStreak";
 import { getGrammarJourneyCompletion } from "../../lib/grammar";
+import {
+  readHomeResumeContext,
+  type HomeResumeContext,
+} from "../../lib/homeResume";
 
 const BACKGROUND_SOURCE = require("../../assets/images/seoulhub.jpg");
 
@@ -284,12 +288,26 @@ export default function Home() {
     responsive.gridGap,
   );
 
+  const [resumeContext, setResumeContext] = useState<HomeResumeContext | null>(
+    null,
+  );
   const currentTrack = progress.learningTrack;
 
-  const activeSeq =
+  const baseActiveSeq =
     (currentTrack ? RESUME_SEQUENCES[currentTrack] : undefined) ??
     SEQUENCES.find((s) => s.trackKey === currentTrack) ??
     SEQUENCES[0];
+
+  const activeSeq =
+    currentTrack === "vocab" && resumeContext?.track === "vocab"
+      ? {
+          ...baseActiveSeq,
+          title: resumeContext.title,
+          label: resumeContext.title,
+          route: resumeContext.route,
+          resumeMeta: `Vocabulaire · ${resumeContext.detail}`,
+        }
+      : baseActiveSeq;
 
   const activeSeqProgress = getSequenceProgress(activeSeq.trackKey, progress);
 
@@ -390,6 +408,28 @@ export default function Home() {
         isMounted = false;
       };
     }, [refreshStreak]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+
+      readHomeResumeContext()
+        .then((context) => {
+          if (isMounted) {
+            setResumeContext(context);
+          }
+        })
+        .catch(() => {
+          if (isMounted) {
+            setResumeContext(null);
+          }
+        });
+
+      return () => {
+        isMounted = false;
+      };
+    }, []),
   );
 
   const openSequence = (sequence: any) => {
@@ -725,6 +765,7 @@ function AnimatedFragment({
 
 function MainActionCard({ sequence, narrative, progress, onPress }: any) {
   const displayLabel = sequence.label;
+  const resumeMeta = sequence.resumeMeta as string | undefined;
   const isMission = sequence.trackKey.endsWith("_ia");
   const accent = sequence.hubAccent;
 
@@ -760,7 +801,7 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
             tone="muted"
             style={styles.cardNarrative}
           >
-            {narrative}
+            {resumeMeta ?? narrative}
           </AppText>
 
           {typeof progress === "number" ? (
