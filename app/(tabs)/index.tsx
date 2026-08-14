@@ -3,10 +3,13 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import {
+  ChevronRight,
   Compass,
   Flame,
+  Headphones,
   MessageCircleMore,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -25,51 +28,52 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
 import { HubModuleAccents } from "../../constants/theme";
+import { GRAMMAR_STAGE_BY_ID, GRAMMAR_STAGE_IDS } from "../../data/grammar";
 import {
   HANGUL_MODULES,
   HANGUL_PROGRESS_IDS,
 } from "../../data/hangul/curriculum";
-import {
-  GRAMMAR_STAGE_BY_ID,
-  GRAMMAR_STAGE_IDS,
-} from "../../data/grammar";
+import { aeroportMissions } from "../../data/lesson/aeroport/aeroportMissions";
+import { cafeMissions } from "../../data/lesson/cafe/cafeMissions";
+import { metroMissions } from "../../data/lesson/metro/metroMissions";
+import { restaurantMissions } from "../../data/lesson/restaurant/restaurantMissions";
 import {
   EXERCISES_BY_KIND,
   TRAINING_ORDER,
   type ExerciseKind,
 } from "../../data/listen/activeExercises";
-import { cafeMissions } from "../../data/lesson/cafe/cafeMissions";
-import { metroMissions } from "../../data/lesson/metro/metroMissions";
-import { restaurantMissions } from "../../data/lesson/restaurant/restaurantMissions";
-import { aeroportMissions } from "../../data/lesson/aeroport/aeroportMissions";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import type { DailyStreakState } from "../../lib/dailyStreak";
 import {
-  readHomeResumeContext,
-  type HomeResumeContext,
-} from "../../lib/homeResume";
-import {
   getGrammarJourneyCompletion,
   getGrammarStageState,
 } from "../../lib/grammar";
+import {
+  readHomeResumeContext,
+  type HomeResumeContext,
+} from "../../lib/homeResume";
 import { buildProgressId } from "../../lib/progressIds";
 
 const BACKGROUND_SOURCE = require("../../assets/images/seoulhub.jpg");
 
 // ──────────────────────────────────────────────
-// DESIGN TOKENS
+// SEOUL MIDNIGHT GLASS — TEST HOME
 // ──────────────────────────────────────────────
 
 const BG_DEEP = "#020306";
-const TXT = "#F1F5F9";
-const MUTED = "rgba(241, 245, 249, 0.62)";
-const SOFT = "rgba(241, 245, 249, 0.45)";
-const HUB_BACKGROUND_DARKNESS = 0.58;
+const TXT = "#F5F7FA";
+const MUTED = "rgba(241,245,249,0.70)";
+const SOFT = "rgba(241,245,249,0.48)";
+const HAIRLINE = "rgba(255,255,255,0.10)";
 
 const CYAN = "#67E8F9";
 const PINK = "#F472B6";
+const TEAL = "#5EEAD4";
+
 const STREAK_ACCENT = HubModuleAccents.streak;
+
+const HUB_BACKGROUND_DARKNESS = 0.54;
 
 const SEOUL_TIME_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
   hour: "2-digit",
@@ -93,12 +97,19 @@ const ABSOLUTE_FILL = {
 function textGlow(color: string, radius: number) {
   return {
     textShadowColor: color,
-    textShadowOffset: { width: 0, height: 0 },
+    textShadowOffset: {
+      width: 0,
+      height: 0,
+    },
     textShadowRadius: radius,
   };
 }
 
 const HANGUL_PROGRESS_TOTAL = HANGUL_PROGRESS_IDS.length;
+
+// ──────────────────────────────────────────────
+// SEQUENCES
+// ──────────────────────────────────────────────
 
 const SEQUENCES: any[] = [
   {
@@ -163,46 +174,61 @@ const SEQUENCES: any[] = [
   },
 ];
 
+// ──────────────────────────────────────────────
+// RESUME CONFIG
+// ──────────────────────────────────────────────
+
 const RESUME_SEQUENCES: Record<string, any> = {
   aeroport_ia: {
     title: "Mission aéroport",
     label: "Mission aéroport",
     hubAccent: HubModuleAccents.hangul,
     route: "/lesson/aeroportMissions",
-    routeParams: { mode: "guided" },
+    routeParams: {
+      mode: "guided",
+    },
     trackKey: "aeroport_ia",
     place: "INCHEON - ARRIVÉE",
     narrative: "Reprends ta dernière mission aéroport.",
     type: "immersion",
   },
+
   cafe_ia: {
     title: "Mission café",
     label: "Mission café",
     hubAccent: HubModuleAccents.conversation,
     route: "/lesson/cafeMissions",
-    routeParams: { mode: "guided" },
+    routeParams: {
+      mode: "guided",
+    },
     trackKey: "cafe_ia",
     place: "HONGDAE - CAFÉ",
     narrative: "Reprends ta dernière mission café.",
     type: "immersion",
   },
+
   metro_ia: {
     title: "Mission métro",
     label: "Mission métro",
     hubAccent: HubModuleAccents.counting,
     route: "/lesson/metroMissions",
-    routeParams: { mode: "guided" },
+    routeParams: {
+      mode: "guided",
+    },
     trackKey: "metro_ia",
     place: "LIGNE 2 - SE DÉPLACER",
     narrative: "Reprends ta dernière mission métro.",
     type: "immersion",
   },
+
   restaurant_ia: {
     title: "Mission restaurant",
     label: "Mission restaurant",
     hubAccent: HubModuleAccents.vocabulary,
     route: "/lesson/restaurantMissions",
-    routeParams: { mode: "guided" },
+    routeParams: {
+      mode: "guided",
+    },
     trackKey: "restaurant_ia",
     place: "ITAEWON - DÎNER",
     narrative: "Reprends ta dernière mission restaurant.",
@@ -237,7 +263,10 @@ const MISSION_RESUME_CONFIG: Record<
     prefix: string;
     place: string;
     route: string;
-    missions: ReadonlyArray<{ id: string; title: string }>;
+    missions: readonly {
+      id: string;
+      title: string;
+    }[];
   }
 > = {
   cafe_ia: {
@@ -246,18 +275,21 @@ const MISSION_RESUME_CONFIG: Record<
     route: "/lesson/cafeIA",
     missions: cafeMissions,
   },
+
   metro_ia: {
     prefix: "metro",
     place: "Métro",
     route: "/lesson/metroIA",
     missions: metroMissions,
   },
+
   restaurant_ia: {
     prefix: "restaurant",
     place: "Restaurant",
     route: "/lesson/restaurantIA",
     missions: restaurantMissions,
   },
+
   aeroport_ia: {
     prefix: "aeroport",
     place: "Aéroport",
@@ -266,12 +298,18 @@ const MISSION_RESUME_CONFIG: Record<
   },
 };
 
+// ──────────────────────────────────────────────
+// RESUME LOGIC
+// ──────────────────────────────────────────────
+
 function getStoredResumeSequence(
   currentTrack: string | null,
   resumeContext: HomeResumeContext | null,
   baseSequence: any,
 ) {
-  if (!currentTrack || resumeContext?.track !== currentTrack) return null;
+  if (!currentTrack || resumeContext?.track !== currentTrack) {
+    return null;
+  }
 
   const trackLabel = RESUME_TRACK_LABELS[currentTrack] ?? "Parcours";
 
@@ -291,34 +329,46 @@ function getHangulResumeSequence(progress: any, baseSequence: any) {
   const activeQuizModule = HANGUL_MODULES.find(
     (module) => lessons[module.id]?.activeQuiz,
   );
+
   const activeSceneModule = [...HANGUL_MODULES]
     .reverse()
     .find(
       (module) =>
         lessons[module.id]?.currentSceneId && !progress.completed?.[module.id],
     );
+
   const activeModule =
     activeQuizModule ??
     activeSceneModule ??
     HANGUL_MODULES.find((module) => !progress.completed?.[module.id]) ??
     HANGUL_MODULES[HANGUL_MODULES.length - 1];
 
-  if (!activeModule) return null;
+  if (!activeModule) {
+    return null;
+  }
 
   const lesson = lessons[activeModule.id];
+
   const sceneId = lesson?.activeQuiz?.sceneId ?? lesson?.currentSceneId;
+
   const activeScene =
     activeModule.scenes.find((scene) => scene.id === sceneId) ??
     activeModule.scenes.find((scene) => !lesson?.completedScenes?.[scene.id]) ??
     activeModule.scenes[activeModule.scenes.length - 1];
 
-  if (!activeScene) return null;
+  if (!activeScene) {
+    return null;
+  }
 
   const activeQuiz =
-    lesson?.activeQuiz?.sceneId === activeScene.id ? lesson.activeQuiz : undefined;
+    lesson?.activeQuiz?.sceneId === activeScene.id
+      ? lesson.activeQuiz
+      : undefined;
+
   const questionNumber = activeQuiz
     ? Math.min(activeQuiz.questionIndex + 1, activeQuiz.questions.length)
     : null;
+
   const detail = questionNumber
     ? `Hangul · ${activeModule.title} · Quiz ${questionNumber} / ${activeQuiz.questions.length}`
     : `Hangul · ${activeModule.title}`;
@@ -334,10 +384,12 @@ function getHangulResumeSequence(progress: any, baseSequence: any) {
 
 function getGrammarResumeSequence(progress: any, baseSequence: any) {
   const grammarProgress = progress.grammarProgress;
+
   const resumableStageId =
     grammarProgress.lastStageId &&
     grammarProgress.stages[grammarProgress.lastStageId]?.activeSession &&
-    !grammarProgress.stages[grammarProgress.lastStageId]?.activeSession?.completedAt
+    !grammarProgress.stages[grammarProgress.lastStageId]?.activeSession
+      ?.completedAt
       ? grammarProgress.lastStageId
       : undefined;
 
@@ -345,19 +397,25 @@ function getGrammarResumeSequence(progress: any, baseSequence: any) {
     resumableStageId ??
     GRAMMAR_STAGE_IDS.find((candidate) => {
       const state = getGrammarStageState(grammarProgress, candidate);
+
       return state !== "practiced" && state !== "mastered";
     }) ??
     grammarProgress.lastStageId ??
     GRAMMAR_STAGE_IDS[GRAMMAR_STAGE_IDS.length - 1];
 
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
-  if (!stage) return null;
+
+  if (!stage) {
+    return null;
+  }
 
   const session = grammarProgress.stages[stageId]?.activeSession;
+
   const questionNumber =
     session && !session.completedAt
       ? Math.min(session.questionIndex + 1, session.questions.length)
       : null;
+
   const detail = questionNumber
     ? `Grammaire · Exercice ${questionNumber} / ${session.questions.length}`
     : `Grammaire · Étape ${stage.number} / ${GRAMMAR_STAGE_IDS.length}`;
@@ -367,31 +425,50 @@ function getGrammarResumeSequence(progress: any, baseSequence: any) {
     title: stage.title,
     label: stage.title,
     route: "/grammar/[stageId]",
-    routeParams: { stageId },
+    routeParams: {
+      stageId,
+    },
     resumeMeta: detail,
   };
 }
 
 function getListenResumeSequence(progress: any, baseSequence: any) {
-  for (let trainingIndex = 0; trainingIndex < TRAINING_ORDER.length; trainingIndex += 1) {
+  for (
+    let trainingIndex = 0;
+    trainingIndex < TRAINING_ORDER.length;
+    trainingIndex += 1
+  ) {
     const kind = TRAINING_ORDER[trainingIndex];
+
     const exercises = EXERCISES_BY_KIND[kind];
 
-    for (let exerciseIndex = 0; exerciseIndex < exercises.length; exerciseIndex += 1) {
+    for (
+      let exerciseIndex = 0;
+      exerciseIndex < exercises.length;
+      exerciseIndex += 1
+    ) {
       const exercise = exercises[exerciseIndex];
+
       const progressId = buildProgressId("listen", exercise.id);
 
       if (!progress.completed?.[progressId]) {
         return {
           ...baseSequence,
+
           title: exercise.title,
           label: exercise.title,
+
           route: "/listen",
+
           routeParams: {
             training: kind,
             exercise: String(exerciseIndex),
           },
-          resumeMeta: `Écoute · ${LISTEN_KIND_LABELS[kind]} · ${exercise.theme} · Exercice ${exerciseIndex + 1} / ${exercises.length}`,
+
+          resumeMeta:
+            `Écoute · ${LISTEN_KIND_LABELS[kind]} · ` +
+            `${exercise.theme} · ` +
+            `Exercice ${exerciseIndex + 1} / ${exercises.length}`,
         };
       }
     }
@@ -411,13 +488,25 @@ function getMissionResumeSequence(
   progress: any,
   baseSequence: any,
 ) {
-  if (!currentTrack) return null;
+  if (!currentTrack) {
+    return null;
+  }
+
   const config = MISSION_RESUME_CONFIG[currentTrack];
-  if (!config) return null;
+
+  if (!config) {
+    return null;
+  }
 
   const resumeByProgressId = new Map<
     string,
-    { mission: { id: string; title: string }; mode: "guided" | "real" }
+    {
+      mission: {
+        id: string;
+        title: string;
+      };
+      mode: "guided" | "real";
+    }
   >();
 
   for (const mission of config.missions) {
@@ -430,26 +519,43 @@ function getMissionResumeSequence(
   }
 
   const completedIds = Object.keys(progress.completed ?? {});
+
   let match:
-    | { mission: { id: string; title: string }; mode: "guided" | "real" }
+    | {
+        mission: {
+          id: string;
+          title: string;
+        };
+        mode: "guided" | "real";
+      }
     | undefined;
 
   for (let index = completedIds.length - 1; index >= 0; index -= 1) {
     const candidate = resumeByProgressId.get(completedIds[index]);
+
     if (candidate) {
       match = candidate;
       break;
     }
   }
 
-  if (!match) return null;
+  if (!match) {
+    return null;
+  }
 
   return {
     ...baseSequence,
+
     title: match.mission.title,
     label: match.mission.title,
+
     route: config.route,
-    routeParams: { mode: match.mode, mission: match.mission.id },
+
+    routeParams: {
+      mode: match.mode,
+      mission: match.mission.id,
+    },
+
     resumeMeta: `Conversation · ${config.place} · ${
       match.mode === "real" ? "Simulation réelle" : "Simulation guidée"
     }`,
@@ -464,94 +570,68 @@ function getDerivedResumeSequence(
   switch (currentTrack) {
     case "hangul":
       return getHangulResumeSequence(progress, baseSequence);
+
     case "grammar":
       return getGrammarResumeSequence(progress, baseSequence);
+
     case "listen":
       return getListenResumeSequence(progress, baseSequence);
+
     case "cafe_ia":
     case "metro_ia":
     case "restaurant_ia":
     case "aeroport_ia":
       return getMissionResumeSequence(currentTrack, progress, baseSequence);
+
     default:
       return null;
   }
 }
 
 // ──────────────────────────────────────────────
-// SEOUL HERO
+// HERO
 // ──────────────────────────────────────────────
-
-type HeroCopy = {
-  pre: string;
-  accent: string;
-  sub: (cityTime: string) => string;
-};
-
-const heroCopyVariants: Record<string, HeroCopy> = {
-  presentTense: {
-    pre: "Tu es à ",
-    accent: "Séoul.",
-    sub: (t) => `Il est ${t} là-bas, avec toi.`,
-  },
-  poetic: {
-    pre: "La ville commence ",
-    accent: "à te parler.",
-    sub: (t) => `${t} · Séoul, maintenant.`,
-  },
-  identity: {
-    pre: "Ta version coréenne ",
-    accent: "commence ici.",
-    sub: (t) => `${t} · heure de Séoul`,
-  },
-};
 
 type SeoulHeroProps = {
   cityTime: string;
-  variant?: keyof typeof heroCopyVariants;
 };
 
-function SeoulHero({ cityTime, variant = "presentTense" }: SeoulHeroProps) {
-  const copy = heroCopyVariants[variant];
-
+function SeoulHero({ cityTime }: SeoulHeroProps) {
   return (
-    <View style={styles.seoulHeroContainer}>
-      <LinearGradient
-        colors={["rgba(4,8,20,0)", "rgba(4,8,20,0.4)"]}
-        style={StyleSheet.absoluteFillObject}
-        pointerEvents="none"
-      />
+    <View style={styles.hero}>
+      <View style={styles.heroEyebrowRow}>
+        <View style={styles.heroLiveDot} />
 
-      <View style={styles.seoulHeroTitleRow}>
-        <Text
-          style={[styles.seoulHeroTitleStatic, styles.seoulHeroTitleShadow]}
-        >
-          {copy.pre}
-        </Text>
+        <AppText variant="sectionLabel" style={styles.heroEyebrow}>
+          LIVE FROM SEOUL
+        </AppText>
+      </View>
 
-        <MaskedView
-          maskElement={
-            <Text style={styles.seoulHeroTitleStatic}>{copy.accent}</Text>
-          }
-        >
+      <View style={styles.heroTitleRow}>
+        <Text style={[styles.heroTitle, styles.heroTitleShadow]}>Tu es à </Text>
+
+        <MaskedView maskElement={<Text style={styles.heroTitle}>Séoul.</Text>}>
           <LinearGradient
-            colors={["#5EEAD4", "#F472B6"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
+            colors={[TEAL, CYAN, PINK]}
+            start={{
+              x: 0,
+              y: 0,
+            }}
+            end={{
+              x: 1,
+              y: 0,
+            }}
           >
-            <Text
-              style={[
-                styles.seoulHeroTitleStatic,
-                styles.seoulHeroAccentPlaceholder,
-              ]}
-            >
-              {copy.accent}
+            <Text style={[styles.heroTitle, styles.heroAccentPlaceholder]}>
+              Séoul.
             </Text>
           </LinearGradient>
         </MaskedView>
       </View>
 
-      <Text style={styles.seoulHeroSubtitle}>{copy.sub(cityTime)}</Text>
+      <AppText variant="bodySecondary" style={styles.heroSubtitle}>
+        {cityTime} là-bas. La ville devient ton terrain d'apprentissage.
+      </AppText>
     </View>
   );
 }
@@ -562,8 +642,12 @@ function SeoulHero({ cityTime, variant = "presentTense" }: SeoulHeroProps) {
 
 export default function Home() {
   const { progress, setTrack } = useStore();
+
   const { refreshStreak, streak } = useDailyStreak();
-  const responsive = useResponsiveLayout({ maxWidth: 900 });
+
+  const responsive = useResponsiveLayout({
+    maxWidth: 900,
+  });
 
   const gridColumns = responsive.getColumns({
     minColumnWidth: 330,
@@ -576,13 +660,17 @@ export default function Home() {
     responsive.gridGap,
   );
 
-  const [resumeContext, setResumeContext] =
-    useState<HomeResumeContext | null>(null);
+  const [resumeContext, setResumeContext] = useState<HomeResumeContext | null>(
+    null,
+  );
+
+  const [seoulTime, setSeoulTime] = useState(formatSeoulTime);
+
   const currentTrack = progress.learningTrack;
 
   const baseActiveSeq =
     (currentTrack ? RESUME_SEQUENCES[currentTrack] : undefined) ??
-    SEQUENCES.find((s) => s.trackKey === currentTrack) ??
+    SEQUENCES.find((sequence) => sequence.trackKey === currentTrack) ??
     SEQUENCES[0];
 
   const storedResumeSequence = getStoredResumeSequence(
@@ -590,11 +678,13 @@ export default function Home() {
     resumeContext,
     baseActiveSeq,
   );
+
   const derivedResumeSequence = getDerivedResumeSequence(
     currentTrack,
     progress,
     baseActiveSeq,
   );
+
   const activeSeq =
     storedResumeSequence ?? derivedResumeSequence ?? baseActiveSeq;
 
@@ -606,54 +696,46 @@ export default function Home() {
       : activeSeq.narrative;
 
   const pedagogicalSequences = SEQUENCES.filter(
-    (s) => s.type === "pedagogical",
+    (sequence) => sequence.type === "pedagogical",
   );
 
-  const immersionSequences = SEQUENCES.filter((s) => s.type === "immersion");
+  const immersionSequences = SEQUENCES.filter(
+    (sequence) => sequence.type === "immersion",
+  );
 
-  const pulseAnim = useRef(new Animated.Value(0.4)).current;
-  const streakPulse = useRef(new Animated.Value(1)).current;
-  const [seoulTime, setSeoulTime] = useState(formatSeoulTime);
+  const livePulse = useRef(new Animated.Value(0.35)).current;
 
+  // Live status pulse
   useEffect(() => {
-    Animated.loop(
+    const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, {
+        Animated.timing(livePulse, {
           toValue: 1,
-          duration: 1800,
+          duration: 1700,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
-        Animated.timing(pulseAnim, {
-          toValue: 0.4,
-          duration: 1800,
+
+        Animated.timing(livePulse, {
+          toValue: 0.35,
+          duration: 1700,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
       ]),
-    ).start();
-  }, [pulseAnim]);
+    );
 
-  useEffect(() => {
-    streakPulse.setValue(1);
-    Animated.sequence([
-      Animated.timing(streakPulse, {
-        toValue: 1.06,
-        duration: 180,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.spring(streakPulse, {
-        toValue: 1,
-        friction: 5,
-        tension: 120,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [streak?.currentStreak, streak?.isTodayCompleted, streakPulse]);
+    loop.start();
 
+    return () => {
+      loop.stop();
+    };
+  }, [livePulse]);
+
+  // Seoul time
   useEffect(() => {
     let minuteInterval: ReturnType<typeof setInterval> | undefined;
+
     let minuteTimeout: ReturnType<typeof setTimeout> | undefined;
 
     const updateSeoulTime = () => {
@@ -681,6 +763,7 @@ export default function Home() {
     };
   }, []);
 
+  // Refresh streak
   useFocusEffect(
     useCallback(() => {
       let isMounted = true;
@@ -699,6 +782,7 @@ export default function Home() {
     }, [refreshStreak]),
   );
 
+  // Resume context
   useFocusEffect(
     useCallback(() => {
       let isMounted = true;
@@ -727,6 +811,7 @@ export default function Home() {
     if (sequence.routeParams) {
       router.push({
         pathname: sequence.route,
+
         params: sequence.routeParams,
       } as any);
 
@@ -742,18 +827,35 @@ export default function Home() {
         source={BACKGROUND_SOURCE}
         style={styles.bgImage}
         resizeMode="cover"
-        blurRadius={0}
       >
-        <BlurView intensity={18} tint="dark" style={styles.bgBlur} />
+        {/* Background blur */}
+
+        <BlurView intensity={12} tint="dark" style={styles.bgBlur} />
+
+        {/* Main smoked overlay */}
 
         <View style={styles.hubDarkOverlay} />
-        <View style={styles.topFade} />
-        <View style={styles.bottomFade} />
+
+        {/* Cinematic depth */}
+
+        <LinearGradient
+          colors={["rgba(2,3,6,0.14)", "rgba(2,3,6,0.16)", "rgba(2,3,6,0.74)"]}
+          locations={[0, 0.46, 1]}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+
+        {/* Ambient glass lighting */}
+
+        <View style={styles.ambientGlowCyan} pointerEvents="none" />
+
+        <View style={styles.ambientGlowPink} pointerEvents="none" />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.scrollContent,
+
             {
               paddingHorizontal: responsive.horizontalPadding,
             },
@@ -762,102 +864,37 @@ export default function Home() {
           <View
             style={[
               styles.contentFrame,
+
               {
                 maxWidth: responsive.maxWidth,
               },
             ]}
           >
-            {/* TOP HEADER */}
-            <View
-              style={[
-                styles.header,
-                responsive.isCompact && styles.headerCompact,
-              ]}
-            >
-              <View
-                style={[
-                  styles.headerIdentity,
-                  responsive.isCompact && styles.headerIdentityCompact,
-                ]}
-              >
-                <View style={styles.brandGroup}>
-                  <AppText
-                    variant="koreanPrimary"
-                    script="korean"
-                    lineContract="singleLine"
-                    style={styles.headerCityKr}
-                  >
-                    서울
-                  </AppText>
+            {/* HEADER */}
 
-                  <AppText
-                    variant="sectionLabel"
-                    lineContract="singleLine"
-                    style={styles.headerCityEn}
-                  >
-                    SÉOUL
-                  </AppText>
-                </View>
+            <GlassHeader
+              compact={responsive.isCompact}
+              cityTime={seoulTime}
+              livePulse={livePulse}
+            />
 
-                <View
-                  style={[
-                    styles.headerDivider,
-                    responsive.isCompact && styles.headerDividerCompact,
-                  ]}
-                />
+            {/* HERO */}
 
-                <View style={styles.statusGroup}>
-                  <View style={styles.liveIndicatorRow}>
-                    <Animated.View
-                      style={[
-                        styles.liveDot,
-                        {
-                          opacity: pulseAnim,
-                        },
-                      ]}
-                    />
+            <SeoulHero cityTime={seoulTime} />
 
-                    <AppText
-                      variant="sectionLabel"
-                      lineContract="singleLine"
-                      style={styles.statusText}
-                    >
-                      IMMERSION ACTIVE
-                    </AppText>
-                  </View>
-
-                  <AppText
-                    accessibilityLabel={`Heure à Séoul : ${seoulTime}`}
-                    variant="label"
-                    lineContract="singleLine"
-                    style={styles.locationText}
-                  >
-                    {seoulTime} · SÉOUL
-                  </AppText>
-                </View>
-              </View>
-
-              <Animated.View
-                style={[
-                  styles.streakHeaderSlot,
-                  responsive.isCompact && styles.streakHeaderSlotCompact,
-                  { transform: [{ scale: streakPulse }] },
-                ]}
-              >
-                <StreakHeaderBadge
-                  compact={responsive.isCompact}
-                  streak={streak}
-                  onPress={() => router.push("/streak")}
-                />
-              </Animated.View>
-            </View>
-
-            {/* HERO H1 */}
-            <SeoulHero cityTime={seoulTime} variant="presentTense" />
-
-            {/* CURRENT IMMERSION */}
+            {/* DAILY RHYTHM */}
 
             <AnimatedFragment index={0}>
+              <DailyMomentumCard
+                compact={responsive.isCompact}
+                streak={streak}
+                onPress={() => router.push("/streak")}
+              />
+            </AnimatedFragment>
+
+            {/* ACTIVE JOURNEY */}
+
+            <AnimatedFragment index={1}>
               <MainActionCard
                 sequence={activeSeq}
                 narrative={activeSeqNarrative}
@@ -866,37 +903,29 @@ export default function Home() {
               />
             </AnimatedFragment>
 
-            {/* PARCOURS */}
-            <View style={styles.sectionDivider}>
-              <AppText variant="sectionLabel" style={styles.sectionTitle}>
-                PARCOURS
-              </AppText>
+            {/* PEDAGOGICAL */}
 
-              <View style={styles.titleLineWrap}>
-                <View style={styles.titleLine} />
-
-                <LinearGradient
-                  colors={["transparent", CYAN, PINK]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0.5, y: 0 }}
-                  style={styles.titleLineGlow}
-                />
-              </View>
-            </View>
+            <SectionHeader
+              title="PARCOURS"
+              subtitle="Construis tes bases"
+              colors={[TEAL, CYAN]}
+            />
 
             <View
               style={[
                 styles.grid,
+
                 gridColumns > 1 && styles.gridWide,
+
                 {
                   gap: responsive.gridGap,
                 },
               ]}
             >
-              {pedagogicalSequences.map((seq, i) => (
+              {pedagogicalSequences.map((sequence, index) => (
                 <AnimatedFragment
-                  key={seq.trackKey}
-                  index={i + 1}
+                  key={sequence.trackKey}
+                  index={index + 2}
                   style={
                     gridColumns > 1
                       ? {
@@ -906,45 +935,37 @@ export default function Home() {
                   }
                 >
                   <SequenceCard
-                    item={seq}
-                    isActive={seq.trackKey === currentTrack}
-                    onPress={() => openSequence(seq)}
+                    item={sequence}
+                    isActive={sequence.trackKey === currentTrack}
+                    onPress={() => openSequence(sequence)}
                   />
                 </AnimatedFragment>
               ))}
             </View>
 
             {/* IMMERSION */}
-            <View style={styles.sectionDivider}>
-              <AppText variant="sectionLabel" style={styles.sectionTitle}>
-                IMMERSION
-              </AppText>
 
-              <View style={styles.titleLineWrap}>
-                <View style={styles.titleLine} />
-
-                <LinearGradient
-                  colors={["transparent", "#8B5CF6", PINK]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0.5, y: 0 }}
-                  style={styles.titleLineGlow}
-                />
-              </View>
-            </View>
+            <SectionHeader
+              title="IMMERSION"
+              subtitle="Vis le coréen"
+              colors={[CYAN, PINK]}
+            />
 
             <View
               style={[
                 styles.grid,
+
                 gridColumns > 1 && styles.gridWide,
+
                 {
                   gap: responsive.gridGap,
                 },
               ]}
             >
-              {immersionSequences.map((seq, i) => (
+              {immersionSequences.map((sequence, index) => (
                 <AnimatedFragment
-                  key={seq.trackKey}
-                  index={i + 1 + pedagogicalSequences.length}
+                  key={sequence.trackKey}
+                  index={index + 2 + pedagogicalSequences.length}
                   style={
                     gridColumns > 1
                       ? {
@@ -954,9 +975,9 @@ export default function Home() {
                   }
                 >
                   <SequenceCard
-                    item={seq}
-                    isActive={seq.trackKey === currentTrack}
-                    onPress={() => openSequence(seq)}
+                    item={sequence}
+                    isActive={sequence.trackKey === currentTrack}
+                    onPress={() => openSequence(sequence)}
                   />
                 </AnimatedFragment>
               ))}
@@ -969,7 +990,535 @@ export default function Home() {
 }
 
 // ──────────────────────────────────────────────
-// COMPONENTS
+// GLASS HEADER
+// ──────────────────────────────────────────────
+
+function GlassHeader({
+  compact,
+  cityTime,
+  livePulse,
+}: {
+  compact: boolean;
+  cityTime: string;
+  livePulse: Animated.Value;
+}) {
+  return (
+    <View style={styles.headerShell}>
+      <BlurView intensity={48} tint="dark" style={styles.headerBlur}>
+        <LinearGradient
+          colors={[
+            "rgba(255,255,255,0.10)",
+            "rgba(255,255,255,0.025)",
+            "rgba(4,8,18,0.26)",
+          ]}
+          locations={[0, 0.28, 1]}
+          start={{
+            x: 0,
+            y: 0,
+          }}
+          end={{
+            x: 1,
+            y: 1,
+          }}
+          style={StyleSheet.absoluteFill}
+        />
+
+        <View style={styles.brandGroup}>
+          <AppText
+            variant="koreanPrimary"
+            script="korean"
+            lineContract="singleLine"
+            style={styles.headerCityKr}
+          >
+            서울
+          </AppText>
+
+          <AppText
+            variant="sectionLabel"
+            lineContract="singleLine"
+            style={styles.headerCityEn}
+          >
+            SÉOUL
+          </AppText>
+        </View>
+
+        <View style={styles.headerCenter}>
+          <View style={styles.headerLiveRow}>
+            <Animated.View
+              style={[
+                styles.headerLiveDot,
+
+                {
+                  opacity: livePulse,
+                },
+              ]}
+            />
+
+            <AppText
+              variant="sectionLabel"
+              lineContract="singleLine"
+              style={styles.headerLiveText}
+            >
+              IMMERSION ACTIVE
+            </AppText>
+          </View>
+
+          {!compact ? (
+            <AppText
+              accessibilityLabel={`Heure à Séoul : ${cityTime}`}
+              variant="label"
+              lineContract="singleLine"
+              style={styles.headerTime}
+            >
+              {cityTime} · SEOUL
+            </AppText>
+          ) : null}
+        </View>
+
+        <View style={styles.headerSignal}>
+          <View style={styles.headerSignalDot} />
+
+          <View style={[styles.headerSignalBar, styles.headerSignalBarMid]} />
+
+          <View style={[styles.headerSignalBar, styles.headerSignalBarHigh]} />
+        </View>
+      </BlurView>
+    </View>
+  );
+}
+
+// ──────────────────────────────────────────────
+// DAILY MOMENTUM
+// ──────────────────────────────────────────────
+
+// ──────────────────────────────────────────────
+// DAILY MOMENTUM
+// ──────────────────────────────────────────────
+
+function DailyMomentumCard({
+  compact,
+  streak,
+  onPress,
+}: {
+  compact: boolean;
+  streak: DailyStreakState | null;
+  onPress: () => void;
+}) {
+  const currentStreak = streak?.currentStreak ?? 0;
+  const freezesAvailable = streak?.freezesAvailable ?? 0;
+  const isValidated = streak?.isTodayCompleted ?? false;
+
+  const dayLabel = currentStreak > 1 ? "jours" : "jour";
+  const protectionLabel = freezesAvailable > 1 ? "protections" : "protection";
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Rythme du jour. ${
+        isValidated ? "Journée validée." : "Journée à compléter."
+      } Série de ${currentStreak} ${dayLabel}. ${freezesAvailable} ${protectionLabel}.`}
+      accessibilityHint="Ouvre le détail de la série quotidienne"
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.dailyCardWrap,
+        pressed && styles.pressablePressed,
+      ]}
+    >
+      <BlurView
+        intensity={58}
+        tint="dark"
+        style={[styles.dailyCard, compact && styles.dailyCardCompact]}
+      >
+        <LinearGradient
+          colors={[
+            STREAK_ACCENT.surfaceStrong,
+            "rgba(7,16,22,0.76)",
+            "rgba(2,3,6,0.88)",
+          ]}
+          locations={[0, 0.46, 1]}
+          start={{
+            x: 0,
+            y: 0,
+          }}
+          end={{
+            x: 1,
+            y: 1,
+          }}
+          style={StyleSheet.absoluteFill}
+        />
+
+        {/* Halo d'ambiance */}
+
+        <View style={styles.dailyGlow} />
+
+        <View style={styles.glassTopHairline} />
+
+        {/* HEADER */}
+
+        <View style={styles.dailyHeader}>
+          <View style={styles.dailyKickerRow}>
+            <Sparkles size={18} strokeWidth={2} color={CYAN} />
+
+            <AppText variant="sectionLabel" style={styles.dailyKicker}>
+              RYTHME DU JOUR
+            </AppText>
+          </View>
+
+          <View style={styles.dailyArrow}>
+            <ChevronRight
+              size={19}
+              strokeWidth={2.2}
+              color="rgba(241,245,249,0.48)"
+            />
+          </View>
+        </View>
+
+        {/* INFORMATION PRINCIPALE */}
+
+        <View style={styles.dailyMain}>
+          <AppText variant="featureTitle" style={styles.dailyTitle}>
+            {isValidated ? "Journée validée" : "Continue ta journée"}
+          </AppText>
+
+          <AppText
+            variant="bodySecondary"
+            tone="muted"
+            style={styles.dailySubtitle}
+          >
+            {isValidated
+              ? "Ta série est protégée pour aujourd'hui."
+              : "Une activité suffit pour protéger ta série."}
+          </AppText>
+        </View>
+
+        {/* STATISTIQUES */}
+
+        <View style={styles.dailyStats}>
+          <View style={styles.dailyStat}>
+            <View
+              style={[
+                styles.dailyIconOrb,
+                isValidated && styles.dailyIconOrbActive,
+              ]}
+            >
+              <Flame
+                size={21}
+                strokeWidth={2.2}
+                color={
+                  isValidated ? STREAK_ACCENT.base : "rgba(241,245,249,0.48)"
+                }
+                fill={isValidated ? STREAK_ACCENT.base : "transparent"}
+              />
+            </View>
+
+            <View style={styles.dailyStatText}>
+              <AppText
+                variant="bodyStrong"
+                lineContract="singleLine"
+                style={styles.dailyStreakValue}
+              >
+                {currentStreak}
+              </AppText>
+
+              <AppText
+                variant="caption"
+                lineContract="singleLine"
+                style={styles.dailyStatLabel}
+              >
+                {dayLabel}
+              </AppText>
+            </View>
+          </View>
+
+          <View style={styles.dailyDivider} />
+
+          <View style={styles.dailyStat}>
+            <View style={styles.dailyIconOrb}>
+              <ShieldCheck size={21} strokeWidth={2.1} color={CYAN} />
+            </View>
+
+            <View style={styles.dailyStatText}>
+              <AppText
+                variant="bodyStrong"
+                lineContract="singleLine"
+                style={styles.dailyFreezeValue}
+              >
+                {freezesAvailable}
+              </AppText>
+
+              <AppText
+                variant="caption"
+                lineContract="singleLine"
+                style={styles.dailyStatLabel}
+              >
+                {protectionLabel}
+              </AppText>
+            </View>
+          </View>
+        </View>
+      </BlurView>
+    </Pressable>
+  );
+}
+
+// ──────────────────────────────────────────────
+// MAIN ACTION
+// ──────────────────────────────────────────────
+
+// ──────────────────────────────────────────────
+// MAIN ACTION
+// ──────────────────────────────────────────────
+
+function MainActionCard({ sequence, narrative, progress, onPress }: any) {
+  const displayLabel = sequence.label;
+
+  const resumeMeta = sequence.resumeMeta as string | undefined;
+
+  const isMission = sequence.trackKey.endsWith("_ia");
+
+  const accent = sequence.hubAccent;
+
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  const hasProgress = typeof progress === "number";
+  const progressValue = hasProgress ? Math.max(0, Math.min(1, progress)) : 0;
+
+  useEffect(() => {
+    if (!hasProgress) {
+      progressAnim.setValue(0);
+      return;
+    }
+
+    progressAnim.setValue(0);
+
+    Animated.timing(progressAnim, {
+      toValue: progressValue,
+      duration: 720,
+      delay: 180,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [hasProgress, progressAnim, progressValue]);
+
+  const animatedProgressWidth = progressAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0%", "100%"],
+  });
+
+  const displayedProgress = Math.round(progressValue * 100);
+
+  return (
+    <Pressable
+      accessibilityRole="link"
+      accessibilityLabel={`Reprendre ${
+        isMission ? "la mission" : "le parcours"
+      } ${displayLabel}. ${narrative}`}
+      accessibilityHint="Ouvre le parcours actif"
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.mainCardWrap,
+
+        {
+          borderColor: accent.featuredBorder,
+
+          boxShadow: `0px 12px 28px ${accent.featuredShadow}`,
+        },
+
+        pressed && styles.pressablePressed,
+      ]}
+    >
+      <BlurView intensity={72} tint="dark" style={styles.mainCard}>
+        <LinearGradient
+          colors={[
+            accent.surfaceStrong,
+            "rgba(8,10,16,0.64)",
+            "rgba(2,3,6,0.70)",
+          ]}
+          locations={[0, 0.46, 1]}
+          start={{
+            x: 0,
+            y: 0,
+          }}
+          end={{
+            x: 1,
+            y: 1,
+          }}
+          style={StyleSheet.absoluteFill}
+        />
+
+        <View
+          style={[
+            styles.mainAmbientGlow,
+
+            {
+              backgroundColor: accent.base,
+
+              boxShadow: `0px 0px 54px ${accent.glow}`,
+            },
+          ]}
+        />
+
+        <View style={styles.glassTopHairline} />
+
+        <View style={styles.mainCardTopRow}>
+          <View style={styles.mainCardKickerPill}>
+            <View
+              style={[
+                styles.mainCardKickerDot,
+
+                {
+                  backgroundColor: accent.base,
+                },
+              ]}
+            />
+
+            <AppText variant="sectionLabel" style={styles.mainCardKicker}>
+              {isMission ? "MISSION EN COURS" : "À CONTINUER"}
+            </AppText>
+          </View>
+
+          <View
+            style={[
+              styles.mainArrowButton,
+
+              {
+                borderColor: accent.iconBorder,
+
+                backgroundColor: accent.iconSurface,
+              },
+            ]}
+          >
+            <ChevronRight size={19} color={accent.base} strokeWidth={2.3} />
+          </View>
+        </View>
+
+        <View style={styles.mainContent}>
+          <AppText variant="featureTitle" style={styles.mainTitle}>
+            {displayLabel}
+          </AppText>
+
+          <AppText
+            variant="bodySecondary"
+            tone="muted"
+            style={styles.mainNarrative}
+          >
+            {resumeMeta ?? narrative}
+          </AppText>
+        </View>
+
+        {hasProgress ? (
+          <View style={styles.mainProgressBlock}>
+            <View style={styles.mainProgressMeta}>
+              <AppText variant="caption" style={styles.mainProgressLabel}>
+                PROGRESSION
+              </AppText>
+
+              <AppText
+                variant="bodyStrong"
+                style={[
+                  styles.mainProgressValue,
+                  displayedProgress === 0 && styles.mainProgressValueStart,
+                ]}
+              >
+                {displayedProgress === 0
+                  ? "Commencer"
+                  : `${displayedProgress}%`}
+              </AppText>
+            </View>
+
+            <View style={styles.mainProgressTrack}>
+              <Animated.View
+                style={[
+                  styles.mainProgressFill,
+
+                  {
+                    width: animatedProgressWidth,
+                  },
+                ]}
+              >
+                <LinearGradient
+                  colors={[accent.base, "rgba(255,255,255,0.90)"]}
+                  start={{
+                    x: 0,
+                    y: 0,
+                  }}
+                  end={{
+                    x: 1,
+                    y: 0,
+                  }}
+                  style={StyleSheet.absoluteFill}
+                />
+              </Animated.View>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.mainFooterMeta}>
+            <AppText variant="caption" style={styles.mainFooterLabel}>
+              REPRENDRE L'IMMERSION
+            </AppText>
+
+            <View
+              style={[
+                styles.mainFooterLine,
+
+                {
+                  backgroundColor: accent.base,
+                },
+              ]}
+            />
+          </View>
+        )}
+      </BlurView>
+    </Pressable>
+  );
+}
+// ──────────────────────────────────────────────
+// SECTION HEADER
+// ──────────────────────────────────────────────
+
+function SectionHeader({
+  title,
+  subtitle,
+  colors,
+}: {
+  title: string;
+  subtitle: string;
+  colors: [string, string];
+}) {
+  return (
+    <View style={styles.sectionHeader}>
+      <View>
+        <AppText variant="sectionLabel" style={styles.sectionTitle}>
+          {title}
+        </AppText>
+
+        <AppText variant="caption" style={styles.sectionSubtitle}>
+          {subtitle}
+        </AppText>
+      </View>
+
+      <View style={styles.sectionLineWrap}>
+        <View style={styles.sectionLineBase} />
+
+        <LinearGradient
+          colors={["transparent", colors[0], colors[1]]}
+          start={{
+            x: 0,
+            y: 0,
+          }}
+          end={{
+            x: 1,
+            y: 0,
+          }}
+          style={styles.sectionLineGlow}
+        />
+      </View>
+    </View>
+  );
+}
+
+// ──────────────────────────────────────────────
+// ANIMATION WRAPPER
 // ──────────────────────────────────────────────
 
 function AnimatedFragment({
@@ -983,65 +1532,39 @@ function AnimatedFragment({
 }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const slideAnim = useRef(new Animated.Value(30)).current;
-
-  const floatAnim = useRef(new Animated.Value(0)).current;
-
-  const startFloating = useCallback(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(floatAnim, {
-          toValue: 1,
-          duration: 3400 + index * 300,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(floatAnim, {
-          toValue: 0,
-          duration: 3400 + index * 300,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ]),
-    ).start();
-  }, [floatAnim, index]);
+  const slideAnim = useRef(new Animated.Value(18)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
-        delay: index * 180,
+        duration: 620,
+        delay: index * 90,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
+
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 1000,
-        delay: index * 180,
-        easing: Easing.out(Easing.back(1.2)),
+        duration: 720,
+        delay: index * 90,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
-    ]).start(() => startFloating());
-  }, [fadeAnim, index, slideAnim, startFloating]);
-
-  const translateY = Animated.add(
-    slideAnim,
-    floatAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, -5],
-    }),
-  );
+    ]).start();
+  }, [fadeAnim, index, slideAnim]);
 
   return (
     <Animated.View
       style={[
         style,
+
         {
           opacity: fadeAnim,
+
           transform: [
             {
-              translateY,
+              translateY: slideAnim,
             },
           ],
         },
@@ -1052,172 +1575,9 @@ function AnimatedFragment({
   );
 }
 
-function MainActionCard({ sequence, narrative, progress, onPress }: any) {
-  const displayLabel = sequence.label;
-  const resumeMeta = sequence.resumeMeta as string | undefined;
-  const isMission = sequence.trackKey.endsWith("_ia");
-  const accent = sequence.hubAccent;
-
-  return (
-    <Pressable
-      accessibilityRole="link"
-      accessibilityLabel={`Reprendre ${
-        isMission ? "la mission" : "le parcours"
-      } ${displayLabel}. ${narrative}`}
-      accessibilityHint="Ouvre le parcours actif"
-      hitSlop={6}
-      onPress={onPress}
-      style={[
-        styles.mainCardWrap,
-        {
-          borderColor: accent.featuredBorder,
-          boxShadow: `0px 8px 18px ${accent.featuredShadow}`,
-        },
-      ]}
-    >
-      <BlurView intensity={60} tint="dark" style={styles.mainCard}>
-        <View style={styles.cardContent}>
-          <AppText variant="sectionLabel" style={styles.cardKicker}>
-            {isMission ? "REPRENDRE LA MISSION" : "REPRENDRE LE PARCOURS"}
-          </AppText>
-
-          <AppText variant="featureTitle" style={styles.cardTitle}>
-            {displayLabel}
-          </AppText>
-
-          <AppText
-            variant="bodySecondary"
-            tone="muted"
-            style={styles.cardNarrative}
-          >
-            {resumeMeta ?? narrative}
-          </AppText>
-
-          {typeof progress === "number" ? (
-            <View style={styles.progressContainer}>
-              <View style={styles.progressTrack}>
-                <View
-                  style={[
-                    styles.progressFill,
-                    {
-                      width: `${progress * 100}%`,
-                      backgroundColor: accent.base,
-                    },
-                  ]}
-                />
-              </View>
-
-              <AppText variant="caption" style={styles.progressText}>
-                {Math.round(progress * 100)} % du parcours
-              </AppText>
-            </View>
-          ) : null}
-        </View>
-      </BlurView>
-    </Pressable>
-  );
-}
-
-function StreakHeaderBadge({
-  compact,
-  onPress,
-  streak,
-}: {
-  compact: boolean;
-  onPress: () => void;
-  streak: DailyStreakState | null;
-}) {
-  const currentStreak = streak?.currentStreak ?? 0;
-  const freezesAvailable = streak?.freezesAvailable ?? 0;
-  const isValidated = streak?.isTodayCompleted ?? false;
-  const dayLabel = currentStreak > 1 ? "jours" : "jour";
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`Série quotidienne : ${currentStreak} ${dayLabel}. ${
-        isValidated
-          ? "Objectif du jour atteint."
-          : "Objectif du jour à compléter."
-      } ${freezesAvailable} ${
-        freezesAvailable > 1
-          ? "protections disponibles"
-          : "protection disponible"
-      }.`}
-      accessibilityHint="Ouvre le calendrier de série"
-      hitSlop={8}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.streakBadgePressable,
-        pressed && styles.streakBadgePressed,
-      ]}
-    >
-      <BlurView intensity={44} tint="dark" style={styles.streakBadgeBlur}>
-        <LinearGradient
-          colors={[
-            STREAK_ACCENT.surfaceStrong,
-            STREAK_ACCENT.surface,
-            "rgba(2,3,6,0.32)",
-          ]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-
-        <View style={styles.streakBadgePrimary}>
-          <Flame
-            size={16}
-            strokeWidth={2.25}
-            color={
-              isValidated ? STREAK_ACCENT.base : "rgba(241,245,249,0.58)"
-            }
-            fill={isValidated ? STREAK_ACCENT.base : "transparent"}
-          />
-
-          <AppText
-            variant="bodyStrong"
-            lineContract="singleLine"
-            style={[
-              styles.streakBadgeValue,
-              isValidated && styles.streakBadgeValueActive,
-            ]}
-          >
-            {currentStreak}
-          </AppText>
-        </View>
-
-        {!compact ? (
-          <>
-            <View style={styles.streakBadgeDivider} />
-
-            <View style={styles.streakBadgeSecondary}>
-              <ShieldCheck
-                size={14}
-                strokeWidth={2.15}
-                color="rgba(103,232,249,0.72)"
-              />
-
-              <AppText
-                variant="caption"
-                lineContract="singleLine"
-                style={styles.streakBadgeFreezeValue}
-              >
-                {freezesAvailable}
-              </AppText>
-            </View>
-          </>
-        ) : null}
-
-        <View
-          style={[
-            styles.streakBadgeStatusDot,
-            isValidated && styles.streakBadgeStatusDotActive,
-          ]}
-        />
-      </BlurView>
-    </Pressable>
-  );
-}
+// ──────────────────────────────────────────────
+// PROGRESS
+// ──────────────────────────────────────────────
 
 function getSequenceProgress(trackKey: string, progress: any) {
   if (trackKey === "grammar") {
@@ -1234,6 +1594,10 @@ function getSequenceProgress(trackKey: string, progress: any) {
 
   return Math.min(1, completedHangulItems / HANGUL_PROGRESS_TOTAL);
 }
+
+// ──────────────────────────────────────────────
+// ICONS
+// ──────────────────────────────────────────────
 
 function getSequenceIcon(trackKey: string) {
   switch (trackKey) {
@@ -1253,7 +1617,7 @@ function getSequenceIcon(trackKey: string) {
       return "compass";
 
     case "listen":
-      return "소리";
+      return "headphones";
 
     default:
       return "•";
@@ -1262,22 +1626,28 @@ function getSequenceIcon(trackKey: string) {
 
 function SequenceIconGlyph({ icon, color }: { icon: string; color: string }) {
   if (icon === "dialogue") {
-    return <MessageCircleMore color={color} size={23} strokeWidth={2.25} />;
+    return <MessageCircleMore color={color} size={22} strokeWidth={2.15} />;
   }
 
   if (icon === "compass") {
-    return <Compass color={color} size={23} strokeWidth={2.25} />;
+    return <Compass color={color} size={22} strokeWidth={2.15} />;
+  }
+
+  if (icon === "headphones") {
+    return <Headphones color={color} size={21} strokeWidth={2.15} />;
   }
 
   return (
     <AppText
       variant="symbol"
       style={[
-        styles.seqIcon,
+        styles.sequenceIconText,
+
         {
           color,
         },
-        textGlow(color, 10),
+
+        textGlow(color, 9),
       ]}
     >
       {icon}
@@ -1285,10 +1655,14 @@ function SequenceIconGlyph({ icon, color }: { icon: string; color: string }) {
   );
 }
 
-function SequenceCard({ item, isActive, onPress }: any) {
-  const icon = getSequenceIcon(item.trackKey);
+// ──────────────────────────────────────────────
+// SEQUENCE CARD
+// ──────────────────────────────────────────────
 
+function SequenceCard({ item, isActive, onPress }: any) {
   const accent = item.hubAccent;
+
+  const icon = getSequenceIcon(item.trackKey);
 
   return (
     <Pressable
@@ -1297,97 +1671,65 @@ function SequenceCard({ item, isActive, onPress }: any) {
       accessibilityState={{
         selected: isActive,
       }}
-      aria-selected={isActive}
       accessibilityHint="Ouvre ce parcours"
-      hitSlop={6}
+      aria-selected={isActive}
       onPress={onPress}
-      style={[
-        styles.seqCard,
+      style={({ pressed }) => [
+        styles.sequenceCardWrap,
+
         isActive && {
           borderColor: accent.selectedBorder,
-          boxShadow: `0px 8px 18px ${accent.selectedShadow}`,
+
+          boxShadow: `0px 12px 24px ${accent.selectedShadow}`,
         },
+
+        pressed && styles.pressablePressed,
       ]}
     >
       <BlurView
-        intensity={isActive ? 52 : 40}
+        intensity={isActive ? 62 : 48}
         tint="dark"
-        style={[
-          styles.seqBlur,
-          isActive && {
-            borderColor: accent.iconBorder,
-          },
-        ]}
+        style={styles.sequenceCard}
       >
         <LinearGradient
-          colors={[
-            accent.surface,
-            "rgba(2,3,6,0.48)",
-            "rgba(255,255,255,0.035)",
-          ]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          colors={[accent.surface, "rgba(5,7,12,0.62)", "rgba(2,3,6,0.66)"]}
+          locations={[0, 0.5, 1]}
+          start={{
+            x: 0,
+            y: 0,
+          }}
+          end={{
+            x: 1,
+            y: 1,
+          }}
           style={StyleSheet.absoluteFill}
         />
 
-        <LinearGradient
-          colors={[
-            "rgba(255,255,255,0.13)",
-            "rgba(255,255,255,0.025)",
-            "transparent",
-          ]}
-          locations={[0, 0.35, 1]}
-          style={styles.seqTopReflect}
-        />
-
-        <View style={styles.seqRainA} />
-
         <View
           style={[
-            styles.seqRainB,
-            {
-              backgroundColor: accent.rain,
-            },
-          ]}
-        />
+            styles.sequenceAmbientGlow,
 
-        <View
-          style={[
-            styles.seqRainC,
-            {
-              backgroundColor: accent.decorative,
-            },
-          ]}
-        />
-
-        <View
-          style={[
-            styles.seqRainDrop,
             {
               backgroundColor: accent.base,
+
+              boxShadow: `0px 0px 42px ${accent.glow}`,
             },
           ]}
         />
 
-        <View
-          style={[
-            styles.seqAccent,
-            {
-              backgroundColor: accent.base,
-              opacity: isActive ? 1 : 0.9,
-              boxShadow: `0px 0px 10px ${accent.glow}`,
-            },
-          ]}
-        />
+        <View style={styles.glassTopHairline} />
 
-        <View style={styles.seqIconZone}>
+        <View style={styles.sequenceTopRow}>
           <View
             style={[
-              styles.seqIconBox,
+              styles.sequenceIconBox,
+
               {
                 borderColor: accent.iconBorder,
+
                 backgroundColor: accent.iconSurface,
-                boxShadow: `0px 0px 12px ${
+
+                boxShadow: `0px 0px 14px ${
                   isActive ? accent.iconShadowSelected : accent.iconShadow
                 }`,
               },
@@ -1395,48 +1737,72 @@ function SequenceCard({ item, isActive, onPress }: any) {
           >
             <LinearGradient
               colors={[
-                "rgba(255,255,255,0.24)",
-                "rgba(255,255,255,0.05)",
+                "rgba(255,255,255,0.18)",
+                "rgba(255,255,255,0.025)",
                 "transparent",
               ]}
-              locations={[0, 0.45, 1]}
-              style={styles.seqIconLight}
+              style={StyleSheet.absoluteFill}
             />
 
             <SequenceIconGlyph icon={icon} color={accent.base} />
           </View>
+
+          <View style={styles.sequencePlacePill}>
+            <AppText
+              variant="sectionLabel"
+              lineContract="singleLine"
+              style={styles.sequencePlace}
+            >
+              {item.place}
+            </AppText>
+          </View>
         </View>
 
-        <View style={styles.seqDividerLine} />
-
-        <View style={styles.seqText}>
-          <AppText variant="sectionLabel" style={styles.seqPlace}>
-            {item.place}
-          </AppText>
-
-          <AppText variant="cardTitle" style={styles.seqTitle}>
+        <View style={styles.sequenceTextBlock}>
+          <AppText variant="cardTitle" style={styles.sequenceTitle}>
             {item.title}
           </AppText>
 
-          <AppText variant="bodySecondary" tone="muted" style={styles.seqSub}>
+          <AppText
+            variant="bodySecondary"
+            tone="muted"
+            style={styles.sequenceNarrative}
+          >
             {item.narrative}
           </AppText>
         </View>
 
-        <AppText
-          variant="symbol"
-          lineContract="singleLine"
-          style={[
-            styles.seqArrow,
-            isActive && {
-              color: accent.base,
-              opacity: 0.9,
-            },
-            isActive && textGlow(accent.base, 8),
-          ]}
-        >
-          ›
-        </AppText>
+        <View style={styles.sequenceFooter}>
+          <View style={styles.sequenceFooterLine}>
+            <View
+              style={[
+                styles.sequenceFooterAccent,
+
+                {
+                  backgroundColor: accent.base,
+                },
+              ]}
+            />
+          </View>
+
+          <View
+            style={[
+              styles.sequenceArrow,
+
+              isActive && {
+                borderColor: accent.iconBorder,
+
+                backgroundColor: accent.iconSurface,
+              },
+            ]}
+          >
+            <ChevronRight
+              size={17}
+              strokeWidth={2.2}
+              color={isActive ? accent.base : "rgba(241,245,249,0.48)"}
+            />
+          </View>
+        </View>
       </BlurView>
     </Pressable>
   );
@@ -1447,6 +1813,10 @@ function SequenceCard({ item, isActive, onPress }: any) {
 // ──────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  // ─────────────────────────────
+  // ROOT
+  // ─────────────────────────────
+
   safe: {
     flex: 1,
     backgroundColor: BG_DEEP,
@@ -1464,26 +1834,45 @@ const styles = StyleSheet.create({
 
   hubDarkOverlay: {
     ...ABSOLUTE_FILL,
+
     backgroundColor: `rgba(2,3,6,${HUB_BACKGROUND_DARKNESS})`,
   },
 
-  topFade: {
-    ...ABSOLUTE_FILL,
-    backgroundColor: "rgba(0,0,0,0.07)",
+  ambientGlowCyan: {
+    position: "absolute",
+
+    top: 105,
+    right: -95,
+
+    width: 220,
+    height: 220,
+
+    borderRadius: 110,
+
+    backgroundColor: "rgba(103,232,249,0.055)",
+
+    boxShadow: "0px 0px 80px rgba(103,232,249,0.10)",
   },
 
-  bottomFade: {
+  ambientGlowPink: {
     position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
+
+    top: 360,
+    left: -120,
+
+    width: 240,
     height: 240,
-    backgroundColor: "rgba(2,3,6,0.40)",
+
+    borderRadius: 120,
+
+    backgroundColor: "rgba(244,114,182,0.04)",
+
+    boxShadow: "0px 0px 90px rgba(244,114,182,0.08)",
   },
 
   scrollContent: {
     paddingTop: 8,
-    paddingBottom: 100,
+    paddingBottom: 112,
   },
 
   contentFrame: {
@@ -1491,35 +1880,67 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
 
+  pressablePressed: {
+    opacity: 0.82,
+
+    transform: [
+      {
+        scale: 0.992,
+      },
+    ],
+  },
+
+  glassTopHairline: {
+    position: "absolute",
+
+    top: 0,
+    left: 18,
+    right: 18,
+
+    height: 1,
+
+    backgroundColor: "rgba(255,255,255,0.17)",
+
+    opacity: 0.72,
+  },
+
+  // ─────────────────────────────
   // HEADER
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    minHeight: 40,
+  // ─────────────────────────────
+
+  headerShell: {
     marginTop: 4,
-    marginBottom: 38,
-    paddingHorizontal: 4,
-    position: "relative",
+
+    borderRadius: 22,
+
+    overflow: "hidden",
+
+    borderWidth: 1,
+
+    borderColor: "rgba(255,255,255,0.09)",
+
+    backgroundColor: "rgba(2,3,6,0.28)",
+
+    boxShadow: "0px 8px 24px rgba(0,0,0,0.20)",
   },
 
-  headerCompact: {
-    marginTop: 2,
-    marginBottom: 16,
-  },
+  headerBlur: {
+    minHeight: 58,
 
-  headerIdentity: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+
     flexDirection: "row",
-    alignItems: "center",
-    flexShrink: 1,
-    minWidth: 0,
-  },
 
-  headerIdentityCompact: {
-    paddingRight: 0,
+    alignItems: "center",
+
+    position: "relative",
+
+    overflow: "hidden",
   },
 
   brandGroup: {
+    minWidth: 56,
     alignItems: "flex-start",
   },
 
@@ -1528,417 +1949,792 @@ const styles = StyleSheet.create({
   },
 
   headerCityEn: {
-    color: "rgba(255,255,255,0.65)",
+    color: "rgba(255,255,255,0.48)",
+
     marginTop: -1,
   },
 
-  headerDivider: {
-    width: 1,
-    height: 24,
-    backgroundColor: "rgba(255,255,255,0.09)",
-    marginHorizontal: 16,
-  },
+  headerCenter: {
+    flex: 1,
 
-  headerDividerCompact: {
-    height: 22,
-    marginHorizontal: 9,
-  },
-
-  statusGroup: {
+    alignItems: "center",
     justifyContent: "center",
-    flexShrink: 1,
+
+    paddingHorizontal: 10,
   },
 
-  liveIndicatorRow: {
+  headerLiveRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 3,
   },
 
-  liveDot: {
+  headerLiveDot: {
     width: 5,
     height: 5,
-    borderRadius: 2.5,
+
+    borderRadius: 3,
+
     backgroundColor: CYAN,
-    marginRight: 6,
+
+    marginRight: 7,
+
+    boxShadow: "0px 0px 8px rgba(103,232,249,0.65)",
   },
 
-  statusText: {
-    color: "rgba(224,242,254,0.74)",
+  headerLiveText: {
+    color: "rgba(226,242,254,0.76)",
   },
 
-  locationText: {
-    color: "rgba(224,242,254,0.40)",
-    marginLeft: 11,
+  headerTime: {
+    marginTop: 3,
+
+    color: "rgba(226,242,254,0.38)",
   },
 
-  streakHeaderSlot: {
-    marginLeft: 12,
-    flexShrink: 0,
-  },
+  headerSignal: {
+    width: 56,
+    height: 22,
 
-  streakHeaderSlotCompact: {
-    marginLeft: 8,
-  },
-
-  streakBadgePressable: {
-    borderRadius: 999,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: STREAK_ACCENT.cardBorder,
-    backgroundColor: "rgba(2,3,6,0.34)",
-    boxShadow: `0px 4px 16px ${STREAK_ACCENT.featuredShadow}`,
-  },
-
-  streakBadgePressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }],
-  },
-
-  streakBadgeBlur: {
-    minHeight: 38,
     flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    position: "relative",
-    overflow: "hidden",
+
+    alignItems: "flex-end",
+    justifyContent: "flex-end",
+
+    gap: 3,
   },
 
-  streakBadgePrimary: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-
-  streakBadgeValue: {
-    color: "rgba(241,245,249,0.78)",
-  },
-
-  streakBadgeValueActive: {
-    color: TXT,
-    ...textGlow(STREAK_ACCENT.selectedShadow, 8),
-  },
-
-  streakBadgeDivider: {
-    width: 1,
-    height: 16,
-    backgroundColor: "rgba(255,255,255,0.10)",
-    marginHorizontal: 8,
-  },
-
-  streakBadgeSecondary: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-
-  streakBadgeFreezeValue: {
-    color: "rgba(224,242,254,0.66)",
-  },
-
-  streakBadgeStatusDot: {
-    position: "absolute",
-    top: 5,
-    right: 5,
+  headerSignalDot: {
     width: 4,
     height: 4,
+
     borderRadius: 2,
-    backgroundColor: "rgba(241,245,249,0.20)",
+
+    backgroundColor: "rgba(103,232,249,0.45)",
   },
 
-  streakBadgeStatusDotActive: {
-    backgroundColor: STREAK_ACCENT.base,
-    boxShadow: `0px 0px 7px ${STREAK_ACCENT.glow}`,
+  headerSignalBar: {
+    width: 3,
+    height: 8,
+
+    borderRadius: 2,
+
+    backgroundColor: "rgba(103,232,249,0.58)",
   },
 
-  // HERO H1
-  seoulHeroContainer: {
-    position: "relative",
-    paddingHorizontal: 0,
-    marginTop: 78,
-    marginBottom: 78,
+  headerSignalBarMid: {
+    height: 12,
   },
 
-  seoulHeroTitleRow: {
+  headerSignalBarHigh: {
+    height: 16,
+
+    backgroundColor: "rgba(103,232,249,0.78)",
+  },
+
+  // ─────────────────────────────
+  // HERO
+  // ─────────────────────────────
+
+  hero: {
+    paddingHorizontal: 2,
+
+    marginTop: 66,
+    marginBottom: 34,
+  },
+
+  heroEyebrowRow: {
     flexDirection: "row",
+    alignItems: "center",
+
+    marginBottom: 11,
+  },
+
+  heroLiveDot: {
+    width: 5,
+    height: 5,
+
+    borderRadius: 3,
+
+    backgroundColor: TEAL,
+
+    marginRight: 7,
+
+    boxShadow: "0px 0px 8px rgba(94,234,212,0.72)",
+  },
+
+  heroEyebrow: {
+    color: "rgba(226,242,254,0.48)",
+
+    letterSpacing: 1.35,
+  },
+
+  heroTitleRow: {
+    flexDirection: "row",
+
     flexWrap: "wrap",
+
     alignItems: "baseline",
   },
 
-  seoulHeroTitleStatic: {
+  heroTitle: {
     fontSize: 42,
-    lineHeight: 38,
+    lineHeight: 44,
+
     fontWeight: "800",
-    letterSpacing: -0.4,
-    color: "#F5F7FA",
+
+    letterSpacing: -0.8,
+
+    color: TXT,
   },
 
-  seoulHeroTitleShadow: {
-    textShadowColor: "rgba(0,0,0,0.35)",
+  heroTitleShadow: {
+    textShadowColor: "rgba(0,0,0,0.38)",
+
     textShadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    textShadowRadius: 6,
+
+    textShadowRadius: 8,
   },
 
-  seoulHeroAccentPlaceholder: {
+  heroAccentPlaceholder: {
     opacity: 0,
   },
 
-  seoulHeroSubtitle: {
-    marginTop: 10,
-    fontSize: 15,
-    fontWeight: "500",
-    letterSpacing: 0.2,
-    color: "rgba(245,247,250,0.72)",
+  heroSubtitle: {
+    maxWidth: 560,
+
+    marginTop: 12,
+
+    color: "rgba(245,247,250,0.68)",
   },
 
-  heroLabel: {
-    color: "rgba(255,255,255,0.70)",
-    textAlign: "left",
-    marginBottom: 12,
-    paddingHorizontal: 4,
+  // ─────────────────────────────
+  // DAILY MOMENTUM
+  // ─────────────────────────────
+
+  // ─────────────────────────────
+  // DAILY MOMENTUM
+  // ─────────────────────────────
+
+  dailyCardWrap: {
+    marginBottom: 14,
+
+    borderRadius: 28,
+
+    overflow: "hidden",
+
+    borderWidth: 1,
+
+    borderColor: "rgba(103,232,249,0.16)",
+
+    backgroundColor: "rgba(3,4,8,0.38)",
+
+    boxShadow: `0px 12px 30px ${STREAK_ACCENT.featuredShadow}`,
   },
 
-  rainLine: {
+  dailyCard: {
+    minHeight: 194,
+
+    paddingHorizontal: 22,
+    paddingTop: 20,
+    paddingBottom: 20,
+
+    position: "relative",
+
+    overflow: "hidden",
+  },
+
+  dailyCardCompact: {
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 18,
+  },
+
+  dailyGlow: {
     position: "absolute",
-    top: 0,
-    width: 1,
-    height: 200,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    zIndex: 20,
+
+    top: -78,
+    left: -54,
+
+    width: 190,
+    height: 190,
+
+    borderRadius: 95,
+
+    backgroundColor: STREAK_ACCENT.base,
+
+    opacity: 0.07,
+
+    boxShadow: `0px 0px 72px ${STREAK_ACCENT.glow}`,
   },
+
+  dailyHeader: {
+    flexDirection: "row",
+
+    alignItems: "center",
+    justifyContent: "space-between",
+
+    marginBottom: 17,
+  },
+
+  dailyKickerRow: {
+    flexDirection: "row",
+
+    alignItems: "center",
+
+    gap: 8,
+
+    flexShrink: 1,
+  },
+
+  dailyKicker: {
+    color: "rgba(241,245,249,0.52)",
+
+    letterSpacing: 1.35,
+  },
+
+  dailyArrow: {
+    width: 34,
+    height: 34,
+
+    borderRadius: 17,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    borderWidth: 1,
+
+    borderColor: "rgba(255,255,255,0.075)",
+
+    backgroundColor: "rgba(255,255,255,0.025)",
+
+    marginLeft: 12,
+  },
+
+  dailyMain: {
+    width: "100%",
+
+    paddingRight: 4,
+
+    marginBottom: 21,
+  },
+
+  dailyTitle: {
+    color: TXT,
+
+    marginBottom: 5,
+  },
+  dailySubtitle: {
+    color: MUTED,
+
+    maxWidth: 480,
+
+    paddingRight: 10,
+  },
+
+  dailyStats: {
+    width: "100%",
+
+    minHeight: 54,
+
+    flexDirection: "row",
+
+    alignItems: "center",
+
+    borderTopWidth: 1,
+
+    borderTopColor: "rgba(255,255,255,0.07)",
+
+    paddingTop: 15,
+  },
+
+  dailyStat: {
+    flex: 1,
+
+    minWidth: 0,
+
+    flexDirection: "row",
+
+    alignItems: "center",
+  },
+
+  dailyIconOrb: {
+    width: 40,
+    height: 40,
+
+    borderRadius: 20,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    flexShrink: 0,
+
+    borderWidth: 1,
+
+    borderColor: "rgba(103,232,249,0.10)",
+
+    backgroundColor: "rgba(103,232,249,0.045)",
+
+    marginRight: 10,
+  },
+
+  dailyIconOrbActive: {
+    borderColor: "rgba(103,232,249,0.18)",
+
+    backgroundColor: "rgba(103,232,249,0.075)",
+
+    boxShadow: `0px 0px 20px ${STREAK_ACCENT.glow}`,
+  },
+
+  dailyStatText: {
+    flexDirection: "row",
+
+    alignItems: "baseline",
+
+    flexShrink: 1,
+
+    minWidth: 0,
+  },
+
+  dailyStreakValue: {
+    color: TXT,
+
+    lineHeight: 20,
+
+    marginRight: 5,
+  },
+
+  dailyStatLabel: {
+    color: SOFT,
+
+    flexShrink: 1,
+  },
+
+  dailyDivider: {
+    width: 1,
+    height: 30,
+
+    flexShrink: 0,
+
+    backgroundColor: "rgba(255,255,255,0.08)",
+
+    marginHorizontal: 16,
+  },
+
+  dailyFreezeValue: {
+    color: TXT,
+
+    lineHeight: 20,
+
+    marginRight: 5,
+  },
+  // ─────────────────────────────
+  // MAIN ACTIVE CARD
+  // ─────────────────────────────
 
   mainCardWrap: {
-    marginBottom: 12,
-    borderRadius: 32,
+    marginBottom: 6,
+
+    borderRadius: 30,
+
     overflow: "hidden",
+
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
+
+    backgroundColor: "rgba(2,3,6,0.30)",
   },
 
   mainCard: {
+    minHeight: 206,
+
     padding: 20,
+
+    position: "relative",
+
+    overflow: "hidden",
   },
 
-  cardContent: {},
+  mainAmbientGlow: {
+    position: "absolute",
 
-  cardKicker: {
-    color: SOFT,
-    marginBottom: 6,
+    top: -90,
+    right: -62,
+
+    width: 180,
+    height: 180,
+
+    borderRadius: 90,
+
+    opacity: 0.08,
   },
 
-  cardTitle: {
-    color: TXT,
-    marginBottom: 7,
-  },
+  mainCardTopRow: {
+    flexDirection: "row",
 
-  cardNarrative: {
-    color: MUTED,
-    maxWidth: 560,
+    alignItems: "center",
+
+    justifyContent: "space-between",
+
     marginBottom: 22,
   },
 
-  progressContainer: {
-    gap: 10,
-  },
+  mainCardKickerPill: {
+    minHeight: 30,
 
-  progressTrack: {
-    height: 3,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderRadius: 2,
-  },
-
-  progressFill: {
-    height: "100%",
-    borderRadius: 2,
-  },
-
-  progressText: {
-    color: SOFT,
-  },
-
-  // SECTION DIVIDERS
-  sectionDivider: {
     flexDirection: "row",
+
     alignItems: "center",
-    gap: 15,
-    marginBottom: 16,
-    marginTop: 22,
+
+    paddingHorizontal: 10,
+
+    borderRadius: 999,
+
+    borderWidth: 1,
+
+    borderColor: "rgba(255,255,255,0.08)",
+
+    backgroundColor: "rgba(255,255,255,0.038)",
+  },
+
+  mainCardKickerDot: {
+    width: 5,
+    height: 5,
+
+    borderRadius: 3,
+
+    marginRight: 7,
+  },
+
+  mainCardKicker: {
+    color: "rgba(241,245,249,0.52)",
+  },
+
+  mainArrowButton: {
+    width: 38,
+    height: 38,
+
+    borderRadius: 19,
+
+    alignItems: "center",
+
+    justifyContent: "center",
+
+    borderWidth: 1,
+  },
+
+  mainContent: {
+    maxWidth: 620,
+  },
+
+  mainTitle: {
+    color: TXT,
+
+    marginBottom: 6,
+  },
+
+  mainNarrative: {
+    color: MUTED,
+
+    maxWidth: 560,
+  },
+
+  mainProgressBlock: {
+    marginTop: 24,
+  },
+
+  mainProgressMeta: {
+    flexDirection: "row",
+
+    justifyContent: "space-between",
+
+    alignItems: "center",
+
+    marginBottom: 8,
+  },
+
+  mainProgressLabel: {
+    color: SOFT,
+
+    letterSpacing: 0.8,
+  },
+
+  mainProgressValue: {
+    color: TXT,
+  },
+
+  mainProgressValueStart: {
+    color: "rgba(103,232,249,0.78)",
+
+    fontSize: 14,
+
+    letterSpacing: 0.15,
+  },
+
+  mainProgressTrack: {
+    height: 4,
+
+    borderRadius: 2,
+
+    overflow: "hidden",
+
+    backgroundColor: "rgba(255,255,255,0.08)",
+  },
+
+  mainProgressFill: {
+    height: "100%",
+
+    borderRadius: 2,
+  },
+
+  mainFooterMeta: {
+    marginTop: 26,
+
+    flexDirection: "row",
+
+    alignItems: "center",
+
+    gap: 9,
+  },
+
+  mainFooterLabel: {
+    color: SOFT,
+
+    letterSpacing: 0.65,
+  },
+
+  mainFooterLine: {
+    width: 34,
+    height: 1,
+
+    opacity: 0.72,
+  },
+
+  // ─────────────────────────────
+  // SECTIONS
+  // ─────────────────────────────
+
+  sectionHeader: {
+    marginTop: 30,
+    marginBottom: 14,
+
+    flexDirection: "row",
+
+    alignItems: "flex-end",
+
+    gap: 14,
   },
 
   sectionTitle: {
-    color: "rgba(241,245,249,0.48)",
+    color: "rgba(241,245,249,0.54)",
+
+    letterSpacing: 1.15,
   },
 
-  titleLineWrap: {
+  sectionSubtitle: {
+    color: "rgba(241,245,249,0.30)",
+
+    marginTop: 2,
+  },
+
+  sectionLineWrap: {
     flex: 1,
-    height: 8,
+
+    height: 10,
+
     justifyContent: "center",
+
     position: "relative",
+
+    marginBottom: 2,
   },
 
-  titleLine: {
+  sectionLineBase: {
     height: 1,
+
     backgroundColor: "rgba(255,255,255,0.055)",
   },
 
-  titleLineGlow: {
+  sectionLineGlow: {
     position: "absolute",
+
     right: 0,
-    width: 70,
+
+    width: 88,
     height: 1,
-    borderRadius: 2,
-    opacity: 0.85,
+
+    opacity: 0.78,
   },
 
+  // ─────────────────────────────
+  // GRID
+  // ─────────────────────────────
+
   grid: {
-    gap: 10,
+    gap: 15,
   },
 
   gridWide: {
     flexDirection: "row",
+
     flexWrap: "wrap",
+
     alignItems: "stretch",
   },
 
-  // SEQUENCE CARDS
-  seqCard: {
-    borderRadius: 22,
+  // ─────────────────────────────
+  // MODULE CARDS
+  // ─────────────────────────────
+
+  sequenceCardWrap: {
+    minHeight: 150,
+
+    borderRadius: 24,
+
     overflow: "hidden",
-    backgroundColor: "rgba(2,3,6,0.26)",
+
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.09)",
-    boxShadow: "0px 8px 14px rgba(0,0,0,0.28)",
+
+    borderColor: HAIRLINE,
+
+    backgroundColor: "rgba(2,3,6,0.30)",
+
+    boxShadow: "0px 10px 24px rgba(0,0,0,0.24)",
   },
 
-  seqBlur: {
-    minHeight: 78,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.11)",
-    position: "relative",
-  },
-
-  seqTopReflect: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: "50%",
-    opacity: 0.55,
-  },
-
-  seqAccent: {
-    position: "absolute",
-    left: 0,
-    top: 14,
-    bottom: 14,
-    width: 3,
-    borderTopRightRadius: 9,
-    borderBottomRightRadius: 9,
-  },
-
-  seqIconZone: {
-    width: 48,
-    height: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 6,
-    marginRight: 10,
-    position: "relative",
-  },
-
-  seqIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    overflow: "hidden",
-  },
-
-  seqIconLight: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: "58%",
-    borderRadius: 22,
-  },
-
-  seqIcon: {},
-
-  seqDividerLine: {
-    width: 1,
-    height: 42,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    marginRight: 12,
-  },
-
-  seqText: {
+  sequenceCard: {
     flex: 1,
-    minWidth: 0,
+
+    minHeight: 150,
+
+    padding: 15,
+
+    position: "relative",
+
+    overflow: "hidden",
   },
 
-  seqPlace: {
+  sequenceAmbientGlow: {
+    position: "absolute",
+
+    top: -52,
+    right: -46,
+
+    width: 126,
+    height: 126,
+
+    borderRadius: 63,
+
+    opacity: 0.07,
+  },
+
+  sequenceTopRow: {
+    flexDirection: "row",
+
+    alignItems: "center",
+
+    justifyContent: "space-between",
+
+    gap: 10,
+  },
+
+  sequenceIconBox: {
+    width: 42,
+    height: 42,
+
+    borderRadius: 15,
+
+    alignItems: "center",
+
+    justifyContent: "center",
+
+    borderWidth: 1,
+
+    overflow: "hidden",
+  },
+
+  sequenceIconText: {},
+
+  sequencePlacePill: {
+    maxWidth: "72%",
+
+    paddingHorizontal: 9,
+
+    paddingVertical: 5,
+
+    borderRadius: 999,
+
+    borderWidth: 1,
+
+    borderColor: "rgba(255,255,255,0.06)",
+
+    backgroundColor: "rgba(255,255,255,0.028)",
+  },
+
+  sequencePlace: {
     color: "rgba(241,245,249,0.34)",
-    marginBottom: 3,
   },
 
-  seqTitle: {
+  sequenceTextBlock: {
+    marginTop: 17,
+
+    paddingRight: 8,
+  },
+
+  sequenceTitle: {
     color: TXT,
   },
 
-  seqSub: {
-    color: "rgba(241,245,249,0.62)",
-    marginTop: 3,
+  sequenceNarrative: {
+    marginTop: 4,
+
+    color: "rgba(241,245,249,0.68)",
   },
 
-  seqArrow: {
-    color: "rgba(255,255,255,0.36)",
-    opacity: 0.52,
-    marginLeft: 8,
+  sequenceFooter: {
+    marginTop: "auto",
+
+    paddingTop: 15,
+
+    flexDirection: "row",
+
+    alignItems: "center",
+
+    gap: 10,
   },
 
-  seqRainA: {
-    position: "absolute",
-    top: 6,
-    bottom: 8,
-    left: "34%",
-    width: 1,
-    backgroundColor: "rgba(255,255,255,0.045)",
+  sequenceFooterLine: {
+    flex: 1,
+
+    height: 1,
+
+    backgroundColor: "rgba(255,255,255,0.055)",
+
+    overflow: "hidden",
   },
 
-  seqRainB: {
-    position: "absolute",
-    top: 10,
-    bottom: 16,
-    left: "66%",
-    width: 1,
+  sequenceFooterAccent: {
+    width: 34,
+    height: 1,
+
+    opacity: 0.7,
   },
 
-  seqRainC: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    right: 40,
-    width: 1,
-  },
+  sequenceArrow: {
+    width: 30,
+    height: 30,
 
-  seqRainDrop: {
-    position: "absolute",
-    top: 16,
-    left: "72%",
-    width: 3,
-    height: 15,
-    borderRadius: 2,
-    opacity: 0.065,
+    borderRadius: 15,
+
+    alignItems: "center",
+
+    justifyContent: "center",
+
+    borderWidth: 1,
+
+    borderColor: "rgba(255,255,255,0.065)",
+
+    backgroundColor: "rgba(255,255,255,0.025)",
   },
 });
