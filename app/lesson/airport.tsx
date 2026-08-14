@@ -51,7 +51,7 @@ const AIRPORT_EXPRESSION_AUDIO: Record<
     require("../../assets/ai/aeroport-memo/voyageur-3.mp3"),
     require("../../assets/ai/aeroport-memo/voyageur-4.mp3"),
     require("../../assets/ai/aeroport-memo/voyageur-5.mp3"),
-    null,
+    require("../../assets/ai/aeroport-memo/voyageur-11.mp3"),
     require("../../assets/ai/aeroport-memo/voyageur-6.mp3"),
     require("../../assets/ai/aeroport-memo/voyageur-7.mp3"),
     require("../../assets/ai/aeroport-memo/voyageur-8.mp3"),
