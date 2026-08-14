@@ -17,6 +17,12 @@ export type RestaurantMission =
 export const DEFAULT_RESTAURANT_MISSION_ID = "order-simple";
 export const RESTAURANT_SPEECH_MISSION_ID = "restaurant-vocal";
 
+const PREMIUM_PAYMENT_CHOICE_IDS = [
+  "ped_pay_card",
+  "ped_pay_cash",
+  "repeat_ped_payment",
+];
+
 export const restaurantMissions: RestaurantMission[] = [
   {
     id: DEFAULT_RESTAURANT_MISSION_ID,
@@ -129,6 +135,7 @@ export function getRestaurantMissionScenario(
   switch (scenarioKey) {
     case "restaurant_vocal":
       break;
+
     case "order_simple":
       keepChoices(missionScenario, "ped_meat_choice", [
         "ped_order_samgyeopsal",
@@ -152,6 +159,7 @@ export function getRestaurantMissionScenario(
       ]);
       keepChoices(missionScenario, "ped_receipt_choice", ["ped_receipt_no"]);
       break;
+
     case "ask_recommendation":
       keepChoices(missionScenario, "ped_meat_choice", [
         "ped_order_recommendation",
@@ -173,12 +181,14 @@ export function getRestaurantMissionScenario(
         "ped_no_extra",
         "repeat_ped_extra",
       ]);
-      keepChoices(missionScenario, "ped_payment_choice", [
-        "ped_pay_card",
-        "repeat_ped_payment",
-      ]);
+      keepChoices(
+        missionScenario,
+        "ped_payment_choice",
+        PREMIUM_PAYMENT_CHOICE_IDS,
+      );
       keepChoices(missionScenario, "ped_receipt_choice", ["ped_receipt_no"]);
       break;
+
     case "choose_grill":
       keepChoices(missionScenario, "ped_meat_choice", [
         "ped_order_samgyeopsal",
@@ -200,12 +210,14 @@ export function getRestaurantMissionScenario(
         "ped_no_extra",
         "repeat_ped_extra",
       ]);
-      keepChoices(missionScenario, "ped_payment_choice", [
-        "ped_pay_card",
-        "repeat_ped_payment",
-      ]);
+      keepChoices(
+        missionScenario,
+        "ped_payment_choice",
+        PREMIUM_PAYMENT_CHOICE_IDS,
+      );
       keepChoices(missionScenario, "ped_receipt_choice", ["ped_receipt_no"]);
       break;
+
     case "add_sides":
       keepChoices(missionScenario, "ped_meat_choice", [
         "ped_order_samgyeopsal",
@@ -227,12 +239,14 @@ export function getRestaurantMissionScenario(
         "ped_more_lettuce",
         "repeat_ped_extra",
       ]);
-      keepChoices(missionScenario, "ped_payment_choice", [
-        "ped_pay_card",
-        "repeat_ped_payment",
-      ]);
+      keepChoices(
+        missionScenario,
+        "ped_payment_choice",
+        PREMIUM_PAYMENT_CHOICE_IDS,
+      );
       keepChoices(missionScenario, "ped_receipt_choice", ["ped_receipt_no"]);
       break;
+
     case "pay_receipt":
       keepChoices(missionScenario, "ped_meat_choice", [
         "ped_order_samgyeopsal",
@@ -250,10 +264,11 @@ export function getRestaurantMissionScenario(
         "ped_no_extra",
         "repeat_ped_extra",
       ]);
-      keepChoices(missionScenario, "ped_payment_choice", [
-        "ped_pay_card",
-        "repeat_ped_payment",
-      ]);
+      keepChoices(
+        missionScenario,
+        "ped_payment_choice",
+        PREMIUM_PAYMENT_CHOICE_IDS,
+      );
       keepChoices(missionScenario, "ped_receipt_choice", ["ped_receipt_yes"]);
       break;
   }
