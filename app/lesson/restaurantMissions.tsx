@@ -22,6 +22,7 @@ import {
   type RestaurantMission,
 } from "../../data/lesson/restaurant/restaurantMissions";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
+import { saveHomeResumeContext } from "../../lib/homeResume";
 import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
@@ -83,19 +84,37 @@ export default function RestaurantMissionsScreen() {
     setSelectedMission(mission);
   };
 
-  const startSelectedMission = () => {
+  const startSelectedMission = async () => {
     if (!selectedMission) return;
     const mission = selectedMission;
+    const resolvedMode =
+      mission.id === RESTAURANT_SPEECH_MISSION_ID ? "guided" : mode;
     setSelectedMission(null);
-    setTrack("restaurant_ia");
-    router.push({
-      pathname: "/lesson/restaurantIA",
-      params: {
-        mode:
-          mission.id === RESTAURANT_SPEECH_MISSION_ID ? "guided" : mode,
-        mission: mission.id,
-      },
-    });
+
+    try {
+      await Promise.all([
+        setTrack("restaurant_ia"),
+        saveHomeResumeContext({
+          track: "restaurant_ia",
+          title: mission.title,
+          detail:
+            resolvedMode === "real" ? "Simulation réelle" : "Simulation guidée",
+          route: "/lesson/restaurantIA",
+          routeParams: {
+            mode: resolvedMode,
+            mission: mission.id,
+          },
+        }),
+      ]);
+    } finally {
+      router.push({
+        pathname: "/lesson/restaurantIA",
+        params: {
+          mode: resolvedMode,
+          mission: mission.id,
+        },
+      });
+    }
   };
 
   return (
