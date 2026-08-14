@@ -1162,7 +1162,7 @@ const styles = StyleSheet.create({
   // HEADER
   header: {
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
     minHeight: 40,
     marginTop: 4,
@@ -1179,11 +1179,12 @@ const styles = StyleSheet.create({
   headerIdentity: {
     flexDirection: "row",
     alignItems: "center",
-    maxWidth: "100%",
+    flexShrink: 1,
+    minWidth: 0,
   },
 
   headerIdentityCompact: {
-    paddingRight: 54,
+    paddingRight: 0,
   },
 
   brandGroup: {
@@ -1240,12 +1241,12 @@ const styles = StyleSheet.create({
   },
 
   streakHeaderSlot: {
-    position: "absolute",
-    right: 4,
+    marginLeft: 12,
+    flexShrink: 0,
   },
 
   streakHeaderSlotCompact: {
-    right: 2,
+    marginLeft: 8,
   },
 
   streakBadgePressable: {
