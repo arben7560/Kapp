@@ -166,9 +166,7 @@ export const RESTAURANT_SPEECH_INTENTS: readonly RestaurantSpeechIntentDefinitio
     allowTerse: true,
     confirmationLabel: "deux portions de samgyeopsal",
     helpLabel: "commander deux portions de samgyeopsal",
-    asrConfusions: [
-      { from: "삼겹쌀", to: "삼겹살" },
-    ],
+    asrConfusions: [{ from: "삼겹쌀", to: "삼겹살" }],
   },
   {
     id: "galbi-order",
@@ -435,6 +433,11 @@ export const RESTAURANT_SPEECH_INTENTS: readonly RestaurantSpeechIntentDefinitio
       "상추 좀 주세요.",
       "상추 추가해 주세요.",
       "상추 부탁드려요.",
+      "야채 좀 더 주세요.",
+      "야채 더 주세요.",
+      "채소 좀 더 주세요.",
+      "채소 더 주세요.",
+      "쌈 채소 좀 더 주세요.",
     ],
     conceptTokens: ["상추"],
     predicateFamilies: ["give", "request", "do"],
@@ -536,9 +539,7 @@ export const RESTAURANT_SPEECH_INTENTS: readonly RestaurantSpeechIntentDefinitio
     allowTerse: true,
     confirmationLabel: "le reçu",
     helpLabel: "accepter le reçu",
-    asrConfusions: [
-      { from: "영수쯩", to: "영수증" },
-    ],
+    asrConfusions: [{ from: "영수쯩", to: "영수증" }],
   },
   {
     id: "receipt-no",
@@ -569,16 +570,9 @@ const RESTAURANT_PREDICATE_FORMS = {
   recommend: ["추천", "추천해", "추천하", "추천드"],
 } as const;
 
-const RESTAURANT_CLASSIFIERS = [
-  ...CAFE_CLASSIFIERS,
-  "인분",
-] as const;
+const RESTAURANT_CLASSIFIERS = [...CAFE_CLASSIFIERS, "인분"] as const;
 
-const RESTAURANT_QUANTITIES = [
-  ...CAFE_QUANTITIES,
-  "다섯",
-  "다섯개",
-] as const;
+const RESTAURANT_QUANTITIES = [...CAFE_QUANTITIES, "다섯", "다섯개"] as const;
 
 const SHARED_ACTION_NEGATION_TOKENS = NEGATION_TOKENS.filter(
   (token) => token !== "말고" && token !== "아니",
@@ -697,7 +691,8 @@ const RESTAURANT_CONTEXTUAL_INTERPRETATIONS: readonly ContextualInterpretationRu
       "« 돼지고기 » désigne le porc en général. Pour choisir le samgyeopsal, dis plutôt : « 삼겹살 2인분 주세요. »",
     matches: (value) =>
       includesAny(value, ["돼지고기", "돼지배고기"]) &&
-      (hasExpectedQuantityFor(value, "samgyeopsal-order") || hasRequestSpeechAct(value)),
+      (hasExpectedQuantityFor(value, "samgyeopsal-order") ||
+        hasRequestSpeechAct(value)),
   },
   {
     targetId: "galbi-order",
@@ -708,7 +703,8 @@ const RESTAURANT_CONTEXTUAL_INTERPRETATIONS: readonly ContextualInterpretationRu
       "« 소고기 » désigne le bœuf en général. Pour choisir les galbi, dis plutôt : « 갈비 2인분 주세요. »",
     matches: (value) =>
       includesAny(value, ["소고기", "쇠고기"]) &&
-      (hasExpectedQuantityFor(value, "galbi-order") || hasRequestSpeechAct(value)),
+      (hasExpectedQuantityFor(value, "galbi-order") ||
+        hasRequestSpeechAct(value)),
   },
   {
     targetId: "recommendation",
@@ -774,8 +770,10 @@ const RESTAURANT_CONTEXTUAL_INTERPRETATIONS: readonly ContextualInterpretationRu
     examples: ["충분해요.", "이제 됐습니다."],
     severity: "minor",
     understood: "tu dis que tu en as déjà assez et ne veux rien ajouter",
-    guidance: "Dans ce contexte, tu peux aussi répondre : « 아니요, 괜찮아요. »",
-    matches: (value) => includesAny(value, ["충분해", "이제됐", "더필요하지않"]),
+    guidance:
+      "Dans ce contexte, tu peux aussi répondre : « 아니요, 괜찮아요. »",
+    matches: (value) =>
+      includesAny(value, ["충분해", "이제됐", "더필요하지않"]),
   },
   {
     targetId: "spicy",
@@ -809,14 +807,14 @@ const RESTAURANT_CONTEXTUAL_INTERPRETATIONS: readonly ContextualInterpretationRu
   },
   {
     targetId: "more-lettuce",
-    examples: ["야채 넣어 주세요.", "쌈 채소 좀 주세요."],
+    examples: ["야채 좀 더 주세요.", "쌈 채소 좀 더 주세요."],
     severity: "moderate",
-    understood: "tu demandes d’ajouter des légumes",
+    understood: "tu demandes davantage de légumes",
     guidance:
-      "« 야채 » est général et tu n’as pas précisé « davantage ». Si tu veux plus de salade pour les ssam, dis plutôt : « 상추 좀 더 주세요. »",
+      "Ta demande est compréhensible. Pour nommer précisément la salade des ssam, tu peux dire : « 상추 좀 더 주세요. »",
     matches: (value) =>
       includesAny(value, ["야채", "채소", "쌈채소", "샐러드", "깻잎"]) &&
-      hasRequestSpeechAct(value),
+      includesAny(value, ["더", "추가"]),
   },
   {
     targetId: "more-banchan",
@@ -845,7 +843,8 @@ const RESTAURANT_CONTEXTUAL_INTERPRETATIONS: readonly ContextualInterpretationRu
     examples: ["현찰로 낼게요.", "지폐로 계산할게요."],
     severity: "minor",
     understood: "tu veux payer en espèces",
-    guidance: "Le mot le plus courant ici est « 현금 » : « 현금으로 할게요. »",
+    guidance:
+      "Le mot le plus courant ici est « 현금 » : « 현금으로 할게요. »",
     matches: (value) =>
       includesAny(value, ["현찰", "지폐로", "돈으로"]) &&
       includesAny(value, ["할게", "낼게", "결제", "계산"]),
@@ -865,9 +864,15 @@ const RESTAURANT_CONTEXTUAL_INTERPRETATIONS: readonly ContextualInterpretationRu
     examples: ["버려 주세요.", "안 줘도 돼요."],
     severity: "minor",
     understood: "tu refuses le reçu",
-    guidance: "Une réponse plus polie et explicite est : « 아니요, 괜찮아요. »",
+    guidance:
+      "Une réponse plus polie et explicite est : « 아니요, 괜찮아요. »",
     matches: (value) =>
-      includesAny(value, ["버려주세요", "안줘도돼", "안챙겨도돼", "출력안해도돼"]),
+      includesAny(value, [
+        "버려주세요",
+        "안줘도돼",
+        "안챙겨도돼",
+        "출력안해도돼",
+      ]),
   },
 ] as const;
 
@@ -1073,13 +1078,20 @@ function applyContextualAsrRecovery(
   definitions: readonly RestaurantSpeechIntentDefinition[],
 ) {
   let corrected = value;
-  const recoveries: { definitionId: RestaurantIntentId; from: string; to: string }[] = [];
+  const recoveries: {
+    definitionId: RestaurantIntentId;
+    from: string;
+    to: string;
+  }[] = [];
 
   for (const definition of definitions) {
     for (const confusion of definition.asrConfusions) {
       const from = normalizeKoreanSpeech(confusion.from);
       const to = normalizeKoreanSpeech(confusion.to);
-      if (!corrected.includes(from) || !hasApproximationContext(corrected, definition)) {
+      if (
+        !corrected.includes(from) ||
+        !hasApproximationContext(corrected, definition)
+      ) {
         continue;
       }
       corrected = corrected.replaceAll(from, to);
@@ -1136,7 +1148,11 @@ function isTerseConcept(
 ) {
   return definition.conceptTokens.some((concept) => {
     const normalized = normalizeKoreanSpeech(concept);
-    return value === normalized || value === `${normalized}요` || value === `${normalized}이요`;
+    return (
+      value === normalized ||
+      value === `${normalized}요` ||
+      value === `${normalized}이요`
+    );
   });
 }
 
@@ -1158,7 +1174,9 @@ function combineFeedback(...messages: readonly (string | null | undefined)[]) {
 
 function detectRegisterFeedback(value: string) {
   if (
-    (value.includes("줘") && !value.includes("줘요") && !value.includes("주세요")) ||
+    (value.includes("줘") &&
+      !value.includes("줘요") &&
+      !value.includes("주세요")) ||
     value.endsWith("해") ||
     value.endsWith("구워")
   ) {
@@ -1182,7 +1200,8 @@ function detectParticleFeedback(
     definition.kind === "payment" &&
     /(?:카드|현금)(?:을|를|에)(?:할|결제|계산|해|부탁)/u.test(value)
   ) {
-    const particle = definition.id === "card-payment" ? "카드로" : "현금으로";
+    const particle =
+      definition.id === "card-payment" ? "카드로" : "현금으로";
     return `Le moyen de paiement prend « (으)로 ». Dis plutôt : « ${particle} 할게요. »`;
   }
   if (
@@ -1194,7 +1213,10 @@ function detectParticleFeedback(
   if (
     ["meat-order", "side-order", "extra"].includes(definition.kind) &&
     definition.conceptTokens.some((concept) =>
-      new RegExp(`${normalizeKoreanSpeech(concept)}(?:이|가|에)(?:좀|더)?(?:주|부탁)`, "u").test(value),
+      new RegExp(
+        `${normalizeKoreanSpeech(concept)}(?:이|가|에)(?:좀|더)?(?:주|부탁)`,
+        "u",
+      ).test(value),
     )
   ) {
     return "La commande est comprise. Ici, omets la particule ou utilise « 을/를 ».";
@@ -1275,7 +1297,8 @@ function getContextualRulesForValue(value: string) {
   return RESTAURANT_CONTEXTUAL_INTERPRETATIONS.filter(
     ({ targetId, matches }) =>
       matches(value) &&
-      (!hasNegation || ["decline", "receipt-no", "not-spicy"].includes(targetId)),
+      (!hasNegation ||
+        ["decline", "receipt-no", "not-spicy"].includes(targetId)),
   );
 }
 
@@ -1291,14 +1314,16 @@ function findContextualEvaluations(
     const choice = findChoiceForDefinition(definition, choices);
     if (!choice) return [];
 
-    return [{
-      definition,
-      choice,
-      category: "contextual-interpretation" as const,
-      severity: rule.severity,
-      feedback: `J’ai compris que ${rule.understood}. ${questionExplanation} ${rule.guidance}`,
-      score: rule.severity === "minor" ? 7 : 5,
-    }];
+    return [
+      {
+        definition,
+        choice,
+        category: "contextual-interpretation" as const,
+        severity: rule.severity,
+        feedback: `J’ai compris que ${rule.understood}. ${questionExplanation} ${rule.guidance}`,
+        score: rule.severity === "minor" ? 7 : 5,
+      },
+    ];
   });
 }
 
@@ -1339,7 +1364,15 @@ function getIncompleteContextualFeedback(
   if (
     (ids.has("more-lettuce") || ids.has("more-banchan")) &&
     includesAny(value, ["더주세요", "추가해주세요", "좀더요"]) &&
-    !includesAny(value, ["상추", "반찬", "야채", "채소", "김치", "마늘", "쌈장"])
+    !includesAny(value, [
+      "상추",
+      "반찬",
+      "야채",
+      "채소",
+      "김치",
+      "마늘",
+      "쌈장",
+    ])
   ) {
     return `J’ai compris que tu en veux davantage, mais tu n’as pas précisé quoi. ${questionExplanation}`;
   }
@@ -1366,7 +1399,9 @@ function evaluateDefinition(
   choice: RestaurantSpeechChoice,
   wasRecovered: boolean,
 ): DefinitionEvaluation | null {
-  const explicit = isExplicitVariant(value, definition) || value === normalizeKoreanSpeech(choice.korean);
+  const explicit =
+    isExplicitVariant(value, definition) ||
+    value === normalizeKoreanSpeech(choice.korean);
   const hasConcept = containsExplicitConcept(value, definition);
   const hasPredicate = hasCompatiblePredicate(value, definition);
   const terse = definition.allowTerse && isTerseConcept(value, definition);
@@ -1380,17 +1415,31 @@ function evaluateDefinition(
   if (definition.kind === "repeat") {
     if (!hasConcept && !explicit) return null;
   } else if (definition.kind === "recommendation") {
-    const naturalQuestion = includesAny(value, ["뭐가맛있", "어떤메뉴", "뭐가좋"]);
-    if (!explicit && !(hasConcept && (hasPredicate || naturalQuestion))) return null;
-  } else if (definition.kind === "staff-grill") {
-    if (includesAny(value, ["저희", "우리", "제가", "직접"])) return null;
-    if (!explicit && !(hasConcept && (hasPredicate || value.includes("부탁")))) return null;
-  } else if (definition.kind === "self-grill") {
-    const hasSelf = includesAny(value, ["저희", "우리", "제가", "직접"]);
-    if (!explicit && !(hasSelf && (hasPredicate || includesAny(value, ["할게", "구울"])))) {
+    const naturalQuestion = includesAny(value, [
+      "뭐가맛있",
+      "어떤메뉴",
+      "뭐가좋",
+    ]);
+    if (!explicit && !(hasConcept && (hasPredicate || naturalQuestion))) {
       return null;
     }
-  } else if (definition.kind === "decline" || definition.kind === "receipt-no") {
+  } else if (definition.kind === "staff-grill") {
+    if (includesAny(value, ["저희", "우리", "제가", "직접"])) return null;
+    if (!explicit && !(hasConcept && (hasPredicate || value.includes("부탁")))) {
+      return null;
+    }
+  } else if (definition.kind === "self-grill") {
+    const hasSelf = includesAny(value, ["저희", "우리", "제가", "직접"]);
+    if (
+      !explicit &&
+      !(hasSelf && (hasPredicate || includesAny(value, ["할게", "구울"])))
+    ) {
+      return null;
+    }
+  } else if (
+    definition.kind === "decline" ||
+    definition.kind === "receipt-no"
+  ) {
     if (!hasConcept && !explicit) return null;
   } else if (definition.kind === "spice") {
     const polarity = getPolarityConcepts(value);
@@ -1399,7 +1448,10 @@ function evaluateDefinition(
       includesAny(value, ["매워요", "안매워요", "맵나요"]) &&
       !includesAny(value, ["주세요", "원해요", "괜찮아요"]);
     if (asksAboutSpice) return null;
-    if (definition.id === "spicy" && (!polarity.spicy || polarity.less || polarity.not)) {
+    if (
+      definition.id === "spicy" &&
+      (!polarity.spicy || polarity.less || polarity.not)
+    ) {
       return null;
     }
     if (definition.id === "less-spicy" && !polarity.less) return null;
@@ -1416,7 +1468,10 @@ function evaluateDefinition(
         score: 4,
       };
     }
-    if (!explicit && !(hasConcept && (hasPredicate || includesAny(value, ["네", "받을"])))) {
+    if (
+      !explicit &&
+      !(hasConcept && (hasPredicate || includesAny(value, ["네", "받을"])))
+    ) {
       return null;
     }
   } else if (definition.kind === "payment") {
@@ -1438,7 +1493,10 @@ function evaluateDefinition(
   const quantities = findQuantityMentions(value);
   if (definition.expectedQuantity !== undefined && quantities.length > 0) {
     const distinctQuantities = new Set(quantities.map(({ quantity }) => quantity));
-    if (distinctQuantities.size > 1 || !distinctQuantities.has(definition.expectedQuantity)) {
+    if (
+      distinctQuantities.size > 1 ||
+      !distinctQuantities.has(definition.expectedQuantity)
+    ) {
       return null;
     }
   }
@@ -1462,8 +1520,9 @@ function evaluateDefinition(
   );
   const missingClassifier =
     definition.kind === "meat-order" &&
-    quantities.some(({ quantity, classifier }) =>
-      quantity === definition.expectedQuantity && classifier === null,
+    quantities.some(
+      ({ quantity, classifier }) =>
+        quantity === definition.expectedQuantity && classifier === null,
     );
 
   const codeSwitchFeedback = buildCodeSwitchFeedback(
@@ -1526,7 +1585,9 @@ function withAvailableChoices(
   feedback: string,
   choices: readonly RestaurantSpeechChoice[],
 ) {
-  const labels = Array.from(new Set(choices.map(({ label }) => label.trim()))).filter(Boolean);
+  const labels = Array.from(
+    new Set(choices.map(({ label }) => label.trim())),
+  ).filter(Boolean);
   if (labels.length === 0) return feedback;
   return `${feedback.trim().replace(/[.!?…]+$/u, "")} — réponses proposées : ${labels
     .map((label) => `« ${label} »`)
@@ -1538,14 +1599,20 @@ function withProgressiveHelp(
   attemptNumber: number,
   choices: readonly RestaurantSpeechChoice[],
 ) {
-  const definitions = getAvailableDefinitions(choices).filter(({ id }) => id !== "repeat");
+  const definitions = getAvailableDefinitions(choices).filter(
+    ({ id }) => id !== "repeat",
+  );
   if (attemptNumber >= 3) {
-    const models = definitions.slice(0, 2).map(({ canonical }) => `« ${canonical} »`);
+    const models = definitions
+      .slice(0, 2)
+      .map(({ canonical }) => `« ${canonical} »`);
     return `${feedback.trim().replace(/[.!?…]+$/u, "")} — phrase modèle : ${models.join(" ou ")}.`;
   }
   if (attemptNumber === 2) {
     const keywords = Array.from(
-      new Set(definitions.flatMap(({ conceptTokens }) => conceptTokens.slice(0, 1))),
+      new Set(
+        definitions.flatMap(({ conceptTokens }) => conceptTokens.slice(0, 1)),
+      ),
     );
     return `${feedback.trim().replace(/[.!?…]+$/u, "")} — mots utiles : ${keywords.join(" · ")}.`;
   }
@@ -1590,13 +1657,18 @@ function getWrongQuantityFeedback(
   definitions: readonly RestaurantSpeechIntentDefinition[],
 ) {
   for (const definition of definitions) {
-    if (definition.expectedQuantity === undefined || !containsExplicitConcept(value, definition)) {
+    if (
+      definition.expectedQuantity === undefined ||
+      !containsExplicitConcept(value, definition)
+    ) {
       continue;
     }
     const quantities = findQuantityMentions(value);
     if (
       quantities.length > 0 &&
-      quantities.some(({ quantity }) => quantity !== definition.expectedQuantity)
+      quantities.some(
+        ({ quantity }) => quantity !== definition.expectedQuantity,
+      )
     ) {
       return `Le plat est compris, mais le nombre change la commande. Ici, demande ${definition.expectedQuantity} portion${definition.expectedQuantity > 1 ? "s" : ""} : « ${definition.canonical} »`;
     }
@@ -1614,14 +1686,18 @@ function findUnavailableIntent(value: string) {
           ? polarity.less
           : polarity.not;
     }
-    return containsExplicitConcept(value, definition) &&
-      (hasCompatiblePredicate(value, definition) || definition.allowTerse);
+    return (
+      containsExplicitConcept(value, definition) &&
+      (hasCompatiblePredicate(value, definition) || definition.allowTerse)
+    );
   });
   return matches.length === 1 ? matches[0] : null;
 }
 
 function findExplicitSelfCorrection(transcript: string) {
-  const match = transcript.match(/^(.+?)(?:…|\.{3}|,)?\s*아니(?:요)?\s*,?\s*(.+)$/u);
+  const match = transcript.match(
+    /^(.+?)(?:…|\.{3}|,)?\s*아니(?:요)?\s*,?\s*(.+)$/u,
+  );
   if (!match) return null;
   const corrected = match[2]?.trim();
   if (!corrected || /^괜찮/u.test(corrected)) return null;
@@ -1693,7 +1769,12 @@ export function matchRestaurantSpeechIntent(
   }
 
   const hasReceiptYesEvidence =
-    includesAny(corrected, ["네주세요", "예주세요", "영수증주세요", "필요해"]) ||
+    includesAny(corrected, [
+      "네주세요",
+      "예주세요",
+      "영수증주세요",
+      "필요해",
+    ]) ||
     (corrected.includes("받을게") && !corrected.includes("안받을게"));
   const hasReceiptNoEvidence = includesAny(corrected, [
     "아니",
@@ -1783,8 +1864,12 @@ export function matchRestaurantSpeechIntent(
 
   const hasNegatedAvailableConcept = availableDefinitions.some(
     (definition) =>
-      definition.conceptTokens.some((concept) => isConceptNegated(corrected, concept)) ||
-      (!["decline", "receipt-no", "spice", "repeat"].includes(definition.kind) &&
+      definition.conceptTokens.some((concept) =>
+        isConceptNegated(corrected, concept),
+      ) ||
+      (!["decline", "receipt-no", "spice", "repeat"].includes(
+        definition.kind,
+      ) &&
         containsExplicitConcept(corrected, definition) &&
         containsActionNegation(corrected)),
   );
@@ -1857,10 +1942,10 @@ export function matchRestaurantSpeechIntent(
     );
   }
 
-  const unavailableContextualRules = getContextualRulesForValue(corrected)
-    .filter((rule) =>
+  const unavailableContextualRules = getContextualRulesForValue(corrected).filter(
+    (rule) =>
       !availableDefinitions.some(({ id }) => id === rule.targetId),
-    );
+  );
   if (unavailableContextualRules.length === 1) {
     const [rule] = unavailableContextualRules;
     return needsHelp(
@@ -1872,7 +1957,8 @@ export function matchRestaurantSpeechIntent(
     );
   }
 
-  const hasOnlyLatinAfterReplacement = !input.hadHangul && input.replacements.length > 0;
+  const hasOnlyLatinAfterReplacement =
+    !input.hadHangul && input.replacements.length > 0;
   return needsHelp(
     "out-of-scope",
     "major",
