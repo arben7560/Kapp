@@ -3,15 +3,15 @@ import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-    ImageBackground,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    View,
+  ImageBackground,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
 } from "react-native";
 import {
-    SafeAreaView,
-    useSafeAreaInsets,
+  SafeAreaView,
+  useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
@@ -22,38 +22,38 @@ import { ImmersiveStepProgress } from "../../components/immersion/ImmersiveStepP
 import { MetroConversationSummaryModal } from "../../components/metro/MetroConversationSummaryModal";
 import { AppBackButton } from "../../components/ui/app-back-button";
 import {
-    getImmersiveBottomPadding,
-    getImmersivePortraitMediaLayout,
-    IMMERSIVE_CONTENT_MAX_WIDTH,
-    IMMERSIVE_MIN_TOUCH_TARGET,
-    IMMERSIVE_VIDEO_VIEW_PROPS,
+  getImmersiveBottomPadding,
+  getImmersivePortraitMediaLayout,
+  IMMERSIVE_CONTENT_MAX_WIDTH,
+  IMMERSIVE_MIN_TOUCH_TARGET,
+  IMMERSIVE_VIDEO_VIEW_PROPS,
 } from "../../constants/immersive-layout";
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import { metroLessons } from "../../data/lesson/metro/metro";
 import {
-    DEFAULT_METRO_MISSION_ID,
-    getMetroMissionById,
-    getMetroMissionLesson,
+  DEFAULT_METRO_MISSION_ID,
+  getMetroMissionById,
+  getMetroMissionLesson,
 } from "../../data/lesson/metro/metroMissions";
-import {
-    useKoreanSpeechRecognition,
-    type SpeechTranscriptSession,
-} from "../../hooks/useKoreanSpeechRecognition";
 import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
+import {
+  useKoreanSpeechRecognition,
+  type SpeechTranscriptSession,
+} from "../../hooks/useKoreanSpeechRecognition";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
 import {
-    createMetroConversationMemory,
-    recordMetroAudioReplay,
-    recordMetroHelpRequest,
-    recordMetroSpeechAttempt,
+  createMetroConversationMemory,
+  recordMetroAudioReplay,
+  recordMetroHelpRequest,
+  recordMetroSpeechAttempt,
 } from "../../lib/metroConversationMemory";
 import {
-    getMetroSpeechChoiceIntent,
-    getMetroSpeechContextualStrings,
-    matchMetroSpeechIntent,
-    METRO_SPEECH_PILOT_MISSION_ID,
+  getMetroSpeechChoiceIntent,
+  getMetroSpeechContextualStrings,
+  matchMetroSpeechIntent,
+  METRO_SPEECH_PILOT_MISSION_ID,
 } from "../../lib/metroSpeechIntents";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { buildProgressId } from "../../lib/progressIds";
@@ -346,6 +346,18 @@ function buildMetroScenario(lesson: MetroLesson): DialogueScenario {
     startNodeId: lesson.steps[0]?.id || "start",
     nodes,
   };
+}
+
+function isComingSoonMetroChoice(
+  missionId: string,
+  nodeId: string,
+  choiceId: string,
+) {
+  return (
+    missionId === "ask-time" &&
+    nodeId === "start" &&
+    choiceId === "choose_myeongdong_time"
+  );
 }
 
 // ==================== MAIN ====================
@@ -687,6 +699,19 @@ export default function MetroIaScreen() {
 
   const handleChoice = useCallback(
     (choice: DialogueChoice, delay = 320) => {
+      const isComingSoon = isComingSoonMetroChoice(
+        missionId,
+        currentNodeId,
+        choice.id,
+      );
+
+      // Sécurité supplémentaire :
+      // même si le choix est déclenché autrement que par le Pressable,
+      // Myeongdong → Itaewon reste inaccessible dans "Demander la durée".
+      if (isComingSoon) {
+        return;
+      }
+
       if (
         transitionLockRef.current ||
         isTransitioning ||
@@ -707,14 +732,25 @@ export default function MetroIaScreen() {
         const nextNode = currentScenario.nodes[choice.nextNodeId];
         const nextVideo =
           nextNode?.videoSources?.[0] ?? nextNode?.videoSource ?? null;
-        if (nextVideo) setDisplayedVideoSource(nextVideo);
+
+        if (nextVideo) {
+          setDisplayedVideoSource(nextVideo);
+        }
+
         setCurrentNodeId(choice.nextNodeId);
         setSelectedChoiceId(null);
         setIsTransitioning(false);
         transitionLockRef.current = false;
       }, delay);
     },
-    [currentScenario, isReplayingLastIa, isSceneEnded, isTransitioning],
+    [
+      currentNodeId,
+      currentScenario,
+      isReplayingLastIa,
+      isSceneEnded,
+      isTransitioning,
+      missionId,
+    ],
   );
 
   const isUserChoice = currentNode?.type === "user_choice";
@@ -948,26 +984,52 @@ export default function MetroIaScreen() {
         const isSelected = selectedChoiceId === choice.id;
         const accent = mode === "real" ? CYAN : PURPLE;
 
+        const isComingSoon = isComingSoonMetroChoice(
+          missionId,
+          currentNodeId,
+          choice.id,
+        );
+
+        const isChoiceDisabled =
+          isComingSoon || isTransitioning || isReplayingLastIa;
+
         return (
           <Pressable
             key={choice.id}
             accessibilityRole="button"
-            accessibilityLabel={`${choice.korean}. ${choice.label}`}
+            accessibilityLabel={
+              isComingSoon
+                ? `${choice.korean}. ${choice.label}. Prochainement disponible.`
+                : `${choice.korean}. ${choice.label}`
+            }
+            accessibilityHint={
+              isComingSoon
+                ? "Cette scène est temporairement indisponible"
+                : undefined
+            }
             accessibilityState={{
-              disabled: isTransitioning || isReplayingLastIa,
+              disabled: isChoiceDisabled,
               selected: isSelected,
             }}
+            aria-disabled={isChoiceDisabled}
             aria-selected={isSelected}
             hitSlop={6}
             onPress={() => handleChoice(choice)}
-            disabled={isTransitioning || isReplayingLastIa}
+            disabled={isChoiceDisabled}
             style={({ pressed }) => [
               styles.choiceBtn,
+
               isSelected && {
                 borderColor: accent,
                 backgroundColor: "rgba(5,5,8,0.92)",
               },
-              pressed && { opacity: 0.92 },
+
+              isComingSoon && styles.choiceComingSoon,
+
+              pressed &&
+                !isChoiceDisabled && {
+                  opacity: 0.92,
+                },
             ]}
           >
             <View
@@ -980,23 +1042,43 @@ export default function MetroIaScreen() {
                       ? "rgba(34,211,238,0.08)"
                       : "rgba(168,85,247,0.10)",
                 },
+                isComingSoon && styles.choiceGlowComingSoon,
               ]}
             />
+
+            {isComingSoon ? (
+              <View pointerEvents="none" style={styles.choiceComingSoonBadge}>
+                <AppText
+                  variant="caption"
+                  lineContract="singleLine"
+                  style={styles.choiceComingSoonBadgeText}
+                >
+                  PROCHAINEMENT
+                </AppText>
+              </View>
+            ) : null}
 
             <AppText
               variant="koreanSecondary"
               tone="strong"
               script="korean"
               accessibilityLanguage="ko-KR"
-              style={styles.choiceKr}
+              style={[
+                styles.choiceKr,
+                isComingSoon && styles.choiceComingSoonText,
+              ]}
             >
               {choice.korean}
             </AppText>
+
             <AppText
               variant="bodySecondary"
               tone="muted"
               script="latin"
-              style={styles.choiceFr}
+              style={[
+                styles.choiceFr,
+                isComingSoon && styles.choiceComingSoonText,
+              ]}
             >
               {choice.label}
             </AppText>
@@ -1582,6 +1664,39 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.24,
     shadowRadius: 14,
     elevation: 5,
+  },
+
+  choiceComingSoon: {
+    opacity: 0.72,
+    borderColor: "rgba(255,255,255,0.18)",
+    backgroundColor: "rgba(5,5,8,0.88)",
+    paddingTop: 52,
+  },
+
+  choiceComingSoonBadge: {
+    position: "absolute",
+    top: 14,
+    right: 14,
+    zIndex: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.22)",
+    backgroundColor: "rgba(5,5,8,0.92)",
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+  },
+
+  choiceComingSoonBadgeText: {
+    color: "rgba(255,255,255,0.84)",
+    letterSpacing: 1.05,
+  },
+
+  choiceComingSoonText: {
+    opacity: 0.62,
+  },
+
+  choiceGlowComingSoon: {
+    opacity: 0.3,
   },
 
   choiceGlow: {
