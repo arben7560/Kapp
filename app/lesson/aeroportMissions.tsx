@@ -21,6 +21,7 @@ import {
   type AeroportMission,
 } from "../../data/lesson/aeroport/aeroportMissions";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
+import { saveHomeResumeContext } from "../../lib/homeResume";
 import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
@@ -72,22 +73,39 @@ export default function AeroportMissionsScreen() {
     setSelectedMission(mission);
   };
 
-  const startSelectedMission = () => {
+  const startSelectedMission = async () => {
     if (!selectedMission) return;
 
     const mission = selectedMission;
     const isVocal = mission.id === AEROPORT_VOCAL_MISSION_ID;
+    const resolvedMode = isVocal ? "guided" : mode;
 
     setSelectedMission(null);
-    setTrack("aeroport_ia");
 
-    router.push({
-      pathname: "/lesson/aeroportIA",
-      params: {
-        mode: isVocal ? "guided" : mode,
-        mission: mission.id,
-      },
-    });
+    try {
+      await Promise.all([
+        setTrack("aeroport_ia"),
+        saveHomeResumeContext({
+          track: "aeroport_ia",
+          title: mission.title,
+          detail:
+            resolvedMode === "real" ? "Simulation réelle" : "Simulation guidée",
+          route: "/lesson/aeroportIA",
+          routeParams: {
+            mode: resolvedMode,
+            mission: mission.id,
+          },
+        }),
+      ]);
+    } finally {
+      router.push({
+        pathname: "/lesson/aeroportIA",
+        params: {
+          mode: resolvedMode,
+          mission: mission.id,
+        },
+      });
+    }
   };
 
   return (
