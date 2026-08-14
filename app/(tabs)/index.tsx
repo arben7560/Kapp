@@ -1,3 +1,4 @@
+import MaskedView from "@react-native-masked-view/masked-view";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
@@ -15,6 +16,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Text,
   View,
   type StyleProp,
   type ViewStyle,
@@ -22,11 +24,15 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
-import { AppTypography, HubModuleAccents } from "../../constants/theme";
+import { HubModuleAccents } from "../../constants/theme";
 import { HANGUL_PROGRESS_IDS } from "../../data/hangul/curriculum";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import type { DailyStreakState } from "../../lib/dailyStreak";
+import {
+  readHomeResumeContext,
+  type HomeResumeContext,
+} from "../../lib/homeResume";
 import { getGrammarJourneyCompletion } from "../../lib/grammar";
 
 const BACKGROUND_SOURCE = require("../../assets/images/seoulhub.jpg");
@@ -34,6 +40,7 @@ const BACKGROUND_SOURCE = require("../../assets/images/seoulhub.jpg");
 // ──────────────────────────────────────────────
 // DESIGN TOKENS
 // ──────────────────────────────────────────────
+
 const BG_DEEP = "#020306";
 const TXT = "#F1F5F9";
 const MUTED = "rgba(241, 245, 249, 0.62)";
@@ -183,33 +190,126 @@ const RESUME_SEQUENCES: Record<string, any> = {
   },
 };
 
+// ──────────────────────────────────────────────
+// SEOUL HERO
+// ──────────────────────────────────────────────
+
+type HeroCopy = {
+  pre: string;
+  accent: string;
+  sub: (cityTime: string) => string;
+};
+
+const heroCopyVariants: Record<string, HeroCopy> = {
+  presentTense: {
+    pre: "Tu es à ",
+    accent: "Séoul.",
+    sub: (t) => `Il est ${t} là-bas, avec toi.`,
+  },
+  poetic: {
+    pre: "La ville commence ",
+    accent: "à te parler.",
+    sub: (t) => `${t} · Séoul, maintenant.`,
+  },
+  identity: {
+    pre: "Ta version coréenne ",
+    accent: "commence ici.",
+    sub: (t) => `${t} · heure de Séoul`,
+  },
+};
+
+type SeoulHeroProps = {
+  cityTime: string;
+  variant?: keyof typeof heroCopyVariants;
+};
+
+function SeoulHero({ cityTime, variant = "presentTense" }: SeoulHeroProps) {
+  const copy = heroCopyVariants[variant];
+
+  return (
+    <View style={styles.seoulHeroContainer}>
+      <LinearGradient
+        colors={["rgba(4,8,20,0)", "rgba(4,8,20,0.4)"]}
+        style={StyleSheet.absoluteFillObject}
+        pointerEvents="none"
+      />
+
+      <View style={styles.seoulHeroTitleRow}>
+        <Text
+          style={[styles.seoulHeroTitleStatic, styles.seoulHeroTitleShadow]}
+        >
+          {copy.pre}
+        </Text>
+
+        <MaskedView
+          maskElement={
+            <Text style={styles.seoulHeroTitleStatic}>{copy.accent}</Text>
+          }
+        >
+          <LinearGradient
+            colors={["#5EEAD4", "#F472B6"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <Text
+              style={[
+                styles.seoulHeroTitleStatic,
+                styles.seoulHeroAccentPlaceholder,
+              ]}
+            >
+              {copy.accent}
+            </Text>
+          </LinearGradient>
+        </MaskedView>
+      </View>
+
+      <Text style={styles.seoulHeroSubtitle}>{copy.sub(cityTime)}</Text>
+    </View>
+  );
+}
+
+// ──────────────────────────────────────────────
+// HOME
+// ──────────────────────────────────────────────
+
 export default function Home() {
   const { progress, setTrack } = useStore();
   const { refreshStreak, streak } = useDailyStreak();
   const responsive = useResponsiveLayout({ maxWidth: 900 });
+
   const gridColumns = responsive.getColumns({
     minColumnWidth: 330,
     maxColumns: 2,
     gap: responsive.gridGap,
   });
+
   const gridItemWidth = responsive.getGridItemWidth(
     gridColumns,
     responsive.gridGap,
   );
-  const heroTextWidth = Math.max(0, responsive.contentWidth - 8);
-  const heroSubtitleWidth = Math.min(430, heroTextWidth);
-  const heroSeoulVariant = responsive.isCompact
-    ? "display"
-    : responsive.screenClass === "phone"
-      ? "koreanPhraseHero"
-      : "koreanHero";
-  const heroTitleVariant = responsive.isCompact ? "screenTitle" : "display";
+
+  const [resumeContext, setResumeContext] =
+    useState<HomeResumeContext | null>(null);
   const currentTrack = progress.learningTrack;
-  const activeSeq =
+
+  const baseActiveSeq =
     (currentTrack ? RESUME_SEQUENCES[currentTrack] : undefined) ??
     SEQUENCES.find((s) => s.trackKey === currentTrack) ??
     SEQUENCES[0];
+
+  const activeSeq =
+    currentTrack === "vocab" && resumeContext?.track === "vocab"
+      ? {
+          ...baseActiveSeq,
+          title: resumeContext.title,
+          label: resumeContext.title,
+          route: resumeContext.route,
+          resumeMeta: `Vocabulaire · ${resumeContext.detail}`,
+        }
+      : baseActiveSeq;
+
   const activeSeqProgress = getSequenceProgress(activeSeq.trackKey, progress);
+
   const activeSeqNarrative =
     activeSeq.trackKey === "hangul" && (activeSeqProgress ?? 0) > 0
       ? "Reprends ta session Hangul."
@@ -218,6 +318,7 @@ export default function Home() {
   const pedagogicalSequences = SEQUENCES.filter(
     (s) => s.type === "pedagogical",
   );
+
   const immersionSequences = SEQUENCES.filter((s) => s.type === "immersion");
 
   const pulseAnim = useRef(new Animated.Value(0.4)).current;
@@ -265,18 +366,28 @@ export default function Home() {
     let minuteInterval: ReturnType<typeof setInterval> | undefined;
     let minuteTimeout: ReturnType<typeof setTimeout> | undefined;
 
-    const updateSeoulTime = () => setSeoulTime(formatSeoulTime());
+    const updateSeoulTime = () => {
+      setSeoulTime(formatSeoulTime());
+    };
+
     const delayUntilNextMinute = 60_000 - (Date.now() % 60_000);
 
     updateSeoulTime();
+
     minuteTimeout = setTimeout(() => {
       updateSeoulTime();
+
       minuteInterval = setInterval(updateSeoulTime, 60_000);
     }, delayUntilNextMinute);
 
     return () => {
-      if (minuteTimeout) clearTimeout(minuteTimeout);
-      if (minuteInterval) clearInterval(minuteInterval);
+      if (minuteTimeout) {
+        clearTimeout(minuteTimeout);
+      }
+
+      if (minuteInterval) {
+        clearInterval(minuteInterval);
+      }
     };
   }, []);
 
@@ -286,7 +397,9 @@ export default function Home() {
 
       refreshStreak()
         .then(() => {
-          if (!isMounted) return;
+          if (!isMounted) {
+            return;
+          }
         })
         .catch(() => null);
 
@@ -296,13 +409,37 @@ export default function Home() {
     }, [refreshStreak]),
   );
 
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+
+      readHomeResumeContext()
+        .then((context) => {
+          if (isMounted) {
+            setResumeContext(context);
+          }
+        })
+        .catch(() => {
+          if (isMounted) {
+            setResumeContext(null);
+          }
+        });
+
+      return () => {
+        isMounted = false;
+      };
+    }, []),
+  );
+
   const openSequence = (sequence: any) => {
     setTrack(sequence.trackKey);
+
     if (sequence.routeParams) {
       router.push({
         pathname: sequence.route,
         params: sequence.routeParams,
       } as any);
+
       return;
     }
 
@@ -318,6 +455,7 @@ export default function Home() {
         blurRadius={0}
       >
         <BlurView intensity={18} tint="dark" style={styles.bgBlur} />
+
         <View style={styles.hubDarkOverlay} />
         <View style={styles.topFade} />
         <View style={styles.bottomFade} />
@@ -326,11 +464,18 @@ export default function Home() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingHorizontal: responsive.horizontalPadding },
+            {
+              paddingHorizontal: responsive.horizontalPadding,
+            },
           ]}
         >
           <View
-            style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
+            style={[
+              styles.contentFrame,
+              {
+                maxWidth: responsive.maxWidth,
+              },
+            ]}
           >
             {/* TOP HEADER */}
             <View
@@ -354,6 +499,7 @@ export default function Home() {
                   >
                     서울
                   </AppText>
+
                   <AppText
                     variant="sectionLabel"
                     lineContract="singleLine"
@@ -373,8 +519,14 @@ export default function Home() {
                 <View style={styles.statusGroup}>
                   <View style={styles.liveIndicatorRow}>
                     <Animated.View
-                      style={[styles.liveDot, { opacity: pulseAnim }]}
+                      style={[
+                        styles.liveDot,
+                        {
+                          opacity: pulseAnim,
+                        },
+                      ]}
                     />
+
                     <AppText
                       variant="sectionLabel"
                       lineContract="singleLine"
@@ -383,6 +535,7 @@ export default function Home() {
                       IMMERSION ACTIVE
                     </AppText>
                   </View>
+
                   <AppText
                     accessibilityLabel={`Heure à Séoul : ${seoulTime}`}
                     variant="label"
@@ -409,93 +562,11 @@ export default function Home() {
               </Animated.View>
             </View>
 
-            {/* HERO - SEOUL IMMERSION */}
-            <View
-              style={[
-                styles.heroBlock,
-                responsive.isCompact && styles.heroBlockCompact,
-              ]}
-            >
-              <View
-                style={[
-                  styles.heroWrap,
-                  responsive.isCompact && styles.heroWrapCompact,
-                ]}
-              >
-                <View style={styles.heroContent}>
-                  <AppText variant="sectionLabel" style={styles.heroLabel}>
-                    SÉOUL IMMERSION
-                  </AppText>
+            {/* HERO H1 */}
+            <SeoulHero cityTime={seoulTime} variant="presentTense" />
 
-                  <View
-                    style={[
-                      styles.heroSeoulTitleWrap,
-                      responsive.isCompact && styles.heroSeoulTitleWrapCompact,
-                    ]}
-                  >
-                    <AppText
-                      variant={heroSeoulVariant}
-                      script="korean"
-                      lineContract="singleLine"
-                      style={[
-                        styles.heroSeoulShadow,
-                        {
-                          maxWidth: heroTextWidth,
-                          top: "50%",
-                          transform: [
-                            {
-                              translateY:
-                                1 -
-                                AppTypography[heroSeoulVariant].lineHeight / 2,
-                            },
-                          ],
-                        },
-                      ]}
-                    >
-                      어서 오세요.
-                    </AppText>
-                    <AppText
-                      variant={heroSeoulVariant}
-                      script="korean"
-                      lineContract="singleLine"
-                      style={[
-                        styles.heroSeoulTitle,
-                        { maxWidth: heroTextWidth },
-                      ]}
-                    >
-                      어서 오세요.
-                    </AppText>
-                  </View>
+            {/* CURRENT IMMERSION */}
 
-                  <AppText
-                    accessibilityRole="header"
-                    variant={heroTitleVariant}
-                    style={styles.heroTitle}
-                  >
-                    Entre dans la ville.
-                  </AppText>
-
-                  <AppText
-                    variant="subtitle"
-                    style={[
-                      styles.heroSubtitle,
-                      { maxWidth: heroSubtitleWidth },
-                    ]}
-                  >
-                    Apprends le coréen comme si tu y étais déjà.
-                  </AppText>
-
-                  <LinearGradient
-                    colors={[CYAN, PINK]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.heroLine}
-                  />
-                </View>
-              </View>
-            </View>
-
-            {/* LIST CONTENT */}
             <AnimatedFragment index={0}>
               <MainActionCard
                 sequence={activeSeq}
@@ -505,12 +576,15 @@ export default function Home() {
               />
             </AnimatedFragment>
 
+            {/* PARCOURS */}
             <View style={styles.sectionDivider}>
               <AppText variant="sectionLabel" style={styles.sectionTitle}>
                 PARCOURS
               </AppText>
+
               <View style={styles.titleLineWrap}>
                 <View style={styles.titleLine} />
+
                 <LinearGradient
                   colors={["transparent", CYAN, PINK]}
                   start={{ x: 0, y: 0 }}
@@ -524,14 +598,22 @@ export default function Home() {
               style={[
                 styles.grid,
                 gridColumns > 1 && styles.gridWide,
-                { gap: responsive.gridGap },
+                {
+                  gap: responsive.gridGap,
+                },
               ]}
             >
               {pedagogicalSequences.map((seq, i) => (
                 <AnimatedFragment
                   key={seq.trackKey}
                   index={i + 1}
-                  style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
+                  style={
+                    gridColumns > 1
+                      ? {
+                          width: gridItemWidth,
+                        }
+                      : undefined
+                  }
                 >
                   <SequenceCard
                     item={seq}
@@ -542,12 +624,15 @@ export default function Home() {
               ))}
             </View>
 
+            {/* IMMERSION */}
             <View style={styles.sectionDivider}>
               <AppText variant="sectionLabel" style={styles.sectionTitle}>
                 IMMERSION
               </AppText>
+
               <View style={styles.titleLineWrap}>
                 <View style={styles.titleLine} />
+
                 <LinearGradient
                   colors={["transparent", "#8B5CF6", PINK]}
                   start={{ x: 0, y: 0 }}
@@ -561,14 +646,22 @@ export default function Home() {
               style={[
                 styles.grid,
                 gridColumns > 1 && styles.gridWide,
-                { gap: responsive.gridGap },
+                {
+                  gap: responsive.gridGap,
+                },
               ]}
             >
               {immersionSequences.map((seq, i) => (
                 <AnimatedFragment
                   key={seq.trackKey}
                   index={i + 1 + pedagogicalSequences.length}
-                  style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
+                  style={
+                    gridColumns > 1
+                      ? {
+                          width: gridItemWidth,
+                        }
+                      : undefined
+                  }
                 >
                   <SequenceCard
                     item={seq}
@@ -588,6 +681,7 @@ export default function Home() {
 // ──────────────────────────────────────────────
 // COMPONENTS
 // ──────────────────────────────────────────────
+
 function AnimatedFragment({
   children,
   index,
@@ -598,7 +692,9 @@ function AnimatedFragment({
   style?: StyleProp<ViewStyle>;
 }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
   const slideAnim = useRef(new Animated.Value(30)).current;
+
   const floatAnim = useRef(new Animated.Value(0)).current;
 
   const startFloating = useCallback(() => {
@@ -641,12 +737,25 @@ function AnimatedFragment({
 
   const translateY = Animated.add(
     slideAnim,
-    floatAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -5] }),
+    floatAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, -5],
+    }),
   );
 
   return (
     <Animated.View
-      style={[style, { opacity: fadeAnim, transform: [{ translateY }] }]}
+      style={[
+        style,
+        {
+          opacity: fadeAnim,
+          transform: [
+            {
+              translateY,
+            },
+          ],
+        },
+      ]}
     >
       {children}
     </Animated.View>
@@ -655,13 +764,16 @@ function AnimatedFragment({
 
 function MainActionCard({ sequence, narrative, progress, onPress }: any) {
   const displayLabel = sequence.label;
+  const resumeMeta = sequence.resumeMeta as string | undefined;
   const isMission = sequence.trackKey.endsWith("_ia");
   const accent = sequence.hubAccent;
 
   return (
     <Pressable
       accessibilityRole="link"
-      accessibilityLabel={`Reprendre ${isMission ? "la mission" : "le parcours"} ${displayLabel}. ${narrative}`}
+      accessibilityLabel={`Reprendre ${
+        isMission ? "la mission" : "le parcours"
+      } ${displayLabel}. ${narrative}`}
       accessibilityHint="Ouvre le parcours actif"
       hitSlop={6}
       onPress={onPress}
@@ -678,16 +790,19 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
           <AppText variant="sectionLabel" style={styles.cardKicker}>
             {isMission ? "REPRENDRE LA MISSION" : "REPRENDRE LE PARCOURS"}
           </AppText>
+
           <AppText variant="featureTitle" style={styles.cardTitle}>
             {displayLabel}
           </AppText>
+
           <AppText
             variant="bodySecondary"
             tone="muted"
             style={styles.cardNarrative}
           >
-            {narrative}
+            {resumeMeta ?? narrative}
           </AppText>
+
           {typeof progress === "number" ? (
             <View style={styles.progressContainer}>
               <View style={styles.progressTrack}>
@@ -701,6 +816,7 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
                   ]}
                 />
               </View>
+
               <AppText variant="caption" style={styles.progressText}>
                 {Math.round(progress * 100)} % du parcours
               </AppText>
@@ -729,7 +845,15 @@ function StreakHeaderBadge({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Série quotidienne : ${currentStreak} ${dayLabel}. ${isValidated ? "Objectif du jour atteint." : "Objectif du jour à compléter."} ${freezesAvailable} ${freezesAvailable > 1 ? "protections disponibles" : "protection disponible"}.`}
+      accessibilityLabel={`Série quotidienne : ${currentStreak} ${dayLabel}. ${
+        isValidated
+          ? "Objectif du jour atteint."
+          : "Objectif du jour à compléter."
+      } ${freezesAvailable} ${
+        freezesAvailable > 1
+          ? "protections disponibles"
+          : "protection disponible"
+      }.`}
       accessibilityHint="Ouvre le calendrier de série"
       hitSlop={8}
       onPress={onPress}
@@ -754,9 +878,12 @@ function StreakHeaderBadge({
           <Flame
             size={16}
             strokeWidth={2.25}
-            color={isValidated ? STREAK_ACCENT.base : "rgba(241,245,249,0.58)"}
+            color={
+              isValidated ? STREAK_ACCENT.base : "rgba(241,245,249,0.58)"
+            }
             fill={isValidated ? STREAK_ACCENT.base : "transparent"}
           />
+
           <AppText
             variant="bodyStrong"
             lineContract="singleLine"
@@ -772,12 +899,14 @@ function StreakHeaderBadge({
         {!compact ? (
           <>
             <View style={styles.streakBadgeDivider} />
+
             <View style={styles.streakBadgeSecondary}>
               <ShieldCheck
                 size={14}
                 strokeWidth={2.15}
                 color="rgba(103,232,249,0.72)"
               />
+
               <AppText
                 variant="caption"
                 lineContract="singleLine"
@@ -804,7 +933,10 @@ function getSequenceProgress(trackKey: string, progress: any) {
   if (trackKey === "grammar") {
     return getGrammarJourneyCompletion(progress.grammarProgress);
   }
-  if (trackKey !== "hangul") return null;
+
+  if (trackKey !== "hangul") {
+    return null;
+  }
 
   const completedHangulItems = HANGUL_PROGRESS_IDS.filter(
     (id) => progress.completed?.[id],
@@ -817,16 +949,22 @@ function getSequenceIcon(trackKey: string) {
   switch (trackKey) {
     case "hangul":
       return "가";
+
     case "grammar":
       return "문";
+
     case "vocab":
       return "dialogue";
+
     case "numbers":
       return "123";
+
     case "dialogs":
       return "compass";
+
     case "listen":
       return "소리";
+
     default:
       return "•";
   }
@@ -859,13 +997,16 @@ function SequenceIconGlyph({ icon, color }: { icon: string; color: string }) {
 
 function SequenceCard({ item, isActive, onPress }: any) {
   const icon = getSequenceIcon(item.trackKey);
+
   const accent = item.hubAccent;
 
   return (
     <Pressable
       accessibilityRole="link"
       accessibilityLabel={`${item.title}. ${item.narrative}`}
-      accessibilityState={{ selected: isActive }}
+      accessibilityState={{
+        selected: isActive,
+      }}
       aria-selected={isActive}
       accessibilityHint="Ouvre ce parcours"
       hitSlop={6}
@@ -910,13 +1051,33 @@ function SequenceCard({ item, isActive, onPress }: any) {
         />
 
         <View style={styles.seqRainA} />
+
         <View
-          style={[styles.seqRainB, { backgroundColor: accent.rain }]}
+          style={[
+            styles.seqRainB,
+            {
+              backgroundColor: accent.rain,
+            },
+          ]}
         />
+
         <View
-          style={[styles.seqRainC, { backgroundColor: accent.decorative }]}
+          style={[
+            styles.seqRainC,
+            {
+              backgroundColor: accent.decorative,
+            },
+          ]}
         />
-        <View style={[styles.seqRainDrop, { backgroundColor: accent.base }]} />
+
+        <View
+          style={[
+            styles.seqRainDrop,
+            {
+              backgroundColor: accent.base,
+            },
+          ]}
+        />
 
         <View
           style={[
@@ -962,9 +1123,11 @@ function SequenceCard({ item, isActive, onPress }: any) {
           <AppText variant="sectionLabel" style={styles.seqPlace}>
             {item.place}
           </AppText>
+
           <AppText variant="cardTitle" style={styles.seqTitle}>
             {item.title}
           </AppText>
+
           <AppText variant="bodySecondary" tone="muted" style={styles.seqSub}>
             {item.narrative}
           </AppText>
@@ -992,20 +1155,33 @@ function SequenceCard({ item, isActive, onPress }: any) {
 // ──────────────────────────────────────────────
 // STYLES
 // ──────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: BG_DEEP },
-  bgImage: { flex: 1, backgroundColor: BG_DEEP, overflow: "hidden" },
+  safe: {
+    flex: 1,
+    backgroundColor: BG_DEEP,
+  },
+
+  bgImage: {
+    flex: 1,
+    backgroundColor: BG_DEEP,
+    overflow: "hidden",
+  },
+
   bgBlur: {
     ...ABSOLUTE_FILL,
   },
+
   hubDarkOverlay: {
     ...ABSOLUTE_FILL,
     backgroundColor: `rgba(2,3,6,${HUB_BACKGROUND_DARKNESS})`,
   },
+
   topFade: {
     ...ABSOLUTE_FILL,
     backgroundColor: "rgba(0,0,0,0.07)",
   },
+
   bottomFade: {
     position: "absolute",
     left: 0,
@@ -1014,7 +1190,12 @@ const styles = StyleSheet.create({
     height: 240,
     backgroundColor: "rgba(2,3,6,0.40)",
   },
-  scrollContent: { paddingTop: 8, paddingBottom: 100 },
+
+  scrollContent: {
+    paddingTop: 8,
+    paddingBottom: 100,
+  },
+
   contentFrame: {
     width: "100%",
     alignSelf: "center",
@@ -1023,7 +1204,7 @@ const styles = StyleSheet.create({
   // HEADER
   header: {
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
     minHeight: 40,
     marginTop: 4,
@@ -1031,42 +1212,59 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     position: "relative",
   },
+
   headerCompact: {
     marginTop: 2,
     marginBottom: 16,
   },
+
   headerIdentity: {
     flexDirection: "row",
     alignItems: "center",
-    maxWidth: "100%",
+    flexShrink: 1,
+    minWidth: 0,
   },
+
   headerIdentityCompact: {
-    paddingRight: 54,
+    paddingRight: 0,
   },
-  brandGroup: { alignItems: "flex-start" },
+
+  brandGroup: {
+    alignItems: "flex-start",
+  },
+
   headerCityKr: {
     color: TXT,
   },
+
   headerCityEn: {
     color: "rgba(255,255,255,0.65)",
     marginTop: -1,
   },
+
   headerDivider: {
     width: 1,
     height: 24,
     backgroundColor: "rgba(255,255,255,0.09)",
     marginHorizontal: 16,
   },
+
   headerDividerCompact: {
     height: 22,
     marginHorizontal: 9,
   },
-  statusGroup: { justifyContent: "center", flexShrink: 1 },
+
+  statusGroup: {
+    justifyContent: "center",
+    flexShrink: 1,
+  },
+
   liveIndicatorRow: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 3,
   },
+
   liveDot: {
     width: 5,
     height: 5,
@@ -1074,20 +1272,25 @@ const styles = StyleSheet.create({
     backgroundColor: CYAN,
     marginRight: 6,
   },
+
   statusText: {
     color: "rgba(224,242,254,0.74)",
   },
+
   locationText: {
     color: "rgba(224,242,254,0.40)",
     marginLeft: 11,
   },
+
   streakHeaderSlot: {
-    position: "absolute",
-    right: 4,
+    marginLeft: 12,
+    flexShrink: 0,
   },
+
   streakHeaderSlotCompact: {
-    right: 2,
+    marginLeft: 8,
   },
+
   streakBadgePressable: {
     borderRadius: 999,
     overflow: "hidden",
@@ -1096,10 +1299,12 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(2,3,6,0.34)",
     boxShadow: `0px 4px 16px ${STREAK_ACCENT.featuredShadow}`,
   },
+
   streakBadgePressed: {
     opacity: 0.8,
     transform: [{ scale: 0.98 }],
   },
+
   streakBadgeBlur: {
     minHeight: 38,
     flexDirection: "row",
@@ -1109,32 +1314,39 @@ const styles = StyleSheet.create({
     position: "relative",
     overflow: "hidden",
   },
+
   streakBadgePrimary: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
   },
+
   streakBadgeValue: {
     color: "rgba(241,245,249,0.78)",
   },
+
   streakBadgeValueActive: {
     color: TXT,
     ...textGlow(STREAK_ACCENT.selectedShadow, 8),
   },
+
   streakBadgeDivider: {
     width: 1,
     height: 16,
     backgroundColor: "rgba(255,255,255,0.10)",
     marginHorizontal: 8,
   },
+
   streakBadgeSecondary: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
   },
+
   streakBadgeFreezeValue: {
     color: "rgba(224,242,254,0.66)",
   },
+
   streakBadgeStatusDot: {
     position: "absolute",
     top: 5,
@@ -1144,75 +1356,63 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: "rgba(241,245,249,0.20)",
   },
+
   streakBadgeStatusDotActive: {
     backgroundColor: STREAK_ACCENT.base,
     boxShadow: `0px 0px 7px ${STREAK_ACCENT.glow}`,
   },
 
-  // HERO - SEOUL IMMERSION
-  heroBlock: {
-    marginBottom: 20,
-  },
-  heroBlockCompact: {
-    marginBottom: 12,
-  },
-  heroWrap: {
-    minHeight: 300,
-    justifyContent: "center",
+  // HERO H1
+  seoulHeroContainer: {
+
     position: "relative",
+    paddingHorizontal: 0,
+    marginTop: 78,
+    marginBottom: 78,
   },
-  heroWrapCompact: {
-    minHeight: 250,
+
+  seoulHeroTitleRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "baseline",
   },
-  heroContent: {
-    paddingHorizontal: 4,
-    alignItems: "flex-start",
-    position: "relative",
+
+  seoulHeroTitleStatic: {
+    fontSize: 42,
+    lineHeight: 38,
+    fontWeight: "800",
+    letterSpacing: -0.4,
+    color: "#F5F7FA",
   },
+
+  seoulHeroTitleShadow: {
+    textShadowColor: "rgba(0,0,0,0.35)",
+    textShadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    textShadowRadius: 6,
+  },
+
+  seoulHeroAccentPlaceholder: {
+    opacity: 0,
+  },
+
+  seoulHeroSubtitle: {
+    marginTop: 10,
+    fontSize: 15,
+    fontWeight: "500",
+    letterSpacing: 0.2,
+    color: "rgba(245,247,250,0.72)",
+  },
+
   heroLabel: {
     color: "rgba(255,255,255,0.70)",
     textAlign: "left",
+    marginBottom: 12,
+    paddingHorizontal: 4,
   },
 
-  heroSeoulTitleWrap: {
-    position: "relative",
-    marginTop: 6,
-    minHeight: 115,
-    justifyContent: "center",
-    alignItems: "flex-start",
-  },
-  heroSeoulTitleWrapCompact: {
-    minHeight: 88,
-  },
-  heroSeoulShadow: {
-    position: "absolute",
-    left: 1,
-    color: "rgba(103,232,249,0.16)",
-    ...textGlow("rgba(199,184,255,0.30)", 26),
-  },
-  heroSeoulTitle: {
-    color: "rgba(215,247,255,0.84)",
-    ...textGlow("rgba(103,232,249,0.38)", 18),
-  },
-
-  heroTitle: {
-    color: "#FFFFFF",
-    opacity: 0.9,
-    marginTop: 0,
-    marginBottom: 10,
-    maxWidth: 620,
-    textAlign: "left",
-  },
-  heroSubtitle: {
-    color: "rgba(255,255,255,0.65)",
-    marginBottom: 20,
-    textAlign: "left",
-  },
-  heroLine: {
-    width: 60,
-    height: 2,
-    borderRadius: 2,
-  },
   rainLine: {
     position: "absolute",
     top: 0,
@@ -1229,29 +1429,47 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
   },
-  mainCard: { padding: 20 },
+
+  mainCard: {
+    padding: 20,
+  },
+
   cardContent: {},
+
   cardKicker: {
     color: SOFT,
     marginBottom: 6,
   },
+
   cardTitle: {
     color: TXT,
     marginBottom: 7,
   },
+
   cardNarrative: {
     color: MUTED,
     maxWidth: 560,
     marginBottom: 22,
   },
-  progressContainer: { gap: 10 },
+
+  progressContainer: {
+    gap: 10,
+  },
+
   progressTrack: {
     height: 3,
     backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: 2,
   },
-  progressFill: { height: "100%", borderRadius: 2 },
-  progressText: { color: SOFT },
+
+  progressFill: {
+    height: "100%",
+    borderRadius: 2,
+  },
+
+  progressText: {
+    color: SOFT,
+  },
 
   // SECTION DIVIDERS
   sectionDivider: {
@@ -1261,19 +1479,23 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     marginTop: 22,
   },
+
   sectionTitle: {
     color: "rgba(241,245,249,0.48)",
   },
+
   titleLineWrap: {
     flex: 1,
     height: 8,
     justifyContent: "center",
     position: "relative",
   },
+
   titleLine: {
     height: 1,
     backgroundColor: "rgba(255,255,255,0.055)",
   },
+
   titleLineGlow: {
     position: "absolute",
     right: 0,
@@ -1283,7 +1505,10 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
 
-  grid: { gap: 10 },
+  grid: {
+    gap: 10,
+  },
+
   gridWide: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -1299,6 +1524,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.09)",
     boxShadow: "0px 8px 14px rgba(0,0,0,0.28)",
   },
+
   seqBlur: {
     minHeight: 78,
     flexDirection: "row",
@@ -1309,6 +1535,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.11)",
     position: "relative",
   },
+
   seqTopReflect: {
     position: "absolute",
     top: 0,
@@ -1317,6 +1544,7 @@ const styles = StyleSheet.create({
     height: "50%",
     opacity: 0.55,
   },
+
   seqAccent: {
     position: "absolute",
     left: 0,
@@ -1326,6 +1554,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 9,
     borderBottomRightRadius: 9,
   },
+
   seqIconZone: {
     width: 48,
     height: 48,
@@ -1335,6 +1564,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
     position: "relative",
   },
+
   seqIconBox: {
     width: 44,
     height: 44,
@@ -1344,6 +1574,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: "hidden",
   },
+
   seqIconLight: {
     position: "absolute",
     top: 0,
@@ -1352,33 +1583,41 @@ const styles = StyleSheet.create({
     height: "58%",
     borderRadius: 22,
   },
+
   seqIcon: {},
+
   seqDividerLine: {
     width: 1,
     height: 42,
     backgroundColor: "rgba(255,255,255,0.12)",
     marginRight: 12,
   },
+
   seqText: {
     flex: 1,
     minWidth: 0,
   },
+
   seqPlace: {
     color: "rgba(241,245,249,0.34)",
     marginBottom: 3,
   },
+
   seqTitle: {
     color: TXT,
   },
+
   seqSub: {
     color: "rgba(241,245,249,0.62)",
     marginTop: 3,
   },
+
   seqArrow: {
     color: "rgba(255,255,255,0.36)",
     opacity: 0.52,
     marginLeft: 8,
   },
+
   seqRainA: {
     position: "absolute",
     top: 6,
@@ -1387,6 +1626,7 @@ const styles = StyleSheet.create({
     width: 1,
     backgroundColor: "rgba(255,255,255,0.045)",
   },
+
   seqRainB: {
     position: "absolute",
     top: 10,
@@ -1394,6 +1634,7 @@ const styles = StyleSheet.create({
     left: "66%",
     width: 1,
   },
+
   seqRainC: {
     position: "absolute",
     top: 0,
@@ -1401,6 +1642,7 @@ const styles = StyleSheet.create({
     right: 40,
     width: 1,
   },
+
   seqRainDrop: {
     position: "absolute",
     top: 16,
