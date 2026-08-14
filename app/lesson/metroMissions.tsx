@@ -21,6 +21,7 @@ import {
   type MetroMission,
 } from "../../data/lesson/metro/metroMissions";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
+import { saveHomeResumeContext } from "../../lib/homeResume";
 import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
@@ -84,17 +85,31 @@ export default function MetroMissionsScreen() {
     setSelectedMission(mission);
   };
 
-  const startSelectedMission = () => {
+  const startSelectedMission = async () => {
     if (!selectedMission || COMING_SOON_MISSION_IDS.has(selectedMission.id)) {
       return;
     }
+
     const mission = selectedMission;
     setSelectedMission(null);
-    setTrack("metro_ia");
-    router.push({
-      pathname: "/lesson/metroIA",
-      params: { mode, mission: mission.id },
-    });
+
+    try {
+      await Promise.all([
+        setTrack("metro_ia"),
+        saveHomeResumeContext({
+          track: "metro_ia",
+          title: mission.title,
+          detail: mode === "real" ? "Simulation réelle" : "Simulation guidée",
+          route: "/lesson/metroIA",
+          routeParams: { mode, mission: mission.id },
+        }),
+      ]);
+    } finally {
+      router.push({
+        pathname: "/lesson/metroIA",
+        params: { mode, mission: mission.id },
+      });
+    }
   };
 
   return (
