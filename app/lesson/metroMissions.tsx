@@ -108,37 +108,37 @@ export default function MetroMissionsScreen() {
           ]}
         >
           <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
-          <GuidedMissionsHeader
-            accent={CYAN}
-            compact={responsive.isCompact}
-            intro="Apprends à te déplacer en métro en immersion"
-            onBack={handleBack}
-            title="Métro"
-          />
+            <GuidedMissionsHeader
+              accent={CYAN}
+              compact={responsive.isCompact}
+              intro="Apprends à te déplacer en métro en immersion"
+              onBack={handleBack}
+              title="Métro"
+            />
 
-          <MissionSection
-            title="Missions complètes"
-            subtitle="Choisis ton trajet réel dans le métro de Séoul."
-            missions={completeMissions}
-            hasPremiumAccess={hasPremiumAccess}
-            onOpenMission={openMission}
-            missionColumns={missionColumns}
-            missionItemWidth={missionItemWidth}
-            missionGap={responsive.gridGap}
-            featured
-          />
+            <MissionSection
+              title="Missions complètes"
+              subtitle="Choisis ton trajet réel dans le métro de Séoul."
+              missions={completeMissions}
+              hasPremiumAccess={hasPremiumAccess}
+              onOpenMission={openMission}
+              missionColumns={missionColumns}
+              missionItemWidth={missionItemWidth}
+              missionGap={responsive.gridGap}
+              featured
+            />
 
-          <MissionSection
-            title="Mini-missions ciblées"
-            subtitle="Des scènes courtes, chacune centrée sur une seule compétence."
-            missions={miniMissions}
-            hasPremiumAccess={hasPremiumAccess}
-            onOpenMission={openMission}
-            missionColumns={missionColumns}
-            missionItemWidth={missionItemWidth}
-            missionGap={responsive.gridGap}
-            compact
-          />
+            <MissionSection
+              title="Mini-missions ciblées"
+              subtitle="Des scènes courtes, chacune centrée sur une seule compétence."
+              missions={miniMissions}
+              hasPremiumAccess={hasPremiumAccess}
+              onOpenMission={openMission}
+              missionColumns={missionColumns}
+              missionItemWidth={missionItemWidth}
+              missionGap={responsive.gridGap}
+              compact
+            />
           </View>
         </ScrollView>
 
@@ -184,8 +184,16 @@ function MissionSection({
   return (
     <View style={[styles.section, featured && styles.firstSection]}>
       <View style={styles.sectionHeader}>
-        <AppText variant="sectionTitle" style={styles.sectionTitle}>{title}</AppText>
-        <AppText variant="bodySecondary" tone="muted" style={styles.sectionSubtitle}>{subtitle}</AppText>
+        <AppText variant="sectionTitle" style={styles.sectionTitle}>
+          {title}
+        </AppText>
+        <AppText
+          variant="bodySecondary"
+          tone="muted"
+          style={styles.sectionSubtitle}
+        >
+          {subtitle}
+        </AppText>
       </View>
 
       <View
@@ -199,6 +207,7 @@ function MissionSection({
           const isPremium = mission.access === "premium";
           const isLocked = isPremium && !hasPremiumAccess;
           const isComingSoon = COMING_SOON_MISSION_IDS.has(mission.id);
+
           return (
             <Pressable
               key={mission.id}
@@ -235,22 +244,12 @@ function MissionSection({
                 missionColumns > 1 && { width: missionItemWidth },
                 featured && styles.featuredCard,
                 compact && styles.compactCard,
-                isPremium && styles.premiumCard,
+                isPremium && !isComingSoon && styles.premiumCard,
                 isComingSoon && styles.comingSoonCard,
                 pressed && !isComingSoon && styles.pressedCard,
               ]}
             >
               <View style={styles.cardTop}>
-                <MissionAccessBadge
-                  access={mission.access}
-                  accent={
-                    mission.id === "ask-direction" ? VOCAL_VIOLET : CYAN
-                  }
-                  featured={featured}
-                  variant={
-                    mission.id === "ask-direction" ? "vocal" : "access"
-                  }
-                />
                 {isComingSoon ? (
                   <View pointerEvents="none" style={styles.comingSoonBadge}>
                     <AppText
@@ -262,18 +261,54 @@ function MissionSection({
                     </AppText>
                   </View>
                 ) : (
-                  <AppText variant="caption" lineContract="singleLine"
-                    style={[
-                      styles.cardArrow,
-                      isLocked && styles.cardArrowPremium,
-                    ]}
-                  >
-                    {isLocked ? "Premium" : "Ouvrir"}
-                  </AppText>
+                  <MissionAccessBadge
+                    access={mission.access}
+                    accent={
+                      mission.id === "ask-direction" ? VOCAL_VIOLET : CYAN
+                    }
+                    featured={featured}
+                    variant={
+                      mission.id === "ask-direction" ? "vocal" : "access"
+                    }
+                  />
                 )}
+
+                <AppText
+                  variant="caption"
+                  lineContract="singleLine"
+                  style={[
+                    styles.cardArrow,
+                    !isComingSoon && isLocked && styles.cardArrowPremium,
+                    isComingSoon && styles.comingSoonStatus,
+                  ]}
+                >
+                  {isComingSoon
+                    ? "Indisponible"
+                    : isLocked
+                      ? "Premium"
+                      : "Ouvrir"}
+                </AppText>
               </View>
-              <AppText variant="cardTitle" style={styles.missionTitle}>{mission.title}</AppText>
-              <AppText variant="bodySecondary" tone="muted" style={styles.missionSubtitle}>{mission.subtitle}</AppText>
+
+              <AppText
+                variant="cardTitle"
+                style={[
+                  styles.missionTitle,
+                  isComingSoon && styles.comingSoonContent,
+                ]}
+              >
+                {mission.title}
+              </AppText>
+              <AppText
+                variant="bodySecondary"
+                tone="muted"
+                style={[
+                  styles.missionSubtitle,
+                  isComingSoon && styles.comingSoonContent,
+                ]}
+              >
+                {mission.subtitle}
+              </AppText>
             </Pressable>
           );
         })}
@@ -325,12 +360,21 @@ const styles = StyleSheet.create({
     minHeight: 112,
     padding: 16,
   },
-  premiumCard: { borderColor: SeoulMidnightGlass.colors.premiumBorder },
-  comingSoonCard: {
-    opacity: 0.74,
-    backgroundColor: "rgba(5,5,8,0.72)",
+  premiumCard: {
+    borderColor: SeoulMidnightGlass.colors.premiumBorder,
   },
-  pressedCard: { opacity: 0.88, transform: [{ scale: 0.99 }] },
+  comingSoonCard: {
+    opacity: 0.78,
+    borderColor: "rgba(255,255,255,0.18)",
+    backgroundColor: "rgba(5,5,8,0.82)",
+  },
+  comingSoonContent: {
+    opacity: 0.72,
+  },
+  pressedCard: {
+    opacity: 0.88,
+    transform: [{ scale: 0.99 }],
+  },
   cardTop: {
     flexDirection: "row",
     alignItems: "center",
@@ -340,18 +384,23 @@ const styles = StyleSheet.create({
   cardArrow: {
     color: SOFT,
   },
-  cardArrowPremium: { color: GOLD },
+  cardArrowPremium: {
+    color: GOLD,
+  },
   comingSoonBadge: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.22)",
-    backgroundColor: "rgba(5,5,8,0.88)",
-    paddingHorizontal: 11,
-    paddingVertical: 6,
+    borderColor: "rgba(255,255,255,0.30)",
+    backgroundColor: "rgba(5,5,8,0.94)",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
   },
   comingSoonBadgeText: {
-    color: "rgba(255,255,255,0.84)",
-    letterSpacing: 1.05,
+    color: "rgba(255,255,255,0.92)",
+    letterSpacing: 1.1,
+  },
+  comingSoonStatus: {
+    color: "rgba(255,255,255,0.50)",
   },
   missionTitle: {
     color: TXT,
