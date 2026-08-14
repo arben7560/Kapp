@@ -29,7 +29,10 @@ const COLORS = {
 
 const AIRPORT_IMAGE = require("../../assets/images/airport.jpg");
 
-const AIRPORT_EXPRESSION_AUDIO: Record<Scene["id"], readonly number[]> = {
+const AIRPORT_EXPRESSION_AUDIO: Record<
+  Scene["id"],
+  readonly (number | null)[]
+> = {
   agent: [
     require("../../assets/ai/aeroport-memo/agent-1.mp3"),
     require("../../assets/ai/aeroport-memo/agent-2.mp3"),
@@ -48,7 +51,7 @@ const AIRPORT_EXPRESSION_AUDIO: Record<Scene["id"], readonly number[]> = {
     require("../../assets/ai/aeroport-memo/voyageur-3.mp3"),
     require("../../assets/ai/aeroport-memo/voyageur-4.mp3"),
     require("../../assets/ai/aeroport-memo/voyageur-5.mp3"),
-    require("../../assets/ai/aeroport-memo/agent-7.mp3"),
+    null,
     require("../../assets/ai/aeroport-memo/voyageur-6.mp3"),
     require("../../assets/ai/aeroport-memo/voyageur-7.mp3"),
     require("../../assets/ai/aeroport-memo/voyageur-8.mp3"),
@@ -171,12 +174,12 @@ const TRAVELER_TOOLBOX_EXPRESSIONS: Expression[] = [
     context: "Pour vérifier si la carte fonctionne sur ce trajet.",
   },
   {
-    word: "승강장",
-    rom: "Seunggangjang",
-    mean: "Quai",
-    context: "Mot clé à connaître avant de demander où monter dans le train.",
+    word: "플랫폼",
+    rom: "Peullaetpom",
+    mean: "Quai / plateforme",
+    context: "Mot utilisé dans la scène vocale pour demander où se trouve le quai.",
     pronunciationNote:
-      "Prononciation : « seung-gang-djang ». Sur « 승 », garde les lèvres peu arrondies pour ㅡ ; « 강 » se lit « gang » et « 장 » sonne comme « djang ».",
+      "Prononciation : « peul-laet-pom ». Découpe-le en trois temps : 플 = « peul », 랫 = « laet », 폼 = « pom ». Enchaîne ensuite naturellement : « peul-laet-pom ».",
   },
   {
     word: "승강장은 어디예요?",
@@ -341,14 +344,18 @@ export default function AirportLessonScreen() {
                 const cardId = `${activeScene.id}-${i}`;
                 const audioSource = AIRPORT_EXPRESSION_AUDIO[activeScene.id][i];
                 const isActive = selectedWord === cardId;
+                const hasAudio = typeof audioSource === "number";
 
                 return (
                   <Pressable
                     key={cardId}
-                    onPress={() => playExpression(audioSource, cardId)}
+                    disabled={!hasAudio}
+                    onPress={() => {
+                      if (hasAudio) playExpression(audioSource, cardId);
+                    }}
                     style={({ pressed }) => [
                       styles.expPressable,
-                      pressed && { transform: [{ scale: 0.985 }] },
+                      pressed && hasAudio && { transform: [{ scale: 0.985 }] },
                     ]}
                   >
                     <BlurView
@@ -393,25 +400,27 @@ export default function AirportLessonScreen() {
                             ) : null}
                           </View>
 
-                          <View
-                            style={[
-                              styles.listenPill,
-                              {
-                                backgroundColor: `${activeScene.accent}20`,
-                                borderColor: `${activeScene.accent}55`,
-                              },
-                            ]}
-                          >
-                            <AppText variant="caption" lineContract="singleLine"
+                          {hasAudio ? (
+                            <View
                               style={[
-                                styles.listenIcon,
-                                { color: activeScene.accent },
+                                styles.listenPill,
+                                {
+                                  backgroundColor: `${activeScene.accent}20`,
+                                  borderColor: `${activeScene.accent}55`,
+                                },
                               ]}
                             >
-                              {isActive ? "●" : "▶"}
-                            </AppText>
-                            <AppText variant="label" lineContract="singleLine" style={styles.listenText}>ÉCOUTER</AppText>
-                          </View>
+                              <AppText variant="caption" lineContract="singleLine"
+                                style={[
+                                  styles.listenIcon,
+                                  { color: activeScene.accent },
+                                ]}
+                              >
+                                {isActive ? "●" : "▶"}
+                              </AppText>
+                              <AppText variant="label" lineContract="singleLine" style={styles.listenText}>ÉCOUTER</AppText>
+                            </View>
+                          ) : null}
                         </View>
 
                         <AppText variant="bodyStrong" style={styles.expMean}>{exp.mean}</AppText>
