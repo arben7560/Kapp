@@ -107,7 +107,9 @@ export default function MetroMissionsScreen() {
             { paddingHorizontal: responsive.horizontalPadding },
           ]}
         >
-          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
+          <View
+            style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
+          >
             <GuidedMissionsHeader
               accent={CYAN}
               compact={responsive.isCompact}
@@ -257,7 +259,7 @@ function MissionSection({
                       lineContract="singleLine"
                       style={styles.comingSoonBadgeText}
                     >
-                      PROCHAINEMENT
+                      PROCHAINEMENT !
                     </AppText>
                   </View>
                 ) : (

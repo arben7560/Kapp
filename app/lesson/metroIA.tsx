@@ -1053,7 +1053,7 @@ export default function MetroIaScreen() {
                   lineContract="singleLine"
                   style={styles.choiceComingSoonBadgeText}
                 >
-                  PROCHAINEMENT
+                  PROCHAINEMENT !
                 </AppText>
               </View>
             ) : null}

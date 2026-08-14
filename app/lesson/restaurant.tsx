@@ -1,6 +1,6 @@
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Animated,
   Easing,
@@ -182,7 +182,7 @@ const SERVEUR_TOOLBOX_EXPRESSIONS: Expression[] = [
     context: "Utilisé dans 'passez une bonne journée'.",
   },
   {
-    word: "감사합니다.",
+    word: "감사합니다",
     rom: "Gamsahamnida.",
     mean: "Merci.",
     context: "Formule polie de remerciement.",
@@ -358,7 +358,13 @@ export default function RestaurantLesson() {
               <AppBackButton onPress={handleBack} />
             </View>
 
-            <AppText variant="sectionLabel" lineContract="singleLine" style={styles.headerTitle}>RESTAURANT</AppText>
+            <AppText
+              variant="sectionLabel"
+              lineContract="singleLine"
+              style={styles.headerTitle}
+            >
+              RESTAURANT
+            </AppText>
           </View>
 
           <View style={styles.selectorRow}>
@@ -374,7 +380,9 @@ export default function RestaurantLesson() {
                   },
                 ]}
               >
-                <AppText variant="label" lineContract="singleLine"
+                <AppText
+                  variant="label"
+                  lineContract="singleLine"
                   style={[
                     styles.selectorText,
                     activeScene.id === scene.id && { color: scene.accent },
@@ -388,7 +396,9 @@ export default function RestaurantLesson() {
 
           <View style={styles.toolbox}>
             <View style={styles.toolboxHeader}>
-              <AppText variant="sectionLabel" style={styles.toolboxTitle}>Expressions clés</AppText>
+              <AppText variant="sectionLabel" style={styles.toolboxTitle}>
+                Expressions clés
+              </AppText>
               <View
                 style={[
                   styles.toolboxLine,
@@ -400,7 +410,8 @@ export default function RestaurantLesson() {
             <View style={styles.expressionGrid}>
               {activeScene.expressions.map((exp, i) => {
                 const cardId = `${activeScene.id}-${i}`;
-                const audioSource = RESTAURANT_EXPRESSION_AUDIO[activeScene.id][i];
+                const audioSource =
+                  RESTAURANT_EXPRESSION_AUDIO[activeScene.id][i];
                 const isActive = selectedWord === cardId;
 
                 return (
@@ -433,9 +444,21 @@ export default function RestaurantLesson() {
                       />
                       <View style={styles.expContent}>
                         <View style={styles.expTopRow}>
-                          <View style={{ flex: 1, minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH }}>
-                            <AppText variant="koreanPrimary" script="korean" style={styles.expWord}>{exp.word}</AppText>
-                            <AppText variant="caption"
+                          <View
+                            style={{
+                              flex: 1,
+                              minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH,
+                            }}
+                          >
+                            <AppText
+                              variant="koreanPrimary"
+                              script="korean"
+                              style={styles.expWord}
+                            >
+                              {exp.word}
+                            </AppText>
+                            <AppText
+                              variant="caption"
                               style={[
                                 styles.expRom,
                                 { color: activeScene.accent },
@@ -454,7 +477,9 @@ export default function RestaurantLesson() {
                               },
                             ]}
                           >
-                            <AppText variant="caption" lineContract="singleLine"
+                            <AppText
+                              variant="caption"
+                              lineContract="singleLine"
                               style={[
                                 styles.listenIcon,
                                 { color: activeScene.accent },
@@ -462,12 +487,26 @@ export default function RestaurantLesson() {
                             >
                               {isActive ? "●" : "▶"}
                             </AppText>
-                            <AppText variant="label" lineContract="singleLine" style={styles.listenText}>ÉCOUTER</AppText>
+                            <AppText
+                              variant="label"
+                              lineContract="singleLine"
+                              style={styles.listenText}
+                            >
+                              ÉCOUTER
+                            </AppText>
                           </View>
                         </View>
 
-                        <AppText variant="bodyStrong" style={styles.expMean}>{exp.mean}</AppText>
-                        <AppText variant="bodySecondary" tone="muted" style={styles.expContext}>{exp.context}</AppText>
+                        <AppText variant="bodyStrong" style={styles.expMean}>
+                          {exp.mean}
+                        </AppText>
+                        <AppText
+                          variant="bodySecondary"
+                          tone="muted"
+                          style={styles.expContext}
+                        >
+                          {exp.context}
+                        </AppText>
                       </View>
                     </BlurView>
                   </Pressable>
@@ -565,8 +604,7 @@ const styles = StyleSheet.create({
     color: COLORS.txt,
     marginBottom: 2,
   },
-  expRom: {
-  },
+  expRom: {},
   expMean: {
     color: COLORS.txt,
     marginBottom: 4,
@@ -583,8 +621,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  listenIcon: {
-  },
+  listenIcon: {},
   listenText: {
     color: "rgba(255,255,255,0.78)",
   },
