@@ -22,6 +22,7 @@ import {
   type CafeMission,
 } from "../../data/lesson/cafe/cafeMissions";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
+import { saveHomeResumeContext } from "../../lib/homeResume";
 import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
@@ -78,20 +79,35 @@ export default function CafeMissionsScreen() {
     setSelectedMission(mission);
   };
 
-  const startSelectedMission = () => {
+  const startSelectedMission = async () => {
     if (!selectedMission) return;
 
     const mission = selectedMission;
     setSelectedMission(null);
-    setTrack("cafe_ia");
 
-    router.push({
-      pathname: "/lesson/cafeIA",
-      params: {
-        mode,
-        mission: mission.id,
-      },
-    });
+    try {
+      await Promise.all([
+        setTrack("cafe_ia"),
+        saveHomeResumeContext({
+          track: "cafe_ia",
+          title: mission.title,
+          detail: mode === "real" ? "Simulation réelle" : "Simulation guidée",
+          route: "/lesson/cafeIA",
+          routeParams: {
+            mode,
+            mission: mission.id,
+          },
+        }),
+      ]);
+    } finally {
+      router.push({
+        pathname: "/lesson/cafeIA",
+        params: {
+          mode,
+          mission: mission.id,
+        },
+      });
+    }
   };
 
   return (
