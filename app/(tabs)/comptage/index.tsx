@@ -1,4 +1,5 @@
 import { BlurView } from "expo-blur";
+import { router } from "expo-router";
 import { AppBackButton } from "../../../components/ui/app-back-button";
 import React, { useEffect, useMemo } from "react";
 import {
@@ -12,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useStore } from "../../../_store";
 import { HubHero } from "../../../components/hub/HubHero";
 import { SectionHeader } from "../../../components/hub/SectionHeader";
 import { ModuleCard } from "../../../components/ModuleCard";
@@ -21,20 +23,24 @@ import {
   SeoulMidnightGlass,
 } from "../../../constants/theme";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
+import { saveHomeResumeContext } from "../../../lib/homeResume";
+import { usePaywall } from "../../../lib/paywall/PaywallProvider";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/comptage.jpg");
 
-// ----------------------------------------------
-// DESIGN TOKENS
-// ----------------------------------------------
 const BG_DEEP = SeoulMidnightGlass.colors.bgDeep;
 const TXT = SeoulMidnightGlass.colors.text;
 const COUNTING_ACCENT = HubModuleAccents.counting.base;
 
-// ----------------------------------------------
-// MODULES (STRATÉGIE PRODUIT OPTIMISÉE)
-// ----------------------------------------------
-const MODULES = [
+type CountingModule = {
+  title: string;
+  sub: string;
+  color: string;
+  route: string;
+  isLocked: boolean;
+};
+
+const MODULES: CountingModule[] = [
   {
     title: "Nombres de base",
     sub: "Système coréen natif",
@@ -93,11 +99,10 @@ const MODULES = [
   },
 ];
 
-// ----------------------------------------------
-// SCREEN
-// ----------------------------------------------
 export default function ComptageHub() {
   const responsive = useResponsiveLayout({ maxWidth: 920 });
+  const { hasPremiumAccess } = usePaywall();
+  const { setTrack } = useStore();
   const gridColumns = responsive.getColumns({
     minColumnWidth: 330,
     maxColumns: 2,
@@ -107,6 +112,25 @@ export default function ComptageHub() {
     gridColumns,
     responsive.gridGap,
   );
+
+  const openModule = async (module: CountingModule) => {
+    if (module.isLocked && !hasPremiumAccess) {
+      router.push("/premium");
+      return;
+    }
+
+    await Promise.all([
+      setTrack("numbers"),
+      saveHomeResumeContext({
+        track: "numbers",
+        title: module.title,
+        detail: module.sub,
+        route: module.route,
+      }),
+    ]);
+
+    router.push(module.route as any);
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -146,7 +170,6 @@ export default function ComptageHub() {
               accentColor={COUNTING_ACCENT}
             />
 
-            {/* CARDS */}
             <View
               style={[
                 styles.grid,
@@ -154,19 +177,21 @@ export default function ComptageHub() {
                 { gap: responsive.gridGap },
               ]}
             >
-              {MODULES.map((m, i) => (
+              {MODULES.map((module, index) => (
                 <AnimatedItem
-                  key={m.route}
-                  index={i}
+                  key={module.route}
+                  index={index}
                   style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
                 >
                   <ModuleCard
-                    title={m.title}
-                    subtitle={m.sub}
-                    href={m.route}
-                    accentColor={m.color}
-                    icon={m.title.charAt(0)}
-                    requiresPremium={m.isLocked}
+                    title={module.title}
+                    subtitle={module.sub}
+                    onPress={() => {
+                      void openModule(module);
+                    }}
+                    accentColor={module.color}
+                    icon={module.title.charAt(0)}
+                    requiresPremium={module.isLocked}
                     metaLabel="PARCOURS DE COMPTAGE"
                     accessibilityContext="ce parcours de comptage"
                     visualVariant="legacyGlass"
@@ -191,9 +216,6 @@ function UnifiedNavHeader() {
   );
 }
 
-// ----------------------------------------------
-// ANIMATION
-// ----------------------------------------------
 function AnimatedItem({
   children,
   index,
@@ -240,9 +262,6 @@ function AnimatedItem({
   );
 }
 
-// ----------------------------------------------
-// STYLES
-// ----------------------------------------------
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
