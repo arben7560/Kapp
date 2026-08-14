@@ -25,15 +25,35 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
 import { HubModuleAccents } from "../../constants/theme";
-import { HANGUL_PROGRESS_IDS } from "../../data/hangul/curriculum";
+import {
+  HANGUL_MODULES,
+  HANGUL_PROGRESS_IDS,
+} from "../../data/hangul/curriculum";
+import {
+  GRAMMAR_STAGE_BY_ID,
+  GRAMMAR_STAGE_IDS,
+} from "../../data/grammar";
+import {
+  EXERCISES_BY_KIND,
+  TRAINING_ORDER,
+  type ExerciseKind,
+} from "../../data/listen/activeExercises";
+import { cafeMissions } from "../../data/lesson/cafe/cafeMissions";
+import { metroMissions } from "../../data/lesson/metro/metroMissions";
+import { restaurantMissions } from "../../data/lesson/restaurant/restaurantMissions";
+import { aeroportMissions } from "../../data/lesson/aeroport/aeroportMissions";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import type { DailyStreakState } from "../../lib/dailyStreak";
-import { getGrammarJourneyCompletion } from "../../lib/grammar";
 import {
   readHomeResumeContext,
   type HomeResumeContext,
 } from "../../lib/homeResume";
+import {
+  getGrammarJourneyCompletion,
+  getGrammarStageState,
+} from "../../lib/grammar";
+import { buildProgressId } from "../../lib/progressIds";
 
 const BACKGROUND_SOURCE = require("../../assets/images/seoulhub.jpg");
 
@@ -190,6 +210,274 @@ const RESUME_SEQUENCES: Record<string, any> = {
   },
 };
 
+const RESUME_TRACK_LABELS: Record<string, string> = {
+  hangul: "Hangul",
+  grammar: "Grammaire",
+  vocab: "Vocabulaire",
+  numbers: "Comptage",
+  dialogs: "Conversation",
+  listen: "Écoute",
+  cafe_ia: "Conversation · Café",
+  metro_ia: "Conversation · Métro",
+  restaurant_ia: "Conversation · Restaurant",
+  aeroport_ia: "Conversation · Aéroport",
+};
+
+const LISTEN_KIND_LABELS: Record<ExerciseKind, string> = {
+  dictation: "Orthographe",
+  situation: "Compréhension",
+  gap: "Mot manquant",
+  order: "Syntaxe",
+  reaction: "Réaction",
+};
+
+const MISSION_RESUME_CONFIG: Record<
+  string,
+  {
+    prefix: string;
+    place: string;
+    route: string;
+    missions: ReadonlyArray<{ id: string; title: string }>;
+  }
+> = {
+  cafe_ia: {
+    prefix: "cafe",
+    place: "Café",
+    route: "/lesson/cafeIA",
+    missions: cafeMissions,
+  },
+  metro_ia: {
+    prefix: "metro",
+    place: "Métro",
+    route: "/lesson/metroIA",
+    missions: metroMissions,
+  },
+  restaurant_ia: {
+    prefix: "restaurant",
+    place: "Restaurant",
+    route: "/lesson/restaurantIA",
+    missions: restaurantMissions,
+  },
+  aeroport_ia: {
+    prefix: "aeroport",
+    place: "Aéroport",
+    route: "/lesson/aeroportIA",
+    missions: aeroportMissions,
+  },
+};
+
+function getStoredResumeSequence(
+  currentTrack: string | null,
+  resumeContext: HomeResumeContext | null,
+  baseSequence: any,
+) {
+  if (!currentTrack || resumeContext?.track !== currentTrack) return null;
+
+  const trackLabel = RESUME_TRACK_LABELS[currentTrack] ?? "Parcours";
+
+  return {
+    ...baseSequence,
+    title: resumeContext.title,
+    label: resumeContext.title,
+    route: resumeContext.route,
+    routeParams: resumeContext.routeParams,
+    resumeMeta: `${trackLabel} · ${resumeContext.detail}`,
+  };
+}
+
+function getHangulResumeSequence(progress: any, baseSequence: any) {
+  const lessons = progress.hangulProgress?.lessons ?? {};
+
+  const activeQuizModule = HANGUL_MODULES.find(
+    (module) => lessons[module.id]?.activeQuiz,
+  );
+  const activeSceneModule = [...HANGUL_MODULES]
+    .reverse()
+    .find(
+      (module) =>
+        lessons[module.id]?.currentSceneId && !progress.completed?.[module.id],
+    );
+  const activeModule =
+    activeQuizModule ??
+    activeSceneModule ??
+    HANGUL_MODULES.find((module) => !progress.completed?.[module.id]) ??
+    HANGUL_MODULES[HANGUL_MODULES.length - 1];
+
+  if (!activeModule) return null;
+
+  const lesson = lessons[activeModule.id];
+  const sceneId = lesson?.activeQuiz?.sceneId ?? lesson?.currentSceneId;
+  const activeScene =
+    activeModule.scenes.find((scene) => scene.id === sceneId) ??
+    activeModule.scenes.find((scene) => !lesson?.completedScenes?.[scene.id]) ??
+    activeModule.scenes[activeModule.scenes.length - 1];
+
+  if (!activeScene) return null;
+
+  const activeQuiz =
+    lesson?.activeQuiz?.sceneId === activeScene.id ? lesson.activeQuiz : undefined;
+  const questionNumber = activeQuiz
+    ? Math.min(activeQuiz.questionIndex + 1, activeQuiz.questions.length)
+    : null;
+  const detail = questionNumber
+    ? `Hangul · ${activeModule.title} · Quiz ${questionNumber} / ${activeQuiz.questions.length}`
+    : `Hangul · ${activeModule.title}`;
+
+  return {
+    ...baseSequence,
+    title: activeScene.title,
+    label: activeScene.title,
+    route: activeModule.route,
+    resumeMeta: detail,
+  };
+}
+
+function getGrammarResumeSequence(progress: any, baseSequence: any) {
+  const grammarProgress = progress.grammarProgress;
+  const resumableStageId =
+    grammarProgress.lastStageId &&
+    grammarProgress.stages[grammarProgress.lastStageId]?.activeSession &&
+    !grammarProgress.stages[grammarProgress.lastStageId]?.activeSession?.completedAt
+      ? grammarProgress.lastStageId
+      : undefined;
+
+  const stageId =
+    resumableStageId ??
+    GRAMMAR_STAGE_IDS.find((candidate) => {
+      const state = getGrammarStageState(grammarProgress, candidate);
+      return state !== "practiced" && state !== "mastered";
+    }) ??
+    grammarProgress.lastStageId ??
+    GRAMMAR_STAGE_IDS[GRAMMAR_STAGE_IDS.length - 1];
+
+  const stage = GRAMMAR_STAGE_BY_ID[stageId];
+  if (!stage) return null;
+
+  const session = grammarProgress.stages[stageId]?.activeSession;
+  const questionNumber =
+    session && !session.completedAt
+      ? Math.min(session.questionIndex + 1, session.questions.length)
+      : null;
+  const detail = questionNumber
+    ? `Grammaire · Exercice ${questionNumber} / ${session.questions.length}`
+    : `Grammaire · Étape ${stage.number} / ${GRAMMAR_STAGE_IDS.length}`;
+
+  return {
+    ...baseSequence,
+    title: stage.title,
+    label: stage.title,
+    route: "/grammar/[stageId]",
+    routeParams: { stageId },
+    resumeMeta: detail,
+  };
+}
+
+function getListenResumeSequence(progress: any, baseSequence: any) {
+  for (let trainingIndex = 0; trainingIndex < TRAINING_ORDER.length; trainingIndex += 1) {
+    const kind = TRAINING_ORDER[trainingIndex];
+    const exercises = EXERCISES_BY_KIND[kind];
+
+    for (let exerciseIndex = 0; exerciseIndex < exercises.length; exerciseIndex += 1) {
+      const exercise = exercises[exerciseIndex];
+      const progressId = buildProgressId("listen", exercise.id);
+
+      if (!progress.completed?.[progressId]) {
+        return {
+          ...baseSequence,
+          title: exercise.title,
+          label: exercise.title,
+          route: "/listen",
+          routeParams: {
+            training: kind,
+            exercise: String(exerciseIndex),
+          },
+          resumeMeta: `Écoute · ${LISTEN_KIND_LABELS[kind]} · ${exercise.theme} · Exercice ${exerciseIndex + 1} / ${exercises.length}`,
+        };
+      }
+    }
+  }
+
+  return {
+    ...baseSequence,
+    title: "Révision d'écoute",
+    label: "Révision d'écoute",
+    route: "/listen",
+    resumeMeta: "Écoute · Parcours terminé · Révision libre",
+  };
+}
+
+function getMissionResumeSequence(
+  currentTrack: string | null,
+  progress: any,
+  baseSequence: any,
+) {
+  if (!currentTrack) return null;
+  const config = MISSION_RESUME_CONFIG[currentTrack];
+  if (!config) return null;
+
+  const resumeByProgressId = new Map<
+    string,
+    { mission: { id: string; title: string }; mode: "guided" | "real" }
+  >();
+
+  for (const mission of config.missions) {
+    for (const mode of ["guided", "real"] as const) {
+      resumeByProgressId.set(buildProgressId(config.prefix, mode, mission.id), {
+        mission,
+        mode,
+      });
+    }
+  }
+
+  const completedIds = Object.keys(progress.completed ?? {});
+  let match:
+    | { mission: { id: string; title: string }; mode: "guided" | "real" }
+    | undefined;
+
+  for (let index = completedIds.length - 1; index >= 0; index -= 1) {
+    const candidate = resumeByProgressId.get(completedIds[index]);
+    if (candidate) {
+      match = candidate;
+      break;
+    }
+  }
+
+  if (!match) return null;
+
+  return {
+    ...baseSequence,
+    title: match.mission.title,
+    label: match.mission.title,
+    route: config.route,
+    routeParams: { mode: match.mode, mission: match.mission.id },
+    resumeMeta: `Conversation · ${config.place} · ${
+      match.mode === "real" ? "Simulation réelle" : "Simulation guidée"
+    }`,
+  };
+}
+
+function getDerivedResumeSequence(
+  currentTrack: string | null,
+  progress: any,
+  baseSequence: any,
+) {
+  switch (currentTrack) {
+    case "hangul":
+      return getHangulResumeSequence(progress, baseSequence);
+    case "grammar":
+      return getGrammarResumeSequence(progress, baseSequence);
+    case "listen":
+      return getListenResumeSequence(progress, baseSequence);
+    case "cafe_ia":
+    case "metro_ia":
+    case "restaurant_ia":
+    case "aeroport_ia":
+      return getMissionResumeSequence(currentTrack, progress, baseSequence);
+    default:
+      return null;
+  }
+}
+
 // ──────────────────────────────────────────────
 // SEOUL HERO
 // ──────────────────────────────────────────────
@@ -288,9 +576,8 @@ export default function Home() {
     responsive.gridGap,
   );
 
-  const [resumeContext, setResumeContext] = useState<HomeResumeContext | null>(
-    null,
-  );
+  const [resumeContext, setResumeContext] =
+    useState<HomeResumeContext | null>(null);
   const currentTrack = progress.learningTrack;
 
   const baseActiveSeq =
@@ -298,16 +585,18 @@ export default function Home() {
     SEQUENCES.find((s) => s.trackKey === currentTrack) ??
     SEQUENCES[0];
 
+  const storedResumeSequence = getStoredResumeSequence(
+    currentTrack,
+    resumeContext,
+    baseActiveSeq,
+  );
+  const derivedResumeSequence = getDerivedResumeSequence(
+    currentTrack,
+    progress,
+    baseActiveSeq,
+  );
   const activeSeq =
-    currentTrack === "vocab" && resumeContext?.track === "vocab"
-      ? {
-          ...baseActiveSeq,
-          title: resumeContext.title,
-          label: resumeContext.title,
-          route: resumeContext.route,
-          resumeMeta: `Vocabulaire · ${resumeContext.detail}`,
-        }
-      : baseActiveSeq;
+    storedResumeSequence ?? derivedResumeSequence ?? baseActiveSeq;
 
   const activeSeqProgress = getSequenceProgress(activeSeq.trackKey, progress);
 
@@ -879,7 +1168,9 @@ function StreakHeaderBadge({
           <Flame
             size={16}
             strokeWidth={2.25}
-            color={isValidated ? STREAK_ACCENT.base : "rgba(241,245,249,0.58)"}
+            color={
+              isValidated ? STREAK_ACCENT.base : "rgba(241,245,249,0.58)"
+            }
             fill={isValidated ? STREAK_ACCENT.base : "transparent"}
           />
 
