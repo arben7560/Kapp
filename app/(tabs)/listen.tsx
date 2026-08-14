@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AccessibilityInfo,
@@ -20,6 +21,7 @@ import {
 } from "../../data/listen/activeExercises";
 import { useVocAudio } from "../../hooks/useVocAudio";
 import { completeDailyActivity } from "../../lib/dailyStreak";
+import { saveHomeResumeContext } from "../../lib/homeResume";
 import { shuffleListenChoices } from "../../lib/listenExerciseChoices";
 import { canValidateListenAnswer } from "../../lib/listenValidation";
 import { buildProgressId } from "../../lib/progressIds";
@@ -77,15 +79,57 @@ const KIND_LABEL: Record<ExerciseKind, { mini: string; skill: string }> = {
   reaction: { mini: "Réaction", skill: "Conversation" },
 };
 
+function normalizeParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function getRequestedListenPosition(
+  trainingParam: string | undefined,
+  exerciseParam: string | undefined,
+) {
+  const requestedTrainingIndex = TRAINING_ORDER.indexOf(
+    trainingParam as ExerciseKind,
+  );
+  const trainingIndex = requestedTrainingIndex >= 0 ? requestedTrainingIndex : 0;
+  const trainingKind = TRAINING_ORDER[trainingIndex];
+  const exercises = EXERCISES_BY_KIND[trainingKind];
+  const parsedExerciseIndex = Number.parseInt(exerciseParam ?? "", 10);
+  const exerciseIndex =
+    Number.isInteger(parsedExerciseIndex) &&
+    parsedExerciseIndex >= 0 &&
+    parsedExerciseIndex < exercises.length
+      ? parsedExerciseIndex
+      : 0;
+
+  return { trainingIndex, exerciseIndex };
+}
+
 export default function ListenScreen() {
-  const { complete, isHydrated } = useStore();
+  const params = useLocalSearchParams<{
+    training?: string | string[];
+    exercise?: string | string[];
+  }>();
+  const requestedTraining = normalizeParam(params.training);
+  const requestedExercise = normalizeParam(params.exercise);
+  const requestedPosition = getRequestedListenPosition(
+    requestedTraining,
+    requestedExercise,
+  );
+  const { complete, isHydrated, setTrack } = useStore();
   const scrollRef = useRef<ScrollView | null>(null);
   const validationLockRef = useRef(false);
   const dailyActivityPromiseRef = useRef<ReturnType<
     typeof completeDailyActivity
   > | null>(null);
-  const [trainingIndex, setTrainingIndex] = useState(0);
-  const [exerciseIndex, setExerciseIndex] = useState(0);
+  const resumeRequestKeyRef = useRef(
+    `${requestedTraining ?? ""}:${requestedExercise ?? ""}`,
+  );
+  const [trainingIndex, setTrainingIndex] = useState(
+    requestedPosition.trainingIndex,
+  );
+  const [exerciseIndex, setExerciseIndex] = useState(
+    requestedPosition.exerciseIndex,
+  );
   const [selected, setSelected] = useState<number | null>(null);
   const [picked, setPicked] = useState<number[]>([]);
   const [checked, setChecked] = useState(false);
@@ -116,6 +160,48 @@ export default function ListenScreen() {
   const hasCompletedCurrentAudio = !!completedAudioIds[item.id];
   const isPlayingCurrentAudio = playingAudioId === item.id;
   const isLastExercise = exerciseIndex === exercises.length - 1;
+
+  useEffect(() => {
+    const requestKey = `${requestedTraining ?? ""}:${requestedExercise ?? ""}`;
+    if (!requestedTraining || requestKey === resumeRequestKeyRef.current) return;
+
+    const nextPosition = getRequestedListenPosition(
+      requestedTraining,
+      requestedExercise,
+    );
+    resumeRequestKeyRef.current = requestKey;
+    validationLockRef.current = false;
+    clearAudioError();
+    setTrainingIndex(nextPosition.trainingIndex);
+    setExerciseIndex(nextPosition.exerciseIndex);
+    setSelected(null);
+    setPicked([]);
+    setChecked(false);
+  }, [clearAudioError, requestedExercise, requestedTraining]);
+
+  useEffect(() => {
+    void Promise.all([
+      setTrack("listen"),
+      saveHomeResumeContext({
+        track: "listen",
+        title: item.title,
+        detail: `${meta.mini} · ${item.theme} · Exercice ${exerciseIndex + 1} / ${exercises.length}`,
+        route: "/listen",
+        routeParams: {
+          training: trainingKind,
+          exercise: String(exerciseIndex),
+        },
+      }),
+    ]).catch(() => null);
+  }, [
+    exerciseIndex,
+    exercises.length,
+    item.theme,
+    item.title,
+    meta.mini,
+    setTrack,
+    trainingKind,
+  ]);
 
   useEffect(() => {
     return stopAudio;
