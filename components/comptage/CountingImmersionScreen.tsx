@@ -1,5 +1,6 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { useLocalSearchParams, usePathname } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -14,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { useVocAudio } from "../../hooks/useVocAudio";
+import { saveHomeResumeContext } from "../../lib/homeResume";
 import { trackSceneCompleted } from "../../lib/immersionStreak";
 import { buildProgressId } from "../../lib/progressIds";
 import { AnimatedAppText, AppText } from "../app-text";
@@ -62,6 +64,16 @@ const COLORS = {
   bg: "#020306",
 };
 
+function normalizeParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function clampMessageCount(value: string | undefined, max: number) {
+  const parsed = Number.parseInt(value ?? "", 10);
+  if (!Number.isFinite(parsed)) return 1;
+  return Math.min(Math.max(parsed, 1), Math.max(max, 1));
+}
+
 export default function CountingImmersionScreen({
   scenes,
   backLabel,
@@ -71,8 +83,22 @@ export default function CountingImmersionScreen({
   stopAudioOnDialogueChange = false,
 }: Props) {
   const { complete } = useStore();
-  const [activeScene, setActiveScene] = useState(scenes[0]);
-  const [visibleMessages, setVisibleMessages] = useState(1);
+  const pathname = usePathname();
+  const params = useLocalSearchParams<{
+    scene?: string | string[];
+    message?: string | string[];
+  }>();
+  const requestedSceneId = normalizeParam(params.scene);
+  const requestedMessage = normalizeParam(params.message);
+  const requestedScene = scenes.find((scene) => scene.id === requestedSceneId);
+  const initialScene = requestedScene ?? scenes[0];
+  const initialVisibleMessages = clampMessageCount(
+    requestedMessage,
+    initialScene.dialogue.length,
+  );
+
+  const [activeScene, setActiveScene] = useState(initialScene);
+  const [visibleMessages, setVisibleMessages] = useState(initialVisibleMessages);
   const [isTyping, setIsTyping] = useState(false);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
@@ -81,10 +107,17 @@ export default function CountingImmersionScreen({
   const tapHintPulse = useRef(new Animated.Value(0)).current;
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const completedSceneIdsRef = useRef<Set<string>>(new Set());
+  const preserveInitialPositionRef = useRef(Boolean(requestedScene));
 
   useEffect(() => {
     fadeAnim.setValue(0);
-    setVisibleMessages(1);
+
+    if (preserveInitialPositionRef.current) {
+      preserveInitialPositionRef.current = false;
+    } else {
+      setVisibleMessages(1);
+    }
+
     setIsTyping(false);
     setSelectedWord(null);
     stopAudio();
@@ -101,6 +134,24 @@ export default function CountingImmersionScreen({
       useNativeDriver: true,
     }).start();
   }, [activeScene, fadeAnim, stopAudio]);
+
+  useEffect(() => {
+    const detail = `${backLabel} · Dialogue ${Math.min(
+      visibleMessages,
+      activeScene.dialogue.length,
+    )} / ${activeScene.dialogue.length}`;
+
+    void saveHomeResumeContext({
+      track: "numbers",
+      title: activeScene.title,
+      detail,
+      route: pathname,
+      routeParams: {
+        scene: activeScene.id,
+        message: String(visibleMessages),
+      },
+    }).catch(() => null);
+  }, [activeScene, backLabel, pathname, visibleMessages]);
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -420,7 +471,10 @@ export default function CountingImmersionScreen({
                     <BlurView
                       intensity={18}
                       tint="dark"
-                      style={[styles.vocabCard, isActive && { borderColor: activeScene.accent }]}
+                      style={[
+                        styles.vocabCard,
+                        isActive && { borderColor: activeScene.accent },
+                      ]}
                     >
                       <View
                         style={[
