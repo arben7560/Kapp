@@ -48,6 +48,7 @@ const AIRPORT_EXPRESSION_AUDIO: Record<Scene["id"], readonly number[]> = {
     require("../../assets/ai/aeroport-memo/voyageur-3.mp3"),
     require("../../assets/ai/aeroport-memo/voyageur-4.mp3"),
     require("../../assets/ai/aeroport-memo/voyageur-5.mp3"),
+    require("../../assets/ai/aeroport-memo/agent-7.mp3"),
     require("../../assets/ai/aeroport-memo/voyageur-6.mp3"),
     require("../../assets/ai/aeroport-memo/voyageur-7.mp3"),
     require("../../assets/ai/aeroport-memo/voyageur-8.mp3"),
@@ -61,6 +62,7 @@ type Expression = {
   rom: string;
   mean: string;
   context: string;
+  pronunciationNote?: string;
 };
 
 type Scene = {
@@ -167,6 +169,14 @@ const TRAVELER_TOOLBOX_EXPRESSIONS: Expression[] = [
     rom: "T-money-ro tal su isseoyo?",
     mean: "Puis-je le prendre avec une T-money ?",
     context: "Pour vérifier si la carte fonctionne sur ce trajet.",
+  },
+  {
+    word: "승강장",
+    rom: "Seunggangjang",
+    mean: "Quai",
+    context: "Mot clé à connaître avant de demander où monter dans le train.",
+    pronunciationNote:
+      "Prononciation : « seung-gang-djang ». Sur « 승 », garde les lèvres peu arrondies pour ㅡ ; « 강 » se lit « gang » et « 장 » sonne comme « djang ».",
   },
   {
     word: "승강장은 어디예요?",
@@ -372,6 +382,15 @@ export default function AirportLessonScreen() {
                             >
                               {exp.rom}
                             </AppText>
+                            {exp.pronunciationNote ? (
+                              <AppText
+                                variant="caption"
+                                tone="muted"
+                                style={styles.expPronunciation}
+                              >
+                                {exp.pronunciationNote}
+                              </AppText>
+                            ) : null}
                           </View>
 
                           <View
@@ -495,6 +514,11 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   expRom: {
+  },
+  expPronunciation: {
+    color: COLORS.muted,
+    marginTop: 5,
+    maxWidth: 420,
   },
   expMean: {
     color: COLORS.txt,
