@@ -1,7 +1,12 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
-import { Compass, MessageCircleMore, Settings } from "lucide-react-native";
+import {
+  Compass,
+  Flame,
+  MessageCircleMore,
+  ShieldCheck,
+} from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -216,6 +221,7 @@ export default function Home() {
   const immersionSequences = SEQUENCES.filter((s) => s.type === "immersion");
 
   const pulseAnim = useRef(new Animated.Value(0.4)).current;
+  const streakPulse = useRef(new Animated.Value(1)).current;
   const [seoulTime, setSeoulTime] = useState(formatSeoulTime);
 
   useEffect(() => {
@@ -236,6 +242,24 @@ export default function Home() {
       ]),
     ).start();
   }, [pulseAnim]);
+
+  useEffect(() => {
+    streakPulse.setValue(1);
+    Animated.sequence([
+      Animated.timing(streakPulse, {
+        toValue: 1.06,
+        duration: 180,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.spring(streakPulse, {
+        toValue: 1,
+        friction: 5,
+        tension: 120,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [streak?.currentStreak, streak?.isTodayCompleted, streakPulse]);
 
   useEffect(() => {
     let minuteInterval: ReturnType<typeof setInterval> | undefined;
@@ -370,31 +394,19 @@ export default function Home() {
                 </View>
               </View>
 
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Paramètres"
-                accessibilityState={{ disabled: true }}
-                aria-disabled={true}
-                disabled
-                hitSlop={8}
-                style={({ pressed }) => [
-                  styles.settingsTrigger,
-                  responsive.isCompact && styles.settingsTriggerCompact,
-                  pressed && styles.settingsTriggerPressed,
+              <Animated.View
+                style={[
+                  styles.streakHeaderSlot,
+                  responsive.isCompact && styles.streakHeaderSlotCompact,
+                  { transform: [{ scale: streakPulse }] },
                 ]}
               >
-                <BlurView
-                  intensity={34}
-                  tint="dark"
-                  style={styles.settingsBlur}
-                >
-                  <Settings
-                    size={20}
-                    strokeWidth={2.15}
-                    color="rgba(241,245,249,0.84)"
-                  />
-                </BlurView>
-              </Pressable>
+                <StreakHeaderBadge
+                  compact={responsive.isCompact}
+                  streak={streak}
+                  onPress={() => router.push("/streak")}
+                />
+              </Animated.View>
             </View>
 
             {/* HERO - SEOUL IMMERSION */}
@@ -492,11 +504,6 @@ export default function Home() {
                 onPress={() => openSequence(activeSeq)}
               />
             </AnimatedFragment>
-
-            <DailyStreakCard
-              streak={streak}
-              onPress={() => router.push("/streak")}
-            />
 
             <View style={styles.sectionDivider}>
               <AppText variant="sectionLabel" style={styles.sectionTitle}>
@@ -705,139 +712,89 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
   );
 }
 
-function DailyStreakCard({
+function StreakHeaderBadge({
+  compact,
   onPress,
   streak,
 }: {
+  compact: boolean;
   onPress: () => void;
   streak: DailyStreakState | null;
 }) {
   const currentStreak = streak?.currentStreak ?? 0;
-  const longestStreak = streak?.longestStreak ?? 0;
-  const isValidated = streak?.isTodayCompleted ?? false;
   const freezesAvailable = streak?.freezesAvailable ?? 0;
-  const statusLabel = isValidated ? "Terminé" : "À commencer";
-  const helperText = isValidated
-    ? "Ta série est conservée. Les autres activités du jour restent du bonus."
-    : "Termine une activité aujourd'hui pour conserver ta série.";
+  const isValidated = streak?.isTodayCompleted ?? false;
+  const dayLabel = currentStreak > 1 ? "jours" : "jour";
 
   return (
     <Pressable
-      accessibilityRole="link"
-      accessibilityLabel={`Série quotidienne. ${currentStreak} ${currentStreak > 1 ? "jours" : "jour"}. ${statusLabel}`}
-      accessibilityState={{ selected: isValidated }}
-      aria-selected={isValidated}
+      accessibilityRole="button"
+      accessibilityLabel={`Série quotidienne : ${currentStreak} ${dayLabel}. ${isValidated ? "Objectif du jour atteint." : "Objectif du jour à compléter."} ${freezesAvailable} ${freezesAvailable > 1 ? "protections disponibles" : "protection disponible"}.`}
       accessibilityHint="Ouvre le calendrier de série"
-      hitSlop={6}
+      hitSlop={8}
       onPress={onPress}
+      style={({ pressed }) => [
+        styles.streakBadgePressable,
+        pressed && styles.streakBadgePressed,
+      ]}
     >
-      <BlurView intensity={42} tint="dark" style={styles.streakCard}>
+      <BlurView intensity={44} tint="dark" style={styles.streakBadgeBlur}>
         <LinearGradient
           colors={[
             STREAK_ACCENT.surfaceStrong,
             STREAK_ACCENT.surface,
-            "rgba(2,3,6,0.16)",
+            "rgba(2,3,6,0.32)",
           ]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
 
-        <View style={styles.streakAccent} />
-
-        <View style={styles.streakTopRow}>
-          <View style={styles.streakCounterBlock}>
-            <AppText variant="sectionLabel" style={styles.streakKicker}>
-              SÉRIE QUOTIDIENNE
-            </AppText>
-            <View style={styles.streakNumberRow}>
-              <View style={styles.streakSymbol}>
-                <AppText variant="caption" style={styles.streakSymbolText}>
-                  ST
-                </AppText>
-              </View>
-              <AppText variant="numericValue" style={styles.streakNumber}>
-                {currentStreak}
-              </AppText>
-              <AppText variant="caption" style={styles.streakUnit}>
-                {currentStreak > 1 ? "jours" : "jour"}
-              </AppText>
-            </View>
-          </View>
-
-          <View
+        <View style={styles.streakBadgePrimary}>
+          <Flame
+            size={16}
+            strokeWidth={2.25}
+            color={isValidated ? STREAK_ACCENT.base : "rgba(241,245,249,0.58)"}
+            fill={isValidated ? STREAK_ACCENT.base : "transparent"}
+          />
+          <AppText
+            variant="bodyStrong"
+            lineContract="singleLine"
             style={[
-              styles.streakStatus,
-              isValidated && styles.streakStatusValidated,
+              styles.streakBadgeValue,
+              isValidated && styles.streakBadgeValueActive,
             ]}
           >
-            <AppText
-              variant="label"
-              style={[
-                styles.streakStatusText,
-                isValidated && styles.streakStatusTextValidated,
-              ]}
-            >
-              {statusLabel}
-            </AppText>
-          </View>
-        </View>
-
-        <View style={styles.streakMessageBox}>
-          <AppText variant="bodyStrong" style={styles.streakMessageTitle}>
-            {isValidated ? "Objectif du jour atteint" : "Objectif du jour"}
-          </AppText>
-          <AppText
-            variant="bodySecondary"
-            tone="muted"
-            style={styles.streakGoal}
-          >
-            {helperText}
+            {currentStreak}
           </AppText>
         </View>
 
-        <View style={styles.streakMetrics}>
-          <View style={styles.streakMetricCard}>
-            <AppText variant="bodyStrong" style={styles.streakMetricValue}>
-              {longestStreak} j
-            </AppText>
-            <AppText
-              variant="caption"
-              tone="muted"
-              style={styles.streakMetricLabel}
-            >
-              Record
-            </AppText>
-          </View>
-          <View style={styles.streakMetricCard}>
-            <AppText variant="bodyStrong" style={styles.streakMetricValue}>
-              {freezesAvailable}
-            </AppText>
-            <AppText
-              variant="caption"
-              tone="muted"
-              style={styles.streakMetricLabel}
-            >
-              Protection de série
-            </AppText>
-          </View>
-          <View style={styles.streakMetricCard}>
-            <AppText variant="bodyStrong" style={styles.streakMetricValue}>
-              {isValidated ? "OK" : "1"}
-            </AppText>
-            <AppText
-              variant="caption"
-              tone="muted"
-              style={styles.streakMetricLabel}
-            >
-              {isValidated ? "Terminée" : "activité"}
-            </AppText>
-          </View>
-        </View>
+        {!compact ? (
+          <>
+            <View style={styles.streakBadgeDivider} />
+            <View style={styles.streakBadgeSecondary}>
+              <ShieldCheck
+                size={14}
+                strokeWidth={2.15}
+                color="rgba(103,232,249,0.72)"
+              />
+              <AppText
+                variant="caption"
+                lineContract="singleLine"
+                style={styles.streakBadgeFreezeValue}
+              >
+                {freezesAvailable}
+              </AppText>
+            </View>
+          </>
+        ) : null}
 
-        <AppText variant="caption" tone="soft" style={styles.streakOpenHint}>
-          Voir le calendrier et les badges
-        </AppText>
+        <View
+          style={[
+            styles.streakBadgeStatusDot,
+            isValidated && styles.streakBadgeStatusDotActive,
+          ]}
+        />
       </BlurView>
     </Pressable>
   );
@@ -1084,7 +1041,7 @@ const styles = StyleSheet.create({
     maxWidth: "100%",
   },
   headerIdentityCompact: {
-    paddingRight: 34,
+    paddingRight: 54,
   },
   brandGroup: { alignItems: "flex-start" },
   headerCityKr: {
@@ -1124,31 +1081,74 @@ const styles = StyleSheet.create({
     color: "rgba(224,242,254,0.40)",
     marginLeft: 11,
   },
-  settingsTrigger: {
+  streakHeaderSlot: {
     position: "absolute",
     right: 4,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  },
+  streakHeaderSlotCompact: {
+    right: 2,
+  },
+  streakBadgePressable: {
+    borderRadius: 999,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    backgroundColor: "rgba(2,3,6,0.42)",
+    borderColor: STREAK_ACCENT.cardBorder,
+    backgroundColor: "rgba(2,3,6,0.34)",
+    boxShadow: `0px 4px 16px ${STREAK_ACCENT.featuredShadow}`,
   },
-  settingsTriggerCompact: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+  streakBadgePressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
   },
-  settingsTriggerPressed: {
-    opacity: 0.72,
-  },
-  settingsBlur: {
-    flex: 1,
+  streakBadgeBlur: {
+    minHeight: 38,
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(2,3,6,0.30)",
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    position: "relative",
+    overflow: "hidden",
   },
+  streakBadgePrimary: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  streakBadgeValue: {
+    color: "rgba(241,245,249,0.78)",
+  },
+  streakBadgeValueActive: {
+    color: TXT,
+    ...textGlow(STREAK_ACCENT.selectedShadow, 8),
+  },
+  streakBadgeDivider: {
+    width: 1,
+    height: 16,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    marginHorizontal: 8,
+  },
+  streakBadgeSecondary: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  streakBadgeFreezeValue: {
+    color: "rgba(224,242,254,0.66)",
+  },
+  streakBadgeStatusDot: {
+    position: "absolute",
+    top: 5,
+    right: 5,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(241,245,249,0.20)",
+  },
+  streakBadgeStatusDotActive: {
+    backgroundColor: STREAK_ACCENT.base,
+    boxShadow: `0px 0px 7px ${STREAK_ACCENT.glow}`,
+  },
+
   // HERO - SEOUL IMMERSION
   heroBlock: {
     marginBottom: 20,
@@ -1223,7 +1223,7 @@ const styles = StyleSheet.create({
   },
 
   mainCardWrap: {
-    marginBottom: 32,
+    marginBottom: 12,
     borderRadius: 32,
     overflow: "hidden",
     borderWidth: 1,
@@ -1252,130 +1252,6 @@ const styles = StyleSheet.create({
   },
   progressFill: { height: "100%", borderRadius: 2 },
   progressText: { color: SOFT },
-
-  streakCard: {
-    borderRadius: 22,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: STREAK_ACCENT.cardBorder,
-    padding: 18,
-    marginTop: -14,
-    marginBottom: 28,
-  },
-  streakAccent: {
-    position: "absolute",
-    left: 0,
-    top: 14,
-    bottom: 14,
-    width: 3,
-    borderTopRightRadius: 8,
-    borderBottomRightRadius: 8,
-    backgroundColor: STREAK_ACCENT.base,
-    opacity: 0.85,
-  },
-  streakTopRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 14,
-  },
-  streakCounterBlock: {
-    flex: 1,
-  },
-  streakKicker: {
-    color: "rgba(241,245,249,0.48)",
-    marginBottom: 6,
-  },
-  streakNumberRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 7,
-  },
-  streakSymbol: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: STREAK_ACCENT.iconBorder,
-    backgroundColor: STREAK_ACCENT.iconSurface,
-    marginBottom: 6,
-  },
-  streakSymbolText: {
-    color: STREAK_ACCENT.base,
-  },
-  streakNumber: {
-    color: TXT,
-  },
-  streakUnit: {
-    color: "rgba(241,245,249,0.72)",
-    paddingBottom: 7,
-  },
-  streakStatus: {
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.14)",
-    paddingHorizontal: 11,
-    paddingVertical: 7,
-    backgroundColor: "rgba(255,255,255,0.04)",
-  },
-  streakStatusValidated: {
-    borderColor: STREAK_ACCENT.selectedBorder,
-    backgroundColor: STREAK_ACCENT.surface,
-  },
-  streakStatusText: {
-    color: "rgba(241,245,249,0.55)",
-  },
-  streakStatusTextValidated: {
-    color: STREAK_ACCENT.base,
-  },
-  streakMessageBox: {
-    marginTop: 14,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-    backgroundColor: "rgba(2,3,6,0.22)",
-    paddingHorizontal: 13,
-    paddingVertical: 12,
-  },
-  streakMessageTitle: {
-    color: TXT,
-    marginBottom: 5,
-  },
-  streakGoal: {
-    color: MUTED,
-    maxWidth: 620,
-  },
-  streakMetrics: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginTop: 12,
-  },
-  streakMetricCard: {
-    flex: 1,
-    minWidth: 68,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-    backgroundColor: "rgba(255,255,255,0.045)",
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-  },
-  streakMetricValue: {
-    color: TXT,
-  },
-  streakMetricLabel: {
-    color: "rgba(241,245,249,0.50)",
-    marginTop: 2,
-  },
-  streakOpenHint: {
-    color: STREAK_ACCENT.mutedText,
-    marginTop: 12,
-    textAlign: "center",
-  },
 
   // SECTION DIVIDERS
   sectionDivider: {
