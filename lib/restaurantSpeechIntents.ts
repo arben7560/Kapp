@@ -479,8 +479,11 @@ export const RESTAURANT_SPEECH_INTENTS: readonly RestaurantSpeechIntentDefinitio
       "카드로 계산할게요.",
       "카드로 결제할게요.",
       "카드로 해 주세요.",
+      "카드로 주세요.",
+      "카드로 좀 주세요.",
       "카드요.",
       "카드로 부탁드려요.",
+      "카드로 부탁해요.",
     ],
     conceptTokens: ["카드"],
     predicateFamilies: SHARED_PAYMENT_FAMILIES,
@@ -504,8 +507,11 @@ export const RESTAURANT_SPEECH_INTENTS: readonly RestaurantSpeechIntentDefinitio
       "현금으로 계산할게요.",
       "현금으로 결제할게요.",
       "현금으로 해 주세요.",
+      "현금으로 주세요.",
+      "현금으로 좀 주세요.",
       "현금이요.",
       "현금으로 부탁드려요.",
+      "현금으로 부탁해요.",
     ],
     conceptTokens: ["현금"],
     predicateFamilies: SHARED_PAYMENT_FAMILIES,
@@ -668,6 +674,29 @@ function hasRequestSpeechAct(value: string) {
     "챙겨",
     "버려",
     "필요해",
+  ]);
+}
+
+function hasPaymentMethodRequestSpeechAct(
+  value: string,
+  definition: RestaurantSpeechIntentDefinition,
+) {
+  if (definition.kind !== "payment") return false;
+
+  const paymentMethod =
+    definition.id === "card-payment"
+      ? normalizeKoreanSpeech("카드로")
+      : normalizeKoreanSpeech("현금으로");
+
+  if (!value.includes(paymentMethod)) return false;
+
+  return includesAny(value, [
+    "주세요",
+    "줘요",
+    "주실래요",
+    "주시겠어요",
+    "부탁드려요",
+    "부탁해요",
   ]);
 }
 
@@ -1404,6 +1433,10 @@ function evaluateDefinition(
     value === normalizeKoreanSpeech(choice.korean);
   const hasConcept = containsExplicitConcept(value, definition);
   const hasPredicate = hasCompatiblePredicate(value, definition);
+  const paymentMethodRequest = hasPaymentMethodRequestSpeechAct(
+    value,
+    definition,
+  );
   const terse = definition.allowTerse && isTerseConcept(value, definition);
   const hasExpectedOrderQuantity =
     (definition.kind === "meat-order" || definition.kind === "side-order") &&
@@ -1475,7 +1508,12 @@ function evaluateDefinition(
       return null;
     }
   } else if (definition.kind === "payment") {
-    if (!explicit && !(hasConcept && (hasPredicate || terse))) return null;
+    if (
+      !explicit &&
+      !(hasConcept && (hasPredicate || paymentMethodRequest || terse))
+    ) {
+      return null;
+    }
   } else if (
     !explicit &&
     !(hasConcept && (hasPredicate || terse || hasExpectedOrderQuantity))
@@ -1536,6 +1574,12 @@ function evaluateDefinition(
   const conjugationFeedback = detectConjugationFeedback(value);
   const particleFeedback = detectParticleFeedback(value, definition);
   const wordOrderFeedback = detectWordOrderFeedback(value, definition);
+  const paymentRequestFeedback =
+    definition.kind === "payment" &&
+    paymentMethodRequest &&
+    !hasPredicate
+      ? `Paiement compris 👍 Dans ce contexte, ta formulation est claire. Une tournure plus naturelle est : « ${definition.canonical} »`
+      : null;
   const missingExtraMarkerFeedback =
     definition.kind === "extra" && !includesAny(value, ["더", "추가"])
       ? `Demande comprise. « 더 » précise que tu en veux davantage : « ${definition.canonical} »`
@@ -1552,6 +1596,7 @@ function evaluateDefinition(
     conjugationFeedback,
     particleFeedback,
     wordOrderFeedback,
+    paymentRequestFeedback,
     missingExtraMarkerFeedback,
     classifierFeedback,
   );
@@ -1577,7 +1622,13 @@ function evaluateDefinition(
     category,
     severity: feedback ? "minor" : "correct",
     feedback,
-    score: explicit ? 10 : hasPredicate ? 8 : terse ? 6 : 7,
+    score: explicit
+      ? 10
+      : hasPredicate || paymentMethodRequest
+        ? 8
+        : terse
+          ? 6
+          : 7,
   };
 }
 
