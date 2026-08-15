@@ -12,6 +12,7 @@ import {
   Animated,
   Easing,
   ImageBackground,
+  ImageSourcePropType,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -24,10 +25,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
 import { AppBackButton } from "../../../components/ui/app-back-button";
-import {
-  HubModuleAccents,
-  SeoulMidnightGlass,
-} from "../../../constants/theme";
+import { HubModuleAccents, SeoulMidnightGlass } from "../../../constants/theme";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
 import {
   readHomeResumeContext,
@@ -46,7 +44,9 @@ const SOFT = "rgba(241,245,249,0.54)";
 const VOCABULARY = HubModuleAccents.vocabulary;
 const VOCABULARY_ACCENT = VOCABULARY.base;
 const VOCABULARY_LIGHT = "#E2BE7D";
+
 const PREMIUM_GOLD = SeoulMidnightGlass.colors.premiumGold;
+
 const PREMIUM_LIGHT = "#FFF1A8";
 const PREMIUM_SOFT = "#D8C89A";
 const ACTIVE_PEARL = "#E8E3D8";
@@ -58,6 +58,7 @@ type VocabularyTheme = {
   sub: string;
   route: string;
   isLocked: boolean;
+  background: ImageSourcePropType;
 };
 
 const THEMES: VocabularyTheme[] = [
@@ -67,6 +68,7 @@ const THEMES: VocabularyTheme[] = [
     sub: "Restaurants et cuisine de rue",
     route: "/voc/gastronomie",
     isLocked: false,
+    background: require("../../../assets/images/bbq-card.png"),
   },
   {
     id: 2,
@@ -74,6 +76,7 @@ const THEMES: VocabularyTheme[] = [
     sub: "Salutations et survie",
     route: "/voc/basics",
     isLocked: false,
+    background: require("../../../assets/images/meet-card.png"),
   },
   {
     id: 6,
@@ -81,6 +84,7 @@ const THEMES: VocabularyTheme[] = [
     sub: "S'orienter dans Séoul",
     route: "/voc/transport",
     isLocked: false,
+    background: require("../../../assets/images/transport-card.png"),
   },
   {
     id: 3,
@@ -88,6 +92,7 @@ const THEMES: VocabularyTheme[] = [
     sub: "Expressions cultes et argot",
     route: "/voc/kdrama",
     isLocked: true,
+    background: require("../../../assets/images/love.jpg"),
   },
   {
     id: 4,
@@ -95,6 +100,7 @@ const THEMES: VocabularyTheme[] = [
     sub: "Sentiments et rencontres",
     route: "/voc/romance",
     isLocked: true,
+    background: require("../../../assets/images/sogeting.jpg"),
   },
   {
     id: 5,
@@ -103,6 +109,7 @@ const THEMES: VocabularyTheme[] = [
     sub: "Sorties, bars et soju",
     route: "/voc/nuit",
     isLocked: true,
+    background: require("../../../assets/images/pocha2-card.png"),
   },
   {
     id: 7,
@@ -110,6 +117,7 @@ const THEMES: VocabularyTheme[] = [
     sub: "Hôpital et pharmacie",
     route: "/voc/sante",
     isLocked: true,
+    background: require("../../../assets/images/safety.jpg"),
   },
   {
     id: 8,
@@ -117,17 +125,25 @@ const THEMES: VocabularyTheme[] = [
     sub: "Travail et réseautage",
     route: "/voc/work",
     isLocked: true,
+    background: require("../../../assets/images/businessmeeting-card.png"),
   },
 ];
 
 const INCLUDED_THEMES = THEMES.filter((theme) => !theme.isLocked);
+
 const PREMIUM_THEMES = THEMES.filter((theme) => theme.isLocked);
 
 export default function VocabHub() {
-  const responsive = useResponsiveLayout({ maxWidth: 920 });
+  const responsive = useResponsiveLayout({
+    maxWidth: 920,
+  });
+
   const { hasPremiumAccess } = usePaywall();
   const { setTrack } = useStore();
-  const [resumeContext, setResumeContext] = useState<HomeResumeContext | null>(null);
+
+  const [resumeContext, setResumeContext] = useState<HomeResumeContext | null>(
+    null,
+  );
 
   const gridColumns = responsive.getColumns({
     minColumnWidth: 330,
@@ -145,7 +161,9 @@ export default function VocabHub() {
       let cancelled = false;
 
       void readHomeResumeContext().then((context) => {
-        if (!cancelled) setResumeContext(context);
+        if (!cancelled) {
+          setResumeContext(context);
+        }
       });
 
       return () => {
@@ -155,11 +173,15 @@ export default function VocabHub() {
   );
 
   const resumeTheme = useMemo(() => {
-    if (resumeContext?.track !== "vocab") return null;
+    if (resumeContext?.track !== "vocab") {
+      return null;
+    }
+
     return THEMES.find((theme) => theme.route === resumeContext.route) ?? null;
   }, [resumeContext]);
 
   const featuredTheme = resumeTheme ?? INCLUDED_THEMES[0];
+
   const isResume = !!resumeTheme;
 
   const openTheme = async (theme: VocabularyTheme) => {
@@ -188,30 +210,43 @@ export default function VocabHub() {
         style={styles.background}
         resizeMode="cover"
       >
-        <BlurView intensity={24} tint="dark" style={StyleSheet.absoluteFill} />
+        {/* Flou du background général uniquement */}
+        <BlurView
+          intensity={24}
+          tint="dark"
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
 
+        {/* Assombrissement du background général */}
         <LinearGradient
-          colors={[
-            "rgba(2,3,6,0.40)",
-            "rgba(2,3,6,0.61)",
-            "rgba(2,3,6,0.91)",
-          ]}
+          colors={["rgba(2,3,6,0.40)", "rgba(2,3,6,0.61)", "rgba(2,3,6,0.91)"]}
           locations={[0, 0.48, 1]}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
 
         <View style={styles.ambientGlowTop} pointerEvents="none" />
+
         <View style={styles.ambientGlowBottom} pointerEvents="none" />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingHorizontal: responsive.horizontalPadding },
+            {
+              paddingHorizontal: responsive.horizontalPadding,
+            },
           ]}
         >
-          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
+          <View
+            style={[
+              styles.contentFrame,
+              {
+                maxWidth: responsive.maxWidth,
+              },
+            ]}
+          >
             <View style={styles.navHeader}>
               <AppBackButton />
             </View>
@@ -236,14 +271,22 @@ export default function VocabHub() {
               style={[
                 styles.grid,
                 gridColumns > 1 && styles.gridWide,
-                { gap: Math.max(15, responsive.gridGap) },
+                {
+                  gap: Math.max(15, responsive.gridGap),
+                },
               ]}
             >
               {INCLUDED_THEMES.map((theme, index) => (
                 <AnimatedFragment
                   key={theme.id}
                   index={index + 1}
-                  style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
+                  style={
+                    gridColumns > 1
+                      ? {
+                          width: gridItemWidth,
+                        }
+                      : undefined
+                  }
                 >
                   <VocabularyCollectionCard
                     theme={theme}
@@ -271,14 +314,22 @@ export default function VocabHub() {
               style={[
                 styles.grid,
                 gridColumns > 1 && styles.gridWide,
-                { gap: Math.max(16, responsive.gridGap) },
+                {
+                  gap: Math.max(16, responsive.gridGap),
+                },
               ]}
             >
               {PREMIUM_THEMES.map((theme, index) => (
                 <AnimatedFragment
                   key={theme.id}
                   index={INCLUDED_THEMES.length + index + 1}
-                  style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
+                  style={
+                    gridColumns > 1
+                      ? {
+                          width: gridItemWidth,
+                        }
+                      : undefined
+                  }
                 >
                   <VocabularyCollectionCard
                     theme={theme}
@@ -302,6 +353,7 @@ function VocabularyHero({ compact }: { compact: boolean }) {
     <View style={styles.hero}>
       <View style={styles.heroEyebrowRow}>
         <View style={styles.heroDot} />
+
         <AppText variant="sectionLabel" style={styles.heroEyebrow}>
           COLLECTIONS · VOCABULAIRE
         </AppText>
@@ -327,13 +379,20 @@ function VocabularyHero({ compact }: { compact: boolean }) {
       <View style={styles.heroMetaRow}>
         <View style={styles.levelPill}>
           <Sparkles size={15} strokeWidth={2} color={VOCABULARY_ACCENT} />
-          <AppText variant="sectionLabel" lineContract="singleLine" style={styles.levelText}>
+
+          <AppText
+            variant="sectionLabel"
+            lineContract="singleLine"
+            style={styles.levelText}
+          >
             NIVEAU 1
           </AppText>
         </View>
 
         <AppText variant="caption" style={styles.heroCollectionCount}>
-          {INCLUDED_THEMES.length} incluses · {PREMIUM_THEMES.length} Premium
+          {INCLUDED_THEMES.length} incluses
+          {" · "}
+          {PREMIUM_THEMES.length} Premium
         </AppText>
       </View>
     </View>
@@ -352,14 +411,20 @@ function FeaturedCollectionCard({
   onPress: () => void;
 }) {
   const isPremium = theme.isLocked;
+
   const premiumLocked = isPremium && !hasPremiumAccess;
+
   const premiumActive = isPremium && hasPremiumAccess;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${isResume ? "À continuer" : "Pour commencer"}. ${theme.title}. ${theme.sub}.`}
-      accessibilityHint={premiumLocked ? "Ouvre l'accès Premium" : "Ouvre cette collection"}
+      accessibilityLabel={`${
+        isResume ? "À continuer" : "Pour commencer"
+      }. ${theme.title}. ${theme.sub}.`}
+      accessibilityHint={
+        premiumLocked ? "Ouvre l'accès Premium" : "Ouvre cette collection"
+      }
       onPress={onPress}
       style={({ pressed }) => [
         styles.featuredWrap,
@@ -368,32 +433,54 @@ function FeaturedCollectionCard({
         pressed && styles.pressablePressed,
       ]}
     >
-      <BlurView intensity={68} tint="dark" style={styles.featuredCard}>
+      <View style={styles.featuredCard}>
+        {/* Image de la carte */}
+        <ImageBackground
+          source={theme.background}
+          resizeMode="cover"
+          style={StyleSheet.absoluteFill}
+          imageStyle={styles.featuredImage}
+          pointerEvents="none"
+        />
+
+        {/* Léger flou sur l'image */}
+        <BlurView
+          intensity={8}
+          tint="dark"
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+
+        {/* Overlay de lisibilité */}
+        <LinearGradient
+          colors={["rgba(3,5,8,0.28)", "rgba(3,5,8,0.48)", "rgba(2,3,6,0.72)"]}
+          locations={[0, 0.52, 1]}
+          start={{ x: 0.05, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+
+        {/* Teinte premium / accent */}
         <LinearGradient
           colors={
             premiumLocked
-              ? [
-                  "rgba(253,224,71,0.11)",
-                  "rgba(18,15,7,0.90)",
-                  "rgba(2,3,6,0.97)",
-                ]
+              ? ["rgba(253,224,71,0.08)", "rgba(0,0,0,0)", "rgba(2,3,6,0.18)"]
               : premiumActive
                 ? [
-                    "rgba(216,200,154,0.065)",
-                    "rgba(11,11,10,0.90)",
-                    "rgba(2,3,6,0.97)",
+                    "rgba(216,200,154,0.05)",
+                    "rgba(0,0,0,0)",
+                    "rgba(2,3,6,0.16)",
                   ]
-                : [
-                    "rgba(198,154,88,0.18)",
-                    "rgba(9,12,17,0.86)",
-                    "rgba(2,3,6,0.96)",
-                  ]
+                : ["rgba(198,154,88,0.08)", "rgba(0,0,0,0)", "rgba(2,3,6,0.16)"]
           }
-          locations={[0, 0.44, 1]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
+          pointerEvents="none"
         />
+
+        <View style={styles.glassTopHairline} />
 
         <View
           style={[
@@ -402,7 +489,6 @@ function FeaturedCollectionCard({
             premiumActive && styles.featuredGlowPremiumActive,
           ]}
         />
-        <View style={styles.glassTopHairline} />
 
         <View style={styles.featuredTopRow}>
           <View style={styles.featuredKicker}>
@@ -413,6 +499,7 @@ function FeaturedCollectionCard({
                 premiumActive && styles.premiumDotActive,
               ]}
             />
+
             <AppText variant="sectionLabel" style={styles.featuredKickerText}>
               {isResume ? "À CONTINUER" : "POUR COMMENCER"}
             </AppText>
@@ -422,14 +509,22 @@ function FeaturedCollectionCard({
             {premiumLocked ? (
               <View style={styles.featuredPremiumBadgeLocked}>
                 <Sparkles size={12} strokeWidth={2} color={PREMIUM_GOLD} />
-                <AppText variant="caption" style={styles.featuredPremiumTextLocked}>
+
+                <AppText
+                  variant="caption"
+                  style={styles.featuredPremiumTextLocked}
+                >
                   PREMIUM
                 </AppText>
               </View>
             ) : premiumActive ? (
               <View style={styles.featuredAccessBadgeActive}>
                 <Check size={11} strokeWidth={2.5} color={ACTIVE_PEARL} />
-                <AppText variant="caption" style={styles.featuredAccessTextActive}>
+
+                <AppText
+                  variant="caption"
+                  style={styles.featuredAccessTextActive}
+                >
                   ACCÈS ACTIF
                 </AppText>
               </View>
@@ -465,7 +560,12 @@ function FeaturedCollectionCard({
           <AppText variant="featureTitle" style={styles.featuredTitle}>
             {theme.title}
           </AppText>
-          <AppText variant="bodySecondary" tone="muted" style={styles.featuredSubtitle}>
+
+          <AppText
+            variant="bodySecondary"
+            tone="muted"
+            style={styles.featuredSubtitle}
+          >
             Vocabulaire · {theme.sub}
           </AppText>
         </View>
@@ -479,11 +579,7 @@ function FeaturedCollectionCard({
               premiumActive && styles.featuredFooterLabelPremiumActive,
             ]}
           >
-            {premiumLocked
-              ? "DÉBLOQUER PREMIUM"
-              : premiumActive
-                ? "OUVRIR LA COLLECTION"
-                : "OUVRIR LA COLLECTION"}
+            {premiumLocked ? "DÉBLOQUER PREMIUM" : "OUVRIR LA COLLECTION"}
           </AppText>
 
           <View style={styles.featuredFooterLine}>
@@ -495,13 +591,19 @@ function FeaturedCollectionCard({
                     ? [PREMIUM_SOFT, "rgba(216,200,154,0.34)", "transparent"]
                     : [VOCABULARY_ACCENT, VOCABULARY_LIGHT, "transparent"]
               }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
+              start={{
+                x: 0,
+                y: 0,
+              }}
+              end={{
+                x: 1,
+                y: 0,
+              }}
               style={StyleSheet.absoluteFill}
             />
           </View>
         </View>
-      </BlurView>
+      </View>
     </Pressable>
   );
 }
@@ -520,10 +622,15 @@ function CollectionSectionHeader({
   const headerAccent = premiumActive ? PREMIUM_SOFT : PREMIUM_GOLD;
 
   return (
-    <View style={[styles.sectionHeader, premium && styles.sectionHeaderPremium]}>
+    <View
+      style={[styles.sectionHeader, premium && styles.sectionHeaderPremium]}
+    >
       <View style={styles.sectionCopy}>
         <View style={styles.sectionTitleRow}>
-          {premium ? <Sparkles size={15} strokeWidth={2} color={headerAccent} /> : null}
+          {premium ? (
+            <Sparkles size={15} strokeWidth={2} color={headerAccent} />
+          ) : null}
+
           <AppText
             variant="sectionLabel"
             style={[
@@ -535,6 +642,7 @@ function CollectionSectionHeader({
             {title}
           </AppText>
         </View>
+
         <AppText
           variant="caption"
           style={[
@@ -549,6 +657,7 @@ function CollectionSectionHeader({
 
       <View style={styles.sectionLineWrap}>
         <View style={styles.sectionLineBase} />
+
         <LinearGradient
           colors={
             premium
@@ -580,8 +689,11 @@ function VocabularyCollectionCard({
   onPress: () => void;
 }) {
   const isPremium = theme.isLocked;
+
   const premiumLocked = isPremium && !hasPremiumAccess;
+
   const premiumActive = isPremium && hasPremiumAccess;
+
   const unlocked = !isPremium || hasPremiumAccess;
 
   return (
@@ -590,7 +702,9 @@ function VocabularyCollectionCard({
       accessibilityLabel={`${theme.title}. ${theme.sub}. ${
         isPremium ? "Premium" : "Incluse"
       }.${isCurrent ? " En cours." : ""}`}
-      accessibilityHint={unlocked ? "Ouvre cette collection" : "Ouvre l'accès Premium"}
+      accessibilityHint={
+        unlocked ? "Ouvre cette collection" : "Ouvre l'accès Premium"
+      }
       onPress={onPress}
       style={({ pressed }) => [
         styles.collectionWrap,
@@ -600,34 +714,51 @@ function VocabularyCollectionCard({
         pressed && styles.pressablePressed,
       ]}
     >
-      <BlurView
-        intensity={premiumLocked ? 58 : 62}
-        tint="dark"
-        style={styles.collectionCard}
-      >
+      <View style={styles.collectionCard}>
+        {/* Image de fond */}
+        <ImageBackground
+          source={theme.background}
+          resizeMode="cover"
+          style={StyleSheet.absoluteFill}
+          imageStyle={styles.collectionImage}
+          pointerEvents="none"
+        />
+
+        {/* Léger flou uniforme */}
+        <BlurView
+          intensity={7}
+          tint="dark"
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+
+        {/* Assombrissement pour la lisibilité */}
+        <LinearGradient
+          colors={["rgba(2,4,7,0.30)", "rgba(2,4,7,0.50)", "rgba(2,3,6,0.72)"]}
+          locations={[0, 0.52, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+
+        {/* Accent couleur / premium */}
         <LinearGradient
           colors={
             premiumLocked
-              ? [
-                  "rgba(253,224,71,0.065)",
-                  "rgba(13,12,8,0.91)",
-                  "rgba(2,3,6,0.97)",
-                ]
+              ? ["rgba(253,224,71,0.07)", "rgba(0,0,0,0)", "rgba(2,3,6,0.16)"]
               : premiumActive
                 ? [
-                    "rgba(216,200,154,0.032)",
-                    "rgba(8,9,10,0.90)",
-                    "rgba(2,3,6,0.97)",
+                    "rgba(216,200,154,0.04)",
+                    "rgba(0,0,0,0)",
+                    "rgba(2,3,6,0.14)",
                   ]
-                : [
-                    "rgba(198,154,88,0.11)",
-                    "rgba(6,10,15,0.86)",
-                    "rgba(2,3,6,0.95)",
-                  ]
+                : ["rgba(198,154,88,0.06)", "rgba(0,0,0,0)", "rgba(2,3,6,0.14)"]
           }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
+          pointerEvents="none"
         />
 
         <View
@@ -637,6 +768,7 @@ function VocabularyCollectionCard({
             premiumActive && styles.cardTopHairlinePremiumActive,
           ]}
         />
+
         <View
           style={[
             styles.collectionAmbientGlow,
@@ -644,6 +776,7 @@ function VocabularyCollectionCard({
             premiumActive && styles.collectionAmbientGlowPremiumActive,
           ]}
         />
+
         {isPremium ? (
           <View
             style={[
@@ -706,6 +839,7 @@ function VocabularyCollectionCard({
               premiumLocked ? (
                 <View style={styles.premiumBadgeLocked}>
                   <LockKeyhole size={10} strokeWidth={2} color={PREMIUM_GOLD} />
+
                   <AppText
                     variant="caption"
                     lineContract="singleLine"
@@ -726,6 +860,7 @@ function VocabularyCollectionCard({
                   ) : (
                     <Check size={10} strokeWidth={2.5} color={ACTIVE_PEARL} />
                   )}
+
                   <AppText
                     variant="caption"
                     lineContract="singleLine"
@@ -739,8 +874,19 @@ function VocabularyCollectionCard({
                 </View>
               )
             ) : (
-              <View style={[styles.includedBadge, isCurrent && styles.includedBadgeCurrent]}>
-                <View style={[styles.statusDot, isCurrent && styles.currentDotIncluded]} />
+              <View
+                style={[
+                  styles.includedBadge,
+                  isCurrent && styles.includedBadgeCurrent,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.statusDot,
+                    isCurrent && styles.currentDotIncluded,
+                  ]}
+                />
+
                 <AppText
                   variant="caption"
                   lineContract="singleLine"
@@ -757,7 +903,12 @@ function VocabularyCollectionCard({
           <AppText variant="cardTitle" style={styles.collectionTitle}>
             {theme.title}
           </AppText>
-          <AppText variant="bodySecondary" tone="muted" style={styles.collectionSubtitle}>
+
+          <AppText
+            variant="bodySecondary"
+            tone="muted"
+            style={styles.collectionSubtitle}
+          >
             {theme.sub}
           </AppText>
         </View>
@@ -783,7 +934,7 @@ function VocabularyCollectionCard({
             )}
           </View>
         </View>
-      </BlurView>
+      </View>
     </Pressable>
   );
 }
@@ -798,6 +949,7 @@ function AnimatedFragment({
   style?: StyleProp<ViewStyle>;
 }) {
   const fadeAnim = useMemo(() => new Animated.Value(0), []);
+
   const slideAnim = useMemo(() => new Animated.Value(18), []);
 
   useEffect(() => {
@@ -832,7 +984,11 @@ function AnimatedFragment({
         style,
         {
           opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
+          transform: [
+            {
+              translateY: slideAnim,
+            },
+          ],
         },
       ]}
     >
@@ -846,23 +1002,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BG_DEEP,
   },
+
   background: {
     flex: 1,
     overflow: "hidden",
     backgroundColor: BG_DEEP,
   },
+
   scrollContent: {
     paddingTop: 8,
     paddingBottom: 120,
   },
+
   contentFrame: {
     width: "100%",
     alignSelf: "center",
   },
+
   pressablePressed: {
     opacity: 0.84,
-    transform: [{ scale: 0.992 }],
+    transform: [
+      {
+        scale: 0.992,
+      },
+    ],
   },
+
   glassTopHairline: {
     position: "absolute",
     top: 0,
@@ -872,6 +1037,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.16)",
     opacity: 0.7,
   },
+
   ambientGlowTop: {
     position: "absolute",
     top: 120,
@@ -882,6 +1048,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(198,154,88,0.025)",
     boxShadow: "0px 0px 70px rgba(198,154,88,0.05)",
   },
+
   ambientGlowBottom: {
     position: "absolute",
     top: 640,
@@ -892,22 +1059,26 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(226,190,125,0.018)",
     boxShadow: "0px 0px 80px rgba(226,190,125,0.04)",
   },
+
   navHeader: {
     minHeight: 60,
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
   },
+
   hero: {
     paddingHorizontal: 2,
     marginTop: 12,
     marginBottom: 28,
   },
+
   heroEyebrowRow: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
   },
+
   heroDot: {
     width: 5,
     height: 5,
@@ -916,31 +1087,40 @@ const styles = StyleSheet.create({
     backgroundColor: VOCABULARY_ACCENT,
     boxShadow: "0px 0px 8px rgba(198,154,88,0.72)",
   },
+
   heroEyebrow: {
     color: "rgba(244,232,212,0.62)",
     letterSpacing: 1.3,
   },
+
   heroKorean: {
     color: "rgba(255,248,236,0.98)",
     fontSize: 40,
     lineHeight: 48,
     textShadowColor: "rgba(198,154,88,0.16)",
-    textShadowOffset: { width: 0, height: 0 },
+    textShadowOffset: {
+      width: 0,
+      height: 0,
+    },
     textShadowRadius: 14,
   },
+
   heroKoreanCompact: {
     fontSize: 36,
     lineHeight: 44,
   },
+
   heroTitle: {
     color: TXT,
     marginTop: -2,
   },
+
   heroSubtitle: {
     maxWidth: 520,
     marginTop: 8,
     color: MUTED,
   },
+
   heroMetaRow: {
     marginTop: 20,
     flexDirection: "row",
@@ -948,6 +1128,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 14,
   },
+
   levelPill: {
     minHeight: 32,
     paddingHorizontal: 12,
@@ -958,10 +1139,12 @@ const styles = StyleSheet.create({
     borderColor: "rgba(198,154,88,0.20)",
     backgroundColor: "rgba(28,21,12,0.68)",
   },
+
   levelText: {
     marginLeft: 7,
     color: "rgba(226,190,125,0.86)",
   },
+
   heroCollectionCount: {
     color: SOFT,
     textAlign: "right",
@@ -976,20 +1159,28 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(2,3,6,0.48)",
     boxShadow: `0px 12px 30px ${VOCABULARY.featuredShadow}`,
   },
+
   featuredWrapPremiumLocked: {
     borderColor: "rgba(253,224,71,0.25)",
     boxShadow: "0px 12px 32px rgba(253,224,71,0.06)",
   },
+
   featuredWrapPremiumActive: {
     borderColor: "rgba(216,200,154,0.18)",
     boxShadow: "0px 12px 30px rgba(0,0,0,0.28)",
   },
+
   featuredCard: {
     minHeight: 214,
     padding: 20,
     position: "relative",
     overflow: "hidden",
   },
+
+  featuredImage: {
+    borderRadius: 29,
+  },
+
   featuredGlow: {
     position: "absolute",
     top: -86,
@@ -1001,16 +1192,19 @@ const styles = StyleSheet.create({
     backgroundColor: VOCABULARY_ACCENT,
     boxShadow: `0px 0px 58px ${VOCABULARY.glow}`,
   },
+
   featuredGlowPremiumLocked: {
     backgroundColor: PREMIUM_GOLD,
     opacity: 0.045,
     boxShadow: "0px 0px 58px rgba(253,224,71,0.12)",
   },
+
   featuredGlowPremiumActive: {
     backgroundColor: PREMIUM_SOFT,
     opacity: 0.022,
     boxShadow: "0px 0px 42px rgba(216,200,154,0.07)",
   },
+
   featuredTopRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1018,11 +1212,13 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 20,
   },
+
   featuredTopActions: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
+
   featuredKicker: {
     minHeight: 30,
     flexDirection: "row",
@@ -1033,6 +1229,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.10)",
     backgroundColor: "rgba(3,6,10,0.62)",
   },
+
   featuredKickerDot: {
     width: 5,
     height: 5,
@@ -1040,15 +1237,19 @@ const styles = StyleSheet.create({
     marginRight: 7,
     backgroundColor: VOCABULARY_ACCENT,
   },
+
   premiumDotLocked: {
     backgroundColor: PREMIUM_GOLD,
   },
+
   premiumDotActive: {
     backgroundColor: PREMIUM_SOFT,
   },
+
   featuredKickerText: {
     color: "rgba(241,245,249,0.62)",
   },
+
   featuredPremiumBadgeLocked: {
     minHeight: 30,
     flexDirection: "row",
@@ -1060,10 +1261,12 @@ const styles = StyleSheet.create({
     borderColor: "rgba(253,224,71,0.28)",
     backgroundColor: "rgba(253,224,71,0.07)",
   },
+
   featuredPremiumTextLocked: {
     color: PREMIUM_LIGHT,
     letterSpacing: 0.5,
   },
+
   featuredAccessBadgeActive: {
     minHeight: 30,
     flexDirection: "row",
@@ -1075,15 +1278,18 @@ const styles = StyleSheet.create({
     borderColor: "rgba(232,227,216,0.19)",
     backgroundColor: "rgba(232,227,216,0.045)",
   },
+
   featuredAccessTextActive: {
     color: "rgba(232,227,216,0.86)",
     letterSpacing: 0.4,
   },
+
   featuredPremiumMicroLabel: {
     color: "rgba(216,200,154,0.54)",
     letterSpacing: 1,
     marginBottom: 6,
   },
+
   featuredArrow: {
     width: 40,
     height: 40,
@@ -1094,41 +1300,63 @@ const styles = StyleSheet.create({
     borderColor: "rgba(198,154,88,0.22)",
     backgroundColor: "rgba(28,21,12,0.62)",
   },
+
   featuredArrowPremiumLocked: {
     borderColor: "rgba(253,224,71,0.22)",
     backgroundColor: "rgba(253,224,71,0.04)",
   },
+
   featuredArrowPremiumActive: {
     borderColor: "rgba(216,200,154,0.16)",
     backgroundColor: "rgba(216,200,154,0.025)",
   },
+
   featuredContent: {
     maxWidth: 600,
   },
+
   featuredTitle: {
     color: TXT,
     marginBottom: 6,
+    textShadowColor: "rgba(0,0,0,0.60)",
+    textShadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    textShadowRadius: 5,
   },
+
   featuredSubtitle: {
     color: MUTED,
     maxWidth: 560,
+    textShadowColor: "rgba(0,0,0,0.70)",
+    textShadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    textShadowRadius: 4,
   },
+
   featuredFooter: {
     marginTop: 27,
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
   },
+
   featuredFooterLabel: {
     color: "rgba(226,190,125,0.76)",
     letterSpacing: 0.45,
   },
+
   featuredFooterLabelPremiumLocked: {
     color: PREMIUM_LIGHT,
   },
+
   featuredFooterLabelPremiumActive: {
     color: "rgba(216,200,154,0.72)",
   },
+
   featuredFooterLine: {
     flex: 1,
     height: 1,
@@ -1143,37 +1371,47 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     gap: 14,
   },
+
   sectionHeaderPremium: {
     marginTop: 38,
   },
+
   sectionCopy: {
     flexShrink: 0,
   },
+
   sectionTitleRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 7,
   },
+
   sectionTitle: {
     color: "rgba(241,245,249,0.64)",
     letterSpacing: 1.15,
   },
+
   sectionTitlePremium: {
     color: PREMIUM_LIGHT,
   },
+
   sectionTitlePremiumActive: {
     color: "rgba(216,200,154,0.82)",
   },
+
   sectionSubtitle: {
     marginTop: 3,
     color: "rgba(241,245,249,0.46)",
   },
+
   sectionSubtitlePremium: {
     color: "rgba(255,241,168,0.56)",
   },
+
   sectionSubtitlePremiumActive: {
     color: "rgba(216,200,154,0.52)",
   },
+
   sectionLineWrap: {
     flex: 1,
     height: 10,
@@ -1181,10 +1419,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 2,
   },
+
   sectionLineBase: {
     height: 1,
     backgroundColor: "rgba(255,255,255,0.06)",
   },
+
   sectionLineGlow: {
     position: "absolute",
     right: 0,
@@ -1196,6 +1436,7 @@ const styles = StyleSheet.create({
   grid: {
     gap: 15,
   },
+
   gridWide: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -1211,26 +1452,36 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(2,3,6,0.50)",
     boxShadow: "0px 10px 24px rgba(0,0,0,0.26)",
   },
+
   collectionWrapPremiumLocked: {
     borderColor: "rgba(253,224,71,0.18)",
     backgroundColor: "rgba(10,9,5,0.56)",
     boxShadow: "0px 10px 26px rgba(253,224,71,0.035)",
   },
+
   collectionWrapPremiumActive: {
     borderColor: "rgba(216,200,154,0.105)",
     backgroundColor: "rgba(5,6,7,0.58)",
     boxShadow: "0px 10px 24px rgba(0,0,0,0.28)",
   },
+
   collectionWrapCurrent: {
     borderColor: "rgba(216,200,154,0.18)",
   },
+
   collectionCard: {
     flex: 1,
     minHeight: 174,
     padding: 16,
     position: "relative",
     overflow: "hidden",
+    justifyContent: "flex-start",
   },
+
+  collectionImage: {
+    borderRadius: 24,
+  },
+
   cardTopHairline: {
     position: "absolute",
     top: 0,
@@ -1240,14 +1491,17 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.14)",
     opacity: 0.62,
   },
+
   cardTopHairlinePremiumLocked: {
     backgroundColor: "rgba(253,224,71,0.28)",
     opacity: 0.72,
   },
+
   cardTopHairlinePremiumActive: {
     backgroundColor: "rgba(216,200,154,0.14)",
     opacity: 0.58,
   },
+
   premiumRail: {
     position: "absolute",
     top: 18,
@@ -1256,16 +1510,19 @@ const styles = StyleSheet.create({
     width: 2,
     borderRadius: 2,
   },
+
   premiumRailLocked: {
     backgroundColor: PREMIUM_GOLD,
     opacity: 0.82,
     boxShadow: "0px 0px 10px rgba(253,224,71,0.22)",
   },
+
   premiumRailActive: {
     backgroundColor: PREMIUM_SOFT,
     opacity: 0.48,
     boxShadow: "0px 0px 6px rgba(216,200,154,0.08)",
   },
+
   collectionAmbientGlow: {
     position: "absolute",
     top: -60,
@@ -1276,19 +1533,23 @@ const styles = StyleSheet.create({
     backgroundColor: VOCABULARY_ACCENT,
     opacity: 0.032,
   },
+
   collectionAmbientGlowPremiumLocked: {
     backgroundColor: PREMIUM_GOLD,
     opacity: 0.035,
   },
+
   collectionAmbientGlowPremiumActive: {
     backgroundColor: PREMIUM_SOFT,
     opacity: 0.012,
   },
+
   collectionTopRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 13,
   },
+
   collectionIcon: {
     width: 48,
     height: 48,
@@ -1298,28 +1559,34 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     borderWidth: 1,
     borderColor: "rgba(198,154,88,0.24)",
-    backgroundColor: "rgba(198,154,88,0.075)",
+    backgroundColor: "rgba(22,16,9,0.72)",
     boxShadow: `0px 0px 18px ${VOCABULARY.iconShadow}`,
   },
+
   collectionIconPremiumLocked: {
     borderColor: "rgba(253,224,71,0.22)",
-    backgroundColor: "rgba(253,224,71,0.045)",
+    backgroundColor: "rgba(25,21,7,0.72)",
     boxShadow: "0px 0px 16px rgba(253,224,71,0.08)",
   },
+
   collectionIconPremiumActive: {
     borderColor: "rgba(216,200,154,0.15)",
-    backgroundColor: "rgba(216,200,154,0.028)",
+    backgroundColor: "rgba(20,19,17,0.72)",
     boxShadow: "0px 0px 12px rgba(216,200,154,0.035)",
   },
+
   collectionIconText: {
     color: VOCABULARY_LIGHT,
   },
+
   collectionIconTextPremiumLocked: {
     color: PREMIUM_LIGHT,
   },
+
   collectionIconTextPremiumActive: {
     color: "rgba(216,200,154,0.82)",
   },
+
   collectionTopMeta: {
     flex: 1,
     minWidth: 0,
@@ -1328,29 +1595,36 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 9,
   },
+
   collectionIdentity: {
     flex: 1,
     minWidth: 0,
   },
+
   collectionIndex: {
-    color: "rgba(241,245,249,0.46)",
+    color: "rgba(241,245,249,0.58)",
     letterSpacing: 0.95,
   },
+
   collectionIndexPremiumLocked: {
-    color: "rgba(255,241,168,0.52)",
+    color: "rgba(255,241,168,0.60)",
   },
+
   collectionIndexPremiumActive: {
-    color: "rgba(216,200,154,0.48)",
+    color: "rgba(216,200,154,0.56)",
   },
+
   premiumMicroLabel: {
     marginTop: 3,
-    color: "rgba(216,200,154,0.46)",
+    color: "rgba(216,200,154,0.52)",
     fontSize: 10,
     letterSpacing: 0.8,
   },
+
   premiumMicroLabelLocked: {
     color: "rgba(253,224,71,0.72)",
   },
+
   includedBadge: {
     minHeight: 27,
     flexDirection: "row",
@@ -1359,13 +1633,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(198,154,88,0.16)",
-    backgroundColor: "rgba(198,154,88,0.045)",
+    borderColor: "rgba(198,154,88,0.22)",
+    backgroundColor: "rgba(18,14,8,0.74)",
   },
+
   includedBadgeCurrent: {
-    borderColor: "rgba(226,190,125,0.24)",
-    backgroundColor: "rgba(226,190,125,0.07)",
+    borderColor: "rgba(226,190,125,0.28)",
+    backgroundColor: "rgba(28,21,12,0.76)",
   },
+
   statusDot: {
     width: 4,
     height: 4,
@@ -1373,12 +1649,15 @@ const styles = StyleSheet.create({
     marginRight: 6,
     backgroundColor: VOCABULARY_ACCENT,
   },
+
   currentDotIncluded: {
     backgroundColor: VOCABULARY_LIGHT,
   },
+
   includedBadgeText: {
-    color: "rgba(226,190,125,0.76)",
+    color: "rgba(226,190,125,0.84)",
   },
+
   premiumBadgeLocked: {
     minHeight: 27,
     flexDirection: "row",
@@ -1389,12 +1668,14 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: "rgba(253,224,71,0.26)",
-    backgroundColor: "rgba(253,224,71,0.065)",
+    backgroundColor: "rgba(25,21,7,0.74)",
   },
+
   premiumBadgeTextLocked: {
     color: PREMIUM_LIGHT,
     letterSpacing: 0.35,
   },
+
   accessBadgeActive: {
     minHeight: 27,
     flexDirection: "row",
@@ -1404,39 +1685,59 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(232,227,216,0.16)",
-    backgroundColor: "rgba(232,227,216,0.035)",
+    borderColor: "rgba(232,227,216,0.18)",
+    backgroundColor: "rgba(16,16,15,0.74)",
   },
+
   accessBadgeCurrent: {
     borderColor: "rgba(216,200,154,0.22)",
-    backgroundColor: "rgba(216,200,154,0.055)",
+    backgroundColor: "rgba(25,22,17,0.74)",
   },
+
   currentDot: {
     width: 5,
     height: 5,
     borderRadius: 3,
     backgroundColor: PREMIUM_SOFT,
   },
+
   accessBadgeActiveText: {
-    color: "rgba(232,227,216,0.80)",
+    color: "rgba(232,227,216,0.86)",
     fontSize: 10,
     letterSpacing: 0.25,
   },
+
   accessBadgeCurrentText: {
-    color: "rgba(216,200,154,0.82)",
+    color: "rgba(216,200,154,0.88)",
   },
+
   collectionCopy: {
     marginTop: 18,
     paddingRight: 8,
   },
+
   collectionTitle: {
     color: TXT,
+    textShadowColor: "rgba(0,0,0,0.65)",
+    textShadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    textShadowRadius: 5,
   },
+
   collectionSubtitle: {
     marginTop: 5,
-    color: MUTED,
+    color: "rgba(241,245,249,0.82)",
     maxWidth: 560,
+    textShadowColor: "rgba(0,0,0,0.72)",
+    textShadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    textShadowRadius: 4,
   },
+
   collectionFooter: {
     marginTop: "auto",
     paddingTop: 16,
@@ -1444,33 +1745,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
+
   collectionFooterLine: {
     flex: 1,
     height: 1,
     overflow: "hidden",
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: "rgba(255,255,255,0.10)",
   },
-  collectionFooterAccent: {
-    width: 40,
-    height: 1,
-    backgroundColor: VOCABULARY_ACCENT,
-    opacity: 0.82,
-  },
-  collectionFooterAccentPremiumLocked: {
-    width: 44,
-    backgroundColor: PREMIUM_GOLD,
-    opacity: 0.72,
-    boxShadow: "0px 0px 6px rgba(253,224,71,0.12)",
-  },
-  collectionFooterAccentPremiumActive: {
-    width: 36,
-    backgroundColor: PREMIUM_SOFT,
-    opacity: 0.40,
-  },
-  collectionFooterAccentCurrent: {
-    width: 46,
-    opacity: 0.66,
-  },
+
   collectionArrow: {
     width: 31,
     height: 31,
@@ -1478,15 +1760,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "rgba(198,154,88,0.18)",
-    backgroundColor: "rgba(198,154,88,0.045)",
+    borderColor: "rgba(198,154,88,0.24)",
+    backgroundColor: "rgba(18,14,8,0.76)",
   },
+
   collectionArrowPremiumLocked: {
-    borderColor: "rgba(253,224,71,0.20)",
-    backgroundColor: "rgba(253,224,71,0.035)",
+    borderColor: "rgba(253,224,71,0.22)",
+    backgroundColor: "rgba(25,21,7,0.76)",
   },
+
   collectionArrowPremiumActive: {
-    borderColor: "rgba(216,200,154,0.14)",
-    backgroundColor: "rgba(216,200,154,0.02)",
+    borderColor: "rgba(216,200,154,0.16)",
+    backgroundColor: "rgba(16,16,15,0.76)",
   },
 });
