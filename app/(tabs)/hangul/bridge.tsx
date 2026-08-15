@@ -2,6 +2,7 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { AppBackButton } from "../../../components/ui/app-back-button";
+import { ABSOLUTE_FILL } from "../../../constants/layout";
 import { ImageBackground, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -27,13 +28,13 @@ export default function HangulBridgeScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground source={BACKGROUND_SOURCE} style={styles.background} resizeMode="cover" blurRadius={6} imageStyle={styles.backgroundImage}>
-        <BlurView intensity={18} tint="dark" style={StyleSheet.absoluteFillObject} />
+      <ImageBackground source={BACKGROUND_SOURCE} style={styles.bgImage} resizeMode="cover">
+        <BlurView intensity={18} tint="dark" style={styles.bgBlur} />
         <View style={styles.vignetteOverlay} />
         <LinearGradient
           colors={["rgba(2,3,6,0.10)", "rgba(2,3,6,0.22)", "rgba(2,3,6,0.72)"]}
           locations={[0, 0.44, 1]}
-          style={StyleSheet.absoluteFillObject}
+          style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
         <View style={styles.ambientGlowTop} pointerEvents="none" />
@@ -74,10 +75,10 @@ export default function HangulBridgeScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#020306" },
-  background: { flex: 1, overflow: "hidden", backgroundColor: "#020306" },
-  backgroundImage: { opacity: 0.78 },
+  bgImage: { flex: 1, overflow: "hidden", backgroundColor: "#020306" },
+  bgBlur: { ...ABSOLUTE_FILL },
   vignetteOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     backgroundColor: "rgba(2,3,6,0.52)",
   },
   ambientGlowTop: {

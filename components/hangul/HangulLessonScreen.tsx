@@ -21,6 +21,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
+import { ABSOLUTE_FILL } from "../../constants/layout";
 import { HubModuleAccents, SeoulMidnightGlass } from "../../constants/theme";
 import { getHangulModule, HANGUL_MODULES } from "../../data/hangul/curriculum";
 import {
@@ -368,15 +369,19 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
 
   const BackgroundLayers = () => (
     <>
-      <BlurView intensity={18} tint="dark" style={StyleSheet.absoluteFillObject} />
+      <BlurView intensity={18} tint="dark" style={styles.bgBlur} />
+
       <View style={styles.vignetteOverlay} />
+
       <LinearGradient
         colors={["rgba(2,3,6,0.10)", "rgba(2,3,6,0.22)", "rgba(2,3,6,0.72)"]}
         locations={[0, 0.44, 1]}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
+
       <View style={styles.ambientGlowTop} pointerEvents="none" />
+
       <View style={styles.ambientGlowBottom} pointerEvents="none" />
     </>
   );
@@ -386,10 +391,8 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
       <SafeAreaView style={styles.safe}>
         <ImageBackground
           source={BACKGROUND_SOURCE}
-          style={styles.background}
+          style={styles.bgImage}
           resizeMode="cover"
-          blurRadius={6}
-          imageStyle={styles.backgroundImage}
         >
           <BackgroundLayers />
 
@@ -457,10 +460,8 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
     <SafeAreaView style={styles.safe}>
       <ImageBackground
         source={BACKGROUND_SOURCE}
-        style={styles.background}
+        style={styles.bgImage}
         resizeMode="cover"
-          blurRadius={6}
-          imageStyle={styles.backgroundImage}
         >
         <BackgroundLayers />
 
@@ -1165,16 +1166,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BG_DEEP,
   },
-  background: {
+  bgImage: {
     flex: 1,
-    backgroundColor: BG_DEEP,
+
     overflow: "hidden",
+
+    backgroundColor: BG_DEEP,
   },
-  backgroundImage: {
-    opacity: 0.78,
+
+  bgBlur: {
+    ...ABSOLUTE_FILL,
   },
+
   vignetteOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
+
     backgroundColor: "rgba(2,3,6,0.52)",
   },
   ambientGlowTop: {
