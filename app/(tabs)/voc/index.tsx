@@ -7,12 +7,7 @@ import {
   LockKeyhole,
   Sparkles,
 } from "lucide-react-native";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Animated,
   Easing,
@@ -43,24 +38,16 @@ import { usePaywall } from "../../../lib/paywall/PaywallProvider";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vocabulaire.jpg");
 
-// ──────────────────────────────────────────────
-// SEOUL MIDNIGHT GLASS — VOCABULARY
-// ──────────────────────────────────────────────
-
 const BG_DEEP = SeoulMidnightGlass.colors.bgDeep;
 const TXT = SeoulMidnightGlass.colors.text;
 const MUTED = "rgba(241,245,249,0.76)";
 const SOFT = "rgba(241,245,249,0.54)";
-const HAIRLINE = "rgba(255,255,255,0.10)";
 
 const VOCABULARY = HubModuleAccents.vocabulary;
 const VOCABULARY_ACCENT = VOCABULARY.base;
 const VOCABULARY_LIGHT = "#E2BE7D";
 const PREMIUM_GOLD = SeoulMidnightGlass.colors.premiumGold;
-
-// ──────────────────────────────────────────────
-// DATA
-// ──────────────────────────────────────────────
+const PREMIUM_LIGHT = "#FFF1A8";
 
 type VocabularyTheme = {
   id: number;
@@ -132,17 +119,11 @@ const THEMES: VocabularyTheme[] = [
 const INCLUDED_THEMES = THEMES.filter((theme) => !theme.isLocked);
 const PREMIUM_THEMES = THEMES.filter((theme) => theme.isLocked);
 
-// ──────────────────────────────────────────────
-// SCREEN
-// ──────────────────────────────────────────────
-
 export default function VocabHub() {
   const responsive = useResponsiveLayout({ maxWidth: 920 });
   const { hasPremiumAccess } = usePaywall();
   const { setTrack } = useStore();
-  const [resumeContext, setResumeContext] = useState<HomeResumeContext | null>(
-    null,
-  );
+  const [resumeContext, setResumeContext] = useState<HomeResumeContext | null>(null);
 
   const gridColumns = responsive.getColumns({
     minColumnWidth: 330,
@@ -226,24 +207,19 @@ export default function VocabHub() {
             { paddingHorizontal: responsive.horizontalPadding },
           ]}
         >
-          <View
-            style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
-          >
-            <UnifiedNavHeader />
+          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
+            <View style={styles.navHeader}>
+              <AppBackButton />
+            </View>
 
-            <VocabularyHero
-              compact={responsive.isCompact}
-              hasPremiumAccess={hasPremiumAccess}
-            />
+            <VocabularyHero compact={responsive.isCompact} />
 
             <AnimatedFragment index={0}>
               <FeaturedCollectionCard
                 theme={featuredTheme}
                 isResume={isResume}
                 hasPremiumAccess={hasPremiumAccess}
-                onPress={() => {
-                  void openTheme(featuredTheme);
-                }}
+                onPress={() => void openTheme(featuredTheme)}
               />
             </AnimatedFragment>
 
@@ -269,9 +245,7 @@ export default function VocabHub() {
                     theme={theme}
                     order={index + 1}
                     hasPremiumAccess={hasPremiumAccess}
-                    onPress={() => {
-                      void openTheme(theme);
-                    }}
+                    onPress={() => void openTheme(theme)}
                   />
                 </AnimatedFragment>
               ))}
@@ -281,8 +255,8 @@ export default function VocabHub() {
               title="COLLECTIONS PREMIUM"
               subtitle={
                 hasPremiumAccess
-                  ? `${PREMIUM_THEMES.length} collections déverrouillées`
-                  : `${PREMIUM_THEMES.length} collections pour aller plus loin`
+                  ? `${PREMIUM_THEMES.length} collections Premium · accès actif`
+                  : `${PREMIUM_THEMES.length} collections Premium à débloquer`
               }
               premium
             />
@@ -291,7 +265,7 @@ export default function VocabHub() {
               style={[
                 styles.grid,
                 gridColumns > 1 && styles.gridWide,
-                { gap: Math.max(15, responsive.gridGap) },
+                { gap: Math.max(16, responsive.gridGap) },
               ]}
             >
               {PREMIUM_THEMES.map((theme, index) => (
@@ -304,9 +278,7 @@ export default function VocabHub() {
                     theme={theme}
                     order={INCLUDED_THEMES.length + index + 1}
                     hasPremiumAccess={hasPremiumAccess}
-                    onPress={() => {
-                      void openTheme(theme);
-                    }}
+                    onPress={() => void openTheme(theme)}
                   />
                 </AnimatedFragment>
               ))}
@@ -318,34 +290,11 @@ export default function VocabHub() {
   );
 }
 
-// ──────────────────────────────────────────────
-// NAVIGATION
-// ──────────────────────────────────────────────
-
-function UnifiedNavHeader() {
-  return (
-    <View style={styles.navHeader}>
-      <AppBackButton />
-    </View>
-  );
-}
-
-// ──────────────────────────────────────────────
-// HERO
-// ──────────────────────────────────────────────
-
-function VocabularyHero({
-  compact,
-  hasPremiumAccess,
-}: {
-  compact: boolean;
-  hasPremiumAccess: boolean;
-}) {
+function VocabularyHero({ compact }: { compact: boolean }) {
   return (
     <View style={styles.hero}>
       <View style={styles.heroEyebrowRow}>
         <View style={styles.heroDot} />
-
         <AppText variant="sectionLabel" style={styles.heroEyebrow}>
           COLLECTIONS · VOCABULAIRE
         </AppText>
@@ -371,29 +320,18 @@ function VocabularyHero({
       <View style={styles.heroMetaRow}>
         <View style={styles.levelPill}>
           <Sparkles size={15} strokeWidth={2} color={VOCABULARY_ACCENT} />
-
-          <AppText
-            variant="sectionLabel"
-            lineContract="singleLine"
-            style={styles.levelText}
-          >
+          <AppText variant="sectionLabel" lineContract="singleLine" style={styles.levelText}>
             NIVEAU 1
           </AppText>
         </View>
 
         <AppText variant="caption" style={styles.heroCollectionCount}>
-          {hasPremiumAccess
-            ? `${THEMES.length} collections accessibles`
-            : `${INCLUDED_THEMES.length} incluses · ${PREMIUM_THEMES.length} premium`}
+          {INCLUDED_THEMES.length} incluses · {PREMIUM_THEMES.length} Premium
         </AppText>
       </View>
     </View>
   );
 }
-
-// ──────────────────────────────────────────────
-// FEATURED / RESUME COLLECTION
-// ──────────────────────────────────────────────
 
 function FeaturedCollectionCard({
   theme,
@@ -407,61 +345,73 @@ function FeaturedCollectionCard({
   onPress: () => void;
 }) {
   const premiumLocked = theme.isLocked && !hasPremiumAccess;
+  const isPremium = theme.isLocked;
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${isResume ? "À continuer" : "Pour commencer"}. ${theme.title}. ${theme.sub}.`}
-      accessibilityHint={
-        premiumLocked
-          ? "Ouvre l'accès Premium"
-          : "Ouvre cette collection de vocabulaire"
-      }
+      accessibilityHint={premiumLocked ? "Ouvre l'accès Premium" : "Ouvre cette collection"}
       onPress={onPress}
       style={({ pressed }) => [
         styles.featuredWrap,
+        isPremium && styles.featuredWrapPremium,
         pressed && styles.pressablePressed,
       ]}
     >
       <BlurView intensity={68} tint="dark" style={styles.featuredCard}>
         <LinearGradient
-          colors={[
-            "rgba(198,154,88,0.18)",
-            "rgba(9,12,17,0.86)",
-            "rgba(2,3,6,0.96)",
-          ]}
+          colors={
+            isPremium
+              ? [
+                  "rgba(253,224,71,0.15)",
+                  "rgba(18,15,7,0.90)",
+                  "rgba(2,3,6,0.97)",
+                ]
+              : [
+                  "rgba(198,154,88,0.18)",
+                  "rgba(9,12,17,0.86)",
+                  "rgba(2,3,6,0.96)",
+                ]
+          }
           locations={[0, 0.44, 1]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
 
-        <View style={styles.featuredGlow} />
+        <View style={[styles.featuredGlow, isPremium && styles.featuredGlowPremium]} />
         <View style={styles.glassTopHairline} />
 
         <View style={styles.featuredTopRow}>
           <View style={styles.featuredKicker}>
-            <View style={styles.featuredKickerDot} />
-
+            <View style={[styles.featuredKickerDot, isPremium && styles.premiumDot]} />
             <AppText variant="sectionLabel" style={styles.featuredKickerText}>
               {isResume ? "À CONTINUER" : "POUR COMMENCER"}
             </AppText>
           </View>
 
-          <View style={styles.featuredArrow}>
-            {premiumLocked ? (
-              <LockKeyhole
-                size={17}
-                strokeWidth={2}
-                color={PREMIUM_GOLD}
-              />
-            ) : (
-              <ChevronRight
-                size={19}
-                strokeWidth={2.25}
-                color={VOCABULARY_LIGHT}
-              />
-            )}
+          <View style={styles.featuredTopActions}>
+            {isPremium ? (
+              <View style={styles.featuredPremiumBadge}>
+                <Sparkles size={12} strokeWidth={2} color={PREMIUM_GOLD} />
+                <AppText variant="caption" style={styles.featuredPremiumText}>
+                  PREMIUM
+                </AppText>
+              </View>
+            ) : null}
+
+            <View style={[styles.featuredArrow, isPremium && styles.featuredArrowPremium]}>
+              {premiumLocked ? (
+                <LockKeyhole size={17} strokeWidth={2} color={PREMIUM_GOLD} />
+              ) : (
+                <ChevronRight
+                  size={19}
+                  strokeWidth={2.25}
+                  color={isPremium ? PREMIUM_LIGHT : VOCABULARY_LIGHT}
+                />
+              )}
+            </View>
           </View>
         </View>
 
@@ -469,24 +419,30 @@ function FeaturedCollectionCard({
           <AppText variant="featureTitle" style={styles.featuredTitle}>
             {theme.title}
           </AppText>
-
-          <AppText
-            variant="bodySecondary"
-            tone="muted"
-            style={styles.featuredSubtitle}
-          >
+          <AppText variant="bodySecondary" tone="muted" style={styles.featuredSubtitle}>
             Vocabulaire · {theme.sub}
           </AppText>
         </View>
 
         <View style={styles.featuredFooter}>
-          <AppText variant="caption" style={styles.featuredFooterLabel}>
-            {premiumLocked ? "DÉCOUVRIR PREMIUM" : "OUVRIR LA COLLECTION"}
+          <AppText
+            variant="caption"
+            style={[styles.featuredFooterLabel, isPremium && styles.featuredFooterLabelPremium]}
+          >
+            {isPremium
+              ? premiumLocked
+                ? "DÉBLOQUER PREMIUM"
+                : "PREMIUM · OUVRIR LA COLLECTION"
+              : "OUVRIR LA COLLECTION"}
           </AppText>
 
           <View style={styles.featuredFooterLine}>
             <LinearGradient
-              colors={[VOCABULARY_ACCENT, VOCABULARY_LIGHT, "transparent"]}
+              colors={
+                isPremium
+                  ? [PREMIUM_GOLD, PREMIUM_LIGHT, "transparent"]
+                  : [VOCABULARY_ACCENT, VOCABULARY_LIGHT, "transparent"]
+              }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={StyleSheet.absoluteFill}
@@ -498,10 +454,6 @@ function FeaturedCollectionCard({
   );
 }
 
-// ──────────────────────────────────────────────
-// SECTION HEADER
-// ──────────────────────────────────────────────
-
 function CollectionSectionHeader({
   title,
   subtitle,
@@ -512,30 +464,31 @@ function CollectionSectionHeader({
   premium?: boolean;
 }) {
   return (
-    <View style={styles.sectionHeader}>
+    <View style={[styles.sectionHeader, premium && styles.sectionHeaderPremium]}>
       <View style={styles.sectionCopy}>
+        <View style={styles.sectionTitleRow}>
+          {premium ? <Sparkles size={15} strokeWidth={2} color={PREMIUM_GOLD} /> : null}
+          <AppText
+            variant="sectionLabel"
+            style={[styles.sectionTitle, premium && styles.sectionTitlePremium]}
+          >
+            {title}
+          </AppText>
+        </View>
         <AppText
-          variant="sectionLabel"
-          style={[
-            styles.sectionTitle,
-            premium && styles.sectionTitlePremium,
-          ]}
+          variant="caption"
+          style={[styles.sectionSubtitle, premium && styles.sectionSubtitlePremium]}
         >
-          {title}
-        </AppText>
-
-        <AppText variant="caption" style={styles.sectionSubtitle}>
           {subtitle}
         </AppText>
       </View>
 
       <View style={styles.sectionLineWrap}>
         <View style={styles.sectionLineBase} />
-
         <LinearGradient
           colors={
             premium
-              ? ["transparent", VOCABULARY_ACCENT, PREMIUM_GOLD]
+              ? ["transparent", "rgba(253,224,71,0.46)", PREMIUM_GOLD]
               : ["transparent", VOCABULARY_ACCENT, VOCABULARY_LIGHT]
           }
           start={{ x: 0, y: 0 }}
@@ -546,10 +499,6 @@ function CollectionSectionHeader({
     </View>
   );
 }
-
-// ──────────────────────────────────────────────
-// COLLECTION CARD
-// ──────────────────────────────────────────────
 
 function VocabularyCollectionCard({
   theme,
@@ -565,21 +514,13 @@ function VocabularyCollectionCard({
   const isPremium = theme.isLocked;
   const unlocked = !isPremium || hasPremiumAccess;
 
-  const statusLabel = isPremium
-    ? unlocked
-      ? "DÉVERROUILLÉ"
-      : "PREMIUM"
-    : "INCLUSE";
-
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${theme.title}. ${theme.sub}. ${statusLabel}.`}
-      accessibilityHint={
-        unlocked
-          ? "Ouvre cette collection de vocabulaire"
-          : "Ouvre l'accès Premium"
-      }
+      accessibilityLabel={`${theme.title}. ${theme.sub}. ${
+        isPremium ? "Premium" : "Incluse"
+      }.`}
+      accessibilityHint={unlocked ? "Ouvre cette collection" : "Ouvre l'accès Premium"}
       onPress={onPress}
       style={({ pressed }) => [
         styles.collectionWrap,
@@ -588,7 +529,7 @@ function VocabularyCollectionCard({
       ]}
     >
       <BlurView
-        intensity={isPremium ? 56 : 62}
+        intensity={isPremium ? 58 : 62}
         tint="dark"
         style={styles.collectionCard}
       >
@@ -596,9 +537,9 @@ function VocabularyCollectionCard({
           colors={
             isPremium
               ? [
-                  "rgba(198,154,88,0.07)",
-                  "rgba(6,9,14,0.88)",
-                  "rgba(2,3,6,0.96)",
+                  "rgba(253,224,71,0.095)",
+                  "rgba(13,12,8,0.91)",
+                  "rgba(2,3,6,0.97)",
                 ]
               : [
                   "rgba(198,154,88,0.11)",
@@ -611,16 +552,12 @@ function VocabularyCollectionCard({
           style={StyleSheet.absoluteFill}
         />
 
-        <View style={styles.glassTopHairline} />
-        <View style={styles.collectionAmbientGlow} />
+        <View style={[styles.cardTopHairline, isPremium && styles.cardTopHairlinePremium]} />
+        <View style={[styles.collectionAmbientGlow, isPremium && styles.collectionAmbientGlowPremium]} />
+        {isPremium ? <View style={styles.premiumRail} /> : null}
 
         <View style={styles.collectionTopRow}>
-          <View
-            style={[
-              styles.collectionIcon,
-              isPremium && styles.collectionIconPremium,
-            ]}
-          >
+          <View style={[styles.collectionIcon, isPremium && styles.collectionIconPremium]}>
             <AppText
               variant="symbol"
               style={[
@@ -636,44 +573,48 @@ function VocabularyCollectionCard({
             <AppText
               variant="sectionLabel"
               lineContract="singleLine"
-              style={styles.collectionIndex}
+              style={[styles.collectionIndex, isPremium && styles.collectionIndexPremium]}
             >
               COLLECTION {String(order).padStart(2, "0")}
             </AppText>
 
-            <View
-              style={[
-                styles.statusPill,
-                isPremium && styles.statusPillPremium,
-                isPremium && unlocked && styles.statusPillUnlocked,
-              ]}
-            >
-              {isPremium ? (
-                unlocked ? (
-                  <Check size={11} strokeWidth={2.5} color={VOCABULARY_LIGHT} />
-                ) : (
-                  <LockKeyhole
-                    size={11}
-                    strokeWidth={2}
-                    color={PREMIUM_GOLD}
-                  />
-                )
-              ) : (
-                <View style={styles.statusDot} />
-              )}
+            {isPremium ? (
+              <View style={styles.premiumStatusGroup}>
+                <View style={styles.premiumBadge}>
+                  <Sparkles size={11} strokeWidth={2} color={PREMIUM_GOLD} />
+                  <AppText variant="caption" lineContract="singleLine" style={styles.premiumBadgeText}>
+                    PREMIUM
+                  </AppText>
+                </View>
 
-              <AppText
-                variant="caption"
-                lineContract="singleLine"
-                style={[
-                  styles.statusText,
-                  isPremium && styles.statusTextPremium,
-                  isPremium && unlocked && styles.statusTextUnlocked,
-                ]}
-              >
-                {statusLabel}
-              </AppText>
-            </View>
+                <View
+                  style={[
+                    styles.accessBadge,
+                    unlocked ? styles.accessBadgeActive : styles.accessBadgeLocked,
+                  ]}
+                >
+                  {unlocked ? (
+                    <Check size={10} strokeWidth={2.5} color={PREMIUM_LIGHT} />
+                  ) : (
+                    <LockKeyhole size={10} strokeWidth={2} color={PREMIUM_GOLD} />
+                  )}
+                  <AppText
+                    variant="caption"
+                    lineContract="singleLine"
+                    style={styles.accessBadgeText}
+                  >
+                    {unlocked ? "ACCÈS ACTIF" : "VERROUILLÉ"}
+                  </AppText>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.includedBadge}>
+                <View style={styles.statusDot} />
+                <AppText variant="caption" lineContract="singleLine" style={styles.includedBadgeText}>
+                  INCLUSE
+                </AppText>
+              </View>
+            )}
           </View>
         </View>
 
@@ -681,12 +622,7 @@ function VocabularyCollectionCard({
           <AppText variant="cardTitle" style={styles.collectionTitle}>
             {theme.title}
           </AppText>
-
-          <AppText
-            variant="bodySecondary"
-            tone="muted"
-            style={styles.collectionSubtitle}
-          >
+          <AppText variant="bodySecondary" tone="muted" style={styles.collectionSubtitle}>
             {theme.sub}
           </AppText>
         </View>
@@ -701,19 +637,14 @@ function VocabularyCollectionCard({
             />
           </View>
 
-          <View
-            style={[
-              styles.collectionArrow,
-              isPremium && styles.collectionArrowPremium,
-            ]}
-          >
+          <View style={[styles.collectionArrow, isPremium && styles.collectionArrowPremium]}>
             {isPremium && !unlocked ? (
               <LockKeyhole size={15} strokeWidth={2} color={PREMIUM_GOLD} />
             ) : (
               <ChevronRight
                 size={17}
                 strokeWidth={2.2}
-                color={VOCABULARY_LIGHT}
+                color={isPremium ? PREMIUM_LIGHT : VOCABULARY_LIGHT}
               />
             )}
           </View>
@@ -722,10 +653,6 @@ function VocabularyCollectionCard({
     </Pressable>
   );
 }
-
-// ──────────────────────────────────────────────
-// ANIMATION
-// ──────────────────────────────────────────────
 
 function AnimatedFragment({
   children,
@@ -780,37 +707,28 @@ function AnimatedFragment({
   );
 }
 
-// ──────────────────────────────────────────────
-// STYLES
-// ──────────────────────────────────────────────
-
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: BG_DEEP,
   },
-
   background: {
     flex: 1,
     overflow: "hidden",
     backgroundColor: BG_DEEP,
   },
-
   scrollContent: {
     paddingTop: 8,
     paddingBottom: 120,
   },
-
   contentFrame: {
     width: "100%",
     alignSelf: "center",
   },
-
   pressablePressed: {
     opacity: 0.84,
     transform: [{ scale: 0.992 }],
   },
-
   glassTopHairline: {
     position: "absolute",
     top: 0,
@@ -820,7 +738,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.16)",
     opacity: 0.7,
   },
-
   ambientGlowTop: {
     position: "absolute",
     top: 120,
@@ -831,7 +748,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(198,154,88,0.025)",
     boxShadow: "0px 0px 70px rgba(198,154,88,0.05)",
   },
-
   ambientGlowBottom: {
     position: "absolute",
     top: 640,
@@ -842,30 +758,22 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(226,190,125,0.018)",
     boxShadow: "0px 0px 80px rgba(226,190,125,0.04)",
   },
-
-  // NAV
-
   navHeader: {
     minHeight: 60,
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
   },
-
-  // HERO
-
   hero: {
     paddingHorizontal: 2,
     marginTop: 12,
     marginBottom: 28,
   },
-
   heroEyebrowRow: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
   },
-
   heroDot: {
     width: 5,
     height: 5,
@@ -874,12 +782,10 @@ const styles = StyleSheet.create({
     backgroundColor: VOCABULARY_ACCENT,
     boxShadow: "0px 0px 8px rgba(198,154,88,0.72)",
   },
-
   heroEyebrow: {
     color: "rgba(244,232,212,0.62)",
     letterSpacing: 1.3,
   },
-
   heroKorean: {
     color: "rgba(255,248,236,0.98)",
     fontSize: 40,
@@ -888,23 +794,19 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 14,
   },
-
   heroKoreanCompact: {
     fontSize: 36,
     lineHeight: 44,
   },
-
   heroTitle: {
     color: TXT,
     marginTop: -2,
   },
-
   heroSubtitle: {
     maxWidth: 520,
     marginTop: 8,
     color: MUTED,
   },
-
   heroMetaRow: {
     marginTop: 20,
     flexDirection: "row",
@@ -912,7 +814,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 14,
   },
-
   levelPill: {
     minHeight: 32,
     paddingHorizontal: 12,
@@ -923,19 +824,14 @@ const styles = StyleSheet.create({
     borderColor: "rgba(198,154,88,0.20)",
     backgroundColor: "rgba(28,21,12,0.68)",
   },
-
   levelText: {
     marginLeft: 7,
     color: "rgba(226,190,125,0.86)",
   },
-
   heroCollectionCount: {
     color: SOFT,
     textAlign: "right",
   },
-
-  // FEATURED
-
   featuredWrap: {
     marginBottom: 8,
     borderRadius: 30,
@@ -945,14 +841,16 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(2,3,6,0.48)",
     boxShadow: `0px 12px 30px ${VOCABULARY.featuredShadow}`,
   },
-
+  featuredWrapPremium: {
+    borderColor: "rgba(253,224,71,0.34)",
+    boxShadow: "0px 12px 32px rgba(253,224,71,0.12)",
+  },
   featuredCard: {
     minHeight: 214,
     padding: 20,
     position: "relative",
     overflow: "hidden",
   },
-
   featuredGlow: {
     position: "absolute",
     top: -86,
@@ -964,14 +862,23 @@ const styles = StyleSheet.create({
     backgroundColor: VOCABULARY_ACCENT,
     boxShadow: `0px 0px 58px ${VOCABULARY.glow}`,
   },
-
+  featuredGlowPremium: {
+    backgroundColor: PREMIUM_GOLD,
+    opacity: 0.07,
+    boxShadow: "0px 0px 58px rgba(253,224,71,0.22)",
+  },
   featuredTopRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: 10,
     marginBottom: 24,
   },
-
+  featuredTopActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   featuredKicker: {
     minHeight: 30,
     flexDirection: "row",
@@ -982,7 +889,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.10)",
     backgroundColor: "rgba(3,6,10,0.62)",
   },
-
   featuredKickerDot: {
     width: 5,
     height: 5,
@@ -990,11 +896,27 @@ const styles = StyleSheet.create({
     marginRight: 7,
     backgroundColor: VOCABULARY_ACCENT,
   },
-
+  premiumDot: {
+    backgroundColor: PREMIUM_GOLD,
+  },
   featuredKickerText: {
     color: "rgba(241,245,249,0.62)",
   },
-
+  featuredPremiumBadge: {
+    minHeight: 30,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 9,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(253,224,71,0.28)",
+    backgroundColor: "rgba(253,224,71,0.07)",
+  },
+  featuredPremiumText: {
+    color: PREMIUM_LIGHT,
+    letterSpacing: 0.5,
+  },
   featuredArrow: {
     width: 40,
     height: 40,
@@ -1005,42 +927,40 @@ const styles = StyleSheet.create({
     borderColor: "rgba(198,154,88,0.22)",
     backgroundColor: "rgba(28,21,12,0.62)",
   },
-
+  featuredArrowPremium: {
+    borderColor: "rgba(253,224,71,0.30)",
+    backgroundColor: "rgba(253,224,71,0.06)",
+  },
   featuredContent: {
     maxWidth: 600,
   },
-
   featuredTitle: {
     color: TXT,
     marginBottom: 6,
   },
-
   featuredSubtitle: {
     color: MUTED,
     maxWidth: 560,
   },
-
   featuredFooter: {
     marginTop: 27,
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
   },
-
   featuredFooterLabel: {
     color: "rgba(226,190,125,0.76)",
     letterSpacing: 0.45,
   },
-
+  featuredFooterLabelPremium: {
+    color: PREMIUM_LIGHT,
+  },
   featuredFooterLine: {
     flex: 1,
     height: 1,
     overflow: "hidden",
-    opacity: 0.74,
+    opacity: 0.78,
   },
-
-  // SECTION HEADER
-
   sectionHeader: {
     marginTop: 32,
     marginBottom: 16,
@@ -1048,25 +968,31 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     gap: 14,
   },
-
+  sectionHeaderPremium: {
+    marginTop: 38,
+  },
   sectionCopy: {
     flexShrink: 0,
   },
-
+  sectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+  },
   sectionTitle: {
     color: "rgba(241,245,249,0.64)",
     letterSpacing: 1.15,
   },
-
   sectionTitlePremium: {
-    color: "rgba(226,190,125,0.76)",
+    color: PREMIUM_LIGHT,
   },
-
   sectionSubtitle: {
     marginTop: 3,
     color: "rgba(241,245,249,0.46)",
   },
-
+  sectionSubtitlePremium: {
+    color: "rgba(255,241,168,0.56)",
+  },
   sectionLineWrap: {
     flex: 1,
     height: 10,
@@ -1074,34 +1000,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 2,
   },
-
   sectionLineBase: {
     height: 1,
     backgroundColor: "rgba(255,255,255,0.06)",
   },
-
   sectionLineGlow: {
     position: "absolute",
     right: 0,
     width: 96,
     height: 1,
-    opacity: 0.8,
+    opacity: 0.86,
   },
-
-  // GRID
-
   grid: {
     gap: 15,
   },
-
   gridWide: {
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "stretch",
   },
-
-  // COLLECTION CARD
-
   collectionWrap: {
     minHeight: 174,
     borderRadius: 25,
@@ -1111,11 +1028,11 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(2,3,6,0.50)",
     boxShadow: "0px 10px 24px rgba(0,0,0,0.26)",
   },
-
   collectionWrapPremium: {
-    borderColor: "rgba(198,154,88,0.14)",
+    borderColor: "rgba(253,224,71,0.25)",
+    backgroundColor: "rgba(10,9,5,0.56)",
+    boxShadow: "0px 10px 26px rgba(253,224,71,0.07)",
   },
-
   collectionCard: {
     flex: 1,
     minHeight: 174,
@@ -1123,7 +1040,30 @@ const styles = StyleSheet.create({
     position: "relative",
     overflow: "hidden",
   },
-
+  cardTopHairline: {
+    position: "absolute",
+    top: 0,
+    left: 18,
+    right: 18,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.14)",
+    opacity: 0.62,
+  },
+  cardTopHairlinePremium: {
+    backgroundColor: "rgba(253,224,71,0.42)",
+    opacity: 0.92,
+  },
+  premiumRail: {
+    position: "absolute",
+    top: 18,
+    bottom: 18,
+    left: 0,
+    width: 2,
+    borderRadius: 2,
+    backgroundColor: PREMIUM_GOLD,
+    opacity: 0.92,
+    boxShadow: "0px 0px 12px rgba(253,224,71,0.42)",
+  },
   collectionAmbientGlow: {
     position: "absolute",
     top: -60,
@@ -1134,13 +1074,15 @@ const styles = StyleSheet.create({
     backgroundColor: VOCABULARY_ACCENT,
     opacity: 0.032,
   },
-
+  collectionAmbientGlowPremium: {
+    backgroundColor: PREMIUM_GOLD,
+    opacity: 0.055,
+  },
   collectionTopRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 13,
   },
-
   collectionIcon: {
     width: 48,
     height: 48,
@@ -1153,21 +1095,17 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(198,154,88,0.075)",
     boxShadow: `0px 0px 18px ${VOCABULARY.iconShadow}`,
   },
-
   collectionIconPremium: {
-    borderColor: "rgba(253,224,71,0.16)",
-    backgroundColor: "rgba(198,154,88,0.045)",
-    boxShadow: "0px 0px 14px rgba(198,154,88,0.10)",
+    borderColor: "rgba(253,224,71,0.30)",
+    backgroundColor: "rgba(253,224,71,0.07)",
+    boxShadow: "0px 0px 18px rgba(253,224,71,0.14)",
   },
-
   collectionIconText: {
     color: VOCABULARY_LIGHT,
   },
-
   collectionIconTextPremium: {
-    color: "rgba(226,190,125,0.72)",
+    color: PREMIUM_LIGHT,
   },
-
   collectionTopMeta: {
     flex: 1,
     minWidth: 0,
@@ -1176,14 +1114,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 9,
   },
-
   collectionIndex: {
     flexShrink: 1,
     color: "rgba(241,245,249,0.46)",
     letterSpacing: 0.95,
   },
-
-  statusPill: {
+  collectionIndexPremium: {
+    color: "rgba(255,241,168,0.58)",
+  },
+  includedBadge: {
     minHeight: 27,
     flexDirection: "row",
     alignItems: "center",
@@ -1194,17 +1133,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(198,154,88,0.16)",
     backgroundColor: "rgba(198,154,88,0.045)",
   },
-
-  statusPillPremium: {
-    borderColor: "rgba(253,224,71,0.18)",
-    backgroundColor: "rgba(253,224,71,0.04)",
-  },
-
-  statusPillUnlocked: {
-    borderColor: "rgba(198,154,88,0.20)",
-    backgroundColor: "rgba(198,154,88,0.055)",
-  },
-
   statusDot: {
     width: 4,
     height: 4,
@@ -1212,35 +1140,62 @@ const styles = StyleSheet.create({
     marginRight: 6,
     backgroundColor: VOCABULARY_ACCENT,
   },
-
-  statusText: {
-    color: "rgba(226,190,125,0.74)",
+  includedBadgeText: {
+    color: "rgba(226,190,125,0.76)",
   },
-
-  statusTextPremium: {
-    marginLeft: 5,
-    color: "rgba(253,224,71,0.80)",
+  premiumStatusGroup: {
+    flexShrink: 0,
+    alignItems: "flex-end",
+    gap: 5,
   },
-
-  statusTextUnlocked: {
-    color: "rgba(226,190,125,0.80)",
+  premiumBadge: {
+    minHeight: 25,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(253,224,71,0.32)",
+    backgroundColor: "rgba(253,224,71,0.075)",
   },
-
+  premiumBadgeText: {
+    color: PREMIUM_LIGHT,
+    letterSpacing: 0.45,
+  },
+  accessBadge: {
+    minHeight: 22,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 7,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  accessBadgeActive: {
+    borderColor: "rgba(255,241,168,0.18)",
+    backgroundColor: "rgba(255,241,168,0.035)",
+  },
+  accessBadgeLocked: {
+    borderColor: "rgba(253,224,71,0.18)",
+    backgroundColor: "rgba(253,224,71,0.03)",
+  },
+  accessBadgeText: {
+    color: "rgba(255,241,168,0.70)",
+    fontSize: 10,
+  },
   collectionCopy: {
     marginTop: 18,
     paddingRight: 8,
   },
-
   collectionTitle: {
     color: TXT,
   },
-
   collectionSubtitle: {
     marginTop: 5,
     color: MUTED,
     maxWidth: 560,
   },
-
   collectionFooter: {
     marginTop: "auto",
     paddingTop: 16,
@@ -1248,26 +1203,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
-
   collectionFooterLine: {
     flex: 1,
     height: 1,
     overflow: "hidden",
     backgroundColor: "rgba(255,255,255,0.06)",
   },
-
   collectionFooterAccent: {
     width: 40,
     height: 1,
     backgroundColor: VOCABULARY_ACCENT,
     opacity: 0.82,
   },
-
   collectionFooterAccentPremium: {
-    width: 26,
-    opacity: 0.52,
+    width: 52,
+    backgroundColor: PREMIUM_GOLD,
+    opacity: 0.92,
+    boxShadow: "0px 0px 8px rgba(253,224,71,0.28)",
   },
-
   collectionArrow: {
     width: 31,
     height: 31,
@@ -1278,9 +1231,8 @@ const styles = StyleSheet.create({
     borderColor: "rgba(198,154,88,0.18)",
     backgroundColor: "rgba(198,154,88,0.045)",
   },
-
   collectionArrowPremium: {
-    borderColor: "rgba(253,224,71,0.15)",
-    backgroundColor: "rgba(253,224,71,0.025)",
+    borderColor: "rgba(253,224,71,0.28)",
+    backgroundColor: "rgba(253,224,71,0.055)",
   },
 });
