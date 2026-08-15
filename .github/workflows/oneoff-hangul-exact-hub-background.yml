@@ -1,0 +1,86 @@
+name: One-off exact Hangul hub background replication
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oneoff-hangul-exact-hub-background.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Copy hub background implementation exactly
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          lesson = Path("components/hangul/HangulLessonScreen.tsx")
+          text = lesson.read_text(encoding="utf-8")
+
+          # Same ABSOLUTE_FILL helper as hangul/index.tsx.
+          anchor = 'import { HubModuleAccents, SeoulMidnightGlass } from "../../constants/theme";\n'
+          if 'import { ABSOLUTE_FILL } from "../../constants/layout";' not in text:
+              text = text.replace(anchor, 'import { ABSOLUTE_FILL } from "../../constants/layout";\n' + anchor, 1)
+
+          # Background layers: literal copy of hub implementation.
+          start = text.index('  const BackgroundLayers = () => (')
+          end = text.index('\n\n  if (!moduleUnlocked && prerequisite)', start)
+          exact_layers = '''  const BackgroundLayers = () => (\n    <>\n      <BlurView intensity={18} tint="dark" style={styles.bgBlur} />\n\n      <View style={styles.vignetteOverlay} />\n\n      <LinearGradient\n        colors={["rgba(2,3,6,0.10)", "rgba(2,3,6,0.22)", "rgba(2,3,6,0.72)"]}\n        locations={[0, 0.44, 1]}\n        style={StyleSheet.absoluteFill}\n        pointerEvents="none"\n      />\n\n      <View style={styles.ambientGlowTop} pointerEvents="none" />\n\n      <View style={styles.ambientGlowBottom} pointerEvents="none" />\n    </>\n  );'''
+          text = text[:start] + exact_layers + text[end:]
+
+          # Both lesson ImageBackgrounds must match hub: no blurRadius, no image opacity.
+          text = text.replace('style={styles.background}', 'style={styles.bgImage}')
+          text = text.replace('\n          blurRadius={6}\n          imageStyle={styles.backgroundImage}', '')
+          text = text.replace('\n          blurRadius={6}\n          imageStyle={styles.backgroundImage}', '')
+          text = text.replace('\n          blurRadius={6}\n          imageStyle={styles.backgroundImage}', '')
+
+          # Exact root styles from hub.
+          old_styles = '''  background: {\n    flex: 1,\n    backgroundColor: BG_DEEP,\n    overflow: "hidden",\n  },\n  backgroundImage: {\n    opacity: 0.78,\n  },\n  vignetteOverlay: {\n    ...StyleSheet.absoluteFillObject,\n    backgroundColor: "rgba(2,3,6,0.52)",\n  },'''
+          new_styles = '''  bgImage: {\n    flex: 1,\n\n    overflow: "hidden",\n\n    backgroundColor: BG_DEEP,\n  },\n\n  bgBlur: {\n    ...ABSOLUTE_FILL,\n  },\n\n  vignetteOverlay: {\n    ...ABSOLUTE_FILL,\n\n    backgroundColor: "rgba(2,3,6,0.52)",\n  },'''
+          if old_styles not in text:
+              raise SystemExit("Lesson background styles did not match expected current code")
+          text = text.replace(old_styles, new_styles, 1)
+          lesson.write_text(text, encoding="utf-8")
+
+          # Apply the same exact root/background mechanism to assessment + bridge.
+          for rel in ["app/(tabs)/hangul/assessment.tsx", "app/(tabs)/hangul/bridge.tsx"]:
+              p = Path(rel)
+              s = p.read_text(encoding="utf-8")
+              import_anchor = 'import { AppBackButton } from "../../../components/ui/app-back-button";\n'
+              if 'import { ABSOLUTE_FILL } from "../../../constants/layout";' not in s:
+                  s = s.replace(import_anchor, import_anchor + 'import { ABSOLUTE_FILL } from "../../../constants/layout";\n', 1)
+
+              s = s.replace('style={styles.background}', 'style={styles.bgImage}')
+              s = s.replace(' blurRadius={6} imageStyle={styles.backgroundImage}', '')
+              s = s.replace('<BlurView intensity={18} tint="dark" style={StyleSheet.absoluteFillObject} />', '<BlurView intensity={18} tint="dark" style={styles.bgBlur} />')
+              s = s.replace('style={StyleSheet.absoluteFillObject}\n          pointerEvents="none"', 'style={StyleSheet.absoluteFill}\n          pointerEvents="none"')
+
+              old = '  background: { flex: 1, overflow: "hidden", backgroundColor: "#020306" },\n  backgroundImage: { opacity: 0.78 },\n  vignetteOverlay: {\n    ...StyleSheet.absoluteFillObject,\n    backgroundColor: "rgba(2,3,6,0.52)",\n  },'
+              new = '  bgImage: { flex: 1, overflow: "hidden", backgroundColor: "#020306" },\n  bgBlur: { ...ABSOLUTE_FILL },\n  vignetteOverlay: {\n    ...ABSOLUTE_FILL,\n    backgroundColor: "rgba(2,3,6,0.52)",\n  },'
+              if old not in s:
+                  raise SystemExit(f"{rel}: expected current background styles not found")
+              s = s.replace(old, new, 1)
+              p.write_text(s, encoding="utf-8")
+          PY
+
+      - name: Validate and commit
+        shell: bash
+        run: |
+          npm ci
+          npx tsc --noEmit
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/oneoff-hangul-exact-hub-background.yml
+          git add components/hangul/HangulLessonScreen.tsx app/'(tabs)'/hangul/assessment.tsx app/'(tabs)'/hangul/bridge.tsx .github/workflows/oneoff-hangul-exact-hub-background.yml
+          git diff --cached --check
+          git commit -m "fix: replicate Hangul hub background exactly across parcours"
+          git push origin HEAD:main
