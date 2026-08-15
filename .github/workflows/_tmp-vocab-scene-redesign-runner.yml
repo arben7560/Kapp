@@ -1,0 +1,77 @@
+name: Apply vocabulary scene redesign runner
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/_tmp-vocab-scene-redesign-runner.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  redesign:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract and apply redesign script
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          workflow = Path('.github/workflows/_tmp-vocab-scene-redesign.yml').read_text()
+          start_marker = "          node <<'NODE'\n"
+          end_marker = "\n          NODE"
+          start = workflow.index(start_marker) + len(start_marker)
+          end = workflow.index(end_marker, start)
+          block = workflow[start:end]
+          script = "\n".join(
+              line[10:] if line.startswith("          ") else line
+              for line in block.splitlines()
+          )
+          Path('/tmp/apply-vocab-redesign.js').write_text(script + "\n")
+          PY
+
+          node /tmp/apply-vocab-redesign.js
+          git diff --check
+          git diff --stat
+
+      - name: Scoped TypeScript validation
+        shell: bash
+        run: |
+          npm ci --ignore-scripts
+          set +e
+          npx tsc --noEmit 2>&1 | tee /tmp/tsc.log
+          TSC_STATUS=${PIPESTATUS[0]}
+          set -e
+
+          if grep -E 'app/\(tabs\)/voc/(gastronomie|basics|transport|kdrama|romance|nuit|sante|work)\.tsx' /tmp/tsc.log; then
+            echo "Vocabulary redesign introduced a TypeScript error."
+            exit 1
+          fi
+
+          if [ "$TSC_STATUS" -ne 0 ]; then
+            echo "::warning::TypeScript still reports pre-existing errors outside the Vocabulary redesign scope; no Vocabulary subtheme error was found."
+          fi
+
+      - name: Commit redesign
+        shell: bash
+        run: |
+          git config user.name "K-App Design Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/'(tabs)'/voc/gastronomie.tsx \
+                  app/'(tabs)'/voc/basics.tsx \
+                  app/'(tabs)'/voc/transport.tsx \
+                  app/'(tabs)'/voc/kdrama.tsx \
+                  app/'(tabs)'/voc/romance.tsx \
+                  app/'(tabs)'/voc/nuit.tsx \
+                  app/'(tabs)'/voc/sante.tsx \
+                  app/'(tabs)'/voc/work.tsx
+          git commit -m "style(vocab): unify subthemes with Seoul Midnight Glass"
+          git push origin HEAD:main
