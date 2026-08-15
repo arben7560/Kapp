@@ -22,6 +22,7 @@ jobs:
         run: |
           python <<'PY'
           from pathlib import Path
+          import re
 
           files = [
               Path("components/hangul/HangulLessonScreen.tsx"),
@@ -32,21 +33,25 @@ jobs:
           for path in files:
               text = path.read_text(encoding="utf-8")
 
-              # Apply blur directly to the source image so Android rendering does
-              # not depend on BlurView's platform-specific background blur path.
               if path.name == "HangulLessonScreen.tsx":
-                  old = 'style={styles.background}\n          resizeMode="cover"\n        >'
-                  new = 'style={styles.background}\n          resizeMode="cover"\n          blurRadius={6}\n          imageStyle={styles.backgroundImage}\n        >'
-                  count = text.count(old)
-                  if count != 2:
-                      raise SystemExit(f"Expected 2 lesson ImageBackground blocks, got {count}")
-                  text = text.replace(old, new)
+                  pattern = re.compile(
+                      r'(source=\{BACKGROUND_SOURCE\}\s+style=\{styles\.background\}\s+resizeMode="cover")\s*(>)'
+                  )
+                  text, count = pattern.subn(
+                      r'\1\n          blurRadius={6}\n          imageStyle={styles.backgroundImage}\n        \2',
+                      text,
+                  )
+                  if count < 1:
+                      raise SystemExit("No lesson ImageBackground block patched")
 
                   marker = '''  background: {\n    flex: 1,\n    backgroundColor: BG_DEEP,\n    overflow: "hidden",\n  },\n'''
-                  replacement = marker + '''  backgroundImage: {\n    opacity: 0.78,\n  },\n'''
                   if marker not in text:
                       raise SystemExit("Lesson background style marker missing")
-                  text = text.replace(marker, replacement, 1)
+                  text = text.replace(
+                      marker,
+                      marker + '''  backgroundImage: {\n    opacity: 0.78,\n  },\n''',
+                      1,
+                  )
               else:
                   old = '<ImageBackground source={BACKGROUND_SOURCE} style={styles.background} resizeMode="cover">'
                   new = '<ImageBackground source={BACKGROUND_SOURCE} style={styles.background} resizeMode="cover" blurRadius={6} imageStyle={styles.backgroundImage}>'
