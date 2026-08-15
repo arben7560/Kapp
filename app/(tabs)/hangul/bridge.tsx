@@ -28,7 +28,16 @@ export default function HangulBridgeScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ImageBackground source={BACKGROUND_SOURCE} style={styles.background} resizeMode="cover">
-        <LinearGradient colors={["rgba(2,3,6,0.65)", "rgba(2,3,6,0.94)"]} style={StyleSheet.absoluteFillObject} />
+        <BlurView intensity={18} tint="dark" style={StyleSheet.absoluteFillObject} />
+        <View style={styles.vignetteOverlay} />
+        <LinearGradient
+          colors={["rgba(2,3,6,0.10)", "rgba(2,3,6,0.22)", "rgba(2,3,6,0.72)"]}
+          locations={[0, 0.44, 1]}
+          style={StyleSheet.absoluteFillObject}
+          pointerEvents="none"
+        />
+        <View style={styles.ambientGlowTop} pointerEvents="none" />
+        <View style={styles.ambientGlowBottom} pointerEvents="none" />
         <ScrollView contentContainerStyle={[styles.scroll, { paddingHorizontal: responsive.horizontalPadding }]}>
           <View style={[styles.frame, { maxWidth: responsive.maxWidth }]}>
             <View style={styles.back}><AppBackButton /></View>
@@ -65,7 +74,31 @@ export default function HangulBridgeScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#020306" },
-  background: { flex: 1 },
+  background: { flex: 1, overflow: "hidden", backgroundColor: "#020306" },
+  vignetteOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(2,3,6,0.52)",
+  },
+  ambientGlowTop: {
+    position: "absolute",
+    top: 100,
+    right: -110,
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    backgroundColor: "rgba(103,232,249,0.05)",
+    boxShadow: "0px 0px 90px rgba(103,232,249,0.10)",
+  },
+  ambientGlowBottom: {
+    position: "absolute",
+    top: 510,
+    left: -130,
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    backgroundColor: "rgba(94,234,212,0.035)",
+    boxShadow: "0px 0px 100px rgba(94,234,212,0.07)",
+  },
   scroll: { paddingTop: 16, paddingBottom: 100 },
   frame: { width: "100%", alignSelf: "center" },
   back: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 26 },
