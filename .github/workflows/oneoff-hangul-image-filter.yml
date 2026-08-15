@@ -1,0 +1,74 @@
+name: One-off Hangul image filter fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oneoff-hangul-image-filter.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply deterministic image blur and opacity
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          files = [
+              Path("components/hangul/HangulLessonScreen.tsx"),
+              Path("app/(tabs)/hangul/assessment.tsx"),
+              Path("app/(tabs)/hangul/bridge.tsx"),
+          ]
+
+          for path in files:
+              text = path.read_text(encoding="utf-8")
+
+              # Apply blur directly to the source image so Android rendering does
+              # not depend on BlurView's platform-specific background blur path.
+              if path.name == "HangulLessonScreen.tsx":
+                  old = 'style={styles.background}\n          resizeMode="cover"\n        >'
+                  new = 'style={styles.background}\n          resizeMode="cover"\n          blurRadius={6}\n          imageStyle={styles.backgroundImage}\n        >'
+                  count = text.count(old)
+                  if count != 2:
+                      raise SystemExit(f"Expected 2 lesson ImageBackground blocks, got {count}")
+                  text = text.replace(old, new)
+
+                  marker = '''  background: {\n    flex: 1,\n    backgroundColor: BG_DEEP,\n    overflow: "hidden",\n  },\n'''
+                  replacement = marker + '''  backgroundImage: {\n    opacity: 0.78,\n  },\n'''
+                  if marker not in text:
+                      raise SystemExit("Lesson background style marker missing")
+                  text = text.replace(marker, replacement, 1)
+              else:
+                  old = '<ImageBackground source={BACKGROUND_SOURCE} style={styles.background} resizeMode="cover">'
+                  new = '<ImageBackground source={BACKGROUND_SOURCE} style={styles.background} resizeMode="cover" blurRadius={6} imageStyle={styles.backgroundImage}>'
+                  if old not in text:
+                      raise SystemExit(f"ImageBackground marker missing in {path}")
+                  text = text.replace(old, new, 1)
+
+                  marker = '  background: { flex: 1, overflow: "hidden", backgroundColor: "#020306" },\n'
+                  if marker not in text:
+                      raise SystemExit(f"Background style marker missing in {path}")
+                  text = text.replace(marker, marker + '  backgroundImage: { opacity: 0.78 },\n', 1)
+
+              path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Commit fix and remove workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/oneoff-hangul-image-filter.yml
+          git add components/hangul/HangulLessonScreen.tsx app/'(tabs)'/hangul/assessment.tsx app/'(tabs)'/hangul/bridge.tsx .github/workflows/oneoff-hangul-image-filter.yml
+          git diff --cached --check
+          git commit -m "fix: match Hangul lesson backgrounds to hub on Android"
+          git push origin HEAD:main
