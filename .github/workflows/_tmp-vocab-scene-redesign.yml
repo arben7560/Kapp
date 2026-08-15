@@ -1,0 +1,374 @@
+name: Apply vocabulary scene redesign
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/_tmp-vocab-scene-redesign.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  redesign:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply Seoul Midnight Glass scene system
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+
+          const configs = [
+            {
+              path: 'app/(tabs)/voc/gastronomie.tsx',
+              selectorContainer: 'tabContainer', selectorItem: 'tab', selectorLabel: 'tabText', selectorMode: 'equal',
+              hero: 'glassCard', desc: 'sceneDesc', bubble: 'bubble', left: 'bubbleLeft', right: 'bubbleRight',
+              toolboxHeader: 'toolboxTitleRow', grid: 'vocabGrid', expressionCard: 'vocabCard', expressionAccent: 'vocabAccent', expressionContent: 'vocabContent', expressionTop: 'vocabTopRow',
+            },
+            {
+              path: 'app/(tabs)/voc/basics.tsx',
+              selectorContainer: 'tabBar', selectorItem: 'tab', selectorLabel: 'tabLabel', selectorMode: 'equal',
+              hero: 'mainCard', desc: 'sceneSubtitle', bubble: 'msgBox', left: 'msgLeft', right: 'msgRight',
+              toolboxHeader: 'toolboxHeader', grid: 'expGrid', expressionCard: 'expCard', expressionAccent: 'expGlow', expressionContent: null, expressionTop: 'expTopRow',
+            },
+            {
+              path: 'app/(tabs)/voc/transport.tsx',
+              selectorContainer: 'tabBar', selectorItem: 'tab', selectorLabel: 'tabLabel', selectorMode: 'equal',
+              hero: 'glassCard', desc: 'sceneSub', bubble: 'bubble', left: 'bubbleLeft', right: 'bubbleRight',
+              toolboxHeader: 'toolboxHeader', grid: 'vocabularyGrid', expressionCard: 'vocabCard', expressionAccent: 'vocabGlow', expressionContent: null, expressionTop: 'vocabTopRow',
+            },
+            {
+              path: 'app/(tabs)/voc/kdrama.tsx',
+              selectorContainer: 'selectorRow', selectorItem: 'selectorItem', selectorLabel: 'selectorText', selectorMode: 'pill',
+              hero: 'glassCard', desc: 'sceneDesc', bubble: 'bubble', left: 'bubbleLeft', right: 'bubbleRight',
+              toolboxHeader: 'toolboxHeader', grid: 'expressionGrid', expressionCard: 'expCard', expressionAccent: 'expAccent', expressionContent: 'expContent', expressionTop: 'expTopRow',
+              extras: ['moodCard', 'immersionCard'],
+            },
+            {
+              path: 'app/(tabs)/voc/romance.tsx',
+              selectorContainer: 'sceneTabs', selectorItem: 'tab', selectorLabel: 'tabText', selectorMode: 'pill',
+              hero: 'mainCard', desc: 'sceneDesc', bubble: 'bubble', left: 'bubbleLeft', right: 'bubbleRight',
+              toolboxHeader: 'toolboxTitleRow', grid: 'vocabGrid', expressionCard: 'vocabCard', expressionAccent: 'vocabAccent', expressionContent: 'vocabContent', expressionTop: 'vocabTopRow',
+            },
+            {
+              path: 'app/(tabs)/voc/nuit.tsx',
+              selectorContainer: 'tabContainer', selectorItem: 'tab', selectorLabel: 'tabText', selectorMode: 'pill',
+              hero: 'glassCard', desc: 'sceneDesc', bubble: 'msg', left: 'msgLeft', right: 'msgRight',
+              toolboxHeader: 'toolboxTitleRow', grid: 'expGrid', expressionCard: 'expBox', expressionAccent: 'expGlow', expressionContent: 'expContent', expressionTop: 'expTopRow',
+              extras: ['cultureHint'],
+            },
+            {
+              path: 'app/(tabs)/voc/sante.tsx',
+              selectorContainer: 'tabContainer', selectorItem: 'tab', selectorLabel: 'tabText', selectorMode: 'equal',
+              hero: 'medicalCard', desc: 'sceneDesc', bubble: 'dialogueBubble', left: 'dialogueBubbleLeft', right: 'dialogueBubbleRight',
+              toolboxHeader: 'toolboxTitleBox', grid: 'expGrid', expressionCard: 'expCard', expressionAccent: 'expAccent', expressionContent: 'expContent', expressionTop: 'expTopRow',
+            },
+            {
+              path: 'app/(tabs)/voc/work.tsx',
+              selectorContainer: 'tabContainer', selectorItem: 'tab', selectorLabel: 'tabText', selectorMode: 'equal',
+              hero: 'glassCard', desc: 'sceneDesc', bubble: 'bubble', left: 'bubbleLeft', right: 'bubbleRight',
+              toolboxHeader: 'toolboxTitleRow', grid: 'vocabGrid', expressionCard: 'vocabCard', expressionAccent: 'vocabAccent', expressionContent: 'vocabContent', expressionTop: 'vocabTopRow',
+            },
+          ];
+
+          const lines = (...items) => items;
+
+          function replaceStyle(source, key, bodyLines, required = true) {
+            const stylesStart = source.indexOf('const styles = StyleSheet.create({');
+            if (stylesStart < 0) throw new Error('StyleSheet.create not found');
+
+            const patterns = [`\n  ${key}: {`, `\n  ${key}:\n  {`];
+            let start = -1;
+            for (const marker of patterns) {
+              start = source.indexOf(marker.replace('\\n', '\n'), stylesStart);
+              if (start >= 0) break;
+            }
+            if (start < 0) {
+              // Handles the common single-line form: key: { ... },
+              start = source.indexOf(`\n  ${key}:`, stylesStart);
+            }
+            if (start < 0) {
+              if (required) throw new Error(`Style ${key} not found`);
+              return source;
+            }
+
+            const open = source.indexOf('{', start);
+            if (open < 0) throw new Error(`Opening brace for ${key} not found`);
+
+            let depth = 0;
+            let close = -1;
+            for (let i = open; i < source.length; i += 1) {
+              const ch = source[i];
+              if (ch === '{') depth += 1;
+              if (ch === '}') {
+                depth -= 1;
+                if (depth === 0) {
+                  close = i;
+                  break;
+                }
+              }
+            }
+            if (close < 0) throw new Error(`Closing brace for ${key} not found`);
+
+            let end = close + 1;
+            while (end < source.length && /\s/.test(source[end]) && source[end] !== '\n') end += 1;
+            if (source[end] === ',') end += 1;
+
+            const replacement = `\n  ${key}: {\n${bodyLines.map((line) => `    ${line}`).join('\n')}\n  },`;
+            return source.slice(0, start) + replacement + source.slice(end);
+          }
+
+          function styleScene(source, config) {
+            const overlayPattern = /<View\s+style=\{styles\.overlay\}\s*\/>/;
+            if (!overlayPattern.test(source)) {
+              throw new Error(`Overlay view not found in ${config.path}`);
+            }
+            source = source.replace(
+              overlayPattern,
+              `<LinearGradient\n          colors={[\n            "rgba(2,3,6,0.34)",\n            "rgba(2,3,6,0.64)",\n            "rgba(2,3,6,0.93)",\n          ]}\n          locations={[0, 0.48, 1]}\n          style={styles.overlay}\n          pointerEvents="none"\n        />`,
+            );
+
+            // Enrich the existing scene accent wash where the old layout uses a two-stop gradient.
+            source = source.replace(
+              /colors=\{\[\`\$\{activeScene\.accent\}(?:15|18|20|25|30)\`,\s*"transparent"\]\}/g,
+              'colors={[`${activeScene.accent}28`, "rgba(4,8,18,0.18)", "transparent"]}',
+            );
+
+            source = replaceStyle(source, 'overlay', lines(
+              '...ABSOLUTE_FILL,',
+            ));
+            source = replaceStyle(source, 'scroll', lines(
+              'paddingHorizontal: 20,',
+              'paddingBottom: 110,',
+            ));
+            source = replaceStyle(source, 'topNav', lines(
+              'flexDirection: "row",',
+              'alignItems: "center",',
+              'gap: 14,',
+              'marginBottom: 24,',
+            ));
+            source = replaceStyle(source, 'navTitle', lines(
+              'color: "#F5F7FA",',
+              'opacity: 0.94,',
+            ));
+
+            if (config.selectorMode === 'pill') {
+              source = replaceStyle(source, config.selectorContainer, lines(
+                'flexDirection: "row",',
+                'justifyContent: "center",',
+                'alignItems: "center",',
+                'flexWrap: "wrap",',
+                'gap: 8,',
+                'marginBottom: 24,',
+              ));
+              source = replaceStyle(source, config.selectorItem, lines(
+                'minWidth: 94,',
+                'alignItems: "center",',
+                'justifyContent: "center",',
+                'paddingHorizontal: 14,',
+                'paddingVertical: 10,',
+                'borderRadius: 999,',
+                'borderWidth: 1,',
+                'borderColor: "rgba(255,255,255,0.12)",',
+                'backgroundColor: "rgba(4,8,18,0.58)",',
+              ));
+            } else {
+              source = replaceStyle(source, config.selectorContainer, lines(
+                'flexDirection: "row",',
+                'gap: 8,',
+                'marginBottom: 24,',
+              ));
+              source = replaceStyle(source, config.selectorItem, lines(
+                'flex: 1,',
+                'minHeight: 46,',
+                'alignItems: "center",',
+                'justifyContent: "center",',
+                'paddingHorizontal: 8,',
+                'paddingVertical: 11,',
+                'borderRadius: 18,',
+                'borderWidth: 1,',
+                'borderColor: "rgba(255,255,255,0.12)",',
+                'backgroundColor: "rgba(4,8,18,0.58)",',
+              ));
+            }
+            source = replaceStyle(source, config.selectorLabel, lines(
+              'color: COLORS.muted,',
+              'textAlign: "center",',
+            ));
+
+            source = replaceStyle(source, config.hero, lines(
+              'borderRadius: 28,',
+              'padding: 22,',
+              'overflow: "hidden",',
+              'borderWidth: 1,',
+              'borderColor: "rgba(255,255,255,0.16)",',
+              'backgroundColor: "rgba(4,8,18,0.62)",',
+              'boxShadow: "0px 18px 38px rgba(0,0,0,0.30)",',
+            ));
+            source = replaceStyle(source, config.desc, lines(
+              'color: COLORS.muted,',
+              'fontStyle: "italic",',
+              'marginTop: 8,',
+              'marginBottom: 26,',
+            ));
+
+            source = replaceStyle(source, config.bubble, lines(
+              'maxWidth: "90%",',
+              'padding: 17,',
+              'borderRadius: 20,',
+              'borderWidth: 1,',
+              'borderColor: "rgba(255,255,255,0.10)",',
+            ));
+            source = replaceStyle(source, config.left, lines(
+              'alignSelf: "flex-start",',
+              'backgroundColor: "rgba(6,11,20,0.74)",',
+              'borderBottomLeftRadius: 6,',
+            ));
+            source = replaceStyle(source, config.right, lines(
+              'alignSelf: "flex-end",',
+              'backgroundColor: "rgba(255,255,255,0.10)",',
+              'borderBottomRightRadius: 6,',
+            ));
+            source = replaceStyle(source, 'tapHint', lines(
+              'alignSelf: "center",',
+              'color: "rgba(255,255,255,0.48)",',
+              'marginTop: 8,',
+            ));
+
+            source = replaceStyle(source, 'toolbox', lines(
+              'marginTop: 36,',
+            ));
+            source = replaceStyle(source, config.toolboxHeader, lines(
+              'flexDirection: "row",',
+              'alignItems: "center",',
+              'gap: 12,',
+              'marginBottom: 18,',
+            ));
+            source = replaceStyle(source, 'toolboxTitle', lines(
+              'color: COLORS.txt,',
+            ));
+            source = replaceStyle(source, 'toolboxLine', lines(
+              'flex: 1,',
+              'height: 1,',
+              'opacity: 0.38,',
+            ));
+            source = replaceStyle(source, config.grid, lines(
+              'gap: 12,',
+            ));
+
+            const expressionCardLines = [
+              'borderRadius: 22,',
+              ...(config.expressionContent ? [] : ['padding: 20,']),
+              'overflow: "hidden",',
+              'borderWidth: 1,',
+              'borderColor: "rgba(255,255,255,0.12)",',
+              'backgroundColor: "rgba(4,8,18,0.70)",',
+              'boxShadow: "0px 10px 26px rgba(0,0,0,0.22)",',
+            ];
+            source = replaceStyle(source, config.expressionCard, expressionCardLines);
+            source = replaceStyle(source, config.expressionAccent, lines(
+              'position: "absolute",',
+              'left: 0,',
+              'top: 0,',
+              'bottom: 0,',
+              'width: 3,',
+            ));
+            if (config.expressionContent) {
+              source = replaceStyle(source, config.expressionContent, lines(
+                'padding: 20,',
+              ));
+            }
+            source = replaceStyle(source, config.expressionTop, lines(
+              'flexDirection: "row",',
+              'flexWrap: "wrap",',
+              'alignItems: "flex-start",',
+              'gap: 12,',
+              'marginBottom: 12,',
+            ));
+            source = replaceStyle(source, 'listenPill', lines(
+              'flexDirection: "row",',
+              'alignItems: "center",',
+              'gap: 6,',
+              'borderWidth: 1,',
+              'borderRadius: 999,',
+              'paddingHorizontal: 11,',
+              'paddingVertical: 7,',
+            ));
+            source = replaceStyle(source, 'listenText', lines(
+              'color: "rgba(255,255,255,0.84)",',
+            ));
+
+            for (const extra of config.extras ?? []) {
+              if (extra === 'cultureHint') {
+                source = replaceStyle(source, extra, lines(
+                  'marginTop: 24,',
+                  'paddingHorizontal: 14,',
+                  'paddingVertical: 11,',
+                  'borderRadius: 18,',
+                  'borderWidth: 1,',
+                  'backgroundColor: "rgba(4,8,18,0.58)",',
+                ));
+              } else if (extra === 'moodCard') {
+                source = replaceStyle(source, extra, lines(
+                  'borderWidth: 1,',
+                  'borderRadius: 18,',
+                  'padding: 14,',
+                  'backgroundColor: "rgba(4,8,18,0.58)",',
+                  'marginBottom: 22,',
+                ));
+              } else if (extra === 'immersionCard') {
+                source = replaceStyle(source, extra, lines(
+                  'padding: 18,',
+                  'borderRadius: 20,',
+                  'overflow: "hidden",',
+                  'borderWidth: 1,',
+                  'borderColor: "rgba(255,255,255,0.10)",',
+                  'backgroundColor: "rgba(4,8,18,0.62)",',
+                  'marginBottom: 30,',
+                ));
+              }
+            }
+
+            return source;
+          }
+
+          for (const config of configs) {
+            const before = fs.readFileSync(config.path, 'utf8');
+            const after = styleScene(before, config);
+            if (before === after) throw new Error(`No changes produced for ${config.path}`);
+            fs.writeFileSync(config.path, after);
+            console.log(`Updated ${config.path}`);
+          }
+          NODE
+
+          git diff --check
+          git diff --stat
+
+      - name: TypeScript validation
+        shell: bash
+        run: |
+          npm ci --ignore-scripts
+          npx tsc --noEmit
+
+      - name: Commit redesign
+        shell: bash
+        run: |
+          git config user.name "K-App Design Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/'(tabs)'/voc/gastronomie.tsx \
+                  app/'(tabs)'/voc/basics.tsx \
+                  app/'(tabs)'/voc/transport.tsx \
+                  app/'(tabs)'/voc/kdrama.tsx \
+                  app/'(tabs)'/voc/romance.tsx \
+                  app/'(tabs)'/voc/nuit.tsx \
+                  app/'(tabs)'/voc/sante.tsx \
+                  app/'(tabs)'/voc/work.tsx
+          git commit -m "style(vocab): unify subthemes with Seoul Midnight Glass"
+          git push origin HEAD:main
