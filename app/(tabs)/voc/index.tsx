@@ -53,7 +53,6 @@ const ACTIVE_PEARL = "#E8E3D8";
 
 type VocabularyTheme = {
   id: number;
-  monogram?: string;
   title: string;
   sub: string;
   route: string;
@@ -104,7 +103,6 @@ const THEMES: VocabularyTheme[] = [
   },
   {
     id: 5,
-    monogram: "N",
     title: "Vie nocturne",
     sub: "Sorties, bars et soju",
     route: "/voc/nuit",
@@ -788,25 +786,6 @@ function VocabularyCollectionCard({
         ) : null}
 
         <View style={styles.collectionTopRow}>
-          <View
-            style={[
-              styles.collectionIcon,
-              premiumLocked && styles.collectionIconPremiumLocked,
-              premiumActive && styles.collectionIconPremiumActive,
-            ]}
-          >
-            <AppText
-              variant="symbol"
-              style={[
-                styles.collectionIconText,
-                premiumLocked && styles.collectionIconTextPremiumLocked,
-                premiumActive && styles.collectionIconTextPremiumActive,
-              ]}
-            >
-              {theme.monogram ?? theme.title.charAt(0)}
-            </AppText>
-          </View>
-
           <View style={styles.collectionTopMeta}>
             <View style={styles.collectionIdentity}>
               <AppText
@@ -1548,43 +1527,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 13,
-  },
-
-  collectionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-    borderWidth: 1,
-    borderColor: "rgba(198,154,88,0.24)",
-    backgroundColor: "rgba(22,16,9,0.72)",
-    boxShadow: `0px 0px 18px ${VOCABULARY.iconShadow}`,
-  },
-
-  collectionIconPremiumLocked: {
-    borderColor: "rgba(253,224,71,0.22)",
-    backgroundColor: "rgba(25,21,7,0.72)",
-    boxShadow: "0px 0px 16px rgba(253,224,71,0.08)",
-  },
-
-  collectionIconPremiumActive: {
-    borderColor: "rgba(216,200,154,0.15)",
-    backgroundColor: "rgba(20,19,17,0.72)",
-    boxShadow: "0px 0px 12px rgba(216,200,154,0.035)",
-  },
-
-  collectionIconText: {
-    color: VOCABULARY_LIGHT,
-  },
-
-  collectionIconTextPremiumLocked: {
-    color: PREMIUM_LIGHT,
-  },
-
-  collectionIconTextPremiumActive: {
-    color: "rgba(216,200,154,0.82)",
   },
 
   collectionTopMeta: {
