@@ -446,7 +446,16 @@ export default function FirstStepsImmersion() {
         style={styles.bg}
         resizeMode="cover"
       >
-        <View style={styles.overlay} />
+        <LinearGradient
+          colors={[
+            "rgba(2,3,6,0.34)",
+            "rgba(2,3,6,0.64)",
+            "rgba(2,3,6,0.93)",
+          ]}
+          locations={[0, 0.48, 1]}
+          style={styles.overlay}
+          pointerEvents="none"
+        />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -505,7 +514,7 @@ export default function FirstStepsImmersion() {
           >
             <BlurView intensity={30} tint="dark" style={styles.mainCard}>
               <LinearGradient
-                colors={[`${activeScene.accent}15`, "transparent"]}
+                colors={[`${activeScene.accent}28`, "rgba(4,8,18,0.18)", "transparent"]}
                 style={ABSOLUTE_FILL}
               />
 
@@ -769,15 +778,17 @@ const styles = StyleSheet.create({
   bg: { flex: 1, overflow: "hidden" },
   overlay: {
     ...ABSOLUTE_FILL,
-    backgroundColor: "rgba(2,3,6,0.56)",
   },
-  scroll: { paddingHorizontal: 22, paddingBottom: 90 },
+  scroll: {
+    paddingHorizontal: 20,
+    paddingBottom: 110,
+  },
 
   topNav: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 15,
-    marginBottom: 30,
+    gap: 14,
+    marginBottom: 24,
   },
   backCircle: {
     width: 44,
@@ -791,7 +802,10 @@ const styles = StyleSheet.create({
   },
   backArrow: { color: "#fff", marginTop: -2 },
   navEyebrow: {},
-  navTitle: { color: "#fff", opacity: 0.8 },
+  navTitle: {
+    color: "#F5F7FA",
+    opacity: 0.94,
+  },
 
   header: {
     flexDirection: "row",
@@ -815,25 +829,36 @@ const styles = StyleSheet.create({
     color: COLORS.muted,
   },
 
-  tabBar: { flexDirection: "row", gap: 10, marginBottom: 25 },
+  tabBar: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 24,
+  },
   tab: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
+    minHeight: 46,
     alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 11,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(4,8,18,0.58)",
   },
   tabLabel: {
     color: COLORS.muted,
+    textAlign: "center",
   },
 
   mainCard: {
-    borderRadius: 32,
-    padding: 25,
+    borderRadius: 28,
+    padding: 22,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
+    borderColor: "rgba(255,255,255,0.16)",
+    backgroundColor: "rgba(4,8,18,0.62)",
+    boxShadow: "0px 18px 38px rgba(0,0,0,0.30)",
   },
   cardInfo: { marginBottom: 30 },
   krCategory: {
@@ -846,25 +871,26 @@ const styles = StyleSheet.create({
     color: COLORS.muted,
     fontStyle: "italic",
     marginTop: 8,
+    marginBottom: 26,
   },
 
   chatArea: { gap: 16 },
   msgBox: {
-    maxWidth: "85%",
-    padding: 16,
+    maxWidth: "90%",
+    padding: 17,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
+    borderColor: "rgba(255,255,255,0.10)",
   },
   msgLeft: {
     alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderBottomLeftRadius: 2,
+    backgroundColor: "rgba(6,11,20,0.74)",
+    borderBottomLeftRadius: 6,
   },
   msgRight: {
     alignSelf: "flex-end",
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderBottomRightRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderBottomRightRadius: 6,
   },
   msgChar: {
     marginBottom: 6,
@@ -894,44 +920,54 @@ const styles = StyleSheet.create({
   },
   tapHint: {
     alignSelf: "center",
-    color: "rgba(255,255,255,0.42)",
-    marginTop: 4,
+    color: "rgba(255,255,255,0.48)",
+    marginTop: 8,
   },
 
-  toolbox: { marginTop: 40 },
+  toolbox: {
+    marginTop: 36,
+  },
   toolboxHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 15,
-    marginBottom: 20,
+    gap: 12,
+    marginBottom: 18,
   },
   toolboxTitle: {
-    color: COLORS.muted,
+    color: COLORS.txt,
   },
-  toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
+  toolboxLine: {
+    flex: 1,
+    height: 1,
+    opacity: 0.38,
+  },
 
-  expGrid: { gap: 14 },
+  expGrid: {
+    gap: 12,
+  },
   expPressable: { width: "100%" },
   expCard: {
-    borderRadius: 24,
+    borderRadius: 22,
     padding: 20,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
+    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(4,8,18,0.70)",
+    boxShadow: "0px 10px 26px rgba(0,0,0,0.22)",
   },
   expGlow: {
     position: "absolute",
     left: 0,
     top: 0,
     bottom: 0,
-    width: 4,
+    width: 3,
   },
   expTopRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "flex-start",
-    gap: 14,
-    marginBottom: 10,
+    gap: 12,
+    marginBottom: 12,
   },
   expWord: {
     color: COLORS.txt,
@@ -952,11 +988,11 @@ const styles = StyleSheet.create({
     gap: 6,
     borderWidth: 1,
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
   },
   listenIcon: {},
   listenText: {
-    color: "rgba(255, 255, 255, 0.78)",
+    color: "rgba(255,255,255,0.84)",
   },
 });

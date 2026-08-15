@@ -470,7 +470,16 @@ export default function NightlifeImmersion() {
             />
           </Animated.View>
         ) : null}
-        <View style={styles.overlay} />
+        <LinearGradient
+          colors={[
+            "rgba(2,3,6,0.34)",
+            "rgba(2,3,6,0.64)",
+            "rgba(2,3,6,0.93)",
+          ]}
+          locations={[0, 0.48, 1]}
+          style={styles.overlay}
+          pointerEvents="none"
+        />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -532,7 +541,7 @@ export default function NightlifeImmersion() {
           >
             <BlurView intensity={60} tint="dark" style={styles.glassCard}>
               <LinearGradient
-                colors={[`${activeScene.accent}25`, "transparent"]}
+                colors={[`${activeScene.accent}28`, "rgba(4,8,18,0.18)", "transparent"]}
                 style={ABSOLUTE_FILL}
               />
 
@@ -816,15 +825,17 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...ABSOLUTE_FILL,
-    backgroundColor: "rgba(2,3,6,0.56)",
   },
-  scroll: { paddingHorizontal: 20, paddingBottom: 80 },
+  scroll: {
+    paddingHorizontal: 20,
+    paddingBottom: 110,
+  },
 
   topNav: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 15,
-    marginBottom: 30,
+    gap: 14,
+    marginBottom: 24,
   },
   backCircle: {
     width: 44,
@@ -838,7 +849,10 @@ const styles = StyleSheet.create({
   },
   backArrow: { color: "#fff", marginTop: -2 },
   navEyebrow: {},
-  navTitle: { color: "#fff", opacity: 0.8 },
+  navTitle: {
+    color: "#F5F7FA",
+    opacity: 0.94,
+  },
 
   header: {
     flexDirection: "row",
@@ -863,18 +877,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     flexWrap: "wrap",
-    gap: 10,
-    marginBottom: 25,
+    gap: 8,
+    marginBottom: 24,
   },
   tab: {
-    minWidth: 92,
+    minWidth: 94,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(4,8,18,0.58)",
   },
   tabText: {
     color: COLORS.muted,
@@ -882,11 +897,13 @@ const styles = StyleSheet.create({
   },
 
   glassCard: {
-    borderRadius: 32,
-    padding: 25,
+    borderRadius: 28,
+    padding: 22,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: "rgba(255,255,255,0.16)",
+    backgroundColor: "rgba(4,8,18,0.62)",
+    boxShadow: "0px 18px 38px rgba(0,0,0,0.30)",
   },
   cardHeader: { marginBottom: 12 },
   koreanHeader: {
@@ -898,26 +915,27 @@ const styles = StyleSheet.create({
   sceneDesc: {
     color: COLORS.muted,
     fontStyle: "italic",
-    marginBottom: 30,
+    marginTop: 8,
+    marginBottom: 26,
   },
 
   dialogueWrap: { gap: 16 },
   msg: {
-    maxWidth: "85%",
-    padding: 16,
+    maxWidth: "90%",
+    padding: 17,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
+    borderColor: "rgba(255,255,255,0.10)",
   },
   msgLeft: {
     alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderBottomLeftRadius: 2,
+    backgroundColor: "rgba(6,11,20,0.74)",
+    borderBottomLeftRadius: 6,
   },
   msgRight: {
     alignSelf: "flex-end",
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderBottomRightRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderBottomRightRadius: 6,
   },
   sender: {
     marginBottom: 5,
@@ -947,48 +965,66 @@ const styles = StyleSheet.create({
   },
   tapHint: {
     alignSelf: "center",
-    color: "rgba(255,255,255,0.42)",
-    marginTop: 4,
+    color: "rgba(255,255,255,0.48)",
+    marginTop: 8,
   },
 
   cultureHint: {
     marginTop: 24,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 11,
     borderRadius: 18,
     borderWidth: 1,
-    backgroundColor: "rgba(255,255,255,0.04)",
+    backgroundColor: "rgba(4,8,18,0.58)",
   },
   cultureHintText: {},
 
-  toolbox: { marginTop: 40 },
+  toolbox: {
+    marginTop: 36,
+  },
   toolboxTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 15,
-    marginBottom: 20,
+    gap: 12,
+    marginBottom: 18,
   },
   toolboxTitle: {
-    color: COLORS.muted,
+    color: COLORS.txt,
   },
-  toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
+  toolboxLine: {
+    flex: 1,
+    height: 1,
+    opacity: 0.38,
+  },
 
-  expGrid: { gap: 14 },
+  expGrid: {
+    gap: 12,
+  },
   expPressable: { width: "100%" },
   expBox: {
-    borderRadius: 24,
+    borderRadius: 22,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
+    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(4,8,18,0.70)",
+    boxShadow: "0px 10px 26px rgba(0,0,0,0.22)",
   },
-  expGlow: { position: "absolute", left: 0, top: 0, bottom: 0, width: 5 },
-  expContent: { padding: 20 },
+  expGlow: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 3,
+  },
+  expContent: {
+    padding: 20,
+  },
   expTopRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "flex-start",
-    gap: 14,
-    marginBottom: 10,
+    gap: 12,
+    marginBottom: 12,
   },
   expWord: {
     color: COLORS.txt,
@@ -1006,11 +1042,11 @@ const styles = StyleSheet.create({
     gap: 6,
     borderWidth: 1,
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
   },
   listenIcon: {},
   listenText: {
-    color: "rgba(255,255,255,0.78)",
+    color: "rgba(255,255,255,0.84)",
   },
 });

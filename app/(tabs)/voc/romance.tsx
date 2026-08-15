@@ -470,7 +470,16 @@ export default function RomanceDating() {
             />
           </Animated.View>
         ) : null}
-        <View style={styles.overlay} />
+        <LinearGradient
+          colors={[
+            "rgba(2,3,6,0.34)",
+            "rgba(2,3,6,0.64)",
+            "rgba(2,3,6,0.93)",
+          ]}
+          locations={[0, 0.48, 1]}
+          style={styles.overlay}
+          pointerEvents="none"
+        />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -526,7 +535,7 @@ export default function RomanceDating() {
           >
             <BlurView intensity={50} tint="dark" style={styles.mainCard}>
               <LinearGradient
-                colors={[`${activeScene.accent}30`, "transparent"]}
+                colors={[`${activeScene.accent}28`, "rgba(4,8,18,0.18)", "transparent"]}
                 style={ABSOLUTE_FILL}
               />
               <AppText variant="koreanSecondary" script="korean" lineContract="singleLine"
@@ -742,15 +751,17 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...ABSOLUTE_FILL,
-    backgroundColor: "rgba(2,3,6,0.56)",
   },
-  scroll: { paddingHorizontal: 20, paddingBottom: 60 },
+  scroll: {
+    paddingHorizontal: 20,
+    paddingBottom: 110,
+  },
 
   topNav: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 15,
-    marginBottom: 30,
+    gap: 14,
+    marginBottom: 24,
   },
   backCircle: {
     width: 44,
@@ -765,26 +776,29 @@ const styles = StyleSheet.create({
   backArrow: { color: "#fff", marginTop: -2 },
   navEyebrow: {
   },
-  navTitle: { color: "#fff", opacity: 0.8 },
+  navTitle: {
+    color: "#F5F7FA",
+    opacity: 0.94,
+  },
 
   sceneTabs: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     flexWrap: "wrap",
-    marginBottom: 25,
-    gap: 10,
+    gap: 8,
+    marginBottom: 24,
   },
   tab: {
-    minWidth: 92,
+    minWidth: 94,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 14,
-    paddingVertical: 9,
+    paddingVertical: 10,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.12)",
-    backgroundColor: "rgba(255,255,255,0.04)",
+    backgroundColor: "rgba(4,8,18,0.58)",
   },
   tabText: {
     color: COLORS.muted,
@@ -792,11 +806,13 @@ const styles = StyleSheet.create({
   },
 
   mainCard: {
-    borderRadius: 32,
-    padding: 25,
+    borderRadius: 28,
+    padding: 22,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
+    borderColor: "rgba(255,255,255,0.16)",
+    backgroundColor: "rgba(4,8,18,0.62)",
+    boxShadow: "0px 18px 38px rgba(0,0,0,0.30)",
   },
   sceneCategory: {
     marginBottom: 2,
@@ -808,26 +824,27 @@ const styles = StyleSheet.create({
   sceneDesc: {
     color: COLORS.muted,
     fontStyle: "italic",
-    marginBottom: 30,
+    marginTop: 8,
+    marginBottom: 26,
   },
 
   chatContainer: { gap: 16 },
   bubble: {
-    maxWidth: "88%",
-    padding: 16,
+    maxWidth: "90%",
+    padding: 17,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
+    borderColor: "rgba(255,255,255,0.10)",
   },
   bubbleLeft: {
     alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderTopLeftRadius: 4,
+    backgroundColor: "rgba(6,11,20,0.74)",
+    borderBottomLeftRadius: 6,
   },
   bubbleRight: {
     alignSelf: "flex-end",
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderTopRightRadius: 4,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderBottomRightRadius: 6,
   },
   charLabel: {
     marginBottom: 6,
@@ -856,44 +873,56 @@ const styles = StyleSheet.create({
   },
   tapHint: {
     alignSelf: "center",
-    color: "rgba(255,255,255,0.42)",
-    marginTop: 4,
+    color: "rgba(255,255,255,0.48)",
+    marginTop: 8,
   },
 
-  toolbox: { marginTop: 40 },
+  toolbox: {
+    marginTop: 36,
+  },
   toolboxTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 15,
-    marginBottom: 20,
+    gap: 12,
+    marginBottom: 18,
   },
   toolboxTitle: {
-    color: COLORS.muted,
+    color: COLORS.txt,
   },
-  toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
+  toolboxLine: {
+    flex: 1,
+    height: 1,
+    opacity: 0.38,
+  },
 
-  vocabGrid: { gap: 14 },
+  vocabGrid: {
+    gap: 12,
+  },
   vocabPressable: { width: "100%" },
   vocabCard: {
-    borderRadius: 24,
+    borderRadius: 22,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
+    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(4,8,18,0.70)",
+    boxShadow: "0px 10px 26px rgba(0,0,0,0.22)",
   },
   vocabAccent: {
     position: "absolute",
     left: 0,
     top: 0,
     bottom: 0,
-    width: 4,
+    width: 3,
   },
-  vocabContent: { padding: 20 },
+  vocabContent: {
+    padding: 20,
+  },
   vocabTopRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "flex-start",
-    gap: 14,
-    marginBottom: 10,
+    gap: 12,
+    marginBottom: 12,
   },
   vocabKr: {
     color: COLORS.txt,
@@ -912,12 +941,12 @@ const styles = StyleSheet.create({
     gap: 6,
     borderWidth: 1,
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
   },
   listenIcon: {
   },
   listenText: {
-    color: "rgba(255,255,255,0.78)",
+    color: "rgba(255,255,255,0.84)",
   },
 });
