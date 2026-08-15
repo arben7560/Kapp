@@ -388,6 +388,8 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
           source={BACKGROUND_SOURCE}
           style={styles.background}
           resizeMode="cover"
+          blurRadius={6}
+          imageStyle={styles.backgroundImage}
         >
           <BackgroundLayers />
 
@@ -457,7 +459,9 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
         source={BACKGROUND_SOURCE}
         style={styles.background}
         resizeMode="cover"
-      >
+          blurRadius={6}
+          imageStyle={styles.backgroundImage}
+        >
         <BackgroundLayers />
 
         <ScrollView
@@ -1165,6 +1169,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BG_DEEP,
     overflow: "hidden",
+  },
+  backgroundImage: {
+    opacity: 0.78,
   },
   vignetteOverlay: {
     ...StyleSheet.absoluteFillObject,

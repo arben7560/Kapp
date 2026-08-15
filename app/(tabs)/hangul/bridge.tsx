@@ -27,7 +27,7 @@ export default function HangulBridgeScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground source={BACKGROUND_SOURCE} style={styles.background} resizeMode="cover">
+      <ImageBackground source={BACKGROUND_SOURCE} style={styles.background} resizeMode="cover" blurRadius={6} imageStyle={styles.backgroundImage}>
         <BlurView intensity={18} tint="dark" style={StyleSheet.absoluteFillObject} />
         <View style={styles.vignetteOverlay} />
         <LinearGradient
@@ -75,6 +75,7 @@ export default function HangulBridgeScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#020306" },
   background: { flex: 1, overflow: "hidden", backgroundColor: "#020306" },
+  backgroundImage: { opacity: 0.78 },
   vignetteOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(2,3,6,0.52)",
