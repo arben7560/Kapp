@@ -364,7 +364,7 @@ function FeaturedCollectionCard({
           colors={
             isPremium
               ? [
-                  "rgba(253,224,71,0.15)",
+                  "rgba(253,224,71,0.10)",
                   "rgba(18,15,7,0.90)",
                   "rgba(2,3,6,0.97)",
                 ]
@@ -408,7 +408,7 @@ function FeaturedCollectionCard({
                 <ChevronRight
                   size={19}
                   strokeWidth={2.25}
-                  color={isPremium ? PREMIUM_LIGHT : VOCABULARY_LIGHT}
+                  color={isPremium ? VOCABULARY_LIGHT : VOCABULARY_LIGHT}
                 />
               )}
             </View>
@@ -440,7 +440,7 @@ function FeaturedCollectionCard({
             <LinearGradient
               colors={
                 isPremium
-                  ? [PREMIUM_GOLD, PREMIUM_LIGHT, "transparent"]
+                  ? [PREMIUM_GOLD, VOCABULARY_LIGHT, "transparent"]
                   : [VOCABULARY_ACCENT, VOCABULARY_LIGHT, "transparent"]
               }
               start={{ x: 0, y: 0 }}
@@ -537,7 +537,7 @@ function VocabularyCollectionCard({
           colors={
             isPremium
               ? [
-                  "rgba(253,224,71,0.095)",
+                  "rgba(253,224,71,0.06)",
                   "rgba(13,12,8,0.91)",
                   "rgba(2,3,6,0.97)",
                 ]
@@ -644,7 +644,7 @@ function VocabularyCollectionCard({
               <ChevronRight
                 size={17}
                 strokeWidth={2.2}
-                color={isPremium ? PREMIUM_LIGHT : VOCABULARY_LIGHT}
+                color={isPremium ? VOCABULARY_LIGHT : VOCABULARY_LIGHT}
               />
             )}
           </View>
@@ -842,8 +842,8 @@ const styles = StyleSheet.create({
     boxShadow: `0px 12px 30px ${VOCABULARY.featuredShadow}`,
   },
   featuredWrapPremium: {
-    borderColor: "rgba(253,224,71,0.34)",
-    boxShadow: "0px 12px 32px rgba(253,224,71,0.12)",
+    borderColor: "rgba(253,224,71,0.26)",
+    boxShadow: "0px 12px 32px rgba(253,224,71,0.06)",
   },
   featuredCard: {
     minHeight: 214,
@@ -864,8 +864,8 @@ const styles = StyleSheet.create({
   },
   featuredGlowPremium: {
     backgroundColor: PREMIUM_GOLD,
-    opacity: 0.07,
-    boxShadow: "0px 0px 58px rgba(253,224,71,0.22)",
+    opacity: 0.045,
+    boxShadow: "0px 0px 58px rgba(253,224,71,0.12)",
   },
   featuredTopRow: {
     flexDirection: "row",
@@ -928,8 +928,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(28,21,12,0.62)",
   },
   featuredArrowPremium: {
-    borderColor: "rgba(253,224,71,0.30)",
-    backgroundColor: "rgba(253,224,71,0.06)",
+    borderColor: "rgba(253,224,71,0.22)",
+    backgroundColor: "rgba(253,224,71,0.04)",
   },
   featuredContent: {
     maxWidth: 600,
@@ -1029,9 +1029,9 @@ const styles = StyleSheet.create({
     boxShadow: "0px 10px 24px rgba(0,0,0,0.26)",
   },
   collectionWrapPremium: {
-    borderColor: "rgba(253,224,71,0.25)",
+    borderColor: "rgba(253,224,71,0.18)",
     backgroundColor: "rgba(10,9,5,0.56)",
-    boxShadow: "0px 10px 26px rgba(253,224,71,0.07)",
+    boxShadow: "0px 10px 26px rgba(253,224,71,0.035)",
   },
   collectionCard: {
     flex: 1,
@@ -1050,8 +1050,8 @@ const styles = StyleSheet.create({
     opacity: 0.62,
   },
   cardTopHairlinePremium: {
-    backgroundColor: "rgba(253,224,71,0.42)",
-    opacity: 0.92,
+    backgroundColor: "rgba(253,224,71,0.28)",
+    opacity: 0.72,
   },
   premiumRail: {
     position: "absolute",
@@ -1061,8 +1061,8 @@ const styles = StyleSheet.create({
     width: 2,
     borderRadius: 2,
     backgroundColor: PREMIUM_GOLD,
-    opacity: 0.92,
-    boxShadow: "0px 0px 12px rgba(253,224,71,0.42)",
+    opacity: 0.82,
+    boxShadow: "0px 0px 10px rgba(253,224,71,0.22)",
   },
   collectionAmbientGlow: {
     position: "absolute",
@@ -1076,7 +1076,7 @@ const styles = StyleSheet.create({
   },
   collectionAmbientGlowPremium: {
     backgroundColor: PREMIUM_GOLD,
-    opacity: 0.055,
+    opacity: 0.035,
   },
   collectionTopRow: {
     flexDirection: "row",
@@ -1096,9 +1096,9 @@ const styles = StyleSheet.create({
     boxShadow: `0px 0px 18px ${VOCABULARY.iconShadow}`,
   },
   collectionIconPremium: {
-    borderColor: "rgba(253,224,71,0.30)",
-    backgroundColor: "rgba(253,224,71,0.07)",
-    boxShadow: "0px 0px 18px rgba(253,224,71,0.14)",
+    borderColor: "rgba(253,224,71,0.22)",
+    backgroundColor: "rgba(253,224,71,0.045)",
+    boxShadow: "0px 0px 16px rgba(253,224,71,0.08)",
   },
   collectionIconText: {
     color: VOCABULARY_LIGHT,
@@ -1120,7 +1120,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.95,
   },
   collectionIndexPremium: {
-    color: "rgba(255,241,168,0.58)",
+    color: "rgba(255,241,168,0.52)",
   },
   includedBadge: {
     minHeight: 27,
@@ -1156,8 +1156,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(253,224,71,0.32)",
-    backgroundColor: "rgba(253,224,71,0.075)",
+    borderColor: "rgba(253,224,71,0.26)",
+    backgroundColor: "rgba(253,224,71,0.055)",
   },
   premiumBadgeText: {
     color: PREMIUM_LIGHT,
@@ -1216,10 +1216,10 @@ const styles = StyleSheet.create({
     opacity: 0.82,
   },
   collectionFooterAccentPremium: {
-    width: 52,
+    width: 44,
     backgroundColor: PREMIUM_GOLD,
-    opacity: 0.92,
-    boxShadow: "0px 0px 8px rgba(253,224,71,0.28)",
+    opacity: 0.78,
+    boxShadow: "0px 0px 6px rgba(253,224,71,0.14)",
   },
   collectionArrow: {
     width: 31,
@@ -1232,7 +1232,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(198,154,88,0.045)",
   },
   collectionArrowPremium: {
-    borderColor: "rgba(253,224,71,0.28)",
-    backgroundColor: "rgba(253,224,71,0.055)",
+    borderColor: "rgba(253,224,71,0.20)",
+    backgroundColor: "rgba(253,224,71,0.035)",
   },
 });
