@@ -53,6 +53,7 @@ const ACTIVE_PEARL = "#E8E3D8";
 
 type VocabularyTheme = {
   id: number;
+  monogram?: string;
   title: string;
   sub: string;
   route: string;
@@ -97,6 +98,7 @@ const THEMES: VocabularyTheme[] = [
   },
   {
     id: 5,
+    monogram: "N",
     title: "Vie nocturne",
     sub: "Sorties, bars et soju",
     route: "/voc/nuit",
@@ -668,7 +670,7 @@ function VocabularyCollectionCard({
                 premiumActive && styles.collectionIconTextPremiumActive,
               ]}
             >
-              {theme.title.charAt(0)}
+              {theme.monogram ?? theme.title.charAt(0)}
             </AppText>
           </View>
 
@@ -761,16 +763,7 @@ function VocabularyCollectionCard({
         </View>
 
         <View style={styles.collectionFooter}>
-          <View style={styles.collectionFooterLine}>
-            <View
-              style={[
-                styles.collectionFooterAccent,
-                premiumLocked && styles.collectionFooterAccentPremiumLocked,
-                premiumActive && styles.collectionFooterAccentPremiumActive,
-                isCurrent && styles.collectionFooterAccentCurrent,
-              ]}
-            />
-          </View>
+          <View style={styles.collectionFooterLine} />
 
           <View
             style={[
