@@ -66,9 +66,7 @@ const MODULES: CountingModule[] = [
     sub: "Système coréen natif",
     route: "/comptage/base",
     isLocked: false,
-    background: {
-      uri: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1000&q=82",
-    },
+    background: require("../../../assets/images/counting-base-card.png"),
   },
   {
     id: 2,
@@ -76,9 +74,7 @@ const MODULES: CountingModule[] = [
     sub: "Système sino-coréen",
     route: "/comptage/sino",
     isLocked: false,
-    background: {
-      uri: "https://images.unsplash.com/photo-1534452203293-497d1f39106d?auto=format&fit=crop&w=1000&q=82",
-    },
+    background: require("../../../assets/images/counting-sino-card.png"),
   },
   {
     id: 3,
@@ -86,9 +82,7 @@ const MODULES: CountingModule[] = [
     sub: "Le défi du système mixte",
     route: "/comptage/heures",
     isLocked: true,
-    background: {
-      uri: "https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=1000&q=82",
-    },
+    background: require("../../../assets/images/counting-hours-card.png"),
   },
   {
     id: 4,
@@ -96,9 +90,7 @@ const MODULES: CountingModule[] = [
     sub: "Gérer l'argent au quotidien",
     route: "/comptage/prix",
     isLocked: true,
-    background: {
-      uri: "https://images.unsplash.com/photo-1562280963-8a5475740a10?auto=format&fit=crop&w=1000&q=82",
-    },
+    background: require("../../../assets/images/counting-prices-card.png"),
   },
   {
     id: 5,
@@ -106,9 +98,7 @@ const MODULES: CountingModule[] = [
     sub: "Numéros, étages et bus",
     route: "/comptage/phone",
     isLocked: true,
-    background: {
-      uri: "https://images.unsplash.com/photo-1556740734-7f9a2b7a0f4d?auto=format&fit=crop&w=1000&q=82",
-    },
+    background: require("../../../assets/images/counting-phone-card.png"),
   },
   {
     id: 6,
@@ -116,9 +106,7 @@ const MODULES: CountingModule[] = [
     sub: "Jours, mois et années",
     route: "/comptage/dates",
     isLocked: true,
-    background: {
-      uri: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=1000&q=82",
-    },
+    background: require("../../../assets/images/counting-dates-card.png"),
   },
   {
     id: 7,
@@ -126,9 +114,7 @@ const MODULES: CountingModule[] = [
     sub: "Le système coréen unique",
     route: "/comptage/age",
     isLocked: true,
-    background: {
-      uri: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=1000&q=82",
-    },
+    background: require("../../../assets/images/counting-age-card.png"),
   },
   {
     id: 8,
@@ -136,9 +122,7 @@ const MODULES: CountingModule[] = [
     sub: "Premier, deuxième, troisième...",
     route: "/comptage/ordinals",
     isLocked: true,
-    background: {
-      uri: "https://images.unsplash.com/photo-1551818255-e6e10975bc17?auto=format&fit=crop&w=1000&q=82",
-    },
+    background: require("../../../assets/images/counting-ordinals-card.png"),
   },
 ];
 
