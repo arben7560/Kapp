@@ -1,9 +1,15 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import {
+  ChevronRight,
+  Sparkles,
+  X,
+} from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
+  Easing,
   Image,
   ImageBackground,
   ImageSourcePropType,
@@ -22,21 +28,27 @@ import {
 } from "react-native-safe-area-context";
 
 import { AppText } from "../../components/app-text";
-import { HubHero } from "../../components/hub/HubHero";
-import { SectionHeader } from "../../components/hub/SectionHeader";
 import { AppBackButton } from "../../components/ui/app-back-button";
-import { ABSOLUTE_FILL } from "../../constants/layout";
-import { HubModuleAccents } from "../../constants/theme";
+import {
+  HubModuleAccents,
+  SeoulMidnightGlass,
+} from "../../constants/theme";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 
 const BACKGROUND_SOURCE = require("../../assets/images/speak.jpg");
-const SPEAK_BACKGROUND_DARKNESS = 0.72;
 
-const BG_DEEP = "#020306";
+const BG_DEEP = SeoulMidnightGlass.colors.bgDeep;
+const TXT = SeoulMidnightGlass.colors.text;
+const MUTED = "rgba(241,245,249,0.76)";
+const SOFT = "rgba(241,245,249,0.54)";
+
+const CONVERSATION = HubModuleAccents.conversation;
+const CONVERSATION_ACCENT = CONVERSATION.base;
+const CONVERSATION_LIGHT = "#E7A9C1";
+
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
 const ORANGE = "#FB923C";
-const CONVERSATION_ACCENT = HubModuleAccents.conversation;
 
 const ASSETS = {
   cafe: require("../../assets/images/cafeIA.jpg"),
@@ -45,13 +57,16 @@ const ASSETS = {
   airport: require("../../assets/images/airport.jpg"),
   shopping: require("../../assets/images/shopping.jpg"),
 };
+
 type ThemeKey = "cafe" | "metro" | "restaurant" | "airport" | "shopping";
+
 type TextLessonRoute =
   | "/lesson/cafe"
   | "/lesson/metro"
   | "/lesson/restaurant"
   | "/lesson/airport"
   | "/lesson/magasin";
+
 type GuidedLessonRoute =
   | "/lesson/cafeMissions"
   | "/lesson/metroMissions"
@@ -60,6 +75,7 @@ type GuidedLessonRoute =
 
 type ThemeConfig = {
   title: string;
+  korean: string;
   sub: string;
   icon: string;
   image: ImageSourcePropType;
@@ -74,6 +90,7 @@ type ThemeConfig = {
 const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
   cafe: {
     title: "Café",
+    korean: "카페",
     sub: "Hongdae • 14:00",
     icon: "CF",
     image: ASSETS.cafe,
@@ -86,6 +103,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
   },
   metro: {
     title: "Métro",
+    korean: "지하철",
     sub: "Ligne 2 • Gangnam",
     icon: "M2",
     image: ASSETS.metro,
@@ -96,6 +114,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
   },
   restaurant: {
     title: "Restaurant",
+    korean: "식당",
     sub: "Itaewon • Dîner",
     icon: "RS",
     image: ASSETS.restaurant,
@@ -106,6 +125,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
   },
   airport: {
     title: "Aéroport",
+    korean: "공항",
     sub: "Incheon • Arrivée",
     icon: "ICN",
     image: ASSETS.airport,
@@ -116,6 +136,7 @@ const THEME_CONFIG: Record<ThemeKey, ThemeConfig> = {
   },
   shopping: {
     title: "Magasin",
+    korean: "매장",
     sub: "Jamsil • Boutique",
     icon: "SH",
     image: ASSETS.shopping,
@@ -135,24 +156,25 @@ export default function SpeakScreen() {
   const [sheetVisible, setSheetVisible] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<ThemeKey | null>(null);
   const responsive = useResponsiveLayout({ maxWidth: 920 });
-  const [screenEntryScale] = useState(() => new Animated.Value(1.05));
-  const [screenEntryOpacity] = useState(() => new Animated.Value(0));
+  const entryOpacity = useRef(new Animated.Value(0)).current;
+  const entryTranslateY = useRef(new Animated.Value(14)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(screenEntryOpacity, {
+      Animated.timing(entryOpacity, {
         toValue: 1,
-        duration: 900,
+        duration: 560,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
-      Animated.spring(screenEntryScale, {
-        toValue: 1,
-        friction: 9,
-        tension: 15,
+      Animated.timing(entryTranslateY, {
+        toValue: 0,
+        duration: 620,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
     ]).start();
-  }, [screenEntryOpacity, screenEntryScale]);
+  }, [entryOpacity, entryTranslateY]);
 
   const openThemeSheet = (theme: ThemeKey) => {
     setSelectedTheme(theme);
@@ -163,20 +185,38 @@ export default function SpeakScreen() {
     <SafeAreaView style={styles.safe}>
       <ImageBackground
         source={BACKGROUND_SOURCE}
-        style={styles.bgImage}
-        imageStyle={styles.bgImageAsset}
+        style={styles.background}
         resizeMode="cover"
-        blurRadius={2}
       >
-        <BlurView intensity={55} tint="dark" style={styles.bgBlur} />
-        <View style={styles.bgDarkOverlay} />
+        <BlurView
+          intensity={24}
+          tint="dark"
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+
+        <LinearGradient
+          colors={[
+            "rgba(2,3,6,0.40)",
+            "rgba(2,3,6,0.61)",
+            "rgba(2,3,6,0.91)",
+          ]}
+          locations={[0, 0.48, 1]}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+
+        <View style={styles.ambientGlowTop} pointerEvents="none" />
+        <View style={styles.ambientGlowBottom} pointerEvents="none" />
 
         <Animated.View
-          style={{
-            flex: 1,
-            opacity: screenEntryOpacity,
-            transform: [{ scale: screenEntryScale }],
-          }}
+          style={[
+            styles.screenMotion,
+            {
+              opacity: entryOpacity,
+              transform: [{ translateY: entryTranslateY }],
+            },
+          ]}
         >
           <ScrollView
             showsVerticalScrollIndicator={false}
@@ -186,34 +226,20 @@ export default function SpeakScreen() {
             ]}
           >
             <View
-              style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
+              style={[
+                styles.contentFrame,
+                { maxWidth: responsive.maxWidth },
+              ]}
             >
               <View style={styles.navHeader}>
-                <View style={styles.backBtn}>
-                  <AppBackButton />
-                </View>
+                <AppBackButton />
               </View>
 
-              <HubHero
-                korean="대화"
-                title="Scène guidée"
-                subtitle="Choisir un lieu, vivre une situation, parler coréen."
-                badgeLabel="CONVERSATION"
-                accentColor={CONVERSATION_ACCENT.base}
-                accentBadge
-                layeredGlow={false}
-                badgeBlurIntensity={50}
-                badgeBorderColor={CONVERSATION_ACCENT.cardBorder}
-                badgeBackgroundColor={CONVERSATION_ACCENT.iconSurface}
-                badgeTextColor={CONVERSATION_ACCENT.base}
-                reserveTitleSpaceWhenEmpty
-                style={styles.hero}
-                koreanStyle={styles.heroKorean}
-              />
+              <SpeakHero compact={responsive.isCompact} />
 
-              <SectionHeader
+              <ConversationSectionHeader
                 title="SCÈNES DISPONIBLES"
-                accentColor={CONVERSATION_ACCENT.base}
+                subtitle={`${PUBLIC_THEME_KEYS.length} situations immersives`}
               />
 
               <Scenes onSelectTheme={openThemeSheet} />
@@ -231,6 +257,88 @@ export default function SpeakScreen() {
   );
 }
 
+function SpeakHero({ compact }: { compact: boolean }) {
+  return (
+    <View style={styles.hero}>
+      <View style={styles.heroEyebrowRow}>
+        <View style={styles.heroDot} />
+        <AppText variant="sectionLabel" style={styles.heroEyebrow}>
+          IMMERSION · CONVERSATION
+        </AppText>
+      </View>
+
+      <AppText
+        variant="koreanPrimary"
+        script="korean"
+        lineContract="singleLine"
+        style={[styles.heroKorean, compact && styles.heroKoreanCompact]}
+      >
+        대화
+      </AppText>
+
+      <AppText variant="screenTitle" style={styles.heroTitle}>
+        Scène guidée
+      </AppText>
+
+      <AppText variant="bodySecondary" style={styles.heroSubtitle}>
+        Choisis un lieu, vis la situation, parle coréen.
+      </AppText>
+
+      <View style={styles.heroMetaRow}>
+        <View style={styles.practicePill}>
+          <Sparkles
+            size={15}
+            strokeWidth={2}
+            color={CONVERSATION_ACCENT}
+          />
+          <AppText
+            variant="sectionLabel"
+            lineContract="singleLine"
+            style={styles.practiceText}
+          >
+            PRATIQUE ORALE
+          </AppText>
+        </View>
+
+        <AppText variant="caption" style={styles.heroSceneCount}>
+          {PUBLIC_THEME_KEYS.length} scènes · Séoul réel
+        </AppText>
+      </View>
+    </View>
+  );
+}
+
+function ConversationSectionHeader({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <View style={styles.sectionHeader}>
+      <View style={styles.sectionCopy}>
+        <AppText variant="sectionLabel" style={styles.sectionTitle}>
+          {title}
+        </AppText>
+        <AppText variant="caption" style={styles.sectionSubtitle}>
+          {subtitle}
+        </AppText>
+      </View>
+
+      <View style={styles.sectionLineWrap}>
+        <View style={styles.sectionLineBase} />
+        <LinearGradient
+          colors={["transparent", CONVERSATION_ACCENT, CONVERSATION_LIGHT]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.sectionLineGlow}
+        />
+      </View>
+    </View>
+  );
+}
+
 function Scenes({
   onSelectTheme,
 }: {
@@ -241,16 +349,20 @@ function Scenes({
   const [viewportWidth, setViewportWidth] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const cardWidth = Math.min(Math.max(viewportWidth - 48, 260), 620);
-  const cardSpacing = (viewportWidth - cardWidth) / 2;
-  const mediaHeight = Math.min(Math.max(cardWidth * 1.05, 300), 460);
+  const gap = 14;
+  const cardWidth = Math.min(Math.max(viewportWidth - 62, 278), 590);
+  const itemSize = cardWidth + gap;
+  const sidePadding = Math.max(0, (viewportWidth - cardWidth) / 2);
+  const cardHeight = Math.min(Math.max(cardWidth * 1.16, 372), 520);
 
   const scrollToIndex = (index: number) => {
-    const nextIndex =
-      (index + PUBLIC_THEME_KEYS.length) % PUBLIC_THEME_KEYS.length;
+    const nextIndex = Math.max(
+      0,
+      Math.min(index, PUBLIC_THEME_KEYS.length - 1),
+    );
 
     listRef.current?.scrollToOffset({
-      offset: nextIndex * cardWidth,
+      offset: nextIndex * itemSize,
       animated: true,
     });
     setActiveIndex(nextIndex);
@@ -259,13 +371,16 @@ function Scenes({
   const handleMomentumEnd = (
     event: NativeSyntheticEvent<NativeScrollEvent>,
   ) => {
-    if (!cardWidth) return;
+    if (!itemSize) return;
 
-    const nextIndex = Math.round(event.nativeEvent.contentOffset.x / cardWidth);
+    const nextIndex = Math.round(event.nativeEvent.contentOffset.x / itemSize);
     setActiveIndex(
       Math.max(0, Math.min(nextIndex, PUBLIC_THEME_KEYS.length - 1)),
     );
   };
+
+  const activeKey = PUBLIC_THEME_KEYS[activeIndex] ?? PUBLIC_THEME_KEYS[0];
+  const activeConfig = THEME_CONFIG[activeKey];
 
   return (
     <View
@@ -278,13 +393,16 @@ function Scenes({
           data={PUBLIC_THEME_KEYS}
           keyExtractor={(item) => item}
           horizontal
-          snapToInterval={cardWidth}
-          decelerationRate="fast"
-          showsHorizontalScrollIndicator={false}
+          bounces={false}
           overScrollMode="never"
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={itemSize}
+          snapToAlignment="start"
+          decelerationRate="fast"
+          disableIntervalMomentum
           scrollEventThrottle={16}
           contentContainerStyle={{
-            paddingHorizontal: cardSpacing,
+            paddingHorizontal: sidePadding,
           }}
           onMomentumScrollEnd={handleMomentumEnd}
           onScroll={Animated.event(
@@ -292,238 +410,297 @@ function Scenes({
             { useNativeDriver: true },
           )}
           getItemLayout={(_, index) => ({
-            length: cardWidth,
-            offset: cardWidth * index,
+            length: itemSize,
+            offset: itemSize * index,
             index,
           })}
           renderItem={({ item, index }) => {
             const config = THEME_CONFIG[item];
             const inputRange = [
-              (index - 1) * cardWidth,
-              index * cardWidth,
-              (index + 1) * cardWidth,
+              (index - 1) * itemSize,
+              index * itemSize,
+              (index + 1) * itemSize,
             ];
+
             const scale = scrollX.interpolate({
               inputRange,
-              outputRange: [0.93, 1, 0.93],
+              outputRange: [0.92, 1, 0.92],
               extrapolate: "clamp",
             });
+
             const opacity = scrollX.interpolate({
               inputRange,
-              outputRange: [0.55, 1, 0.55],
+              outputRange: [0.48, 1, 0.48],
+              extrapolate: "clamp",
+            });
+
+            const translateY = scrollX.interpolate({
+              inputRange,
+              outputRange: [14, 0, 14],
               extrapolate: "clamp",
             });
 
             return (
-              <View style={{ width: cardWidth }}>
-                <Animated.View
-                  style={[
-                    styles.sceneCardMotion,
-                    {
-                      width: cardWidth - 12,
-                      alignSelf: "center",
-                      opacity,
-                      transform: [{ scale }],
-                      shadowColor: config.accent,
-                    },
+              <View style={{ width: itemSize }}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${config.title}. ${config.sub}. Ouvrir les options de la scène.`}
+                  onPress={() => onSelectTheme(item)}
+                  style={({ pressed }) => [
+                    styles.scenePressable,
+                    pressed && styles.pressablePressed,
                   ]}
                 >
-                  <View
+                  <Animated.View
                     style={[
-                      styles.sceneCard,
-                      { borderColor: `${config.accent}40` },
+                      styles.sceneCardMotion,
+                      {
+                        width: cardWidth,
+                        height: cardHeight,
+                        opacity,
+                        transform: [{ translateY }, { scale }],
+                        shadowColor: config.accent,
+                      },
                     ]}
                   >
-                    <View style={[styles.sceneMedia, { height: mediaHeight }]}>
-                      <Image
+                    <View
+                      style={[
+                        styles.sceneCard,
+                        { borderColor: `${config.accent}38` },
+                      ]}
+                    >
+                      <ImageBackground
                         source={config.image}
                         resizeMode="cover"
-                        style={styles.sceneImage}
+                        style={StyleSheet.absoluteFill}
+                        imageStyle={styles.sceneImage}
+                        pointerEvents="none"
+                      />
+
+                      <BlurView
+                        intensity={4}
+                        tint="dark"
+                        style={StyleSheet.absoluteFill}
+                        pointerEvents="none"
                       />
 
                       <LinearGradient
                         colors={[
-                          "rgba(2,3,6,0.1)",
-                          "rgba(2,3,6,0.2)",
-                          "rgba(2,3,6,0.75)",
+                          "rgba(2,3,6,0.07)",
+                          "rgba(2,3,6,0.17)",
+                          "rgba(2,3,6,0.48)",
+                          "rgba(2,3,6,0.94)",
                         ]}
-                        locations={[0, 0.5, 1]}
+                        locations={[0, 0.34, 0.66, 1]}
                         style={StyleSheet.absoluteFill}
+                        pointerEvents="none"
                       />
 
                       <LinearGradient
-                        colors={[`${config.accent}20`, "transparent"]}
+                        colors={[
+                          `${config.accent}21`,
+                          "rgba(0,0,0,0)",
+                          "rgba(2,3,6,0.18)",
+                        ]}
                         start={{ x: 0, y: 0 }}
-                        end={{ x: 0.9, y: 0.7 }}
+                        end={{ x: 0.92, y: 0.82 }}
                         style={StyleSheet.absoluteFill}
+                        pointerEvents="none"
+                      />
+
+                      <View style={styles.glassTopHairline} />
+
+                      <View
+                        style={[
+                          styles.sceneAmbientGlow,
+                          { backgroundColor: `${config.accent}22` },
+                        ]}
+                        pointerEvents="none"
                       />
 
                       <View style={styles.sceneTopRow}>
-                        <View
-                          style={[
-                            styles.sceneBadge,
-                            {
-                              borderColor: `${config.accent}52`,
-                              backgroundColor: `${config.accent}1C`,
-                            },
-                          ]}
-                        >
+                        <View style={styles.sceneKicker}>
                           <View
                             style={[
-                              styles.sceneBadgeDot,
+                              styles.sceneKickerDot,
                               { backgroundColor: config.accent },
                             ]}
                           />
                           <AppText
                             variant="sectionLabel"
-                            tone="strong"
                             lineContract="singleLine"
+                            style={styles.sceneKickerText}
+                          >
+                            SCÈNE {String(index + 1).padStart(2, "0")}
+                          </AppText>
+                        </View>
+
+                        <View
+                          style={[
+                            styles.sceneImmersionPill,
+                            {
+                              borderColor: `${config.accent}3D`,
+                              backgroundColor: `${config.accent}14`,
+                            },
+                          ]}
+                        >
+                          <AppText
+                            variant="caption"
+                            lineContract="singleLine"
+                            style={[
+                              styles.sceneImmersionText,
+                              { color: config.accent },
+                            ]}
                           >
                             IMMERSION
                           </AppText>
                         </View>
                       </View>
-                    </View>
 
-                    <BlurView
-                      intensity={82}
-                      tint="dark"
-                      style={styles.sceneDock}
-                    >
-                      <LinearGradient
-                        colors={[
-                          `${config.accent}17`,
-                          "rgba(10,12,18,0.9)",
-                          "rgba(5,7,11,0.97)",
-                        ]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={StyleSheet.absoluteFill}
-                      />
-
-                      <View
-                        pointerEvents="none"
-                        style={[
-                          styles.sceneDockAccent,
-                          { backgroundColor: config.accent },
-                        ]}
-                      >
-                        <View
+                      <View style={styles.sceneContent}>
+                        <AppText
+                          variant="sectionLabel"
+                          script="korean"
                           style={[
-                            styles.sceneDockAccentGlow,
-                            { backgroundColor: config.accent },
-                          ]}
-                        />
-                      </View>
-
-                      <View style={styles.sceneDockHeader}>
-                        <View style={styles.sceneDockCopy}>
-                          <AppText
-                            variant="sceneTitle"
-                            tone="strong"
-                            lineContract="singleLine"
-                          >
-                            {config.title}
-                          </AppText>
-                          <AppText
-                            variant="subtitle"
-                            tone="muted"
-                            lineContract="singleLine"
-                            style={styles.sceneSubtitle}
-                          >
-                            {config.sub}
-                          </AppText>
-                        </View>
-                      </View>
-
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={`Ouvrir les options de la scène ${config.title}`}
-                        onPress={() => onSelectTheme(item)}
-                        style={({ pressed }) => [
-                          styles.sceneAction,
-                          {
-                            borderColor: `${config.accent}42`,
-                            backgroundColor: pressed
-                              ? `${config.accent}26`
-                              : `${config.accent}14`,
-                            transform: [{ scale: pressed ? 0.985 : 1 }],
-                          },
-                        ]}
-                      >
-                        <AppText variant="button" tone="strong">
-                          Explorer la scène
-                        </AppText>
-
-                        <View
-                          style={[
-                            styles.sceneActionArrow,
-                            {
-                              borderColor: `${config.accent}48`,
-                              backgroundColor: `${config.accent}16`,
-                            },
+                            styles.sceneKorean,
+                            { color: `${config.accent}E8` },
                           ]}
                         >
+                          {config.korean}
+                        </AppText>
+
+                        <AppText
+                          variant="featureTitle"
+                          style={styles.sceneTitle}
+                        >
+                          {config.title}
+                        </AppText>
+
+                        <AppText
+                          variant="bodySecondary"
+                          style={styles.sceneSubtitle}
+                        >
+                          {config.sub}
+                        </AppText>
+
+                        <View style={styles.sceneActionRow}>
+                          <View style={styles.sceneActionCopy}>
+                            <AppText
+                              variant="caption"
+                              lineContract="singleLine"
+                              style={styles.sceneActionLabel}
+                            >
+                              EXPLORER LA SCÈNE
+                            </AppText>
+
+                            <View style={styles.sceneActionLine}>
+                              <LinearGradient
+                                colors={[
+                                  config.accent,
+                                  `${config.accent}80`,
+                                  "transparent",
+                                ]}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={StyleSheet.absoluteFill}
+                              />
+                            </View>
+                          </View>
+
                           <View
                             style={[
-                              styles.inlineChevron,
+                              styles.sceneArrow,
                               {
-                                borderColor: config.accent,
-                                transform: [{ rotate: "45deg" }],
+                                borderColor: `${config.accent}42`,
+                                backgroundColor: `${config.accent}13`,
                               },
                             ]}
-                          />
+                          >
+                            <ChevronRight
+                              size={19}
+                              strokeWidth={2.25}
+                              color={config.accent}
+                            />
+                          </View>
                         </View>
-                      </Pressable>
-                    </BlurView>
-                  </View>
-                </Animated.View>
+                      </View>
+                    </View>
+                  </Animated.View>
+                </Pressable>
               </View>
             );
           }}
         />
       ) : null}
 
-      <View
-        style={styles.pagination}
-        accessibilityRole="tablist"
-        accessibilityLabel="Sélection des scènes"
-      >
-        {PUBLIC_THEME_KEYS.map((key, index) => {
-          const active = index === activeIndex;
-          const accent = THEME_CONFIG[key].accent;
+      <View style={styles.carouselMetaRow}>
+        <View style={styles.carouselActiveCopy}>
+          <AppText
+            variant="caption"
+            lineContract="singleLine"
+            style={styles.carouselActiveLabel}
+          >
+            {activeConfig.title}
+          </AppText>
+          <AppText
+            variant="caption"
+            lineContract="singleLine"
+            style={styles.carouselActiveSub}
+          >
+            {activeConfig.sub}
+          </AppText>
+        </View>
 
-          return (
-            <Pressable
-              key={key}
-              accessibilityRole="tab"
-              accessibilityLabel={THEME_CONFIG[key].title}
-              accessibilityState={{ selected: active }}
-              onPress={() => scrollToIndex(index)}
-              hitSlop={8}
-              style={styles.paginationHitArea}
-            >
-              <View
-                style={[
-                  styles.paginationDot,
-                  active && styles.paginationDotActive,
-                  active && {
-                    backgroundColor: accent,
-                    shadowColor: accent,
-                  },
-                ]}
-              />
-            </Pressable>
-          );
-        })}
+        <View
+          style={styles.pagination}
+          accessibilityRole="tablist"
+          accessibilityLabel="Sélection des scènes"
+        >
+          {PUBLIC_THEME_KEYS.map((key, index) => {
+            const active = index === activeIndex;
+            const accent = THEME_CONFIG[key].accent;
+
+            return (
+              <Pressable
+                key={key}
+                accessibilityRole="tab"
+                accessibilityLabel={THEME_CONFIG[key].title}
+                accessibilityState={{ selected: active }}
+                onPress={() => scrollToIndex(index)}
+                hitSlop={8}
+                style={styles.paginationHitArea}
+              >
+                <View
+                  style={[
+                    styles.paginationDot,
+                    active && styles.paginationDotActive,
+                    active && {
+                      backgroundColor: accent,
+                      shadowColor: accent,
+                    },
+                  ]}
+                />
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <AppText
+          variant="caption"
+          lineContract="singleLine"
+          style={styles.carouselCount}
+        >
+          {String(activeIndex + 1).padStart(2, "0")} / {String(PUBLIC_THEME_KEYS.length).padStart(2, "0")}
+        </AppText>
       </View>
+
+      <AppText variant="caption" style={styles.carouselHint}>
+        Glisse horizontalement pour changer de scène.
+      </AppText>
     </View>
   );
 }
 
-// ──────────────────────────────────────────────
-// MODAL — REFINED
-// ──────────────────────────────────────────────
 function ThemeModeSheet({
   visible,
   onClose,
@@ -672,10 +849,7 @@ function ThemeModeSheet({
             tint="dark"
             style={[
               styles.sheetWrap,
-              {
-                width: sheetWidth,
-                maxHeight: sheetMaxHeight,
-              },
+              { width: sheetWidth, maxHeight: sheetMaxHeight },
             ]}
           >
             <LinearGradient
@@ -745,15 +919,13 @@ function ThemeModeSheet({
                   style={StyleSheet.absoluteFill}
                 />
 
-                <Pressable onPress={onClose} style={styles.sheetCloseIcon}>
-                  <AppText
-                    variant="sectionTitle"
-                    tone="muted"
-                    align="center"
-                    accessibilityLabel="Fermer"
-                  >
-                    ×
-                  </AppText>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Fermer"
+                  onPress={onClose}
+                  style={styles.sheetCloseIcon}
+                >
+                  <X size={18} strokeWidth={2} color={MUTED} />
                 </Pressable>
 
                 <View style={styles.sheetHeroCopy}>
@@ -769,7 +941,7 @@ function ThemeModeSheet({
                       tone="muted"
                       lineContract="singleLine"
                     >
-                      SCÈNE
+                      SCÈNE IMMERSIVE
                     </AppText>
                   </View>
 
@@ -780,6 +952,7 @@ function ThemeModeSheet({
                   >
                     {config.title}
                   </AppText>
+
                   <AppText
                     variant="subtitle"
                     tone="muted"
@@ -817,18 +990,19 @@ function ThemeModeSheet({
                     tone="soft"
                     style={styles.sheetSectionHint}
                   >
-                    Une scène courte, claire, pensée pour passer à l’action.
+                    Entre dans la situation ou révise d’abord les expressions utiles.
                   </AppText>
                 </View>
 
                 <View style={styles.sheetOptions}>
                   <SheetOptionCard
-                    title="Choisi la scène"
+                    title="Choisis la scène"
                     subtitle="Entre dans la situation, écoute et réponds comme sur place."
                     icon="IA"
                     accent={config.accent}
                     onPress={goToImmersive}
                   />
+
                   <SheetOptionCard
                     title="Expressions utiles"
                     subtitle="Revois les mots et expressions utilisés couramment."
@@ -919,7 +1093,11 @@ function SheetOptionCard({
           <AppText variant="button" tone="strong">
             {title}
           </AppText>
-          <AppText variant="caption" tone="soft" style={styles.sheetOptionSub}>
+          <AppText
+            variant="caption"
+            tone="soft"
+            style={styles.sheetOptionSub}
+          >
             {subtitle}
           </AppText>
         </View>
@@ -933,15 +1111,7 @@ function SheetOptionCard({
             },
           ]}
         >
-          <View
-            style={[
-              styles.inlineChevron,
-              {
-                borderColor: accent,
-                transform: [{ rotate: "45deg" }],
-              },
-            ]}
-          />
+          <ChevronRight size={17} strokeWidth={2.1} color={accent} />
         </View>
       </Animated.View>
     </Pressable>
@@ -953,184 +1123,349 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BG_DEEP,
   },
-  bgImage: {
+  background: {
     flex: 1,
   },
-  bgImageAsset: {
-    opacity: 0.38,
+  ambientGlowTop: {
+    position: "absolute",
+    top: -120,
+    right: -90,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: "rgba(190,117,145,0.09)",
   },
-  bgBlur: {
-    ...ABSOLUTE_FILL,
+  ambientGlowBottom: {
+    position: "absolute",
+    bottom: -180,
+    left: -120,
+    width: 360,
+    height: 360,
+    borderRadius: 180,
+    backgroundColor: "rgba(190,117,145,0.055)",
   },
-  bgDarkOverlay: {
-    ...ABSOLUTE_FILL,
-    backgroundColor: `rgba(2, 3, 6, ${SPEAK_BACKGROUND_DARKNESS})`,
+  screenMotion: {
+    flex: 1,
   },
   scrollContent: {
-    paddingVertical: 16,
+    paddingTop: 8,
+    paddingBottom: 120,
     alignItems: "center",
   },
   contentFrame: {
     width: "100%",
   },
   navHeader: {
-    marginBottom: 8,
+    minHeight: 60,
+    justifyContent: "center",
+    marginBottom: 12,
   },
-  backBtn: {
-    alignSelf: "flex-start",
-  },
-  hero: {
-    marginBottom: 20,
-  },
-  heroKorean: {
-    fontSize: 32,
+  pressablePressed: {
+    transform: [{ scale: 0.992 }],
+    opacity: 0.84,
   },
 
-  // Carousel Layout & Styling
+  hero: {
+    marginTop: 12,
+    marginBottom: 30,
+  },
+  heroEyebrowRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+    marginBottom: 9,
+  },
+  heroDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: CONVERSATION_ACCENT,
+    shadowColor: CONVERSATION_ACCENT,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.52,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  heroEyebrow: {
+    color: CONVERSATION_LIGHT,
+  },
+  heroKorean: {
+    color: TXT,
+    fontSize: 40,
+    lineHeight: 48,
+    marginBottom: 1,
+    textShadowColor: "rgba(190,117,145,0.18)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
+  },
+  heroKoreanCompact: {
+    fontSize: 36,
+    lineHeight: 44,
+  },
+  heroTitle: {
+    color: TXT,
+  },
+  heroSubtitle: {
+    color: MUTED,
+    marginTop: 7,
+    maxWidth: 620,
+  },
+  heroMetaRow: {
+    marginTop: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 11,
+  },
+  practicePill: {
+    minHeight: 34,
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: "rgba(190,117,145,0.28)",
+    backgroundColor: "rgba(190,117,145,0.08)",
+  },
+  practiceText: {
+    color: CONVERSATION_LIGHT,
+  },
+  heroSceneCount: {
+    color: SOFT,
+  },
+
+  sectionHeader: {
+    minHeight: 56,
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 14,
+    marginBottom: 16,
+  },
+  sectionCopy: {
+    flexShrink: 0,
+    maxWidth: "70%",
+  },
+  sectionTitle: {
+    color: TXT,
+  },
+  sectionSubtitle: {
+    color: SOFT,
+    marginTop: 3,
+  },
+  sectionLineWrap: {
+    flex: 1,
+    height: 9,
+    justifyContent: "center",
+    marginBottom: 7,
+    overflow: "hidden",
+  },
+  sectionLineBase: {
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.08)",
+  },
+  sectionLineGlow: {
+    position: "absolute",
+    right: 0,
+    width: "70%",
+    height: 1,
+  },
+
   carouselSection: {
     width: "100%",
     alignItems: "center",
-    marginTop: 8,
+    overflow: "visible",
+  },
+  scenePressable: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   sceneCardMotion: {
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.28,
-    shadowRadius: 20,
+    alignSelf: "center",
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.25,
+    shadowRadius: 22,
     elevation: 8,
   },
   sceneCard: {
-    borderRadius: 24,
+    flex: 1,
+    borderRadius: 29,
     borderWidth: 1,
     overflow: "hidden",
-    backgroundColor: "#080B11",
-  },
-  sceneMedia: {
-    width: "100%",
-    position: "relative",
-    justifyContent: "flex-end",
+    backgroundColor: "rgba(8,10,15,0.96)",
   },
   sceneImage: {
-    ...ABSOLUTE_FILL,
-    width: "100%",
-    height: "100%",
+    borderRadius: 29,
+  },
+  glassTopHairline: {
+    position: "absolute",
+    top: 0,
+    left: 22,
+    right: 22,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.22)",
+  },
+  sceneAmbientGlow: {
+    position: "absolute",
+    top: -76,
+    right: -52,
+    width: 190,
+    height: 190,
+    borderRadius: 95,
+    opacity: 0.5,
   },
   sceneTopRow: {
     position: "absolute",
-    top: 14,
-    left: 14,
-    right: 14,
+    top: 16,
+    left: 16,
+    right: 16,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: 10,
   },
-  sceneBadge: {
+  sceneKicker: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 7,
+    minHeight: 29,
     paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
+    borderRadius: 15,
     borderWidth: 1,
-    gap: 6,
+    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(3,5,9,0.45)",
   },
-  sceneBadgeDot: {
+  sceneKickerDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
   },
-  sceneModePillTop: {
+  sceneKickerText: {
+    color: "rgba(248,250,252,0.82)",
+  },
+  sceneImmersionPill: {
+    minHeight: 29,
     paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
+    borderRadius: 15,
     borderWidth: 1,
+    justifyContent: "center",
   },
-
-  // Scene Dock Bottom Area
-  sceneDock: {
-    padding: 16,
-    position: "relative",
-    overflow: "hidden",
+  sceneImmersionText: {
+    fontSize: 10,
+    lineHeight: 13,
+    letterSpacing: 1.2,
   },
-  sceneDockAccent: {
+  sceneContent: {
     position: "absolute",
-    top: 0,
-    left: 16,
-    right: 16,
-    height: 2,
-    borderRadius: 1,
+    left: 20,
+    right: 20,
+    bottom: 19,
   },
-  sceneDockAccentGlow: {
-    ...ABSOLUTE_FILL,
-    opacity: 0.6,
-    transform: [{ scaleY: 3 }],
+  sceneKorean: {
+    fontSize: 12,
+    lineHeight: 18,
+    letterSpacing: 1.2,
+    marginBottom: 2,
   },
-  sceneDockHeader: {
-    marginBottom: 14,
-  },
-  sceneDockCopy: {
-    width: "100%",
+  sceneTitle: {
+    color: TXT,
   },
   sceneSubtitle: {
-    marginTop: 2,
+    color: MUTED,
+    marginTop: 3,
   },
-  sceneAction: {
+  sceneActionRow: {
+    marginTop: 18,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-end",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 16,
-    borderWidth: 1,
+    gap: 14,
   },
-  sceneActionArrow: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+  sceneActionCopy: {
+    flex: 1,
+  },
+  sceneActionLabel: {
+    color: "rgba(248,250,252,0.76)",
+  },
+  sceneActionLine: {
+    marginTop: 8,
+    width: "72%",
+    height: 2,
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  sceneArrow: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },
-  inlineChevron: {
-    width: 7,
-    height: 7,
-    borderTopWidth: 2,
-    borderRightWidth: 2,
-    marginRight: 2,
+  carouselMetaRow: {
+    width: "100%",
+    minHeight: 42,
+    marginTop: 14,
+    paddingHorizontal: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
   },
-
-  // Pagination
+  carouselActiveCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  carouselActiveLabel: {
+    color: TXT,
+  },
+  carouselActiveSub: {
+    color: SOFT,
+    marginTop: 1,
+  },
   pagination: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    marginTop: 18,
-    marginBottom: 8,
+    gap: 5,
   },
   paginationHitArea: {
     padding: 4,
   },
   paginationDot: {
-    width: 8,
-    height: 8,
+    width: 7,
+    height: 7,
     borderRadius: 4,
-    backgroundColor: "rgba(255,255,255,0.22)",
+    backgroundColor: "rgba(255,255,255,0.18)",
   },
   paginationDotActive: {
-    width: 24,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.6,
-    shadowRadius: 6,
+    width: 30,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.58,
+    shadowRadius: 7,
     elevation: 3,
   },
+  carouselCount: {
+    minWidth: 42,
+    textAlign: "right",
+    color: SOFT,
+    letterSpacing: 0.8,
+  },
+  carouselHint: {
+    alignSelf: "flex-start",
+    color: "rgba(241,245,249,0.42)",
+    marginTop: 1,
+    paddingHorizontal: 6,
+  },
 
-  // Modal Sheet
   sheetRoot: {
     flex: 1,
     justifyContent: "flex-end",
     alignItems: "center",
   },
   sheetBackdrop: {
-    backgroundColor: "rgba(2,3,6,0.78)",
+    backgroundColor: "rgba(2,3,6,0.80)",
   },
   sheetAnimatedWrap: {
     width: "100%",
@@ -1150,7 +1485,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.12)",
     overflow: "hidden",
-    backgroundColor: "rgba(10,13,20,0.85)",
+    backgroundColor: "rgba(10,13,20,0.88)",
   },
   sheetTopSpecular: {
     position: "absolute",
@@ -1187,7 +1522,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
   },
   sheetHeroImg: {
-    ...ABSOLUTE_FILL,
+    ...StyleSheet.absoluteFillObject,
     width: "100%",
     height: "100%",
   },
@@ -1195,10 +1530,12 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 10,
     right: 12,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "rgba(0,0,0,0.45)",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(0,0,0,0.42)",
     alignItems: "center",
     justifyContent: "center",
     zIndex: 10,
@@ -1252,7 +1589,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 18,
     borderWidth: 1,
-    backgroundColor: "rgba(255,255,255,0.03)",
+    backgroundColor: "rgba(255,255,255,0.035)",
     gap: 12,
   },
   sheetOptionIconBox: {
@@ -1270,9 +1607,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   sheetOptionChevron: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -1281,6 +1618,8 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingVertical: 12,
     borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(255,255,255,0.045)",
   },
 });
