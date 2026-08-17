@@ -1,0 +1,90 @@
+name: Add Grammar card background
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/add-grammar-card.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add grammar image and wire card
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          python <<'PY'
+          import base64
+          import json
+          import os
+          import urllib.request
+          from pathlib import Path
+
+          blob_sha = "7fb2de27fb5faa9cd32bbd4d34200bc2ea591e40"
+          repo = os.environ["REPOSITORY"]
+          token = os.environ["GH_TOKEN"]
+
+          request = urllib.request.Request(
+              f"https://api.github.com/repos/{repo}/git/blobs/{blob_sha}",
+              headers={
+                  "Authorization": f"Bearer {token}",
+                  "Accept": "application/vnd.github+json",
+                  "X-GitHub-Api-Version": "2022-11-28",
+              },
+          )
+          with urllib.request.urlopen(request) as response:
+              payload = json.load(response)
+
+          image_bytes = base64.b64decode(payload["content"].replace("\n", ""))
+          image_path = Path("assets/images/grammar-card.jpg")
+          image_path.parent.mkdir(parents=True, exist_ok=True)
+          image_path.write_bytes(image_bytes)
+
+          index_path = Path("app/(tabs)/index.tsx")
+          source = index_path.read_text(encoding="utf-8")
+
+          old = '''    title: "Grammaire",
+    label: "Grammaire",
+    hubAccent: HubModuleAccents.grammar,
+    route: "/grammar",
+    trackKey: "grammar",
+    place: "SÉOUL • A0 → A1",
+    narrative: "Construis des phrases naturelles, étape par étape.",
+    type: "pedagogical",'''
+
+          new = '''    title: "Grammaire",
+    label: "Grammaire",
+    hubAccent: HubModuleAccents.grammar,
+    route: "/grammar",
+    trackKey: "grammar",
+    place: "SÉOUL • A0 → A1",
+    narrative: "Construis des phrases naturelles, étape par étape.",
+    background: require("../../assets/images/grammar-card.jpg"),
+    type: "pedagogical",'''
+
+          if old not in source:
+              raise SystemExit("Grammar sequence block not found")
+
+          source = source.replace(old, new, 1)
+          index_path.write_text(source, encoding="utf-8")
+
+          Path(".github/workflows/add-grammar-card.yml").unlink()
+          PY
+
+      - name: Commit update
+        run: |
+          git config user.name "K-App automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "add Grammar card background to home hub"
+          git push origin HEAD:main
