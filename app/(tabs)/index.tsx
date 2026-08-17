@@ -142,6 +142,7 @@ const SEQUENCES: any[] = [
     trackKey: "vocab",
     place: "SÉOUL • VOCABULAIRE",
     narrative: "Apprends le vocabulaire selon le contexte.",
+    background: require("../../assets/images/vocabulary-card.jpg"),
     type: "pedagogical",
   },
   {
