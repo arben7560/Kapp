@@ -131,6 +131,7 @@ const SEQUENCES: any[] = [
     trackKey: "grammar",
     place: "SÉOUL • A0 → A1",
     narrative: "Construis des phrases naturelles, étape par étape.",
+    background: require("../../assets/images/grammar-card.jpg"),
     type: "pedagogical",
   },
   {
