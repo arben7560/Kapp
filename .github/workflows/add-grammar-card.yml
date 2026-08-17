@@ -53,31 +53,34 @@ jobs:
           index_path = Path("app/(tabs)/index.tsx")
           source = index_path.read_text(encoding="utf-8")
 
-          old = '''    title: "Grammaire",
-    label: "Grammaire",
-    hubAccent: HubModuleAccents.grammar,
-    route: "/grammar",
-    trackKey: "grammar",
-    place: "SÉOUL • A0 → A1",
-    narrative: "Construis des phrases naturelles, étape par étape.",
-    type: "pedagogical",'''
+          old = "\n".join([
+              '    title: "Grammaire",',
+              '    label: "Grammaire",',
+              '    hubAccent: HubModuleAccents.grammar,',
+              '    route: "/grammar",',
+              '    trackKey: "grammar",',
+              '    place: "SÉOUL • A0 → A1",',
+              '    narrative: "Construis des phrases naturelles, étape par étape.",',
+              '    type: "pedagogical",',
+          ])
 
-          new = '''    title: "Grammaire",
-    label: "Grammaire",
-    hubAccent: HubModuleAccents.grammar,
-    route: "/grammar",
-    trackKey: "grammar",
-    place: "SÉOUL • A0 → A1",
-    narrative: "Construis des phrases naturelles, étape par étape.",
-    background: require("../../assets/images/grammar-card.jpg"),
-    type: "pedagogical",'''
+          new = "\n".join([
+              '    title: "Grammaire",',
+              '    label: "Grammaire",',
+              '    hubAccent: HubModuleAccents.grammar,',
+              '    route: "/grammar",',
+              '    trackKey: "grammar",',
+              '    place: "SÉOUL • A0 → A1",',
+              '    narrative: "Construis des phrases naturelles, étape par étape.",',
+              '    background: require("../../assets/images/grammar-card.jpg"),',
+              '    type: "pedagogical",',
+          ])
 
           if old not in source:
               raise SystemExit("Grammar sequence block not found")
 
           source = source.replace(old, new, 1)
           index_path.write_text(source, encoding="utf-8")
-
           Path(".github/workflows/add-grammar-card.yml").unlink()
           PY
 
