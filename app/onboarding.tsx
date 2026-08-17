@@ -1,14 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { ArrowLeft, Check, Compass, MoveRight } from "lucide-react-native";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Check, Compass, MoveRight } from "lucide-react-native";
+import { useMemo, useState } from "react";
 import {
-  Animated,
-  Easing,
   Pressable,
   ScrollView,
   StatusBar,
@@ -17,27 +14,23 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppText } from "../components/app-text";
-import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 
-const HERO_IMAGE = require("../assets/images/hero.jpg");
+import { AppText } from "../components/app-text";
+
+const SCENE_BACKGROUND = require("../assets/images/onboarding-scene-v2.webp");
 const CAFE_IMAGE = require("../assets/images/cafeIA.jpg");
 const METRO_IMAGE = require("../assets/images/metroIA.jpg");
 const RESTAURANT_IMAGE = require("../assets/images/restaurantIA.jpg");
 
-const TXT = "rgba(255,255,255,0.98)";
-const TXT_SOFT = "rgba(255,255,255,0.76)";
+const ONBOARDING_KEY = "kapp_onboarding_completed";
 const PINK = "#F472B6";
 const CYAN = "#22D3EE";
 const GOLD = "#F59E0B";
-const MODE_PEARL = "#C7D2D4";
-const MODE_CYAN = "#70AEB8";
+const WHITE = "#FFFFFF";
 
-const STEP_DURATION = 760;
-const ONBOARDING_KEY = "kapp_onboarding_completed";
-type Step = "arrival" | "scene" | "mode" | "transition";
 type SceneKey = "cafe" | "metro" | "restaurant";
 type ModeKey = "text" | "guided";
+type OnboardingStep = "scene" | "mode";
 
 type SceneOption = {
   key: SceneKey;
@@ -46,15 +39,7 @@ type SceneOption = {
   subtitle: string;
   phrase: string;
   accent: string;
-  image: any;
-};
-
-type ModeOption = {
-  key: ModeKey;
-  title: string;
-  subtitle: string;
-  accent: string;
-  highlighted?: boolean;
+  image: number;
 };
 
 const SCENES: SceneOption[] = [
@@ -87,22 +72,6 @@ const SCENES: SceneOption[] = [
   },
 ];
 
-const MODES: ModeOption[] = [
-  {
-    key: "text",
-    title: "Expressions utiles",
-    subtitle: "Revois les mots et expressions utilisés couramment",
-    accent: MODE_PEARL,
-  },
-  {
-    key: "guided",
-    title: "Entre dans la scène",
-    subtitle: "Entre dans la situation, écoute et réponds comme sur place",
-    accent: MODE_CYAN,
-    highlighted: true,
-  },
-];
-
 const ROUTES: Record<SceneKey, Record<ModeKey, string>> = {
   cafe: {
     text: "/lesson/cafe",
@@ -118,168 +87,237 @@ const ROUTES: Record<SceneKey, Record<ModeKey, string>> = {
   },
 };
 
-function BackgroundLayer({
-  source,
-  blur = 20,
-  imageBlurRadius = 0,
-  darkOverlayOpacity = 0,
-  abstract = false,
-  onLoad,
-}: {
-  source: any;
-  blur?: number;
-  imageBlurRadius?: number;
-  darkOverlayOpacity?: number;
-  abstract?: boolean;
-  onLoad?: () => void;
-}) {
+async function lightTap() {
+  try {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  } catch {
+    // Haptics are intentionally non-blocking on unsupported devices.
+  }
+}
+
+function SceneBackground({ dimmed = false }: { dimmed?: boolean }) {
   return (
-    <View
-      pointerEvents="none"
-      style={[StyleSheet.absoluteFill, styles.backgroundBase]}
-    >
-      {abstract ? (
-        <>
-          <LinearGradient
-            colors={["#050609", "#07101A", "#050609"]}
-            locations={[0, 0.48, 1]}
-            start={{ x: 0.08, y: 0 }}
-            end={{ x: 0.92, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <LinearGradient
-            colors={[
-              "transparent",
-              "rgba(244,114,182,0.10)",
-              "rgba(244,114,182,0.035)",
-              "transparent",
-            ]}
-            locations={[0, 0.34, 0.58, 1]}
-            start={{ x: 0, y: 0.02 }}
-            end={{ x: 1, y: 0.72 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <LinearGradient
-            colors={[
-              "transparent",
-              "rgba(34,211,238,0.045)",
-              "rgba(34,211,238,0.075)",
-              "transparent",
-            ]}
-            locations={[0, 0.48, 0.72, 1]}
-            start={{ x: 1, y: 0.38 }}
-            end={{ x: 0, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <LinearGradient
-            colors={[
-              "rgba(0,0,0,0.34)",
-              "transparent",
-              "transparent",
-              "rgba(0,0,0,0.34)",
-            ]}
-            locations={[0, 0.18, 0.82, 1]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <LinearGradient
-            colors={["transparent", "rgba(5,6,9,0.36)", "#050609"]}
-            locations={[0, 0.72, 1]}
-            style={StyleSheet.absoluteFill}
-          />
-        </>
-      ) : (
-        <>
-          <Image
-            source={source}
-            style={StyleSheet.absoluteFill}
-            contentFit="cover"
-            blurRadius={imageBlurRadius}
-            onLoad={onLoad}
-          />
-
-          {darkOverlayOpacity > 0 && (
-            <View
-              style={[
-                StyleSheet.absoluteFill,
-                { backgroundColor: `rgba(0,0,0,${darkOverlayOpacity})` },
-              ]}
-            />
-          )}
-
-          <LinearGradient
-            colors={["rgba(5,5,8,0.25)", "rgba(5,5,8,0.65)", "#050508"]}
-            locations={[0, 0.45, 0.95]}
-            style={StyleSheet.absoluteFill}
-          />
-
-          <LinearGradient
-            colors={[
-              "rgba(244,114,182,0.12)",
-              "rgba(34,211,238,0.08)",
-              "transparent",
-            ]}
-            start={{ x: 0.05, y: 0 }}
-            end={{ x: 0.95, y: 0.8 }}
-            style={StyleSheet.absoluteFill}
-          />
-
-          <BlurView
-            intensity={blur}
-            tint="dark"
-            style={StyleSheet.absoluteFill}
-          />
-        </>
-      )}
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <Image
+        source={SCENE_BACKGROUND}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+        contentPosition="center"
+      />
+      <LinearGradient
+        colors={[
+          dimmed ? "rgba(2,3,10,0.42)" : "rgba(2,3,10,0.04)",
+          dimmed ? "rgba(2,3,10,0.62)" : "rgba(2,3,10,0.06)",
+          "rgba(2,3,10,0.28)",
+          "rgba(2,3,10,0.64)",
+        ]}
+        locations={[0, 0.34, 0.68, 1]}
+        style={StyleSheet.absoluteFill}
+      />
     </View>
   );
 }
 
+function ProgressDots({ active }: { active: 0 | 1 | 2 }) {
+  return (
+    <View
+      style={styles.progress}
+      accessibilityRole="progressbar"
+      accessibilityValue={{ min: 1, max: 3, now: active + 1 }}
+      accessibilityLabel={`Étape ${active + 1} sur 3`}
+    >
+      {[0, 1, 2].map((index) => (
+        <View
+          key={index}
+          style={[
+            styles.progressLine,
+            index === active && styles.progressLineActive,
+          ]}
+        />
+      ))}
+    </View>
+  );
+}
+
+function FeaturedScene({
+  scene,
+  height,
+}: {
+  scene: SceneOption;
+  height: number;
+}) {
+  const isCafe = scene.key === "cafe";
+
+  return (
+    <View
+      accessible
+      accessibilityLabel={`${scene.title}. ${scene.subtitle}${
+        isCafe ? " Aucun prérequis." : ""
+      }`}
+      style={[
+        styles.featuredCard,
+        {
+          height,
+          borderColor: `${scene.accent}72`,
+          shadowColor: scene.accent,
+        },
+      ]}
+    >
+      <Image
+        source={scene.image}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+      />
+
+      <LinearGradient
+        colors={[
+          "rgba(2,3,7,0.00)",
+          "rgba(2,3,7,0.06)",
+          "rgba(2,3,7,0.48)",
+          "rgba(2,3,7,0.96)",
+        ]}
+        locations={[0, 0.38, 0.66, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+      <LinearGradient
+        colors={["rgba(3,3,8,0.56)", "rgba(3,3,8,0.18)", "transparent"]}
+        locations={[0, 0.54, 1]}
+        start={{ x: 0, y: 0.6 }}
+        end={{ x: 1, y: 0.55 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <LinearGradient
+        colors={[`${scene.accent}1C`, "transparent", "transparent"]}
+        start={{ x: 0, y: 1 }}
+        end={{ x: 0.84, y: 0.15 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      <View style={styles.featuredTopRow}>
+        <View
+          style={[
+            styles.recommendedPill,
+            { borderColor: `${scene.accent}88` },
+          ]}
+        >
+          <View
+            style={[styles.recommendedDot, { backgroundColor: scene.accent }]}
+          />
+          <AppText variant="label" style={styles.recommendedText}>
+            {isCafe ? "IDÉAL POUR DÉBUTER" : "TON IMMERSION"}
+          </AppText>
+        </View>
+
+        <AppText variant="sectionLabel" style={styles.featuredLocation}>
+          {scene.eyebrow}
+        </AppText>
+      </View>
+
+      <View style={styles.featuredCopy}>
+        <AppText
+          accessibilityLanguage="ko-KR"
+          variant="koreanSecondary"
+          script="korean"
+          style={[styles.featuredPhrase, { color: scene.accent }]}
+        >
+          {scene.phrase}
+        </AppText>
+        <AppText variant="sceneTitle" style={styles.featuredTitle}>
+          {scene.title}
+        </AppText>
+        <AppText variant="bodyStrong" style={styles.featuredSubtitle}>
+          {scene.subtitle}
+        </AppText>
+
+        {isCafe ? (
+          <View style={styles.beginnerRow}>
+            <View style={styles.beginnerIcon}>
+              <Check size={12} color={PINK} strokeWidth={2.3} />
+            </View>
+            <AppText variant="caption" style={styles.beginnerText}>
+              Aucun prérequis
+            </AppText>
+          </View>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+function AlternativeScene({
+  scene,
+  height,
+  onPress,
+}: {
+  scene: SceneOption;
+  height: number;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Choisir ${scene.title}`}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.alternativeCard,
+        { height },
+        pressed && styles.pressed,
+      ]}
+    >
+      <Image
+        source={scene.image}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+      />
+      <LinearGradient
+        colors={[
+          "rgba(2,3,7,0.00)",
+          "rgba(2,3,7,0.16)",
+          "rgba(2,3,7,0.88)",
+        ]}
+        locations={[0, 0.42, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+      <LinearGradient
+        colors={[`${scene.accent}1F`, "transparent"]}
+        start={{ x: 0, y: 1 }}
+        end={{ x: 0.72, y: 0.12 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      <View style={styles.alternativeCopy}>
+        <AppText
+          variant="sectionLabel"
+          style={[styles.alternativeEyebrow, { color: scene.accent }]}
+        >
+          {scene.eyebrow}
+        </AppText>
+        <AppText variant="cardTitle" style={styles.alternativeTitle}>
+          {scene.title}
+        </AppText>
+      </View>
+
+      <View style={styles.alternativeArrow}>
+        <MoveRight size={19} color={WHITE} strokeWidth={2} />
+      </View>
+    </Pressable>
+  );
+}
+
 export default function OnboardingScreen() {
-  const { fontScale, height, width } = useWindowDimensions();
-  const responsive = useResponsiveLayout({ maxWidth: 860 });
-  const [step, setStep] = useState<Step>("arrival");
+  const { width, height, fontScale } = useWindowDimensions();
+  const [step, setStep] = useState<OnboardingStep>("scene");
   const [selectedScene, setSelectedScene] = useState<SceneKey>("cafe");
   const [selectedMode, setSelectedMode] = useState<ModeKey>("guided");
-  const isCompactScreen = height <= 700 || width <= 380;
-  const isShortScreen = height <= 700;
-  const isLargeText = fontScale > 1.15;
-  const isWideSceneLayout =
-    responsive.isLandscape && responsive.width >= 760 && !isLargeText;
-  const sceneHeroHeight = isWideSceneLayout
-    ? 350
-    : isShortScreen
-      ? 210
-      : width <= 380
-        ? 244
-        : responsive.isTablet
-          ? 320
-          : height >= 820
-            ? 286
-            : 270;
-  const alternativeSceneHeight = isShortScreen
-    ? 96
-    : width <= 380
-      ? 108
-      : responsive.isTablet
-        ? 128
-        : 116;
 
-  const fade = useMemo(() => new Animated.Value(0), []);
-  const translateY = useMemo(() => new Animated.Value(24), []);
-  const pulse = useMemo(() => new Animated.Value(0), []);
-  const entryOverlayOpacity = useMemo(() => new Animated.Value(1), []);
-  const [entryBackgroundReady, setEntryBackgroundReady] = useState(false);
+  const isCompact = width <= 380 || height <= 720;
+  const isShort = height <= 700;
+  const isTablet = width >= 768;
+  const largeText = fontScale > 1.15;
 
   const selectedSceneData = useMemo(
     () => SCENES.find((scene) => scene.key === selectedScene) ?? SCENES[0],
     [selectedScene],
-  );
-
-  const selectedModeData = useMemo(
-    () => MODES.find((mode) => mode.key === selectedMode) ?? MODES[1],
-    [selectedMode],
   );
 
   const alternativeScenes = useMemo(
@@ -287,879 +325,296 @@ export default function OnboardingScreen() {
     [selectedScene],
   );
 
-  const backgroundSource = useMemo(() => {
-    if (step === "arrival") return HERO_IMAGE;
-    return selectedSceneData.image;
-  }, [step, selectedSceneData.image]);
+  const heroHeight = isTablet
+    ? 378
+    : isShort
+      ? 252
+      : height >= 850
+        ? 320
+        : height >= 790
+          ? 304
+          : 286;
 
-  const animateIn = useCallback(() => {
-    fade.setValue(0);
-    translateY.setValue(20);
+  const alternativeHeight = isTablet ? 142 : isShort ? 102 : 118;
+  const horizontalPadding = isTablet ? 30 : width <= 380 ? 18 : 22;
 
-    Animated.parallel([
-      Animated.timing(fade, {
-        toValue: 1,
-        duration: STEP_DURATION,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: STEP_DURATION,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [fade, translateY]);
-
-  useEffect(() => {
-    animateIn();
-  }, [animateIn, step]);
-
-  useEffect(() => {
-    let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
-    let entrance: Animated.CompositeAnimation | null = null;
-
-    const reveal = () => {
-      entrance = Animated.sequence([
-        Animated.delay(40),
-        Animated.timing(entryOverlayOpacity, {
-          toValue: 0,
-          duration: 680,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]);
-
-      entrance.start();
-    };
-
-    if (entryBackgroundReady) {
-      reveal();
-    } else {
-      // Safety fallback: never leave the onboarding covered if image loading
-      // doesn't emit an event in a specific Expo/runtime environment.
-      fallbackTimer = setTimeout(reveal, 900);
-    }
-
-    return () => {
-      entrance?.stop();
-      if (fallbackTimer) clearTimeout(fallbackTimer);
-    };
-  }, [entryBackgroundReady, entryOverlayOpacity]);
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, {
-          toValue: 1,
-          duration: 2600,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulse, {
-          toValue: 0,
-          duration: 2600,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-
-    loop.start();
-    return () => loop.stop();
-  }, [pulse]);
-
-  const animateOutAnd = (next: () => void) => {
-    Animated.parallel([
-      Animated.timing(fade, {
-        toValue: 0,
-        duration: 280,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 8,
-        duration: 280,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-    ]).start(next);
+  const selectScene = async (scene: SceneKey) => {
+    await lightTap();
+    setSelectedScene(scene);
   };
 
-  const tap = async () => {
-    try {
-      if (Haptics?.impactAsync) {
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
-    } catch {}
-  };
-
-  const goToStep = async (nextStep: Step) => {
-    await tap();
-    animateOutAnd(() => setStep(nextStep));
-  };
-
-  const getSceneRoute = (scene: SceneKey, mode: ModeKey) => {
-    return ROUTES[scene]?.[mode] ?? "/(tabs)";
-  };
-
-  const finishOnboarding = async () => {
-    await tap();
+  const openHub = async () => {
+    await lightTap();
     await AsyncStorage.setItem(ONBOARDING_KEY, "true");
-    const targetRoute = getSceneRoute(selectedScene, selectedMode);
+    router.replace("/(tabs)" as any);
+  };
+
+  const openMode = async () => {
+    await lightTap();
+    setStep("mode");
+  };
+
+  const finish = async () => {
+    await lightTap();
+    await AsyncStorage.setItem(ONBOARDING_KEY, "true");
+    const route = ROUTES[selectedScene][selectedMode];
     const target =
       selectedMode === "text"
-        ? targetRoute
-        : {
-            pathname: targetRoute,
-            params: { mode: selectedMode },
-          };
-    animateOutAnd(() => setStep("transition"));
-
-    setTimeout(() => {
-      router.replace(target as any);
-    }, 1400);
+        ? route
+        : { pathname: route, params: { mode: selectedMode } };
+    router.replace(target as any);
   };
 
-  const openMoreScenes = async () => {
-    await tap();
-    await AsyncStorage.setItem(ONBOARDING_KEY, "true");
-    router.push("/(tabs)" as any);
-  };
+  if (step === "mode") {
+    return (
+      <View style={styles.screen}>
+        <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+        <SceneBackground dimmed />
 
-  const animatedStyle = {
-    opacity: fade,
-    transform: [{ translateY }],
-  };
+        <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+          <View style={[styles.modePage, { paddingHorizontal: horizontalPadding }]}> 
+            <View style={styles.modeProgressWrap}>
+              <ProgressDots active={1} />
+            </View>
 
-  const cardFloat = pulse.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, -4],
-  });
+            <ScrollView
+              style={styles.modeScroll}
+              contentContainerStyle={styles.modeContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <AppText variant="sectionLabel" style={styles.modeEyebrow}>
+                SCÈNE CHOISIE
+              </AppText>
+              <AppText variant="screenTitle" style={styles.modeTitle}>
+                {selectedSceneData.title}
+              </AppText>
+              <AppText variant="body" style={styles.modeSubtitle}>
+                Choisis ton approche.
+              </AppText>
+
+              <View style={styles.modeHero}>
+                <Image
+                  source={selectedSceneData.image}
+                  style={StyleSheet.absoluteFill}
+                  contentFit="cover"
+                />
+                <LinearGradient
+                  colors={["transparent", "rgba(2,3,7,0.94)"]}
+                  style={StyleSheet.absoluteFill}
+                />
+                <View style={styles.modeHeroCopy}>
+                  <AppText
+                    variant="sectionLabel"
+                    style={{ color: selectedSceneData.accent }}
+                  >
+                    {selectedSceneData.eyebrow}
+                  </AppText>
+                  <AppText variant="cardTitle" style={styles.modeHeroTitle}>
+                    {selectedSceneData.title}
+                  </AppText>
+                </View>
+              </View>
+
+              <View style={styles.modeChoices}>
+                <Pressable
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: selectedMode === "guided" }}
+                  onPress={async () => {
+                    await lightTap();
+                    setSelectedMode("guided");
+                  }}
+                  style={[
+                    styles.modeChoice,
+                    selectedMode === "guided" && styles.modeChoiceActive,
+                  ]}
+                >
+                  <View style={styles.modeChoiceCopy}>
+                    <AppText variant="cardTitle" style={styles.modeChoiceTitle}>
+                      Entre dans la scène
+                    </AppText>
+                    <AppText variant="bodySecondary" style={styles.modeChoiceText}>
+                      Écoute et réponds comme si tu étais sur place.
+                    </AppText>
+                  </View>
+                  <View
+                    style={[
+                      styles.radio,
+                      selectedMode === "guided" && styles.radioActive,
+                    ]}
+                  />
+                </Pressable>
+
+                <Pressable
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: selectedMode === "text" }}
+                  onPress={async () => {
+                    await lightTap();
+                    setSelectedMode("text");
+                  }}
+                  style={[
+                    styles.modeChoice,
+                    selectedMode === "text" && styles.modeChoiceActive,
+                  ]}
+                >
+                  <View style={styles.modeChoiceCopy}>
+                    <AppText variant="cardTitle" style={styles.modeChoiceTitle}>
+                      Expressions utiles
+                    </AppText>
+                    <AppText variant="bodySecondary" style={styles.modeChoiceText}>
+                      Revois d’abord les mots et expressions de la situation.
+                    </AppText>
+                  </View>
+                  <View
+                    style={[
+                      styles.radio,
+                      selectedMode === "text" && styles.radioActive,
+                    ]}
+                  />
+                </Pressable>
+              </View>
+
+              <Pressable
+                accessibilityRole="button"
+                onPress={finish}
+                style={({ pressed }) => [styles.modePrimary, pressed && styles.pressed]}
+              >
+                <LinearGradient
+                  colors={["#E65D9D", "#8C426C", "#3F263A"]}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 1, y: 0.5 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                <AppText variant="button" style={styles.buttonText}>
+                  Commencer
+                </AppText>
+                <MoveRight size={19} color={WHITE} strokeWidth={2.2} />
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
+                onPress={async () => {
+                  await lightTap();
+                  setStep("scene");
+                }}
+                style={styles.modeBack}
+              >
+                <AppText variant="button" style={styles.modeBackText}>
+                  Retour aux immersions
+                </AppText>
+              </Pressable>
+            </ScrollView>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.screen}>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="#000000"
-        translucent
-      />
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <SceneBackground />
 
-      <BackgroundLayer
-        source={backgroundSource}
-        abstract={step === "scene"}
-        blur={step === "transition" ? 32 : step === "arrival" ? 18 : 24}
-        onLoad={
-          step === "arrival" ? () => setEntryBackgroundReady(true) : undefined
-        }
-      />
+      <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+        <View style={[styles.scenePage, { paddingHorizontal: horizontalPadding }]}> 
+          <View style={styles.sceneTopNav}>
+            <ProgressDots active={0} />
+          </View>
 
-      <SafeAreaView
-        style={[
-          styles.safe,
-          {
-            paddingHorizontal:
-              step === "scene"
-                ? responsive.horizontalPadding
-                : isCompactScreen
-                  ? 16
-                  : 24,
-          },
-        ]}
-        edges={["top", "bottom"]}
-      >
-        {step === "arrival" && (
-          <Animated.View style={[styles.page, animatedStyle]}>
-            <ScrollView
-              style={styles.stepScroll}
-              contentContainerStyle={[
-                styles.arrivalScrollContent,
-                (isCompactScreen || isLargeText) &&
-                  styles.stepScrollContentCompact,
-              ]}
-              showsVerticalScrollIndicator={false}
-            >
-              <View style={styles.topRow}>
-                <View style={styles.badge}>
-                  <View style={styles.badgeDot} />
-                  <AppText
-                    variant="label"
-                    lineContract="singleLine"
-                    style={styles.badgeText}
-                  >
-                    SÉOUL IMMERSION
-                  </AppText>
-                </View>
+          <ScrollView
+            style={styles.sceneScroll}
+            contentContainerStyle={[
+              styles.sceneScrollContent,
+              isCompact && styles.sceneScrollContentCompact,
+            ]}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.intro}>
+              <AppText variant="sectionLabel" style={styles.introEyebrow}>
+                TON POINT DE DÉPART
+              </AppText>
+              <AppText
+                accessibilityRole="header"
+                variant="screenTitle"
+                style={styles.introTitle}
+              >
+                Choisis ta première expérience
+              </AppText>
+              <AppText variant="body" style={styles.introSubtitle}>
+                Lance une scène guidée ou explore librement le Hub.
+              </AppText>
+            </View>
+
+            <FeaturedScene scene={selectedSceneData} height={heroHeight} />
+
+            <View style={styles.alternativeSection}>
+              <AppText variant="sectionLabel" style={styles.alternativeLabel}>
+                AUTRES IMMERSIONS
+              </AppText>
+
+              <View style={styles.alternativeList}>
+                {alternativeScenes.map((scene) => (
+                  <AlternativeScene
+                    key={scene.key}
+                    scene={scene}
+                    height={alternativeHeight}
+                    onPress={() => void selectScene(scene.key)}
+                  />
+                ))}
               </View>
+            </View>
 
-              <View style={styles.arrivalCenter}>
-                <AppText
-                  variant="koreanPrimary"
-                  script="korean"
-                  style={styles.koreanLine}
-                >
-                  어서 오세요
-                </AppText>
-                <AppText
-                  accessibilityRole="header"
-                  variant="display"
-                  style={styles.bigTitle}
-                >
-                  Bienvenue à Séoul
-                </AppText>
-                <AppText variant="subtitle" style={styles.subtitle}>
-                  Tu n’apprends pas le coréen. Tu entres dans des scènes
-                  réelles.
-                </AppText>
-
-                <Animated.View
-                  style={[
-                    styles.heroCardWrap,
-                    { transform: [{ translateY: cardFloat }] },
-                  ]}
-                >
-                  <BlurView intensity={35} tint="dark" style={styles.heroCard}>
-                    <LinearGradient
-                      colors={[
-                        "rgba(255,255,255,0.08)",
-                        "rgba(255,255,255,0.03)",
-                        "rgba(255,255,255,0.01)",
-                      ]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={StyleSheet.absoluteFill}
-                    />
-
-                    <LinearGradient
-                      colors={[
-                        "rgba(244,114,182,0.08)",
-                        "rgba(34,211,238,0.04)",
-                        "transparent",
-                      ]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={StyleSheet.absoluteFill}
-                    />
-
-                    <AppText variant="sectionLabel" style={styles.heroEyebrow}>
-                      IMMERSION
-                    </AppText>
-                    <AppText variant="sceneTitle" style={styles.heroTitle}>
-                      La ville s’ouvre devant toi
-                    </AppText>
-                    <AppText variant="body" style={styles.heroText}>
-                      Choisis une scène recommandée pour commencer, ou
-                      prépare-toi d’abord avec les bases essentielles.
-                    </AppText>
-                  </BlurView>
-                </Animated.View>
-              </View>
-
-              <View style={styles.bottomCtaArea}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Choisir une scène"
-                  accessibilityHint="Ouvre le choix de la scène de départ"
-                  hitSlop={6}
-                  style={styles.primaryWrap}
-                  onPress={() => goToStep("scene")}
-                >
-                  <BlurView
-                    intensity={20}
-                    tint="dark"
-                    style={styles.primaryButton}
-                  >
-                    <LinearGradient
-                      colors={[
-                        "rgba(244,114,182,0.45)",
-                        "rgba(34,211,238,0.30)",
-                      ]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    <AppText variant="button" style={styles.primaryText}>
-                      Choisir une scène
-                    </AppText>
-                  </BlurView>
-                </Pressable>
-              </View>
-            </ScrollView>
-          </Animated.View>
-        )}
-
-        {step === "scene" && (
-          <Animated.View style={[styles.page, styles.scenePage, animatedStyle]}>
-            <View style={styles.sceneTopNav}>
+            <View style={styles.actions}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Retour à l’écran de bienvenue"
-                hitSlop={10}
+                accessibilityLabel={`Commencer par ${selectedSceneData.title}`}
+                onPress={openMode}
                 style={({ pressed }) => [
-                  styles.sceneBackButton,
-                  pressed && styles.pressedControl,
-                ]}
-                onPress={() => goToStep("arrival")}
-              >
-                <ArrowLeft size={18} color={TXT} strokeWidth={2} />
-              </Pressable>
-
-              <View
-                style={styles.sceneProgress}
-                accessibilityLabel="Étape 2 sur 3"
-              >
-                <View style={styles.sceneProgressLine} />
-                <View
-                  style={[
-                    styles.sceneProgressLine,
-                    styles.sceneProgressLineActive,
-                  ]}
-                />
-                <View style={styles.sceneProgressLine} />
-              </View>
-
-              <View style={styles.sceneNavSpacer} />
-            </View>
-
-            <ScrollView
-              style={styles.stepScroll}
-              contentContainerStyle={[
-                styles.sceneScrollContent,
-                isCompactScreen && styles.sceneScrollContentCompact,
-              ]}
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-            >
-              <View style={styles.sceneIntro}>
-                <AppText
-                  variant="sectionLabel"
-                  style={styles.sceneIntroEyebrow}
-                >
-                  TON POINT DE DÉPART
-                </AppText>
-                <AppText
-                  accessibilityRole="header"
-                  variant="screenTitle"
-                  style={styles.sceneIntroTitle}
-                >
-                  Choisis ta première expérience
-                </AppText>
-                <AppText variant="body" style={styles.sceneIntroText}>
-                  Lance une scène guidée ou explore librement le Hub.
-                </AppText>
-              </View>
-
-              <View
-                style={[
-                  styles.sceneExperienceLayout,
-                  isWideSceneLayout && styles.sceneExperienceLayoutWide,
+                  styles.primaryButton,
+                  pressed && styles.pressed,
                 ]}
               >
-                <View
-                  accessibilityLabel={`${selectedSceneData.title}, scène sélectionnée. ${selectedSceneData.subtitle}${
-                    selectedScene === "cafe"
-                      ? " Guidée pas à pas, sans prérequis."
-                      : ""
-                  }`}
-                  accessibilityState={{ selected: true }}
-                  accessible
-                  style={[
-                    styles.featuredScene,
-                    isWideSceneLayout && styles.featuredSceneWide,
-                    { height: sceneHeroHeight },
-                  ]}
-                >
-                  <Image
-                    source={selectedSceneData.image}
-                    style={StyleSheet.absoluteFill}
-                    contentFit="cover"
-                  />
-                  <LinearGradient
-                    colors={[
-                      "rgba(2,3,6,0.02)",
-                      "rgba(2,3,6,0.08)",
-                      "rgba(2,3,6,0.54)",
-                      "rgba(2,3,6,0.97)",
-                    ]}
-                    locations={[0, 0.48, 0.72, 1]}
-                    style={StyleSheet.absoluteFill}
-                  />
-                  <LinearGradient
-                    colors={[`${selectedSceneData.accent}24`, "transparent"]}
-                    start={{ x: 0, y: 1 }}
-                    end={{ x: 0.78, y: 0.2 }}
-                    style={StyleSheet.absoluteFill}
-                  />
-
-                  <View style={styles.featuredTopRow}>
-                    <View
-                      style={[
-                        styles.recommendedPill,
-                        { borderColor: `${selectedSceneData.accent}72` },
-                      ]}
-                    >
-                      <View
-                        style={[
-                          styles.recommendedDot,
-                          { backgroundColor: selectedSceneData.accent },
-                        ]}
-                      />
-                      <AppText variant="label" style={styles.recommendedText}>
-                        {selectedScene === "cafe"
-                          ? "IDÉAL POUR DÉBUTER"
-                          : isCompactScreen
-                            ? "SÉLECTIONNÉE"
-                            : "TON IMMERSION"}
-                      </AppText>
-                    </View>
-                    <AppText
-                      variant="sectionLabel"
-                      style={styles.featuredLocation}
-                    >
-                      {selectedSceneData.eyebrow}
-                    </AppText>
-                  </View>
-
-                  <View style={styles.featuredCopy}>
-                    <AppText
-                      accessibilityLanguage="ko-KR"
-                      variant="koreanSecondary"
-                      script="korean"
-                      style={[
-                        styles.featuredPhrase,
-                        { color: selectedSceneData.accent },
-                      ]}
-                    >
-                      {selectedSceneData.phrase}
-                    </AppText>
-                    <AppText variant="sceneTitle" style={styles.featuredTitle}>
-                      {selectedSceneData.title}
-                    </AppText>
-                    <AppText
-                      variant="bodyStrong"
-                      style={styles.featuredSubtitle}
-                    >
-                      {selectedSceneData.subtitle}
-                    </AppText>
-                    {selectedScene === "cafe" && (
-                      <View style={styles.beginnerNote}>
-                        <Check
-                          size={13}
-                          color="rgba(255,255,255,0.82)"
-                          strokeWidth={2.2}
-                        />
-                        <AppText
-                          variant="caption"
-                          style={styles.beginnerNoteText}
-                        >
-                          Aucun prérequis
-                        </AppText>
-                      </View>
-                    )}
-                  </View>
-                </View>
-
-                <View
-                  style={[
-                    styles.alternativeRail,
-                    isWideSceneLayout && styles.alternativeRailWide,
-                  ]}
-                >
-                  <View style={styles.alternativeHeading}>
-                    <View style={styles.alternativeRule} />
-                    <AppText
-                      variant="sectionLabel"
-                      style={styles.alternativeLabel}
-                    >
-                      AUTRES IMMERSIONS
-                    </AppText>
-                  </View>
-
-                  <View
-                    style={[
-                      styles.alternativeList,
-                      isWideSceneLayout && styles.alternativeListWide,
-                    ]}
-                  >
-                    {alternativeScenes.map((scene) => (
-                      <Pressable
-                        key={scene.key}
-                        accessibilityRole="radio"
-                        accessibilityLabel={`${scene.title}. ${scene.subtitle}`}
-                        accessibilityState={{ checked: false, selected: false }}
-                        aria-checked={false}
-                        aria-selected={false}
-                        style={({ pressed }) => [
-                          styles.alternativeScene,
-                          { height: alternativeSceneHeight },
-                          isWideSceneLayout && styles.alternativeSceneWide,
-                          pressed && styles.alternativeScenePressed,
-                        ]}
-                        onPress={async () => {
-                          await tap();
-                          setSelectedScene(scene.key);
-                        }}
-                      >
-                        <Image
-                          source={scene.image}
-                          style={StyleSheet.absoluteFill}
-                          contentFit="cover"
-                        />
-                        <LinearGradient
-                          colors={[
-                            "rgba(2,3,6,0.02)",
-                            "rgba(2,3,6,0.18)",
-                            "rgba(2,3,6,0.94)",
-                          ]}
-                          locations={[0, 0.45, 1]}
-                          style={StyleSheet.absoluteFill}
-                        />
-                        <LinearGradient
-                          colors={[`${scene.accent}1F`, "transparent"]}
-                          start={{ x: 0, y: 1 }}
-                          end={{ x: 0.72, y: 0.18 }}
-                          style={StyleSheet.absoluteFill}
-                        />
-                        <View style={styles.alternativeCopy}>
-                          <AppText
-                            variant="sectionLabel"
-                            style={[
-                              styles.alternativePlace,
-                              { color: scene.accent },
-                            ]}
-                          >
-                            {scene.eyebrow}
-                          </AppText>
-                          <AppText
-                            variant="cardTitle"
-                            style={styles.alternativeTitle}
-                          >
-                            {scene.title}
-                          </AppText>
-                        </View>
-                        <View style={styles.alternativeArrow}>
-                          <MoveRight size={16} color={TXT} strokeWidth={2} />
-                        </View>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-              </View>
-            </ScrollView>
-
-            <View style={styles.sceneBottomDock}>
-              <View
-                style={[
-                  styles.sceneActions,
-                  isLargeText && styles.sceneActionsStacked,
-                ]}
-              >
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    selectedScene === "cafe"
-                      ? "Essayer l’expérience Café"
-                      : `Continuer avec la scène ${selectedSceneData.title}`
-                  }
-                  accessibilityHint="Ouvre le choix entre expressions utiles et scène guidée"
-                  hitSlop={6}
-                  style={({ pressed }) => [
-                    styles.scenePrimaryWrap,
-                    pressed && styles.scenePrimaryPressed,
-                  ]}
-                  onPress={() => goToStep("mode")}
-                >
-                  <BlurView
-                    intensity={24}
-                    tint="dark"
-                    style={styles.scenePrimaryButton}
-                  >
-                    <LinearGradient
-                      colors={[
-                        `${selectedSceneData.accent}A8`,
-                        `${selectedSceneData.accent}52`,
-                        "rgba(255,255,255,0.08)",
-                      ]}
-                      start={{ x: 0, y: 0.4 }}
-                      end={{ x: 1, y: 0.6 }}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    <AppText variant="button" style={styles.primaryText}>
-                      {selectedScene === "cafe"
-                        ? "Commencer par Café"
-                        : isCompactScreen
-                          ? "Continuer"
-                          : `Continuer avec ${selectedSceneData.title}`}
-                    </AppText>
-                    {!isCompactScreen && !isLargeText && (
-                      <MoveRight size={18} color="#FFFFFF" strokeWidth={2.2} />
-                    )}
-                  </BlurView>
-                </Pressable>
-
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Explorer le Hub"
-                  accessibilityHint="Quitte l’onboarding et ouvre l’accueil de l’application"
-                  hitSlop={6}
-                  style={({ pressed }) => [
-                    styles.sceneHubButton,
-                    isCompactScreen && styles.sceneHubButtonCompact,
-                    isLargeText && styles.sceneHubButtonStacked,
-                    pressed && styles.scenePrimaryPressed,
-                  ]}
-                  onPress={openMoreScenes}
-                >
-                  {!isCompactScreen && (
-                    <Compass size={16} color={TXT} strokeWidth={2} />
-                  )}
-                  <AppText variant="button" style={styles.sceneHubButtonText}>
-                    Explorer le Hub
-                  </AppText>
-                </Pressable>
-              </View>
-            </View>
-          </Animated.View>
-        )}
-
-        {step === "mode" && (
-          <Animated.View style={[styles.page, animatedStyle]}>
-            <ScrollView
-              style={styles.stepScroll}
-              contentContainerStyle={[
-                styles.modeScrollContent,
-                (isCompactScreen || isLargeText) &&
-                  styles.stepScrollContentCompact,
-              ]}
-              showsVerticalScrollIndicator={false}
-            >
-              <View style={styles.topRow}>
-                <View style={styles.badge}>
-                  <View style={[styles.badgeDot, { backgroundColor: CYAN }]} />
-                  <AppText
-                    variant="label"
-                    lineContract="singleLine"
-                    style={styles.badgeText}
-                  >
-                    CONVERSATION
-                  </AppText>
-                </View>
-              </View>
-
-              <View
-                style={[
-                  styles.sectionHead,
-                  (isCompactScreen || isLargeText) && styles.sectionHeadCompact,
-                ]}
-              >
-                <AppText variant="sectionLabel" style={styles.sectionEyebrow}>
-                  SCÈNE CHOISIE
-                </AppText>
-                <AppText
-                  accessibilityRole="header"
-                  variant="screenTitle"
-                  style={styles.sectionTitle}
-                >
-                  {selectedSceneData.title}
-                </AppText>
-                <AppText variant="body" style={styles.sectionText}>
-                  Choisis ton approche.
-                </AppText>
-              </View>
-
-              <View style={styles.modeList}>
-                {MODES.map((mode) => {
-                  const active = selectedMode === mode.key;
-
-                  return (
-                    <Pressable
-                      key={mode.key}
-                      accessibilityRole="radio"
-                      accessibilityLabel={`${mode.title}. ${mode.subtitle}`}
-                      accessibilityState={{ checked: active, selected: active }}
-                      aria-checked={active}
-                      aria-selected={active}
-                      hitSlop={6}
-                      style={styles.modePress}
-                      onPress={async () => {
-                        await tap();
-                        setSelectedMode(mode.key);
-                      }}
-                    >
-                      <BlurView
-                        intensity={25}
-                        tint="dark"
-                        style={styles.modeCard}
-                      >
-                        <LinearGradient
-                          colors={[
-                            active
-                              ? `${mode.accent}16`
-                              : "rgba(255,255,255,0.025)",
-                            "rgba(4,8,13,0.20)",
-                          ]}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                          style={StyleSheet.absoluteFill}
-                        />
-
-                        <View
-                          style={[
-                            styles.modeAccent,
-                            {
-                              backgroundColor: mode.accent,
-                              opacity: active ? 0.82 : 0.24,
-                            },
-                          ]}
-                        />
-
-                        <View style={styles.modeContent}>
-                          <View style={styles.modeCopy}>
-                            <AppText
-                              variant="cardTitle"
-                              style={styles.modeTitle}
-                            >
-                              {mode.title}
-                            </AppText>
-                            <AppText
-                              variant="bodySecondary"
-                              tone="muted"
-                              style={styles.modeSubtitle}
-                            >
-                              {mode.subtitle}
-                            </AppText>
-                          </View>
-
-                          {mode.highlighted && (
-                            <View style={styles.signatureBadge}>
-                              <AppText
-                                variant="sectionLabel"
-                                style={styles.signatureText}
-                              >
-                                SIGNATURE
-                              </AppText>
-                            </View>
-                          )}
-                        </View>
-
-                        {active && (
-                          <View
-                            style={[
-                              styles.modeActiveRing,
-                              { borderColor: `${mode.accent}4A` },
-                            ]}
-                          />
-                        )}
-                      </BlurView>
-                    </Pressable>
-                  );
-                })}
-              </View>
-
-              <BlurView intensity={20} tint="dark" style={styles.previewCard}>
                 <LinearGradient
-                  colors={["rgba(112,174,184,0.07)", "rgba(255,255,255,0.015)"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
+                  colors={[
+                    selectedScene === "cafe" ? "#E95B9C" : selectedSceneData.accent,
+                    selectedScene === "cafe" ? "#9A476F" : `${selectedSceneData.accent}B8`,
+                    "#3A2838",
+                  ]}
+                  locations={[0, 0.58, 1]}
+                  start={{ x: 0, y: 0.45 }}
+                  end={{ x: 1, y: 0.55 }}
                   style={StyleSheet.absoluteFill}
                 />
-                <AppText variant="sectionLabel" style={styles.previewEyebrow}>
-                  PRÊT À ENTRER
+                <View style={styles.primaryHighlight} />
+                <AppText variant="button" style={styles.buttonText}>
+                  {selectedScene === "cafe"
+                    ? "Commencer par Café"
+                    : `Commencer par ${selectedSceneData.title}`}
                 </AppText>
-                <AppText variant="cardTitle" style={styles.previewTitle}>
-                  {selectedSceneData.title} · {selectedModeData.title}
-                </AppText>
-              </BlurView>
+                <MoveRight size={20} color={WHITE} strokeWidth={2.2} />
+              </Pressable>
 
-              <View style={styles.bottomBar}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Retour au choix de scène"
-                  hitSlop={6}
-                  style={styles.secondaryButton}
-                  onPress={() => goToStep("scene")}
-                >
-                  <AppText variant="button" style={styles.secondaryText}>
-                    Retour aux scènes
-                  </AppText>
-                </Pressable>
-
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Commencer la scène choisie"
-                  hitSlop={6}
-                  style={styles.primaryInlineWrap}
-                  onPress={finishOnboarding}
-                >
-                  <BlurView
-                    intensity={20}
-                    tint="dark"
-                    style={styles.primaryInlineButton}
-                  >
-                    <LinearGradient
-                      colors={[
-                        "rgba(125,63,96,0.42)",
-                        "rgba(45,72,94,0.40)",
-                        "rgba(35,91,102,0.34)",
-                      ]}
-                      locations={[0, 0.52, 1]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    <AppText variant="button" style={styles.primaryText}>
-                      Commencer
-                    </AppText>
-                  </BlurView>
-                </Pressable>
-              </View>
-            </ScrollView>
-          </Animated.View>
-        )}
-
-        {step === "transition" && (
-          <Animated.View
-            style={[styles.page, styles.transitionPage, animatedStyle]}
-          >
-            <View style={styles.transitionGlowWrap}>
-              <LinearGradient
-                colors={[
-                  "rgba(244,114,182,0.22)",
-                  "rgba(34,211,238,0.14)",
-                  "transparent",
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Explorer le Hub"
+                onPress={openHub}
+                style={({ pressed }) => [
+                  styles.hubButton,
+                  pressed && styles.pressed,
                 ]}
-                start={{ x: 0.1, y: 0 }}
-                end={{ x: 0.9, y: 1 }}
-                style={styles.transitionGlow}
-              />
+              >
+                <View style={styles.hubIcon}>
+                  <Compass size={16} color={WHITE} strokeWidth={2.1} />
+                </View>
+                <AppText variant="button" style={styles.hubButtonText}>
+                  Explorer le Hub
+                </AppText>
+              </Pressable>
             </View>
 
-            <AppText variant="sectionLabel" style={styles.transitionEyebrow}>
-              SCÈNE EN COURS
-            </AppText>
-            <AppText
-              accessibilityRole="header"
-              variant="screenTitle"
-              style={styles.transitionTitle}
-            >
-              Tu es prêt.
-            </AppText>
-            <AppText variant="body" style={styles.transitionText}>
-              La conversation commence.
-            </AppText>
-          </Animated.View>
-        )}
+            {largeText ? <View style={styles.largeTextSpacer} /> : null}
+          </ScrollView>
+        </View>
       </SafeAreaView>
-
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          StyleSheet.absoluteFill,
-          styles.entryOverlay,
-          { opacity: entryOverlayOpacity },
-        ]}
-      />
     </View>
   );
 }
@@ -1167,619 +622,399 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#000000",
-  },
-  backgroundBase: {
-    backgroundColor: "#000000",
-  },
-  entryOverlay: {
-    backgroundColor: "#000000",
-    zIndex: 1000,
-    elevation: 1000,
+    backgroundColor: "#02030A",
   },
   safe: {
     flex: 1,
   },
-  page: {
-    flex: 1,
-    width: "100%",
-    maxWidth: 560,
-    alignSelf: "center",
-  },
-  topRow: {
-    paddingTop: 16,
-    alignItems: "flex-start",
-  },
-  badge: {
-    minHeight: 32,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    backgroundColor: "rgba(255,255,255,0.05)",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  badgeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 999,
-    backgroundColor: CYAN,
-  },
-  badgeText: {
-    color: TXT_SOFT,
-  },
-  arrivalCenter: {
-    flex: 1,
-    justifyContent: "center",
-    paddingTop: 24,
-    paddingBottom: 20,
-    width: "100%",
-    maxWidth: 520,
-    alignSelf: "center",
-  },
-  koreanLine: {
-    color: "rgba(255,255,255,0.85)",
-    textAlign: "center",
-    marginBottom: 12,
-  },
-  bigTitle: {
-    color: TXT,
-    textAlign: "center",
-  },
-  subtitle: {
-    color: "rgba(255,255,255,0.68)",
-    textAlign: "center",
-    marginTop: 14,
-    maxWidth: 290,
-    alignSelf: "center",
-  },
-  heroCardWrap: {
-    marginTop: 38,
-    width: "100%",
-    maxWidth: 520,
-    alignSelf: "center",
-  },
-  heroCard: {
-    borderRadius: 24,
-    overflow: "hidden",
-    padding: 24,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.14)",
-    backgroundColor: "rgba(255,255,255,0.02)",
-  },
-  heroEyebrow: {
-    color: TXT_SOFT,
-    marginBottom: 10,
-  },
-  heroTitle: {
-    color: TXT,
-  },
-  heroText: {
-    color: "rgba(255,255,255,0.60)",
-    marginTop: 12,
-  },
-  bottomCtaArea: {
-    paddingBottom: 24,
-    width: "100%",
-    maxWidth: 520,
-    alignSelf: "center",
-  },
-  primaryWrap: {
-    borderRadius: 999,
-    overflow: "hidden",
-  },
-  primaryButton: {
-    minHeight: 56,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    borderRadius: 999,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderTopWidth: 1.2,
-    borderColor: "rgba(255,255,255,0.18)",
-    borderTopColor: "rgba(255,255,255,0.35)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  primaryText: {
-    color: "#FFFFFF",
-    textAlign: "center",
-  },
   scenePage: {
+    flex: 1,
+    width: "100%",
     maxWidth: 920,
+    alignSelf: "center",
   },
   sceneTopNav: {
-    minHeight: 54,
-    paddingTop: 8,
-    flexDirection: "row",
+    height: 50,
+    paddingTop: 11,
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: 10,
+    justifyContent: "flex-start",
   },
-  sceneBackButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    backgroundColor: "rgba(2,3,6,0.32)",
+  progress: {
+    minHeight: 16,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 10,
   },
-  pressedControl: {
-    opacity: 0.68,
-  },
-  sceneProgress: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-  sceneProgressLine: {
-    width: 16,
-    height: 2,
+  progressLine: {
+    width: 26,
+    height: 3,
     borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.18)",
+    backgroundColor: "rgba(255,255,255,0.14)",
   },
-  sceneProgressLineActive: {
-    width: 28,
-    backgroundColor: "rgba(255,255,255,0.82)",
+  progressLineActive: {
+    width: 38,
+    backgroundColor: PINK,
+    shadowColor: PINK,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.55,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  sceneNavSpacer: {
-    width: 40,
-    height: 40,
+  sceneScroll: {
+    flex: 1,
   },
   sceneScrollContent: {
     width: "100%",
     maxWidth: 860,
     alignSelf: "center",
-    paddingTop: 16,
-    paddingBottom: 22,
+    paddingTop: 24,
+    paddingBottom: 12,
   },
   sceneScrollContentCompact: {
-    paddingTop: 10,
-    paddingBottom: 18,
+    paddingTop: 14,
   },
-  sceneIntro: {
-    maxWidth: 620,
+  intro: {
+    maxWidth: 650,
     marginBottom: 24,
   },
-  sceneIntroEyebrow: {
+  introEyebrow: {
     color: PINK,
-    marginBottom: 7,
+    marginBottom: 12,
+    textShadowColor: "rgba(244,114,182,0.25)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
-  sceneIntroTitle: {
-    color: TXT,
+  introTitle: {
+    color: "#FFF9FC",
+    maxWidth: 560,
+    textShadowColor: "rgba(0,0,0,0.44)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 12,
   },
-  sceneIntroText: {
-    maxWidth: 520,
-    color: "rgba(255,255,255,0.64)",
-    marginTop: 8,
+  introSubtitle: {
+    color: "rgba(255,255,255,0.68)",
+    maxWidth: 560,
+    marginTop: 12,
   },
-  sceneExperienceLayout: {
-    gap: 22,
-  },
-  sceneExperienceLayoutWide: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    gap: 18,
-  },
-  featuredScene: {
+  featuredCard: {
     width: "100%",
     borderRadius: 28,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.11)",
-    backgroundColor: "rgba(2,3,6,0.60)",
+    backgroundColor: "rgba(2,3,7,0.62)",
     justifyContent: "space-between",
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.24,
-    shadowRadius: 24,
-    elevation: 6,
-  },
-  featuredSceneWide: {
-    flex: 1.9,
-    width: "auto",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.13,
+    shadowRadius: 22,
+    elevation: 7,
   },
   featuredTopRow: {
-    paddingHorizontal: 17,
-    paddingTop: 17,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
+    paddingHorizontal: 18,
+    paddingTop: 18,
   },
   recommendedPill: {
-    minHeight: 24,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    minHeight: 31,
     borderRadius: 999,
     borderWidth: 1,
-    backgroundColor: "rgba(2,3,6,0.68)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 8,
+    backgroundColor: "rgba(7,5,11,0.67)",
   },
   recommendedDot: {
-    width: 5,
-    height: 5,
+    width: 7,
+    height: 7,
     borderRadius: 999,
   },
   recommendedText: {
-    color: "rgba(255,255,255,0.92)",
+    color: "rgba(255,255,255,0.97)",
   },
   featuredLocation: {
-    color: "rgba(255,255,255,0.72)",
+    color: "rgba(255,255,255,0.80)",
     textAlign: "right",
+    textShadowColor: "rgba(0,0,0,0.88)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 8,
   },
   featuredCopy: {
-    paddingHorizontal: 20,
-    paddingBottom: 18,
-    maxWidth: 520,
+    paddingHorizontal: 22,
+    paddingBottom: 20,
+    maxWidth: 540,
   },
   featuredPhrase: {
-    marginBottom: 3,
-    textShadowColor: "rgba(0,0,0,0.78)",
+    marginBottom: 5,
+    textShadowColor: "rgba(0,0,0,0.88)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 12,
   },
   featuredTitle: {
-    color: TXT,
-    textShadowColor: "rgba(0,0,0,0.78)",
+    color: WHITE,
+    textShadowColor: "rgba(0,0,0,0.90)",
     textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 18,
+    textShadowRadius: 16,
   },
   featuredSubtitle: {
-    color: "rgba(255,255,255,0.82)",
-    marginTop: 5,
-    maxWidth: 380,
+    color: "rgba(255,255,255,0.88)",
+    marginTop: 8,
+    maxWidth: 410,
+    textShadowColor: "rgba(0,0,0,0.78)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 8,
   },
-  beginnerNote: {
-    marginTop: 7,
+  beginnerRow: {
+    marginTop: 12,
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 9,
   },
-  beginnerNoteText: {
-    color: "rgba(255,255,255,0.74)",
-  },
-  alternativeRail: {
-    gap: 13,
-  },
-  alternativeRailWide: {
-    flex: 1,
-    minWidth: 0,
-  },
-  alternativeHeading: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  alternativeRule: {
+  beginnerIcon: {
     width: 20,
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.22)",
+    height: 20,
+    borderRadius: 999,
+    borderWidth: 1.2,
+    borderColor: "rgba(244,114,182,0.72)",
+    backgroundColor: "rgba(244,114,182,0.08)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  beginnerText: {
+    color: "rgba(255,255,255,0.78)",
+  },
+  alternativeSection: {
+    marginTop: 22,
   },
   alternativeLabel: {
     color: "rgba(255,255,255,0.52)",
+    marginLeft: 1,
+    marginBottom: 12,
   },
   alternativeList: {
     flexDirection: "row",
-    gap: 11,
+    gap: 12,
   },
-  alternativeListWide: {
-    flex: 1,
-    flexDirection: "column",
-  },
-  alternativeScene: {
+  alternativeCard: {
     flex: 1,
     minWidth: 0,
-    height: 108,
-    borderRadius: 20,
+    borderRadius: 22,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    backgroundColor: "rgba(2,3,6,0.58)",
+    borderColor: "rgba(255,255,255,0.13)",
+    backgroundColor: "rgba(2,3,7,0.62)",
     justifyContent: "flex-end",
-  },
-  alternativeSceneWide: {
-    height: "auto",
-  },
-  alternativeScenePressed: {
-    opacity: 0.88,
-    transform: [{ scale: 0.985 }],
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.24,
+    shadowRadius: 14,
+    elevation: 4,
   },
   alternativeCopy: {
-    paddingLeft: 14,
-    paddingRight: 38,
-    paddingBottom: 13,
+    paddingLeft: 15,
+    paddingRight: 49,
+    paddingBottom: 14,
   },
-  alternativePlace: {
-    marginBottom: 2,
+  alternativeEyebrow: {
+    marginBottom: 4,
+    textShadowColor: "rgba(0,0,0,0.85)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 8,
   },
   alternativeTitle: {
-    color: TXT,
+    color: WHITE,
+    textShadowColor: "rgba(0,0,0,0.88)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 10,
   },
   alternativeArrow: {
     position: "absolute",
-    right: 10,
-    bottom: 12,
-    width: 24,
-    height: 24,
+    right: 12,
+    bottom: 13,
+    width: 38,
+    height: 38,
     borderRadius: 999,
-    backgroundColor: "rgba(4,6,10,0.54)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.09)",
+    borderColor: "rgba(255,255,255,0.18)",
+    backgroundColor: "rgba(3,4,8,0.58)",
     alignItems: "center",
     justifyContent: "center",
   },
-  sceneBottomDock: {
-    width: "100%",
-    maxWidth: 860,
-    alignSelf: "center",
-    paddingTop: 11,
-    paddingBottom: 13,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.10)",
-    backgroundColor: "rgba(5,6,9,0.62)",
-  },
-  sceneActions: {
-    flexDirection: "row",
-    alignItems: "center",
+  actions: {
     gap: 10,
-  },
-  sceneActionsStacked: {
-    flexDirection: "column",
-    alignItems: "stretch",
-  },
-  scenePrimaryWrap: {
-    flex: 1,
-    minWidth: 0,
-    borderRadius: 18,
-    overflow: "hidden",
-  },
-  scenePrimaryPressed: {
-    opacity: 0.92,
-    transform: [{ scale: 0.994 }],
-  },
-  scenePrimaryButton: {
-    minHeight: 54,
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderTopWidth: 1.2,
-    borderColor: "rgba(255,255,255,0.15)",
-    borderTopColor: "rgba(255,255,255,0.28)",
-    overflow: "hidden",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  sceneHubButton: {
-    width: 138,
-    minHeight: 54,
-    paddingHorizontal: 14,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.13)",
-    backgroundColor: "rgba(255,255,255,0.055)",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  sceneHubButtonCompact: {
-    width: 118,
-    paddingHorizontal: 10,
-  },
-  sceneHubButtonStacked: {
-    width: "100%",
-  },
-  sceneHubButtonText: {
-    color: TXT,
-  },
-  sectionHead: {
-    marginTop: 26,
-    marginBottom: 20,
-  },
-  sectionHeadCompact: {
     marginTop: 18,
-    marginBottom: 14,
   },
-  sectionEyebrow: {
-    color: TXT_SOFT,
-    marginBottom: 6,
-  },
-  sectionTitle: {
-    color: TXT,
-  },
-  sectionText: {
-    color: "rgba(255,255,255,0.65)",
-    marginTop: 6,
-  },
-  stepScroll: {
-    flex: 1,
-  },
-  stepScrollContent: {
-    width: "100%",
-    maxWidth: 520,
-    alignSelf: "center",
-    paddingBottom: 14,
-  },
-  arrivalScrollContent: {
-    flexGrow: 1,
-    width: "100%",
-    maxWidth: 520,
-    alignSelf: "center",
-    paddingBottom: 14,
-  },
-  modeScrollContent: {
-    flexGrow: 1,
-    width: "100%",
-    maxWidth: 520,
-    alignSelf: "center",
-    paddingBottom: 14,
-  },
-  stepScrollContentCompact: {
-    paddingBottom: 10,
-  },
-  modeList: {
-    gap: 12,
-    marginBottom: 20,
-  },
-  modePress: {
-    borderRadius: 20,
-    overflow: "hidden",
-  },
-  modeCard: {
-    minHeight: 76,
-    borderRadius: 20,
-    overflow: "hidden",
+  primaryButton: {
+    minHeight: 62,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.085)",
-    backgroundColor: "rgba(4,8,13,0.66)",
+    borderColor: "rgba(255,255,255,0.20)",
+    overflow: "hidden",
+    paddingHorizontal: 22,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 14,
+    shadowColor: PINK,
+    shadowOffset: { width: 0, height: 7 },
+    shadowOpacity: 0.22,
+    shadowRadius: 18,
+    elevation: 6,
   },
-  modeAccent: {
-    width: 3,
-    height: 28,
-    borderRadius: 999,
-    position: "absolute",
-    left: 0,
-  },
-  modeContent: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: 20,
-    paddingRight: 16,
-    paddingVertical: 12,
-    gap: 12,
-  },
-  modeCopy: {
-    flex: 1,
-    minWidth: 0,
-  },
-  modeTitle: {
-    color: TXT,
-  },
-  modeSubtitle: {
-    color: "rgba(255,255,255,0.52)",
-    marginTop: 2,
-  },
-  signatureBadge: {
-    borderRadius: 999,
-    backgroundColor: "rgba(184,140,164,0.07)",
-    borderWidth: 1,
-    borderColor: "rgba(215,174,195,0.18)",
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    flexShrink: 0,
-  },
-  signatureText: {
-    color: "rgba(232,199,215,0.78)",
-  },
-  modeActiveRing: {
+  primaryHighlight: {
     position: "absolute",
     top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    borderRadius: 20,
+    left: 18,
+    right: 18,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.48)",
+  },
+  buttonText: {
+    color: WHITE,
+    textAlign: "center",
+  },
+  hubButton: {
+    minHeight: 58,
+    borderRadius: 23,
     borderWidth: 1,
-    pointerEvents: "none",
-  },
-  previewCard: {
-    borderRadius: 16,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.07)",
-    backgroundColor: "rgba(4,8,13,0.48)",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginBottom: "auto",
-  },
-  previewEyebrow: {
-    color: "rgba(255,255,255,0.40)",
-    marginBottom: 2,
-  },
-  previewTitle: {
-    color: TXT,
-  },
-  bottomBar: {
+    borderColor: "rgba(255,255,255,0.20)",
+    backgroundColor: "rgba(4,6,12,0.70)",
     flexDirection: "row",
-    flexWrap: "wrap",
     alignItems: "center",
-    gap: 12,
-    paddingBottom: 20,
-    paddingTop: 12,
+    justifyContent: "center",
+    gap: 11,
+  },
+  hubIcon: {
+    width: 27,
+    height: 27,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.34)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  hubButtonText: {
+    color: WHITE,
+  },
+  pressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.992 }],
+  },
+  largeTextSpacer: {
+    height: 16,
+  },
+
+  modePage: {
+    flex: 1,
     width: "100%",
-    maxWidth: 520,
+    maxWidth: 620,
     alignSelf: "center",
   },
-  secondaryButton: {
-    minHeight: 56,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    justifyContent: "center",
+  modeProgressWrap: {
+    height: 50,
+    paddingTop: 11,
     alignItems: "center",
   },
-  secondaryText: {
-    color: "rgba(255,255,255,0.55)",
-  },
-  primaryInlineWrap: {
+  modeScroll: {
     flex: 1,
-    minWidth: 160,
-    borderRadius: 999,
-    overflow: "hidden",
   },
-  primaryInlineButton: {
-    minHeight: 56,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    borderRadius: 999,
+  modeContent: {
+    paddingTop: 24,
+    paddingBottom: 18,
+  },
+  modeEyebrow: {
+    color: CYAN,
+    marginBottom: 10,
+  },
+  modeTitle: {
+    color: WHITE,
+  },
+  modeSubtitle: {
+    color: "rgba(255,255,255,0.66)",
+    marginTop: 7,
+  },
+  modeHero: {
+    height: 170,
+    borderRadius: 24,
     overflow: "hidden",
     borderWidth: 1,
-    borderTopWidth: 1.2,
-    borderColor: "rgba(255,255,255,0.13)",
-    borderTopColor: "rgba(255,255,255,0.25)",
-    backgroundColor: "rgba(5,9,15,0.62)",
-    alignItems: "center",
-    justifyContent: "center",
+    borderColor: "rgba(255,255,255,0.14)",
+    marginTop: 24,
+    justifyContent: "flex-end",
   },
-  transitionPage: {
+  modeHeroCopy: {
+    padding: 18,
+  },
+  modeHeroTitle: {
+    color: WHITE,
+    marginTop: 3,
+  },
+  modeChoices: {
+    gap: 12,
+    marginTop: 18,
+  },
+  modeChoice: {
+    minHeight: 88,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.11)",
+    backgroundColor: "rgba(4,6,12,0.72)",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+  modeChoiceActive: {
+    borderColor: "rgba(112,174,184,0.62)",
+    backgroundColor: "rgba(19,38,46,0.76)",
+  },
+  modeChoiceCopy: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
-  transitionGlowWrap: {
-    position: "absolute",
-    width: 240,
-    height: 240,
-    justifyContent: "center",
-    alignItems: "center",
+  modeChoiceTitle: {
+    color: WHITE,
   },
-  transitionGlow: {
-    width: "100%",
-    height: "100%",
+  modeChoiceText: {
+    color: "rgba(255,255,255,0.58)",
+    marginTop: 3,
+  },
+  radio: {
+    width: 18,
+    height: 18,
     borderRadius: 999,
+    borderWidth: 1.4,
+    borderColor: "rgba(255,255,255,0.36)",
   },
-  transitionEyebrow: {
-    color: PINK,
-    marginBottom: 12,
+  radioActive: {
+    borderWidth: 5,
+    borderColor: CYAN,
+    backgroundColor: "rgba(255,255,255,0.90)",
   },
-  transitionTitle: {
-    color: TXT,
+  modePrimary: {
+    minHeight: 58,
+    borderRadius: 22,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+    marginTop: 20,
+    paddingHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
   },
-  transitionText: {
-    color: TXT_SOFT,
-    marginTop: 8,
-    textAlign: "center",
+  modeBack: {
+    minHeight: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 5,
+  },
+  modeBackText: {
+    color: "rgba(255,255,255,0.58)",
   },
 });
