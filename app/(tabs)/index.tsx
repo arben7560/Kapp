@@ -120,6 +120,7 @@ const SEQUENCES: any[] = [
     trackKey: "hangul",
     place: "CENTRE D'APPRENTISSAGE",
     narrative: "Décrypte l'âme visuelle de la ville.",
+    background: require("../../assets/images/hangul-card.png"),
     type: "pedagogical",
   },
   {
@@ -1691,6 +1692,34 @@ function SequenceCard({ item, isActive, onPress }: any) {
         tint="dark"
         style={styles.sequenceCard}
       >
+                {item.background ? (
+          <>
+            <ImageBackground
+              source={item.background}
+              resizeMode="cover"
+              style={StyleSheet.absoluteFill}
+              pointerEvents="none"
+            />
+            <BlurView
+              intensity={7}
+              tint="dark"
+              style={StyleSheet.absoluteFill}
+              pointerEvents="none"
+            />
+            <LinearGradient
+              colors={[
+                "rgba(2,4,7,0.30)",
+                "rgba(2,4,7,0.50)",
+                "rgba(2,3,6,0.72)",
+              ]}
+              locations={[0, 0.52, 1]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+              pointerEvents="none"
+            />
+          </>
+        ) : null}
         <LinearGradient
           colors={[accent.surface, "rgba(5,7,12,0.62)", "rgba(2,3,6,0.66)"]}
           locations={[0, 0.5, 1]}
