@@ -1,11 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import {
-  ChevronRight,
-  Sparkles,
-  X,
-} from "lucide-react-native";
+import { ChevronRight, Sparkles, X } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -29,10 +25,7 @@ import {
 
 import { AppText } from "../../components/app-text";
 import { AppBackButton } from "../../components/ui/app-back-button";
-import {
-  HubModuleAccents,
-  SeoulMidnightGlass,
-} from "../../constants/theme";
+import { HubModuleAccents, SeoulMidnightGlass } from "../../constants/theme";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 
 const BACKGROUND_SOURCE = require("../../assets/images/speak.jpg");
@@ -196,11 +189,7 @@ export default function SpeakScreen() {
         />
 
         <LinearGradient
-          colors={[
-            "rgba(2,3,6,0.40)",
-            "rgba(2,3,6,0.61)",
-            "rgba(2,3,6,0.91)",
-          ]}
+          colors={["rgba(2,3,6,0.40)", "rgba(2,3,6,0.61)", "rgba(2,3,6,0.91)"]}
           locations={[0, 0.48, 1]}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
@@ -226,10 +215,7 @@ export default function SpeakScreen() {
             ]}
           >
             <View
-              style={[
-                styles.contentFrame,
-                { maxWidth: responsive.maxWidth },
-              ]}
+              style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
             >
               <View style={styles.navHeader}>
                 <AppBackButton />
@@ -286,11 +272,7 @@ function SpeakHero({ compact }: { compact: boolean }) {
 
       <View style={styles.heroMetaRow}>
         <View style={styles.practicePill}>
-          <Sparkles
-            size={15}
-            strokeWidth={2}
-            color={CONVERSATION_ACCENT}
-          />
+          <Sparkles size={15} strokeWidth={2} color={CONVERSATION_ACCENT} />
           <AppText
             variant="sectionLabel"
             lineContract="singleLine"
@@ -301,7 +283,7 @@ function SpeakHero({ compact }: { compact: boolean }) {
         </View>
 
         <AppText variant="caption" style={styles.heroSceneCount}>
-          {PUBLIC_THEME_KEYS.length} scènes · Séoul réel
+          {PUBLIC_THEME_KEYS.length} scènes
         </AppText>
       </View>
     </View>
@@ -690,7 +672,8 @@ function Scenes({
           lineContract="singleLine"
           style={styles.carouselCount}
         >
-          {String(activeIndex + 1).padStart(2, "0")} / {String(PUBLIC_THEME_KEYS.length).padStart(2, "0")}
+          {String(activeIndex + 1).padStart(2, "0")} /{" "}
+          {String(PUBLIC_THEME_KEYS.length).padStart(2, "0")}
         </AppText>
       </View>
 
@@ -990,7 +973,8 @@ function ThemeModeSheet({
                     tone="soft"
                     style={styles.sheetSectionHint}
                   >
-                    Entre dans la situation ou révise d’abord les expressions utiles.
+                    Entre dans la situation ou révise d’abord les expressions
+                    utiles.
                   </AppText>
                 </View>
 
@@ -1093,11 +1077,7 @@ function SheetOptionCard({
           <AppText variant="button" tone="strong">
             {title}
           </AppText>
-          <AppText
-            variant="caption"
-            tone="soft"
-            style={styles.sheetOptionSub}
-          >
+          <AppText variant="caption" tone="soft" style={styles.sheetOptionSub}>
             {subtitle}
           </AppText>
         </View>
