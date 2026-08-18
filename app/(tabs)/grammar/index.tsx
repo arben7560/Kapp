@@ -146,8 +146,6 @@ export default function GrammarHubScreen() {
   );
   const nextStagePremiumLocked = !canAccessGrammarStage(nextStage, isPremium);
   const nextStagePrerequisiteLocked = !nextStageAccess.canOpen;
-  const nextStageBlocked =
-    nextStagePremiumLocked || nextStagePrerequisiteLocked;
   const nextStageSession = grammarProgress.stages[nextStageId]?.activeSession;
   const isResume = !!nextStageSession && !nextStageSession.completedAt;
 
@@ -309,11 +307,7 @@ export default function GrammarHubScreen() {
                     return (
                       <AnimatedFragment
                         key={stageId}
-                        index={
-                          1 +
-                          chapterIndex * 4 +
-                          stageIndex
-                        }
+                        index={1 + chapterIndex * 4 + stageIndex}
                         style={
                           gridColumns > 1
                             ? { width: gridItemWidth }
@@ -449,18 +443,11 @@ function FeaturedGrammarCard({
           pointerEvents="none"
         />
 
-        <BlurView
-          intensity={8}
-          tint="dark"
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-
         <LinearGradient
           colors={[
-            "rgba(3,5,8,0.30)",
-            "rgba(3,5,8,0.50)",
-            "rgba(2,3,6,0.76)",
+            "rgba(2,3,6,0.18)",
+            "rgba(2,3,6,0.34)",
+            "rgba(2,3,6,0.60)",
           ]}
           locations={[0, 0.52, 1]}
           start={{ x: 0.05, y: 0 }}
@@ -475,12 +462,12 @@ function FeaturedGrammarCard({
               ? [
                   "rgba(253,224,71,0.07)",
                   "rgba(0,0,0,0)",
-                  "rgba(2,3,6,0.18)",
+                  "rgba(2,3,6,0.12)",
                 ]
               : [
                   "rgba(119,114,170,0.10)",
                   "rgba(0,0,0,0)",
-                  "rgba(2,3,6,0.16)",
+                  "rgba(2,3,6,0.10)",
                 ]
           }
           start={{ x: 0, y: 0 }}
@@ -733,18 +720,11 @@ function GrammarStageCard({
           pointerEvents="none"
         />
 
-        <BlurView
-          intensity={7}
-          tint="dark"
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-
         <LinearGradient
           colors={[
-            "rgba(2,4,7,0.32)",
-            "rgba(2,4,7,0.54)",
-            "rgba(2,3,6,0.76)",
+            "rgba(2,3,6,0.18)",
+            "rgba(2,3,6,0.34)",
+            "rgba(2,3,6,0.60)",
           ]}
           locations={[0, 0.52, 1]}
           start={{ x: 0, y: 0 }}
@@ -759,18 +739,18 @@ function GrammarStageCard({
               ? [
                   "rgba(253,224,71,0.06)",
                   "rgba(0,0,0,0)",
-                  "rgba(2,3,6,0.16)",
+                  "rgba(2,3,6,0.10)",
                 ]
               : premiumActive
                 ? [
                     "rgba(216,200,154,0.04)",
                     "rgba(0,0,0,0)",
-                    "rgba(2,3,6,0.14)",
+                    "rgba(2,3,6,0.09)",
                   ]
                 : [
                     "rgba(119,114,170,0.08)",
                     "rgba(0,0,0,0)",
-                    "rgba(2,3,6,0.14)",
+                    "rgba(2,3,6,0.09)",
                   ]
           }
           start={{ x: 0, y: 0 }}
@@ -1176,12 +1156,13 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: GRAMMAR.featuredBorder,
-    backgroundColor: "rgba(2,3,6,0.50)",
+    backgroundColor: "rgba(2,3,6,0.20)",
     boxShadow: `0px 12px 30px ${GRAMMAR.featuredShadow}`,
   },
 
   featuredWrapPremiumLocked: {
     borderColor: "rgba(253,224,71,0.25)",
+    backgroundColor: "rgba(10,9,5,0.18)",
     boxShadow: "0px 12px 32px rgba(253,224,71,0.06)",
   },
 
@@ -1460,19 +1441,19 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(119,114,170,0.24)",
-    backgroundColor: "rgba(2,3,6,0.52)",
+    backgroundColor: "rgba(2,3,6,0.22)",
     boxShadow: "0px 10px 24px rgba(0,0,0,0.26)",
   },
 
   collectionWrapPremiumLocked: {
     borderColor: "rgba(253,224,71,0.18)",
-    backgroundColor: "rgba(10,9,5,0.56)",
+    backgroundColor: "rgba(10,9,5,0.18)",
     boxShadow: "0px 10px 26px rgba(253,224,71,0.035)",
   },
 
   collectionWrapPremiumActive: {
     borderColor: "rgba(216,200,154,0.105)",
-    backgroundColor: "rgba(5,6,7,0.58)",
+    backgroundColor: "rgba(5,6,7,0.18)",
     boxShadow: "0px 10px 24px rgba(0,0,0,0.28)",
   },
 
