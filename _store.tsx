@@ -56,6 +56,7 @@ type StoreValue = {
   setTrack: (t: LearningTrack) => Promise<void>;
   progress: Progress;
   setProgress: (updater: React.SetStateAction<Progress>) => Promise<void>;
+  resetProgress: () => Promise<void>;
   complete: (id: string) => Promise<boolean>;
   bumpHangul: () => Promise<void>;
   updateHangulProgress: (
@@ -170,6 +171,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [setProgress],
   );
 
+  const resetProgress = React.useCallback(
+    () => setProgress(mergeProgress({})),
+    [setProgress],
+  );
+
   const complete = React.useCallback(async (id: string) => {
     const nextCompleted = reserveCompletion(
       completedRef.current,
@@ -235,6 +241,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       value={{
         progress,
         setProgress,
+        resetProgress,
         complete,
         bumpHangul,
         updateHangulProgress,

@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -13,6 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useStore } from "../../_store";
 import { AppText, AppTextInput } from "../../components/app-text";
 import { ActionButton } from "../../components/ui/action-button";
 import { AppBackButton } from "../../components/ui/app-back-button";
@@ -20,6 +23,10 @@ import { AppDialog, DialogActions } from "../../components/ui/app-dialog";
 import { SeoulMidnightGlass } from "../../constants/theme";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useAuth } from "../../lib/AuthProvider";
+import type { KappOAuthProvider } from "../../lib/authCallback";
+import {
+  suppressAccountProtectionPromptAfterLogout,
+} from "../../lib/accountProtectionPromptStorage";
 import { KappAuthError } from "../../lib/authErrors";
 import { useProgressSync } from "../../lib/ProgressSyncProvider";
 import { synchronizeProgressNow } from "../../services/progressSync";
@@ -95,6 +102,58 @@ function GlassCard({ children }: { children: React.ReactNode }) {
   );
 }
 
+function ProviderButton({
+  provider,
+  loading,
+  disabled,
+  onPress,
+}: {
+  provider: KappOAuthProvider;
+  loading: boolean;
+  disabled?: boolean;
+  onPress: () => void;
+}) {
+  const label = provider === "google" ? "Continuer avec Google" : "Continuer avec Apple";
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      disabled={disabled || loading}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.providerButton,
+        pressed && styles.providerButtonPressed,
+        (disabled || loading) && styles.providerButtonDisabled,
+      ]}
+    >
+      {loading ? (
+        <ActivityIndicator color={COLORS.text} size="small" />
+      ) : (
+        <Ionicons
+          name={provider === "google" ? "logo-google" : "logo-apple"}
+          color={COLORS.text}
+          size={20}
+        />
+      )}
+      <AppText variant="button" style={styles.providerButtonLabel}>
+        {label}
+      </AppText>
+    </Pressable>
+  );
+}
+
+function providerSummary(providers: string[]) {
+  const labels = providers
+    .filter((provider) => provider !== "anonymous")
+    .map((provider) => {
+      if (provider === "google") return "Google";
+      if (provider === "apple") return "Apple";
+      if (provider === "email") return "Email + mot de passe";
+      return provider;
+    });
+  return labels.length > 0 ? labels.join(" • ") : "Compte K-App";
+}
+
 function Field({
   label,
   value,
@@ -136,6 +195,8 @@ function Field({
 export default function AccountScreen() {
   const auth = useAuth();
   const sync = useProgressSync();
+  const { resetProgress } = useStore();
+  const params = useLocalSearchParams<{ action?: string | string[] }>();
   const responsive = useResponsiveLayout({ maxWidth: 760 });
   const [mode, setMode] = React.useState<FormMode>(null);
   const [email, setEmail] = React.useState("");
@@ -144,6 +205,7 @@ export default function AccountScreen() {
   const [formError, setFormError] = React.useState<string | null>(null);
   const [formSuccess, setFormSuccess] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const didHandleProtectAction = React.useRef(false);
   const clearAuthError = auth.clearError;
 
   const resetForm = React.useCallback(() => {
@@ -167,10 +229,44 @@ export default function AccountScreen() {
   );
 
   const closeDialog = React.useCallback(() => {
-    if (isSubmitting) return;
+    if (isSubmitting || auth.activeOAuthProvider) return;
     setMode(null);
     resetForm();
-  }, [isSubmitting, resetForm]);
+  }, [auth.activeOAuthProvider, isSubmitting, resetForm]);
+
+  const continueWithProvider = React.useCallback(
+    async (provider: KappOAuthProvider, existingAccount = false) => {
+      setFormError(null);
+      try {
+        const result = existingAccount
+          ? await auth.signInWithOAuth(provider)
+          : await auth.linkOAuthIdentity(provider);
+        if (result === "success" && existingAccount) setMode(null);
+      } catch (caught) {
+        setFormError(friendlyCaughtMessage(caught));
+      }
+    },
+    [auth],
+  );
+
+  const requestedAction = Array.isArray(params.action)
+    ? params.action[0]
+    : params.action;
+
+  React.useEffect(() => {
+    if (
+      didHandleProtectAction.current ||
+      requestedAction !== "protect" ||
+      auth.isLoading ||
+      !auth.isAnonymous
+    ) {
+      return;
+    }
+
+    didHandleProtectAction.current = true;
+    const timer = setTimeout(() => openMode("protect"), 0);
+    return () => clearTimeout(timer);
+  }, [auth.isAnonymous, auth.isLoading, openMode, requestedAction]);
 
   React.useEffect(() => {
     if (!auth.needsPasswordSetup) return;
@@ -247,6 +343,14 @@ export default function AccountScreen() {
             setIsSubmitting(true);
             void auth
               .signOut()
+              .then(() =>
+                suppressAccountProtectionPromptAfterLogout().catch((error) =>
+                  console.warn(
+                    "Impossible d’enregistrer le délai après déconnexion:",
+                    error,
+                  ),
+                ),
+              )
               .catch((caught) => Alert.alert("Déconnexion suspendue", friendlyCaughtMessage(caught)))
               .finally(() => setIsSubmitting(false));
           },
@@ -268,6 +372,15 @@ export default function AccountScreen() {
             setIsSubmitting(true);
             void auth
               .deleteAccount()
+              .then(async () => {
+                await resetProgress();
+                await suppressAccountProtectionPromptAfterLogout().catch((error) =>
+                  console.warn(
+                    "Impossible d’enregistrer le délai après suppression:",
+                    error,
+                  ),
+                );
+              })
               .catch((caught) => Alert.alert("Suppression impossible", friendlyCaughtMessage(caught)))
               .finally(() => setIsSubmitting(false));
           },
@@ -375,8 +488,27 @@ export default function AccountScreen() {
                   </View>
                 ) : null}
                 <View style={styles.primaryActions}>
+                  <ProviderButton
+                    provider="google"
+                    loading={auth.activeOAuthProvider === "google"}
+                    disabled={!auth.isConfigured || auth.isLoading || Boolean(auth.activeOAuthProvider)}
+                    onPress={() => void continueWithProvider("google")}
+                  />
+                  {Platform.OS === "ios" ? (
+                    <ProviderButton
+                      provider="apple"
+                      loading={auth.activeOAuthProvider === "apple"}
+                      disabled={!auth.isConfigured || auth.isLoading || Boolean(auth.activeOAuthProvider)}
+                      onPress={() => void continueWithProvider("apple")}
+                    />
+                  ) : null}
+                  <View style={styles.orRow}>
+                    <View style={styles.orLine} />
+                    <AppText variant="caption" tone="soft">OU</AppText>
+                    <View style={styles.orLine} />
+                  </View>
                   <ActionButton
-                    label="Protéger ma progression"
+                    label="Protéger avec mon email"
                     size="large"
                     accentColor={COLORS.cyan}
                     disabled={!auth.isConfigured || auth.isLoading}
@@ -416,15 +548,28 @@ export default function AccountScreen() {
                   </AppText>
                   <View style={styles.accountLine}>
                     <View style={styles.lineIcon}>
-                      <Ionicons name="mail-outline" size={17} color={COLORS.cyan} />
+                      <Ionicons name="person-circle-outline" size={17} color={COLORS.cyan} />
                     </View>
                     <View style={styles.lineCopy}>
-                      <AppText variant="caption" tone="soft">EMAIL</AppText>
-                      <AppText variant="bodyStrong" lineContract="singleLine">
-                        {auth.user?.email ?? "Email indisponible"}
+                      <AppText variant="caption" tone="soft">CONNEXION</AppText>
+                      <AppText variant="bodyStrong">
+                        {providerSummary(auth.providers)}
                       </AppText>
                     </View>
                   </View>
+                  {auth.user?.email ? (
+                    <View style={styles.accountLine}>
+                      <View style={styles.lineIcon}>
+                        <Ionicons name="mail-outline" size={17} color={COLORS.cyan} />
+                      </View>
+                      <View style={styles.lineCopy}>
+                        <AppText variant="caption" tone="soft">EMAIL</AppText>
+                        <AppText variant="bodyStrong" lineContract="singleLine">
+                          {auth.user.email}
+                        </AppText>
+                      </View>
+                    </View>
+                  ) : null}
                   <View style={styles.accountLine}>
                     <View style={styles.lineIcon}>
                       <Ionicons name="cloud-done-outline" size={17} color={syncPresentation.color} />
@@ -436,18 +581,19 @@ export default function AccountScreen() {
                       </AppText>
                     </View>
                   </View>
-                  {sync.status !== "synced" ? (
-                    <ActionButton
-                      label="Réessayer la synchronisation"
-                      variant="secondary"
-                      loading={sync.status === "syncing"}
-                      onPress={() => void synchronizeProgressNow()}
-                      style={styles.retryButton}
-                    />
-                  ) : null}
+                  <ActionButton
+                    label={sync.status === "error" || sync.status === "offline"
+                      ? "Réessayer la synchronisation"
+                      : "Synchroniser maintenant"}
+                    variant="secondary"
+                    loading={sync.status === "syncing"}
+                    onPress={() => void synchronizeProgressNow().catch(() => undefined)}
+                    style={styles.retryButton}
+                  />
                 </GlassCard>
 
-                <View style={styles.sectionCard}>
+                {auth.hasEmailIdentity ? (
+                  <View style={styles.sectionCard}>
                   <AppText variant="sectionLabel" tone="soft">SÉCURITÉ</AppText>
                   <Pressable style={styles.settingsRow} onPress={() => openMode("change-password")}>
                     <View style={styles.settingsIcon}>
@@ -470,7 +616,8 @@ export default function AccountScreen() {
                     </View>
                     <Ionicons name="chevron-forward" size={18} color={COLORS.soft} />
                   </Pressable>
-                </View>
+                  </View>
+                ) : null}
 
                 <View style={styles.secondaryActions}>
                   <ActionButton
@@ -535,7 +682,31 @@ export default function AccountScreen() {
             </AppText>
           </View>
         ) : (
-          <View style={styles.fields}>
+          <View>
+            {mode === "sign-in" ? (
+              <View style={styles.dialogProviders}>
+                <ProviderButton
+                  provider="google"
+                  loading={auth.activeOAuthProvider === "google"}
+                  disabled={Boolean(auth.activeOAuthProvider)}
+                  onPress={() => void continueWithProvider("google", true)}
+                />
+                {Platform.OS === "ios" ? (
+                  <ProviderButton
+                    provider="apple"
+                    loading={auth.activeOAuthProvider === "apple"}
+                    disabled={Boolean(auth.activeOAuthProvider)}
+                    onPress={() => void continueWithProvider("apple", true)}
+                  />
+                ) : null}
+                <View style={styles.orRow}>
+                  <View style={styles.orLine} />
+                  <AppText variant="caption" tone="soft">EMAIL</AppText>
+                  <View style={styles.orLine} />
+                </View>
+              </View>
+            ) : null}
+            <View style={styles.fields}>
             {requiresEmail ? (
               <Field
                 label="EMAIL"
@@ -565,6 +736,7 @@ export default function AccountScreen() {
                 autoComplete="new-password"
               />
             ) : null}
+            </View>
           </View>
         )}
 
@@ -627,7 +799,7 @@ export default function AccountScreen() {
               }}
             />
           ) : null}
-          <ActionButton label="Fermer" variant="ghost" disabled={isSubmitting} onPress={closeDialog} />
+          <ActionButton label="Fermer" variant="ghost" disabled={isSubmitting || Boolean(auth.activeOAuthProvider)} onPress={closeDialog} />
         </DialogActions>
       </AppDialog>
     </LinearGradient>
@@ -715,6 +887,29 @@ const styles = StyleSheet.create({
   },
   noticeCopy: { flex: 1, color: COLORS.amber },
   primaryActions: { gap: 10, marginTop: 24 },
+  providerButton: {
+    minHeight: 54,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    backgroundColor: "rgba(255,255,255,0.075)",
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 11,
+  },
+  providerButtonPressed: { backgroundColor: "rgba(255,255,255,0.12)" },
+  providerButtonDisabled: { opacity: 0.48 },
+  providerButtonLabel: { color: COLORS.text },
+  orRow: {
+    minHeight: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 2,
+  },
+  orLine: { flex: 1, height: 1, backgroundColor: SeoulMidnightGlass.colors.lineSoft },
   securityNote: {
     marginTop: 18,
     flexDirection: "row",
@@ -786,6 +981,7 @@ const styles = StyleSheet.create({
   dialogHeadingCopy: { flex: 1 },
   dialogSubtitle: { marginTop: 5 },
   fields: { gap: 14, marginTop: 22 },
+  dialogProviders: { gap: 10, marginTop: 22 },
   fieldGroup: { gap: 7 },
   input: {
     minHeight: 52,

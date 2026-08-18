@@ -111,7 +111,25 @@ test("cloud and local snapshots keep both sets of completed learning", () => {
   assert.equal(merged.hangulLevel, 2);
 });
 
-test("this restoration does not integrate account UX into the Hub", () => {
-  assert.doesNotMatch(hubSource, /router\.(?:push|replace)\("\/account/u);
-  assert.doesNotMatch(hubSource, /useAuth\(/u);
+test("the Hub exposes profile access and keeps protection in the account route", () => {
+  assert.match(hubSource, /accessibilityLabel="Ouvrir mon profil"/u);
+  assert.match(hubSource, /onOpenProfile=\{\(\) => router\.push\("\/account"\)\}/u);
+  assert.match(hubSource, /pathname: "\/account",[\s\S]*?action: "protect"/u);
+  assert.match(hubSource, /useAuth\(\)/u);
+  assert.doesNotMatch(hubSource, /protectProgress\(/u);
+});
+
+test("profile and protection controls keep compact responsive contracts", () => {
+  assert.match(
+    hubSource,
+    /profileButton:\s*\{[\s\S]*?width: 44,[\s\S]*?height: 44,/u,
+  );
+  assert.match(
+    hubSource,
+    /compact && styles\.protectionActionsCompact/u,
+  );
+  assert.match(
+    hubSource,
+    /protectionActionsCompact:\s*\{[\s\S]*?flexDirection: "column"/u,
+  );
 });

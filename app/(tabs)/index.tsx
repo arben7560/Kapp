@@ -10,6 +10,7 @@ import {
   MessageCircleMore,
   ShieldCheck,
   Sparkles,
+  UserRound,
 } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -27,6 +28,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { ActionButton } from "../../components/ui/action-button";
 import { HubModuleAccents } from "../../constants/theme";
 import { GRAMMAR_STAGE_BY_ID, GRAMMAR_STAGE_IDS } from "../../data/grammar";
 import {
@@ -43,6 +45,16 @@ import {
   type ExerciseKind,
 } from "../../data/listen/activeExercises";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
+import { useAuth } from "../../lib/AuthProvider";
+import {
+  createAccountProtectionPromptSessionGuard,
+  getMeaningfulProgressCount,
+  shouldShowAccountProtectionPrompt,
+} from "../../lib/accountProtectionPrompt";
+import {
+  dismissAccountProtectionPrompt,
+  readAccountProtectionPromptState,
+} from "../../lib/accountProtectionPromptStorage";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import type { DailyStreakState } from "../../lib/dailyStreak";
 import {
@@ -74,6 +86,9 @@ const TEAL = "#5EEAD4";
 const STREAK_ACCENT = HubModuleAccents.streak;
 
 const HUB_BACKGROUND_DARKNESS = 0.54;
+
+const accountProtectionPromptSessionGuard =
+  createAccountProtectionPromptSessionGuard();
 
 const SEOUL_TIME_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
   hour: "2-digit",
@@ -642,7 +657,9 @@ function SeoulHero({ cityTime }: SeoulHeroProps) {
 // ──────────────────────────────────────────────
 
 export default function Home() {
-  const { progress, setTrack } = useStore();
+  const { progress, setTrack, isHydrated } = useStore();
+
+  const auth = useAuth();
 
   const { refreshStreak, streak } = useDailyStreak();
 
@@ -666,6 +683,24 @@ export default function Home() {
   );
 
   const [seoulTime, setSeoulTime] = useState(formatSeoulTime);
+
+  const [showProtectionPrompt, setShowProtectionPrompt] = useState(false);
+
+  const meaningfulProgressCount = getMeaningfulProgressCount(progress);
+
+  const promptContextRef = useRef({
+    isAnonymous: auth.isAnonymous,
+    isHydrated,
+    meaningfulProgressCount,
+  });
+
+  useEffect(() => {
+    promptContextRef.current = {
+      isAnonymous: auth.isAnonymous,
+      isHydrated,
+      meaningfulProgressCount,
+    };
+  }, [auth.isAnonymous, isHydrated, meaningfulProgressCount]);
 
   const currentTrack = progress.learningTrack;
 
@@ -806,6 +841,60 @@ export default function Home() {
     }, []),
   );
 
+  // The first Hub visit of an app session is intentionally quiet. On later
+  // visits, eligibility is read from local storage and evaluated once.
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+
+      if (!accountProtectionPromptSessionGuard.beginHubVisit()) {
+        setShowProtectionPrompt(false);
+        return () => {
+          isMounted = false;
+        };
+      }
+
+      const context = promptContextRef.current;
+      if (
+        !context.isHydrated ||
+        !context.isAnonymous ||
+        context.meaningfulProgressCount <= 0
+      ) {
+        setShowProtectionPrompt(false);
+        return () => {
+          isMounted = false;
+        };
+      }
+
+      void readAccountProtectionPromptState()
+        .then((promptState) => {
+          if (!isMounted) return;
+
+          const shouldShow = shouldShowAccountProtectionPrompt({
+            isAnonymous: context.isAnonymous,
+            meaningfulProgressCount: context.meaningfulProgressCount,
+            promptState,
+          });
+
+          setShowProtectionPrompt(shouldShow);
+          if (shouldShow) {
+            accountProtectionPromptSessionGuard.markPromptShown();
+          }
+        })
+        .catch((error) => {
+          console.warn(
+            "Impossible de lire la préférence de protection du compte:",
+            error,
+          );
+          if (isMounted) setShowProtectionPrompt(false);
+        });
+
+      return () => {
+        isMounted = false;
+      };
+    }, []),
+  );
+
   const openSequence = (sequence: any) => {
     setTrack(sequence.trackKey);
 
@@ -821,6 +910,18 @@ export default function Home() {
 
     router.push(sequence.route);
   };
+
+  const dismissProtectionPrompt = useCallback(() => {
+    setShowProtectionPrompt(false);
+    void dismissAccountProtectionPrompt(meaningfulProgressCount).catch(
+      (error) => {
+        console.warn(
+          "Impossible d’enregistrer le rappel de protection du compte:",
+          error,
+        );
+      },
+    );
+  }, [meaningfulProgressCount]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -877,6 +978,7 @@ export default function Home() {
               compact={responsive.isCompact}
               cityTime={seoulTime}
               livePulse={livePulse}
+              onOpenProfile={() => router.push("/account")}
             />
 
             {/* HERO */}
@@ -903,6 +1005,22 @@ export default function Home() {
                 onPress={() => openSequence(activeSeq)}
               />
             </AnimatedFragment>
+
+            {showProtectionPrompt && auth.isAnonymous ? (
+              <AnimatedFragment index={0}>
+                <AccountProtectionCard
+                  compact={responsive.isCompact}
+                  onProtect={() => {
+                    setShowProtectionPrompt(false);
+                    router.push({
+                      pathname: "/account",
+                      params: { action: "protect" },
+                    });
+                  }}
+                  onDismiss={dismissProtectionPrompt}
+                />
+              </AnimatedFragment>
+            ) : null}
 
             {/* PEDAGOGICAL */}
 
@@ -998,10 +1116,12 @@ function GlassHeader({
   compact,
   cityTime,
   livePulse,
+  onOpenProfile,
 }: {
   compact: boolean;
   cityTime: string;
   livePulse: Animated.Value;
+  onOpenProfile: () => void;
 }) {
   return (
     <View style={styles.headerShell}>
@@ -1076,12 +1196,90 @@ function GlassHeader({
           ) : null}
         </View>
 
-        <View style={styles.headerSignal}>
-          <View style={styles.headerSignalDot} />
+        <View style={styles.headerActionSlot}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Ouvrir mon profil"
+            accessibilityHint="Ouvre la page Mon profil"
+            hitSlop={4}
+            onPress={onOpenProfile}
+            style={({ pressed }) => [
+              styles.profileButton,
+              pressed && styles.profileButtonPressed,
+            ]}
+          >
+            <UserRound size={20} strokeWidth={1.9} color={CYAN} />
+          </Pressable>
+        </View>
+      </BlurView>
+    </View>
+  );
+}
 
-          <View style={[styles.headerSignalBar, styles.headerSignalBarMid]} />
-
-          <View style={[styles.headerSignalBar, styles.headerSignalBarHigh]} />
+function AccountProtectionCard({
+  compact,
+  onProtect,
+  onDismiss,
+}: {
+  compact: boolean;
+  onProtect: () => void;
+  onDismiss: () => void;
+}) {
+  return (
+    <View style={styles.protectionCardShell}>
+      <BlurView intensity={56} tint="dark" style={styles.protectionCard}>
+        <LinearGradient
+          colors={[
+            "rgba(103,232,249,0.11)",
+            "rgba(9,13,20,0.76)",
+            "rgba(2,3,6,0.84)",
+          ]}
+          locations={[0, 0.48, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.glassTopHairline} />
+        <View style={styles.protectionContent}>
+          <View style={styles.protectionIcon}>
+            <ShieldCheck size={20} strokeWidth={2} color={CYAN} />
+          </View>
+          <View style={styles.protectionCopy}>
+            <AppText variant="sectionTitle" style={styles.protectionTitle}>
+              Protégez votre progression
+            </AppText>
+            <AppText
+              variant="bodySecondary"
+              tone="muted"
+              style={styles.protectionBody}
+            >
+              Retrouvez votre apprentissage après une réinstallation ou sur un
+              autre appareil.
+            </AppText>
+          </View>
+        </View>
+        <View
+          style={[
+            styles.protectionActions,
+            compact && styles.protectionActionsCompact,
+          ]}
+        >
+          <ActionButton
+            accessibilityLabel="Protéger ma progression maintenant"
+            label="Protéger maintenant"
+            accentColor={CYAN}
+            fullWidth={compact}
+            onPress={onProtect}
+            style={compact ? undefined : styles.protectionPrimaryAction}
+          />
+          <ActionButton
+            accessibilityLabel="Me le rappeler plus tard"
+            label="Plus tard"
+            variant="secondary"
+            fullWidth={compact}
+            onPress={onDismiss}
+            style={compact ? undefined : styles.protectionSecondaryAction}
+          />
         </View>
       </BlurView>
     </View>
@@ -1992,44 +2190,35 @@ const styles = StyleSheet.create({
     color: "rgba(226,242,254,0.38)",
   },
 
-  headerSignal: {
+  headerActionSlot: {
     width: 56,
-    height: 22,
-
-    flexDirection: "row",
+    minHeight: 44,
 
     alignItems: "flex-end",
     justifyContent: "flex-end",
-
-    gap: 3,
   },
 
-  headerSignalDot: {
-    width: 4,
-    height: 4,
+  profileButton: {
+    width: 44,
+    height: 44,
 
-    borderRadius: 2,
+    borderRadius: 18,
 
-    backgroundColor: "rgba(103,232,249,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+
+    borderWidth: 1,
+    borderColor: "rgba(103,232,249,0.20)",
+
+    backgroundColor: "rgba(103,232,249,0.075)",
+
+    boxShadow: "0px 5px 16px rgba(0,0,0,0.20)",
   },
 
-  headerSignalBar: {
-    width: 3,
-    height: 8,
+  profileButtonPressed: {
+    opacity: 0.74,
 
-    borderRadius: 2,
-
-    backgroundColor: "rgba(103,232,249,0.58)",
-  },
-
-  headerSignalBarMid: {
-    height: 12,
-  },
-
-  headerSignalBarHigh: {
-    height: 16,
-
-    backgroundColor: "rgba(103,232,249,0.78)",
+    transform: [{ scale: 0.96 }],
   },
 
   // ─────────────────────────────
@@ -2515,6 +2704,91 @@ const styles = StyleSheet.create({
   // ─────────────────────────────
   // SECTIONS
   // ─────────────────────────────
+
+  protectionCardShell: {
+    marginTop: 14,
+
+    borderRadius: 24,
+
+    overflow: "hidden",
+
+    borderWidth: 1,
+    borderColor: "rgba(103,232,249,0.16)",
+
+    backgroundColor: "rgba(2,3,6,0.34)",
+
+    boxShadow: "0px 10px 26px rgba(0,0,0,0.24)",
+  },
+
+  protectionCard: {
+    padding: 18,
+
+    position: "relative",
+
+    overflow: "hidden",
+  },
+
+  protectionContent: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+
+    gap: 13,
+  },
+
+  protectionIcon: {
+    width: 42,
+    height: 42,
+
+    borderRadius: 16,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    flexShrink: 0,
+
+    borderWidth: 1,
+    borderColor: "rgba(103,232,249,0.18)",
+
+    backgroundColor: "rgba(103,232,249,0.075)",
+  },
+
+  protectionCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  protectionTitle: {
+    color: TXT,
+  },
+
+  protectionBody: {
+    maxWidth: 600,
+
+    marginTop: 5,
+
+    color: MUTED,
+  },
+
+  protectionActions: {
+    marginTop: 16,
+
+    flexDirection: "row",
+    justifyContent: "flex-end",
+
+    gap: 10,
+  },
+
+  protectionActionsCompact: {
+    flexDirection: "column",
+  },
+
+  protectionPrimaryAction: {
+    minWidth: 176,
+  },
+
+  protectionSecondaryAction: {
+    minWidth: 112,
+  },
 
   sectionHeader: {
     marginTop: 30,

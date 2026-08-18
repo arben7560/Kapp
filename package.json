@@ -28,6 +28,7 @@
     "test:immersion": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-immersion-scenes.mjs",
     "test:streak": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-daily-streak.mjs",
     "test:auth-sync": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-auth-sync.mjs",
+    "test:auth-production": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-auth-production.mjs",
     "test:progress-cloud": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-progress-cloud-contract.mjs",
     "validate:ui": "node ./scripts/validate-ui-contracts.mjs",
     "lint": "expo lint"
@@ -81,6 +82,7 @@
     "@types/react": "~19.2.10",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~56.0.4",
+    "supabase": "^2.114.0",
     "typescript": "~6.0.3"
   },
   "private": true

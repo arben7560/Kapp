@@ -22,6 +22,7 @@ const activeRoutes = [
   ["entry:/", "app/index.tsx"],
   ["/", "app/(tabs)/index.tsx"],
   ["/onboarding", "app/onboarding.tsx"],
+  ["/account", "app/account/index.tsx"],
   ["/premium", "app/premium.tsx"],
   ["/streak", "app/streak.tsx"],
   ["/hangul", "app/(tabs)/hangul/index.tsx"],

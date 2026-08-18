@@ -1,14 +1,22 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Session, User } from "@supabase/supabase-js";
 import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
 import React from "react";
 
+import {
+  assertLinkedUserId,
+  authProvidersFromUser,
+  parseAuthCallbackUrl,
+  type KappOAuthProvider,
+} from "./authCallback";
 import {
   KappAuthError,
   toKappAuthError,
   validateEmail,
   validatePassword,
 } from "./authErrors";
+import { createAuthRedirectUrl } from "./authRedirects";
 import {
   isSupabaseConfigured,
   requireSupabaseClient,
@@ -23,6 +31,9 @@ const DELETE_ACCOUNT_FUNCTION =
   "delete-account";
 
 export type ProtectProgressResult = "protected" | "confirmation-required";
+export type OAuthResult = "success" | "cancelled";
+
+WebBrowser.maybeCompleteAuthSession();
 
 type AuthContextValue = {
   session: Session | null;
@@ -35,6 +46,9 @@ type AuthContextValue = {
   needsPasswordSetup: boolean;
   isPasswordRecovery: boolean;
   confirmationEmail: string | null;
+  providers: string[];
+  hasEmailIdentity: boolean;
+  activeOAuthProvider: KappOAuthProvider | null;
   error: string | null;
   clearError: () => void;
   protectProgress: (
@@ -44,6 +58,8 @@ type AuthContextValue = {
   completeAccountProtection: (password: string) => Promise<void>;
   resendProtectionEmail: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  linkOAuthIdentity: (provider: KappOAuthProvider) => Promise<OAuthResult>;
+  signInWithOAuth: (provider: KappOAuthProvider) => Promise<OAuthResult>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
@@ -69,18 +85,6 @@ function requireConfiguredAuth() {
   return requireSupabaseClient();
 }
 
-function protectionRedirectUrl() {
-  return Linking.createURL("/account", {
-    queryParams: { action: "protect" },
-  });
-}
-
-function recoveryRedirectUrl() {
-  return Linking.createURL("/account", {
-    queryParams: { action: "recovery" },
-  });
-}
-
 async function createAnonymousSession() {
   const client = requireConfiguredAuth();
   const { data, error } = await client.auth.signInAnonymously();
@@ -88,32 +92,47 @@ async function createAnonymousSession() {
   return data.session;
 }
 
+const handledAuthUrls = new Map<string, Promise<void>>();
+
 async function applyAuthUrl(url: string) {
   const client = requireConfiguredAuth();
-  const parsedUrl = new URL(url);
-  const fragment = new URLSearchParams(parsedUrl.hash.replace(/^#/u, ""));
-  const errorDescription =
-    parsedUrl.searchParams.get("error_description") ||
-    fragment.get("error_description");
+  const callback = parseAuthCallbackUrl(url);
 
-  if (errorDescription) throw new Error(errorDescription);
+  if (!callback.hasAuthPayload) return;
+  if (callback.errorDescription || callback.errorCode) {
+    const callbackError = new Error(
+      callback.errorDescription ?? "Authentication provider rejected the request.",
+    ) as Error & { code?: string };
+    callbackError.code = callback.errorCode ?? undefined;
+    throw callbackError;
+  }
 
-  const code = parsedUrl.searchParams.get("code");
-  if (code) {
-    const { error } = await client.auth.exchangeCodeForSession(code);
+  if (callback.code) {
+    const { error } = await client.auth.exchangeCodeForSession(callback.code);
     if (error) throw error;
     return;
   }
 
-  const accessToken = fragment.get("access_token");
-  const refreshToken = fragment.get("refresh_token");
-  if (accessToken && refreshToken) {
+  if (callback.accessToken && callback.refreshToken) {
     const { error } = await client.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
+      access_token: callback.accessToken,
+      refresh_token: callback.refreshToken,
     });
     if (error) throw error;
   }
+}
+
+function applyAuthUrlOnce(url: string) {
+  const existing = handledAuthUrls.get(url);
+  if (existing) return existing;
+
+  const operation = applyAuthUrl(url);
+  handledAuthUrls.set(url, operation);
+  if (handledAuthUrls.size > 12) {
+    const oldestUrl = handledAuthUrls.keys().next().value;
+    if (typeof oldestUrl === "string") handledAuthUrls.delete(oldestUrl);
+  }
+  return operation;
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -129,6 +148,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   >(null);
   const [needsPasswordSetup, setNeedsPasswordSetup] = React.useState(false);
   const [isPasswordRecovery, setIsPasswordRecovery] = React.useState(false);
+  const [activeOAuthProvider, setActiveOAuthProvider] =
+    React.useState<KappOAuthProvider | null>(null);
 
   const captureError = React.useCallback((caught: unknown) => {
     const mapped = toKappAuthError(caught);
@@ -178,7 +199,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (sessionResult.error) throw sessionResult.error;
 
         if (pendingEmail && mounted) setConfirmationEmail(pendingEmail);
-        if (initialUrl) await applyAuthUrl(initialUrl);
+        if (initialUrl) {
+          try {
+            await applyAuthUrlOnce(initialUrl);
+          } catch (caught) {
+            if (mounted) captureError(caught);
+          }
+        }
 
         const refreshedSession = (await client.auth.getSession()).data.session;
         const resolvedSession = refreshedSession ?? sessionResult.data.session;
@@ -201,7 +228,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void initialize();
 
     const linkingSubscription = Linking.addEventListener("url", ({ url }) => {
-      void applyAuthUrl(url).catch(captureError);
+      void applyAuthUrlOnce(url).catch(captureError);
     });
 
     return () => {
@@ -230,7 +257,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data, error: updateError } = await client.auth.updateUser(
           { email },
-          { emailRedirectTo: protectionRedirectUrl() },
+          { emailRedirectTo: createAuthRedirectUrl("protect") },
         );
         if (updateError) throw updateError;
 
@@ -295,7 +322,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error: resendError } = await client.auth.resend({
         type: "email_change",
         email,
-        options: { emailRedirectTo: protectionRedirectUrl() },
+        options: { emailRedirectTo: createAuthRedirectUrl("protect") },
       });
       if (resendError) throw resendError;
     } catch (caught) {
@@ -324,6 +351,94 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [captureError],
   );
 
+  const runOAuth = React.useCallback(
+    async (
+      provider: KappOAuthProvider,
+      intent: "link" | "login",
+    ): Promise<OAuthResult> => {
+      const client = requireConfiguredAuth();
+      const expectedUserId = intent === "link" ? session?.user.id : null;
+
+      if (
+        intent === "link" &&
+        (!session?.user || !isAnonymousUser(session.user))
+      ) {
+        throw new KappAuthError(
+          "anonymous-session-required",
+          "Cette progression est déjà associée à un compte.",
+        );
+      }
+
+      setError(null);
+      setActiveOAuthProvider(provider);
+      try {
+        if (intent === "login") {
+          // The local snapshot remains available for the post-login merge even
+          // if the guest cloud sync is temporarily unavailable.
+          await synchronizeProgressNow().catch(() => undefined);
+        }
+
+        const redirectTo = createAuthRedirectUrl(
+          `oauth-${intent}-${provider}`,
+        );
+        const credentials = {
+          provider,
+          options: {
+            redirectTo,
+            skipBrowserRedirect: true,
+          },
+        } as const;
+        const result =
+          intent === "link"
+            ? await client.auth.linkIdentity(credentials)
+            : await client.auth.signInWithOAuth(credentials);
+
+        if (result.error) throw result.error;
+        if (!result.data.url) {
+          throw new Error("OAuth provider did not return an authorization URL.");
+        }
+
+        const browserResult = await WebBrowser.openAuthSessionAsync(
+          result.data.url,
+          redirectTo,
+        );
+        if (browserResult.type !== "success") return "cancelled";
+
+        await applyAuthUrlOnce(browserResult.url);
+        const { data: userResult, error: userError } =
+          await client.auth.getUser();
+        if (userError) throw userError;
+        if (!userResult.user) {
+          throw new Error("OAuth callback did not create an authenticated user.");
+        }
+
+        if (expectedUserId) {
+          assertLinkedUserId(expectedUserId, userResult.user.id);
+          if (!authProvidersFromUser(userResult.user).includes(provider)) {
+            throw new Error("OAuth identity was not linked to the current user.");
+          }
+        }
+
+        return "success";
+      } catch (caught) {
+        throw captureError(caught);
+      } finally {
+        setActiveOAuthProvider(null);
+      }
+    },
+    [captureError, session],
+  );
+
+  const linkOAuthIdentity = React.useCallback(
+    (provider: KappOAuthProvider) => runOAuth(provider, "link"),
+    [runOAuth],
+  );
+
+  const signInWithOAuth = React.useCallback(
+    (provider: KappOAuthProvider) => runOAuth(provider, "login"),
+    [runOAuth],
+  );
+
   const signOut = React.useCallback(async () => {
     const client = requireConfiguredAuth();
     setError(null);
@@ -350,7 +465,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { error: resetError } = await client.auth.resetPasswordForEmail(
           email,
-          { redirectTo: recoveryRedirectUrl() },
+          { redirectTo: createAuthRedirectUrl("recovery") },
         );
         if (resetError) throw resetError;
       } catch (caught) {
@@ -408,6 +523,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const user = session?.user ?? null;
   const isAnonymous = isAnonymousUser(user);
+  const providers = React.useMemo(() => authProvidersFromUser(user), [user]);
+  const hasEmailIdentity = providers.includes("email");
 
   const value = React.useMemo<AuthContextValue>(
     () => ({
@@ -421,12 +538,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       needsPasswordSetup,
       isPasswordRecovery,
       confirmationEmail,
+      providers,
+      hasEmailIdentity,
+      activeOAuthProvider,
       error,
       clearError,
       protectProgress,
       completeAccountProtection,
       resendProtectionEmail,
       signIn,
+      linkOAuthIdentity,
+      signInWithOAuth,
       signOut,
       resetPassword,
       updatePassword,
@@ -440,12 +562,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       needsPasswordSetup,
       isPasswordRecovery,
       confirmationEmail,
+      providers,
+      hasEmailIdentity,
+      activeOAuthProvider,
       error,
       clearError,
       protectProgress,
       completeAccountProtection,
       resendProtectionEmail,
       signIn,
+      linkOAuthIdentity,
+      signInWithOAuth,
       signOut,
       resetPassword,
       updatePassword,

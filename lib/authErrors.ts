@@ -8,6 +8,14 @@ type AuthErrorCode =
   | "anonymous-session-required"
   | "confirmation-email-missing"
   | "delete-account-unavailable"
+  | "oauth-cancelled"
+  | "oauth-provider-disabled"
+  | "oauth-linking-disabled"
+  | "identity-already-used"
+  | "auth-link-invalid"
+  | "auth-link-expired"
+  | "rate-limited"
+  | "session-expired"
   | "network-unavailable"
   | "auth-operation-failed";
 
@@ -27,15 +35,30 @@ function normalizedMessage(error: unknown) {
   return "";
 }
 
+function normalizedCode(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof error.code === "string"
+  ) {
+    return error.code.toLowerCase();
+  }
+  return "";
+}
+
 export function toKappAuthError(error: unknown): KappAuthError {
   if (error instanceof KappAuthError) return error;
 
   const message = normalizedMessage(error);
+  const code = normalizedCode(error);
+  const detail = `${code} ${message}`;
 
   if (
-    message.includes("network") ||
-    message.includes("fetch") ||
-    message.includes("offline")
+    detail.includes("network") ||
+    detail.includes("fetch") ||
+    detail.includes("offline") ||
+    detail.includes("timeout")
   ) {
     return new KappAuthError(
       "network-unavailable",
@@ -44,9 +67,87 @@ export function toKappAuthError(error: unknown): KappAuthError {
     );
   }
 
+  if (detail.includes("provider_disabled")) {
+    return new KappAuthError(
+      "oauth-provider-disabled",
+      "Ce mode de connexion n’est pas encore activé pour K-App.",
+      { cause: error },
+    );
+  }
+
   if (
-    message.includes("invalid login credentials") ||
-    message.includes("invalid credentials")
+    detail.includes("manual_linking_disabled") ||
+    detail.includes("manual linking is disabled")
+  ) {
+    return new KappAuthError(
+      "oauth-linking-disabled",
+      "La liaison de compte doit être activée dans la configuration Supabase.",
+      { cause: error },
+    );
+  }
+
+  if (
+    detail.includes("identity_already_exists") ||
+    detail.includes("identity is already linked") ||
+    detail.includes("already linked to another user")
+  ) {
+    return new KappAuthError(
+      "identity-already-used",
+      "Ce compte est déjà associé à K-App. Utilisez « J’ai déjà un compte » pour vous connecter et fusionner la progression locale.",
+      { cause: error },
+    );
+  }
+
+  if (
+    detail.includes("flow_state_not_found") ||
+    detail.includes("bad_code_verifier") ||
+    detail.includes("exchange_code_not_found")
+  ) {
+    return new KappAuthError(
+      "auth-link-invalid",
+      "Ce lien de connexion n’est plus valide ou a déjà été utilisé. Relancez l’opération depuis K-App.",
+      { cause: error },
+    );
+  }
+
+  if (
+    detail.includes("otp_expired") ||
+    detail.includes("expired") && detail.includes("link")
+  ) {
+    return new KappAuthError(
+      "auth-link-expired",
+      "Ce lien a expiré. Demandez-en un nouveau depuis K-App.",
+      { cause: error },
+    );
+  }
+
+  if (
+    detail.includes("over_email_send_rate_limit") ||
+    detail.includes("rate limit") ||
+    detail.includes("too many requests")
+  ) {
+    return new KappAuthError(
+      "rate-limited",
+      "Trop de tentatives rapprochées. Patientez quelques minutes avant de réessayer.",
+      { cause: error },
+    );
+  }
+
+  if (
+    detail.includes("session_not_found") ||
+    detail.includes("refresh_token_not_found") ||
+    detail.includes("invalid refresh token")
+  ) {
+    return new KappAuthError(
+      "session-expired",
+      "Votre session a expiré. Reconnectez-vous pour reprendre la synchronisation.",
+      { cause: error },
+    );
+  }
+
+  if (
+    detail.includes("invalid login credentials") ||
+    detail.includes("invalid credentials")
   ) {
     return new KappAuthError(
       "invalid-credentials",
@@ -56,9 +157,10 @@ export function toKappAuthError(error: unknown): KappAuthError {
   }
 
   if (
-    message.includes("already registered") ||
-    message.includes("already been registered") ||
-    message.includes("already exists")
+    detail.includes("already registered") ||
+    detail.includes("already been registered") ||
+    detail.includes("email_exists") ||
+    detail.includes("user_already_exists")
   ) {
     return new KappAuthError(
       "email-already-used",
@@ -67,7 +169,10 @@ export function toKappAuthError(error: unknown): KappAuthError {
     );
   }
 
-  if (message.includes("password") && message.includes("characters")) {
+  if (
+    detail.includes("weak_password") ||
+    detail.includes("password") && detail.includes("characters")
+  ) {
     return new KappAuthError(
       "password-too-short",
       "Le mot de passe doit contenir au moins 8 caractères.",
