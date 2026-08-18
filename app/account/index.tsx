@@ -477,7 +477,7 @@ export default function AccountScreen() {
                   Progression enregistrée sur cet appareil
                 </AppText>
                 <AppText variant="body" tone="muted" style={styles.cardBody}>
-                  Créez un compte pour retrouver votre progression après une réinstallation ou sur un autre appareil.
+                  Créez un compte ou connectez-vous pour retrouver votre progression après une réinstallation ou sur un autre appareil.
                 </AppText>
                 {auth.error ? (
                   <View style={styles.inlineNotice}>
@@ -508,7 +508,7 @@ export default function AccountScreen() {
                     <View style={styles.orLine} />
                   </View>
                   <ActionButton
-                    label="Protéger avec mon email"
+                    label="Créer un compte avec mon email"
                     size="large"
                     accentColor={COLORS.cyan}
                     disabled={!auth.isConfigured || auth.isLoading}
