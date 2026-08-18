@@ -1,7 +1,12 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Check, ChevronRight, LockKeyhole, Sparkles } from "lucide-react-native";
+import {
+  Check,
+  ChevronRight,
+  LockKeyhole,
+  Sparkles,
+} from "lucide-react-native";
 import React, { useEffect, useMemo } from "react";
 import {
   Animated,
@@ -38,7 +43,7 @@ import {
 } from "../../../lib/grammar";
 import { usePaywall } from "../../../lib/paywall/PaywallProvider";
 
-const BACKGROUND_SOURCE = require("../../../assets/images/grammar-card.jpg");
+const BACKGROUND_SOURCE = require("../../../assets/images/seoulhub.jpg");
 
 const BG_DEEP = SeoulMidnightGlass.colors.bgDeep;
 const TXT = SeoulMidnightGlass.colors.text;
@@ -73,8 +78,9 @@ function prerequisiteLabel(prerequisite: GrammarPrerequisite): string {
     );
   }
   return (
-    CONTENT_REFS.find((contentRef) => contentRef.id === prerequisite.contentRefId)
-      ?.title ?? prerequisite.contentRefId
+    CONTENT_REFS.find(
+      (contentRef) => contentRef.id === prerequisite.contentRefId,
+    )?.title ?? prerequisite.contentRefId
   );
 }
 
@@ -105,7 +111,8 @@ export default function GrammarHubScreen() {
     const resumable =
       grammarProgress.lastStageId &&
       grammarProgress.stages[grammarProgress.lastStageId]?.activeSession &&
-      !grammarProgress.stages[grammarProgress.lastStageId]?.activeSession?.completedAt
+      !grammarProgress.stages[grammarProgress.lastStageId]?.activeSession
+        ?.completedAt
         ? grammarProgress.lastStageId
         : undefined;
 
@@ -153,8 +160,17 @@ export default function GrammarHubScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground source={BACKGROUND_SOURCE} style={styles.background} resizeMode="cover">
-        <BlurView intensity={25} tint="dark" style={StyleSheet.absoluteFill} pointerEvents="none" />
+      <ImageBackground
+        source={BACKGROUND_SOURCE}
+        style={styles.background}
+        resizeMode="cover"
+      >
+        <BlurView
+          intensity={25}
+          tint="dark"
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
         <LinearGradient
           colors={["rgba(2,3,6,0.40)", "rgba(2,3,6,0.63)", "rgba(2,3,6,0.93)"]}
           locations={[0, 0.48, 1]}
@@ -169,12 +185,17 @@ export default function GrammarHubScreen() {
             { paddingHorizontal: responsive.horizontalPadding },
           ]}
         >
-          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
+          <View
+            style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
+          >
             <View style={styles.navHeader}>
               <AppBackButton accessibilityLabel="Retour à l’accueil" />
             </View>
 
-            <GrammarHero compact={responsive.isCompact} completedStages={completedStages} />
+            <GrammarHero
+              compact={responsive.isCompact}
+              completedStages={completedStages}
+            />
 
             <AnimatedFragment index={0}>
               <FeaturedGrammarCard
@@ -203,24 +224,33 @@ export default function GrammarHubScreen() {
                 >
                   {chapter.stageIds.map((stageId, stageIndex) => {
                     const stage = GRAMMAR_STAGE_BY_ID[stageId];
-                    const state = getGrammarStageState(grammarProgress, stageId);
+                    const state = getGrammarStageState(
+                      grammarProgress,
+                      stageId,
+                    );
                     const access = getGrammarStageAccess(
                       grammarProgress,
                       stageId,
                       completedContentRefs,
                     );
                     const isPremiumStage = stage.access === "premium";
-                    const premiumLocked = !canAccessGrammarStage(stage, isPremium);
+                    const premiumLocked = !canAccessGrammarStage(
+                      stage,
+                      isPremium,
+                    );
                     const prerequisiteLocked = !access.canOpen;
                     const disabled = prerequisiteLocked && !premiumLocked;
-                    const completed = state === "practiced" || state === "mastered";
+                    const completed =
+                      state === "practiced" || state === "mastered";
                     const isCurrent = stageId === nextStageId && !completed;
                     const missingRecommended = access.missingRecommended[0];
                     const conceptForms = stage.conceptIds
                       .slice(0, 3)
                       .map(
                         (conceptId) =>
-                          GRAMMAR_CONCEPTS.find((concept) => concept.id === conceptId)?.form,
+                          GRAMMAR_CONCEPTS.find(
+                            (concept) => concept.id === conceptId,
+                          )?.form,
                       )
                       .filter(Boolean)
                       .join(" · ");
@@ -253,7 +283,9 @@ export default function GrammarHubScreen() {
                       <AnimatedFragment
                         key={stageId}
                         index={1 + chapterIndex * 4 + stageIndex}
-                        style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
+                        style={
+                          gridColumns > 1 ? { width: gridItemWidth } : undefined
+                        }
                       >
                         <GrammarStageCard
                           stageId={stageId}
@@ -281,7 +313,13 @@ export default function GrammarHubScreen() {
   );
 }
 
-function GrammarHero({ compact, completedStages }: { compact: boolean; completedStages: number }) {
+function GrammarHero({
+  compact,
+  completedStages,
+}: {
+  compact: boolean;
+  completedStages: number;
+}) {
   return (
     <View style={styles.hero}>
       <View style={styles.heroEyebrowRow}>
@@ -299,7 +337,9 @@ function GrammarHero({ compact, completedStages }: { compact: boolean; completed
       >
         문법
       </AppText>
-      <AppText variant="screenTitle" style={styles.heroTitle}>Grammaire</AppText>
+      <AppText variant="screenTitle" style={styles.heroTitle}>
+        Grammaire
+      </AppText>
       <AppText variant="bodySecondary" style={styles.heroSubtitle}>
         Construis des phrases naturelles, étape par étape.
       </AppText>
@@ -307,7 +347,11 @@ function GrammarHero({ compact, completedStages }: { compact: boolean; completed
       <View style={styles.heroMetaRow}>
         <View style={styles.levelPill}>
           <Sparkles size={15} strokeWidth={2} color={GRAMMAR_ACCENT} />
-          <AppText variant="sectionLabel" lineContract="singleLine" style={styles.levelText}>
+          <AppText
+            variant="sectionLabel"
+            lineContract="singleLine"
+            style={styles.levelText}
+          >
             A0 → A1
           </AppText>
         </View>
@@ -351,7 +395,11 @@ function FeaturedGrammarCard({
       ]}
     >
       <LinearGradient
-        colors={["rgba(16,14,30,0.78)", "rgba(7,7,16,0.88)", "rgba(2,3,6,0.94)"]}
+        colors={[
+          "rgba(16,14,30,0.78)",
+          "rgba(7,7,16,0.88)",
+          "rgba(2,3,6,0.94)",
+        ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.featuredCard}
@@ -369,17 +417,28 @@ function FeaturedGrammarCard({
           <View style={styles.actions}>
             <View style={styles.accessPill}>
               {blocked ? (
-                <LockKeyhole size={11} strokeWidth={2} color={premiumLocked ? PREMIUM_GOLD : SOFT} />
+                <LockKeyhole
+                  size={11}
+                  strokeWidth={2}
+                  color={premiumLocked ? PREMIUM_GOLD : SOFT}
+                />
               ) : (
                 <Check size={11} strokeWidth={2.5} color={GRAMMAR_LIGHT} />
               )}
               <AppText variant="caption" style={styles.accessText}>
-                {premiumLocked ? "PREMIUM" : prerequisiteLocked ? "PRÉREQUIS" : "ACCÈS ACTIF"}
+                {premiumLocked
+                  ? "PREMIUM"
+                  : prerequisiteLocked
+                    ? "PRÉREQUIS"
+                    : "ACCÈS ACTIF"}
               </AppText>
             </View>
             <View style={styles.arrowButton}>
               {blocked ? (
-                <LockKeyhole size={17} color={premiumLocked ? PREMIUM_GOLD : SOFT} />
+                <LockKeyhole
+                  size={17}
+                  color={premiumLocked ? PREMIUM_GOLD : SOFT}
+                />
               ) : (
                 <ChevronRight size={19} color={GRAMMAR_LIGHT} />
               )}
@@ -390,7 +449,9 @@ function FeaturedGrammarCard({
         <AppText variant="caption" style={styles.stageMeta}>
           ÉTAPE {String(stage.number).padStart(2, "0")} · NIVEAU {level}
         </AppText>
-        <AppText variant="featureTitle" style={styles.featuredTitle}>{stage.title}</AppText>
+        <AppText variant="featureTitle" style={styles.featuredTitle}>
+          {stage.title}
+        </AppText>
         <AppText variant="bodySecondary" style={styles.featuredSubtitle}>
           {stage.communicativeGoal}
         </AppText>
@@ -415,12 +476,22 @@ function FeaturedGrammarCard({
   );
 }
 
-function GrammarSectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
+function GrammarSectionHeader({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle: string;
+}) {
   return (
     <View style={styles.sectionHeader}>
       <View style={styles.sectionCopy}>
-        <AppText variant="sectionLabel" style={styles.sectionTitle}>{title}</AppText>
-        <AppText variant="caption" style={styles.sectionSubtitle}>{subtitle}</AppText>
+        <AppText variant="sectionLabel" style={styles.sectionTitle}>
+          {title}
+        </AppText>
+        <AppText variant="caption" style={styles.sectionSubtitle}>
+          {subtitle}
+        </AppText>
       </View>
       <View style={styles.sectionLine} />
     </View>
@@ -488,7 +559,9 @@ function GrammarStageCard({
               ÉTAPE {String(stage.number).padStart(2, "0")} · {level}
             </AppText>
             {isPremiumStage ? (
-              <AppText variant="caption" style={styles.premiumMicro}>PREMIUM</AppText>
+              <AppText variant="caption" style={styles.premiumMicro}>
+                PREMIUM
+              </AppText>
             ) : null}
           </View>
           <StatusPill
@@ -500,17 +573,26 @@ function GrammarStageCard({
           />
         </View>
 
-        <AppText variant="cardTitle" style={styles.stageTitle}>{stage.title}</AppText>
-        <AppText variant="bodySecondary" style={styles.stageSubtitle}>{helper}</AppText>
+        <AppText variant="cardTitle" style={styles.stageTitle}>
+          {stage.title}
+        </AppText>
+        <AppText variant="bodySecondary" style={styles.stageSubtitle}>
+          {helper}
+        </AppText>
         {conceptForms ? (
-          <AppText variant="caption" style={styles.conceptForms}>{conceptForms}</AppText>
+          <AppText variant="caption" style={styles.conceptForms}>
+            {conceptForms}
+          </AppText>
         ) : null}
 
         <View style={styles.stageFooter}>
           <View style={styles.footerLine} />
           <View style={styles.smallArrow}>
             {premiumLocked || prerequisiteLocked ? (
-              <LockKeyhole size={15} color={premiumLocked ? PREMIUM_GOLD : SOFT} />
+              <LockKeyhole
+                size={15}
+                color={premiumLocked ? PREMIUM_GOLD : SOFT}
+              />
             ) : completed ? (
               <Check size={15} color={COMPLETED_MINT} />
             ) : (
@@ -546,7 +628,13 @@ function StatusPill({
         <View style={styles.statusDot} />
       )}
       <AppText variant="caption" style={styles.statusText}>
-        {premiumLocked ? "À DÉBLOQUER" : prerequisiteLocked ? "À VENIR" : isCurrent ? "EN COURS" : status}
+        {premiumLocked
+          ? "À DÉBLOQUER"
+          : prerequisiteLocked
+            ? "À VENIR"
+            : isCurrent
+              ? "EN COURS"
+              : status}
       </AppText>
     </View>
   );
@@ -589,7 +677,12 @@ function AnimatedFragment({
   }, [fadeAnim, index, slideAnim]);
 
   return (
-    <Animated.View style={[style, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+    <Animated.View
+      style={[
+        style,
+        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+      ]}
+    >
       {children}
     </Animated.View>
   );
@@ -600,11 +693,20 @@ const styles = StyleSheet.create({
   background: { flex: 1, overflow: "hidden", backgroundColor: BG_DEEP },
   scrollContent: { paddingTop: 8, paddingBottom: 120 },
   contentFrame: { width: "100%", alignSelf: "center" },
-  navHeader: { minHeight: 60, flexDirection: "row", alignItems: "center", marginBottom: 12 },
+  navHeader: {
+    minHeight: 60,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
   pressablePressed: { opacity: 0.86, transform: [{ scale: 0.992 }] },
 
   hero: { paddingHorizontal: 2, marginTop: 12, marginBottom: 28 },
-  heroEyebrowRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
+  heroEyebrowRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
   heroDot: {
     width: 5,
     height: 5,
@@ -681,7 +783,13 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.10)",
     backgroundColor: "rgba(2,3,6,0.42)",
   },
-  kickerDot: { width: 5, height: 5, borderRadius: 3, marginRight: 7, backgroundColor: GRAMMAR_ACCENT },
+  kickerDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    marginRight: 7,
+    backgroundColor: GRAMMAR_ACCENT,
+  },
   kickerText: { color: "rgba(241,245,249,0.64)" },
   actions: { flexDirection: "row", alignItems: "center", gap: 8 },
   accessPill: {
@@ -706,13 +814,26 @@ const styles = StyleSheet.create({
     borderColor: "rgba(119,114,170,0.34)",
     backgroundColor: "rgba(12,10,22,0.48)",
   },
-  stageMeta: { color: "rgba(184,180,226,0.70)", letterSpacing: 0.9, marginBottom: 7 },
+  stageMeta: {
+    color: "rgba(184,180,226,0.70)",
+    letterSpacing: 0.9,
+    marginBottom: 7,
+  },
   featuredTitle: { color: TXT, marginBottom: 6 },
   featuredSubtitle: { color: MUTED, maxWidth: 560 },
-  featuredFooter: { marginTop: 27, flexDirection: "row", alignItems: "center", gap: 12 },
+  featuredFooter: {
+    marginTop: 27,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
   ctaText: { color: "rgba(184,180,226,0.88)", letterSpacing: 0.45 },
   footerLine: { flex: 1, height: 1, backgroundColor: "rgba(184,180,226,0.28)" },
-  progressText: { minWidth: 34, color: "rgba(217,214,243,0.90)", textAlign: "right" },
+  progressText: {
+    minWidth: 34,
+    color: "rgba(217,214,243,0.90)",
+    textAlign: "right",
+  },
 
   sectionHeader: {
     marginTop: 32,
@@ -756,10 +877,20 @@ const styles = StyleSheet.create({
   completedBorder: { borderColor: "rgba(167,215,196,0.20)" },
   premiumBorder: { borderColor: "rgba(253,224,71,0.24)" },
   blocked: { opacity: 0.58 },
-  stageTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
+  stageTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
   stageIdentity: { flex: 1, minWidth: 0 },
   stageIndex: { color: "rgba(214,211,238,0.68)", letterSpacing: 0.95 },
-  premiumMicro: { marginTop: 3, color: "rgba(253,224,71,0.72)", fontSize: 10, letterSpacing: 0.8 },
+  premiumMicro: {
+    marginTop: 3,
+    color: "rgba(253,224,71,0.72)",
+    fontSize: 10,
+    letterSpacing: 0.8,
+  },
   statusPill: {
     minHeight: 27,
     flexDirection: "row",
@@ -771,12 +902,27 @@ const styles = StyleSheet.create({
     borderColor: "rgba(184,180,226,0.24)",
     backgroundColor: "rgba(12,10,22,0.50)",
   },
-  statusDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: GRAMMAR_LIGHT },
+  statusDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: GRAMMAR_LIGHT,
+  },
   statusText: { color: "rgba(217,214,243,0.84)" },
   stageTitle: { color: TXT, marginTop: 18 },
-  stageSubtitle: { marginTop: 5, color: "rgba(241,245,249,0.80)", maxWidth: 560 },
+  stageSubtitle: {
+    marginTop: 5,
+    color: "rgba(241,245,249,0.80)",
+    maxWidth: 560,
+  },
   conceptForms: { marginTop: 8, color: "rgba(184,180,226,0.66)" },
-  stageFooter: { marginTop: "auto", paddingTop: 16, flexDirection: "row", alignItems: "center", gap: 10 },
+  stageFooter: {
+    marginTop: "auto",
+    paddingTop: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
   smallArrow: {
     width: 31,
     height: 31,

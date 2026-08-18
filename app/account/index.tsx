@@ -296,14 +296,11 @@ export default function AccountScreen() {
     setFormSuccess(null);
     try {
       if (mode === "protect") {
-        ensureMatchingPasswords();
-        const result = await auth.protectProgress(email, password);
+        const result = await auth.protectProgress(email);
         if (result === "confirmation-required") {
-          setPassword("");
-          setPasswordConfirmation("");
           setMode("confirmation");
         } else {
-          setMode(null);
+          setMode("set-password");
         }
       } else if (mode === "sign-in") {
         await auth.signIn(email, password);
@@ -419,12 +416,11 @@ export default function AccountScreen() {
 
   const requiresEmail = mode === "protect" || mode === "sign-in" || mode === "reset";
   const requiresPassword =
-    mode === "protect" ||
     mode === "sign-in" ||
     mode === "set-password" ||
     mode === "change-password";
   const requiresConfirmation =
-    mode === "protect" || mode === "set-password" || mode === "change-password";
+    mode === "set-password" || mode === "change-password";
 
   return (
     <LinearGradient

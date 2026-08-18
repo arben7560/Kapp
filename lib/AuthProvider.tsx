@@ -30,7 +30,9 @@ const DELETE_ACCOUNT_FUNCTION =
   process.env.EXPO_PUBLIC_SUPABASE_DELETE_ACCOUNT_FUNCTION?.trim() ||
   "delete-account";
 
-export type ProtectProgressResult = "protected" | "confirmation-required";
+export type ProtectProgressResult =
+  | "confirmation-required"
+  | "password-required";
 export type OAuthResult = "success" | "cancelled";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -51,10 +53,7 @@ type AuthContextValue = {
   activeOAuthProvider: KappOAuthProvider | null;
   error: string | null;
   clearError: () => void;
-  protectProgress: (
-    email: string,
-    password: string,
-  ) => Promise<ProtectProgressResult>;
+  protectProgress: (email: string) => Promise<ProtectProgressResult>;
   completeAccountProtection: (password: string) => Promise<void>;
   resendProtectionEmail: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
@@ -150,6 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isPasswordRecovery, setIsPasswordRecovery] = React.useState(false);
   const [activeOAuthProvider, setActiveOAuthProvider] =
     React.useState<KappOAuthProvider | null>(null);
+  const pendingProtectionRevision = React.useRef(0);
 
   const captureError = React.useCallback((caught: unknown) => {
     const mapped = toKappAuthError(caught);
@@ -175,9 +175,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (event === "USER_UPDATED" || event === "SIGNED_IN") {
+          const revision = pendingProtectionRevision.current;
           void AsyncStorage.getItem(PENDING_PROTECTION_EMAIL_KEY).then(
             (pendingEmail) => {
-              if (!mounted || !pendingEmail) return;
+              if (
+                !mounted ||
+                !pendingEmail ||
+                revision !== pendingProtectionRevision.current
+              ) {
+                return;
+              }
               setConfirmationEmail(pendingEmail);
               setNeedsPasswordSetup(
                 Boolean(nextSession?.user) &&
@@ -241,10 +248,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearError = React.useCallback(() => setError(null), []);
 
   const protectProgress = React.useCallback(
-    async (rawEmail: string, password: string) => {
+    async (rawEmail: string) => {
       const client = requireConfiguredAuth();
       const email = validateEmail(rawEmail);
-      validatePassword(password);
 
       if (!session?.user || !isAnonymousUser(session.user)) {
         throw new KappAuthError(
@@ -265,14 +271,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setConfirmationEmail(email);
 
         if (data.user && !isAnonymousUser(data.user)) {
-          const { error: passwordError } = await client.auth.updateUser({
-            password,
-          });
-          if (passwordError) throw passwordError;
-          await AsyncStorage.removeItem(PENDING_PROTECTION_EMAIL_KEY);
-          setConfirmationEmail(null);
-          setNeedsPasswordSetup(false);
-          return "protected" as const;
+          setNeedsPasswordSetup(true);
+          return "password-required" as const;
         }
 
         return "confirmation-required" as const;
@@ -294,7 +294,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           password,
         });
         if (updateError) throw updateError;
+        pendingProtectionRevision.current += 1;
         await AsyncStorage.removeItem(PENDING_PROTECTION_EMAIL_KEY);
+        pendingProtectionRevision.current += 1;
         setConfirmationEmail(null);
         setNeedsPasswordSetup(false);
       } catch (caught) {

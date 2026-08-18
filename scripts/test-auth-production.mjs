@@ -63,9 +63,21 @@ test("2. user_progress is read and upserted only for the active UID", () => {
   assert.match(migration, /auth\.uid\(\)\) = user_id/iu);
 });
 
-test("3. anonymous to email updates the current user before adding a password", () => {
+test("3. anonymous to email confirms the address before choosing one password", () => {
   assert.match(authSource, /auth\.updateUser\([\s\S]*?\{ email \}/u);
-  assert.match(authSource, /PENDING_PROTECTION_EMAIL_KEY[\s\S]*?password/u);
+  assert.match(accountSource, /auth\.protectProgress\(email\)/u);
+  assert.doesNotMatch(
+    accountSource,
+    /auth\.protectProgress\(email,\s*password\)/u,
+  );
+  assert.match(
+    authSource,
+    /const completeAccountProtection[\s\S]*?auth\.updateUser\(\{[\s\S]*?password/u,
+  );
+  assert.match(
+    authSource,
+    /pendingProtectionRevision\.current \+= 1;[\s\S]*?removeItem\(PENDING_PROTECTION_EMAIL_KEY\)[\s\S]*?pendingProtectionRevision\.current \+= 1;/u,
+  );
 });
 
 test("4. new and existing Google identities use the same OAuth sign-in", () => {
