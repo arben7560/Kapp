@@ -25,7 +25,9 @@ import React from "react";
 import { StoreProvider } from "../_store";
 import { AppTextProvider } from "../components/app-text";
 import { useMediaSessionLifecycle } from "../hooks/useMediaSessionLifecycle";
+import { AuthProvider } from "../lib/AuthProvider";
 import { DailyStreakProvider } from "../lib/DailyStreakProvider";
+import { ProgressSyncProvider } from "../lib/ProgressSyncProvider";
 import { PaywallProvider } from "../lib/paywall/PaywallProvider";
 import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard";
 
@@ -184,44 +186,48 @@ export default function RootLayout() {
     <ThemeProvider value={KAPP_NAVIGATION_THEME}>
       <AppTextProvider customFontsAvailable={customFontsAvailable}>
         <StoreProvider>
-          <DailyStreakProvider>
-            <PaywallProvider>
-              <SubscriptionAccessGuard>
-                <ReleaseRouteGuard>
-                  <InitialOnboardingRoute />
+          <AuthProvider>
+            <ProgressSyncProvider>
+              <DailyStreakProvider>
+                <PaywallProvider>
+                  <SubscriptionAccessGuard>
+                    <ReleaseRouteGuard>
+                      <InitialOnboardingRoute />
 
-                  <Stack
-                    initialRouteName="index"
-                    screenOptions={{
-                      headerShown: false,
-                      contentStyle: {
-                        backgroundColor: "#000000",
-                      },
-                      animation: "fade",
-                      animationDuration: 220,
-                    }}
-                  >
-                    <Stack.Screen
-                      name="index"
-                      options={{ animation: "none" }}
-                    />
-                    <Stack.Screen
-                      name="onboarding"
-                      options={{ animation: "none" }}
-                    />
-                    <Stack.Screen name="premium" />
-                    <Stack.Screen name="streak" />
-                    <Stack.Screen name="(tabs)" />
-                    <Stack.Screen
-                      name="listen/teacherIA"
-                      options={{ animation: "none" }}
-                    />
-                    <Stack.Screen name="listen/teacherIARealtime" />
-                  </Stack>
-                </ReleaseRouteGuard>
-              </SubscriptionAccessGuard>
-            </PaywallProvider>
-          </DailyStreakProvider>
+                      <Stack
+                        initialRouteName="index"
+                        screenOptions={{
+                          headerShown: false,
+                          contentStyle: {
+                            backgroundColor: "#000000",
+                          },
+                          animation: "fade",
+                          animationDuration: 220,
+                        }}
+                      >
+                        <Stack.Screen
+                          name="index"
+                          options={{ animation: "none" }}
+                        />
+                        <Stack.Screen
+                          name="onboarding"
+                          options={{ animation: "none" }}
+                        />
+                        <Stack.Screen name="premium" />
+                        <Stack.Screen name="streak" />
+                        <Stack.Screen name="(tabs)" />
+                        <Stack.Screen
+                          name="listen/teacherIA"
+                          options={{ animation: "none" }}
+                        />
+                        <Stack.Screen name="listen/teacherIARealtime" />
+                      </Stack>
+                    </ReleaseRouteGuard>
+                  </SubscriptionAccessGuard>
+                </PaywallProvider>
+              </DailyStreakProvider>
+            </ProgressSyncProvider>
+          </AuthProvider>
         </StoreProvider>
       </AppTextProvider>
     </ThemeProvider>

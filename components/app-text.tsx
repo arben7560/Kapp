@@ -3,7 +3,9 @@ import {
   Animated,
   StyleSheet,
   Text,
+  TextInput,
   type StyleProp,
+  type TextInputProps,
   type TextProps,
   type TextStyle,
 } from 'react-native';
@@ -216,6 +218,48 @@ export const AppText = React.forwardRef<
 
 /** Animated counterpart with the same semantic typography contract. */
 export const AnimatedAppText = Animated.createAnimatedComponent(AppText);
+
+export type AppTextInputProps = Omit<TextInputProps, 'style'> & {
+  variant?: AppTextVariant;
+  script?: AppTextScript;
+  style?: StyleProp<TextStyle>;
+};
+
+/** Text input counterpart that follows the same typography contract as AppText. */
+export const AppTextInput = React.forwardRef<
+  React.ComponentRef<typeof TextInput>,
+  AppTextInputProps
+>(function AppTextInput(
+  { variant = 'body', script, style, ...rest },
+  ref,
+) {
+  const customFontsAvailable = React.useContext(AppFontsAvailableContext);
+  const token = AppTypography[variant];
+  const resolvedScript = script ?? token.script;
+  const safeStyle = sanitizeTextStyle(style);
+
+  return (
+    <TextInput
+      ref={ref}
+      {...rest}
+      style={[
+        resolveFontStyle(
+          resolvedScript,
+          token.fontRole,
+          customFontsAvailable,
+        ),
+        {
+          color: AppTextTones.default,
+          fontSize: token.fontSize,
+          lineHeight: token.lineHeight,
+          letterSpacing: token.letterSpacing,
+          includeFontPadding: false,
+        },
+        safeStyle,
+      ]}
+    />
+  );
+});
 
 export type AppMixedTextSegment = Readonly<{
   key?: React.Key;
