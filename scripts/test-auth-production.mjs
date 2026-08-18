@@ -68,9 +68,31 @@ test("3. anonymous to email updates the current user before adding a password", 
   assert.match(authSource, /PENDING_PROTECTION_EMAIL_KEY[\s\S]*?password/u);
 });
 
-test("4. anonymous to Google uses manual identity linking", () => {
-  assert.match(authSource, /auth\.linkIdentity\(credentials\)/u);
-  assert.match(accountSource, /provider="google"[\s\S]*?continueWithProvider\("google"\)/u);
+test("4. new and existing Google identities use the same OAuth sign-in", () => {
+  assert.match(
+    accountSource,
+    /provider === "google" \|\| existingAccount[\s\S]*?auth\.signInWithOAuth\(provider\)/u,
+  );
+  assert.match(
+    accountSource,
+    /provider="google"[\s\S]*?continueWithProvider\("google"\)/u,
+  );
+  assert.match(authSource, /auth\.signInWithOAuth\(credentials\)/u);
+});
+
+test("4b. Google sign-in keeps guest progress available for the target UID merge", () => {
+  const oauthImplementation = authSource.slice(
+    authSource.indexOf("const runOAuth"),
+    authSource.indexOf("const signOut"),
+  );
+  assert.match(
+    oauthImplementation,
+    /intent === "login"[\s\S]*?synchronizeProgressNow\(\)[\s\S]*?auth\.signInWithOAuth\(credentials\)/u,
+  );
+  assert.match(
+    syncProviderSource,
+    /userIdRef\.current !== nextUserId[\s\S]*?lastSyncedFingerprintRef\.current = null/u,
+  );
 });
 
 test("5. anonymous to Apple uses linking and is exposed only on iOS", () => {
@@ -148,7 +170,9 @@ test("13. PKCE and token callbacks parse safely without a native localhost fallb
 test("14. network and provider failures have precise French messages", () => {
   assert.equal(toKappAuthError(new TypeError("Network request failed")).code, "network-unavailable");
   assert.equal(toKappAuthError({ code: "provider_disabled" }).code, "oauth-provider-disabled");
-  assert.equal(toKappAuthError({ code: "identity_already_exists" }).code, "identity-already-used");
+  const linkedIdentityError = toKappAuthError({ code: "identity_already_exists" });
+  assert.equal(linkedIdentityError.code, "identity-already-used");
+  assert.doesNotMatch(linkedIdentityError.message, /J’ai déjà un compte/u);
   assert.equal(toKappAuthError({ code: "over_email_send_rate_limit" }).code, "rate-limited");
 });
 

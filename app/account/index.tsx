@@ -238,7 +238,7 @@ export default function AccountScreen() {
     async (provider: KappOAuthProvider, existingAccount = false) => {
       setFormError(null);
       try {
-        const result = existingAccount
+        const result = provider === "google" || existingAccount
           ? await auth.signInWithOAuth(provider)
           : await auth.linkOAuthIdentity(provider);
         if (result === "success" && existingAccount) setMode(null);

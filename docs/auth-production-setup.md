@@ -8,8 +8,9 @@ The client is configured for Supabase PKCE auth and the native callback scheme
 1. Enable **Anonymous Sign-Ins**, Email, Google and Apple under Authentication.
    Configure CAPTCHA and the anonymous sign-in/IP rate limits before launch to
    prevent automated anonymous-user abuse.
-2. Enable **Manual identity linking**. K-App uses `linkIdentity` while the current
-   user is anonymous so the existing UID and `user_progress` row are preserved.
+2. Enable **Manual identity linking** for the Apple account-conversion flow.
+   Google uses the standard OAuth sign-in flow for both registration and login;
+   the existing local/cloud merge preserves guest progress across the UID change.
 3. Add `kapp://**` to Authentication → URL Configuration → Redirect URLs.
 4. Keep the project Site URL as the real web application URL; do not use it as a
    native callback and do not rely on `localhost:3000` in a release build.

@@ -93,7 +93,7 @@ export function toKappAuthError(error: unknown): KappAuthError {
   ) {
     return new KappAuthError(
       "identity-already-used",
-      "Ce compte est déjà associé à K-App. Utilisez « J’ai déjà un compte » pour vous connecter et fusionner la progression locale.",
+      "Cette identité est déjà associée à un autre compte K-App.",
       { cause: error },
     );
   }
