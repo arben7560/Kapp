@@ -978,6 +978,7 @@ export default function Home() {
               compact={responsive.isCompact}
               cityTime={seoulTime}
               livePulse={livePulse}
+              isProtected={auth.isPermanentAccount}
               onOpenProfile={() => router.push("/account")}
             />
 
@@ -1116,11 +1117,13 @@ function GlassHeader({
   compact,
   cityTime,
   livePulse,
+  isProtected,
   onOpenProfile,
 }: {
   compact: boolean;
   cityTime: string;
   livePulse: Animated.Value;
+  isProtected: boolean;
   onOpenProfile: () => void;
 }) {
   return (
@@ -1199,7 +1202,11 @@ function GlassHeader({
         <View style={styles.headerActionSlot}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Ouvrir mon profil"
+            accessibilityLabel={
+              isProtected
+                ? "Ouvrir mon profil, compte protégé"
+                : "Ouvrir mon profil"
+            }
             accessibilityHint="Ouvre la page Mon profil"
             hitSlop={4}
             onPress={onOpenProfile}
@@ -1209,6 +1216,11 @@ function GlassHeader({
             ]}
           >
             <UserRound size={20} strokeWidth={1.9} color={CYAN} />
+            {isProtected ? (
+              <View style={styles.profileStatusDot} pointerEvents="none">
+                <View style={styles.profileStatusDotCore} />
+              </View>
+            ) : null}
           </Pressable>
         </View>
       </BlurView>
@@ -2213,6 +2225,31 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(103,232,249,0.075)",
 
     boxShadow: "0px 5px 16px rgba(0,0,0,0.20)",
+  },
+
+  profileStatusDot: {
+    position: "absolute",
+    right: 5,
+    bottom: 5,
+
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: "rgba(2,3,6,0.94)",
+
+    boxShadow: "0px 0px 8px rgba(74,222,128,0.42)",
+  },
+
+  profileStatusDotCore: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+
+    backgroundColor: "#4ADE80",
   },
 
   profileButtonPressed: {
