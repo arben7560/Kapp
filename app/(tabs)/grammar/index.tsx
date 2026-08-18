@@ -1,12 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import {
-  Check,
-  ChevronRight,
-  LockKeyhole,
-  Sparkles,
-} from "lucide-react-native";
+import { Check, ChevronRight, LockKeyhole, Sparkles } from "lucide-react-native";
 import React, { useEffect, useMemo } from "react";
 import {
   Animated,
@@ -44,22 +39,16 @@ import {
 import { usePaywall } from "../../../lib/paywall/PaywallProvider";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/grammar-card.jpg");
-const CARD_BACKGROUND_SOURCE = require("../../../assets/images/grammar-card.jpg");
 
 const BG_DEEP = SeoulMidnightGlass.colors.bgDeep;
 const TXT = SeoulMidnightGlass.colors.text;
 const MUTED = "rgba(241,245,249,0.76)";
 const SOFT = "rgba(241,245,249,0.54)";
-
 const GRAMMAR = HubModuleAccents.grammar;
 const GRAMMAR_ACCENT = GRAMMAR.base;
 const GRAMMAR_LIGHT = "#B8B4E2";
-const GRAMMAR_PALE = "#D9D6F3";
-
 const PREMIUM_GOLD = SeoulMidnightGlass.colors.premiumGold;
 const PREMIUM_LIGHT = "#FFF1A8";
-const PREMIUM_SOFT = "#D8C89A";
-const ACTIVE_PEARL = "#E8E3D8";
 const COMPLETED_MINT = "#A7D7C4";
 
 function getCompletedContentRefs(completed: Record<string, boolean>) {
@@ -68,7 +57,6 @@ function getCompletedContentRefs(completed: Record<string, boolean>) {
       const normalizedId = contentRef.id
         .replace(/[^a-zA-Z0-9]+/gu, "_")
         .toLowerCase();
-
       return completed[contentRef.id] || completed[normalizedId];
     }).map((contentRef) => contentRef.id),
   );
@@ -78,14 +66,12 @@ function prerequisiteLabel(prerequisite: GrammarPrerequisite): string {
   if (prerequisite.kind === "stage") {
     return GRAMMAR_STAGE_BY_ID[prerequisite.stageId].title;
   }
-
   if (prerequisite.kind === "concept") {
     return (
       GRAMMAR_CONCEPTS.find((concept) => concept.id === prerequisite.conceptId)
         ?.form ?? prerequisite.conceptId
     );
   }
-
   return (
     CONTENT_REFS.find((contentRef) => contentRef.id === prerequisite.contentRefId)
       ?.title ?? prerequisite.contentRefId
@@ -102,19 +88,16 @@ export default function GrammarHubScreen() {
     maxColumns: 2,
     gap: responsive.gridGap,
   });
-
   const gridItemWidth = responsive.getGridItemWidth(
     gridColumns,
     responsive.gridGap,
   );
 
   const grammarProgress = progress.grammarProgress;
-
   const completedContentRefs = React.useMemo(
     () => getCompletedContentRefs(progress.completed),
     [progress.completed],
   );
-
   const completion = getGrammarJourneyCompletion(grammarProgress);
   const completedStages = Math.round(completion * GRAMMAR_STAGE_IDS.length);
 
@@ -122,8 +105,7 @@ export default function GrammarHubScreen() {
     const resumable =
       grammarProgress.lastStageId &&
       grammarProgress.stages[grammarProgress.lastStageId]?.activeSession &&
-      !grammarProgress.stages[grammarProgress.lastStageId]?.activeSession
-        ?.completedAt
+      !grammarProgress.stages[grammarProgress.lastStageId]?.activeSession?.completedAt
         ? grammarProgress.lastStageId
         : undefined;
 
@@ -131,7 +113,6 @@ export default function GrammarHubScreen() {
       resumable ??
       GRAMMAR_STAGE_IDS.find((stageId) => {
         const state = getGrammarStageState(grammarProgress, stageId);
-
         return state !== "practiced" && state !== "mastered";
       }) ??
       GRAMMAR_STAGE_IDS[0]
@@ -155,15 +136,12 @@ export default function GrammarHubScreen() {
         router.push("/premium");
         return;
       }
-
       const access = getGrammarStageAccess(
         grammarProgress,
         stageId,
         completedContentRefs,
       );
-
       if (!access.canOpen) return;
-
       setTrack("grammar");
       router.push({
         pathname: "/grammar/[stageId]",
@@ -175,31 +153,14 @@ export default function GrammarHubScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground
-        source={BACKGROUND_SOURCE}
-        style={styles.background}
-        resizeMode="cover"
-      >
-        <BlurView
-          intensity={25}
-          tint="dark"
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-
+      <ImageBackground source={BACKGROUND_SOURCE} style={styles.background} resizeMode="cover">
+        <BlurView intensity={25} tint="dark" style={StyleSheet.absoluteFill} pointerEvents="none" />
         <LinearGradient
-          colors={[
-            "rgba(2,3,6,0.40)",
-            "rgba(2,3,6,0.63)",
-            "rgba(2,3,6,0.93)",
-          ]}
+          colors={["rgba(2,3,6,0.40)", "rgba(2,3,6,0.63)", "rgba(2,3,6,0.93)"]}
           locations={[0, 0.48, 1]}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
-
-        <View style={styles.ambientGlowTop} pointerEvents="none" />
-        <View style={styles.ambientGlowBottom} pointerEvents="none" />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -208,20 +169,12 @@ export default function GrammarHubScreen() {
             { paddingHorizontal: responsive.horizontalPadding },
           ]}
         >
-          <View
-            style={[
-              styles.contentFrame,
-              { maxWidth: responsive.maxWidth },
-            ]}
-          >
+          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
             <View style={styles.navHeader}>
               <AppBackButton accessibilityLabel="Retour à l’accueil" />
             </View>
 
-            <GrammarHero
-              compact={responsive.isCompact}
-              completedStages={completedStages}
-            />
+            <GrammarHero compact={responsive.isCompact} completedStages={completedStages} />
 
             <AnimatedFragment index={0}>
               <FeaturedGrammarCard
@@ -257,23 +210,17 @@ export default function GrammarHubScreen() {
                       completedContentRefs,
                     );
                     const isPremiumStage = stage.access === "premium";
-                    const premiumLocked = !canAccessGrammarStage(
-                      stage,
-                      isPremium,
-                    );
+                    const premiumLocked = !canAccessGrammarStage(stage, isPremium);
                     const prerequisiteLocked = !access.canOpen;
                     const disabled = prerequisiteLocked && !premiumLocked;
-                    const completed =
-                      state === "practiced" || state === "mastered";
+                    const completed = state === "practiced" || state === "mastered";
                     const isCurrent = stageId === nextStageId && !completed;
                     const missingRecommended = access.missingRecommended[0];
                     const conceptForms = stage.conceptIds
                       .slice(0, 3)
                       .map(
                         (conceptId) =>
-                          GRAMMAR_CONCEPTS.find(
-                            (concept) => concept.id === conceptId,
-                          )?.form,
+                          GRAMMAR_CONCEPTS.find((concept) => concept.id === conceptId)?.form,
                       )
                       .filter(Boolean)
                       .join(" · ");
@@ -294,9 +241,7 @@ export default function GrammarHubScreen() {
                       ? "Inclus avec K-App Premium"
                       : prerequisiteLocked
                         ? `Requis : ${access.missingBlocking
-                            .map((item) =>
-                              prerequisiteLabel(item.prerequisite),
-                            )
+                            .map((item) => prerequisiteLabel(item.prerequisite))
                             .join(", ")}`
                         : missingRecommended
                           ? `Ordre conseillé : après ${prerequisiteLabel(
@@ -308,11 +253,7 @@ export default function GrammarHubScreen() {
                       <AnimatedFragment
                         key={stageId}
                         index={1 + chapterIndex * 4 + stageIndex}
-                        style={
-                          gridColumns > 1
-                            ? { width: gridItemWidth }
-                            : undefined
-                        }
+                        style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
                       >
                         <GrammarStageCard
                           stageId={stageId}
@@ -340,18 +281,11 @@ export default function GrammarHubScreen() {
   );
 }
 
-function GrammarHero({
-  compact,
-  completedStages,
-}: {
-  compact: boolean;
-  completedStages: number;
-}) {
+function GrammarHero({ compact, completedStages }: { compact: boolean; completedStages: number }) {
   return (
     <View style={styles.hero}>
       <View style={styles.heroEyebrowRow}>
         <View style={styles.heroDot} />
-
         <AppText variant="sectionLabel" style={styles.heroEyebrow}>
           PARCOURS · GRAMMAIRE
         </AppText>
@@ -365,11 +299,7 @@ function GrammarHero({
       >
         문법
       </AppText>
-
-      <AppText variant="screenTitle" style={styles.heroTitle}>
-        Grammaire
-      </AppText>
-
+      <AppText variant="screenTitle" style={styles.heroTitle}>Grammaire</AppText>
       <AppText variant="bodySecondary" style={styles.heroSubtitle}>
         Construis des phrases naturelles, étape par étape.
       </AppText>
@@ -377,16 +307,10 @@ function GrammarHero({
       <View style={styles.heroMetaRow}>
         <View style={styles.levelPill}>
           <Sparkles size={15} strokeWidth={2} color={GRAMMAR_ACCENT} />
-
-          <AppText
-            variant="sectionLabel"
-            lineContract="singleLine"
-            style={styles.levelText}
-          >
+          <AppText variant="sectionLabel" lineContract="singleLine" style={styles.levelText}>
             A0 → A1
           </AppText>
         </View>
-
         <AppText variant="caption" style={styles.heroStageCount}>
           {completedStages} / {GRAMMAR_STAGE_IDS.length} étapes
         </AppText>
@@ -417,179 +341,62 @@ function FeaturedGrammarCard({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${isResume ? "À continuer" : "Prochaine étape"}. Étape ${stage.number}. ${stage.title}. ${stage.communicativeGoal}.`}
-      accessibilityHint={
-        premiumLocked
-          ? "Ouvre l'accès Premium"
-          : prerequisiteLocked
-            ? "Termine d'abord les prérequis"
-            : "Ouvre cette leçon"
-      }
       disabled={prerequisiteLocked && !premiumLocked}
       onPress={onPress}
       style={({ pressed }) => [
         styles.featuredWrap,
-        premiumLocked && styles.featuredWrapPremiumLocked,
-        prerequisiteLocked && styles.featuredWrapBlocked,
+        premiumLocked && styles.premiumBorder,
+        prerequisiteLocked && styles.blocked,
         pressed && styles.pressablePressed,
       ]}
     >
-      <View style={styles.featuredCard}>
-        <ImageBackground
-          source={CARD_BACKGROUND_SOURCE}
-          resizeMode="cover"
-          style={StyleSheet.absoluteFill}
-          imageStyle={styles.featuredImage}
-          pointerEvents="none"
-        />
-
-        <LinearGradient
-          colors={[
-            "rgba(2,3,6,0.18)",
-            "rgba(2,3,6,0.34)",
-            "rgba(2,3,6,0.60)",
-          ]}
-          locations={[0, 0.52, 1]}
-          start={{ x: 0.05, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-
-        <LinearGradient
-          colors={
-            premiumLocked
-              ? [
-                  "rgba(253,224,71,0.07)",
-                  "rgba(0,0,0,0)",
-                  "rgba(2,3,6,0.12)",
-                ]
-              : [
-                  "rgba(119,114,170,0.10)",
-                  "rgba(0,0,0,0)",
-                  "rgba(2,3,6,0.10)",
-                ]
-          }
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-
-        <View style={styles.glassTopHairline} />
-
-        <View
-          style={[
-            styles.featuredGlow,
-            premiumLocked && styles.featuredGlowPremiumLocked,
-            prerequisiteLocked && styles.featuredGlowBlocked,
-          ]}
-        />
+      <LinearGradient
+        colors={["rgba(16,14,30,0.78)", "rgba(7,7,16,0.88)", "rgba(2,3,6,0.94)"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.featuredCard}
+      >
+        <View style={styles.glassGlow} pointerEvents="none" />
 
         <View style={styles.featuredTopRow}>
-          <View style={styles.featuredKicker}>
-            <View
-              style={[
-                styles.featuredKickerDot,
-                premiumLocked && styles.premiumDotLocked,
-                prerequisiteLocked && styles.blockedDot,
-              ]}
-            />
-
-            <AppText variant="sectionLabel" style={styles.featuredKickerText}>
+          <View style={styles.kicker}>
+            <View style={styles.kickerDot} />
+            <AppText variant="sectionLabel" style={styles.kickerText}>
               {isResume ? "À CONTINUER" : "PROCHAINE ÉTAPE"}
             </AppText>
           </View>
 
-          <View style={styles.featuredTopActions}>
-            {blocked ? (
-              <View
-                style={[
-                  styles.featuredPremiumBadgeLocked,
-                  prerequisiteLocked && styles.featuredBlockedBadge,
-                ]}
-              >
-                <LockKeyhole
-                  size={12}
-                  strokeWidth={2}
-                  color={premiumLocked ? PREMIUM_GOLD : SOFT}
-                />
-
-                <AppText
-                  variant="caption"
-                  style={
-                    premiumLocked
-                      ? styles.featuredPremiumTextLocked
-                      : styles.featuredBlockedText
-                  }
-                >
-                  {premiumLocked ? "PREMIUM" : "PRÉREQUIS"}
-                </AppText>
-              </View>
-            ) : (
-              <View style={styles.featuredAccessBadgeActive}>
-                <Check size={11} strokeWidth={2.5} color={ACTIVE_PEARL} />
-
-                <AppText
-                  variant="caption"
-                  style={styles.featuredAccessTextActive}
-                >
-                  ACCÈS ACTIF
-                </AppText>
-              </View>
-            )}
-
-            <View
-              style={[
-                styles.featuredArrow,
-                premiumLocked && styles.featuredArrowPremiumLocked,
-                prerequisiteLocked && styles.featuredArrowBlocked,
-              ]}
-            >
+          <View style={styles.actions}>
+            <View style={styles.accessPill}>
               {blocked ? (
-                <LockKeyhole
-                  size={17}
-                  strokeWidth={2}
-                  color={premiumLocked ? PREMIUM_GOLD : SOFT}
-                />
+                <LockKeyhole size={11} strokeWidth={2} color={premiumLocked ? PREMIUM_GOLD : SOFT} />
               ) : (
-                <ChevronRight
-                  size={19}
-                  strokeWidth={2.25}
-                  color={GRAMMAR_LIGHT}
-                />
+                <Check size={11} strokeWidth={2.5} color={GRAMMAR_LIGHT} />
+              )}
+              <AppText variant="caption" style={styles.accessText}>
+                {premiumLocked ? "PREMIUM" : prerequisiteLocked ? "PRÉREQUIS" : "ACCÈS ACTIF"}
+              </AppText>
+            </View>
+            <View style={styles.arrowButton}>
+              {blocked ? (
+                <LockKeyhole size={17} color={premiumLocked ? PREMIUM_GOLD : SOFT} />
+              ) : (
+                <ChevronRight size={19} color={GRAMMAR_LIGHT} />
               )}
             </View>
           </View>
         </View>
 
-        <AppText variant="caption" style={styles.featuredMicroLabel}>
+        <AppText variant="caption" style={styles.stageMeta}>
           ÉTAPE {String(stage.number).padStart(2, "0")} · NIVEAU {level}
         </AppText>
-
-        <View style={styles.featuredContent}>
-          <AppText variant="featureTitle" style={styles.featuredTitle}>
-            {stage.title}
-          </AppText>
-
-          <AppText
-            variant="bodySecondary"
-            tone="muted"
-            style={styles.featuredSubtitle}
-          >
-            {stage.communicativeGoal}
-          </AppText>
-        </View>
+        <AppText variant="featureTitle" style={styles.featuredTitle}>{stage.title}</AppText>
+        <AppText variant="bodySecondary" style={styles.featuredSubtitle}>
+          {stage.communicativeGoal}
+        </AppText>
 
         <View style={styles.featuredFooter}>
-          <AppText
-            variant="caption"
-            style={[
-              styles.featuredFooterLabel,
-              premiumLocked && styles.featuredFooterLabelPremiumLocked,
-              prerequisiteLocked && styles.featuredFooterLabelBlocked,
-            ]}
-          >
+          <AppText variant="caption" style={styles.ctaText}>
             {premiumLocked
               ? "DÉBLOQUER PREMIUM"
               : prerequisiteLocked
@@ -598,62 +405,24 @@ function FeaturedGrammarCard({
                   ? "REPRENDRE LA LEÇON"
                   : "COMMENCER LA LEÇON"}
           </AppText>
-
-          <View style={styles.featuredFooterLine}>
-            <LinearGradient
-              colors={
-                premiumLocked
-                  ? [PREMIUM_GOLD, PREMIUM_LIGHT, "transparent"]
-                  : prerequisiteLocked
-                    ? ["rgba(255,255,255,0.22)", "transparent"]
-                    : [GRAMMAR_ACCENT, GRAMMAR_LIGHT, "transparent"]
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={StyleSheet.absoluteFill}
-            />
-          </View>
-
-          <AppText variant="caption" style={styles.featuredProgressText}>
+          <View style={styles.footerLine} />
+          <AppText variant="caption" style={styles.progressText}>
             {Math.round(completion * 100)}%
           </AppText>
         </View>
-      </View>
+      </LinearGradient>
     </Pressable>
   );
 }
 
-function GrammarSectionHeader({
-  title,
-  subtitle,
-}: {
-  title: string;
-  subtitle: string;
-}) {
+function GrammarSectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <View style={styles.sectionHeader}>
       <View style={styles.sectionCopy}>
-        <View style={styles.sectionTitleRow}>
-          <AppText variant="sectionLabel" style={styles.sectionTitle}>
-            {title}
-          </AppText>
-        </View>
-
-        <AppText variant="caption" style={styles.sectionSubtitle}>
-          {subtitle}
-        </AppText>
+        <AppText variant="sectionLabel" style={styles.sectionTitle}>{title}</AppText>
+        <AppText variant="caption" style={styles.sectionSubtitle}>{subtitle}</AppText>
       </View>
-
-      <View style={styles.sectionLineWrap}>
-        <View style={styles.sectionLineBase} />
-
-        <LinearGradient
-          colors={["transparent", GRAMMAR_ACCENT, GRAMMAR_LIGHT]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.sectionLineGlow}
-        />
-      </View>
+      <View style={styles.sectionLine} />
     </View>
   );
 }
@@ -684,268 +453,100 @@ function GrammarStageCard({
   onPress: () => void;
 }) {
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
-  const premiumActive = isPremiumStage && !premiumLocked;
   const level = stage.status === "pre-a1" ? "A0" : "A1";
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Étape ${stage.number}. ${stage.title}. ${status}. ${helper}`}
-      accessibilityHint={
-        premiumLocked
-          ? "Ouvre l'offre Premium"
-          : prerequisiteLocked
-            ? "Termine d'abord les prérequis"
-            : "Ouvre la leçon"
-      }
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
-        styles.collectionWrap,
-        premiumLocked && styles.collectionWrapPremiumLocked,
-        premiumActive && styles.collectionWrapPremiumActive,
-        prerequisiteLocked && styles.collectionWrapBlocked,
-        isCurrent && styles.collectionWrapCurrent,
-        completed && styles.collectionWrapCompleted,
+        styles.stageWrap,
+        isCurrent && styles.currentBorder,
+        completed && styles.completedBorder,
+        premiumLocked && styles.premiumBorder,
+        prerequisiteLocked && styles.blocked,
         pressed && styles.pressablePressed,
       ]}
     >
-      <View style={styles.collectionCard}>
-        <ImageBackground
-          source={CARD_BACKGROUND_SOURCE}
-          resizeMode="cover"
-          style={StyleSheet.absoluteFill}
-          imageStyle={styles.collectionImage}
-          pointerEvents="none"
-        />
+      <LinearGradient
+        colors={
+          premiumLocked
+            ? ["rgba(26,21,8,0.82)", "rgba(7,7,12,0.92)"]
+            : ["rgba(17,15,31,0.78)", "rgba(4,5,11,0.92)"]
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.stageCard}
+      >
+        <View style={styles.glassGlowSmall} pointerEvents="none" />
 
-        <LinearGradient
-          colors={[
-            "rgba(2,3,6,0.18)",
-            "rgba(2,3,6,0.34)",
-            "rgba(2,3,6,0.60)",
-          ]}
-          locations={[0, 0.52, 1]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-
-        <LinearGradient
-          colors={
-            premiumLocked
-              ? [
-                  "rgba(253,224,71,0.06)",
-                  "rgba(0,0,0,0)",
-                  "rgba(2,3,6,0.10)",
-                ]
-              : premiumActive
-                ? [
-                    "rgba(216,200,154,0.04)",
-                    "rgba(0,0,0,0)",
-                    "rgba(2,3,6,0.09)",
-                  ]
-                : [
-                    "rgba(119,114,170,0.08)",
-                    "rgba(0,0,0,0)",
-                    "rgba(2,3,6,0.09)",
-                  ]
-          }
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-
-        <View
-          style={[
-            styles.cardTopHairline,
-            premiumLocked && styles.cardTopHairlinePremiumLocked,
-            premiumActive && styles.cardTopHairlinePremiumActive,
-            completed && styles.cardTopHairlineCompleted,
-          ]}
-        />
-
-        <View
-          style={[
-            styles.collectionAmbientGlow,
-            premiumLocked && styles.collectionAmbientGlowPremiumLocked,
-            premiumActive && styles.collectionAmbientGlowPremiumActive,
-            completed && styles.collectionAmbientGlowCompleted,
-          ]}
-        />
-
-        {isPremiumStage ? (
-          <View
-            style={[
-              styles.premiumRail,
-              premiumLocked && styles.premiumRailLocked,
-              premiumActive && styles.premiumRailActive,
-            ]}
+        <View style={styles.stageTopRow}>
+          <View style={styles.stageIdentity}>
+            <AppText variant="sectionLabel" style={styles.stageIndex}>
+              ÉTAPE {String(stage.number).padStart(2, "0")} · {level}
+            </AppText>
+            {isPremiumStage ? (
+              <AppText variant="caption" style={styles.premiumMicro}>PREMIUM</AppText>
+            ) : null}
+          </View>
+          <StatusPill
+            status={status}
+            premiumLocked={premiumLocked}
+            prerequisiteLocked={prerequisiteLocked}
+            completed={completed}
+            isCurrent={isCurrent}
           />
+        </View>
+
+        <AppText variant="cardTitle" style={styles.stageTitle}>{stage.title}</AppText>
+        <AppText variant="bodySecondary" style={styles.stageSubtitle}>{helper}</AppText>
+        {conceptForms ? (
+          <AppText variant="caption" style={styles.conceptForms}>{conceptForms}</AppText>
         ) : null}
 
-        <View style={styles.collectionTopRow}>
-          <View style={styles.collectionTopMeta}>
-            <View style={styles.collectionIdentity}>
-              <AppText
-                variant="sectionLabel"
-                lineContract="singleLine"
-                style={[
-                  styles.collectionIndex,
-                  premiumLocked && styles.collectionIndexPremiumLocked,
-                  premiumActive && styles.collectionIndexPremiumActive,
-                  completed && styles.collectionIndexCompleted,
-                ]}
-              >
-                ÉTAPE {String(stage.number).padStart(2, "0")} · {level}
-              </AppText>
-
-              {isPremiumStage ? (
-                <AppText
-                  variant="caption"
-                  lineContract="singleLine"
-                  style={[
-                    styles.premiumMicroLabel,
-                    premiumLocked && styles.premiumMicroLabelLocked,
-                  ]}
-                >
-                  PREMIUM
-                </AppText>
-              ) : null}
-            </View>
-
-            <GrammarStatusBadge
-              status={status}
-              premiumLocked={premiumLocked}
-              premiumActive={premiumActive}
-              prerequisiteLocked={prerequisiteLocked}
-              completed={completed}
-              isCurrent={isCurrent}
-            />
-          </View>
-        </View>
-
-        <View style={styles.collectionCopy}>
-          <AppText variant="cardTitle" style={styles.collectionTitle}>
-            {stage.title}
-          </AppText>
-
-          <AppText
-            variant="bodySecondary"
-            tone="muted"
-            style={styles.collectionSubtitle}
-          >
-            {helper}
-          </AppText>
-
-          {conceptForms ? (
-            <AppText variant="caption" style={styles.conceptForms}>
-              {conceptForms}
-            </AppText>
-          ) : null}
-        </View>
-
-        <View style={styles.collectionFooter}>
-          <View style={styles.collectionFooterLine} />
-
-          <View
-            style={[
-              styles.collectionArrow,
-              premiumLocked && styles.collectionArrowPremiumLocked,
-              premiumActive && styles.collectionArrowPremiumActive,
-              prerequisiteLocked && styles.collectionArrowBlocked,
-              completed && styles.collectionArrowCompleted,
-            ]}
-          >
+        <View style={styles.stageFooter}>
+          <View style={styles.footerLine} />
+          <View style={styles.smallArrow}>
             {premiumLocked || prerequisiteLocked ? (
-              <LockKeyhole
-                size={15}
-                strokeWidth={2}
-                color={premiumLocked ? PREMIUM_GOLD : SOFT}
-              />
+              <LockKeyhole size={15} color={premiumLocked ? PREMIUM_GOLD : SOFT} />
             ) : completed ? (
-              <Check size={15} strokeWidth={2.4} color={COMPLETED_MINT} />
+              <Check size={15} color={COMPLETED_MINT} />
             ) : (
-              <ChevronRight
-                size={17}
-                strokeWidth={2.2}
-                color={premiumActive ? PREMIUM_SOFT : GRAMMAR_LIGHT}
-              />
+              <ChevronRight size={17} color={GRAMMAR_LIGHT} />
             )}
           </View>
         </View>
-      </View>
+      </LinearGradient>
     </Pressable>
   );
 }
 
-function GrammarStatusBadge({
+function StatusPill({
   status,
   premiumLocked,
-  premiumActive,
   prerequisiteLocked,
   completed,
   isCurrent,
 }: {
   status: string;
   premiumLocked: boolean;
-  premiumActive: boolean;
   prerequisiteLocked: boolean;
   completed: boolean;
   isCurrent: boolean;
 }) {
-  if (premiumLocked) {
-    return (
-      <View style={styles.premiumBadgeLocked}>
-        <LockKeyhole size={10} strokeWidth={2} color={PREMIUM_GOLD} />
-        <AppText variant="caption" style={styles.premiumBadgeTextLocked}>
-          À DÉBLOQUER
-        </AppText>
-      </View>
-    );
-  }
-
-  if (prerequisiteLocked) {
-    return (
-      <View style={styles.blockedBadge}>
-        <LockKeyhole size={10} strokeWidth={2} color={SOFT} />
-        <AppText variant="caption" style={styles.blockedBadgeText}>
-          À VENIR
-        </AppText>
-      </View>
-    );
-  }
-
-  if (completed) {
-    return (
-      <View style={styles.completedBadge}>
-        <Check size={10} strokeWidth={2.5} color={COMPLETED_MINT} />
-        <AppText variant="caption" style={styles.completedBadgeText}>
-          {status}
-        </AppText>
-      </View>
-    );
-  }
-
-  if (premiumActive) {
-    return (
-      <View style={styles.accessBadgeActive}>
-        <Check size={10} strokeWidth={2.5} color={ACTIVE_PEARL} />
-        <AppText variant="caption" style={styles.accessBadgeActiveText}>
-          {isCurrent ? "EN COURS" : "ACCÈS ACTIF"}
-        </AppText>
-      </View>
-    );
-  }
-
   return (
-    <View style={[styles.includedBadge, isCurrent && styles.includedBadgeCurrent]}>
-      <View style={[styles.statusDot, isCurrent && styles.currentDotIncluded]} />
-      <AppText variant="caption" style={styles.includedBadgeText}>
-        {isCurrent ? "EN COURS" : "INCLUSE"}
+    <View style={styles.statusPill}>
+      {premiumLocked || prerequisiteLocked ? (
+        <LockKeyhole size={10} color={premiumLocked ? PREMIUM_GOLD : SOFT} />
+      ) : completed ? (
+        <Check size={10} color={COMPLETED_MINT} />
+      ) : (
+        <View style={styles.statusDot} />
+      )}
+      <AppText variant="caption" style={styles.statusText}>
+        {premiumLocked ? "À DÉBLOQUER" : prerequisiteLocked ? "À VENIR" : isCurrent ? "EN COURS" : status}
       </AppText>
     </View>
   );
@@ -980,9 +581,7 @@ function AnimatedFragment({
         useNativeDriver: true,
       }),
     ]);
-
     animation.start();
-
     return () => {
       fadeAnim.stopAnimation();
       slideAnim.stopAnimation();
@@ -990,98 +589,22 @@ function AnimatedFragment({
   }, [fadeAnim, index, slideAnim]);
 
   return (
-    <Animated.View
-      style={[
-        style,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        },
-      ]}
-    >
+    <Animated.View style={[style, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
       {children}
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: BG_DEEP,
-  },
+  safe: { flex: 1, backgroundColor: BG_DEEP },
+  background: { flex: 1, overflow: "hidden", backgroundColor: BG_DEEP },
+  scrollContent: { paddingTop: 8, paddingBottom: 120 },
+  contentFrame: { width: "100%", alignSelf: "center" },
+  navHeader: { minHeight: 60, flexDirection: "row", alignItems: "center", marginBottom: 12 },
+  pressablePressed: { opacity: 0.86, transform: [{ scale: 0.992 }] },
 
-  background: {
-    flex: 1,
-    overflow: "hidden",
-    backgroundColor: BG_DEEP,
-  },
-
-  scrollContent: {
-    paddingTop: 8,
-    paddingBottom: 120,
-  },
-
-  contentFrame: {
-    width: "100%",
-    alignSelf: "center",
-  },
-
-  pressablePressed: {
-    opacity: 0.84,
-    transform: [{ scale: 0.992 }],
-  },
-
-  glassTopHairline: {
-    position: "absolute",
-    top: 0,
-    left: 18,
-    right: 18,
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.16)",
-    opacity: 0.7,
-  },
-
-  ambientGlowTop: {
-    position: "absolute",
-    top: 120,
-    right: -110,
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: "rgba(119,114,170,0.035)",
-    boxShadow: "0px 0px 70px rgba(119,114,170,0.07)",
-  },
-
-  ambientGlowBottom: {
-    position: "absolute",
-    top: 680,
-    left: -140,
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    backgroundColor: "rgba(184,180,226,0.022)",
-    boxShadow: "0px 0px 80px rgba(184,180,226,0.045)",
-  },
-
-  navHeader: {
-    minHeight: 60,
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-
-  hero: {
-    paddingHorizontal: 2,
-    marginTop: 12,
-    marginBottom: 28,
-  },
-
-  heroEyebrowRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-
+  hero: { paddingHorizontal: 2, marginTop: 12, marginBottom: 28 },
+  heroEyebrowRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
   heroDot: {
     width: 5,
     height: 5,
@@ -1090,12 +613,7 @@ const styles = StyleSheet.create({
     backgroundColor: GRAMMAR_ACCENT,
     boxShadow: "0px 0px 8px rgba(119,114,170,0.78)",
   },
-
-  heroEyebrow: {
-    color: "rgba(221,218,240,0.64)",
-    letterSpacing: 1.3,
-  },
-
+  heroEyebrow: { color: "rgba(221,218,240,0.64)", letterSpacing: 1.3 },
   heroKorean: {
     color: "rgba(255,248,252,0.98)",
     fontSize: 40,
@@ -1104,23 +622,9 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 14,
   },
-
-  heroKoreanCompact: {
-    fontSize: 36,
-    lineHeight: 44,
-  },
-
-  heroTitle: {
-    color: TXT,
-    marginTop: -2,
-  },
-
-  heroSubtitle: {
-    maxWidth: 560,
-    marginTop: 8,
-    color: MUTED,
-  },
-
+  heroKoreanCompact: { fontSize: 36, lineHeight: 44 },
+  heroTitle: { color: TXT, marginTop: -2 },
+  heroSubtitle: { maxWidth: 560, marginTop: 8, color: MUTED },
   heroMetaRow: {
     marginTop: 20,
     flexDirection: "row",
@@ -1128,7 +632,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 14,
   },
-
   levelPill: {
     minHeight: 32,
     paddingHorizontal: 12,
@@ -1136,76 +639,31 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(119,114,170,0.28)",
-    backgroundColor: "rgba(18,16,29,0.70)",
+    borderColor: "rgba(119,114,170,0.30)",
+    backgroundColor: "rgba(14,12,25,0.62)",
   },
-
-  levelText: {
-    marginLeft: 7,
-    color: "rgba(184,180,226,0.90)",
-  },
-
-  heroStageCount: {
-    color: SOFT,
-    textAlign: "right",
-  },
+  levelText: { marginLeft: 7, color: "rgba(184,180,226,0.90)" },
+  heroStageCount: { color: SOFT, textAlign: "right" },
 
   featuredWrap: {
     marginBottom: 8,
     borderRadius: 30,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: GRAMMAR.featuredBorder,
-    backgroundColor: "rgba(2,3,6,0.20)",
-    boxShadow: `0px 12px 30px ${GRAMMAR.featuredShadow}`,
+    borderColor: "rgba(119,114,170,0.52)",
+    backgroundColor: "transparent",
+    boxShadow: "0px 12px 30px rgba(119,114,170,0.10)",
   },
-
-  featuredWrapPremiumLocked: {
-    borderColor: "rgba(253,224,71,0.25)",
-    backgroundColor: "rgba(10,9,5,0.18)",
-    boxShadow: "0px 12px 32px rgba(253,224,71,0.06)",
-  },
-
-  featuredWrapBlocked: {
-    borderColor: "rgba(255,255,255,0.10)",
-    opacity: 0.72,
-  },
-
-  featuredCard: {
-    minHeight: 220,
-    padding: 20,
-    position: "relative",
-    overflow: "hidden",
-  },
-
-  featuredImage: {
-    borderRadius: 29,
-  },
-
-  featuredGlow: {
+  featuredCard: { minHeight: 220, padding: 20, overflow: "hidden" },
+  glassGlow: {
     position: "absolute",
-    top: -86,
-    right: -66,
-    width: 190,
-    height: 190,
-    borderRadius: 95,
-    opacity: 0.065,
-    backgroundColor: GRAMMAR_ACCENT,
-    boxShadow: `0px 0px 58px ${GRAMMAR.glow}`,
+    top: -90,
+    right: -70,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: "rgba(119,114,170,0.10)",
   },
-
-  featuredGlowPremiumLocked: {
-    backgroundColor: PREMIUM_GOLD,
-    opacity: 0.045,
-    boxShadow: "0px 0px 58px rgba(253,224,71,0.12)",
-  },
-
-  featuredGlowBlocked: {
-    backgroundColor: "rgba(255,255,255,0.16)",
-    opacity: 0.025,
-    boxShadow: "none",
-  },
-
   featuredTopRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1213,14 +671,7 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 18,
   },
-
-  featuredTopActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-
-  featuredKicker: {
+  kicker: {
     minHeight: 30,
     flexDirection: "row",
     alignItems: "center",
@@ -1228,30 +679,12 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.10)",
-    backgroundColor: "rgba(3,6,10,0.62)",
+    backgroundColor: "rgba(2,3,6,0.42)",
   },
-
-  featuredKickerDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    marginRight: 7,
-    backgroundColor: GRAMMAR_ACCENT,
-  },
-
-  premiumDotLocked: {
-    backgroundColor: PREMIUM_GOLD,
-  },
-
-  blockedDot: {
-    backgroundColor: SOFT,
-  },
-
-  featuredKickerText: {
-    color: "rgba(241,245,249,0.62)",
-  },
-
-  featuredPremiumBadgeLocked: {
+  kickerDot: { width: 5, height: 5, borderRadius: 3, marginRight: 7, backgroundColor: GRAMMAR_ACCENT },
+  kickerText: { color: "rgba(241,245,249,0.64)" },
+  actions: { flexDirection: "row", alignItems: "center", gap: 8 },
+  accessPill: {
     minHeight: 30,
     flexDirection: "row",
     alignItems: "center",
@@ -1259,121 +692,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(253,224,71,0.28)",
-    backgroundColor: "rgba(253,224,71,0.07)",
+    borderColor: "rgba(184,180,226,0.22)",
+    backgroundColor: "rgba(12,10,22,0.48)",
   },
-
-  featuredBlockedBadge: {
-    borderColor: "rgba(255,255,255,0.12)",
-    backgroundColor: "rgba(255,255,255,0.035)",
-  },
-
-  featuredPremiumTextLocked: {
-    color: PREMIUM_LIGHT,
-    letterSpacing: 0.5,
-  },
-
-  featuredBlockedText: {
-    color: SOFT,
-    letterSpacing: 0.45,
-  },
-
-  featuredAccessBadgeActive: {
-    minHeight: 30,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 9,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(232,227,216,0.19)",
-    backgroundColor: "rgba(232,227,216,0.045)",
-  },
-
-  featuredAccessTextActive: {
-    color: "rgba(232,227,216,0.86)",
-    letterSpacing: 0.4,
-  },
-
-  featuredArrow: {
+  accessText: { color: "rgba(224,221,244,0.82)" },
+  arrowButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "rgba(119,114,170,0.32)",
-    backgroundColor: "rgba(18,16,29,0.66)",
+    borderColor: "rgba(119,114,170,0.34)",
+    backgroundColor: "rgba(12,10,22,0.48)",
   },
-
-  featuredArrowPremiumLocked: {
-    borderColor: "rgba(253,224,71,0.22)",
-    backgroundColor: "rgba(253,224,71,0.04)",
-  },
-
-  featuredArrowBlocked: {
-    borderColor: "rgba(255,255,255,0.10)",
-    backgroundColor: "rgba(255,255,255,0.025)",
-  },
-
-  featuredMicroLabel: {
-    color: "rgba(184,180,226,0.62)",
-    letterSpacing: 0.9,
-    marginBottom: 6,
-  },
-
-  featuredContent: {
-    maxWidth: 600,
-  },
-
-  featuredTitle: {
-    color: TXT,
-    marginBottom: 6,
-    textShadowColor: "rgba(0,0,0,0.60)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 5,
-  },
-
-  featuredSubtitle: {
-    color: MUTED,
-    maxWidth: 560,
-    textShadowColor: "rgba(0,0,0,0.70)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-  },
-
-  featuredFooter: {
-    marginTop: 27,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-
-  featuredFooterLabel: {
-    color: "rgba(184,180,226,0.82)",
-    letterSpacing: 0.45,
-  },
-
-  featuredFooterLabelPremiumLocked: {
-    color: PREMIUM_LIGHT,
-  },
-
-  featuredFooterLabelBlocked: {
-    color: SOFT,
-  },
-
-  featuredFooterLine: {
-    flex: 1,
-    height: 1,
-    overflow: "hidden",
-    opacity: 0.82,
-  },
-
-  featuredProgressText: {
-    minWidth: 34,
-    color: GRAMMAR_PALE,
-    textAlign: "right",
-  },
+  stageMeta: { color: "rgba(184,180,226,0.70)", letterSpacing: 0.9, marginBottom: 7 },
+  featuredTitle: { color: TXT, marginBottom: 6 },
+  featuredSubtitle: { color: MUTED, maxWidth: 560 },
+  featuredFooter: { marginTop: 27, flexDirection: "row", alignItems: "center", gap: 12 },
+  ctaText: { color: "rgba(184,180,226,0.88)", letterSpacing: 0.45 },
+  footerLine: { flex: 1, height: 1, backgroundColor: "rgba(184,180,226,0.28)" },
+  progressText: { minWidth: 34, color: "rgba(217,214,243,0.90)", textAlign: "right" },
 
   sectionHeader: {
     marginTop: 32,
@@ -1382,376 +721,63 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     gap: 14,
   },
-
-  sectionCopy: {
-    flexShrink: 0,
-    maxWidth: "72%",
-  },
-
-  sectionTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-  },
-
-  sectionTitle: {
-    color: "rgba(241,245,249,0.66)",
-    letterSpacing: 1.05,
-  },
-
-  sectionSubtitle: {
-    marginTop: 3,
-    color: "rgba(241,245,249,0.46)",
-  },
-
-  sectionLineWrap: {
+  sectionCopy: { flexShrink: 0, maxWidth: "72%" },
+  sectionTitle: { color: "rgba(241,245,249,0.66)", letterSpacing: 1.05 },
+  sectionSubtitle: { marginTop: 3, color: "rgba(241,245,249,0.46)" },
+  sectionLine: {
     flex: 1,
-    height: 10,
-    position: "relative",
-    justifyContent: "center",
-    marginBottom: 2,
-  },
-
-  sectionLineBase: {
     height: 1,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    marginBottom: 5,
+    backgroundColor: "rgba(184,180,226,0.46)",
   },
 
-  sectionLineGlow: {
-    position: "absolute",
-    right: 0,
-    width: 96,
-    height: 1,
-    opacity: 0.82,
-  },
-
-  grid: {
-    gap: 15,
-  },
-
-  gridWide: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "stretch",
-  },
-
-  collectionWrap: {
-    minHeight: 184,
+  grid: { gap: 15 },
+  gridWide: { flexDirection: "row", flexWrap: "wrap", alignItems: "stretch" },
+  stageWrap: {
+    minHeight: 174,
     borderRadius: 25,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(119,114,170,0.24)",
-    backgroundColor: "rgba(2,3,6,0.22)",
-    boxShadow: "0px 10px 24px rgba(0,0,0,0.26)",
+    borderColor: "rgba(119,114,170,0.26)",
+    backgroundColor: "transparent",
+    boxShadow: "0px 10px 24px rgba(0,0,0,0.24)",
   },
-
-  collectionWrapPremiumLocked: {
-    borderColor: "rgba(253,224,71,0.18)",
-    backgroundColor: "rgba(10,9,5,0.18)",
-    boxShadow: "0px 10px 26px rgba(253,224,71,0.035)",
-  },
-
-  collectionWrapPremiumActive: {
-    borderColor: "rgba(216,200,154,0.105)",
-    backgroundColor: "rgba(5,6,7,0.18)",
-    boxShadow: "0px 10px 24px rgba(0,0,0,0.28)",
-  },
-
-  collectionWrapBlocked: {
-    borderColor: "rgba(255,255,255,0.08)",
-    opacity: 0.58,
-  },
-
-  collectionWrapCurrent: {
-    borderColor: "rgba(184,180,226,0.38)",
-    boxShadow: "0px 10px 28px rgba(119,114,170,0.08)",
-  },
-
-  collectionWrapCompleted: {
-    borderColor: "rgba(167,215,196,0.18)",
-  },
-
-  collectionCard: {
-    flex: 1,
-    minHeight: 184,
-    padding: 16,
-    position: "relative",
-    overflow: "hidden",
-    justifyContent: "flex-start",
-  },
-
-  collectionImage: {
-    borderRadius: 24,
-  },
-
-  cardTopHairline: {
-    position: "absolute",
-    top: 0,
-    left: 18,
-    right: 18,
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.14)",
-    opacity: 0.62,
-  },
-
-  cardTopHairlinePremiumLocked: {
-    backgroundColor: "rgba(253,224,71,0.28)",
-    opacity: 0.72,
-  },
-
-  cardTopHairlinePremiumActive: {
-    backgroundColor: "rgba(216,200,154,0.14)",
-    opacity: 0.58,
-  },
-
-  cardTopHairlineCompleted: {
-    backgroundColor: "rgba(167,215,196,0.28)",
-  },
-
-  premiumRail: {
-    position: "absolute",
-    top: 18,
-    bottom: 18,
-    left: 0,
-    width: 2,
-    borderRadius: 2,
-  },
-
-  premiumRailLocked: {
-    backgroundColor: PREMIUM_GOLD,
-    opacity: 0.82,
-    boxShadow: "0px 0px 10px rgba(253,224,71,0.22)",
-  },
-
-  premiumRailActive: {
-    backgroundColor: PREMIUM_SOFT,
-    opacity: 0.48,
-    boxShadow: "0px 0px 6px rgba(216,200,154,0.08)",
-  },
-
-  collectionAmbientGlow: {
+  stageCard: { flex: 1, minHeight: 174, padding: 16, overflow: "hidden" },
+  glassGlowSmall: {
     position: "absolute",
     top: -60,
     right: -50,
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: GRAMMAR_ACCENT,
-    opacity: 0.04,
+    backgroundColor: "rgba(119,114,170,0.08)",
   },
-
-  collectionAmbientGlowPremiumLocked: {
-    backgroundColor: PREMIUM_GOLD,
-    opacity: 0.035,
-  },
-
-  collectionAmbientGlowPremiumActive: {
-    backgroundColor: PREMIUM_SOFT,
-    opacity: 0.012,
-  },
-
-  collectionAmbientGlowCompleted: {
-    backgroundColor: COMPLETED_MINT,
-    opacity: 0.025,
-  },
-
-  collectionTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 13,
-  },
-
-  collectionTopMeta: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 9,
-  },
-
-  collectionIdentity: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  collectionIndex: {
-    color: "rgba(214,211,238,0.66)",
-    letterSpacing: 0.95,
-  },
-
-  collectionIndexPremiumLocked: {
-    color: "rgba(255,241,168,0.60)",
-  },
-
-  collectionIndexPremiumActive: {
-    color: "rgba(216,200,154,0.56)",
-  },
-
-  collectionIndexCompleted: {
-    color: "rgba(167,215,196,0.72)",
-  },
-
-  premiumMicroLabel: {
-    marginTop: 3,
-    color: "rgba(216,200,154,0.52)",
-    fontSize: 10,
-    letterSpacing: 0.8,
-  },
-
-  premiumMicroLabelLocked: {
-    color: "rgba(253,224,71,0.72)",
-  },
-
-  includedBadge: {
-    minHeight: 27,
-    flexDirection: "row",
-    alignItems: "center",
-    flexShrink: 0,
-    paddingHorizontal: 9,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(119,114,170,0.30)",
-    backgroundColor: "rgba(18,16,29,0.76)",
-  },
-
-  includedBadgeCurrent: {
-    borderColor: "rgba(184,180,226,0.36)",
-    backgroundColor: "rgba(25,22,40,0.78)",
-  },
-
-  statusDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    marginRight: 6,
-    backgroundColor: GRAMMAR_ACCENT,
-  },
-
-  currentDotIncluded: {
-    backgroundColor: GRAMMAR_LIGHT,
-  },
-
-  includedBadgeText: {
-    color: "rgba(184,180,226,0.88)",
-  },
-
-  premiumBadgeLocked: {
+  currentBorder: { borderColor: "rgba(184,180,226,0.50)" },
+  completedBorder: { borderColor: "rgba(167,215,196,0.20)" },
+  premiumBorder: { borderColor: "rgba(253,224,71,0.24)" },
+  blocked: { opacity: 0.58 },
+  stageTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
+  stageIdentity: { flex: 1, minWidth: 0 },
+  stageIndex: { color: "rgba(214,211,238,0.68)", letterSpacing: 0.95 },
+  premiumMicro: { marginTop: 3, color: "rgba(253,224,71,0.72)", fontSize: 10, letterSpacing: 0.8 },
+  statusPill: {
     minHeight: 27,
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    flexShrink: 0,
     paddingHorizontal: 9,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(253,224,71,0.26)",
-    backgroundColor: "rgba(25,21,7,0.74)",
+    borderColor: "rgba(184,180,226,0.24)",
+    backgroundColor: "rgba(12,10,22,0.50)",
   },
-
-  premiumBadgeTextLocked: {
-    color: PREMIUM_LIGHT,
-    letterSpacing: 0.35,
-  },
-
-  blockedBadge: {
-    minHeight: 27,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    flexShrink: 0,
-    paddingHorizontal: 9,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    backgroundColor: "rgba(255,255,255,0.03)",
-  },
-
-  blockedBadgeText: {
-    color: SOFT,
-    letterSpacing: 0.35,
-  },
-
-  accessBadgeActive: {
-    minHeight: 27,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    flexShrink: 0,
-    paddingHorizontal: 9,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(232,227,216,0.18)",
-    backgroundColor: "rgba(16,16,15,0.74)",
-  },
-
-  accessBadgeActiveText: {
-    color: "rgba(232,227,216,0.86)",
-    fontSize: 10,
-    letterSpacing: 0.25,
-  },
-
-  completedBadge: {
-    minHeight: 27,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    flexShrink: 0,
-    paddingHorizontal: 9,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(167,215,196,0.20)",
-    backgroundColor: "rgba(167,215,196,0.045)",
-  },
-
-  completedBadgeText: {
-    color: "rgba(183,226,208,0.88)",
-    fontSize: 10,
-    letterSpacing: 0.25,
-  },
-
-  collectionCopy: {
-    marginTop: 18,
-    paddingRight: 8,
-  },
-
-  collectionTitle: {
-    color: TXT,
-    textShadowColor: "rgba(0,0,0,0.65)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 5,
-  },
-
-  collectionSubtitle: {
-    marginTop: 5,
-    color: "rgba(241,245,249,0.82)",
-    maxWidth: 560,
-    textShadowColor: "rgba(0,0,0,0.72)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-  },
-
-  conceptForms: {
-    marginTop: 8,
-    color: "rgba(184,180,226,0.64)",
-  },
-
-  collectionFooter: {
-    marginTop: "auto",
-    paddingTop: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-
-  collectionFooterLine: {
-    flex: 1,
-    height: 1,
-    overflow: "hidden",
-    backgroundColor: "rgba(255,255,255,0.10)",
-  },
-
-  collectionArrow: {
+  statusDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: GRAMMAR_LIGHT },
+  statusText: { color: "rgba(217,214,243,0.84)" },
+  stageTitle: { color: TXT, marginTop: 18 },
+  stageSubtitle: { marginTop: 5, color: "rgba(241,245,249,0.80)", maxWidth: 560 },
+  conceptForms: { marginTop: 8, color: "rgba(184,180,226,0.66)" },
+  stageFooter: { marginTop: "auto", paddingTop: 16, flexDirection: "row", alignItems: "center", gap: 10 },
+  smallArrow: {
     width: 31,
     height: 31,
     borderRadius: 16,
@@ -1759,26 +785,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
     borderColor: "rgba(119,114,170,0.30)",
-    backgroundColor: "rgba(18,16,29,0.78)",
-  },
-
-  collectionArrowPremiumLocked: {
-    borderColor: "rgba(253,224,71,0.22)",
-    backgroundColor: "rgba(25,21,7,0.76)",
-  },
-
-  collectionArrowPremiumActive: {
-    borderColor: "rgba(216,200,154,0.16)",
-    backgroundColor: "rgba(16,16,15,0.76)",
-  },
-
-  collectionArrowBlocked: {
-    borderColor: "rgba(255,255,255,0.10)",
-    backgroundColor: "rgba(255,255,255,0.025)",
-  },
-
-  collectionArrowCompleted: {
-    borderColor: "rgba(167,215,196,0.20)",
-    backgroundColor: "rgba(167,215,196,0.035)",
+    backgroundColor: "rgba(12,10,22,0.48)",
   },
 });
