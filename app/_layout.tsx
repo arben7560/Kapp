@@ -209,10 +209,7 @@ export default function RootLayout() {
                           name="index"
                           options={{ animation: "none" }}
                         />
-                        <Stack.Screen
-                          name="onboarding"
-                          options={{ animation: "none" }}
-                        />
+                        <Stack.Screen name="onboarding" />
                         <Stack.Screen name="premium" />
                         <Stack.Screen name="streak" />
                         <Stack.Screen name="(tabs)" />
