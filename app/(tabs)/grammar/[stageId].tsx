@@ -73,6 +73,35 @@ function scoreLabel(score: number) {
   return `${score} réponse${plural} correcte${plural}`;
 }
 
+function getTeacherFeedbackLead(
+  question: GrammarPracticeQuestion,
+  correct: boolean,
+) {
+  if (correct) {
+    switch (question.skill) {
+      case "particles": return "Oui, bonne particule ici.";
+      case "conjugation": return "Oui, la conjugaison est juste.";
+      case "modality": return "Oui, tu as choisi la bonne nuance.";
+      case "connectors": return "Oui, le lien entre les deux idées est bon.";
+      case "syntax": return "Oui, l’ordre de la phrase est bon.";
+      case "register": return "Oui, le registre convient bien ici.";
+      case "forms": return "Oui, c’est la bonne forme.";
+      default: return "Oui, c’est ça.";
+    }
+  }
+
+  switch (question.skill) {
+    case "particles": return "Ici, c’est la particule qu’il faut revoir.";
+    case "conjugation": return "Ici, c’est la conjugaison qu’il faut ajuster.";
+    case "modality": return "La forme est proche, mais la nuance n’est pas la bonne ici.";
+    case "connectors": return "Ici, regarde surtout le lien entre les deux idées.";
+    case "syntax": return "Ici, regarde surtout l’ordre de la phrase.";
+    case "register": return "La phrase est proche, mais le registre ne convient pas ici.";
+    case "forms": return "Ici, il faut une autre forme.";
+    default: return "Pas tout à fait. Regarde le point corrigé juste dessous.";
+  }
+}
+
 function getRemainingTokens(options: readonly string[], draft: readonly string[]) {
   const used = new Set<number>();
   for (const token of draft) {
@@ -736,14 +765,17 @@ function FeedbackCard({
   onContinue: () => void;
   isLast: boolean;
 }) {
+  const teacherLead = getTeacherFeedbackLead(question, response.correct);
+
   return (
     <BlurView intensity={58} tint="dark" style={[styles.feedbackCard, response.correct ? styles.feedbackCorrect : styles.feedbackWrong]}>
       <AppText variant="sectionLabel" style={response.correct ? styles.successText : styles.errorText}>
-        {response.correct ? "CORRECT" : "À CORRIGER"}
+        {response.correct ? "BIEN VU" : "À REVOIR"}
       </AppText>
+      <AppText variant="bodyStrong">{teacherLead}</AppText>
       {!response.correct ? (
         <View style={styles.correctAnswerBox}>
-          <AppText variant="caption" tone="soft">RÉPONSE ATTENDUE</AppText>
+          <AppText variant="caption" tone="soft">ICI, ON ATTENDAIT</AppText>
           <AppText variant="bodyStrong">{answerLabel(question.answer)}</AppText>
         </View>
       ) : null}
