@@ -376,10 +376,6 @@ export default function OnboardingScreen() {
           <View
             style={[styles.modePage, { paddingHorizontal: horizontalPadding }]}
           >
-            <View style={styles.modeProgressWrap}>
-              <ProgressDots active={1} />
-            </View>
-
             <ScrollView
               style={styles.modeScroll}
               contentContainerStyle={styles.modeContent}
@@ -534,10 +530,6 @@ export default function OnboardingScreen() {
         <View
           style={[styles.scenePage, { paddingHorizontal: horizontalPadding }]}
         >
-          <View style={styles.sceneTopNav}>
-            <ProgressDots active={0} />
-          </View>
-
           <ScrollView
             style={styles.sceneScroll}
             contentContainerStyle={[
