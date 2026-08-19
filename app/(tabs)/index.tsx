@@ -46,6 +46,7 @@ import {
 } from "../../data/listen/activeExercises";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useAuth } from "../../lib/AuthProvider";
+import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import {
   createAccountProtectionPromptSessionGuard,
   getMeaningfulProgressCount,
@@ -55,7 +56,6 @@ import {
   dismissAccountProtectionPrompt,
   readAccountProtectionPromptState,
 } from "../../lib/accountProtectionPromptStorage";
-import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import type { DailyStreakState } from "../../lib/dailyStreak";
 import {
   getGrammarJourneyCompletion,
@@ -143,7 +143,7 @@ const SEQUENCES: any[] = [
     hubAccent: HubModuleAccents.grammar,
     route: "/grammar",
     trackKey: "grammar",
-    place: "SÉOUL • A0 → A1",
+    place: "NIVEAU • A0 → A1",
     narrative: "Construis des phrases naturelles, étape par étape.",
     type: "pedagogical",
   },
@@ -174,7 +174,7 @@ const SEQUENCES: any[] = [
     hubAccent: HubModuleAccents.conversation,
     route: "/speak",
     trackKey: "dialogs",
-    place: "SÉOUL • CONVERSATION",
+    place: "IMMERSION",
     narrative: "Parle dans des situations du quotidien.",
     type: "immersion",
   },

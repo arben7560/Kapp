@@ -43,7 +43,7 @@ import {
 } from "../../../lib/grammar";
 import { usePaywall } from "../../../lib/paywall/PaywallProvider";
 
-const BACKGROUND_SOURCE = require("../../../assets/images/seoulhub.jpg");
+const BACKGROUND_SOURCE = require("../../../assets/images/grammar.png");
 
 const BG_DEEP = SeoulMidnightGlass.colors.bgDeep;
 const TXT = SeoulMidnightGlass.colors.text;

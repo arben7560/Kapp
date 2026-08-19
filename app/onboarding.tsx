@@ -87,7 +87,7 @@ const SCENES: SceneOption[] = [
     phrase: "지하철은 어디예요?",
     accent: CYAN,
     image: AIRPORT_IMAGE,
-    badge: "PLUS COMPLET",
+    badge: "INTERMEDIAIRE",
     guidance: "Vocabulaire + grammaire guidés",
   },
 ];
@@ -163,7 +163,13 @@ function ProgressDots({ active }: { active: 0 | 1 | 2 }) {
   );
 }
 
-function FeaturedScene({ scene, height }: { scene: SceneOption; height: number }) {
+function FeaturedScene({
+  scene,
+  height,
+}: {
+  scene: SceneOption;
+  height: number;
+}) {
   return (
     <View
       accessible
@@ -177,7 +183,11 @@ function FeaturedScene({ scene, height }: { scene: SceneOption; height: number }
         },
       ]}
     >
-      <Image source={scene.image} style={StyleSheet.absoluteFill} contentFit="cover" />
+      <Image
+        source={scene.image}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+      />
 
       <LinearGradient
         colors={[
@@ -204,8 +214,12 @@ function FeaturedScene({ scene, height }: { scene: SceneOption; height: number }
       />
 
       <View style={styles.featuredTopRow}>
-        <View style={[styles.recommendedPill, { borderColor: `${scene.accent}88` }]}>
-          <View style={[styles.recommendedDot, { backgroundColor: scene.accent }]} />
+        <View
+          style={[styles.recommendedPill, { borderColor: `${scene.accent}88` }]}
+        >
+          <View
+            style={[styles.recommendedDot, { backgroundColor: scene.accent }]}
+          />
           <AppText variant="label" style={styles.recommendedText}>
             {scene.badge}
           </AppText>
@@ -233,7 +247,9 @@ function FeaturedScene({ scene, height }: { scene: SceneOption; height: number }
         </AppText>
 
         <View style={styles.beginnerRow}>
-          <View style={[styles.beginnerIcon, { borderColor: `${scene.accent}B8` }]}>
+          <View
+            style={[styles.beginnerIcon, { borderColor: `${scene.accent}B8` }]}
+          >
             <Check size={12} color={scene.accent} strokeWidth={2.3} />
           </View>
           <AppText variant="caption" style={styles.beginnerText}>
@@ -267,7 +283,11 @@ function AlternativeScene({
         pressed && styles.pressed,
       ]}
     >
-      <Image source={scene.image} style={StyleSheet.absoluteFill} contentFit="cover" />
+      <Image
+        source={scene.image}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+      />
       <LinearGradient
         colors={["rgba(2,3,7,0.00)", "rgba(2,3,7,0.16)", "rgba(2,3,7,0.88)"]}
         locations={[0, 0.42, 1]}
@@ -331,7 +351,9 @@ export default function OnboardingScreen() {
           : 286;
 
   const alternativeHeight = isTablet ? 142 : isShort ? 102 : 118;
-  const alternativeWidth = isTablet ? 244 : Math.min(190, Math.max(154, width * 0.43));
+  const alternativeWidth = isTablet
+    ? 244
+    : Math.min(190, Math.max(154, width * 0.43));
   const horizontalPadding = isTablet ? 30 : width <= 380 ? 18 : 22;
 
   const selectScene = async (scene: SceneKey) => {
@@ -364,11 +386,17 @@ export default function OnboardingScreen() {
   if (step === "mode") {
     return (
       <View style={styles.screen}>
-        <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+        <StatusBar
+          barStyle="light-content"
+          translucent
+          backgroundColor="transparent"
+        />
         <SceneBackground dimmed />
 
         <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-          <View style={[styles.modePage, { paddingHorizontal: horizontalPadding }]}>
+          <View
+            style={[styles.modePage, { paddingHorizontal: horizontalPadding }]}
+          >
             <View style={styles.modeProgressWrap}>
               <ProgressDots active={1} />
             </View>
@@ -399,7 +427,10 @@ export default function OnboardingScreen() {
                   style={StyleSheet.absoluteFill}
                 />
                 <View style={styles.modeHeroCopy}>
-                  <AppText variant="sectionLabel" style={{ color: selectedSceneData.accent }}>
+                  <AppText
+                    variant="sectionLabel"
+                    style={{ color: selectedSceneData.accent }}
+                  >
                     {selectedSceneData.eyebrow}
                   </AppText>
                   <AppText variant="cardTitle" style={styles.modeHeroTitle}>
@@ -425,7 +456,10 @@ export default function OnboardingScreen() {
                     <AppText variant="cardTitle" style={styles.modeChoiceTitle}>
                       Entre dans la scène
                     </AppText>
-                    <AppText variant="bodySecondary" style={styles.modeChoiceText}>
+                    <AppText
+                      variant="bodySecondary"
+                      style={styles.modeChoiceText}
+                    >
                       Écoute et réponds comme si tu étais sur place.
                     </AppText>
                   </View>
@@ -453,7 +487,10 @@ export default function OnboardingScreen() {
                     <AppText variant="cardTitle" style={styles.modeChoiceTitle}>
                       Expressions utiles
                     </AppText>
-                    <AppText variant="bodySecondary" style={styles.modeChoiceText}>
+                    <AppText
+                      variant="bodySecondary"
+                      style={styles.modeChoiceText}
+                    >
                       Revois d’abord les mots et expressions de la situation.
                     </AppText>
                   </View>
@@ -469,7 +506,10 @@ export default function OnboardingScreen() {
               <Pressable
                 accessibilityRole="button"
                 onPress={finish}
-                style={({ pressed }) => [styles.modePrimary, pressed && styles.pressed]}
+                style={({ pressed }) => [
+                  styles.modePrimary,
+                  pressed && styles.pressed,
+                ]}
               >
                 <LinearGradient
                   colors={["#E65D9D", "#8C426C", "#3F263A"]}
@@ -504,11 +544,17 @@ export default function OnboardingScreen() {
 
   return (
     <View style={styles.screen}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <StatusBar
+        barStyle="light-content"
+        translucent
+        backgroundColor="transparent"
+      />
       <SceneBackground />
 
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-        <View style={[styles.scenePage, { paddingHorizontal: horizontalPadding }]}>
+        <View
+          style={[styles.scenePage, { paddingHorizontal: horizontalPadding }]}
+        >
           <View style={styles.sceneTopNav}>
             <ProgressDots active={0} />
           </View>
@@ -572,11 +618,16 @@ export default function OnboardingScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={`Commencer par ${selectedSceneData.title}`}
                 onPress={openMode}
-                style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
+                style={({ pressed }) => [
+                  styles.primaryButton,
+                  pressed && styles.pressed,
+                ]}
               >
                 <LinearGradient
                   colors={[
-                    selectedScene === "cafe" ? "#E95B9C" : selectedSceneData.accent,
+                    selectedScene === "cafe"
+                      ? "#E95B9C"
+                      : selectedSceneData.accent,
                     selectedScene === "cafe"
                       ? "#9A476F"
                       : `${selectedSceneData.accent}B8`,
@@ -598,7 +649,10 @@ export default function OnboardingScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Explorer le Hub"
                 onPress={openHub}
-                style={({ pressed }) => [styles.hubButton, pressed && styles.pressed]}
+                style={({ pressed }) => [
+                  styles.hubButton,
+                  pressed && styles.pressed,
+                ]}
               >
                 <View style={styles.hubIcon}>
                   <Compass size={16} color={WHITE} strokeWidth={2.1} />
