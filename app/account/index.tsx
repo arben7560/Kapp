@@ -389,7 +389,7 @@ export default function AccountScreen() {
   const syncPresentation = React.useMemo(() => {
     switch (sync.status) {
       case "synced":
-        return { label: "Synchronisé", color: COLORS.green, icon: "checkmark-circle" as const };
+        return { label: "Progression synchronisée", color: COLORS.green, icon: "checkmark-circle" as const };
       case "syncing":
         return { label: "Synchronisation", color: COLORS.cyan, icon: "sync" as const };
       case "pending":
@@ -534,14 +534,13 @@ export default function AccountScreen() {
                     label={syncPresentation.label}
                   />
                   <AppText variant="featureTitle" style={styles.cardTitle}>
-                    {sync.status === "synced"
-                      ? "✓ Progression sauvegardée"
-                      : "Compte protégé"}
+                    Compte protégé
                   </AppText>
-                  <AppText variant="body" tone="muted" style={styles.cardBody}>
-                    {sync.errorMessage ??
-                      "Votre progression locale est reliée à votre compte K-App."}
-                  </AppText>
+                  {sync.errorMessage ? (
+                    <AppText variant="body" tone="muted" style={styles.cardBody}>
+                      {sync.errorMessage}
+                    </AppText>
+                  ) : null}
                   <View style={styles.accountLine}>
                     <View style={styles.lineIcon}>
                       <Ionicons name="person-circle-outline" size={17} color={COLORS.cyan} />
