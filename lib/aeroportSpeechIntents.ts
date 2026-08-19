@@ -186,21 +186,21 @@ function getCurrentExpectation(choices: readonly AeroportSpeechChoice[]) {
   const intents = new Set(choices.map(getAeroportSpeechChoiceIntent));
 
   if (intents.has("route")) {
-    return "Ici, tu viens d’arriver à Incheon et tu dois demander comment aller à Seoul Station.";
+    return "Ici, tu viens d’arriver à Incheon : l’objectif est de demander comment rejoindre Seoul Station.";
   }
   if (intents.has("continue")) {
-    return "Ici, l’agent vient d’indiquer le centre de transport : tu peux demander l’étape suivante ou lui faire répéter.";
+    return "Ici, l’agent vient de t’indiquer le centre de transport. Tu peux lui demander ce que tu dois faire ensuite ou lui demander de répéter.";
   }
   if (intents.has("train-choice")) {
-    return "Ici, l’agent a présenté les trains AREX : tu peux demander lequel choisir ou lui faire répéter.";
+    return "Ici, l’agent vient de présenter les trains AREX. Tu peux lui demander lequel il te conseille ou lui demander de répéter.";
   }
   if (intents.has("platform")) {
-    return "Ici, tu as choisi le type de train : tu peux demander où se trouve le quai ou faire répéter la recommandation.";
+    return "Ici, tu as choisi ton train. Tu peux maintenant demander où l’embarquer, ou faire répéter la recommandation.";
   }
   if (intents.has("thanks")) {
-    return "Ici, tu connais le quai : tu peux remercier l’agent et terminer, ou demander une répétition.";
+    return "Ici, tu sais où prendre le train. Tu peux remercier l’agent et terminer l’échange, ou lui demander de répéter.";
   }
-  return "Ici, ta réponse doit correspondre à l’étape actuelle de la conversation.";
+  return "Ici, réponds simplement à ce que l’agent vient de te demander.";
 }
 
 function withProgressiveHelp(
@@ -210,13 +210,13 @@ function withProgressiveHelp(
 ) {
   if (attemptNumber >= 3) {
     return withAvailableChoices(
-      `${feedback} Affiche les réponses et choisis la formulation qui correspond à ton intention.`,
+      `${feedback} Si tu bloques encore, affiche les réponses et choisis celle qui correspond à ce que tu veux dire.`,
       choices,
     );
   }
   if (attemptNumber === 2) {
     return withAvailableChoices(
-      `${feedback} Réécoute la question, puis réponds avec une seule intention.`,
+      `${feedback} Réécoute l’agent et concentre-toi sur une seule intention.`,
       choices,
     );
   }
@@ -262,7 +262,7 @@ const CONTEXTUAL_RULES: readonly ContextualRule[] = [
     confidence: "uncertain",
     understood: "tu veux aller à Seoul Station",
     guidance:
-      "L’intention est bonne, mais l’agent attend une question. Tu peux dire : « 서울역까지 어떻게 가요? »",
+      "On comprend parfaitement la destination, mais ce n’est pas encore une demande de chemin. Transforme-la simplement en question : « 서울역까지 어떻게 가요? »",
     matches: (value) => includesAny(value, [
       "서울역에가고싶",
       "서울역가고싶",
@@ -276,7 +276,7 @@ const CONTEXTUAL_RULES: readonly ContextualRule[] = [
     confidence: "matched",
     understood: "tu cherches l’AREX ou le train de l’aéroport",
     guidance:
-      "Dans cette scène, précise la destination si possible : « 서울역 가는 공항철도는 어디예요? »",
+      "Ta question est naturelle. Comme ton objectif est Seoul Station, tu peux être encore plus précis : « 서울역 가는 공항철도는 어디예요? »",
     matches: (value) =>
       includesAny(value, ["공항철도", "arex"]) && hasQuestionShape(value),
   },
@@ -285,7 +285,8 @@ const CONTEXTUAL_RULES: readonly ContextualRule[] = [
     examples: ["이제 뭐 해요?", "그다음은요?"],
     confidence: "matched",
     understood: "tu demandes ce qu’il faut faire ensuite",
-    guidance: "Une formulation complète est : « 그다음 어떻게 하면 돼요? »",
+    guidance:
+      "« 그다음은요? » est déjà naturel et très courant. Si tu veux une phrase plus complète : « 그다음 어떻게 하면 돼요? »",
     matches: (value) => includesAny(value, [
       "이제뭐해",
       "그다음은요",
@@ -300,7 +301,7 @@ const CONTEXTUAL_RULES: readonly ContextualRule[] = [
     confidence: "uncertain",
     understood: "tu demandes quel train choisir entre le direct et le train avec arrêts",
     guidance:
-      "Pour demander une recommandation clairement : « 어느 열차를 타는 게 좋을까요? »",
+      "L’idée est claire. Pour demander explicitement lequel l’agent te conseille, dis : « 어느 열차를 타는 게 좋을까요? »",
     matches: (value) => includesAny(value, [
       "직통이좋",
       "일반이좋",
@@ -316,7 +317,7 @@ const CONTEXTUAL_RULES: readonly ContextualRule[] = [
     confidence: "uncertain",
     understood: "tu demandes où monter dans le train",
     guidance:
-      "Le lieu d’embarquement s’appelle « 플랫폼 » ou « 승강장 » : « 플랫폼은 어디예요? »",
+      "« 어디서 타요? » est naturel dans ce contexte. Si tu veux nommer explicitement le quai, utilise « 플랫폼 » ou « 승강장 » : « 플랫폼은 어디예요? »",
     matches: (value) =>
       includesAny(value, ["어디서타", "타는곳", "어디로내려가", "열차어디있"]) &&
       !includesAny(value, ["공항철도", "arex"]),
@@ -326,7 +327,8 @@ const CONTEXTUAL_RULES: readonly ContextualRule[] = [
     examples: ["잘 못 들었어요.", "방금 뭐라고 하셨어요?"],
     confidence: "matched",
     understood: "tu n’as pas bien entendu et demandes une répétition",
-    guidance: "Tu peux dire : « 다시 한번 말씀해 주세요. »",
+    guidance:
+      "C’est naturel. Une formule très polie et facile à réutiliser est : « 다시 한번 말씀해 주세요. »",
     allowNegation: true,
     matches: (value) => includesAny(value, [
       "잘못들었",
@@ -342,7 +344,8 @@ const CONTEXTUAL_RULES: readonly ContextualRule[] = [
     examples: ["덕분에 알겠어요.", "이제 찾을 수 있어요."],
     confidence: "matched",
     understood: "tu as compris les indications et peux maintenant continuer seul",
-    guidance: "Pour terminer poliment, ajoute : « 감사합니다. »",
+    guidance:
+      "Ta réponse est naturelle. Pour terminer simplement et poliment, tu peux ajouter : « 감사합니다. »",
     matches: (value) => includesAny(value, [
       "덕분에알겠",
       "이제찾을수있",
@@ -454,16 +457,16 @@ function getIncompleteFeedback(
   const expectation = getCurrentExpectation(choices);
 
   if (intents.has("route") && includesAny(value, ["서울역", "공항철도"])) {
-    return `J’ai compris que tu parles de Seoul Station ou de l’AREX, mais tu n’as pas formulé la demande de trajet. ${expectation}`;
+    return `Tu as bien donné la destination ou parlé de l’AREX, mais tu n’as pas formulé la demande de trajet. ${expectation}`;
   }
   if (intents.has("continue") && includesAny(value, ["네", "알겠", "다음"])) {
-    return `J’ai compris que tu suis l’explication, mais tu n’as pas demandé clairement l’étape suivante. ${expectation}`;
+    return `Tu montres que tu suis l’explication, mais il manque encore la demande sur l’étape suivante. ${expectation}`;
   }
   if (intents.has("train-choice") && includesAny(value, ["열차", "기차", "직통", "일반"])) {
-    return `J’ai compris que tu parles du train, mais tu n’as pas demandé lequel choisir. ${expectation}`;
+    return `Tu parles bien du train, mais tu n’as pas encore demandé lequel choisir. ${expectation}`;
   }
   if (intents.has("platform") && includesAny(value, ["플랫폼", "승강장", "타는곳"])) {
-    return `J’ai compris que tu parles du quai, mais la question reste incomplète. ${expectation}`;
+    return `Tu as bien identifié le quai ou le lieu d’embarquement, mais la question reste incomplète. ${expectation}`;
   }
   return null;
 }
@@ -513,7 +516,7 @@ export function matchAeroportSpeechIntent(
         "natural",
         exactChoice,
         intent,
-        "Réponse comprise dans le contexte de cette étape.",
+        "Oui, cette réponse convient naturellement à cette étape.",
       );
     }
   }
@@ -530,7 +533,7 @@ export function matchAeroportSpeechIntent(
         "natural",
         choice,
         intent,
-        `J’ai compris ton intention. ${getCurrentExpectation(choices)}`,
+        `Oui, ta phrase exprime clairement ce qu’il faut ici. ${getCurrentExpectation(choices)}`,
       );
     }
   }
@@ -544,7 +547,7 @@ export function matchAeroportSpeechIntent(
   if (negatedSignal) {
     return needsHelp(
       "negation-conflict",
-      `J’ai compris que tu nies ou refuses cette intention. ${getCurrentExpectation(choices)}`,
+      `Ta phrase dit l’inverse de l’intention proposée à ce tour. ${getCurrentExpectation(choices)}`,
       choices,
       attemptNumber,
     );
@@ -558,8 +561,8 @@ export function matchAeroportSpeechIntent(
     return needsHelp(
       "quantity-conflict",
       floorNumbers.length > 1
-        ? `J’ai entendu plusieurs étages différents (${floorNumbers.map((floor) => `${floor}층`).join(" et ")}). Dans cette scène, le centre de transport est au sous-sol 1 : « 지하 1층 ». Garde un seul étage ou demande simplement le quai.`
-        : `J’ai entendu « ${floorNumbers[0]}층 », mais l’agent vient d’indiquer le sous-sol 1. Dans cette scène, dis « 지하 1층 » ou demande simplement où se trouve le quai.`,
+        ? `Tu as cité plusieurs étages (${floorNumbers.map((floor) => `${floor}층`).join(" et ")}). L’agent vient d’indiquer le sous-sol 1, « 지하 1층 ». Garde un seul étage, ou demande simplement où se trouve le quai.`
+        : `Tu as cité « ${floorNumbers[0]}층 », alors que l’agent vient d’indiquer « 지하 1층 », le sous-sol 1. Tu peux reprendre cet étage ou demander simplement où se trouve le quai.`,
       choices,
       attemptNumber,
     );
@@ -572,7 +575,7 @@ export function matchAeroportSpeechIntent(
   if (wrongDestinations.length > 0 && !hasSeoulStation) {
     return needsHelp(
       "wrong-destination",
-      `J’ai compris une autre destination : ${wrongDestinations.join(", ")}. ${getCurrentExpectation(choices)}`,
+      `Tu demandes un trajet vers ${wrongDestinations.join(", ")}, mais cette scène travaille le trajet vers Seoul Station. ${getCurrentExpectation(choices)}`,
       choices,
       attemptNumber,
     );
@@ -584,7 +587,7 @@ export function matchAeroportSpeechIntent(
   ) {
     return needsHelp(
       "ambiguous",
-      `J’ai entendu Seoul Station et une autre destination. Garde une seule destination. ${getCurrentExpectation(choices)}`,
+      `Tu as cité Seoul Station et une autre destination dans la même réponse. Garde seulement celle que tu veux rejoindre. ${getCurrentExpectation(choices)}`,
       choices,
       attemptNumber,
     );
@@ -593,7 +596,7 @@ export function matchAeroportSpeechIntent(
   if (signals.length > 1) {
     return needsHelp(
       "ambiguous",
-      `J’ai compris plusieurs intentions à la fois. ${getCurrentExpectation(choices)}`,
+      `Tu as exprimé plusieurs intentions à la fois. ${getCurrentExpectation(choices)}`,
       choices,
       attemptNumber,
     );
@@ -613,8 +616,8 @@ export function matchAeroportSpeechIntent(
         choice,
         intent,
         isNatural
-          ? `J’ai compris ton intention. ${getCurrentExpectation(choices)}`
-          : `J’ai compris ton intention malgré une formulation différente. ${getCurrentExpectation(choices)}`,
+          ? `Oui, ta réponse est naturelle ici. ${getCurrentExpectation(choices)}`
+          : `Je t’ai compris même si tu n’as pas repris exactement la formulation proposée. ${getCurrentExpectation(choices)}`,
         !isNatural,
       );
     }
@@ -629,7 +632,7 @@ export function matchAeroportSpeechIntent(
   if (availableContextualMatches.length > 1) {
     return needsHelp(
       "ambiguous",
-      `J’ai reconnu plusieurs sens proches. ${getCurrentExpectation(choices)}`,
+      `Ta phrase peut être comprise de plusieurs façons. ${getCurrentExpectation(choices)}`,
       choices,
       attemptNumber,
     );
@@ -637,7 +640,7 @@ export function matchAeroportSpeechIntent(
 
   if (availableContextualMatches.length === 1) {
     const [{ rule, choice }] = availableContextualMatches;
-    const feedback = `J’ai compris que ${rule.understood}. ${getCurrentExpectation(choices)} ${rule.guidance}`;
+    const feedback = `J’ai compris : ${rule.understood}. ${getCurrentExpectation(choices)} ${rule.guidance}`;
     if (rule.confidence === "matched") {
       return matched(
         "contextual-interpretation",
@@ -678,7 +681,7 @@ export function matchAeroportSpeechIntent(
     }[intent];
     return needsHelp(
       "out-of-scope",
-      `J’ai compris que ${understood}. ${getCurrentExpectation(choices)}`,
+      `J’ai compris : ${understood}. Ce n’est simplement pas ce que l’agent attend à ce moment-là. ${getCurrentExpectation(choices)}`,
       choices,
       attemptNumber,
     );
@@ -696,7 +699,7 @@ export function matchAeroportSpeechIntent(
 
   return needsHelp(
     "out-of-scope",
-    `Je n’ai pas reconnu une réponse adaptée. ${getCurrentExpectation(choices)}`,
+    `Je ne retrouve pas encore une intention adaptée à ce tour. ${getCurrentExpectation(choices)}`,
     choices,
     attemptNumber,
   );
