@@ -68,7 +68,7 @@ const LISTEN_AUDIO_BY_ID: Partial<Record<string, number>> = {
   "restaurant-reaction-02": require("../../assets/audio/listen/deo-piryohan-geo-isseuseyo.mp3"),
   "shop-reaction-03": require("../../assets/audio/listen/mwo-chajeusineun-geo-isseuseyo.mp3"),
   "hotel-reaction-04": require("../../assets/audio/listen/yeyakhasyeosseoyo.mp3"),
-  "street-reaction-05": require("../../assets/audio/listen/yeogiseo-oreunjjogeuro-gaseyo.mp3"),
+  "street-reaction-05": require("../../assets/audio/listen/yeogiseo-jjuk-gasimyeon-dwaeyo.mp3"),
 };
 
 const KIND_LABEL: Record<ExerciseKind, { mini: string; skill: string }> = {
