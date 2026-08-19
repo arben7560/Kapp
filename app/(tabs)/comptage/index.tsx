@@ -414,7 +414,7 @@ function FeaturedPathCard({
         />
 
         <LinearGradient
-          colors={["rgba(3,5,8,0.28)", "rgba(3,5,8,0.48)", "rgba(2,3,6,0.72)"]}
+          colors={["rgba(3,5,8,0.36)", "rgba(3,5,8,0.56)", "rgba(2,3,6,0.78)"]}
           locations={[0, 0.52, 1]}
           start={{ x: 0.05, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -675,7 +675,7 @@ function CountingPathCard({
         />
 
         <LinearGradient
-          colors={["rgba(2,4,7,0.30)", "rgba(2,4,7,0.50)", "rgba(2,3,6,0.72)"]}
+          colors={["rgba(2,4,7,0.38)", "rgba(2,4,7,0.58)", "rgba(2,3,6,0.78)"]}
           locations={[0, 0.52, 1]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
