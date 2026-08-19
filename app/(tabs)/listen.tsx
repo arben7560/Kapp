@@ -68,7 +68,7 @@ const LISTEN_AUDIO_BY_ID: Partial<Record<string, number>> = {
   "restaurant-reaction-02": require("../../assets/audio/listen/deo-piryohan-geo-isseuseyo.mp3"),
   "shop-reaction-03": require("../../assets/audio/listen/mwo-chajeusineun-geo-isseuseyo.mp3"),
   "hotel-reaction-04": require("../../assets/audio/listen/yeyakhasyeosseoyo.mp3"),
-  "street-reaction-05": require("../../assets/audio/listen/yeogiseo-jjuk-gasimyeon-dwaeyo.mp3"),
+  "street-reaction-05": require("../../assets/audio/listen/yeogiseo-oreunjjogeuro-gaseyo.mp3"),
 };
 
 const KIND_LABEL: Record<ExerciseKind, { mini: string; skill: string }> = {
@@ -78,6 +78,36 @@ const KIND_LABEL: Record<ExerciseKind, { mini: string; skill: string }> = {
   order: { mini: "Ordre", skill: "Syntaxe" },
   reaction: { mini: "Réaction", skill: "Conversation" },
 };
+
+function getListenTeacherFeedback(kind: ExerciseKind, correct: boolean) {
+  if (correct) {
+    switch (kind) {
+      case "dictation":
+        return "Oui, c’est bien la phrase que tu as entendue.";
+      case "situation":
+        return "Oui, tu as bien compris ce qui se passe dans la scène.";
+      case "gap":
+        return "Oui, tu as isolé le bon mot dans l’audio.";
+      case "order":
+        return "Oui, tu as retrouvé l’ordre entendu dans la phrase.";
+      case "reaction":
+        return "Oui, cette réaction suit naturellement ce que tu viens d’entendre.";
+    }
+  }
+
+  switch (kind) {
+    case "dictation":
+      return "Pas tout à fait. Réécoute une fois sans lire les choix, puis compare les sons que tu reconnais.";
+    case "situation":
+      return "La réponse choisie ne répond pas vraiment à ce qui vient d’être dit. Repars de la question ou de l’annonce entendue.";
+    case "gap":
+      return "Tu n’as pas isolé le bon mot. Réécoute surtout l’endroit qui correspond au blanc.";
+    case "order":
+      return "Les éléments sont là, mais pas dans l’ordre entendu. Réécoute le rythme de la phrase avant de les replacer.";
+    case "reaction":
+      return "Cette réponse pourrait fonctionner ailleurs, mais pas après cette réplique. Écoute d’abord l’intention de la personne.";
+  }
+}
 
 function normalizeParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
@@ -240,6 +270,7 @@ export default function ListenScreen() {
   };
 
   const isCorrect = checked && isAnswerCorrect();
+  const teacherFeedback = getListenTeacherFeedback(item.kind, isCorrect);
 
   const resetAnswer = () => {
     validationLockRef.current = false;
@@ -291,7 +322,7 @@ export default function ListenScreen() {
 
     validationLockRef.current = true;
     const correct = isAnswerCorrect();
-    const expectedAnswer = getExpectedAnswer();
+    const feedback = getListenTeacherFeedback(item.kind, correct);
     const dailyActivityPromise =
       dailyActivityPromiseRef.current ??
       completeDailyActivity("listen_exercise");
@@ -302,8 +333,8 @@ export default function ListenScreen() {
 
     AccessibilityInfo.announceForAccessibility(
       correct
-        ? `Correct. Réponse attendue : ${expectedAnswer}.`
-        : "À revoir. Ce n’est pas la bonne réponse. Réessaie.",
+        ? `Bien vu. ${feedback} ${item.explanation}`
+        : `À revoir. ${feedback}`,
     );
 
     if (correct) {
@@ -728,12 +759,12 @@ export default function ListenScreen() {
                 accessibilityRole="alert"
                 accessibilityLabel={
                   isCorrect
-                    ? `Correct. ${
+                    ? `Bien vu. ${teacherFeedback} ${
                         item.kind === "situation" || item.kind === "reaction"
                           ? `Phrase entendue : ${item.sourceText}. `
                           : ""
-                      }Réponse attendue : ${getExpectedAnswer()}. ${item.explanation}`
-                    : "À revoir. Ce n’est pas la bonne réponse. Réessaie."
+                      }À retenir : ${getExpectedAnswer()}. ${item.explanation}`
+                    : `À revoir. ${teacherFeedback}`
                 }
                 style={[styles.feedback, isCorrect ? styles.good : styles.bad]}
               >
@@ -742,7 +773,15 @@ export default function ListenScreen() {
                   tone="strong"
                   style={styles.feedbackTitle}
                 >
-                  {isCorrect ? "Correct" : "À revoir"}
+                  {isCorrect ? "Bien vu" : "À revoir"}
+                </AppText>
+
+                <AppText
+                  variant="body"
+                  tone="strong"
+                  style={styles.teacherFeedbackText}
+                >
+                  {teacherFeedback}
                 </AppText>
 
                 {isCorrect ? (
@@ -775,7 +814,7 @@ export default function ListenScreen() {
                       tone="strong"
                       style={styles.expectedLabel}
                     >
-                      Réponse attendue
+                      À retenir
                     </AppText>
 
                     <AppText
@@ -796,15 +835,7 @@ export default function ListenScreen() {
                       {item.explanation}
                     </AppText>
                   </>
-                ) : (
-                  <AppText
-                    variant="body"
-                    tone="muted"
-                    style={styles.feedbackText}
-                  >
-                    Ce n’est pas la bonne réponse. Réessaie.
-                  </AppText>
-                )}
+                ) : null}
               </View>
             )}
 
@@ -1345,6 +1376,10 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,79,102,0.45)",
   },
   feedbackTitle: {
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  teacherFeedbackText: {
     color: COLORS.text,
     marginBottom: 4,
   },
