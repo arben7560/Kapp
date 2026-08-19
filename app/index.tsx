@@ -1,15 +1,21 @@
+import { BlurView } from "expo-blur";
+import { Image } from "expo-image";
+import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AccessibilityInfo,
   Animated,
   Easing,
+  Pressable,
+  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   useWindowDimensions,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, {
   Circle,
   Defs,
@@ -20,10 +26,18 @@ import Svg, {
   Stop,
 } from "react-native-svg";
 
+import { AppText } from "../components/app-text";
+
+const HERO_IMAGE = require("../assets/images/hero.jpg");
+
 const BACKGROUND = "#000000";
 const CYAN = "#39DDF2";
 const BLUE = "#3994F6";
 const VIOLET = "#745BFF";
+const HERO_BG = "#050508";
+const HERO_TEXT = "rgba(255,255,255,0.98)";
+const HERO_TEXT_SOFT = "rgba(255,255,255,0.76)";
+const HERO_CYAN = "#22D3EE";
 
 const AnimatedView = Animated.View;
 
@@ -206,9 +220,253 @@ function KSymbol({
   );
 }
 
+function HeroBackground() {
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <Image
+        source={HERO_IMAGE}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+      />
+
+      <ExpoLinearGradient
+        colors={["rgba(5,5,8,0.25)", "rgba(5,5,8,0.65)", HERO_BG]}
+        locations={[0, 0.45, 0.95]}
+        style={StyleSheet.absoluteFill}
+      />
+
+      <ExpoLinearGradient
+        colors={[
+          "rgba(244,114,182,0.12)",
+          "rgba(34,211,238,0.08)",
+          "transparent",
+        ]}
+        start={{ x: 0.05, y: 0 }}
+        end={{ x: 0.95, y: 0.8 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      <BlurView intensity={18} tint="dark" style={StyleSheet.absoluteFill} />
+    </View>
+  );
+}
+
+function HeroEntryScreen() {
+  const { fontScale, height, width } = useWindowDimensions();
+  const isCompactScreen = height <= 700 || width <= 380;
+  const isLargeText = fontScale > 1.15;
+
+  const fade = useMemo(() => new Animated.Value(0), []);
+  const translateY = useMemo(() => new Animated.Value(20), []);
+  const pulse = useMemo(() => new Animated.Value(0), []);
+
+  useEffect(() => {
+    const entrance = Animated.parallel([
+      Animated.timing(fade, {
+        toValue: 1,
+        duration: 760,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 760,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]);
+
+    const floatLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 2600,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 0,
+          duration: 2600,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+
+    entrance.start();
+    floatLoop.start();
+
+    return () => {
+      entrance.stop();
+      floatLoop.stop();
+    };
+  }, [fade, pulse, translateY]);
+
+  const cardFloat = pulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -4],
+  });
+
+  const openOnboarding = () => {
+    router.replace("/onboarding");
+  };
+
+  return (
+    <View style={styles.heroScreen}>
+      <StatusBar
+        hidden={false}
+        barStyle="light-content"
+        translucent
+        backgroundColor="transparent"
+      />
+      <HeroBackground />
+
+      <SafeAreaView
+        style={[
+          styles.heroSafe,
+          isCompactScreen && styles.heroSafeCompact,
+        ]}
+        edges={["top", "bottom"]}
+      >
+        <AnimatedView
+          style={[
+            styles.heroPage,
+            {
+              opacity: fade,
+              transform: [{ translateY }],
+            },
+          ]}
+        >
+          <ScrollView
+            style={styles.heroScroll}
+            contentContainerStyle={[
+              styles.heroScrollContent,
+              (isCompactScreen || isLargeText) &&
+                styles.heroScrollContentCompact,
+            ]}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.heroTopRow}>
+              <View style={styles.heroBadge}>
+                <View style={styles.heroBadgeDot} />
+                <AppText
+                  variant="label"
+                  lineContract="singleLine"
+                  style={styles.heroBadgeText}
+                >
+                  SÉOUL IMMERSION
+                </AppText>
+              </View>
+            </View>
+
+            <View style={styles.heroCenter}>
+              <AppText
+                variant="koreanPrimary"
+                script="korean"
+                style={styles.heroKoreanLine}
+              >
+                어서 오세요
+              </AppText>
+              <AppText
+                accessibilityRole="header"
+                variant="display"
+                style={styles.heroBigTitle}
+              >
+                Bienvenue à Séoul
+              </AppText>
+              <AppText variant="subtitle" style={styles.heroSubtitle}>
+                Tu n’apprends pas le coréen. Tu entres dans des scènes réelles.
+              </AppText>
+
+              <AnimatedView
+                style={[
+                  styles.heroCardWrap,
+                  { transform: [{ translateY: cardFloat }] },
+                ]}
+              >
+                <BlurView intensity={35} tint="dark" style={styles.heroCard}>
+                  <ExpoLinearGradient
+                    colors={[
+                      "rgba(255,255,255,0.08)",
+                      "rgba(255,255,255,0.03)",
+                      "rgba(255,255,255,0.01)",
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+
+                  <ExpoLinearGradient
+                    colors={[
+                      "rgba(244,114,182,0.08)",
+                      "rgba(34,211,238,0.04)",
+                      "transparent",
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+
+                  <AppText
+                    variant="sectionLabel"
+                    style={styles.heroEyebrow}
+                  >
+                    IMMERSION
+                  </AppText>
+                  <AppText variant="sceneTitle" style={styles.heroTitle}>
+                    La ville s’ouvre devant toi
+                  </AppText>
+                  <AppText variant="body" style={styles.heroText}>
+                    Choisis une scène recommandée pour commencer, ou prépare-toi
+                    d’abord avec les bases essentielles.
+                  </AppText>
+                </BlurView>
+              </AnimatedView>
+            </View>
+
+            <View style={styles.heroBottomCtaArea}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Choisir une scène"
+                accessibilityHint="Ouvre le choix de la scène de départ"
+                hitSlop={6}
+                style={({ pressed }) => [
+                  styles.heroPrimaryWrap,
+                  pressed && styles.heroPressed,
+                ]}
+                onPress={openOnboarding}
+              >
+                <BlurView
+                  intensity={20}
+                  tint="dark"
+                  style={styles.heroPrimaryButton}
+                >
+                  <ExpoLinearGradient
+                    colors={[
+                      "rgba(244,114,182,0.45)",
+                      "rgba(34,211,238,0.30)",
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <AppText variant="button" style={styles.heroPrimaryText}>
+                    Choisir une scène
+                  </AppText>
+                </BlurView>
+              </Pressable>
+            </View>
+          </ScrollView>
+        </AnimatedView>
+      </SafeAreaView>
+    </View>
+  );
+}
+
 export default function SplashScreenPage() {
   const { width, height } = useWindowDimensions();
-  const hasNavigated = useRef(false);
+  const hasShownHero = useRef(false);
+  const [showHero, setShowHero] = useState(false);
 
   const contentOpacity = useMemo(() => new Animated.Value(1), []);
   const glowOpacity = useMemo(() => new Animated.Value(0), []);
@@ -240,10 +498,10 @@ export default function SplashScreenPage() {
     let animation: Animated.CompositeAnimation | null = null;
     let reducedMotionTimer: ReturnType<typeof setTimeout> | null = null;
 
-    const goToOnboarding = () => {
-      if (!mounted || hasNavigated.current) return;
-      hasNavigated.current = true;
-      router.replace("/onboarding");
+    const revealHero = () => {
+      if (!mounted || hasShownHero.current) return;
+      hasShownHero.current = true;
+      setShowHero(true);
     };
 
     const run = async () => {
@@ -267,7 +525,7 @@ export default function SplashScreenPage() {
         taglineOpacity.setValue(1);
         taglineTranslate.setValue(0);
 
-        reducedMotionTimer = setTimeout(goToOnboarding, 900);
+        reducedMotionTimer = setTimeout(revealHero, 900);
         return;
       }
 
@@ -384,14 +642,13 @@ export default function SplashScreenPage() {
           easing: Easing.inOut(Easing.cubic),
           useNativeDriver: true,
         }),
-        // Keep the black canvas visible for a few frames before navigation.
-        // The onboarding screen takes over on the same black background,
-        // preventing the route switch from exposing a bright intermediate frame.
+        // Keep the black canvas visible for a few frames before the hero screen
+        // takes over, preventing a bright intermediate frame.
         Animated.delay(80),
       ]);
 
       animation.start(({ finished }) => {
-        if (finished) goToOnboarding();
+        if (finished) revealHero();
       });
     };
 
@@ -418,6 +675,10 @@ export default function SplashScreenPage() {
     wordmarkOpacity,
     wordmarkTranslate,
   ]);
+
+  if (showHero) {
+    return <HeroEntryScreen />;
+  }
 
   return (
     <View style={styles.screen}>
@@ -572,5 +833,142 @@ const styles = StyleSheet.create({
   },
   taglineViolet: {
     color: "#977BFF",
+  },
+
+  heroScreen: {
+    flex: 1,
+    backgroundColor: HERO_BG,
+  },
+  heroSafe: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+  heroSafeCompact: {
+    paddingHorizontal: 16,
+  },
+  heroPage: {
+    flex: 1,
+    width: "100%",
+    maxWidth: 560,
+    alignSelf: "center",
+  },
+  heroScroll: {
+    flex: 1,
+  },
+  heroScrollContent: {
+    flexGrow: 1,
+    width: "100%",
+    maxWidth: 520,
+    alignSelf: "center",
+    paddingBottom: 14,
+  },
+  heroScrollContentCompact: {
+    paddingBottom: 10,
+  },
+  heroTopRow: {
+    paddingTop: 16,
+    alignItems: "flex-start",
+  },
+  heroBadge: {
+    minHeight: 32,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  heroBadgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 999,
+    backgroundColor: HERO_CYAN,
+  },
+  heroBadgeText: {
+    color: HERO_TEXT_SOFT,
+  },
+  heroCenter: {
+    flex: 1,
+    justifyContent: "center",
+    paddingTop: 24,
+    paddingBottom: 20,
+    width: "100%",
+    maxWidth: 520,
+    alignSelf: "center",
+  },
+  heroKoreanLine: {
+    color: "rgba(255,255,255,0.85)",
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  heroBigTitle: {
+    color: HERO_TEXT,
+    textAlign: "center",
+  },
+  heroSubtitle: {
+    color: "rgba(255,255,255,0.68)",
+    textAlign: "center",
+    marginTop: 14,
+    maxWidth: 290,
+    alignSelf: "center",
+  },
+  heroCardWrap: {
+    marginTop: 38,
+    width: "100%",
+    maxWidth: 520,
+    alignSelf: "center",
+  },
+  heroCard: {
+    borderRadius: 24,
+    overflow: "hidden",
+    padding: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.14)",
+    backgroundColor: "rgba(255,255,255,0.02)",
+  },
+  heroEyebrow: {
+    color: HERO_TEXT_SOFT,
+    marginBottom: 10,
+  },
+  heroTitle: {
+    color: HERO_TEXT,
+  },
+  heroText: {
+    color: "rgba(255,255,255,0.60)",
+    marginTop: 12,
+  },
+  heroBottomCtaArea: {
+    paddingBottom: 24,
+    width: "100%",
+    maxWidth: 520,
+    alignSelf: "center",
+  },
+  heroPrimaryWrap: {
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  heroPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.994 }],
+  },
+  heroPrimaryButton: {
+    minHeight: 56,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 999,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderTopWidth: 1.2,
+    borderColor: "rgba(255,255,255,0.18)",
+    borderTopColor: "rgba(255,255,255,0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroPrimaryText: {
+    color: "#FFFFFF",
+    textAlign: "center",
   },
 });
