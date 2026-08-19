@@ -18,6 +18,7 @@ import {
 } from "../../../data/hangul/curriculum";
 import { useHangulAudio } from "../../../hooks/useHangulAudio";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
+import { getHangulTeacherFeedback } from "../../../lib/hangulFeedback";
 import { shuffleHangulQuestions } from "../../../lib/hangulQuiz";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
@@ -39,6 +40,10 @@ export default function HangulAssessmentScreen() {
   const correctAnswerLabel = current?.options.find(
     (option) => option.value === current.answer,
   )?.label ?? current?.answer;
+  const isCurrentAnswerCorrect = answered !== null && answered === current?.answer;
+  const teacherFeedback = current
+    ? getHangulTeacherFeedback(current.type, isCurrentAnswerCorrect)
+    : "";
   const saved = progress.hangulProgress.assessment;
   const missingModule = HANGUL_MODULES.find((module) => !progress.completed[module.id]);
   const curriculumReady = !missingModule || !!saved?.passed;
@@ -176,7 +181,19 @@ export default function HangulAssessmentScreen() {
                     return <Pressable key={option.value} onPress={() => answer(option.value)} style={[styles.option, correct && styles.correct, wrong && styles.wrong]}><AppText variant="bodyStrong" align="center">{option.label}</AppText></Pressable>;
                   })}
                 </View>
-                {answered !== null ? <View style={styles.feedback}><AppText variant="bodyStrong" style={{ color: answered === current.answer ? "#4ADE80" : "#F87171" }}>{answered === current.answer ? "Correct" : `Bonne réponse : ${correctAnswerLabel}`}</AppText><AppText variant="bodySecondary">{current.explanation}</AppText><Pressable onPress={next} style={styles.button}><AppText variant="button" style={styles.buttonText}>{index + 1 < HANGUL_ASSESSMENT_QUESTIONS.length ? "SUIVANT" : "TERMINER"}</AppText></Pressable></View> : null}
+                {answered !== null ? (
+                  <View style={styles.feedback}>
+                    <AppText variant="bodyStrong" style={{ color: isCurrentAnswerCorrect ? "#4ADE80" : "#F87171" }}>
+                      {isCurrentAnswerCorrect ? "Bien vu" : "À revoir"}
+                    </AppText>
+                    <AppText variant="bodyStrong">{teacherFeedback}</AppText>
+                    {!isCurrentAnswerCorrect ? (
+                      <AppText variant="bodySecondary">À retenir : {correctAnswerLabel}</AppText>
+                    ) : null}
+                    <AppText variant="bodySecondary">{current.explanation}</AppText>
+                    <Pressable onPress={next} style={styles.button}><AppText variant="button" style={styles.buttonText}>{index + 1 < HANGUL_ASSESSMENT_QUESTIONS.length ? "SUIVANT" : "TERMINER"}</AppText></Pressable>
+                  </View>
+                ) : null}
               </BlurView>
             )}
           </View>
