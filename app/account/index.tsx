@@ -169,25 +169,45 @@ function Field({
   secureTextEntry?: boolean;
   autoComplete?: React.ComponentProps<typeof AppTextInput>["autoComplete"];
 }) {
+  const [isSecureTextVisible, setIsSecureTextVisible] = React.useState(false);
+
   return (
     <View style={styles.fieldGroup}>
       <AppText variant="label" tone="soft">
         {label}
       </AppText>
-      <AppTextInput
-        accessibilityLabel={label}
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete={autoComplete}
-        keyboardType={label === "EMAIL" ? "email-address" : "default"}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor="rgba(255,255,255,0.30)"
-        secureTextEntry={secureTextEntry}
-        variant="bodyStrong"
-        style={styles.input}
-        value={value}
-      />
+      <View style={styles.inputShell}>
+        <AppTextInput
+          accessibilityLabel={label}
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete={autoComplete}
+          keyboardType={label === "EMAIL" ? "email-address" : "default"}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor="rgba(255,255,255,0.30)"
+          secureTextEntry={secureTextEntry && !isSecureTextVisible}
+          variant="bodyStrong"
+          style={[styles.input, secureTextEntry && styles.inputWithToggle]}
+          value={value}
+        />
+        {secureTextEntry ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={isSecureTextVisible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+            accessibilityState={{ checked: isSecureTextVisible }}
+            hitSlop={8}
+            onPress={() => setIsSecureTextVisible((visible) => !visible)}
+            style={styles.passwordToggle}
+          >
+            <Ionicons
+              name={isSecureTextVisible ? "eye-off-outline" : "eye-outline"}
+              size={21}
+              color={COLORS.soft}
+            />
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -978,6 +998,7 @@ const styles = StyleSheet.create({
   fields: { gap: 14, marginTop: 22 },
   dialogProviders: { gap: 10, marginTop: 22 },
   fieldGroup: { gap: 7 },
+  inputShell: { position: "relative" },
   input: {
     minHeight: 52,
     borderRadius: 17,
@@ -987,6 +1008,16 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     paddingHorizontal: 15,
     paddingVertical: 12,
+  },
+  inputWithToggle: { paddingRight: 52 },
+  passwordToggle: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: 48,
+    alignItems: "center",
+    justifyContent: "center",
   },
   confirmationPanel: {
     marginTop: 20,
