@@ -1,0 +1,42 @@
+name: Darken counting card backgrounds
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/darken-counting-cards.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply subtle dark filter to counting cards
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('app/(tabs)/comptage/index.tsx')
+          text = path.read_text(encoding='utf-8')
+          replacements = {
+              'colors={["rgba(3,5,8,0.28)", "rgba(3,5,8,0.48)", "rgba(2,3,6,0.72)"]}': 'colors={["rgba(3,5,8,0.36)", "rgba(3,5,8,0.56)", "rgba(2,3,6,0.78)"]}',
+              'colors={["rgba(2,4,7,0.30)", "rgba(2,4,7,0.50)", "rgba(2,3,6,0.72)"]}': 'colors={["rgba(2,4,7,0.38)", "rgba(2,4,7,0.58)", "rgba(2,3,6,0.78)"]}',
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'Expected pattern not found: {old}')
+              text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit change and remove one-off workflow
+        run: |
+          rm .github/workflows/darken-counting-cards.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/'(tabs)'/comptage/index.tsx .github/workflows/darken-counting-cards.yml
+          git commit -m "Darken counting card backgrounds"
+          git push
