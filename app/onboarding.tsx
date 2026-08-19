@@ -142,27 +142,6 @@ function SceneBackground({ dimmed = false }: { dimmed?: boolean }) {
   );
 }
 
-function ProgressDots({ active }: { active: 0 | 1 | 2 }) {
-  return (
-    <View
-      style={styles.progress}
-      accessibilityRole="progressbar"
-      accessibilityValue={{ min: 1, max: 3, now: active + 1 }}
-      accessibilityLabel={`Étape ${active + 1} sur 3`}
-    >
-      {[0, 1, 2].map((index) => (
-        <View
-          key={index}
-          style={[
-            styles.progressLine,
-            index === active && styles.progressLineActive,
-          ]}
-        />
-      ))}
-    </View>
-  );
-}
-
 function FeaturedScene({ scene, height }: { scene: SceneOption; height: number }) {
   return (
     <View
@@ -369,10 +348,6 @@ export default function OnboardingScreen() {
 
         <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
           <View style={[styles.modePage, { paddingHorizontal: horizontalPadding }]}>
-            <View style={styles.modeProgressWrap}>
-              <ProgressDots active={1} />
-            </View>
-
             <ScrollView
               style={styles.modeScroll}
               contentContainerStyle={styles.modeContent}
@@ -509,10 +484,6 @@ export default function OnboardingScreen() {
 
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={[styles.scenePage, { paddingHorizontal: horizontalPadding }]}>
-          <View style={styles.sceneTopNav}>
-            <ProgressDots active={0} />
-          </View>
-
           <ScrollView
             style={styles.sceneScroll}
             contentContainerStyle={[
@@ -630,34 +601,6 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 920,
     alignSelf: "center",
-  },
-  sceneTopNav: {
-    height: 50,
-    paddingTop: 11,
-    alignItems: "center",
-    justifyContent: "flex-start",
-  },
-  progress: {
-    minHeight: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-  },
-  progressLine: {
-    width: 26,
-    height: 3,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.14)",
-  },
-  progressLineActive: {
-    width: 38,
-    backgroundColor: PINK,
-    shadowColor: PINK,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.55,
-    shadowRadius: 8,
-    elevation: 3,
   },
   sceneScroll: {
     flex: 1,
@@ -919,11 +862,6 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 620,
     alignSelf: "center",
-  },
-  modeProgressWrap: {
-    height: 50,
-    paddingTop: 11,
-    alignItems: "center",
   },
   modeScroll: {
     flex: 1,
