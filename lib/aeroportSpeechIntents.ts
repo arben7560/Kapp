@@ -195,7 +195,7 @@ function getCurrentExpectation(choices: readonly AeroportSpeechChoice[]) {
     return "Ici, l’agent vient de présenter les trains AREX. Tu peux lui demander lequel il te conseille ou lui demander de répéter.";
   }
   if (intents.has("platform")) {
-    return "Ici, tu as choisi ton train. Tu peux maintenant demander où l’embarquer, ou faire répéter la recommandation.";
+    return "Ici, tu as choisi ton train. Tu peux maintenant demander où prendre le train, ou faire répéter la recommandation.";
   }
   if (intents.has("thanks")) {
     return "Ici, tu sais où prendre le train. Tu peux remercier l’agent et terminer l’échange, ou lui demander de répéter.";
