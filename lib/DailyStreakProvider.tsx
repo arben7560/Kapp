@@ -3,12 +3,14 @@ import { AppState } from "react-native";
 import {
   completeDailyActivity as completeDailyActivityStorage,
   getDailyStreakState,
+  readDailyStreakSnapshot,
   grantStreakFreeze,
   resetDailyStreak,
   applyStreakFreeze,
   type DailyActivityType,
   type DailyStreakState,
 } from "./dailyStreak";
+import { subscribeToProgressHydration } from "./progressSyncEvents";
 
 type DailyStreakContextValue = {
   streak: DailyStreakState | null;
@@ -60,6 +62,21 @@ export function DailyStreakProvider({
       subscription.remove();
     };
   }, [refreshStreak]);
+
+  React.useEffect(
+    () =>
+      subscribeToProgressHydration(() => {
+        void readDailyStreakSnapshot()
+          .then(setStreak)
+          .catch((error) => {
+            console.warn(
+              "Impossible de recharger le streak synchronisé:",
+              error,
+            );
+          });
+      }),
+    [],
+  );
 
   const completeDailyActivity = React.useCallback(
     async (activityType: DailyActivityType = "pedagogical_activity") => {

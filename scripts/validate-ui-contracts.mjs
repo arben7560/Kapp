@@ -24,6 +24,8 @@ const activeRoutes = [
   ["/onboarding", "app/onboarding.tsx"],
   ["/premium", "app/premium.tsx"],
   ["/streak", "app/streak.tsx"],
+  ["/account", "app/account/index.tsx"],
+  ["/account/callback", "app/account/callback.tsx"],
   ["/hangul", "app/(tabs)/hangul/index.tsx"],
   ["/hangul/vowels-basic", "app/(tabs)/hangul/vowels-basic.tsx"],
   ["/hangul/consonants-basic", "app/(tabs)/hangul/consonants-basic.tsx"],

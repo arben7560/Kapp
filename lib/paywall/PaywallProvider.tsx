@@ -6,6 +6,8 @@ import type {
 } from "react-native-purchases";
 import Purchases from "react-native-purchases";
 import { configureRevenueCat } from "../../services/revenueCat";
+import { synchronizeRevenueCatIdentity } from "../../services/revenueCatIdentity";
+import { useAuth } from "../AuthProvider";
 
 import {
   DEV_UNLOCK_ALL,
@@ -129,6 +131,8 @@ function LockedPreviewPaywallProvider({
 }
 
 function StorePaywallProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const authUserRef = React.useRef(user);
   const [customerInfo, setCustomerInfo] = React.useState<CustomerInfo | null>(
     null,
   );
@@ -146,6 +150,11 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
   const isConfiguredRef = React.useRef(false);
   const refreshInFlightRef = React.useRef(false);
   const operationGuardRef = React.useRef(createPaywallOperationGuard());
+  const identitySyncRef = React.useRef<Promise<void>>(Promise.resolve());
+
+  React.useEffect(() => {
+    authUserRef.current = user;
+  }, [user]);
 
   const updateCustomerInfo = React.useCallback(
     (nextCustomerInfo: CustomerInfo) => {
@@ -153,6 +162,20 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
     },
     [],
   );
+
+  const synchronizeIdentity = React.useCallback(() => {
+    const nextUser = authUserRef.current;
+    if (!isConfiguredRef.current || !nextUser) return Promise.resolve();
+
+    identitySyncRef.current = identitySyncRef.current
+      .catch(() => undefined)
+      .then(async () => {
+        const identityCustomerInfo =
+          await synchronizeRevenueCatIdentity(nextUser);
+        if (identityCustomerInfo) updateCustomerInfo(identityCustomerInfo);
+      });
+    return identitySyncRef.current;
+  }, [updateCustomerInfo]);
 
   const refreshCustomerInfo = React.useCallback(
     async (showLoader: boolean) => {
@@ -265,6 +288,7 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
         } else {
           Purchases.addCustomerInfoUpdateListener(updateCustomerInfo);
           listenerInstalled = true;
+          await synchronizeIdentity();
           await loadRevenueCatState();
         }
       } catch (initializationError) {
@@ -284,7 +308,18 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
           nextAppState === "active" && previousAppState !== "active";
         previousAppState = nextAppState;
 
-        if (becameActive) void refreshCustomerInfo(false);
+        if (becameActive) {
+          void synchronizeIdentity()
+            .catch((identityError) => {
+              if (__DEV__) {
+                console.warn(
+                  "[RevenueCat] Réidentification différée:",
+                  identityError,
+                );
+              }
+            })
+            .then(() => refreshCustomerInfo(false));
+        }
       },
     );
 
@@ -296,7 +331,23 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
         Purchases.removeCustomerInfoUpdateListener(updateCustomerInfo);
       }
     };
-  }, [loadRevenueCatState, refreshCustomerInfo, updateCustomerInfo]);
+  }, [
+    loadRevenueCatState,
+    refreshCustomerInfo,
+    synchronizeIdentity,
+    updateCustomerInfo,
+  ]);
+
+  React.useEffect(() => {
+    if (!user) return;
+    void synchronizeIdentity()
+      .then(() => refreshCustomerInfo(false))
+      .catch((identityError) => {
+        if (__DEV__) {
+          console.warn("[RevenueCat] Identité non synchronisée:", identityError);
+        }
+      });
+  }, [refreshCustomerInfo, synchronizeIdentity, user]);
 
   const subscribe = React.useCallback(
     async (offerId: SubscriptionOfferId) => {
@@ -417,10 +468,14 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
   const displayPrices = React.useMemo<Record<SubscriptionOfferId, string>>(
     () => ({
       monthly:
-        subscriptions.monthly?.product.priceString ??
+        (subscriptions.monthly
+          ? `${subscriptions.monthly.product.priceString} / mois`
+          : undefined) ??
         (isLoading ? PREMIUM_PRICE_FALLBACKS.monthly : "Indisponible"),
       yearly:
-        subscriptions.yearly?.product.priceString ??
+        (subscriptions.yearly
+          ? `${subscriptions.yearly.product.priceString} / an`
+          : undefined) ??
         (isLoading ? PREMIUM_PRICE_FALLBACKS.yearly : "Indisponible"),
     }),
     [isLoading, subscriptions],

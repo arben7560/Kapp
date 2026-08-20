@@ -25,7 +25,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useStore } from "../../_store";
+import { useStore, type Progress } from "../../_store";
 import { AppText } from "../../components/app-text";
 import { HubModuleAccents } from "../../constants/theme";
 import { GRAMMAR_STAGE_BY_ID, GRAMMAR_STAGE_IDS } from "../../data/grammar";
@@ -383,7 +383,7 @@ function getHangulResumeSequence(progress: any, baseSequence: any) {
   };
 }
 
-function getGrammarResumeSequence(progress: any, baseSequence: any) {
+function getGrammarResumeSequence(progress: Progress, baseSequence: any) {
   const grammarProgress = progress.grammarProgress;
 
   const resumableStageId =
@@ -417,7 +417,7 @@ function getGrammarResumeSequence(progress: any, baseSequence: any) {
       ? Math.min(session.questionIndex + 1, session.questions.length)
       : null;
 
-  const detail = questionNumber
+  const detail = questionNumber && session
     ? `Grammaire · Exercice ${questionNumber} / ${session.questions.length}`
     : `Grammaire · Étape ${stage.number} / ${GRAMMAR_STAGE_IDS.length}`;
 

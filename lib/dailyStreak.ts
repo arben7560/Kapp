@@ -1,7 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { notifyLocalProgressMutation } from "./progressSyncEvents.ts";
 
-const STORAGE_KEY = "kapp:daily-streak:v1";
-const LEGACY_STORAGE_KEY = "kapp:immersion-streak:v1";
+export const DAILY_STREAK_STORAGE_KEY = "kapp:daily-streak:v1";
+export const LEGACY_STREAK_STORAGE_KEY = "kapp:immersion-streak:v1";
 const STREAK_DAY_START_HOUR = 4;
 const INITIAL_FREEZES = 1;
 
@@ -198,7 +199,7 @@ function migrateLegacyState(legacy: LegacyImmersionState): DailyStreakState {
 }
 
 async function readState(): Promise<DailyStreakState> {
-  const rawValue = await AsyncStorage.getItem(STORAGE_KEY);
+  const rawValue = await AsyncStorage.getItem(DAILY_STREAK_STORAGE_KEY);
 
   if (rawValue) {
     try {
@@ -210,7 +211,7 @@ async function readState(): Promise<DailyStreakState> {
     }
   }
 
-  const legacyValue = await AsyncStorage.getItem(LEGACY_STORAGE_KEY);
+  const legacyValue = await AsyncStorage.getItem(LEGACY_STREAK_STORAGE_KEY);
   if (!legacyValue) return createDailyStreakState();
 
   try {
@@ -222,7 +223,11 @@ async function readState(): Promise<DailyStreakState> {
 
 async function writeState(state: DailyStreakState): Promise<DailyStreakState> {
   const normalizedState = normalizeDailyStreakState(state);
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedState));
+  await AsyncStorage.setItem(
+    DAILY_STREAK_STORAGE_KEY,
+    JSON.stringify(normalizedState),
+  );
+  notifyLocalProgressMutation("streak");
   return normalizedState;
 }
 
@@ -248,6 +253,16 @@ async function updateState(
 
 export async function getDailyStreakState(): Promise<DailyStreakState> {
   return enqueueStateOperation(async () => writeState(await readState()));
+}
+
+export async function readDailyStreakSnapshot(): Promise<DailyStreakState> {
+  return enqueueStateOperation(readState);
+}
+
+export async function persistDailyStreakSnapshot(
+  state: DailyStreakState,
+): Promise<DailyStreakState> {
+  return enqueueStateOperation(() => writeState(state));
 }
 
 export function completeDailyStreakState(

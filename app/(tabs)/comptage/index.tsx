@@ -401,9 +401,8 @@ function FeaturedPathCard({
         <ImageBackground
           source={module.background}
           resizeMode="cover"
-          style={StyleSheet.absoluteFill}
+          style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
           imageStyle={styles.featuredImage}
-          pointerEvents="none"
         />
 
         <BlurView
@@ -662,9 +661,8 @@ function CountingPathCard({
         <ImageBackground
           source={module.background}
           resizeMode="cover"
-          style={StyleSheet.absoluteFill}
+          style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
           imageStyle={styles.collectionImage}
-          pointerEvents="none"
         />
 
         <BlurView

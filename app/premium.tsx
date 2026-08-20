@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -19,6 +20,7 @@ import {
 } from "../lib/paywall/config";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { usePaywall } from "../lib/paywall/PaywallProvider";
+import { calculateAnnualOfferMetrics } from "../lib/paywall/revenueCatLogic";
 
 const COLORS = {
   bg: "#070812",
@@ -94,23 +96,11 @@ export default function PremiumScreen() {
     !!subscriptions[selectedOffer.id] &&
     !busy &&
     !hasPremiumAccess;
-  const annualSavingsPercent = React.useMemo(() => {
-    const monthlyProduct = subscriptions.monthly?.product;
-    const yearlyProduct = subscriptions.yearly?.product;
-
-    if (
-      !monthlyProduct ||
-      !yearlyProduct ||
-      monthlyProduct.currencyCode !== yearlyProduct.currencyCode ||
-      monthlyProduct.price <= 0
-    ) {
-      return null;
-    }
-
-    const percent = Math.round(
-      (1 - yearlyProduct.price / (monthlyProduct.price * 12)) * 100,
+  const annualMetrics = React.useMemo(() => {
+    return calculateAnnualOfferMetrics(
+      subscriptions.monthly?.product ?? null,
+      subscriptions.yearly?.product ?? null,
     );
-    return percent > 0 ? percent : null;
   }, [subscriptions]);
 
   React.useEffect(() => {
@@ -208,10 +198,11 @@ export default function PremiumScreen() {
                         <View style={styles.offerTitleWrap}>
                           <AppText variant="cardTitle" style={styles.offerTitle}>{offer.title}</AppText>
                           {offer.id === highlightedOfferId &&
-                            annualSavingsPercent !== null && (
+                            annualMetrics?.savingsPercent !== null &&
+                            annualMetrics?.savingsPercent !== undefined && (
                             <View style={styles.savingBadge}>
                               <AppText variant="caption" style={styles.savingBadgeText}>
-                                Économisez {annualSavingsPercent} %
+                                Économisez {annualMetrics.savingsPercent} %
                               </AppText>
                             </View>
                           )}
@@ -244,7 +235,11 @@ export default function PremiumScreen() {
                       >
                         {displayPrices[offer.id]}
                       </AppText>
-                      <AppText variant="bodySecondary" tone="muted" style={styles.priceCaption}>{offer.caption}</AppText>
+                      <AppText variant="bodySecondary" tone="muted" style={styles.priceCaption}>
+                        {offer.id === "yearly" && annualMetrics
+                          ? `Soit ${annualMetrics.monthlyEquivalentPriceString} / mois. ${offer.caption}`
+                          : offer.caption}
+                      </AppText>
                     </>
                   )}
                 </Pressable>
@@ -319,9 +314,9 @@ export default function PremiumScreen() {
           />
 
           <AppText variant="caption" tone="soft" style={styles.legalText}>
-            {
-              "Le paiement est traité par l’App Store ou Google Play. Le renouvellement et l’expiration de l’abonnement sont gérés par le compte associé."
-            }
+            {Platform.OS === "android"
+              ? "Le paiement est effectué via Google Play. L’abonnement est renouvelé automatiquement sauf résiliation. Vous pouvez le gérer ou l’annuler depuis votre compte Google Play. Les achats peuvent être restaurés avec le même compte."
+              : "Le paiement est effectué via l’App Store. L’abonnement est renouvelé automatiquement sauf résiliation. Vous pouvez le gérer ou l’annuler depuis votre compte App Store. Les achats peuvent être restaurés avec le même compte."}
           </AppText>
           </View>
         </ScrollView>

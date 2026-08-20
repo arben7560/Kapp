@@ -27,6 +27,8 @@
     "test:premium": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-premium.mjs",
     "test:immersion": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-immersion-scenes.mjs",
     "test:streak": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-daily-streak.mjs",
+    "test:auth-cloud": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-auth-cloud.mjs",
+    "test:progress-cloud": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-progress-cloud.mjs",
     "validate:ui": "node ./scripts/validate-ui-contracts.mjs",
     "lint": "expo lint"
   },
@@ -36,6 +38,7 @@
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-masked-view/masked-view": "0.3.2",
+    "@supabase/supabase-js": "^2.112.3",
     "expo": "~56.0.9",
     "expo-asset": "~56.0.21",
     "expo-audio": "~56.0.13",
@@ -68,6 +71,7 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-svg": "15.15.4",
+    "react-native-url-polyfill": "^4.0.0",
     "react-native-web": "~0.21.0",
     "react-native-webview": "^13.16.1",
     "react-native-worklets": "0.8.3"

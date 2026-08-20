@@ -436,9 +436,8 @@ function FeaturedCollectionCard({
         <ImageBackground
           source={theme.background}
           resizeMode="cover"
-          style={StyleSheet.absoluteFill}
+          style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
           imageStyle={styles.featuredImage}
-          pointerEvents="none"
         />
 
         {/* Léger flou sur l'image */}
@@ -717,9 +716,8 @@ function VocabularyCollectionCard({
         <ImageBackground
           source={theme.background}
           resizeMode="cover"
-          style={StyleSheet.absoluteFill}
+          style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
           imageStyle={styles.collectionImage}
-          pointerEvents="none"
         />
 
         {/* Léger flou uniforme */}

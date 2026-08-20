@@ -5,9 +5,22 @@ const IS_DEVELOPMENT =
     ? __DEV__
     : process.env.NODE_ENV !== "production";
 
-export const DEV_UNLOCK_ALL =
-  (IS_DEVELOPMENT && process.env.EXPO_PUBLIC_DEV_UNLOCK_ALL !== "0") ||
-  process.env.EXPO_PUBLIC_INTERNAL_PREMIUM_ACCESS === "1";
+export function isDeveloperPremiumUnlockEnabled(
+  isDevelopment: boolean,
+  devUnlockValue: string | undefined,
+  internalAccessValue: string | undefined,
+) {
+  return (
+    isDevelopment &&
+    (devUnlockValue !== "0" || internalAccessValue === "1")
+  );
+}
+
+export const DEV_UNLOCK_ALL = isDeveloperPremiumUnlockEnabled(
+  IS_DEVELOPMENT,
+  process.env.EXPO_PUBLIC_DEV_UNLOCK_ALL,
+  process.env.EXPO_PUBLIC_INTERNAL_PREMIUM_ACCESS,
+);
 
 export const ENABLE_NATIVE_IAP =
   process.env.EXPO_PUBLIC_ENABLE_NATIVE_IAP === "1" ||
@@ -32,7 +45,7 @@ export const PREMIUM_SUBSCRIPTION_OFFERS = [
     productId: "kapp_premium_monthly",
     title: "Premium mensuel",
     cta: "Choisir l’abonnement mensuel",
-    fallbackPrice: "5,99 EUR / mois",
+    fallbackPrice: "7,99 € / mois",
     caption: "Abonnement mensuel, résiliable depuis l’App Store ou Google Play.",
   },
   {
@@ -40,7 +53,7 @@ export const PREMIUM_SUBSCRIPTION_OFFERS = [
     productId: "kapp_premium_yearly",
     title: "Premium annuel",
     cta: "Choisir l’abonnement annuel",
-    fallbackPrice: "59,99 EUR / an",
+    fallbackPrice: "69,99 € / an",
     caption: "Abonnement annuel, résiliable depuis l’App Store ou Google Play.",
   },
 ] as const satisfies readonly PremiumSubscriptionOffer[];
@@ -93,3 +106,7 @@ export const PREMIUM_ROUTE_PATHS = new Set([
   "/classificateur/drinks",
   "/classificateur/machines",
 ]);
+
+export function isPremiumRoutePath(pathname: string) {
+  return PREMIUM_ROUTE_PATHS.has(pathname);
+}

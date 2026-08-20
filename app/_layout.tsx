@@ -25,9 +25,11 @@ import React from "react";
 import { StoreProvider } from "../_store";
 import { AppTextProvider } from "../components/app-text";
 import { useMediaSessionLifecycle } from "../hooks/useMediaSessionLifecycle";
+import { AuthProvider } from "../lib/AuthProvider";
 import { DailyStreakProvider } from "../lib/DailyStreakProvider";
 import { PaywallProvider } from "../lib/paywall/PaywallProvider";
 import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard";
+import { ProgressSyncProvider } from "../lib/ProgressSyncProvider";
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -183,46 +185,51 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={KAPP_NAVIGATION_THEME}>
       <AppTextProvider customFontsAvailable={customFontsAvailable}>
-        <StoreProvider>
-          <DailyStreakProvider>
-            <PaywallProvider>
-              <SubscriptionAccessGuard>
-                <ReleaseRouteGuard>
-                  <InitialOnboardingRoute />
+        <AuthProvider>
+          <StoreProvider>
+            <DailyStreakProvider>
+              <ProgressSyncProvider>
+                <PaywallProvider>
+                  <SubscriptionAccessGuard>
+                    <ReleaseRouteGuard>
+                      <InitialOnboardingRoute />
 
-                  <Stack
-                    initialRouteName="index"
-                    screenOptions={{
-                      headerShown: false,
-                      contentStyle: {
-                        backgroundColor: "#000000",
-                      },
-                      animation: "fade",
-                      animationDuration: 220,
-                    }}
-                  >
-                    <Stack.Screen
-                      name="index"
-                      options={{ animation: "none" }}
-                    />
-                    <Stack.Screen
-                      name="onboarding"
-                      options={{ animation: "none" }}
-                    />
-                    <Stack.Screen name="premium" />
-                    <Stack.Screen name="streak" />
-                    <Stack.Screen name="(tabs)" />
-                    <Stack.Screen
-                      name="listen/teacherIA"
-                      options={{ animation: "none" }}
-                    />
-                    <Stack.Screen name="listen/teacherIARealtime" />
-                  </Stack>
-                </ReleaseRouteGuard>
-              </SubscriptionAccessGuard>
-            </PaywallProvider>
-          </DailyStreakProvider>
-        </StoreProvider>
+                      <Stack
+                        initialRouteName="index"
+                        screenOptions={{
+                          headerShown: false,
+                          contentStyle: {
+                            backgroundColor: "#000000",
+                          },
+                          animation: "fade",
+                          animationDuration: 220,
+                        }}
+                      >
+                        <Stack.Screen
+                          name="index"
+                          options={{ animation: "none" }}
+                        />
+                        <Stack.Screen
+                          name="onboarding"
+                          options={{ animation: "none" }}
+                        />
+                        <Stack.Screen name="account" />
+                        <Stack.Screen name="premium" />
+                        <Stack.Screen name="streak" />
+                        <Stack.Screen name="(tabs)" />
+                        <Stack.Screen
+                          name="listen/teacherIA"
+                          options={{ animation: "none" }}
+                        />
+                        <Stack.Screen name="listen/teacherIARealtime" />
+                      </Stack>
+                    </ReleaseRouteGuard>
+                  </SubscriptionAccessGuard>
+                </PaywallProvider>
+              </ProgressSyncProvider>
+            </DailyStreakProvider>
+          </StoreProvider>
+        </AuthProvider>
       </AppTextProvider>
     </ThemeProvider>
   );

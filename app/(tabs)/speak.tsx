@@ -454,9 +454,8 @@ function Scenes({
                       <ImageBackground
                         source={config.image}
                         resizeMode="cover"
-                        style={StyleSheet.absoluteFill}
+                        style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
                         imageStyle={styles.sceneImage}
-                        pointerEvents="none"
                       />
 
                       <BlurView

@@ -1,56 +1,25 @@
 import React from "react";
-import {
-  createEmptyHangulProgress,
-  type HangulDetailedProgress,
-} from "./data/hangul/types";
+import type { HangulDetailedProgress } from "./data/hangul/types";
 import type { GrammarLearningProgress } from "./data/grammar/types";
-import {
-  createEmptyGrammarLearningProgress,
-  normalizeGrammarLearningProgress,
-} from "./lib/grammar/learning";
 import {
   COMPLETION_XP,
   reserveCompletion,
 } from "./lib/progressCompletion";
 import {
+  createInitialPedagogicalProgress,
+  normalizePedagogicalProgress,
+  type LearningTrack,
+  type Progress,
+} from "./lib/pedagogicalProgress";
+import {
   persistPedagogicalProgress,
   readPedagogicalProgress,
 } from "./lib/pedagogicalProgressStorage";
+import { subscribeToProgressHydration } from "./lib/progressSyncEvents";
 
-export type LearningTrack =
-  | "hangul"
-  | "grammar"
-  | "vocab"
-  | "numbers"
-  | "classifier"
-  | "dialogs"
-  | "listen"
-  | "immersion"
-  | "cafe_ia"
-  | "restaurant_ia"
-  | "metro_ia"
-  | "aeroport_ia"
-  | null;
+export type { LearningTrack, Progress } from "./lib/pedagogicalProgress";
 
-export type Progress = {
-  learningTrack: LearningTrack;
-  xp: number;
-  streak: number;
-  completed: Record<string, boolean>;
-  hangulLevel: number;
-  hangulProgress: HangulDetailedProgress;
-  grammarProgress: GrammarLearningProgress;
-};
-
-const initialProgress: Progress = {
-  learningTrack: null,
-  xp: 120,
-  streak: 0,
-  completed: {},
-  hangulLevel: 1,
-  hangulProgress: createEmptyHangulProgress(),
-  grammarProgress: createEmptyGrammarLearningProgress(),
-};
+const initialProgress = createInitialPedagogicalProgress();
 
 type StoreValue = {
   setTrack: (t: LearningTrack) => Promise<void>;
@@ -68,34 +37,6 @@ type StoreValue = {
 };
 
 const StoreContext = React.createContext<StoreValue | undefined>(undefined);
-
-function mergeProgress(saved: Partial<Progress>): Progress {
-  const savedWithoutLegacyPremium = { ...saved } as Partial<Progress> & {
-    isPremium?: boolean;
-  };
-  delete savedWithoutLegacyPremium.isPremium;
-
-  return {
-    ...initialProgress,
-    ...savedWithoutLegacyPremium,
-    completed: {
-      ...(savedWithoutLegacyPremium.completed ?? {}),
-    },
-    hangulProgress: {
-      ...createEmptyHangulProgress(),
-      ...(savedWithoutLegacyPremium.hangulProgress ?? {}),
-      lessons: {
-        ...(savedWithoutLegacyPremium.hangulProgress?.lessons ?? {}),
-      },
-      masteredCharacters: {
-        ...(savedWithoutLegacyPremium.hangulProgress?.masteredCharacters ?? {}),
-      },
-    },
-    grammarProgress: normalizeGrammarLearningProgress(
-      savedWithoutLegacyPremium.grammarProgress,
-    ),
-  };
-}
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [progress, setProgressState] = React.useState<Progress>(initialProgress);
@@ -116,7 +57,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (!mounted) return;
 
         if (saved) {
-          const restoredProgress = mergeProgress(saved);
+          const restoredProgress = normalizePedagogicalProgress(saved);
 
           progressRef.current = restoredProgress;
           completedRef.current = restoredProgress.completed;
@@ -146,6 +87,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       console.warn("Impossible de sauvegarder le store pédagogique:", error);
     }
   }, []);
+
+  React.useEffect(
+    () =>
+      subscribeToProgressHydration(() => {
+        void readPedagogicalProgress<Partial<Progress>>()
+          .then((saved) => {
+            const restoredProgress = normalizePedagogicalProgress(saved);
+            progressRef.current = restoredProgress;
+            completedRef.current = restoredProgress.completed;
+            setProgressState(restoredProgress);
+          })
+          .catch((error) => {
+            console.warn(
+              "Impossible de recharger la progression synchronisée:",
+              error,
+            );
+          });
+      }),
+    [],
+  );
 
   const setProgress = React.useCallback(
     (updater: React.SetStateAction<Progress>) => {

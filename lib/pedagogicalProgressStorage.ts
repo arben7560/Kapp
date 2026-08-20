@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { notifyLocalProgressMutation } from "./progressSyncEvents.ts";
 
 export const PEDAGOGICAL_PROGRESS_STORAGE_KEY =
   "@k_app/pedagogical_progress_v1";
@@ -26,10 +27,11 @@ export function persistPedagogicalProgress(
 ): Promise<void> {
   const serializedProgress = JSON.stringify(progress);
 
-  return enqueuePersistence(() =>
-    AsyncStorage.setItem(
+  return enqueuePersistence(async () => {
+    await AsyncStorage.setItem(
       PEDAGOGICAL_PROGRESS_STORAGE_KEY,
       serializedProgress,
-    ),
-  );
+    );
+    notifyLocalProgressMutation("pedagogical");
+  });
 }

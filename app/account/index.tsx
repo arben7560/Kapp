@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import React from "react";
 import {
   Alert,
@@ -22,6 +23,7 @@ import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useAuth } from "../../lib/AuthProvider";
 import { KappAuthError } from "../../lib/authErrors";
 import { useProgressSync } from "../../lib/ProgressSyncProvider";
+import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { synchronizeProgressNow } from "../../services/progressSync";
 
 type FormMode =
@@ -135,6 +137,7 @@ function Field({
 
 export default function AccountScreen() {
   const auth = useAuth();
+  const paywall = usePaywall();
   const sync = useProgressSync();
   const responsive = useResponsiveLayout({ maxWidth: 760 });
   const [mode, setMode] = React.useState<FormMode>(null);
@@ -312,6 +315,22 @@ export default function AccountScreen() {
     mode === "change-password";
   const requiresConfirmation =
     mode === "protect" || mode === "set-password" || mode === "change-password";
+  const activePlanLabel =
+    paywall.entitlement.productId === "kapp_premium_monthly"
+      ? "Formule mensuelle"
+      : paywall.entitlement.productId === "kapp_premium_yearly"
+        ? "Formule annuelle"
+        : null;
+
+  const handleSubscriptionAction = () => {
+    paywall.clearError();
+    if (paywall.hasPremiumAccess && !paywall.isDeveloperUnlocked) {
+      void paywall.openSubscriptionManagement();
+      return;
+    }
+
+    router.push("/premium");
+  };
 
   return (
     <LinearGradient
@@ -490,6 +509,59 @@ export default function AccountScreen() {
                 </View>
               </>
             )}
+
+            <View style={styles.sectionCard}>
+              <AppText variant="sectionLabel" tone="soft">ABONNEMENT</AppText>
+              <View style={styles.subscriptionStatusRow}>
+                <View
+                  style={[
+                    styles.settingsIcon,
+                    paywall.hasPremiumAccess && styles.subscriptionActiveIcon,
+                  ]}
+                >
+                  <Ionicons
+                    name={paywall.hasPremiumAccess ? "sparkles" : "diamond-outline"}
+                    size={19}
+                    color={paywall.hasPremiumAccess ? COLORS.green : COLORS.cyan}
+                  />
+                </View>
+                <View style={styles.settingsCopy}>
+                  <AppText variant="bodyStrong">
+                    {paywall.isLoading
+                      ? "Vérification de Premium…"
+                      : paywall.hasPremiumAccess
+                        ? "Premium actif"
+                        : "K-App Premium"}
+                  </AppText>
+                  <AppText variant="caption" tone="soft">
+                    {paywall.isDeveloperUnlocked
+                      ? "Accès de développement"
+                      : activePlanLabel ??
+                        (paywall.hasPremiumAccess
+                          ? "Accès Premium confirmé"
+                          : "Découvrir tous les parcours Premium")}
+                  </AppText>
+                </View>
+              </View>
+              <ActionButton
+                label={
+                  paywall.hasPremiumAccess && !paywall.isDeveloperUnlocked
+                    ? "Gérer mon abonnement"
+                    : paywall.hasPremiumAccess
+                      ? "Voir l’offre Premium"
+                      : "Découvrir Premium"
+                }
+                variant="secondary"
+                disabled={paywall.isLoading}
+                onPress={handleSubscriptionAction}
+                style={styles.subscriptionAction}
+              />
+              {paywall.error ? (
+                <AppText variant="caption" style={styles.subscriptionError}>
+                  {paywall.error.message}
+                </AppText>
+              ) : null}
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -764,6 +836,18 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.065)",
   },
   settingsCopy: { flex: 1, gap: 2 },
+  subscriptionStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 16,
+  },
+  subscriptionActiveIcon: {
+    borderColor: "rgba(103,232,168,0.28)",
+    backgroundColor: "rgba(103,232,168,0.08)",
+  },
+  subscriptionAction: { marginTop: 16 },
+  subscriptionError: { color: COLORS.red, marginTop: 10 },
   rowDivider: {
     height: 1,
     marginLeft: 52,

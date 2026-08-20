@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { notifyLocalProgressMutation } from "./progressSyncEvents.ts";
 
-const HOME_RESUME_STORAGE_KEY = "kapp:home-resume:v1";
+export const HOME_RESUME_STORAGE_KEY = "kapp:home-resume:v1";
 
 export type HomeResumeTrack =
   | "hangul"
@@ -85,4 +86,16 @@ export async function saveHomeResumeContext(
   };
 
   await AsyncStorage.setItem(HOME_RESUME_STORAGE_KEY, JSON.stringify(next));
+  notifyLocalProgressMutation("resume");
+}
+
+export async function replaceHomeResumeContext(
+  context: HomeResumeContext | null,
+): Promise<void> {
+  if (!context) {
+    await AsyncStorage.removeItem(HOME_RESUME_STORAGE_KEY);
+  } else {
+    await AsyncStorage.setItem(HOME_RESUME_STORAGE_KEY, JSON.stringify(context));
+  }
+  notifyLocalProgressMutation("resume");
 }

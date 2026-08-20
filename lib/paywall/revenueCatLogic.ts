@@ -2,6 +2,7 @@ import type {
   CustomerInfo,
   PurchasesOffering,
   PurchasesPackage,
+  PurchasesStoreProduct,
 } from "react-native-purchases";
 
 import {
@@ -150,6 +151,66 @@ export function mapSubscriptionPackages(
   return {
     monthly: findPackage("monthly", currentOffering.monthly),
     yearly: findPackage("yearly", currentOffering.annual),
+  };
+}
+
+export type AnnualOfferMetrics = {
+  monthlyEquivalentPrice: number;
+  monthlyEquivalentPriceString: string;
+  savingsPercent: number | null;
+};
+
+function formatStoreCurrency(value: number, currencyCode: string) {
+  try {
+    return new Intl.NumberFormat(undefined, {
+      currency: currencyCode,
+      style: "currency",
+    }).format(value);
+  } catch {
+    return `${value.toFixed(2)} ${currencyCode}`;
+  }
+}
+
+export function calculateAnnualOfferMetrics(
+  monthlyProduct: Pick<
+    PurchasesStoreProduct,
+    "currencyCode" | "price"
+  > | null,
+  yearlyProduct: Pick<
+    PurchasesStoreProduct,
+    | "currencyCode"
+    | "price"
+    | "pricePerMonth"
+    | "pricePerMonthString"
+  > | null,
+): AnnualOfferMetrics | null {
+  if (
+    !monthlyProduct ||
+    !yearlyProduct ||
+    monthlyProduct.currencyCode !== yearlyProduct.currencyCode ||
+    monthlyProduct.price <= 0 ||
+    yearlyProduct.price <= 0
+  ) {
+    return null;
+  }
+
+  const monthlyEquivalentPrice =
+    yearlyProduct.pricePerMonth && yearlyProduct.pricePerMonth > 0
+      ? yearlyProduct.pricePerMonth
+      : yearlyProduct.price / 12;
+  const rawSavingsPercent = Math.round(
+    (1 - yearlyProduct.price / (monthlyProduct.price * 12)) * 100,
+  );
+
+  return {
+    monthlyEquivalentPrice,
+    monthlyEquivalentPriceString:
+      yearlyProduct.pricePerMonthString ||
+      formatStoreCurrency(
+        monthlyEquivalentPrice,
+        yearlyProduct.currencyCode,
+      ),
+    savingsPercent: rawSavingsPercent > 0 ? rawSavingsPercent : null,
   };
 }
 
