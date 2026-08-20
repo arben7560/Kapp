@@ -27,7 +27,11 @@ import type { KappOAuthProvider } from "../../lib/authCallback";
 import {
   suppressAccountProtectionPromptAfterLogout,
 } from "../../lib/accountProtectionPromptStorage";
-import { KappAuthError } from "../../lib/authErrors";
+import {
+  KappAuthError,
+  validateEmail,
+  validatePassword,
+} from "../../lib/authErrors";
 import { useProgressSync } from "../../lib/ProgressSyncProvider";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { synchronizeProgressNow } from "../../services/progressSync";
@@ -318,6 +322,21 @@ export default function AccountScreen() {
     setFormSuccess(null);
     try {
       if (mode === "protect") {
+        if (!email.trim()) {
+          throw new KappAuthError(
+            "invalid-email",
+            "Renseignez votre adresse email.",
+          );
+        }
+        if (!password) {
+          throw new KappAuthError(
+            "password-too-short",
+            "Renseignez un mot de passe.",
+          );
+        }
+        ensureMatchingPasswords();
+        validateEmail(email);
+        validatePassword(password);
         const result = await auth.protectProgress(email);
         if (result === "confirmation-required") {
           setMode("confirmation");
@@ -446,6 +465,7 @@ export default function AccountScreen() {
 
   const requiresEmail = mode === "protect" || mode === "sign-in" || mode === "reset";
   const requiresPassword =
+    mode === "protect" ||
     mode === "sign-in" ||
     mode === "set-password" ||
     mode === "change-password";
@@ -812,20 +832,20 @@ export default function AccountScreen() {
             ) : null}
             {requiresPassword ? (
               <Field
-                label={mode === "sign-in" ? "MOT DE PASSE" : "NOUVEAU MOT DE PASSE"}
+                label={mode === "sign-in" || mode === "protect" ? "MOT DE PASSE" : "NOUVEAU MOT DE PASSE"}
                 value={password}
                 onChangeText={setPassword}
-                placeholder="8 caractères minimum"
+                placeholder={mode === "protect" ? "Créez votre mot de passe" : "8 caractères minimum"}
                 secureTextEntry
                 autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
               />
             ) : null}
             {requiresConfirmation ? (
               <Field
-                label="CONFIRMATION"
+                label={mode === "protect" ? "CONFIRMER LE MOT DE PASSE" : "CONFIRMATION"}
                 value={passwordConfirmation}
                 onChangeText={setPasswordConfirmation}
-                placeholder="Répétez le mot de passe"
+                placeholder={mode === "protect" ? "Répétez votre mot de passe" : "Répétez le mot de passe"}
                 secureTextEntry
                 autoComplete="new-password"
               />
