@@ -23,10 +23,24 @@ import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
 const restaurantBackground = require("../../assets/images/restaurant.jpg");
-const restaurantCardBackground = require("../../assets/images/restaurantIA.jpg");
 
 const BG_DEEP = "#050508";
 const ORANGE = "#FB923C";
+
+const PEXELS_16_9 = {
+  "order-simple":
+    "https://images.pexels.com/photos/34688717/pexels-photo-34688717.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
+  "ask-recommendation":
+    "https://images.pexels.com/photos/5774152/pexels-photo-5774152.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
+  "choose-grill":
+    "https://images.pexels.com/photos/36759342/pexels-photo-36759342.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
+  "add-sides":
+    "https://images.pexels.com/photos/31150502/pexels-photo-31150502.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
+  "pay-receipt":
+    "https://images.pexels.com/photos/6816413/pexels-photo-6816413.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
+  [RESTAURANT_SPEECH_MISSION_ID]:
+    "https://images.pexels.com/photos/31601790/pexels-photo-31601790.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
+} as const;
 
 function normalizeMode(rawMode: string | string[] | undefined) {
   const value = Array.isArray(rawMode) ? rawMode[0] : rawMode;
@@ -110,15 +124,22 @@ export default function RestaurantMissionsScreen() {
 
   const renderMissionCard = (mission: RestaurantMission, compact = false) => {
     const order = restaurantMissions.findIndex((item) => item.id === mission.id) + 1;
+    const cardMission =
+      mission.id === RESTAURANT_SPEECH_MISSION_ID
+        ? { ...mission, subtitle: "Exprime toi et commande" }
+        : mission;
+    const backgroundUri =
+      PEXELS_16_9[mission.id as keyof typeof PEXELS_16_9] ??
+      PEXELS_16_9["order-simple"];
 
     return (
       <MissionCollectionCard
         key={mission.id}
-        mission={mission}
+        mission={cardMission}
         order={order}
         hasPremiumAccess={hasPremiumAccess}
         accent={ORANGE}
-        background={restaurantCardBackground}
+        background={{ uri: backgroundUri }}
         compact={compact}
         isVocal={mission.id === RESTAURANT_SPEECH_MISSION_ID}
         onPress={() => openMission(mission)}
