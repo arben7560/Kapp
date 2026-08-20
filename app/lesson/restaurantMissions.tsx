@@ -1,21 +1,17 @@
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import {
-  ImageBackground,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
+import { ImageBackground, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
-import { AppText } from "../../components/app-text";
 import { GuidedMissionsHeader } from "../../components/immersion/GuidedMissionsHeader";
-import { MissionAccessBadge } from "../../components/immersion/MissionAccessBadge";
+import {
+  MissionCollectionCard,
+  MissionCollectionSectionHeader,
+} from "../../components/immersion/MissionCollectionCard";
 import { MissionLaunchModal } from "../../components/immersion/MissionLaunchModal";
-import { ABSOLUTE_FILL } from "../../constants/layout";
-import { SeoulMidnightGlass } from "../../constants/theme";
 import {
   RESTAURANT_SPEECH_MISSION_ID,
   restaurantMissions,
@@ -27,15 +23,10 @@ import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
 const restaurantBackground = require("../../assets/images/restaurant.jpg");
+const restaurantCardBackground = require("../../assets/images/restaurantIA.jpg");
 
 const BG_DEEP = "#050508";
-const TXT = "rgba(255,255,255,0.98)";
-const MUTED = "rgba(255,255,255,0.66)";
-const SOFT = "rgba(255,255,255,0.46)";
-const LINE = "rgba(255,255,255,0.10)";
 const ORANGE = "#FB923C";
-const VOCAL_VIOLET = "#A78BFA";
-const GOLD = SeoulMidnightGlass.colors.premiumGold;
 
 function normalizeMode(rawMode: string | string[] | undefined) {
   const value = Array.isArray(rawMode) ? rawMode[0] : rawMode;
@@ -117,57 +108,90 @@ export default function RestaurantMissionsScreen() {
     }
   };
 
+  const renderMissionCard = (mission: RestaurantMission, compact = false) => {
+    const order = restaurantMissions.findIndex((item) => item.id === mission.id) + 1;
+
+    return (
+      <MissionCollectionCard
+        key={mission.id}
+        mission={mission}
+        order={order}
+        hasPremiumAccess={hasPremiumAccess}
+        accent={ORANGE}
+        background={restaurantCardBackground}
+        compact={compact}
+        isVocal={mission.id === RESTAURANT_SPEECH_MISSION_ID}
+        onPress={() => openMission(mission)}
+        style={missionColumns > 1 ? { width: missionItemWidth } : undefined}
+      />
+    );
+  };
+
   return (
     <ImageBackground source={restaurantBackground} style={styles.background}>
-      <View pointerEvents="none" style={styles.overlay} />
+      <BlurView
+        intensity={22}
+        tint="dark"
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+      <LinearGradient
+        colors={["rgba(2,3,6,0.42)", "rgba(2,3,6,0.64)", "rgba(2,3,6,0.92)"]}
+        locations={[0, 0.48, 1]}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+      <View style={[styles.ambientGlow, { backgroundColor: `${ORANGE}0F` }]} />
+
       <SafeAreaView style={styles.safe}>
         <ScrollView
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.content,
             { paddingHorizontal: responsive.horizontalPadding },
           ]}
         >
           <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
-          <GuidedMissionsHeader
-            accent={ORANGE}
-            compact={responsive.isCompact}
-            intro="Apprends à commander un menu en immersion"
-            onBack={handleBack}
-            title="Restaurant"
-          />
-          <MissionGrid
-            missions={completeMissions}
-            hasPremiumAccess={hasPremiumAccess}
-            missionColumns={missionColumns}
-            missionItemWidth={missionItemWidth}
-            missionGap={responsive.gridGap}
-            onOpenMission={openMission}
-          />
+            <GuidedMissionsHeader
+              accent={ORANGE}
+              compact={responsive.isCompact}
+              intro="Apprends à commander un menu en immersion"
+              onBack={handleBack}
+              title="Restaurant"
+            />
 
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <AppText variant="sectionTitle" style={styles.sectionTitle}>
-                Mini-missions ciblées
-              </AppText>
-              <AppText
-                variant="bodySecondary"
-                tone="muted"
-                style={styles.sectionSubtitle}
-              >
-                Des scènes courtes, chacune centrée sur une seule compétence.
-              </AppText>
+            <MissionCollectionSectionHeader
+              first
+              accent={ORANGE}
+              title="MISSIONS COMPLÈTES"
+              subtitle="Des situations du début à la fin du repas."
+            />
+
+            <View
+              style={[
+                styles.missionStack,
+                missionColumns > 1 && styles.missionGrid,
+                { gap: Math.max(15, responsive.gridGap) },
+              ]}
+            >
+              {completeMissions.map((mission) => renderMissionCard(mission))}
             </View>
 
-            <MissionGrid
-              missions={miniMissions}
-              hasPremiumAccess={hasPremiumAccess}
-              missionColumns={missionColumns}
-              missionItemWidth={missionItemWidth}
-              missionGap={responsive.gridGap}
-              onOpenMission={openMission}
-              compact
+            <MissionCollectionSectionHeader
+              accent={ORANGE}
+              title="MINI-MISSIONS CIBLÉES"
+              subtitle="Des scènes courtes centrées sur une compétence."
             />
-          </View>
+
+            <View
+              style={[
+                styles.missionStack,
+                missionColumns > 1 && styles.missionGrid,
+                { gap: Math.max(15, responsive.gridGap) },
+              ]}
+            >
+              {miniMissions.map((mission) => renderMissionCard(mission, true))}
+            </View>
           </View>
         </ScrollView>
 
@@ -183,149 +207,37 @@ export default function RestaurantMissionsScreen() {
   );
 }
 
-type MissionGridProps = {
-  missions: RestaurantMission[];
-  hasPremiumAccess: boolean;
-  onOpenMission: (mission: RestaurantMission) => void;
-  compact?: boolean;
-  missionColumns: number;
-  missionItemWidth: number | "100%";
-  missionGap: number;
-};
-
-function MissionGrid({
-  missions,
-  hasPremiumAccess,
-  onOpenMission,
-  compact = false,
-  missionColumns,
-  missionItemWidth,
-  missionGap,
-}: MissionGridProps) {
-  return (
-    <View
-      style={[
-        styles.missionStack,
-        missionColumns > 1 && styles.missionGrid,
-        { gap: missionGap },
-      ]}
-    >
-      {missions.map((mission) => {
-        const isPremium = mission.access === "premium";
-        const isLocked = isPremium && !hasPremiumAccess;
-        const isVocal = mission.id === RESTAURANT_SPEECH_MISSION_ID;
-
-        return (
-          <Pressable
-            key={mission.id}
-            accessibilityRole="button"
-            accessibilityLabel={`${mission.title}. ${
-              isLocked
-                ? "Mission premium verrouillée"
-                : isPremium
-                  ? "Mission premium incluse"
-                  : "Mission gratuite"
-            }. ${mission.subtitle}. ${
-              isLocked ? "Ouvre l'écran Premium" : "Ouvre cette mission"
-            }`}
-            accessibilityHint={
-              isLocked
-                ? "Ouvre l'offre Premium"
-                : "Prépare le lancement de cette mission"
-            }
-            hitSlop={6}
-            onPress={() => onOpenMission(mission)}
-            style={({ pressed }) => [
-              styles.missionCard,
-              missionColumns > 1 && { width: missionItemWidth },
-              compact && styles.compactCard,
-              isPremium && styles.premiumCard,
-              pressed && styles.pressedCard,
-            ]}
-          >
-            <View style={styles.cardTop}>
-              <MissionAccessBadge
-                access={mission.access}
-                accent={isVocal ? VOCAL_VIOLET : ORANGE}
-                variant={isVocal ? "vocal" : "access"}
-              />
-              <AppText
-                variant="caption"
-                lineContract="singleLine"
-                style={[
-                  styles.cardArrow,
-                  isLocked && styles.cardArrowPremium,
-                ]}
-              >
-                {isLocked ? "Premium" : "Ouvrir"}
-              </AppText>
-            </View>
-            <AppText variant="cardTitle" style={styles.missionTitle}>
-              {mission.title}
-            </AppText>
-            <AppText
-              variant="bodySecondary"
-              tone="muted"
-              style={styles.missionSubtitle}
-            >
-              {mission.subtitle}
-            </AppText>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  background: { flex: 1, backgroundColor: BG_DEEP, overflow: "hidden" },
-  overlay: { ...ABSOLUTE_FILL, backgroundColor: "rgba(5,5,8,0.70)" },
-  safe: { flex: 1 },
+  background: {
+    flex: 1,
+    backgroundColor: BG_DEEP,
+    overflow: "hidden",
+  },
+  ambientGlow: {
+    position: "absolute",
+    top: 250,
+    right: -120,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+  },
+  safe: {
+    flex: 1,
+  },
   contentFrame: {
     width: "100%",
     alignSelf: "center",
   },
-  content: { paddingTop: 0, paddingBottom: 42 },
-  section: { marginTop: 30 },
-  sectionHeader: { marginBottom: 12 },
-  sectionTitle: { color: TXT },
-  sectionSubtitle: { color: MUTED, marginTop: 4 },
-  missionStack: { gap: 14 },
+  content: {
+    paddingTop: 0,
+    paddingBottom: 96,
+  },
+  missionStack: {
+    gap: 15,
+  },
   missionGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "stretch",
-  },
-  missionCard: {
-    minHeight: 126,
-    borderRadius: SeoulMidnightGlass.radii.missionCard,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: LINE,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    padding: 18,
-  },
-  compactCard: {
-    minHeight: 112,
-    padding: 16,
-  },
-  premiumCard: { borderColor: SeoulMidnightGlass.colors.premiumBorder },
-  pressedCard: { opacity: 0.88, transform: [{ scale: 0.99 }] },
-  cardTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  cardArrow: {
-    color: SOFT,
-  },
-  cardArrowPremium: { color: GOLD },
-  missionTitle: {
-    color: TXT,
-  },
-  missionSubtitle: {
-    color: MUTED,
-    marginTop: 7,
   },
 });
