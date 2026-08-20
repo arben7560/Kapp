@@ -41,6 +41,7 @@ type FormMode =
   | "sign-in"
   | "reset"
   | "confirmation"
+  | "protection-success"
   | "set-password"
   | "change-password"
   | null;
@@ -233,6 +234,7 @@ export default function AccountScreen() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const didHandleProtectAction = React.useRef(false);
   const clearAuthError = auth.clearError;
+  const clearAccountProtectionSuccess = auth.clearAccountProtectionSuccess;
 
   const resetForm = React.useCallback(() => {
     setEmail("");
@@ -256,9 +258,18 @@ export default function AccountScreen() {
 
   const closeDialog = React.useCallback(() => {
     if (isSubmitting || auth.activeOAuthProvider) return;
+    if (mode === "protection-success") {
+      clearAccountProtectionSuccess();
+    }
     setMode(null);
     resetForm();
-  }, [auth.activeOAuthProvider, isSubmitting, resetForm]);
+  }, [
+    auth.activeOAuthProvider,
+    clearAccountProtectionSuccess,
+    isSubmitting,
+    mode,
+    resetForm,
+  ]);
 
   const continueWithProvider = React.useCallback(
     async (provider: KappOAuthProvider, existingAccount = false) => {
@@ -301,6 +312,19 @@ export default function AccountScreen() {
   }, [auth.needsPasswordSetup, openMode]);
 
   React.useEffect(() => {
+    if (!auth.didCompleteAccountProtection) return;
+    const timer = setTimeout(() => {
+      setEmail("");
+      setPassword("");
+      setPasswordConfirmation("");
+      setFormError(null);
+      setFormSuccess(null);
+      setMode("protection-success");
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [auth.didCompleteAccountProtection]);
+
+  React.useEffect(() => {
     if (!auth.isPasswordRecovery) return;
     const timer = setTimeout(() => openMode("change-password"), 0);
     return () => clearTimeout(timer);
@@ -337,11 +361,13 @@ export default function AccountScreen() {
         ensureMatchingPasswords();
         validateEmail(email);
         validatePassword(password);
-        const result = await auth.protectProgress(email);
+        const result = await auth.protectProgress(email, password);
+        setPassword("");
+        setPasswordConfirmation("");
         if (result === "confirmation-required") {
           setMode("confirmation");
         } else {
-          setMode("set-password");
+          setMode("protection-success");
         }
       } else if (mode === "sign-in") {
         await auth.signIn(email, password);
@@ -459,6 +485,8 @@ export default function AccountScreen() {
           ? "Mot de passe oublié"
           : mode === "confirmation"
             ? "Confirmez votre email"
+            : mode === "protection-success"
+              ? "Compte créé avec succès"
             : mode === "set-password"
               ? "Finaliser votre compte"
               : "Nouveau mot de passe";
@@ -759,7 +787,13 @@ export default function AccountScreen() {
         visible={mode !== null}
         onRequestClose={closeDialog}
         accessibilityLabel={dialogTitle}
-        accentColor={mode === "confirmation" ? COLORS.amber : COLORS.cyan}
+        accentColor={
+          mode === "confirmation"
+            ? COLORS.amber
+            : mode === "protection-success"
+              ? COLORS.green
+              : COLORS.cyan
+        }
       >
         <View style={styles.dialogHeader}>
           <View style={styles.dialogIcon}>
@@ -767,12 +801,20 @@ export default function AccountScreen() {
               name={
                 mode === "confirmation"
                   ? "mail-outline"
+                  : mode === "protection-success"
+                    ? "checkmark-circle-outline"
                   : mode === "sign-in"
                     ? "log-in-outline"
                     : "shield-checkmark-outline"
               }
               size={22}
-              color={mode === "confirmation" ? COLORS.amber : COLORS.cyan}
+              color={
+                mode === "confirmation"
+                  ? COLORS.amber
+                  : mode === "protection-success"
+                    ? COLORS.green
+                    : COLORS.cyan
+              }
             />
           </View>
           <View style={styles.dialogHeadingCopy}>
@@ -780,6 +822,8 @@ export default function AccountScreen() {
             <AppText variant="bodySecondary" tone="muted" style={styles.dialogSubtitle}>
               {mode === "confirmation"
                 ? `Un lien a été envoyé à ${auth.confirmationEmail ?? "votre adresse"}.`
+                : mode === "protection-success"
+                  ? "Votre progression est maintenant protégée et synchronisée avec votre compte."
                 : mode === "reset"
                   ? "Nous vous enverrons un lien sécurisé, sans révéler si le compte existe."
                   : mode === "set-password"
@@ -792,7 +836,13 @@ export default function AccountScreen() {
         {mode === "confirmation" ? (
           <View style={styles.confirmationPanel}>
             <AppText variant="body" tone="muted">
-              Ouvrez le lien sur cet appareil. K-App conservera le même identifiant utilisateur et vous demandera ensuite de définir le mot de passe.
+              Ouvrez le lien sur cet appareil. K-App conservera le même identifiant utilisateur et finalisera automatiquement votre compte.
+            </AppText>
+          </View>
+        ) : mode === "protection-success" ? (
+          <View style={[styles.confirmationPanel, styles.protectionSuccessPanel]}>
+            <AppText variant="body" tone="muted">
+              Votre adresse email est confirmée. Vous pouvez désormais vous connecter avec le mot de passe choisi lors de la création du compte.
             </AppText>
           </View>
         ) : (
@@ -887,7 +937,7 @@ export default function AccountScreen() {
                   .finally(() => setIsSubmitting(false));
               }}
             />
-          ) : (
+          ) : mode === "protection-success" ? null : (
             <ActionButton
               label={
                 mode === "protect"
@@ -913,7 +963,12 @@ export default function AccountScreen() {
               }}
             />
           ) : null}
-          <ActionButton label="Fermer" variant="ghost" disabled={isSubmitting || Boolean(auth.activeOAuthProvider)} onPress={closeDialog} />
+          <ActionButton
+            label={mode === "protection-success" ? "Continuer" : "Fermer"}
+            variant="ghost"
+            disabled={isSubmitting || Boolean(auth.activeOAuthProvider)}
+            onPress={closeDialog}
+          />
         </DialogActions>
       </AppDialog>
     </LinearGradient>
@@ -1137,6 +1192,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(247,200,115,0.20)",
     backgroundColor: "rgba(247,200,115,0.06)",
+  },
+  protectionSuccessPanel: {
+    borderColor: "rgba(103,232,168,0.20)",
+    backgroundColor: "rgba(103,232,168,0.06)",
   },
   formMessage: {
     marginTop: 14,

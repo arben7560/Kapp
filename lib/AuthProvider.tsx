@@ -29,13 +29,15 @@ import {
 
 const PENDING_PROTECTION_EMAIL_KEY =
   "@k_app/auth/pending_protection_email_v1";
+const PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY =
+  "@k_app/auth/pending_protection_with_password_email_v2";
 const DELETE_ACCOUNT_FUNCTION =
   process.env.EXPO_PUBLIC_SUPABASE_DELETE_ACCOUNT_FUNCTION?.trim() ||
   "delete-account";
 
 export type ProtectProgressResult =
   | "confirmation-required"
-  | "password-required";
+  | "success";
 export type OAuthResult = "success" | "cancelled";
 export type SignOutResult = {
   syncDeferred: boolean;
@@ -54,6 +56,7 @@ type AuthContextValue = {
   isAnonymous: boolean;
   isPermanentAccount: boolean;
   needsPasswordSetup: boolean;
+  didCompleteAccountProtection: boolean;
   isPasswordRecovery: boolean;
   confirmationEmail: string | null;
   providers: string[];
@@ -61,7 +64,8 @@ type AuthContextValue = {
   activeOAuthProvider: KappOAuthProvider | null;
   error: string | null;
   clearError: () => void;
-  protectProgress: (email: string) => Promise<ProtectProgressResult>;
+  clearAccountProtectionSuccess: () => void;
+  protectProgress: (email: string, password: string) => Promise<ProtectProgressResult>;
   completeAccountProtection: (password: string) => Promise<void>;
   resendProtectionEmail: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
@@ -155,6 +159,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     string | null
   >(null);
   const [needsPasswordSetup, setNeedsPasswordSetup] = React.useState(false);
+  const [didCompleteAccountProtection, setDidCompleteAccountProtection] =
+    React.useState(false);
   const [isPasswordRecovery, setIsPasswordRecovery] = React.useState(false);
   const [activeOAuthProvider, setActiveOAuthProvider] =
     React.useState<KappOAuthProvider | null>(null);
@@ -194,8 +200,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (event === "USER_UPDATED" || event === "SIGNED_IN") {
           const revision = pendingProtectionRevision.current;
-          void AsyncStorage.getItem(PENDING_PROTECTION_EMAIL_KEY).then(
-            (pendingEmail) => {
+          void Promise.all([
+            AsyncStorage.getItem(PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY),
+            AsyncStorage.getItem(PENDING_PROTECTION_EMAIL_KEY),
+          ]).then(
+            ([pendingEmailWithPassword, legacyPendingEmail]) => {
+              const pendingEmail =
+                pendingEmailWithPassword ?? legacyPendingEmail;
               if (
                 !mounted ||
                 !pendingEmail ||
@@ -204,10 +215,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 return;
               }
               setConfirmationEmail(pendingEmail);
-              setNeedsPasswordSetup(
+              const isPermanent =
                 Boolean(nextSession?.user) &&
-                  !isAnonymousUser(nextSession?.user ?? null),
-              );
+                !isAnonymousUser(nextSession?.user ?? null);
+              if (pendingEmailWithPassword && isPermanent) {
+                pendingProtectionRevision.current += 1;
+                void AsyncStorage.removeItem(
+                  PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY,
+                );
+                setConfirmationEmail(null);
+                setNeedsPasswordSetup(false);
+                setDidCompleteAccountProtection(true);
+              } else {
+                setNeedsPasswordSetup(Boolean(legacyPendingEmail && isPermanent));
+              }
             },
           );
         }
@@ -216,13 +237,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initialize = async () => {
       try {
-        const [sessionResult, pendingEmail, initialUrl] = await Promise.all([
+        const [
+          sessionResult,
+          pendingEmailWithPassword,
+          legacyPendingEmail,
+          initialUrl,
+        ] = await Promise.all([
           client.auth.getSession(),
+          AsyncStorage.getItem(PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY),
           AsyncStorage.getItem(PENDING_PROTECTION_EMAIL_KEY),
           Linking.getInitialURL(),
         ]);
         if (sessionResult.error) throw sessionResult.error;
 
+        const pendingEmail = pendingEmailWithPassword ?? legacyPendingEmail;
         if (pendingEmail && mounted) setConfirmationEmail(pendingEmail);
         if (initialUrl) {
           try {
@@ -238,10 +266,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (mounted) {
           setSession(activeSession);
-          setNeedsPasswordSetup(
-            Boolean(pendingEmail && activeSession?.user) &&
-              !isAnonymousUser(activeSession?.user ?? null),
-          );
+          const isPermanent =
+            Boolean(activeSession?.user) &&
+            !isAnonymousUser(activeSession?.user ?? null);
+          if (pendingEmailWithPassword && isPermanent) {
+            pendingProtectionRevision.current += 1;
+            await AsyncStorage.removeItem(
+              PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY,
+            );
+            setConfirmationEmail(null);
+            setNeedsPasswordSetup(false);
+            setDidCompleteAccountProtection(true);
+          } else {
+            setNeedsPasswordSetup(Boolean(legacyPendingEmail && isPermanent));
+          }
         }
       } catch (caught) {
         if (mounted) captureError(caught);
@@ -264,11 +302,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [captureError, handleAuthUrl]);
 
   const clearError = React.useCallback(() => setError(null), []);
+  const clearAccountProtectionSuccess = React.useCallback(
+    () => setDidCompleteAccountProtection(false),
+    [],
+  );
 
   const protectProgress = React.useCallback(
-    async (rawEmail: string) => {
+    async (rawEmail: string, password: string) => {
       const client = requireConfiguredAuth();
       const email = validateEmail(rawEmail);
+      validatePassword(password);
 
       if (!session?.user || !isAnonymousUser(session.user)) {
         throw new KappAuthError(
@@ -278,21 +321,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setError(null);
+      setDidCompleteAccountProtection(false);
       try {
         const { data, error: updateError } = await client.auth.updateUser(
-          { email },
+          { email, password },
           { emailRedirectTo: createAuthRedirectUrl("protect") },
         );
         if (updateError) throw updateError;
 
-        await AsyncStorage.setItem(PENDING_PROTECTION_EMAIL_KEY, email);
-        setConfirmationEmail(email);
-
         if (data.user && !isAnonymousUser(data.user)) {
-          setNeedsPasswordSetup(true);
-          return "password-required" as const;
+          setConfirmationEmail(null);
+          setNeedsPasswordSetup(false);
+          setDidCompleteAccountProtection(true);
+          return "success" as const;
         }
 
+        await AsyncStorage.setItem(
+          PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY,
+          email,
+        );
+        setConfirmationEmail(email);
         return "confirmation-required" as const;
       } catch (caught) {
         throw captureError(caught);
@@ -328,6 +376,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const client = requireConfiguredAuth();
     const email =
       confirmationEmail ??
+      (await AsyncStorage.getItem(
+        PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY,
+      )) ??
       (await AsyncStorage.getItem(PENDING_PROTECTION_EMAIL_KEY));
 
     if (!email) {
@@ -602,6 +653,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAnonymous,
       isPermanentAccount: Boolean(user && !isAnonymous),
       needsPasswordSetup,
+      didCompleteAccountProtection,
       isPasswordRecovery,
       confirmationEmail,
       providers,
@@ -609,6 +661,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       activeOAuthProvider,
       error,
       clearError,
+      clearAccountProtectionSuccess,
       protectProgress,
       completeAccountProtection,
       resendProtectionEmail,
@@ -627,6 +680,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isHandlingDeepLink,
       isAnonymous,
       needsPasswordSetup,
+      didCompleteAccountProtection,
       isPasswordRecovery,
       confirmationEmail,
       providers,
@@ -634,6 +688,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       activeOAuthProvider,
       error,
       clearError,
+      clearAccountProtectionSuccess,
       protectProgress,
       completeAccountProtection,
       resendProtectionEmail,

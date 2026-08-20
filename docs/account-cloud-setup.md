@@ -102,16 +102,14 @@ l’environnement sécurisé de l’Edge Function.
 
 ## Confirmation email et mot de passe
 
-Supabase exige que l’email d’un utilisateur anonyme soit vérifié avant de lui
-ajouter un mot de passe. K-App envoie donc d’abord le changement d’email avec
-le callback `kapp://account/callback?intent=confirm`. Après validation, la page
-demande le mot de passe une seconde fois ; aucun mot de passe en attente n’est
-stocké localement.
+K-App transmet l’email et le mot de passe choisi dans le même appel `updateUser`.
+Supabase envoie ensuite le changement d’email avec le callback de protection.
+Après validation, K-App finalise la session et affiche la réussite sans demander
+une seconde saisie. Aucun mot de passe en attente n’est stocké localement.
 
 Si Confirm Email est désactivé dans un environnement de test, `updateUser`
-convertit immédiatement l’utilisateur et K-App définit le mot de passe dans la
-même interaction. Cette configuration ne doit pas être reproduite
-silencieusement en production.
+convertit immédiatement l’utilisateur et K-App affiche directement la réussite.
+Cette configuration ne doit pas être reproduite silencieusement en production.
 
 La récupération utilise le même callback avec `intent=recovery`, échange le
 code PKCE (ou les jetons legacy), puis appelle `updateUser({ password })` depuis

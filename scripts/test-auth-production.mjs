@@ -84,13 +84,12 @@ test("2. user_progress is read and upserted only for the active UID", () => {
   assert.match(migration, /auth\.uid\(\)\) = user_id/iu);
 });
 
-test("3. anonymous to email confirms the address before choosing one password", () => {
-  assert.match(authSource, /auth\.updateUser\([\s\S]*?\{ email \}/u);
-  assert.match(accountSource, /auth\.protectProgress\(email\)/u);
-  assert.doesNotMatch(
-    accountSource,
-    /auth\.protectProgress\(email,\s*password\)/u,
-  );
+test("3. anonymous to email keeps the chosen password through confirmation", () => {
+  assert.match(authSource, /auth\.updateUser\([\s\S]*?\{ email, password \}/u);
+  assert.match(accountSource, /auth\.protectProgress\(email,\s*password\)/u);
+  assert.match(accountSource, /Compte créé avec succès/u);
+  assert.match(authSource, /setDidCompleteAccountProtection\(true\)/u);
+  // Keep completing protection available for confirmations started by older builds.
   assert.match(
     authSource,
     /const completeAccountProtection[\s\S]*?auth\.updateUser\(\{[\s\S]*?password/u,
