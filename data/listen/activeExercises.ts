@@ -67,7 +67,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       audioAsset: "assets/audio/listen/myeot-buniseyo-1.mp3",
       options: ["몇 분이세요?", "몇 시예요?", "몇 층이에요?"],
       answer: 0,
-      explanation: "몇 분이세요? = Vous êtes combien ?",
+      explanation:
+        "몇 분이세요? veut dire « Vous êtes combien ? ». Ici, 몇 분 porte sur le nombre de personnes.",
     },
     {
       id: "cafe-dictation-02",
@@ -83,7 +84,7 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       ],
       answer: 0,
       explanation:
-        "아이스 아메리카노 주세요. = Un americano glacé, s'il vous plaît.",
+        "Tu as bien entendu 아이스 아메리카노 주세요 : « Un americano glacé, s'il vous plaît. »",
     },
     {
       id: "metro-dictation-03",
@@ -94,7 +95,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       audioAsset: "assets/audio/listen/igoseuro-gaseyo.mp3",
       options: ["이쪽으로 가세요.", "저쪽으로 가세요.", "왼쪽으로 가세요."],
       answer: 0,
-      explanation: "이쪽으로 가세요. = Allez par ici.",
+      explanation:
+        "이쪽으로 가세요 veut dire « Allez par ici ». Le mot-clé est 이쪽, « ce côté-ci ».",
     },
     {
       id: "shop-dictation-04",
@@ -105,7 +107,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       audioAsset: "assets/audio/listen/eolmayeyo.mp3",
       options: ["얼마예요?", "이거 있어요?", "카드 돼요?"],
       answer: 0,
-      explanation: "얼마예요? = Combien ça coûte ?",
+      explanation:
+        "얼마예요? sert à demander le prix : « Combien ça coûte ? »",
     },
     {
       id: "hotel-dictation-05",
@@ -116,7 +119,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       audioAsset: "assets/audio/listen/yeyakhaesseoyo-1.mp3",
       options: ["예약했어요.", "예약할게요.", "취소했어요."],
       answer: 0,
-      explanation: "예약했어요. = J'ai réservé.",
+      explanation:
+        "예약했어요 signifie « J'ai réservé ». La terminaison -했어요 place ici l'action au passé.",
     },
   ],
   situation: [
@@ -130,7 +134,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       sourceText: "몇 분이세요?",
       options: ["두 명이에요.", "삼겹살 2인분 주세요.", "카드로 계산할게요."],
       answer: 0,
-      explanation: "La serveuse demande le nombre de personnes.",
+      explanation:
+        "몇 분이세요? demande combien de personnes vous êtes ; 두 명이에요 répond directement à la question.",
     },
     {
       id: "cafe-situation-02",
@@ -142,7 +147,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       sourceText: "주문 하시겠어요 ?",
       options: ["따뜻한 라떼 주세요.", "매장에서 마실게요.", "카드로 할게요."],
       answer: 0,
-      explanation: "On te demande ce que tu veux commander.",
+      explanation:
+        "Le barista te demande ce que tu veux commander. Une commande comme 따뜻한 라떼 주세요 répond naturellement.",
     },
     {
       id: "metro-situation-03",
@@ -154,7 +160,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       sourceText: "이번 역은 홍대입구역입니다.",
       options: ["여기서 내려요.", "2호선으로 갈아타요.", "다음 역에서 내려요."],
       answer: 0,
-      explanation: "L'annonce indique que c'est l'arrêt où descendre.",
+      explanation:
+        "L'annonce dit que la station actuelle est 홍대입구역. Si c'est ton arrêt, c'est donc ici que tu descends.",
     },
     {
       id: "shop-situation-04",
@@ -167,7 +174,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       sourceText: "카드로 하시겠어요, 현금으로 하시겠어요?",
       options: ["카드로 할게요.", "중간 사이즈로 할게요.", "봉투는 괜찮아요."],
       answer: 0,
-      explanation: "On te demande comment tu veux payer.",
+      explanation:
+        "La question oppose la carte aux espèces. 카드로 할게요 répond directement : « Je vais payer par carte. »",
     },
     {
       id: "street-situation-05",
@@ -179,7 +187,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       sourceText: "여기서 쭉 가시면 돼요",
       options: ["네, 감사합니다.", "서울역이 어디예요?", "택시를 불러 주세요."],
       answer: 0,
-      explanation: "La personne vient de t'indiquer le chemin.",
+      explanation:
+        "La personne vient de t'indiquer le chemin ; 네, 감사합니다 est simplement la réaction naturelle pour la remercier.",
     },
   ],
   gap: [
@@ -194,7 +203,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       after: " 주세요.",
       options: ["2인분", "3인분", "4인분"],
       answer: "2인분",
-      explanation: "2인분 = deux portions.",
+      explanation:
+        "Le groupe entendu est 2인분 : cela signifie « deux portions ».",
     },
     {
       id: "cafe-gap-02",
@@ -207,7 +217,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       after: " 주세요.",
       options: ["라떼", "아메리카노", "레몬에이드"],
       answer: "라떼",
-      explanation: "아이스 라떼 주세요. = Un latte glacé, s'il vous plaît.",
+      explanation:
+        "Le mot entendu est 라떼. La phrase complète est 아이스 라떼 주세요 : « Un latte glacé, s'il vous plaît. »",
     },
     {
       id: "shop-gap-03",
@@ -220,7 +231,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       after: " 계산할게요.",
       options: ["카드로", "현금으로", "삼성페이로"],
       answer: "카드로",
-      explanation: "카드로 계산할게요. = Je vais payer par carte.",
+      explanation:
+        "Tu entends 카드로, « par carte » : 카드로 계산할게요 signifie « Je vais payer par carte. »",
     },
     {
       id: "metro-gap-04",
@@ -233,7 +245,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       after: "에서 내려요.",
       options: ["홍대입구", "강남", "서울역"],
       answer: "홍대입구",
-      explanation: "홍대입구에서 내려요. = Je descends à Hongik University.",
+      explanation:
+        "Le lieu entendu est 홍대입구. 홍대입구에서 내려요 signifie « Je descends à Hongik University. »",
     },
     {
       id: "hotel-gap-05",
@@ -246,7 +259,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       after: "했어요.",
       options: ["예약", "결제", "체크인"],
       answer: "예약",
-      explanation: "예약했어요. = J'ai réservé.",
+      explanation:
+        "Le mot entendu est 예약, « réservation » ; 예약했어요 signifie « J'ai réservé. »",
     },
   ],
   order: [
@@ -259,7 +273,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       audioAsset: "assets/audio/listen/jjuk-ijjogeuro-gaseyo.mp3",
       words: ["가세요", "이쪽으로", "쭉"],
       answer: ["쭉", "이쪽으로", "가세요"],
-      explanation: "쭉 이쪽으로 가세요. = Continuez tout droit par ici.",
+      explanation:
+        "Tu entends 쭉 이쪽으로 가세요 : « Continuez tout droit par ici. » Garde cet ordre quand tu reconstruis la phrase.",
     },
     {
       id: "cafe-order-02",
@@ -271,7 +286,7 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       words: ["주세요", "아이스", "아메리카노"],
       answer: ["아이스", "아메리카노", "주세요"],
       explanation:
-        "아이스 아메리카노 주세요. = Un americano glacé, s'il vous plaît.",
+        "La commande entendue est 아이스 아메리카노 주세요 : la boisson vient avant 주세요.",
     },
     {
       id: "shop-order-03",
@@ -282,7 +297,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       audioAsset: "assets/audio/listen/igeo-eolmayeyo.mp3",
       words: ["얼마예요", "이거", "?"],
       answer: ["이거", "얼마예요", "?"],
-      explanation: "이거 얼마예요? = Combien coûte ceci ?",
+      explanation:
+        "La question entendue est 이거 얼마예요? : « Combien coûte ceci ? »",
     },
     {
       id: "restaurant-order-04",
@@ -293,7 +309,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       audioAsset: "assets/audio/listen/mul-jom-juseyo.mp3",
       words: ["주세요", "물", "좀"],
       answer: ["물", "좀", "주세요"],
-      explanation: "물 좀 주세요. = Un peu d'eau, s'il vous plaît.",
+      explanation:
+        "Tu entends 물 좀 주세요 : une demande naturelle pour dire « Un peu d'eau, s'il vous plaît. »",
     },
     {
       id: "street-order-05",
@@ -304,7 +321,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       audioAsset: "assets/audio/listen/hwajangsiri-eodiyeyo.mp3",
       words: ["어디예요", "화장실이", "?"],
       answer: ["화장실이", "어디예요", "?"],
-      explanation: "화장실이 어디예요? = Où sont les toilettes ?",
+      explanation:
+        "La question naturelle est 화장실이 어디예요? : « Où sont les toilettes ? »",
     },
   ],
   reaction: [
@@ -322,7 +340,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
         "포장해 주세요.",
       ],
       answer: 0,
-      explanation: "On te demande ce que tu veux prendre.",
+      explanation:
+        "뭐 드릴까요? signifie qu'on te demande ce que tu veux prendre. Tu réponds donc par ta commande.",
     },
     {
       id: "restaurant-reaction-02",
@@ -334,7 +353,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       sourceText: "더 필요한 거 있으세요?",
       options: ["네, 물 좀 주세요.", "카드로 계산할게요.", "포장해 주세요."],
       answer: 0,
-      explanation: "La serveuse demande si tu as besoin de quelque chose.",
+      explanation:
+        "La serveuse demande s'il te faut autre chose. 네, 물 좀 주세요 répond directement en demandant de l'eau.",
     },
     {
       id: "shop-reaction-03",
@@ -350,7 +370,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
         "카드로 할게요.",
       ],
       answer: 0,
-      explanation: "Le vendeur propose de t'aider, tu réponds que tu regardes.",
+      explanation:
+        "Le vendeur te propose son aide. 괜찮아요, 그냥 볼게요 lui répond naturellement que tu vas simplement regarder.",
     },
     {
       id: "hotel-reaction-04",
@@ -362,7 +383,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       sourceText: "예약하셨어요?",
       options: ["예약했어요.", "현금으로 할게요.", "짐을 맡길게요."],
       answer: 0,
-      explanation: "La réception demande si tu as une réservation.",
+      explanation:
+        "예약하셨어요? demande si tu as réservé. 예약했어요 répond simplement : « J'ai réservé. »",
     },
     {
       id: "street-reaction-05",
@@ -374,7 +396,8 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       sourceText: "여기서 쭉 가시면 돼요.",
       options: ["감사합니다.", "왼쪽으로 가세요.", "서울역이 어디예요?"],
       answer: 0,
-      explanation: "Quelqu'un vient de t'aider, tu remercies.",
+      explanation:
+        "On vient de t'indiquer le chemin. 감사합니다 est donc la réponse naturelle pour remercier.",
     },
   ],
 };

@@ -5,6 +5,7 @@ import {
   Text,
   TextInput,
   type StyleProp,
+  type TextInputProps,
   type TextProps,
   type TextInputProps,
   type TextStyle,
@@ -221,6 +222,7 @@ export const AnimatedAppText = Animated.createAnimatedComponent(AppText);
 
 export type AppTextInputProps = Omit<TextInputProps, 'style'> & {
   variant?: AppTextVariant;
+<<<<<<< HEAD
   style?: StyleProp<TextStyle>;
 };
 
@@ -230,6 +232,23 @@ export const AppTextInput = React.forwardRef<
 >(function AppTextInput({ variant = 'body', style, ...rest }, ref) {
   const customFontsAvailable = React.useContext(AppFontsAvailableContext);
   const token = AppTypography[variant];
+=======
+  script?: AppTextScript;
+  style?: StyleProp<TextStyle>;
+};
+
+/** Text input counterpart that follows the same typography contract as AppText. */
+export const AppTextInput = React.forwardRef<
+  React.ComponentRef<typeof TextInput>,
+  AppTextInputProps
+>(function AppTextInput(
+  { variant = 'body', script, style, ...rest },
+  ref,
+) {
+  const customFontsAvailable = React.useContext(AppFontsAvailableContext);
+  const token = AppTypography[variant];
+  const resolvedScript = script ?? token.script;
+>>>>>>> 90924cf414d145e2066de5b63efe8194f63264d2
   const safeStyle = sanitizeTextStyle(style);
 
   return (
@@ -237,12 +256,21 @@ export const AppTextInput = React.forwardRef<
       ref={ref}
       {...rest}
       style={[
+<<<<<<< HEAD
         {
           ...resolveFontStyle(
             token.script,
             token.fontRole,
             customFontsAvailable,
           ),
+=======
+        resolveFontStyle(
+          resolvedScript,
+          token.fontRole,
+          customFontsAvailable,
+        ),
+        {
+>>>>>>> 90924cf414d145e2066de5b63efe8194f63264d2
           color: AppTextTones.default,
           fontSize: token.fontSize,
           lineHeight: token.lineHeight,

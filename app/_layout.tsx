@@ -27,6 +27,7 @@ import { AppTextProvider } from "../components/app-text";
 import { useMediaSessionLifecycle } from "../hooks/useMediaSessionLifecycle";
 import { AuthProvider } from "../lib/AuthProvider";
 import { DailyStreakProvider } from "../lib/DailyStreakProvider";
+import { ProgressSyncProvider } from "../lib/ProgressSyncProvider";
 import { PaywallProvider } from "../lib/paywall/PaywallProvider";
 import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard";
 import { ProgressSyncProvider } from "../lib/ProgressSyncProvider";
@@ -185,10 +186,17 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={KAPP_NAVIGATION_THEME}>
       <AppTextProvider customFontsAvailable={customFontsAvailable}>
+<<<<<<< HEAD
         <AuthProvider>
           <StoreProvider>
             <DailyStreakProvider>
               <ProgressSyncProvider>
+=======
+        <StoreProvider>
+          <AuthProvider>
+            <ProgressSyncProvider>
+              <DailyStreakProvider>
+>>>>>>> 90924cf414d145e2066de5b63efe8194f63264d2
                 <PaywallProvider>
                   <SubscriptionAccessGuard>
                     <ReleaseRouteGuard>
@@ -209,11 +217,15 @@ export default function RootLayout() {
                           name="index"
                           options={{ animation: "none" }}
                         />
+<<<<<<< HEAD
                         <Stack.Screen
                           name="onboarding"
                           options={{ animation: "none" }}
                         />
                         <Stack.Screen name="account" />
+=======
+                        <Stack.Screen name="onboarding" />
+>>>>>>> 90924cf414d145e2066de5b63efe8194f63264d2
                         <Stack.Screen name="premium" />
                         <Stack.Screen name="streak" />
                         <Stack.Screen name="(tabs)" />
@@ -226,10 +238,17 @@ export default function RootLayout() {
                     </ReleaseRouteGuard>
                   </SubscriptionAccessGuard>
                 </PaywallProvider>
+<<<<<<< HEAD
               </ProgressSyncProvider>
             </DailyStreakProvider>
           </StoreProvider>
         </AuthProvider>
+=======
+              </DailyStreakProvider>
+            </ProgressSyncProvider>
+          </AuthProvider>
+        </StoreProvider>
+>>>>>>> 90924cf414d145e2066de5b63efe8194f63264d2
       </AppTextProvider>
     </ThemeProvider>
   );

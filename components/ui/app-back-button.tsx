@@ -1,8 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router, type Href } from "expo-router";
-import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { router, type Href, usePathname } from "expo-router";
+import {
+  Pressable,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 
 import { AppText } from "../app-text";
+
+const SPEAK_EXPRESSION_ROUTES = new Set([
+  "/lesson/cafe",
+  "/lesson/metro",
+  "/lesson/restaurant",
+  "/lesson/airport",
+]);
 
 type AppBackButtonProps = {
   accessibilityLabel?: string;
@@ -19,7 +32,14 @@ export function AppBackButton({
   onPress,
   style,
 }: AppBackButtonProps) {
+  const pathname = usePathname();
+
   const handlePress = () => {
+    if (SPEAK_EXPRESSION_ROUTES.has(pathname)) {
+      router.replace("/(tabs)/speak");
+      return;
+    }
+
     if (onPress) {
       onPress();
       return;

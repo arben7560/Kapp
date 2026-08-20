@@ -1,9 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+<<<<<<< HEAD
 import { router } from "expo-router";
+=======
+import { useLocalSearchParams } from "expo-router";
+>>>>>>> 90924cf414d145e2066de5b63efe8194f63264d2
 import React from "react";
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -14,6 +19,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useStore } from "../../_store";
 import { AppText, AppTextInput } from "../../components/app-text";
 import { ActionButton } from "../../components/ui/action-button";
 import { AppBackButton } from "../../components/ui/app-back-button";
@@ -21,6 +27,10 @@ import { AppDialog, DialogActions } from "../../components/ui/app-dialog";
 import { SeoulMidnightGlass } from "../../constants/theme";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useAuth } from "../../lib/AuthProvider";
+import type { KappOAuthProvider } from "../../lib/authCallback";
+import {
+  suppressAccountProtectionPromptAfterLogout,
+} from "../../lib/accountProtectionPromptStorage";
 import { KappAuthError } from "../../lib/authErrors";
 import { useProgressSync } from "../../lib/ProgressSyncProvider";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
@@ -97,6 +107,58 @@ function GlassCard({ children }: { children: React.ReactNode }) {
   );
 }
 
+function ProviderButton({
+  provider,
+  loading,
+  disabled,
+  onPress,
+}: {
+  provider: KappOAuthProvider;
+  loading: boolean;
+  disabled?: boolean;
+  onPress: () => void;
+}) {
+  const label = provider === "google" ? "Continuer avec Google" : "Continuer avec Apple";
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      disabled={disabled || loading}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.providerButton,
+        pressed && styles.providerButtonPressed,
+        (disabled || loading) && styles.providerButtonDisabled,
+      ]}
+    >
+      {loading ? (
+        <ActivityIndicator color={COLORS.text} size="small" />
+      ) : (
+        <Ionicons
+          name={provider === "google" ? "logo-google" : "logo-apple"}
+          color={COLORS.text}
+          size={20}
+        />
+      )}
+      <AppText variant="button" style={styles.providerButtonLabel}>
+        {label}
+      </AppText>
+    </Pressable>
+  );
+}
+
+function providerSummary(providers: string[]) {
+  const labels = providers
+    .filter((provider) => provider !== "anonymous")
+    .map((provider) => {
+      if (provider === "google") return "Google";
+      if (provider === "apple") return "Apple";
+      if (provider === "email") return "Email + mot de passe";
+      return provider;
+    });
+  return labels.length > 0 ? labels.join(" • ") : "Compte K-App";
+}
+
 function Field({
   label,
   value,
@@ -112,25 +174,45 @@ function Field({
   secureTextEntry?: boolean;
   autoComplete?: React.ComponentProps<typeof AppTextInput>["autoComplete"];
 }) {
+  const [isSecureTextVisible, setIsSecureTextVisible] = React.useState(false);
+
   return (
     <View style={styles.fieldGroup}>
       <AppText variant="label" tone="soft">
         {label}
       </AppText>
-      <AppTextInput
-        accessibilityLabel={label}
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete={autoComplete}
-        keyboardType={label === "EMAIL" ? "email-address" : "default"}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor="rgba(255,255,255,0.30)"
-        secureTextEntry={secureTextEntry}
-        variant="bodyStrong"
-        style={styles.input}
-        value={value}
-      />
+      <View style={styles.inputShell}>
+        <AppTextInput
+          accessibilityLabel={label}
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete={autoComplete}
+          keyboardType={label === "EMAIL" ? "email-address" : "default"}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor="rgba(255,255,255,0.30)"
+          secureTextEntry={secureTextEntry && !isSecureTextVisible}
+          variant="bodyStrong"
+          style={[styles.input, secureTextEntry && styles.inputWithToggle]}
+          value={value}
+        />
+        {secureTextEntry ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={isSecureTextVisible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+            accessibilityState={{ checked: isSecureTextVisible }}
+            hitSlop={8}
+            onPress={() => setIsSecureTextVisible((visible) => !visible)}
+            style={styles.passwordToggle}
+          >
+            <Ionicons
+              name={isSecureTextVisible ? "eye-off-outline" : "eye-outline"}
+              size={21}
+              color={COLORS.soft}
+            />
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -139,6 +221,8 @@ export default function AccountScreen() {
   const auth = useAuth();
   const paywall = usePaywall();
   const sync = useProgressSync();
+  const { resetProgress } = useStore();
+  const params = useLocalSearchParams<{ action?: string | string[] }>();
   const responsive = useResponsiveLayout({ maxWidth: 760 });
   const [mode, setMode] = React.useState<FormMode>(null);
   const [email, setEmail] = React.useState("");
@@ -147,6 +231,7 @@ export default function AccountScreen() {
   const [formError, setFormError] = React.useState<string | null>(null);
   const [formSuccess, setFormSuccess] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const didHandleProtectAction = React.useRef(false);
   const clearAuthError = auth.clearError;
 
   const resetForm = React.useCallback(() => {
@@ -170,10 +255,44 @@ export default function AccountScreen() {
   );
 
   const closeDialog = React.useCallback(() => {
-    if (isSubmitting) return;
+    if (isSubmitting || auth.activeOAuthProvider) return;
     setMode(null);
     resetForm();
-  }, [isSubmitting, resetForm]);
+  }, [auth.activeOAuthProvider, isSubmitting, resetForm]);
+
+  const continueWithProvider = React.useCallback(
+    async (provider: KappOAuthProvider, existingAccount = false) => {
+      setFormError(null);
+      try {
+        const result = provider === "google" || existingAccount
+          ? await auth.signInWithOAuth(provider)
+          : await auth.linkOAuthIdentity(provider);
+        if (result === "success" && existingAccount) setMode(null);
+      } catch (caught) {
+        setFormError(friendlyCaughtMessage(caught));
+      }
+    },
+    [auth],
+  );
+
+  const requestedAction = Array.isArray(params.action)
+    ? params.action[0]
+    : params.action;
+
+  React.useEffect(() => {
+    if (
+      didHandleProtectAction.current ||
+      requestedAction !== "protect" ||
+      auth.isLoading ||
+      !auth.isAnonymous
+    ) {
+      return;
+    }
+
+    didHandleProtectAction.current = true;
+    const timer = setTimeout(() => openMode("protect"), 0);
+    return () => clearTimeout(timer);
+  }, [auth.isAnonymous, auth.isLoading, openMode, requestedAction]);
 
   React.useEffect(() => {
     if (!auth.needsPasswordSetup) return;
@@ -203,14 +322,11 @@ export default function AccountScreen() {
     setFormSuccess(null);
     try {
       if (mode === "protect") {
-        ensureMatchingPasswords();
-        const result = await auth.protectProgress(email, password);
+        const result = await auth.protectProgress(email);
         if (result === "confirmation-required") {
-          setPassword("");
-          setPasswordConfirmation("");
           setMode("confirmation");
         } else {
-          setMode(null);
+          setMode("set-password");
         }
       } else if (mode === "sign-in") {
         await auth.signIn(email, password);
@@ -250,6 +366,14 @@ export default function AccountScreen() {
             setIsSubmitting(true);
             void auth
               .signOut()
+              .then(() =>
+                suppressAccountProtectionPromptAfterLogout().catch((error) =>
+                  console.warn(
+                    "Impossible d’enregistrer le délai après déconnexion:",
+                    error,
+                  ),
+                ),
+              )
               .catch((caught) => Alert.alert("Déconnexion suspendue", friendlyCaughtMessage(caught)))
               .finally(() => setIsSubmitting(false));
           },
@@ -271,6 +395,15 @@ export default function AccountScreen() {
             setIsSubmitting(true);
             void auth
               .deleteAccount()
+              .then(async () => {
+                await resetProgress();
+                await suppressAccountProtectionPromptAfterLogout().catch((error) =>
+                  console.warn(
+                    "Impossible d’enregistrer le délai après suppression:",
+                    error,
+                  ),
+                );
+              })
               .catch((caught) => Alert.alert("Suppression impossible", friendlyCaughtMessage(caught)))
               .finally(() => setIsSubmitting(false));
           },
@@ -282,7 +415,7 @@ export default function AccountScreen() {
   const syncPresentation = React.useMemo(() => {
     switch (sync.status) {
       case "synced":
-        return { label: "Synchronisé", color: COLORS.green, icon: "checkmark-circle" as const };
+        return { label: "Progression synchronisée", color: COLORS.green, icon: "checkmark-circle" as const };
       case "syncing":
         return { label: "Synchronisation", color: COLORS.cyan, icon: "sync" as const };
       case "pending":
@@ -309,11 +442,11 @@ export default function AccountScreen() {
 
   const requiresEmail = mode === "protect" || mode === "sign-in" || mode === "reset";
   const requiresPassword =
-    mode === "protect" ||
     mode === "sign-in" ||
     mode === "set-password" ||
     mode === "change-password";
   const requiresConfirmation =
+<<<<<<< HEAD
     mode === "protect" || mode === "set-password" || mode === "change-password";
   const activePlanLabel =
     paywall.entitlement.productId === "kapp_premium_monthly"
@@ -331,6 +464,9 @@ export default function AccountScreen() {
 
     router.push("/premium");
   };
+=======
+    mode === "set-password" || mode === "change-password";
+>>>>>>> 90924cf414d145e2066de5b63efe8194f63264d2
 
   return (
     <LinearGradient
@@ -383,7 +519,7 @@ export default function AccountScreen() {
                   Progression enregistrée sur cet appareil
                 </AppText>
                 <AppText variant="body" tone="muted" style={styles.cardBody}>
-                  Créez un compte pour retrouver votre progression après une réinstallation ou sur un autre appareil.
+                  Créez un compte ou connectez-vous pour retrouver votre progression après une réinstallation ou sur un autre appareil.
                 </AppText>
                 {auth.error ? (
                   <View style={styles.inlineNotice}>
@@ -394,8 +530,27 @@ export default function AccountScreen() {
                   </View>
                 ) : null}
                 <View style={styles.primaryActions}>
+                  <ProviderButton
+                    provider="google"
+                    loading={auth.activeOAuthProvider === "google"}
+                    disabled={!auth.isConfigured || auth.isLoading || Boolean(auth.activeOAuthProvider)}
+                    onPress={() => void continueWithProvider("google")}
+                  />
+                  {Platform.OS === "ios" ? (
+                    <ProviderButton
+                      provider="apple"
+                      loading={auth.activeOAuthProvider === "apple"}
+                      disabled={!auth.isConfigured || auth.isLoading || Boolean(auth.activeOAuthProvider)}
+                      onPress={() => void continueWithProvider("apple")}
+                    />
+                  ) : null}
+                  <View style={styles.orRow}>
+                    <View style={styles.orLine} />
+                    <AppText variant="caption" tone="soft">OU</AppText>
+                    <View style={styles.orLine} />
+                  </View>
                   <ActionButton
-                    label="Protéger ma progression"
+                    label="Créer un compte avec mon email"
                     size="large"
                     accentColor={COLORS.cyan}
                     disabled={!auth.isConfigured || auth.isLoading}
@@ -425,25 +580,37 @@ export default function AccountScreen() {
                     label={syncPresentation.label}
                   />
                   <AppText variant="featureTitle" style={styles.cardTitle}>
-                    {sync.status === "synced"
-                      ? "✓ Progression sauvegardée"
-                      : "Compte protégé"}
+                    Compte protégé
                   </AppText>
-                  <AppText variant="body" tone="muted" style={styles.cardBody}>
-                    {sync.errorMessage ??
-                      "Votre progression locale est reliée à votre compte K-App."}
-                  </AppText>
+                  {sync.errorMessage ? (
+                    <AppText variant="body" tone="muted" style={styles.cardBody}>
+                      {sync.errorMessage}
+                    </AppText>
+                  ) : null}
                   <View style={styles.accountLine}>
                     <View style={styles.lineIcon}>
-                      <Ionicons name="mail-outline" size={17} color={COLORS.cyan} />
+                      <Ionicons name="person-circle-outline" size={17} color={COLORS.cyan} />
                     </View>
                     <View style={styles.lineCopy}>
-                      <AppText variant="caption" tone="soft">EMAIL</AppText>
-                      <AppText variant="bodyStrong" lineContract="singleLine">
-                        {auth.user?.email ?? "Email indisponible"}
+                      <AppText variant="caption" tone="soft">CONNEXION</AppText>
+                      <AppText variant="bodyStrong">
+                        {providerSummary(auth.providers)}
                       </AppText>
                     </View>
                   </View>
+                  {auth.user?.email ? (
+                    <View style={styles.accountLine}>
+                      <View style={styles.lineIcon}>
+                        <Ionicons name="mail-outline" size={17} color={COLORS.cyan} />
+                      </View>
+                      <View style={styles.lineCopy}>
+                        <AppText variant="caption" tone="soft">EMAIL</AppText>
+                        <AppText variant="bodyStrong" lineContract="singleLine">
+                          {auth.user.email}
+                        </AppText>
+                      </View>
+                    </View>
+                  ) : null}
                   <View style={styles.accountLine}>
                     <View style={styles.lineIcon}>
                       <Ionicons name="cloud-done-outline" size={17} color={syncPresentation.color} />
@@ -455,18 +622,19 @@ export default function AccountScreen() {
                       </AppText>
                     </View>
                   </View>
-                  {sync.status !== "synced" ? (
-                    <ActionButton
-                      label="Réessayer la synchronisation"
-                      variant="secondary"
-                      loading={sync.status === "syncing"}
-                      onPress={() => void synchronizeProgressNow()}
-                      style={styles.retryButton}
-                    />
-                  ) : null}
+                  <ActionButton
+                    label={sync.status === "error" || sync.status === "offline"
+                      ? "Réessayer la synchronisation"
+                      : "Synchroniser maintenant"}
+                    variant="secondary"
+                    loading={sync.status === "syncing"}
+                    onPress={() => void synchronizeProgressNow().catch(() => undefined)}
+                    style={styles.retryButton}
+                  />
                 </GlassCard>
 
-                <View style={styles.sectionCard}>
+                {auth.hasEmailIdentity ? (
+                  <View style={styles.sectionCard}>
                   <AppText variant="sectionLabel" tone="soft">SÉCURITÉ</AppText>
                   <Pressable style={styles.settingsRow} onPress={() => openMode("change-password")}>
                     <View style={styles.settingsIcon}>
@@ -489,7 +657,8 @@ export default function AccountScreen() {
                     </View>
                     <Ionicons name="chevron-forward" size={18} color={COLORS.soft} />
                   </Pressable>
-                </View>
+                  </View>
+                ) : null}
 
                 <View style={styles.secondaryActions}>
                   <ActionButton
@@ -607,7 +776,31 @@ export default function AccountScreen() {
             </AppText>
           </View>
         ) : (
-          <View style={styles.fields}>
+          <View>
+            {mode === "sign-in" ? (
+              <View style={styles.dialogProviders}>
+                <ProviderButton
+                  provider="google"
+                  loading={auth.activeOAuthProvider === "google"}
+                  disabled={Boolean(auth.activeOAuthProvider)}
+                  onPress={() => void continueWithProvider("google", true)}
+                />
+                {Platform.OS === "ios" ? (
+                  <ProviderButton
+                    provider="apple"
+                    loading={auth.activeOAuthProvider === "apple"}
+                    disabled={Boolean(auth.activeOAuthProvider)}
+                    onPress={() => void continueWithProvider("apple", true)}
+                  />
+                ) : null}
+                <View style={styles.orRow}>
+                  <View style={styles.orLine} />
+                  <AppText variant="caption" tone="soft">EMAIL</AppText>
+                  <View style={styles.orLine} />
+                </View>
+              </View>
+            ) : null}
+            <View style={styles.fields}>
             {requiresEmail ? (
               <Field
                 label="EMAIL"
@@ -637,6 +830,7 @@ export default function AccountScreen() {
                 autoComplete="new-password"
               />
             ) : null}
+            </View>
           </View>
         )}
 
@@ -699,7 +893,7 @@ export default function AccountScreen() {
               }}
             />
           ) : null}
-          <ActionButton label="Fermer" variant="ghost" disabled={isSubmitting} onPress={closeDialog} />
+          <ActionButton label="Fermer" variant="ghost" disabled={isSubmitting || Boolean(auth.activeOAuthProvider)} onPress={closeDialog} />
         </DialogActions>
       </AppDialog>
     </LinearGradient>
@@ -787,6 +981,29 @@ const styles = StyleSheet.create({
   },
   noticeCopy: { flex: 1, color: COLORS.amber },
   primaryActions: { gap: 10, marginTop: 24 },
+  providerButton: {
+    minHeight: 54,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    backgroundColor: "rgba(255,255,255,0.075)",
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 11,
+  },
+  providerButtonPressed: { backgroundColor: "rgba(255,255,255,0.12)" },
+  providerButtonDisabled: { opacity: 0.48 },
+  providerButtonLabel: { color: COLORS.text },
+  orRow: {
+    minHeight: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 2,
+  },
+  orLine: { flex: 1, height: 1, backgroundColor: SeoulMidnightGlass.colors.lineSoft },
   securityNote: {
     marginTop: 18,
     flexDirection: "row",
@@ -870,7 +1087,9 @@ const styles = StyleSheet.create({
   dialogHeadingCopy: { flex: 1 },
   dialogSubtitle: { marginTop: 5 },
   fields: { gap: 14, marginTop: 22 },
+  dialogProviders: { gap: 10, marginTop: 22 },
   fieldGroup: { gap: 7 },
+  inputShell: { position: "relative" },
   input: {
     minHeight: 52,
     borderRadius: 17,
@@ -880,6 +1099,16 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     paddingHorizontal: 15,
     paddingVertical: 12,
+  },
+  inputWithToggle: { paddingRight: 52 },
+  passwordToggle: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: 48,
+    alignItems: "center",
+    justifyContent: "center",
   },
   confirmationPanel: {
     marginTop: 20,

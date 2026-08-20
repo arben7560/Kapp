@@ -21,6 +21,7 @@ const SCENE_BACKGROUND = require("../assets/images/onboarding-scene-v2.webp");
 const CAFE_IMAGE = require("../assets/images/cafeIA.jpg");
 const METRO_IMAGE = require("../assets/images/metroIA.jpg");
 const RESTAURANT_IMAGE = require("../assets/images/restaurantIA.jpg");
+const AIRPORT_IMAGE = require("../assets/images/airport.jpg");
 
 const ONBOARDING_KEY = "kapp_onboarding_completed";
 const PINK = "#F472B6";
@@ -28,7 +29,7 @@ const CYAN = "#22D3EE";
 const GOLD = "#F59E0B";
 const WHITE = "#FFFFFF";
 
-type SceneKey = "cafe" | "metro" | "restaurant";
+type SceneKey = "cafe" | "metro" | "restaurant" | "airport";
 type ModeKey = "text" | "guided";
 type OnboardingStep = "scene" | "mode";
 
@@ -40,6 +41,8 @@ type SceneOption = {
   phrase: string;
   accent: string;
   image: number;
+  badge: string;
+  guidance: string;
 };
 
 const SCENES: SceneOption[] = [
@@ -51,6 +54,8 @@ const SCENES: SceneOption[] = [
     phrase: "아메리카노 한 잔 주세요",
     accent: PINK,
     image: CAFE_IMAGE,
+    badge: "IDÉAL POUR DÉBUTER",
+    guidance: "Aucun prérequis",
   },
   {
     key: "metro",
@@ -60,6 +65,8 @@ const SCENES: SceneOption[] = [
     phrase: "2호선은 어디예요?",
     accent: CYAN,
     image: METRO_IMAGE,
+    badge: "DÉBUTANT +",
+    guidance: "Scène guidée",
   },
   {
     key: "restaurant",
@@ -69,6 +76,19 @@ const SCENES: SceneOption[] = [
     phrase: "이거 주세요",
     accent: GOLD,
     image: RESTAURANT_IMAGE,
+    badge: "DÉBUTANT +",
+    guidance: "Scène guidée",
+  },
+  {
+    key: "airport",
+    eyebrow: "INCHEON",
+    title: "Aéroport",
+    subtitle: "Repère-toi dès ton arrivée en Corée.",
+    phrase: "지하철은 어디예요?",
+    accent: CYAN,
+    image: AIRPORT_IMAGE,
+    badge: "INTERMEDIAIRE",
+    guidance: "Vocabulaire + grammaire guidés",
   },
 ];
 
@@ -84,6 +104,10 @@ const ROUTES: Record<SceneKey, Record<ModeKey, string>> = {
   restaurant: {
     text: "/lesson/restaurant",
     guided: "/lesson/restaurantMissions",
+  },
+  airport: {
+    text: "/lesson/airport",
+    guided: "/lesson/aeroportMissions",
   },
 };
 
@@ -118,27 +142,6 @@ function SceneBackground({ dimmed = false }: { dimmed?: boolean }) {
   );
 }
 
-function ProgressDots({ active }: { active: 0 | 1 | 2 }) {
-  return (
-    <View
-      style={styles.progress}
-      accessibilityRole="progressbar"
-      accessibilityValue={{ min: 1, max: 3, now: active + 1 }}
-      accessibilityLabel={`Étape ${active + 1} sur 3`}
-    >
-      {[0, 1, 2].map((index) => (
-        <View
-          key={index}
-          style={[
-            styles.progressLine,
-            index === active && styles.progressLineActive,
-          ]}
-        />
-      ))}
-    </View>
-  );
-}
-
 function FeaturedScene({
   scene,
   height,
@@ -146,14 +149,10 @@ function FeaturedScene({
   scene: SceneOption;
   height: number;
 }) {
-  const isCafe = scene.key === "cafe";
-
   return (
     <View
       accessible
-      accessibilityLabel={`${scene.title}. ${scene.subtitle}${
-        isCafe ? " Aucun prérequis." : ""
-      }`}
+      accessibilityLabel={`${scene.title}. ${scene.subtitle} ${scene.guidance}.`}
       style={[
         styles.featuredCard,
         {
@@ -195,16 +194,13 @@ function FeaturedScene({
 
       <View style={styles.featuredTopRow}>
         <View
-          style={[
-            styles.recommendedPill,
-            { borderColor: `${scene.accent}88` },
-          ]}
+          style={[styles.recommendedPill, { borderColor: `${scene.accent}88` }]}
         >
           <View
             style={[styles.recommendedDot, { backgroundColor: scene.accent }]}
           />
           <AppText variant="label" style={styles.recommendedText}>
-            {isCafe ? "IDÉAL POUR DÉBUTER" : "TON IMMERSION"}
+            {scene.badge}
           </AppText>
         </View>
 
@@ -229,16 +225,16 @@ function FeaturedScene({
           {scene.subtitle}
         </AppText>
 
-        {isCafe ? (
-          <View style={styles.beginnerRow}>
-            <View style={styles.beginnerIcon}>
-              <Check size={12} color={PINK} strokeWidth={2.3} />
-            </View>
-            <AppText variant="caption" style={styles.beginnerText}>
-              Aucun prérequis
-            </AppText>
+        <View style={styles.beginnerRow}>
+          <View
+            style={[styles.beginnerIcon, { borderColor: `${scene.accent}B8` }]}
+          >
+            <Check size={12} color={scene.accent} strokeWidth={2.3} />
           </View>
-        ) : null}
+          <AppText variant="caption" style={styles.beginnerText}>
+            {scene.guidance}
+          </AppText>
+        </View>
       </View>
     </View>
   );
@@ -247,10 +243,12 @@ function FeaturedScene({
 function AlternativeScene({
   scene,
   height,
+  width,
   onPress,
 }: {
   scene: SceneOption;
   height: number;
+  width: number;
   onPress: () => void;
 }) {
   return (
@@ -260,7 +258,7 @@ function AlternativeScene({
       onPress={onPress}
       style={({ pressed }) => [
         styles.alternativeCard,
-        { height },
+        { height, width },
         pressed && styles.pressed,
       ]}
     >
@@ -270,11 +268,7 @@ function AlternativeScene({
         contentFit="cover"
       />
       <LinearGradient
-        colors={[
-          "rgba(2,3,7,0.00)",
-          "rgba(2,3,7,0.16)",
-          "rgba(2,3,7,0.88)",
-        ]}
+        colors={["rgba(2,3,7,0.00)", "rgba(2,3,7,0.16)", "rgba(2,3,7,0.88)"]}
         locations={[0, 0.42, 1]}
         style={StyleSheet.absoluteFill}
       />
@@ -336,6 +330,9 @@ export default function OnboardingScreen() {
           : 286;
 
   const alternativeHeight = isTablet ? 142 : isShort ? 102 : 118;
+  const alternativeWidth = isTablet
+    ? 244
+    : Math.min(190, Math.max(154, width * 0.43));
   const horizontalPadding = isTablet ? 30 : width <= 380 ? 18 : 22;
 
   const selectScene = async (scene: SceneKey) => {
@@ -368,15 +365,17 @@ export default function OnboardingScreen() {
   if (step === "mode") {
     return (
       <View style={styles.screen}>
-        <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+        <StatusBar
+          barStyle="light-content"
+          translucent
+          backgroundColor="transparent"
+        />
         <SceneBackground dimmed />
 
         <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-          <View style={[styles.modePage, { paddingHorizontal: horizontalPadding }]}> 
-            <View style={styles.modeProgressWrap}>
-              <ProgressDots active={1} />
-            </View>
-
+          <View
+            style={[styles.modePage, { paddingHorizontal: horizontalPadding }]}
+          >
             <ScrollView
               style={styles.modeScroll}
               contentContainerStyle={styles.modeContent}
@@ -432,7 +431,10 @@ export default function OnboardingScreen() {
                     <AppText variant="cardTitle" style={styles.modeChoiceTitle}>
                       Entre dans la scène
                     </AppText>
-                    <AppText variant="bodySecondary" style={styles.modeChoiceText}>
+                    <AppText
+                      variant="bodySecondary"
+                      style={styles.modeChoiceText}
+                    >
                       Écoute et réponds comme si tu étais sur place.
                     </AppText>
                   </View>
@@ -460,7 +462,10 @@ export default function OnboardingScreen() {
                     <AppText variant="cardTitle" style={styles.modeChoiceTitle}>
                       Expressions utiles
                     </AppText>
-                    <AppText variant="bodySecondary" style={styles.modeChoiceText}>
+                    <AppText
+                      variant="bodySecondary"
+                      style={styles.modeChoiceText}
+                    >
                       Revois d’abord les mots et expressions de la situation.
                     </AppText>
                   </View>
@@ -476,7 +481,10 @@ export default function OnboardingScreen() {
               <Pressable
                 accessibilityRole="button"
                 onPress={finish}
-                style={({ pressed }) => [styles.modePrimary, pressed && styles.pressed]}
+                style={({ pressed }) => [
+                  styles.modePrimary,
+                  pressed && styles.pressed,
+                ]}
               >
                 <LinearGradient
                   colors={["#E65D9D", "#8C426C", "#3F263A"]}
@@ -511,15 +519,17 @@ export default function OnboardingScreen() {
 
   return (
     <View style={styles.screen}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <StatusBar
+        barStyle="light-content"
+        translucent
+        backgroundColor="transparent"
+      />
       <SceneBackground />
 
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-        <View style={[styles.scenePage, { paddingHorizontal: horizontalPadding }]}> 
-          <View style={styles.sceneTopNav}>
-            <ProgressDots active={0} />
-          </View>
-
+        <View
+          style={[styles.scenePage, { paddingHorizontal: horizontalPadding }]}
+        >
           <ScrollView
             style={styles.sceneScroll}
             contentContainerStyle={[
@@ -547,20 +557,31 @@ export default function OnboardingScreen() {
             <FeaturedScene scene={selectedSceneData} height={heroHeight} />
 
             <View style={styles.alternativeSection}>
-              <AppText variant="sectionLabel" style={styles.alternativeLabel}>
-                AUTRES IMMERSIONS
-              </AppText>
+              <View style={styles.alternativeHeader}>
+                <AppText variant="sectionLabel" style={styles.alternativeLabel}>
+                  AUTRES IMMERSIONS
+                </AppText>
+                <AppText variant="caption" style={styles.swipeHint}>
+                  Fais glisser pour explorer
+                </AppText>
+              </View>
 
-              <View style={styles.alternativeList}>
+              <ScrollView
+                horizontal
+                nestedScrollEnabled
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.alternativeList}
+              >
                 {alternativeScenes.map((scene) => (
                   <AlternativeScene
                     key={scene.key}
                     scene={scene}
                     height={alternativeHeight}
+                    width={alternativeWidth}
                     onPress={() => void selectScene(scene.key)}
                   />
                 ))}
-              </View>
+              </ScrollView>
             </View>
 
             <View style={styles.actions}>
@@ -575,8 +596,12 @@ export default function OnboardingScreen() {
               >
                 <LinearGradient
                   colors={[
-                    selectedScene === "cafe" ? "#E95B9C" : selectedSceneData.accent,
-                    selectedScene === "cafe" ? "#9A476F" : `${selectedSceneData.accent}B8`,
+                    selectedScene === "cafe"
+                      ? "#E95B9C"
+                      : selectedSceneData.accent,
+                    selectedScene === "cafe"
+                      ? "#9A476F"
+                      : `${selectedSceneData.accent}B8`,
                     "#3A2838",
                   ]}
                   locations={[0, 0.58, 1]}
@@ -586,9 +611,7 @@ export default function OnboardingScreen() {
                 />
                 <View style={styles.primaryHighlight} />
                 <AppText variant="button" style={styles.buttonText}>
-                  {selectedScene === "cafe"
-                    ? "Commencer par Café"
-                    : `Commencer par ${selectedSceneData.title}`}
+                  {`Commencer par ${selectedSceneData.title}`}
                 </AppText>
                 <MoveRight size={20} color={WHITE} strokeWidth={2.2} />
               </Pressable>
@@ -632,34 +655,6 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 920,
     alignSelf: "center",
-  },
-  sceneTopNav: {
-    height: 50,
-    paddingTop: 11,
-    alignItems: "center",
-    justifyContent: "flex-start",
-  },
-  progress: {
-    minHeight: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-  },
-  progressLine: {
-    width: 26,
-    height: 3,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.14)",
-  },
-  progressLineActive: {
-    width: 38,
-    backgroundColor: PINK,
-    shadowColor: PINK,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.55,
-    shadowRadius: 8,
-    elevation: 3,
   },
   sceneScroll: {
     flex: 1,
@@ -779,8 +774,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 999,
     borderWidth: 1.2,
-    borderColor: "rgba(244,114,182,0.72)",
-    backgroundColor: "rgba(244,114,182,0.08)",
+    backgroundColor: "rgba(255,255,255,0.04)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -790,18 +784,28 @@ const styles = StyleSheet.create({
   alternativeSection: {
     marginTop: 22,
   },
+  alternativeHeader: {
+    minHeight: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 12,
+  },
   alternativeLabel: {
     color: "rgba(255,255,255,0.52)",
     marginLeft: 1,
-    marginBottom: 12,
+  },
+  swipeHint: {
+    color: "rgba(255,255,255,0.38)",
+    textAlign: "right",
   },
   alternativeList: {
-    flexDirection: "row",
     gap: 12,
+    paddingRight: 18,
   },
   alternativeCard: {
-    flex: 1,
-    minWidth: 0,
+    flexShrink: 0,
     borderRadius: 22,
     overflow: "hidden",
     borderWidth: 1,
@@ -907,17 +911,11 @@ const styles = StyleSheet.create({
   largeTextSpacer: {
     height: 16,
   },
-
   modePage: {
     flex: 1,
     width: "100%",
     maxWidth: 620,
     alignSelf: "center",
-  },
-  modeProgressWrap: {
-    height: 50,
-    paddingTop: 11,
-    alignItems: "center",
   },
   modeScroll: {
     flex: 1,

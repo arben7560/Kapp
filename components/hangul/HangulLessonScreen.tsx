@@ -30,6 +30,7 @@ import {
 } from "../../data/hangul/types";
 import { useHangulAudio } from "../../hooks/useHangulAudio";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
+import { getHangulTeacherFeedback } from "../../lib/hangulFeedback";
 import {
   advanceHangulQuiz,
   answerHangulQuizQuestion,
@@ -118,6 +119,11 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
     currentQuestion?.options.find(
       (option) => option.value === currentQuestion.answer,
     )?.label ?? currentQuestion?.answer;
+  const isCurrentAnswerCorrect =
+    answered !== null && answered === currentQuestion?.answer;
+  const teacherFeedback = currentQuestion
+    ? getHangulTeacherFeedback(currentQuestion.type, isCurrentAnswerCorrect)
+    : "";
   const useCompactOptions = (currentQuestion?.options.length ?? 0) > 4;
   const discoveredCount = activeScene.cards.filter(
     (item) => lesson.discovered[item.id],
@@ -1023,22 +1029,25 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                         tint="dark"
                         style={[
                           styles.feedback,
-                          answered === currentQuestion.answer
+                          isCurrentAnswerCorrect
                             ? styles.feedbackCorrect
                             : styles.feedbackWrong,
                         ]}
                       >
                         <AppText
                           variant="bodyStrong"
-                          style={{
-                            color:
-                              answered === currentQuestion.answer ? SUCCESS : ERROR,
-                          }}
+                          style={{ color: isCurrentAnswerCorrect ? SUCCESS : ERROR }}
                         >
-                          {answered === currentQuestion.answer
-                            ? "Bonne lecture"
-                            : `Bonne réponse : ${correctAnswerLabel}`}
+                          {isCurrentAnswerCorrect ? "Bien vu" : "À revoir"}
                         </AppText>
+                        <AppText variant="bodyStrong" style={styles.teacherFeedbackText}>
+                          {teacherFeedback}
+                        </AppText>
+                        {!isCurrentAnswerCorrect ? (
+                          <AppText variant="bodySecondary" style={styles.expectedAnswerText}>
+                            À retenir : {correctAnswerLabel}
+                          </AppText>
+                        ) : null}
                         <AppText variant="bodySecondary" style={styles.feedbackText}>
                           {currentQuestion.explanation}
                         </AppText>
@@ -1763,6 +1772,8 @@ const styles = StyleSheet.create({
     borderColor: "rgba(248,113,113,0.26)",
     backgroundColor: "rgba(38,10,15,0.80)",
   },
+  teacherFeedbackText: { marginTop: 7, color: TXT },
+  expectedAnswerText: { marginTop: 7, color: "rgba(241,245,249,0.90)" },
   feedbackText: { marginTop: 7, color: "rgba(241,245,249,0.82)" },
   continueButton: { marginTop: 15, borderRadius: 16, overflow: "hidden" },
   continueGradient: {

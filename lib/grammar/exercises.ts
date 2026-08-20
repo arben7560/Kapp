@@ -89,10 +89,6 @@ function getOrderSource(
   return candidates[(attemptNumber - 1) % candidates.length];
 }
 
-function conceptReason(concept: GrammarConcept, lead: string) {
-  return `${lead} ${concept.rule}`;
-}
-
 function formatPromptBlock(
   context: string | undefined,
   label: string,
@@ -129,9 +125,6 @@ function buildDrillQuestion(
   random: RandomSource,
 ): GrammarPracticeQuestion {
   const seed = `${stageId}:${attemptNumber}:drill-${concept.id}-${drill.id}`;
-  const answerLabel = Array.isArray(drill.answer)
-    ? drill.answer.join(" ")
-    : drill.answer;
   const options = drill.kind === "order"
     ? shuffleArray(drill.answer, random)
     : buildOptions(drill.answer, drill.distractors, seed, random);
@@ -148,10 +141,7 @@ function buildDrillQuestion(
       : formatPromptBlock(undefined, drill.displayLabel, drill.stimulus),
     options,
     answer: drill.answer,
-    explanation: conceptReason(
-      concept,
-      `${drill.explanation} Réponse attendue : « ${answerLabel} ».`,
-    ),
+    explanation: drill.explanation,
     skill: drill.skill,
     ...(drill.ruleAspect ? { ruleAspect: drill.ruleAspect } : {}),
   };
@@ -351,10 +341,7 @@ export function buildGrammarPracticeQuestions(
         random,
       ),
       answer: first.example.french,
-      explanation: conceptReason(
-        first.concept,
-        `« ${first.example.korean} » signifie « ${first.example.french} ».`,
-      ),
+      explanation: `Ici, « ${first.example.korean} » signifie « ${first.example.french} ».`,
       ...(first.example.note ? { memo: first.example.note } : {}),
     },
     {
@@ -378,10 +365,7 @@ export function buildGrammarPracticeQuestions(
         random,
       ),
       answer: second.example.korean,
-      explanation: conceptReason(
-        second.concept,
-        `La phrase attendue est « ${second.example.korean} ».`,
-      ),
+      explanation: `Dans ce contexte, on dit « ${second.example.korean} ».`,
       ...(second.example.note ? { memo: second.example.note } : {}),
     },
     {
@@ -404,10 +388,7 @@ export function buildGrammarPracticeQuestions(
         random,
       ),
       answer: formConcept.practice.focusForm,
-      explanation: conceptReason(
-        formConcept,
-        `Dans cet exemple, la forme ciblée est ${formConcept.practice.focusForm}.`,
-      ),
+      explanation: `Ici, retiens surtout la forme « ${formConcept.practice.focusForm} ».`,
     },
     order && orderTokens.length > 1
       ? {
@@ -423,10 +404,7 @@ export function buildGrammarPracticeQuestions(
           french: order.example.french,
           options: shuffleArray(orderTokens, random),
           answer: orderTokens,
-          explanation: conceptReason(
-            order.concept,
-            `L’ordre attendu donne « ${order.example.korean} ».`,
-          ),
+          explanation: `L’ordre naturel est « ${order.example.korean} ».`,
           ...(order.example.note ? { memo: order.example.note } : {}),
         }
       : {
@@ -448,10 +426,7 @@ export function buildGrammarPracticeQuestions(
             random,
           ),
           answer: first.example.korean,
-          explanation: conceptReason(
-            first.concept,
-            `La phrase complète est « ${first.example.korean} ».`,
-          ),
+          explanation: `Dans ce contexte, on dit « ${first.example.korean} ».`,
         },
     {
       id: `${seed}:context`,
@@ -475,10 +450,7 @@ export function buildGrammarPracticeQuestions(
         random,
       ),
       answer: sceneConcept.practice.scene.korean,
-      explanation: conceptReason(
-        sceneConcept,
-        `Dans cette situation, la réponse naturelle est « ${sceneConcept.practice.scene.korean} ».`,
-      ),
+      explanation: `Dans cette situation, « ${sceneConcept.practice.scene.korean} » est la formulation naturelle.`,
     },
   ];
 
