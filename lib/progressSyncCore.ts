@@ -1,9 +1,9 @@
-import type { Progress } from "../_store";
-import { mergeProgressSnapshots } from "./progressMerge.ts";
+import { mergeUserProgressSnapshots } from "./progressMerge.ts";
 import {
   CURRENT_PROGRESS_SCHEMA_VERSION,
   InvalidProgressSnapshotError,
   migrateProgressSnapshot,
+  type UserProgressSnapshot,
 } from "./progressSnapshot.ts";
 
 export const REMOTE_PROGRESS_COLUMNS =
@@ -20,7 +20,7 @@ export type RemoteProgressRow = {
 export type ProgressUpsertPayload = {
   user_id: string;
   schema_version: typeof CURRENT_PROGRESS_SCHEMA_VERSION;
-  progress_data: Progress;
+  progress_data: UserProgressSnapshot;
 };
 
 export type ProgressSnapshotRepository = {
@@ -67,15 +67,15 @@ export function parseRemoteProgressRow(value: unknown): RemoteProgressRow {
   };
 }
 
-export function progressFingerprint(progress: Progress) {
-  return JSON.stringify(progress);
+export function progressFingerprint(snapshot: UserProgressSnapshot) {
+  return JSON.stringify(snapshot);
 }
 
 export async function synchronizeProgressSnapshotWithRepository(
   repository: ProgressSnapshotRepository,
   userId: string,
-  localProgress: Progress,
-): Promise<{ progress: Progress; syncedAt: string }> {
+  localSnapshot: UserProgressSnapshot,
+): Promise<{ snapshot: UserProgressSnapshot; syncedAt: string }> {
   const remoteValue = await repository.read(userId);
   const remoteRow = remoteValue === null
     ? null
@@ -85,23 +85,23 @@ export async function synchronizeProgressSnapshotWithRepository(
       "the returned user_id does not match the requested user.",
     );
   }
-  const remoteProgress = remoteRow
+  const remoteSnapshot = remoteRow
     ? migrateProgressSnapshot(
         remoteRow.schema_version,
         remoteRow.progress_data,
       )
     : null;
-  const mergedProgress = remoteProgress
-    ? mergeProgressSnapshots(remoteProgress, localProgress)
-    : localProgress;
+  const mergedSnapshot = remoteSnapshot
+    ? mergeUserProgressSnapshots(remoteSnapshot, localSnapshot)
+    : localSnapshot;
   const storedFingerprint = remoteRow
     ? JSON.stringify(remoteRow.progress_data)
     : null;
-  const mergedFingerprint = progressFingerprint(mergedProgress);
+  const mergedFingerprint = progressFingerprint(mergedSnapshot);
 
   if (storedFingerprint === mergedFingerprint && remoteRow) {
     return {
-      progress: mergedProgress,
+      snapshot: mergedSnapshot,
       syncedAt: remoteRow.updated_at,
     };
   }
@@ -109,7 +109,7 @@ export async function synchronizeProgressSnapshotWithRepository(
   const persistedValue = await repository.upsert({
     user_id: userId,
     schema_version: CURRENT_PROGRESS_SCHEMA_VERSION,
-    progress_data: mergedProgress,
+    progress_data: mergedSnapshot,
   });
   const persistedRow = parseRemoteProgressRow(persistedValue);
   if (persistedRow.user_id !== userId) {
@@ -125,7 +125,7 @@ export async function synchronizeProgressSnapshotWithRepository(
   );
 
   return {
-    progress: mergedProgress,
+    snapshot: mergedSnapshot,
     syncedAt: persistedRow.updated_at,
   };
 }

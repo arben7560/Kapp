@@ -362,14 +362,22 @@ export default function AccountScreen() {
             setIsSubmitting(true);
             void auth
               .signOut()
-              .then(() =>
-                suppressAccountProtectionPromptAfterLogout().catch((error) =>
+              .then((result) => {
+                void suppressAccountProtectionPromptAfterLogout().catch((error) =>
                   console.warn(
                     "Impossible d’enregistrer le délai après déconnexion:",
                     error,
                   ),
-                ),
-              )
+                );
+                if (result.syncDeferred || result.guestSessionPending) {
+                  Alert.alert(
+                    "Déconnexion effectuée",
+                    result.guestSessionPending
+                      ? "Votre progression reste conservée localement. La session invitée sera créée lorsque le réseau sera disponible."
+                      : "Certaines modifications restent conservées localement et seront synchronisées ultérieurement.",
+                  );
+                }
+              })
               .catch((caught) => Alert.alert("Déconnexion suspendue", friendlyCaughtMessage(caught)))
               .finally(() => setIsSubmitting(false));
           },

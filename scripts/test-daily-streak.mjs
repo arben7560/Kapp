@@ -20,6 +20,10 @@ const {
   getStreakDateKey,
   resetDailyStreak,
 } = await import("../lib/dailyStreak.ts");
+const { saveHomeResumeContext } = await import("../lib/homeResume.ts");
+const { subscribeToLocalProgressMutations } = await import(
+  "../lib/progressSyncEvents.ts"
+);
 
 const JULY_21 = new Date(2026, 6, 21, 12);
 
@@ -144,4 +148,27 @@ test("une interruption trop longue redémarre la série", async (t) => {
 test("la journée de streak bascule à 4 h, comme auparavant", () => {
   assert.equal(getStreakDateKey(new Date(2026, 6, 22, 3, 59)), "2026-07-21");
   assert.equal(getStreakDateKey(new Date(2026, 6, 22, 4, 0)), "2026-07-22");
+});
+
+test("les mutations streak et Home Resume déclenchent l’auto-sync cloud", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: JULY_21 });
+  const areas = [];
+  const unsubscribe = subscribeToLocalProgressMutations((area) => {
+    areas.push(area);
+  });
+
+  try {
+    await completeDailyActivity("grammar_exercise");
+    await saveHomeResumeContext({
+      track: "grammar",
+      title: "Continuer la grammaire",
+      detail: "Structure de phrase",
+      route: "/(tabs)/grammar",
+    });
+  } finally {
+    unsubscribe();
+  }
+
+  assert.ok(areas.includes("streak"));
+  assert.ok(areas.includes("resume"));
 });

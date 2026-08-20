@@ -13,7 +13,7 @@ import {
 } from "../lib/progressSyncCore.ts";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
-const [authSource, accountSource, redirectsSource, syncProviderSource, syncServiceSource, migration, deletionFunction, supabaseSource, appConfig] =
+const [authSource, accountSource, redirectsSource, syncProviderSource, syncServiceSource, migration, deletionFunction, supabaseSource, appConfig, rootLayoutSource] =
   await Promise.all([
     read("../lib/AuthProvider.tsx"),
     read("../app/account/index.tsx"),
@@ -24,6 +24,7 @@ const [authSource, accountSource, redirectsSource, syncProviderSource, syncServi
     read("../supabase/functions/delete-account/index.ts"),
     read("../lib/supabase.ts"),
     read("../app.json"),
+    read("../app/_layout.tsx"),
   ]);
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
@@ -42,11 +43,31 @@ function progress(overrides = {}) {
   };
 }
 
-function row(snapshot) {
+function snapshot(progressOverrides = {}) {
+  return {
+    pedagogicalProgress: progress(progressOverrides),
+    dailyStreak: {
+      currentStreak: 0,
+      longestStreak: 0,
+      lastCompletedDate: null,
+      isTodayCompleted: false,
+      todayDate: "2026-08-18",
+      totalCompletedDays: 0,
+      completedDates: {},
+      freezeDates: {},
+      freezesAvailable: 1,
+      freezesUsed: 0,
+      badges: {},
+    },
+    homeResume: null,
+  };
+}
+
+function row(snapshotValue) {
   return {
     user_id: USER_ID,
-    schema_version: 1,
-    progress_data: snapshot,
+    schema_version: 2,
+    progress_data: snapshotValue,
     created_at: NOW,
     updated_at: NOW,
   };
@@ -132,7 +153,7 @@ test("7. identity linking keeps the same user_progress ownership", () => {
 });
 
 test("8. a blank device restores the permanent account cloud snapshot", async () => {
-  const cloud = progress({ xp: 420, completed: { cafe_order: true }, hangulLevel: 3 });
+  const cloud = snapshot({ xp: 420, completed: { cafe_order: true }, hangulLevel: 3 });
   const uploads = [];
   const result = await synchronizeProgressSnapshotWithRepository(
     {
@@ -140,21 +161,23 @@ test("8. a blank device restores the permanent account cloud snapshot", async ()
       async upsert(payload) { uploads.push(payload); return row(payload.progress_data); },
     },
     USER_ID,
-    progress(),
+    snapshot(),
   );
-  assert.equal(result.progress.xp, 420);
-  assert.equal(result.progress.completed.cafe_order, true);
-  assert.equal(result.progress.hangulLevel, 3);
-  assert.equal(uploads.length, 0);
+  assert.equal(result.snapshot.pedagogicalProgress.xp, 420);
+  assert.equal(result.snapshot.pedagogicalProgress.completed.cafe_order, true);
+  assert.equal(result.snapshot.pedagogicalProgress.hangulLevel, 3);
+  assert.equal(uploads.length, 1);
 });
 
 test("9. restoration applies the merged snapshot to the local store", () => {
-  assert.match(syncProviderSource, /setProgress\(result\.progress\)/u);
+  assert.match(syncProviderSource, /applyLocalSnapshot\(safeLocalSnapshot\)/u);
   assert.match(syncProviderSource, /userIdRef\.current !== userId/u);
 });
 
 test("10. logout synchronizes first and then creates a new guest session", () => {
-  assert.match(authSource, /const signOut[\s\S]*?synchronizeProgressNow\(\)[\s\S]*?auth\.signOut\(\)[\s\S]*?createAnonymousSession\(\)/u);
+  assert.match(authSource, /const signOut[\s\S]*?synchronizeProgressNow\(\)[\s\S]*?auth\.signOut\(\)[\s\S]*?isolateProgressAfterSignOut[\s\S]*?createAnonymousSession\(\)/u);
+  assert.match(authSource, /catch \(syncError\)[\s\S]*?syncDeferred = true[\s\S]*?auth\.signOut\(\)/u);
+  assert.match(authSource, /scope: "local"/u);
 });
 
 test("11. classic reconnection supports password and OAuth accounts", () => {
@@ -189,8 +212,8 @@ test("14. network and provider failures have precise French messages", () => {
 });
 
 test("15. local/cloud conflict merge never silently loses further progress", async () => {
-  const cloud = progress({ xp: 500, completed: { grammar_a: true }, hangulLevel: 2 });
-  const local = progress({ xp: 300, completed: { hangul_a: true }, hangulLevel: 4 });
+  const cloud = snapshot({ xp: 500, completed: { grammar_a: true }, hangulLevel: 2 });
+  const local = snapshot({ xp: 300, completed: { hangul_a: true }, hangulLevel: 4 });
   const result = await synchronizeProgressSnapshotWithRepository(
     {
       async read() { return row(cloud); },
@@ -199,9 +222,9 @@ test("15. local/cloud conflict merge never silently loses further progress", asy
     USER_ID,
     local,
   );
-  assert.equal(result.progress.xp, 500);
-  assert.equal(result.progress.hangulLevel, 4);
-  assert.deepEqual(result.progress.completed, { grammar_a: true, hangul_a: true });
+  assert.equal(result.snapshot.pedagogicalProgress.xp, 500);
+  assert.equal(result.snapshot.pedagogicalProgress.hangulLevel, 4);
+  assert.deepEqual(result.snapshot.pedagogicalProgress.completed, { grammar_a: true, hangul_a: true });
 });
 
 test("16. account deletion authenticates the caller and cascades progress deletion", () => {
@@ -220,4 +243,25 @@ test("the client contains no service-role credential", () => {
 test("a stale UID synchronization cannot overwrite the newly signed-in user", () => {
   assert.match(syncProviderSource, /inFlight\?\.userId === userId/u);
   assert.match(syncProviderSource, /if \(userIdRef\.current !== userId\) return;/u);
+});
+
+test("auth deep links bypass only the initial onboarding redirect", () => {
+  for (const action of [
+    "recovery",
+    "protect",
+    "oauth-link-google",
+    "oauth-link-apple",
+    "oauth-login-google",
+    "oauth-login-apple",
+  ]) {
+    assert.match(rootLayoutSource, new RegExp(`"${action}"`, "u"));
+  }
+  assert.match(
+    rootLayoutSource,
+    /pathname === "\/account"[\s\S]*?AUTH_ONBOARDING_BYPASS_ACTIONS\.has\(authAction\)/u,
+  );
+  assert.match(
+    rootLayoutSource,
+    /completed !== "true"[\s\S]*?pathname !== "\/onboarding"[\s\S]*?!isAuthAccountCallback[\s\S]*?router\.replace\("\/onboarding"\)/u,
+  );
 });

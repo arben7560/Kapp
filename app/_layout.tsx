@@ -18,6 +18,7 @@ import {
   Stack,
   ThemeProvider,
   router,
+  useLocalSearchParams,
   usePathname,
 } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -34,6 +35,14 @@ import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard"
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const ONBOARDING_KEY = "kapp_onboarding_completed";
+const AUTH_ONBOARDING_BYPASS_ACTIONS = new Set([
+  "recovery",
+  "protect",
+  "oauth-link-google",
+  "oauth-link-apple",
+  "oauth-login-google",
+  "oauth-login-apple",
+]);
 
 const KAPP_NAVIGATION_THEME = {
   ...DarkTheme,
@@ -94,7 +103,13 @@ function ReleaseRouteGuard({ children }: { children: React.ReactNode }) {
 
 function InitialOnboardingRoute() {
   const pathname = usePathname();
+  const { action } = useLocalSearchParams<{ action?: string | string[] }>();
   const hasCheckedInitialRoute = React.useRef(false);
+  const authAction = Array.isArray(action) ? action[0] : action;
+  const isAuthAccountCallback =
+    pathname === "/account" &&
+    typeof authAction === "string" &&
+    AUTH_ONBOARDING_BYPASS_ACTIONS.has(authAction);
 
   React.useEffect(() => {
     if (hasCheckedInitialRoute.current) {
@@ -116,7 +131,8 @@ function InitialOnboardingRoute() {
         if (
           completed !== "true" &&
           pathname !== "/" &&
-          pathname !== "/onboarding"
+          pathname !== "/onboarding" &&
+          !isAuthAccountCallback
         ) {
           router.replace("/onboarding");
         }
@@ -124,7 +140,12 @@ function InitialOnboardingRoute() {
         hasCheckedInitialRoute.current = true;
 
         console.warn("Unable to read the onboarding state.", error);
-        if (active && pathname !== "/" && pathname !== "/onboarding") {
+        if (
+          active &&
+          pathname !== "/" &&
+          pathname !== "/onboarding" &&
+          !isAuthAccountCallback
+        ) {
           router.replace("/onboarding");
         }
       }
@@ -135,7 +156,7 @@ function InitialOnboardingRoute() {
     return () => {
       active = false;
     };
-  }, [pathname]);
+  }, [isAuthAccountCallback, pathname]);
 
   return null;
 }

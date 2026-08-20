@@ -1,10 +1,10 @@
-import type { Progress } from "../_store";
 import {
   REMOTE_PROGRESS_COLUMNS,
   synchronizeProgressSnapshotWithRepository,
   type ProgressSnapshotRepository,
   type ProgressUpsertPayload,
 } from "../lib/progressSyncCore";
+import type { UserProgressSnapshot } from "../lib/progressSnapshot";
 import { requireSupabaseClient } from "../lib/supabase";
 
 export {
@@ -20,7 +20,6 @@ export {
   type ProgressUpsertPayload,
   type RemoteProgressRow,
 } from "../lib/progressSyncCore";
-
 export type ProgressSyncStatus =
   | "synced"
   | "syncing"
@@ -29,19 +28,24 @@ export type ProgressSyncStatus =
   | "error";
 
 type ProgressSynchronizer = () => Promise<void>;
+type ProgressIsolationHandler = (userId: string) => Promise<void>;
 
 const PROGRESS_TABLE = "user_progress";
 
 let activeSynchronizer: ProgressSynchronizer | null = null;
+let activeIsolationHandler: ProgressIsolationHandler | null = null;
 
 export function registerProgressSynchronizer(
   synchronizer: ProgressSynchronizer,
+  isolationHandler: ProgressIsolationHandler,
 ) {
   activeSynchronizer = synchronizer;
+  activeIsolationHandler = isolationHandler;
 
   return () => {
     if (activeSynchronizer === synchronizer) {
       activeSynchronizer = null;
+      activeIsolationHandler = null;
     }
   };
 }
@@ -56,8 +60,8 @@ export async function synchronizeProgressNow() {
 
 export async function synchronizeProgressSnapshot(
   userId: string,
-  localProgress: Progress,
-): Promise<{ progress: Progress; syncedAt: string }> {
+  localSnapshot: UserProgressSnapshot,
+): Promise<{ snapshot: UserProgressSnapshot; syncedAt: string }> {
   const client = requireSupabaseClient();
   const repository: ProgressSnapshotRepository = {
     async read(id) {
@@ -85,7 +89,7 @@ export async function synchronizeProgressSnapshot(
   return synchronizeProgressSnapshotWithRepository(
     repository,
     userId,
-    localProgress,
+    localSnapshot,
   );
 }
 
@@ -97,4 +101,12 @@ export function isOfflineSyncError(error: unknown) {
     message.includes("fetch") ||
     message.includes("offline")
   );
+}
+
+export async function isolateProgressAfterSignOut(userId: string) {
+  if (!activeIsolationHandler) {
+    throw new Error("ProgressSyncProvider is not mounted.");
+  }
+
+  await activeIsolationHandler(userId);
 }

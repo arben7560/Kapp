@@ -9,6 +9,21 @@ import {
   type ProgressSyncStatus,
 } from "../services/progressSync";
 import { useAuth } from "./AuthProvider";
+import {
+  archiveUserProgressSnapshot,
+  completeUserProgressIsolation,
+  createEmptyUserProgressSnapshot,
+  mergeArchivedUserProgressSnapshot,
+  readLocalUserProgressSnapshot,
+} from "./progressSnapshotStorage";
+import {
+  notifyProgressHydration,
+  subscribeToLocalProgressMutations,
+  withoutProgressMutationTracking,
+} from "./progressSyncEvents";
+import { persistDailyStreakSnapshot } from "./dailyStreak";
+import { replaceHomeResumeContext } from "./homeResume";
+import { mergeUserProgressSnapshots } from "./progressMerge";
 
 type ProgressSyncContextValue = {
   status: ProgressSyncStatus;
@@ -36,6 +51,8 @@ export function ProgressSyncProvider({
     operation: Promise<void>;
   } | null>(null);
   const lastSyncedFingerprintRef = React.useRef<string | null>(null);
+  const mutationRevisionRef = React.useRef(0);
+  const [mutationRevision, setMutationRevision] = React.useState(0);
   const [status, setStatus] = React.useState<ProgressSyncStatus>("pending");
   const [lastSyncedAt, setLastSyncedAt] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -43,6 +60,54 @@ export function ProgressSyncProvider({
   React.useEffect(() => {
     progressRef.current = progress;
   }, [progress]);
+
+  React.useEffect(
+    () => subscribeToLocalProgressMutations(
+      () => {
+        setStatus("pending");
+        mutationRevisionRef.current += 1;
+        setMutationRevision((revision) => revision + 1);
+      },
+    ),
+    [],
+  );
+
+  const applyLocalSnapshot = React.useCallback(async (snapshot: Awaited<
+    ReturnType<typeof readLocalUserProgressSnapshot>
+  >) => {
+    await withoutProgressMutationTracking(async () => {
+      if (
+        progressFingerprint({
+          ...snapshot,
+          dailyStreak: null,
+          homeResume: null,
+        }) !== progressFingerprint({
+          pedagogicalProgress: progressRef.current,
+          dailyStreak: null,
+          homeResume: null,
+        })
+      ) {
+        await setProgress(snapshot.pedagogicalProgress);
+        progressRef.current = snapshot.pedagogicalProgress;
+      }
+
+      if (snapshot.dailyStreak) {
+        await persistDailyStreakSnapshot(snapshot.dailyStreak);
+      }
+      await replaceHomeResumeContext(snapshot.homeResume);
+    });
+    notifyProgressHydration();
+  }, [setProgress]);
+
+  const isolateAfterSignOut = React.useCallback(async (userId: string) => {
+    const snapshot = await readLocalUserProgressSnapshot(progressRef.current);
+    await archiveUserProgressSnapshot(userId, snapshot);
+    await applyLocalSnapshot(createEmptyUserProgressSnapshot());
+    await completeUserProgressIsolation(userId);
+    lastSyncedFingerprintRef.current = null;
+    setLastSyncedAt(null);
+    setStatus("pending");
+  }, [applyLocalSnapshot]);
 
   React.useEffect(() => {
     const nextUserId = auth.user?.id ?? null;
@@ -63,28 +128,52 @@ export function ProgressSyncProvider({
 
     const startOperation = () => {
       const operation = (async () => {
+        const startedAtMutationRevision = mutationRevisionRef.current;
         setStatus("syncing");
         setErrorMessage(null);
 
         try {
-          const result = await synchronizeProgressSnapshot(
-            userId,
+          const localSnapshot = await readLocalUserProgressSnapshot(
             progressRef.current,
           );
-          const mergedFingerprint = progressFingerprint(result.progress);
+          if (userIdRef.current !== userId) return;
+          const snapshotWithArchive = await mergeArchivedUserProgressSnapshot(
+            userId,
+            localSnapshot,
+          );
+          if (userIdRef.current !== userId) return;
+          const result = await synchronizeProgressSnapshot(
+            userId,
+            snapshotWithArchive,
+          );
+          const mergedFingerprint = progressFingerprint(result.snapshot);
 
           // An auth transition may complete while the previous UID is still
           // synchronizing. Never apply that obsolete user's snapshot locally.
           if (userIdRef.current !== userId) return;
 
-          if (mergedFingerprint !== progressFingerprint(progressRef.current)) {
-            await setProgress(result.progress);
-            progressRef.current = result.progress;
+          const currentSnapshot = await readLocalUserProgressSnapshot(
+            progressRef.current,
+          );
+          if (userIdRef.current !== userId) return;
+          const safeLocalSnapshot = mergeUserProgressSnapshots(
+            result.snapshot,
+            currentSnapshot,
+          );
+          if (
+            progressFingerprint(safeLocalSnapshot) !==
+            progressFingerprint(currentSnapshot)
+          ) {
+            await applyLocalSnapshot(safeLocalSnapshot);
           }
 
           lastSyncedFingerprintRef.current = mergedFingerprint;
           setLastSyncedAt(result.syncedAt);
-          setStatus("synced");
+          setStatus(
+            mutationRevisionRef.current === startedAtMutationRevision
+              ? "synced"
+              : "pending",
+          );
         } catch (caught) {
           if (userIdRef.current !== userId) return;
           console.error("[progress-sync] Cloud snapshot synchronization failed.", caught);
@@ -118,26 +207,29 @@ export function ProgressSyncProvider({
         ? nextInFlight.operation
         : startOperation();
     });
-  }, [auth.isConfigured, isHydrated, setProgress]);
+  }, [applyLocalSnapshot, auth.isConfigured, isHydrated]);
 
   React.useEffect(
-    () => registerProgressSynchronizer(synchronize),
-    [synchronize],
+    () => registerProgressSynchronizer(synchronize, isolateAfterSignOut),
+    [isolateAfterSignOut, synchronize],
   );
 
   React.useEffect(() => {
     if (!auth.isConfigured || !auth.user || !isHydrated) return;
 
-    const fingerprint = progressFingerprint(progress);
-    if (fingerprint === lastSyncedFingerprintRef.current) return;
-
-    setStatus("pending");
     const timer = setTimeout(() => {
       void synchronize().catch(() => undefined);
     }, AUTO_SYNC_DELAY_MS);
 
     return () => clearTimeout(timer);
-  }, [auth.isConfigured, auth.user, isHydrated, progress, synchronize]);
+  }, [
+    auth.isConfigured,
+    auth.user,
+    isHydrated,
+    mutationRevision,
+    progress,
+    synchronize,
+  ]);
 
   const value = React.useMemo(
     () => ({ status, lastSyncedAt, errorMessage }),

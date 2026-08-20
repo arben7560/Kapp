@@ -65,6 +65,7 @@ import {
   readHomeResumeContext,
   type HomeResumeContext,
 } from "../../lib/homeResume";
+import { subscribeToProgressHydration } from "../../lib/progressSyncEvents";
 import { buildProgressId } from "../../lib/progressIds";
 
 const BACKGROUND_SOURCE = require("../../assets/images/seoulhub.jpg");
@@ -823,20 +824,26 @@ export default function Home() {
     useCallback(() => {
       let isMounted = true;
 
-      readHomeResumeContext()
-        .then((context) => {
-          if (isMounted) {
-            setResumeContext(context);
-          }
-        })
-        .catch(() => {
-          if (isMounted) {
-            setResumeContext(null);
-          }
-        });
+      const refreshResumeContext = () => {
+        void readHomeResumeContext()
+          .then((context) => {
+            if (isMounted) {
+              setResumeContext(context);
+            }
+          })
+          .catch(() => {
+            if (isMounted) {
+              setResumeContext(null);
+            }
+          });
+      };
+
+      refreshResumeContext();
+      const unsubscribe = subscribeToProgressHydration(refreshResumeContext);
 
       return () => {
         isMounted = false;
+        unsubscribe();
       };
     }, []),
   );

@@ -21,7 +21,7 @@ premier plan.
 
 ## Données synchronisées
 
-Le document JSON versionné (`schemaVersion: 1`) contient :
+Le document JSON versionné (`schema_version: 2`) contient :
 
 - progression pédagogique centrale : piste active, XP, complétions,
   progression séquentielle de tous les modules ;

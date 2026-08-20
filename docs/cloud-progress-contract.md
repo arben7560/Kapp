@@ -11,13 +11,21 @@ user_progress
 └── updated_at     timestamptz, set by PostgreSQL and refreshed by trigger
 ```
 
-The current root version is `1`, exposed in TypeScript as
-`CURRENT_PROGRESS_SCHEMA_VERSION`. A V1 row therefore means:
+The current root version is `2`, exposed in TypeScript as
+`CURRENT_PROGRESS_SCHEMA_VERSION`. A V2 row therefore means:
 
 ```text
-schema_version = 1
-progress_data  = ProgressV1
+schema_version = 2
+progress_data  = {
+  pedagogicalProgress: ProgressV1,
+  dailyStreak: DailyStreakState,
+  homeResume: HomeResumeContext | null
+}
 ```
+
+Legacy V1 rows remain readable. Their `ProgressV1` payload is wrapped in a V2
+snapshot with missing optional subsystems, then merged with the complete local
+snapshot before any V2 upsert.
 
 `schema_version` versions the entire cloud snapshot. It is deliberately
 separate from internal subsystem versions such as
@@ -37,14 +45,14 @@ PostgreSQL supplies `created_at`; the `set_user_progress_updated_at` trigger is
 the authority for `updated_at`. Business timestamps inside `progress_data`
 keep their own meaning and are not substitutes for the row timestamp.
 
-If no cloud row exists, the complete current local progression is uploaded as
-V1. If a supported row exists, it is normalized and passed to the existing
-local/cloud merge. An unknown version or invalid payload stops synchronization,
-keeps local progress intact, and performs no upsert.
+If no cloud row exists, the complete current local snapshot is uploaded as V2.
+If a supported row exists, it is normalized and passed to the subsystem merge.
+An unknown version or invalid payload stops synchronization, keeps local data
+intact, and performs no upsert.
 
 ## Adding a future root version
 
-To add V2, define the V2 payload contract, add a focused `migrateV1ToV2`
+To add V3, define the V3 payload contract, add a focused migration
 function, extend `migrateProgressSnapshot` so versions advance sequentially,
 and only then increment `CURRENT_PROGRESS_SCHEMA_VERSION`. Add fixtures for
 both the migration and the new upsert version. Do not remove or repurpose

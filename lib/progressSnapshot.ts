@@ -7,8 +7,20 @@ import type {
   HangulSceneScore,
 } from "../data/hangul/types";
 import { normalizeGrammarLearningProgress } from "./grammar/learning.ts";
+import {
+  normalizeDailyStreakState,
+  type DailyActivityType,
+  type DailyStreakState,
+} from "./dailyStreak.ts";
+import type { HomeResumeContext, HomeResumeTrack } from "./homeResume.ts";
 
-export const CURRENT_PROGRESS_SCHEMA_VERSION = 1 as const;
+export const CURRENT_PROGRESS_SCHEMA_VERSION = 2 as const;
+
+export type UserProgressSnapshot = {
+  pedagogicalProgress: Progress;
+  dailyStreak: DailyStreakState | null;
+  homeResume: HomeResumeContext | null;
+};
 
 const LEARNING_TRACKS: ReadonlySet<string> = new Set([
   "hangul",
@@ -33,6 +45,31 @@ const HANGUL_QUESTION_TYPES = new Set([
   "read",
   "batchim",
   "contrast",
+]);
+
+const DAILY_ACTIVITY_TYPES: ReadonlySet<DailyActivityType> = new Set([
+  "listen_exercise",
+  "ai_mission",
+  "voice_immersion",
+  "guided_dialogue",
+  "hangul_exercise",
+  "grammar_exercise",
+  "counting_scene",
+  "classifier_scene",
+  "pedagogical_activity",
+]);
+
+const HOME_RESUME_TRACKS: ReadonlySet<HomeResumeTrack> = new Set([
+  "hangul",
+  "grammar",
+  "vocab",
+  "numbers",
+  "dialogs",
+  "listen",
+  "cafe_ia",
+  "metro_ia",
+  "restaurant_ia",
+  "aeroport_ia",
 ]);
 
 export class InvalidProgressSnapshotError extends Error {
@@ -90,6 +127,74 @@ function isNumberRecord(value: unknown): value is Record<string, number> {
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) &&
     value.every((entry) => typeof entry === "string");
+}
+
+function isNullableString(value: unknown): value is string | null {
+  return value === null || typeof value === "string";
+}
+
+function isValidDateString(value: unknown): value is string {
+  return typeof value === "string" && Number.isFinite(Date.parse(value));
+}
+
+function loadDailyStreakV2(value: unknown): DailyStreakState {
+  if (!isRecord(value) ||
+    !isNonNegativeInteger(value.currentStreak) ||
+    !isNonNegativeInteger(value.longestStreak) ||
+    !isNullableString(value.lastCompletedDate) ||
+    typeof value.isTodayCompleted !== "boolean" ||
+    typeof value.todayDate !== "string" ||
+    !isNonNegativeInteger(value.totalCompletedDays) ||
+    !isRecord(value.completedDates) ||
+    !isTrueRecord(value.freezeDates) ||
+    !isNonNegativeInteger(value.freezesAvailable) ||
+    !isNonNegativeInteger(value.freezesUsed) ||
+    !isRecord(value.badges)) {
+    throw new InvalidProgressSnapshotError("dailyStreak is invalid.");
+  }
+
+  const completedDatesAreValid = Object.values(value.completedDates).every(
+    (day) => isRecord(day) &&
+      typeof day.date === "string" &&
+      isValidDateString(day.completedAt) &&
+      Array.isArray(day.activities) &&
+      day.activities.every(
+        (activity) => typeof activity === "string" &&
+          DAILY_ACTIVITY_TYPES.has(activity as DailyActivityType),
+      ),
+  );
+  const badgesAreValid = Object.values(value.badges).every(
+    (badge) => isRecord(badge) &&
+      isNonNegativeInteger(badge.milestone) &&
+      isValidDateString(badge.unlockedAt),
+  );
+
+  if (!completedDatesAreValid || !badgesAreValid) {
+    throw new InvalidProgressSnapshotError("dailyStreak history is invalid.");
+  }
+
+  return normalizeDailyStreakState(value as DailyStreakState);
+}
+
+function loadHomeResumeV2(value: unknown): HomeResumeContext | null {
+  if (value === null) return null;
+
+  if (!isRecord(value) ||
+    typeof value.track !== "string" ||
+    !HOME_RESUME_TRACKS.has(value.track as HomeResumeTrack) ||
+    typeof value.title !== "string" ||
+    typeof value.detail !== "string" ||
+    typeof value.route !== "string" ||
+    !isValidDateString(value.updatedAt) ||
+    (value.routeParams !== undefined && !isRecord(value.routeParams)) ||
+    (isRecord(value.routeParams) &&
+      !Object.values(value.routeParams).every(
+        (entry) => typeof entry === "string",
+      ))) {
+    throw new InvalidProgressSnapshotError("homeResume is invalid.");
+  }
+
+  return value as HomeResumeContext;
 }
 
 function isHangulSceneScore(value: unknown): value is HangulSceneScore {
@@ -235,10 +340,29 @@ export function loadProgressV1(data: unknown): Progress {
   };
 }
 
+export function loadProgressV2(data: unknown): UserProgressSnapshot {
+  if (!isRecord(data)) {
+    throw new InvalidProgressSnapshotError("progress_data must be an object.");
+  }
+  if (!Object.prototype.hasOwnProperty.call(data, "pedagogicalProgress") ||
+    !Object.prototype.hasOwnProperty.call(data, "dailyStreak") ||
+    !Object.prototype.hasOwnProperty.call(data, "homeResume")) {
+    throw new InvalidProgressSnapshotError(
+      "the V2 snapshot envelope is incomplete.",
+    );
+  }
+
+  return {
+    pedagogicalProgress: loadProgressV1(data.pedagogicalProgress),
+    dailyStreak: loadDailyStreakV2(data.dailyStreak),
+    homeResume: loadHomeResumeV2(data.homeResume),
+  };
+}
+
 export function migrateProgressSnapshot(
   schemaVersion: number,
   progressData: unknown,
-): Progress {
+): UserProgressSnapshot {
   if (!Number.isInteger(schemaVersion) || schemaVersion < 1) {
     throw new InvalidProgressSnapshotError(
       "schema_version must be a positive integer.",
@@ -247,7 +371,13 @@ export function migrateProgressSnapshot(
 
   switch (schemaVersion) {
     case 1:
-      return loadProgressV1(progressData);
+      return {
+        pedagogicalProgress: loadProgressV1(progressData),
+        dailyStreak: null,
+        homeResume: null,
+      };
+    case 2:
+      return loadProgressV2(progressData);
     default:
       throw new UnsupportedProgressSchemaVersionError(schemaVersion);
   }

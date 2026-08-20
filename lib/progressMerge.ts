@@ -8,6 +8,15 @@ import type {
   GrammarLearningProgress,
   GrammarStagePracticeProgress,
 } from "../data/grammar/types";
+import {
+  normalizeDailyStreakState,
+  type DailyStreakDay,
+  type DailyStreakState,
+  type StreakBadge,
+  type StreakBadgeMilestone,
+} from "./dailyStreak.ts";
+import type { HomeResumeContext } from "./homeResume.ts";
+import type { UserProgressSnapshot } from "./progressSnapshot.ts";
 
 function mergeTrueRecord(
   remote: Record<string, true> | undefined,
@@ -248,5 +257,128 @@ export function mergeProgressSnapshots(
       remote.grammarProgress,
       local.grammarProgress,
     ),
+  };
+}
+
+function mergeDailyStreakDay(
+  remote: DailyStreakDay | undefined,
+  local: DailyStreakDay | undefined,
+): DailyStreakDay | undefined {
+  if (!remote) return local;
+  if (!local) return remote;
+
+  return {
+    date: local.date || remote.date,
+    completedAt:
+      Date.parse(local.completedAt) >= Date.parse(remote.completedAt)
+        ? local.completedAt
+        : remote.completedAt,
+    activities: [...new Set([...remote.activities, ...local.activities])],
+  };
+}
+
+function mergeStreakBadge(
+  remote: StreakBadge | undefined,
+  local: StreakBadge | undefined,
+): StreakBadge | undefined {
+  if (!remote) return local;
+  if (!local) return remote;
+  return Date.parse(local.unlockedAt) <= Date.parse(remote.unlockedAt)
+    ? local
+    : remote;
+}
+
+function moreRecentStreakState(
+  remote: DailyStreakState,
+  local: DailyStreakState,
+) {
+  const remoteDate = remote.lastCompletedDate ?? "";
+  const localDate = local.lastCompletedDate ?? "";
+  return localDate >= remoteDate ? local : remote;
+}
+
+export function mergeDailyStreakSnapshots(
+  remote: DailyStreakState | null,
+  local: DailyStreakState | null,
+): DailyStreakState | null {
+  if (!remote) return local;
+  if (!local) return remote;
+
+  const completedDates: DailyStreakState["completedDates"] = {};
+  new Set([
+    ...Object.keys(remote.completedDates),
+    ...Object.keys(local.completedDates),
+  ]).forEach((date) => {
+    const day = mergeDailyStreakDay(
+      remote.completedDates[date],
+      local.completedDates[date],
+    );
+    if (day) completedDates[date] = day;
+  });
+
+  const badges: DailyStreakState["badges"] = {};
+  new Set([
+    ...Object.keys(remote.badges),
+    ...Object.keys(local.badges),
+  ]).forEach((rawMilestone) => {
+    const milestone = Number(rawMilestone) as StreakBadgeMilestone;
+    const badge = mergeStreakBadge(
+      remote.badges[milestone],
+      local.badges[milestone],
+    );
+    if (badge) badges[milestone] = badge;
+  });
+
+  const recent = moreRecentStreakState(remote, local);
+  const sameLastCompletedDate =
+    remote.lastCompletedDate === local.lastCompletedDate;
+
+  return normalizeDailyStreakState({
+    ...recent,
+    badges,
+    completedDates,
+    currentStreak: sameLastCompletedDate
+      ? Math.max(remote.currentStreak, local.currentStreak)
+      : recent.currentStreak,
+    freezeDates: { ...remote.freezeDates, ...local.freezeDates },
+    freezesAvailable: Math.max(
+      remote.freezesAvailable,
+      local.freezesAvailable,
+    ),
+    freezesUsed: Math.max(remote.freezesUsed, local.freezesUsed),
+    longestStreak: Math.max(remote.longestStreak, local.longestStreak),
+    totalCompletedDays: Math.max(
+      remote.totalCompletedDays,
+      local.totalCompletedDays,
+      Object.keys(completedDates).length,
+    ),
+  });
+}
+
+export function mergeHomeResumeContexts(
+  remote: HomeResumeContext | null,
+  local: HomeResumeContext | null,
+): HomeResumeContext | null {
+  if (!remote) return local;
+  if (!local) return remote;
+  return Date.parse(local.updatedAt) >= Date.parse(remote.updatedAt)
+    ? local
+    : remote;
+}
+
+export function mergeUserProgressSnapshots(
+  remote: UserProgressSnapshot,
+  local: UserProgressSnapshot,
+): UserProgressSnapshot {
+  return {
+    pedagogicalProgress: mergeProgressSnapshots(
+      remote.pedagogicalProgress,
+      local.pedagogicalProgress,
+    ),
+    dailyStreak: mergeDailyStreakSnapshots(
+      remote.dailyStreak,
+      local.dailyStreak,
+    ),
+    homeResume: mergeHomeResumeContexts(remote.homeResume, local.homeResume),
   };
 }

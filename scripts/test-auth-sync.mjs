@@ -70,7 +70,9 @@ test("anonymous auth, account conversion and password recovery stay centralized"
 
 test("sync remains local-first and exposes the account retry contract", () => {
   assert.match(syncProviderSource, /useStore\(\)/u);
-  assert.match(syncProviderSource, /setProgress\(result\.progress\)/u);
+  assert.match(syncProviderSource, /applyLocalSnapshot\(safeLocalSnapshot\)/u);
+  assert.match(syncProviderSource, /subscribeToLocalProgressMutations/u);
+  assert.match(syncProviderSource, /readLocalUserProgressSnapshot/u);
   assert.match(accountSource, /synchronizeProgressNow\(\)/u);
 });
 

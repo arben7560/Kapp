@@ -219,49 +219,54 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
     }
 
-    try {
-      const nextCustomerInfo = await Purchases.getCustomerInfo();
-      updateCustomerInfo(nextCustomerInfo);
-    } catch (customerInfoError) {
-      if (isMountedRef.current) {
-        setError(toRevenueCatError(customerInfoError));
+    const customerInfoOperation = (async () => {
+      try {
+        const nextCustomerInfo = await Purchases.getCustomerInfo();
+        updateCustomerInfo(nextCustomerInfo);
+      } catch (customerInfoError) {
+        if (isMountedRef.current) {
+          setError(toRevenueCatError(customerInfoError));
+        }
       }
-    }
+    })();
 
-    try {
-      const offerings = await Purchases.getOfferings();
-      const nextSubscriptions = mapSubscriptionPackages(offerings.current);
+    const offeringsOperation = (async () => {
+      try {
+        const offerings = await Purchases.getOfferings();
+        const nextSubscriptions = mapSubscriptionPackages(offerings.current);
 
-      if (isMountedRef.current) {
-        setSubscriptions(nextSubscriptions);
+        if (isMountedRef.current) {
+          setSubscriptions(nextSubscriptions);
 
-        if (!offerings.current) {
+          if (!offerings.current) {
+            setError({
+              code: "offering-unavailable",
+              message: "Aucune offre RevenueCat active n’est disponible.",
+            });
+          } else if (Object.keys(nextSubscriptions).length === 0) {
+            setError({
+              code: "packages-unavailable",
+              message:
+                "Aucune formule Premium compatible n’est disponible sur le Store.",
+            });
+          }
+        }
+      } catch (offeringsError) {
+        if (isMountedRef.current) {
+          setSubscriptions({});
           setError({
-            code: "offering-unavailable",
-            message: "Aucune offre RevenueCat active n’est disponible.",
-          });
-        } else if (Object.keys(nextSubscriptions).length === 0) {
-          setError({
-            code: "packages-unavailable",
+            code: "offerings-load-failed",
             message:
-              "Aucune formule Premium compatible n’est disponible sur le Store.",
+              toRevenueCatError(offeringsError).code === "network-unavailable"
+                ? "Les abonnements ne peuvent pas être chargés hors ligne. Ton accès Premium existant reste disponible."
+                : "Les abonnements sont momentanément indisponibles.",
           });
         }
       }
-    } catch (offeringsError) {
-      if (isMountedRef.current) {
-        setSubscriptions({});
-        setError({
-          code: "offerings-load-failed",
-          message:
-            toRevenueCatError(offeringsError).code === "network-unavailable"
-              ? "Les abonnements ne peuvent pas être chargés hors ligne. Ton accès Premium existant reste disponible."
-              : "Les abonnements sont momentanément indisponibles.",
-        });
-      }
-    } finally {
-      if (isMountedRef.current) setIsLoading(false);
-    }
+    })();
+
+    await Promise.all([customerInfoOperation, offeringsOperation]);
+    if (isMountedRef.current) setIsLoading(false);
   }, [updateCustomerInfo]);
 
   React.useEffect(() => {
@@ -288,7 +293,14 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
         } else {
           Purchases.addCustomerInfoUpdateListener(updateCustomerInfo);
           listenerInstalled = true;
-          await synchronizeIdentity();
+          void synchronizeIdentity().catch((identityError) => {
+            if (__DEV__) {
+              console.warn(
+                "[RevenueCat] Identité initiale non synchronisée:",
+                identityError,
+              );
+            }
+          });
           await loadRevenueCatState();
         }
       } catch (initializationError) {
@@ -341,12 +353,12 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (!user) return;
     void synchronizeIdentity()
-      .then(() => refreshCustomerInfo(false))
       .catch((identityError) => {
         if (__DEV__) {
           console.warn("[RevenueCat] Identité non synchronisée:", identityError);
         }
-      });
+      })
+      .then(() => refreshCustomerInfo(false));
   }, [refreshCustomerInfo, synchronizeIdentity, user]);
 
   const subscribe = React.useCallback(

@@ -22,7 +22,10 @@ import {
   requireSupabaseClient,
   supabase,
 } from "./supabase";
-import { synchronizeProgressNow } from "../services/progressSync";
+import {
+  isolateProgressAfterSignOut,
+  synchronizeProgressNow,
+} from "../services/progressSync";
 
 const PENDING_PROTECTION_EMAIL_KEY =
   "@k_app/auth/pending_protection_email_v1";
@@ -34,6 +37,10 @@ export type ProtectProgressResult =
   | "confirmation-required"
   | "password-required";
 export type OAuthResult = "success" | "cancelled";
+export type SignOutResult = {
+  syncDeferred: boolean;
+  guestSessionPending: boolean;
+};
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -60,7 +67,7 @@ type AuthContextValue = {
   signIn: (email: string, password: string) => Promise<void>;
   linkOAuthIdentity: (provider: KappOAuthProvider) => Promise<OAuthResult>;
   signInWithOAuth: (provider: KappOAuthProvider) => Promise<OAuthResult>;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<SignOutResult>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
   deleteAccount: () => Promise<void>;
@@ -454,20 +461,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = React.useCallback(async () => {
     const client = requireConfiguredAuth();
+    const signedOutUserId = session?.user.id;
     setError(null);
 
+    let syncDeferred = false;
     try {
       await synchronizeProgressNow();
+    } catch (syncError) {
+      syncDeferred = true;
+      console.warn("[auth] Synchronisation différée avant déconnexion.", syncError);
+    }
+
+    try {
       const { error: signOutError } = await client.auth.signOut();
-      if (signOutError) throw signOutError;
-      const anonymousSession = await createAnonymousSession();
-      setSession(anonymousSession);
+      if (signOutError) {
+        const mappedSignOutError = toKappAuthError(signOutError);
+        if (mappedSignOutError.code !== "network-unavailable") {
+          throw signOutError;
+        }
+
+        const { error: localSignOutError } = await client.auth.signOut({
+          scope: "local",
+        });
+        if (localSignOutError) throw localSignOutError;
+      }
+
+      if (signedOutUserId) {
+        try {
+          await isolateProgressAfterSignOut(signedOutUserId);
+        } catch (isolationError) {
+          console.error("[auth] Isolation locale impossible.", isolationError);
+          setSession(null);
+          setError(
+            "Vous êtes déconnecté. Votre progression reste conservée localement ; la session invitée sera créée au retour du réseau.",
+          );
+          return { syncDeferred: true, guestSessionPending: true };
+        }
+      }
+
+      try {
+        const anonymousSession = await createAnonymousSession();
+        setSession(anonymousSession);
+      } catch (anonymousError) {
+        setSession(null);
+        setError(
+          "Vous êtes déconnecté. La nouvelle session invitée sera créée au retour du réseau.",
+        );
+        console.warn("[auth] Session invitée différée.", anonymousError);
+        setIsPasswordRecovery(false);
+        setNeedsPasswordSetup(false);
+        return { syncDeferred, guestSessionPending: true };
+      }
+
       setIsPasswordRecovery(false);
       setNeedsPasswordSetup(false);
+      return { syncDeferred, guestSessionPending: false };
     } catch (caught) {
       throw captureError(caught);
     }
-  }, [captureError]);
+  }, [captureError, session?.user.id]);
 
   const resetPassword = React.useCallback(
     async (rawEmail: string) => {

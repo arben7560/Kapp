@@ -41,6 +41,14 @@ const storePackage = (identifier, productIdentifier) => ({
 
 const monthlyPackage = storePackage("$rc_monthly", "kapp_premium_monthly");
 const yearlyPackage = storePackage("$rc_annual", "kapp_premium_yearly");
+const paywallProviderSource = readFileSync(
+  new URL("../lib/paywall/PaywallProvider.tsx", import.meta.url),
+  "utf8",
+);
+const premiumGuardSource = readFileSync(
+  new URL("../lib/paywall/SubscriptionAccessGuard.tsx", import.meta.url),
+  "utf8",
+);
 
 test("monthly et yearly sélectionnent leurs produits respectifs", () => {
   const packages = mapSubscriptionPackages({
@@ -181,4 +189,23 @@ test("les routes Premium déclarées sont bloquées sans inclure les contenus gr
   assert.equal(isPremiumRoutePath("/voc/basics"), false);
   assert.equal(isPremiumRoutePath("/comptage/base"), false);
   assert.equal(isPremiumRoutePath("/premium"), false);
+});
+
+test("un échec de synchronizeIdentity ne bloque jamais CustomerInfo", () => {
+  assert.match(
+    paywallProviderSource,
+    /void synchronizeIdentity\(\)\.catch\([\s\S]*?await loadRevenueCatState\(\)/u,
+  );
+  assert.match(
+    paywallProviderSource,
+    /synchronizeIdentity\(\)[\s\S]*?\.catch\([\s\S]*?\.then\(\(\) => refreshCustomerInfo\(false\)\)/u,
+  );
+  assert.match(paywallProviderSource, /Purchases\.getCustomerInfo\(\)/u);
+});
+
+test("le Premium Guard masque le contenu avec un écran de chargement non vide", () => {
+  assert.match(premiumGuardSource, /<ActivityIndicator/u);
+  assert.match(premiumGuardSource, /accessibilityRole="progressbar"/u);
+  assert.match(premiumGuardSource, /backgroundColor: "#000000"/u);
+  assert.doesNotMatch(premiumGuardSource, /return null;/u);
 });
