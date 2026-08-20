@@ -89,14 +89,25 @@ test("3. anonymous to email keeps the chosen password through confirmation", () 
   assert.match(accountSource, /auth\.protectProgress\(email,\s*password\)/u);
   assert.match(accountSource, /Compte créé avec succès/u);
   assert.match(authSource, /setDidCompleteAccountProtection\(true\)/u);
-  // Keep completing protection available for confirmations started by older builds.
+  assert.match(authSource, /PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY/u);
   assert.match(
     authSource,
-    /const completeAccountProtection[\s\S]*?auth\.updateUser\(\{[\s\S]*?password/u,
+    /const completeAccountProtection[\s\S]*?auth\.updateUser\(\{[\s\S]*?password[\s\S]*?clearPendingProtectionState\(\)/u,
+  );
+});
+
+test("3b. stale legacy account-protection state cannot reopen password setup", () => {
+  assert.match(
+    authSource,
+    /if \(legacyPendingEmail\)[\s\S]*?removeItem\(PENDING_PROTECTION_EMAIL_KEY\)/u,
+  );
+  assert.doesNotMatch(
+    authSource,
+    /setNeedsPasswordSetup\(Boolean\(legacyPendingEmail/u,
   );
   assert.match(
     authSource,
-    /pendingProtectionRevision\.current \+= 1;[\s\S]*?removeItem\(PENDING_PROTECTION_EMAIL_KEY\)[\s\S]*?pendingProtectionRevision\.current \+= 1;/u,
+    /pendingEmailMatchesUser\([\s\S]*?PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY/u,
   );
 });
 
@@ -185,9 +196,33 @@ test("11. classic reconnection supports password and OAuth accounts", () => {
   assert.match(accountSource, /J’ai déjà un compte/u);
 });
 
+test("11b. explicit reconnection clears abandoned creation state first", () => {
+  const passwordSignIn = authSource.slice(
+    authSource.indexOf("const signIn ="),
+    authSource.indexOf("const runOAuth"),
+  );
+  assert.match(
+    passwordSignIn,
+    /clearPendingProtectionState\(\)[\s\S]*?signInWithPassword/u,
+  );
+
+  const oauthImplementation = authSource.slice(
+    authSource.indexOf("const runOAuth"),
+    authSource.indexOf("const signOut"),
+  );
+  assert.match(
+    oauthImplementation,
+    /intent === "login"[\s\S]*?clearPendingProtectionState\(\)[\s\S]*?signInWithOAuth/u,
+  );
+});
+
 test("12. password reset uses the K-App recovery callback", () => {
   assert.match(authSource, /resetPasswordForEmail[\s\S]*?createAuthRedirectUrl\("recovery"\)/u);
   assert.match(authSource, /event === "PASSWORD_RECOVERY"/u);
+  assert.match(
+    authSource,
+    /const resetPassword[\s\S]*?clearPendingProtectionState\(\)[\s\S]*?resetPasswordForEmail/u,
+  );
   assert.match(
     accountSource,
     /await auth\.updatePassword\(password\);[\s\S]*?setMode\("password-success"\)/u,
