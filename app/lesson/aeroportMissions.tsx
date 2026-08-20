@@ -2,7 +2,13 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { ImageBackground, ScrollView, StyleSheet, View } from "react-native";
+import {
+  ImageBackground,
+  type ImageSourcePropType,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
@@ -22,7 +28,27 @@ import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
 const airportBackground = require("../../assets/images/airport.jpg");
-const airportCardBackground = require("../../assets/images/airport.jpg");
+
+const AIRPORT_MISSION_BACKGROUNDS: Record<string, ImageSourcePropType> = {
+  "go-seoul-station": {
+    uri: "https://images.pexels.com/photos/12940671/pexels-photo-12940671.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
+  },
+  "buy-tmoney": {
+    uri: "https://images.pexels.com/photos/19702166/pexels-photo-19702166.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
+  },
+  "choose-arex": {
+    uri: "https://images.pexels.com/photos/11308707/pexels-photo-11308707.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
+  },
+  "find-platform": {
+    uri: "https://images.pexels.com/photos/18324737/pexels-photo-18324737.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
+  },
+  "lost-help": {
+    uri: "https://images.pexels.com/photos/6544060/pexels-photo-6544060.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
+  },
+  "arrival-assistance": {
+    uri: "https://images.pexels.com/photos/14335630/pexels-photo-14335630.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
+  },
+};
 
 const BG_DEEP = "#050508";
 const CYAN = "#22D3EE";
@@ -158,7 +184,9 @@ export default function AeroportMissionsScreen() {
                   order={index + 1}
                   hasPremiumAccess={hasPremiumAccess}
                   accent={CYAN}
-                  background={airportCardBackground}
+                  background={
+                    AIRPORT_MISSION_BACKGROUNDS[mission.id] ?? airportBackground
+                  }
                   isVocal={mission.id === AEROPORT_VOCAL_MISSION_ID}
                   onPress={() => openMission(mission)}
                   style={
