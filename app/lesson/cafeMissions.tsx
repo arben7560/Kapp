@@ -22,7 +22,18 @@ import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
 const cafeBackground = require("../../assets/images/cafe.jpg");
-const cafeCardBackground = require("../../assets/images/cafeIA.jpg");
+
+const cafeMissionBackgrounds = [
+  {
+    uri: "https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
+  },
+  {
+    uri: "https://images.pexels.com/photos/808941/pexels-photo-808941.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
+  },
+  {
+    uri: "https://images.pexels.com/photos/1235706/pexels-photo-1235706.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
+  },
+] as const;
 
 const BG_DEEP = "#050508";
 const PINK = "#F472B6";
@@ -151,21 +162,30 @@ export default function CafeMissionsScreen() {
                 { gap: Math.max(15, responsive.gridGap) },
               ]}
             >
-              {cafeMissions.map((mission, index) => (
-                <MissionCollectionCard
-                  key={mission.id}
-                  mission={mission}
-                  order={index + 1}
-                  hasPremiumAccess={hasPremiumAccess}
-                  accent={PINK}
-                  background={cafeCardBackground}
-                  isVocal={mission.id === CAFE_VOCAL_MISSION_ID}
-                  onPress={() => openMission(mission)}
-                  style={
-                    missionColumns > 1 ? { width: missionItemWidth } : undefined
-                  }
-                />
-              ))}
+              {cafeMissions.map((mission, index) => {
+                const isVocalMission = mission.id === CAFE_VOCAL_MISSION_ID;
+                const cardMission = isVocalMission
+                  ? { ...mission, subtitle: "Exprime-toi et commande." }
+                  : mission;
+                const cardBackground =
+                  cafeMissionBackgrounds[index] ?? cafeMissionBackgrounds[0];
+
+                return (
+                  <MissionCollectionCard
+                    key={mission.id}
+                    mission={cardMission}
+                    order={index + 1}
+                    hasPremiumAccess={hasPremiumAccess}
+                    accent={PINK}
+                    background={cardBackground}
+                    isVocal={isVocalMission}
+                    onPress={() => openMission(mission)}
+                    style={
+                      missionColumns > 1 ? { width: missionItemWidth } : undefined
+                    }
+                  />
+                );
+              })}
             </View>
           </View>
         </ScrollView>
