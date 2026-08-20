@@ -261,27 +261,28 @@ function createMyeongdongCompleteLesson(lesson: MetroLesson): MetroLesson {
     },
     {
       stepId: "ia_repeat_line6_direction",
-      keepChoiceIds: [],
-      extraChoices: [
-        getSourceChoice(
-          lesson,
-          "ia_transfer_station",
-          "ask_time_from_transfer",
-          "ia_trip_time",
-        ),
-      ],
+      keepChoiceIds: ["ask_time_after_line6_repeat"],
     },
     {
       stepId: "ia_trip_time",
-      keepChoiceIds: ["repeat_trip", "ask_exit_from_trip"],
+      keepChoiceIds: ["repeat_trip_time", "ask_station_count"],
     },
     {
       stepId: "ia_repeat_trip_time",
-      keepChoiceIds: ["ask_exit_after_trip_repeat"],
+      keepChoiceIds: ["ask_station_count_after_repeat"],
+    },
+    {
+      stepId: "ia_station_count",
+      keepChoiceIds: ["repeat_station_count", "ask_exit_after_station_count"],
+    },
+    {
+      stepId: "ia_repeat_station_count",
+      keepChoiceIds: ["ask_exit_after_station_repeat"],
     },
     {
       stepId: "ia_exit_info",
-      keepChoiceIds: ["repeat_exit", "thank_final"],
+      keepChoiceIds: ["repeat_exit"],
+      extraChoices: [createThankChoice("thank_after_exit", "ia_end")],
     },
     {
       stepId: "ia_repeat_exit_info",
@@ -292,156 +293,546 @@ function createMyeongdongCompleteLesson(lesson: MetroLesson): MetroLesson {
 }
 
 function createSeoulJamsilCompleteLesson(lesson: MetroLesson): MetroLesson {
-  return lesson;
-}
-
-function createAskExitLesson(): MetroLesson {
-  return getRequiredLesson("hongik_to_gangnam", [
+  return createFocusedLesson(lesson, [
     { stepId: "start", keepChoiceIds: ["ask1"] },
-    { stepId: "ia_intro_route", keepChoiceIds: ["ask_exit_direct"] },
-    { stepId: "ia_exit_info", keepChoiceIds: ["repeat_exit", "thank_final"] },
+    { stepId: "ia_intro", keepChoiceIds: ["repeat_intro", "ask_transfer"] },
     {
-      stepId: "ia_repeat_exit_info",
+      stepId: "ia_intro_repeat",
+      keepChoiceIds: ["ask_transfer_after_repeat"],
+    },
+    {
+      stepId: "ia_transfer",
+      keepChoiceIds: ["repeat_transfer", "ask_time_from_transfer"],
+    },
+    {
+      stepId: "ia_transfer_repeat",
+      keepChoiceIds: ["ask_time_after_transfer_repeat"],
+    },
+    {
+      stepId: "ia_time",
+      keepChoiceIds: ["repeat_time", "ask_exit_after_time"],
+    },
+    {
+      stepId: "ia_time_repeat",
+      keepChoiceIds: ["ask_exit_after_time_repeat"],
+    },
+    { stepId: "ia_exit", keepChoiceIds: ["repeat_exit", "thank_after_exit"] },
+    {
+      stepId: "ia_exit_repeat",
       keepChoiceIds: ["thank_after_exit_repeat"],
     },
     { stepId: "ia_end" },
   ]);
 }
 
+function createAskExitLesson(): MetroLesson {
+  const hongikLesson = getMetroLessonById("hongik_to_gangnam");
+  const myeongdongLesson = getMetroLessonById("myeongdong_to_itaewon");
+
+  return createMiniLesson({
+    id: "ask_exit",
+    title: "Demander sa sortie",
+    shortTitle: "Quelle sortie ?",
+    situation:
+      "Vous êtes dans le métro à Séoul. Votre objectif est simple : demander uniquement quelle sortie prendre.",
+    objective:
+      "Choisir un trajet, demander la bonne sortie, vérifier si besoin, puis remercier.",
+    startText:
+      "Choisissez le trajet pour lequel vous voulez demander la sortie.",
+    choices: [
+      {
+        id: "choose_hongik_gangnam",
+        label: "Hongik vers Gangnam",
+        korean: "강남역에서는 몇 번 출구로 나가야 하나요?",
+        romanization:
+          "Gangnam-yeogeseoneun myeot beon chulgu-ro nagaya hanayo?",
+        nextId: "ask_exit_hongik_ia_exit_info",
+      },
+      {
+        id: "choose_myeongdong_itaewon",
+        label: "Myeongdong vers Itaewon",
+        korean: "이태원역에서는 몇 번 출구로 나가야 하나요?",
+        romanization:
+          "Itaewon-yeogeseoneun myeot beon chulgu-ro nagaya hanayo?",
+        nextId: "ask_exit_myeongdong_ia_exit_info",
+      },
+    ],
+    steps: [
+      ...buildMiniRouteSteps(hongikLesson, "ask_exit_hongik", [
+        {
+          stepId: "ia_exit_info",
+          keepChoiceIds: ["repeat_exit", "ask_more_exit", "thank_final"],
+        },
+        {
+          stepId: "ia_repeat_exit_info",
+          keepChoiceIds: [
+            "ask_landmark_after_exit_repeat",
+            "thank_after_exit_repeat",
+          ],
+        },
+        {
+          stepId: "ia_exit_landmark_info",
+          keepChoiceIds: ["repeat_landmark", "thank_after_landmark"],
+        },
+        {
+          stepId: "ia_repeat_exit_landmark_info",
+          keepChoiceIds: ["thank_after_landmark_repeat"],
+        },
+        { stepId: "ia_end" },
+      ]),
+      ...buildMiniRouteSteps(myeongdongLesson, "ask_exit_myeongdong", [
+        {
+          stepId: "ia_exit_info",
+          keepChoiceIds: ["repeat_exit", "ask_landmark_exit"],
+          extraChoices: [
+            createThankChoice("thank_after_exit", "ask_exit_myeongdong_ia_end"),
+          ],
+        },
+        {
+          stepId: "ia_repeat_exit_info",
+          keepChoiceIds: [
+            "ask_landmark_after_exit_repeat",
+            "thank_after_exit_repeat",
+          ],
+        },
+        {
+          stepId: "ia_exit_landmark_info",
+          keepChoiceIds: ["repeat_landmark", "thank_after_landmark"],
+        },
+        {
+          stepId: "ia_repeat_exit_landmark_info",
+          keepChoiceIds: ["thank_after_landmark_repeat"],
+        },
+        { stepId: "ia_end" },
+      ]),
+    ],
+  });
+}
+
 function createAskTransferLesson(): MetroLesson {
-  return getRequiredLesson("myeongdong_to_itaewon", [
-    { stepId: "start", keepChoiceIds: ["ask1"] },
-    { stepId: "ia_intro_route", keepChoiceIds: ["ask_transfer_direct"] },
-    {
-      stepId: "ia_transfer_station",
-      keepChoiceIds: ["repeat_transfer_station", "thank_after_transfer"],
-    },
-    {
-      stepId: "ia_repeat_transfer_station",
-      keepChoiceIds: ["thank_after_transfer_repeat"],
-    },
-    { stepId: "ia_end" },
-  ]);
+  const myeongdongLesson = getMetroLessonById("myeongdong_to_itaewon");
+
+  return createMiniLesson({
+    id: "ask_transfer",
+    title: "Vérifier une correspondance",
+    shortTitle: "Correspondance",
+    situation:
+      "Vous allez de Myeongdong à Itaewon. Vous voulez seulement vérifier où changer de ligne.",
+    objective:
+      "Confirmer la station de correspondance et la direction de la ligne 6.",
+    startText: "Demandez uniquement ou faire la correspondance.",
+    choices: [
+      {
+        id: "ask_transfer_myeongdong",
+        label: "Vérifier la correspondance vers Itaewon",
+        korean: "환승은 어디서 하나요?",
+        romanization: "Hwanseung-eun eodiseo hanayo?",
+        nextId: "ask_transfer_myeongdong_ia_transfer_station",
+      },
+    ],
+    steps: [
+      ...buildMiniRouteSteps(myeongdongLesson, "ask_transfer_myeongdong", [
+        {
+          stepId: "ia_transfer_station",
+          keepChoiceIds: ["repeat_transfer_station", "ask_line6_direction"],
+          extraChoices: [
+            createThankChoice(
+              "thank_after_transfer",
+              "ask_transfer_myeongdong_ia_end",
+            ),
+          ],
+        },
+        {
+          stepId: "ia_repeat_transfer_station",
+          keepChoiceIds: ["ask_line6_after_transfer_repeat"],
+          extraChoices: [
+            createThankChoice(
+              "thank_after_transfer_repeat",
+              "ask_transfer_myeongdong_ia_end",
+            ),
+          ],
+        },
+        {
+          stepId: "ia_line6_direction",
+          keepChoiceIds: ["repeat_line6_direction"],
+          extraChoices: [
+            createThankChoice(
+              "thank_after_line6_direction",
+              "ask_transfer_myeongdong_ia_end",
+            ),
+          ],
+        },
+        {
+          stepId: "ia_repeat_line6_direction",
+          keepChoiceIds: [],
+          extraChoices: [
+            createThankChoice(
+              "thank_after_line6_repeat",
+              "ask_transfer_myeongdong_ia_end",
+            ),
+          ],
+        },
+        { stepId: "ia_end" },
+      ]),
+    ],
+  });
 }
 
 function createAskTimeLesson(): MetroLesson {
-  return getRequiredLesson("hongik_to_gangnam", [
-    { stepId: "start", keepChoiceIds: ["ask1"] },
-    { stepId: "ia_intro_route", keepChoiceIds: ["ask_trip"] },
-    { stepId: "ia_trip_time", keepChoiceIds: ["repeat_trip", "thank_after_trip"] },
-    {
-      stepId: "ia_repeat_trip_time",
-      keepChoiceIds: ["thank_after_trip_repeat"],
-    },
-    { stepId: "ia_end" },
-  ]);
+  const hongikLesson = getMetroLessonById("hongik_to_gangnam");
+  const myeongdongLesson = getMetroLessonById("myeongdong_to_itaewon");
+
+  return createMiniLesson({
+    id: "ask_time",
+    title: "Demander la durée",
+    shortTitle: "Durée",
+    situation:
+      "Vous connaissez déjà votre destination. Vous voulez seulement demander le temps de trajet.",
+    objective: "Demander la durée ou le nombre d’arrêts sans changer de sujet.",
+    startText: "Choisissez le trajet pour lequel demander la durée.",
+    choices: [
+      {
+        id: "choose_hongik_time",
+        label: "Hongik vers Gangnam",
+        korean: "강남역까지 시간이 얼마나 걸리나요?",
+        romanization: "Gangnam-yeokkkaji sigani eolmana geollinayo?",
+        nextId: "ask_time_hongik_ia_trip_time",
+      },
+      {
+        id: "choose_myeongdong_time",
+        label: "Myeongdong vers Itaewon",
+        korean: "이태원역까지 시간이 얼마나 걸리나요?",
+        romanization: "Itaewon-yeokkkaji sigani eolmana geollinayo?",
+        nextId: "ask_time_myeongdong_ia_trip_time",
+      },
+    ],
+    steps: [
+      ...buildMiniRouteSteps(hongikLesson, "ask_time_hongik", [
+        {
+          stepId: "ia_trip_time",
+          keepChoiceIds: ["repeat_trip"],
+          extraChoices: [
+            createThankChoice("thank_after_time", "ask_time_hongik_ia_end"),
+          ],
+        },
+        {
+          stepId: "ia_repeat_trip_time",
+          keepChoiceIds: [],
+          extraChoices: [
+            createThankChoice(
+              "thank_after_time_repeat",
+              "ask_time_hongik_ia_end",
+            ),
+          ],
+        },
+        { stepId: "ia_end" },
+      ]),
+      ...buildMiniRouteSteps(myeongdongLesson, "ask_time_myeongdong", [
+        {
+          stepId: "ia_trip_time",
+          keepChoiceIds: ["repeat_trip_time", "ask_station_count"],
+          extraChoices: [
+            createThankChoice("thank_after_time", "ask_time_myeongdong_ia_end"),
+          ],
+        },
+        {
+          stepId: "ia_repeat_trip_time",
+          keepChoiceIds: ["ask_station_count_after_repeat"],
+          extraChoices: [
+            createThankChoice(
+              "thank_after_time_repeat",
+              "ask_time_myeongdong_ia_end",
+            ),
+          ],
+        },
+        {
+          stepId: "ia_station_count",
+          keepChoiceIds: ["repeat_station_count"],
+          extraChoices: [
+            createThankChoice(
+              "thank_after_station_count",
+              "ask_time_myeongdong_ia_end",
+            ),
+          ],
+        },
+        {
+          stepId: "ia_repeat_station_count",
+          keepChoiceIds: ["thank_after_station_repeat"],
+        },
+        { stepId: "ia_end" },
+      ]),
+    ],
+  });
 }
 
 function createAskDirectionLesson(): MetroLesson {
-  return getRequiredLesson("hongik_to_gangnam", [
-    { stepId: "start", keepChoiceIds: ["ask1"] },
-    {
-      stepId: "ia_intro_route",
-      keepChoiceIds: ["repeat_intro", "ask_platform", "ask_trip"],
-    },
-    {
-      stepId: "ia_repeat_intro_route",
-      keepChoiceIds: ["ask_platform_after_repeat"],
-    },
-    {
-      stepId: "ia_platform_direction",
-      keepChoiceIds: ["repeat_platform", "thank_after_platform"],
-      extraChoices: [
-        getSourceChoice(lessonFromId("hongik_to_gangnam"), "ia_intro_route", "ask_trip", "ia_trip_time"),
-      ],
-    },
-    {
-      stepId: "ia_repeat_platform_direction",
-      keepChoiceIds: ["thank_after_platform_repeat"],
-      extraChoices: [
-        getSourceChoice(lessonFromId("hongik_to_gangnam"), "ia_intro_route", "ask_trip", "ia_trip_time"),
-      ],
-    },
-    {
-      stepId: "ia_trip_time",
-      keepChoiceIds: ["repeat_trip", "ask_transfer_from_trip", "thank_after_trip"],
-    },
-    {
-      stepId: "ia_repeat_trip_time",
-      keepChoiceIds: ["ask_transfer_after_trip_repeat", "thank_after_trip_repeat"],
-    },
-    {
-      stepId: "ia_transfer_info",
-      keepChoiceIds: ["repeat_transfer", "thank_after_transfer"],
-    },
-    {
-      stepId: "ia_repeat_transfer_info",
-      keepChoiceIds: ["thank_after_transfer_repeat"],
-    },
-    { stepId: "ia_end" },
-  ]);
+  const hongikLesson = getMetroLessonById("hongik_to_gangnam");
+
+  return createMiniLesson({
+    id: "ask_direction",
+    title: "Direction vers Gangnam",
+    shortTitle: "Vers Gangnam",
+    situation:
+      "Vous êtes à Hongik University. Avant de monter, demandez de quel côté prendre la ligne 2 vers Gangnam.",
+    objective:
+      "Demander la direction de Gangnam, puis préciser si besoin la durée ou la correspondance.",
+    startText:
+      "Vous êtes à Hongik University et cherchez le quai vers Gangnam. Demandez de quel côté prendre le train.",
+    choices: [
+      {
+        id: "choose_hongik_direction",
+        label: "Demander la direction de Gangnam",
+        korean: "강남 방향은 어느 쪽이에요?",
+        romanization: "Gangnam banghyang-eun eoneu jjog-ieyo?",
+        nextId: "ask_direction_hongik_ia_platform_direction",
+      },
+    ],
+    steps: [
+      ...buildMiniRouteSteps(hongikLesson, "ask_direction_hongik", [
+        {
+          stepId: "ia_platform_direction",
+          keepChoiceIds: ["repeat_platform"],
+          extraChoices: [
+            getSourceChoice(
+              hongikLesson,
+              "ia_intro_route",
+              "ask_trip",
+              "ask_direction_hongik_ia_trip_time",
+            ),
+            getSourceChoice(
+              hongikLesson,
+              "ia_platform_direction",
+              "ask_transfer",
+              "ask_direction_hongik_ia_transfer_info",
+            ),
+            createThankChoice(
+              "thank_after_direction",
+              "ask_direction_hongik_ia_end",
+            ),
+          ],
+        },
+        {
+          stepId: "ia_repeat_platform_direction",
+          keepChoiceIds: [],
+          extraChoices: [
+            getSourceChoice(
+              hongikLesson,
+              "ia_platform_direction",
+              "repeat_platform",
+              "ask_direction_hongik_ia_repeat_platform_direction",
+            ),
+            getSourceChoice(
+              hongikLesson,
+              "ia_intro_route",
+              "ask_trip",
+              "ask_direction_hongik_ia_trip_time",
+            ),
+            getSourceChoice(
+              hongikLesson,
+              "ia_platform_direction",
+              "ask_transfer",
+              "ask_direction_hongik_ia_transfer_info",
+            ),
+            createThankChoice(
+              "thank_after_direction_repeat",
+              "ask_direction_hongik_ia_end",
+            ),
+          ],
+        },
+        {
+          stepId: "ia_trip_time",
+          keepChoiceIds: ["repeat_trip", "ask_transfer_from_trip"],
+          extraChoices: [
+            createThankChoice(
+              "thank_after_trip",
+              "ask_direction_hongik_ia_end",
+            ),
+          ],
+        },
+        {
+          stepId: "ia_repeat_trip_time",
+          keepChoiceIds: ["ask_transfer_after_trip_repeat"],
+          extraChoices: [
+            getSourceChoice(
+              hongikLesson,
+              "ia_trip_time",
+              "repeat_trip",
+              "ask_direction_hongik_ia_repeat_trip_time",
+            ),
+            createThankChoice(
+              "thank_after_trip_repeat",
+              "ask_direction_hongik_ia_end",
+            ),
+          ],
+        },
+        {
+          stepId: "ia_transfer_info",
+          keepChoiceIds: ["repeat_transfer", "thank_after_transfer"],
+          extraChoices: [
+            getSourceChoice(
+              hongikLesson,
+              "ia_intro_route",
+              "ask_trip",
+              "ask_direction_hongik_ia_trip_time",
+            ),
+          ],
+        },
+        {
+          stepId: "ia_repeat_transfer_info",
+          keepChoiceIds: [
+            "repeat_transfer_again",
+            "thank_after_transfer_repeat",
+          ],
+          extraChoices: [
+            getSourceChoice(
+              hongikLesson,
+              "ia_intro_route",
+              "ask_trip",
+              "ask_direction_hongik_ia_trip_time",
+            ),
+          ],
+        },
+        { stepId: "ia_end" },
+      ]),
+    ],
+  });
 }
 
-function lessonFromId(lessonId: string): MetroLesson {
-  const lesson = getMetroLessonById(lessonId);
-  if (!lesson) {
-    throw new Error(`Missing metro lesson: ${lessonId}`);
-  }
-  return lesson;
+type MiniLessonConfig = {
+  id: string;
+  title: string;
+  shortTitle: string;
+  situation: string;
+  objective: string;
+  startText: string;
+  choices: MetroChoice[];
+  steps: MetroStep[];
+};
+
+function createMiniLesson(config: MiniLessonConfig): MetroLesson {
+  return {
+    id: config.id,
+    title: config.title,
+    shortTitle: config.shortTitle,
+    situation: config.situation,
+    objective: config.objective,
+    steps: [
+      {
+        id: "start",
+        speaker: "ai",
+        phase: "Accueil",
+        text: config.startText,
+        french: config.startText,
+        choices: config.choices,
+      },
+      ...config.steps,
+    ],
+  };
 }
 
-function getRequiredLesson(
-  lessonId: string,
-  steps: Parameters<typeof createFocusedLesson>[1],
+function createFocusedLesson(
+  lesson: MetroLesson,
+  configs: MiniStepConfig[],
 ): MetroLesson {
-  return createFocusedLesson(cloneLesson(lessonFromId(lessonId)), steps);
+  return {
+    ...lesson,
+    steps: configs
+      .map((config) => createFocusedStep(lesson, config))
+      .filter((step): step is MetroStep => !!step),
+  };
 }
 
-type FocusedStepConfig = {
+type MiniStepConfig = {
   stepId: string;
   keepChoiceIds?: string[];
   extraChoices?: MetroChoice[];
 };
 
-function createFocusedLesson(
+function buildMiniRouteSteps(
+  lesson: MetroLesson | undefined,
+  prefix: string,
+  configs: MiniStepConfig[],
+): MetroStep[] {
+  if (!lesson) return [];
+
+  return configs
+    .map((config) => createPrefixedStep(lesson, prefix, config))
+    .filter((step): step is MetroStep => !!step);
+}
+
+function createFocusedStep(
   lesson: MetroLesson,
-  stepConfigs: FocusedStepConfig[],
-): MetroLesson {
-  const steps = stepConfigs.map((config) => {
-    const sourceStep = lesson.steps.find((step) => step.id === config.stepId);
-    if (!sourceStep) {
-      throw new Error(`Missing metro step: ${config.stepId}`);
-    }
+  config: MiniStepConfig,
+): MetroStep | undefined {
+  const sourceStep = lesson.steps.find((step) => step.id === config.stepId);
+  if (!sourceStep) return undefined;
 
-    const keepChoiceIds = config.keepChoiceIds;
-    const filteredChoices = keepChoiceIds
-      ? (sourceStep.choices ?? []).filter((choice) => keepChoiceIds.includes(choice.id))
-      : sourceStep.choices;
+  const allowedChoiceIds = config.keepChoiceIds
+    ? new Set(config.keepChoiceIds)
+    : undefined;
 
-    return {
-      ...sourceStep,
-      choices: [...(filteredChoices ?? []), ...(config.extraChoices ?? [])],
-    };
-  });
+  const choices = sourceStep.choices
+    ?.filter((choice) => !allowedChoiceIds || allowedChoiceIds.has(choice.id))
+    .map((choice) => ({ ...choice }));
 
   return {
-    ...lesson,
-    steps,
+    ...sourceStep,
+    choices: [...(choices ?? []), ...(config.extraChoices ?? [])],
+  };
+}
+
+function createPrefixedStep(
+  lesson: MetroLesson,
+  prefix: string,
+  config: MiniStepConfig,
+): MetroStep | undefined {
+  const sourceStep = lesson.steps.find((step) => step.id === config.stepId);
+  if (!sourceStep) return undefined;
+
+  const allowedChoiceIds = config.keepChoiceIds
+    ? new Set(config.keepChoiceIds)
+    : undefined;
+
+  const choices = sourceStep.choices
+    ?.filter((choice) => !allowedChoiceIds || allowedChoiceIds.has(choice.id))
+    .map((choice) => ({
+      ...choice,
+      nextId: `${prefix}_${choice.nextId}`,
+    }));
+
+  return {
+    ...sourceStep,
+    id: `${prefix}_${sourceStep.id}`,
+    choices: [...(choices ?? []), ...(config.extraChoices ?? [])],
   };
 }
 
 function getSourceChoice(
-  lesson: MetroLesson,
+  lesson: MetroLesson | undefined,
   stepId: string,
   choiceId: string,
-  nextStepId?: string,
+  nextId?: string,
 ): MetroChoice {
-  const step = lesson.steps.find((item) => item.id === stepId);
-  const choice = step?.choices?.find((item) => item.id === choiceId);
+  const choice = lesson?.steps
+    .find((step) => step.id === stepId)
+    ?.choices?.find((item) => item.id === choiceId);
 
   if (!choice) {
-    throw new Error(`Missing metro choice: ${stepId}/${choiceId}`);
+    throw new Error(`Missing metro choice ${stepId}.${choiceId}`);
   }
 
-  return nextStepId ? { ...choice, next: nextStepId } : { ...choice };
+  return {
+    ...choice,
+    nextId: nextId ?? choice.nextId,
+  };
+}
+
+function createThankChoice(id: string, nextId: string): MetroChoice {
+  return {
+    id,
+    label: "Merci beaucoup, j'ai compris.",
+    korean: "감사합니다, 이해했어요.",
+    romanization: "Gamsahamnida, ihaehaesseoyo.",
+    nextId,
+  };
 }
