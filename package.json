@@ -27,14 +27,9 @@
     "test:premium": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-premium.mjs",
     "test:immersion": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-immersion-scenes.mjs",
     "test:streak": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-daily-streak.mjs",
-<<<<<<< HEAD
-    "test:auth-cloud": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-auth-cloud.mjs",
-    "test:progress-cloud": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-progress-cloud.mjs",
-=======
     "test:auth-sync": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-auth-sync.mjs",
     "test:auth-production": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-auth-production.mjs",
     "test:progress-cloud": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-progress-cloud-contract.mjs",
->>>>>>> 90924cf414d145e2066de5b63efe8194f63264d2
     "validate:ui": "node ./scripts/validate-ui-contracts.mjs",
     "lint": "expo lint"
   },

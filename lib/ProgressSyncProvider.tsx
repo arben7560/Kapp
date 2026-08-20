@@ -1,18 +1,4 @@
 import React from "react";
-<<<<<<< HEAD
-import { AppState } from "react-native";
-
-import { useStore } from "../_store";
-import {
-  getProgressSyncSnapshot,
-  startProgressSync,
-  stopProgressSync,
-  subscribeToProgressSync,
-  synchronizeProgressNow,
-} from "../services/progressSync";
-import { useAuth } from "./AuthProvider";
-import { useDailyStreak } from "./DailyStreakProvider";
-=======
 
 import { useStore } from "../_store";
 import {
@@ -35,46 +21,12 @@ const ProgressSyncContext = React.createContext<
 >(undefined);
 
 const AUTO_SYNC_DELAY_MS = 1_200;
->>>>>>> 90924cf414d145e2066de5b63efe8194f63264d2
 
 export function ProgressSyncProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-<<<<<<< HEAD
-  const { user } = useAuth();
-  const userId = user?.id;
-  const { isHydrated } = useStore();
-  const { isLoading: isStreakLoading } = useDailyStreak();
-
-  React.useEffect(() => {
-    if (!userId || !isHydrated || isStreakLoading) return;
-    void startProgressSync(userId);
-    return () => stopProgressSync(userId);
-  }, [isHydrated, isStreakLoading, userId]);
-
-  React.useEffect(() => {
-    let previousState = AppState.currentState;
-    const subscription = AppState.addEventListener("change", (nextState) => {
-      if (nextState === "active" && previousState !== "active") {
-        void synchronizeProgressNow();
-      }
-      previousState = nextState;
-    });
-    return () => subscription.remove();
-  }, []);
-
-  return <>{children}</>;
-}
-
-export function useProgressSync() {
-  return React.useSyncExternalStore(
-    subscribeToProgressSync,
-    getProgressSyncSnapshot,
-    getProgressSyncSnapshot,
-  );
-=======
   const auth = useAuth();
   const { progress, setProgress, isHydrated } = useStore();
   const progressRef = React.useRef(progress);
@@ -209,5 +161,4 @@ export function useProgressSync() {
   }
 
   return context;
->>>>>>> 90924cf414d145e2066de5b63efe8194f63264d2
 }

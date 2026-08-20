@@ -51,8 +51,11 @@ const SHOPPING_AUDIO = {
     require("../../../assets/audio/comptage/sino/shooping/toolbox/shopping-toolbox-2.mp3"),
     require("../../../assets/audio/comptage/sino/shooping/toolbox/shopping-toolbox-3.mp3"),
     require("../../../assets/audio/comptage/sino/shooping/toolbox/shopping-toolbox-4.mp3"),
-    require("../../../assets/audio/comptage/sino/shooping/toolbox/shooping-toolbox-5.mp3"),
+    require("../../../assets/audio/comptage/sino/shooping/toolbox/shopping-toolbox-5.mp3"),
     require("../../../assets/audio/comptage/sino/shooping/toolbox/shopping-toolbox-6.mp3"),
+    require("../../../assets/audio/comptage/sino/shooping/toolbox/shopping-toolbox-7.mp3"),
+    require("../../../assets/audio/comptage/sino/shooping/toolbox/shooping-toolbox-8.mp3"),
+    require("../../../assets/audio/comptage/sino/shooping/toolbox/shopping-toolbox-9.mp3"),
   ],
 };
 
@@ -123,6 +126,24 @@ const SCENES = withSceneAudio(
         },
       ],
       expressions: [
+        {
+          word: "일, 이, 삼",
+          rom: "Il, I, Sam",
+          mean: "1, 2, 3",
+          context: "Les trois premiers nombres du système sino-coréen.",
+        },
+        {
+          word: "사, 오, 육",
+          rom: "Sa, O, Yuk",
+          mean: "4, 5, 6",
+          context: "La suite de base pour lire les prix, dates et numéros.",
+        },
+        {
+          word: "칠, 팔, 구",
+          rom: "Chil, Pal, Gu",
+          mean: "7, 8, 9",
+          context: "Complète les chiffres sino-coréens avant les dizaines.",
+        },
         {
           word: "삼만 오천 원",
           rom: "Sam-man Oh-cheon won",

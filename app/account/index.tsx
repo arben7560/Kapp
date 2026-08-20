@@ -1,11 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-<<<<<<< HEAD
-import { router } from "expo-router";
-=======
-import { useLocalSearchParams } from "expo-router";
->>>>>>> 90924cf414d145e2066de5b63efe8194f63264d2
+import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
@@ -446,7 +442,6 @@ export default function AccountScreen() {
     mode === "set-password" ||
     mode === "change-password";
   const requiresConfirmation =
-<<<<<<< HEAD
     mode === "protect" || mode === "set-password" || mode === "change-password";
   const activePlanLabel =
     paywall.entitlement.productId === "kapp_premium_monthly"
@@ -464,9 +459,6 @@ export default function AccountScreen() {
 
     router.push("/premium");
   };
-=======
-    mode === "set-password" || mode === "change-password";
->>>>>>> 90924cf414d145e2066de5b63efe8194f63264d2
 
   return (
     <LinearGradient

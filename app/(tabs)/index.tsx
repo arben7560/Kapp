@@ -1202,11 +1202,8 @@ function GlassHeader({
         <View style={styles.headerActionSlot}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={
-              isProtected
-                ? "Ouvrir mon profil, compte protégé"
-                : "Ouvrir mon profil"
-            }
+            accessibilityLabel="Ouvrir mon profil"
+            accessibilityValue={{ text: isProtected ? "Compte protégé" : "Compte local" }}
             accessibilityHint="Ouvre la page Mon profil"
             hitSlop={4}
             onPress={onOpenProfile}

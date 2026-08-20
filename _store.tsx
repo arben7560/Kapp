@@ -133,7 +133,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
 
   const resetProgress = React.useCallback(
-    () => setProgress(mergeProgress({})),
+    () => setProgress(createInitialPedagogicalProgress()),
     [setProgress],
   );
 
