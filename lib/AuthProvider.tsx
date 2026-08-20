@@ -85,6 +85,23 @@ function isAnonymousUser(user: User | null) {
   return Boolean(user?.is_anonymous);
 }
 
+function normalizeEmail(value: string | null | undefined) {
+  return value?.trim().toLowerCase() ?? null;
+}
+
+function pendingEmailMatchesUser(
+  pendingEmail: string | null,
+  user: User | null,
+) {
+  const normalizedPendingEmail = normalizeEmail(pendingEmail);
+  const normalizedUserEmail = normalizeEmail(user?.email);
+  return Boolean(
+    normalizedPendingEmail &&
+      normalizedUserEmail &&
+      normalizedPendingEmail === normalizedUserEmail,
+  );
+}
+
 function requireConfiguredAuth() {
   if (!isSupabaseConfigured) {
     throw new KappAuthError(
@@ -172,6 +189,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return mapped;
   }, []);
 
+  const clearPendingProtectionState = React.useCallback(async () => {
+    pendingProtectionRevision.current += 1;
+    await AsyncStorage.multiRemove([
+      PENDING_PROTECTION_EMAIL_KEY,
+      PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY,
+    ]);
+    pendingProtectionRevision.current += 1;
+    setConfirmationEmail(null);
+    setNeedsPasswordSetup(false);
+    setDidCompleteAccountProtection(false);
+  }, []);
+
   const handleAuthUrl = React.useCallback(async (url: string) => {
     setIsHandlingDeepLink(true);
     try {
@@ -196,6 +225,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (event === "PASSWORD_RECOVERY") {
           setIsPasswordRecovery(true);
+          setNeedsPasswordSetup(false);
+          setDidCompleteAccountProtection(false);
+          pendingProtectionRevision.current += 1;
+          void AsyncStorage.multiRemove([
+            PENDING_PROTECTION_EMAIL_KEY,
+            PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY,
+          ]).catch(() => undefined);
         }
 
         if (event === "USER_UPDATED" || event === "SIGNED_IN") {
@@ -204,31 +240,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             AsyncStorage.getItem(PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY),
             AsyncStorage.getItem(PENDING_PROTECTION_EMAIL_KEY),
           ]).then(
-            ([pendingEmailWithPassword, legacyPendingEmail]) => {
-              const pendingEmail =
-                pendingEmailWithPassword ?? legacyPendingEmail;
-              if (
-                !mounted ||
-                !pendingEmail ||
-                revision !== pendingProtectionRevision.current
-              ) {
+            async ([pendingEmailWithPassword, legacyPendingEmail]) => {
+              if (!mounted || revision !== pendingProtectionRevision.current) {
                 return;
               }
-              setConfirmationEmail(pendingEmail);
+
+              if (legacyPendingEmail) {
+                await AsyncStorage.removeItem(PENDING_PROTECTION_EMAIL_KEY);
+              }
+
               const isPermanent =
                 Boolean(nextSession?.user) &&
                 !isAnonymousUser(nextSession?.user ?? null);
-              if (pendingEmailWithPassword && isPermanent) {
-                pendingProtectionRevision.current += 1;
-                void AsyncStorage.removeItem(
-                  PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY,
-                );
-                setConfirmationEmail(null);
-                setNeedsPasswordSetup(false);
-                setDidCompleteAccountProtection(true);
-              } else {
-                setNeedsPasswordSetup(Boolean(legacyPendingEmail && isPermanent));
+
+              if (!pendingEmailWithPassword) {
+                if (legacyPendingEmail && mounted) {
+                  pendingProtectionRevision.current += 1;
+                  setConfirmationEmail(null);
+                  setNeedsPasswordSetup(false);
+                }
+                return;
               }
+
+              if (!isPermanent) {
+                setConfirmationEmail(pendingEmailWithPassword);
+                setNeedsPasswordSetup(false);
+                return;
+              }
+
+              const didCompleteCurrentProtection = pendingEmailMatchesUser(
+                pendingEmailWithPassword,
+                nextSession?.user ?? null,
+              );
+              pendingProtectionRevision.current += 1;
+              await AsyncStorage.removeItem(
+                PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY,
+              );
+              if (!mounted) return;
+              setConfirmationEmail(null);
+              setNeedsPasswordSetup(false);
+              setDidCompleteAccountProtection(didCompleteCurrentProtection);
             },
           );
         }
@@ -250,8 +301,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ]);
         if (sessionResult.error) throw sessionResult.error;
 
-        const pendingEmail = pendingEmailWithPassword ?? legacyPendingEmail;
-        if (pendingEmail && mounted) setConfirmationEmail(pendingEmail);
+        if (legacyPendingEmail) {
+          await AsyncStorage.removeItem(PENDING_PROTECTION_EMAIL_KEY);
+        }
+        if (pendingEmailWithPassword && mounted) {
+          setConfirmationEmail(pendingEmailWithPassword);
+        }
         if (initialUrl) {
           try {
             await handleAuthUrl(initialUrl);
@@ -270,15 +325,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             Boolean(activeSession?.user) &&
             !isAnonymousUser(activeSession?.user ?? null);
           if (pendingEmailWithPassword && isPermanent) {
+            const didCompleteCurrentProtection = pendingEmailMatchesUser(
+              pendingEmailWithPassword,
+              activeSession?.user ?? null,
+            );
             pendingProtectionRevision.current += 1;
             await AsyncStorage.removeItem(
               PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY,
             );
             setConfirmationEmail(null);
             setNeedsPasswordSetup(false);
-            setDidCompleteAccountProtection(true);
+            setDidCompleteAccountProtection(didCompleteCurrentProtection);
           } else {
-            setNeedsPasswordSetup(Boolean(legacyPendingEmail && isPermanent));
+            setNeedsPasswordSetup(false);
           }
         }
       } catch (caught) {
@@ -321,7 +380,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setError(null);
-      setDidCompleteAccountProtection(false);
+      await clearPendingProtectionState();
       try {
         const { data, error: updateError } = await client.auth.updateUser(
           { email, password },
@@ -346,7 +405,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw captureError(caught);
       }
     },
-    [captureError, session],
+    [captureError, clearPendingProtectionState, session],
   );
 
   const completeAccountProtection = React.useCallback(
@@ -360,16 +419,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           password,
         });
         if (updateError) throw updateError;
-        pendingProtectionRevision.current += 1;
-        await AsyncStorage.removeItem(PENDING_PROTECTION_EMAIL_KEY);
-        pendingProtectionRevision.current += 1;
-        setConfirmationEmail(null);
-        setNeedsPasswordSetup(false);
+        await clearPendingProtectionState();
       } catch (caught) {
         throw captureError(caught);
       }
     },
-    [captureError],
+    [captureError, clearPendingProtectionState],
   );
 
   const resendProtectionEmail = React.useCallback(async () => {
@@ -378,8 +433,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       confirmationEmail ??
       (await AsyncStorage.getItem(
         PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY,
-      )) ??
-      (await AsyncStorage.getItem(PENDING_PROTECTION_EMAIL_KEY));
+      ));
 
     if (!email) {
       throw new KappAuthError(
@@ -409,6 +463,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
 
       try {
+        await clearPendingProtectionState();
+        setIsPasswordRecovery(false);
         await synchronizeProgressNow().catch(() => undefined);
         const { error: signInError } = await client.auth.signInWithPassword({
           email,
@@ -419,7 +475,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw captureError(caught);
       }
     },
-    [captureError],
+    [captureError, clearPendingProtectionState],
   );
 
   const runOAuth = React.useCallback(
@@ -444,6 +500,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setActiveOAuthProvider(provider);
       try {
         if (intent === "login") {
+          await clearPendingProtectionState();
+          setIsPasswordRecovery(false);
           // The local snapshot remains available for the post-login merge even
           // if the guest cloud sync is temporarily unavailable.
           await synchronizeProgressNow().catch(() => undefined);
@@ -497,7 +555,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setActiveOAuthProvider(null);
       }
     },
-    [captureError, handleAuthUrl, session],
+    [captureError, clearPendingProtectionState, handleAuthUrl, session],
   );
 
   const linkOAuthIdentity = React.useCallback(
@@ -524,6 +582,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
+      await clearPendingProtectionState();
       const { error: signOutError } = await client.auth.signOut();
       if (signOutError) {
         const mappedSignOutError = toKappAuthError(signOutError);
@@ -570,7 +629,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (caught) {
       throw captureError(caught);
     }
-  }, [captureError, session?.user.id]);
+  }, [captureError, clearPendingProtectionState, session?.user.id]);
 
   const resetPassword = React.useCallback(
     async (rawEmail: string) => {
@@ -579,6 +638,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
 
       try {
+        await clearPendingProtectionState();
+        setIsPasswordRecovery(false);
         const { error: resetError } = await client.auth.resetPasswordForEmail(
           email,
           { redirectTo: createAuthRedirectUrl("recovery") },
@@ -588,7 +649,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw captureError(caught);
       }
     },
-    [captureError],
+    [captureError, clearPendingProtectionState],
   );
 
   const updatePassword = React.useCallback(
@@ -603,6 +664,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         if (updateError) throw updateError;
         setIsPasswordRecovery(false);
+        setNeedsPasswordSetup(false);
       } catch (caught) {
         throw captureError(caught);
       }
@@ -615,6 +677,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
 
     try {
+      await clearPendingProtectionState();
       const { error: deletionError } = await client.functions.invoke(
         DELETE_ACCOUNT_FUNCTION,
         { method: "POST" },
@@ -635,7 +698,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (caught) {
       throw captureError(caught);
     }
-  }, [captureError]);
+  }, [captureError, clearPendingProtectionState]);
 
   const user = session?.user ?? null;
   const isAnonymous = isAnonymousUser(user);
