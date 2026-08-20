@@ -42,6 +42,7 @@ type FormMode =
   | "reset"
   | "confirmation"
   | "protection-success"
+  | "password-success"
   | "set-password"
   | "change-password"
   | null;
@@ -384,9 +385,9 @@ export default function AccountScreen() {
       } else if (mode === "change-password") {
         ensureMatchingPasswords();
         await auth.updatePassword(password);
-        setFormSuccess("Votre mot de passe a été mis à jour.");
         setPassword("");
         setPasswordConfirmation("");
+        setMode("password-success");
       }
     } catch (caught) {
       setFormError(friendlyCaughtMessage(caught));
@@ -487,6 +488,8 @@ export default function AccountScreen() {
             ? "Confirmez votre email"
             : mode === "protection-success"
               ? "Compte créé avec succès"
+            : mode === "password-success"
+              ? "Mot de passe modifié"
             : mode === "set-password"
               ? "Finaliser votre compte"
               : "Nouveau mot de passe";
@@ -790,7 +793,7 @@ export default function AccountScreen() {
         accentColor={
           mode === "confirmation"
             ? COLORS.amber
-            : mode === "protection-success"
+            : mode === "protection-success" || mode === "password-success"
               ? COLORS.green
               : COLORS.cyan
         }
@@ -801,7 +804,7 @@ export default function AccountScreen() {
               name={
                 mode === "confirmation"
                   ? "mail-outline"
-                  : mode === "protection-success"
+                  : mode === "protection-success" || mode === "password-success"
                     ? "checkmark-circle-outline"
                   : mode === "sign-in"
                     ? "log-in-outline"
@@ -811,7 +814,7 @@ export default function AccountScreen() {
               color={
                 mode === "confirmation"
                   ? COLORS.amber
-                  : mode === "protection-success"
+                  : mode === "protection-success" || mode === "password-success"
                     ? COLORS.green
                     : COLORS.cyan
               }
@@ -824,6 +827,8 @@ export default function AccountScreen() {
                 ? `Un lien a été envoyé à ${auth.confirmationEmail ?? "votre adresse"}.`
                 : mode === "protection-success"
                   ? "Votre progression est maintenant protégée et synchronisée avec votre compte."
+                : mode === "password-success"
+                  ? "Votre nouveau mot de passe est enregistré et immédiatement actif."
                 : mode === "reset"
                   ? "Nous vous enverrons un lien sécurisé, sans révéler si le compte existe."
                   : mode === "set-password"
@@ -843,6 +848,12 @@ export default function AccountScreen() {
           <View style={[styles.confirmationPanel, styles.protectionSuccessPanel]}>
             <AppText variant="body" tone="muted">
               Votre adresse email est confirmée. Vous pouvez désormais vous connecter avec le mot de passe choisi lors de la création du compte.
+            </AppText>
+          </View>
+        ) : mode === "password-success" ? (
+          <View style={[styles.confirmationPanel, styles.protectionSuccessPanel]}>
+            <AppText variant="body" tone="muted">
+              Votre mot de passe a été mis à jour avec succès. Vous pourrez l’utiliser lors de votre prochaine connexion.
             </AppText>
           </View>
         ) : (
@@ -937,7 +948,7 @@ export default function AccountScreen() {
                   .finally(() => setIsSubmitting(false));
               }}
             />
-          ) : mode === "protection-success" ? null : (
+          ) : mode === "protection-success" || mode === "password-success" ? null : (
             <ActionButton
               label={
                 mode === "protect"
@@ -964,7 +975,11 @@ export default function AccountScreen() {
             />
           ) : null}
           <ActionButton
-            label={mode === "protection-success" ? "Continuer" : "Fermer"}
+            label={
+              mode === "protection-success" || mode === "password-success"
+                ? "Continuer"
+                : "Fermer"
+            }
             variant="ghost"
             disabled={isSubmitting || Boolean(auth.activeOAuthProvider)}
             onPress={closeDialog}

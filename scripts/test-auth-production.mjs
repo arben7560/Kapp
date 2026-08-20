@@ -188,6 +188,11 @@ test("11. classic reconnection supports password and OAuth accounts", () => {
 test("12. password reset uses the K-App recovery callback", () => {
   assert.match(authSource, /resetPasswordForEmail[\s\S]*?createAuthRedirectUrl\("recovery"\)/u);
   assert.match(authSource, /event === "PASSWORD_RECOVERY"/u);
+  assert.match(
+    accountSource,
+    /await auth\.updatePassword\(password\);[\s\S]*?setMode\("password-success"\)/u,
+  );
+  assert.match(accountSource, /Votre mot de passe a été mis à jour avec succès/u);
 });
 
 test("13. PKCE and token callbacks parse safely without a native localhost fallback", () => {
