@@ -136,17 +136,7 @@ test("les quatre moteurs IA verrouillent et nettoient les transitions rapides", 
   }
 });
 
-test("les quatre simulations sécurisent l’orientation téléphone et les bords latéraux", () => {
-  const orientationHook = source("hooks/useAndroidPhonePortraitLock.ts");
-  assert.match(orientationHook, /Platform\.OS === "android"/u);
-  assert.match(
-    orientationHook,
-    /Math\.min\(width, height\) < ANDROID_TABLET_MIN_SHORTEST_SIDE/u,
-  );
-  assert.match(orientationHook, /useFocusEffect/u);
-  assert.match(orientationHook, /OrientationLock\.PORTRAIT_UP/u);
-  assert.match(orientationHook, /ScreenOrientation\.unlockAsync\(\)/u);
-
+test("les quatre simulations restent responsives sans verrouillage natif d’orientation", () => {
   for (const path of [
     "app/lesson/cafeIA.tsx",
     "app/lesson/metroIA.tsx",
@@ -154,7 +144,9 @@ test("les quatre simulations sécurisent l’orientation téléphone et les bord
     "app/lesson/aeroportIA.tsx",
   ]) {
     const screen = source(path);
-    assert.match(screen, /useAndroidPhonePortraitLock\(\)/u, path);
+    assert.doesNotMatch(screen, /useAndroidPhonePortraitLock/u, path);
+    assert.match(screen, /useResponsiveLayout/u, path);
+    assert.match(screen, /getImmersivePortraitMediaLayout/u, path);
     assert.match(
       screen,
       /edges=\{\["top", "left", "right"\]\}/u,
