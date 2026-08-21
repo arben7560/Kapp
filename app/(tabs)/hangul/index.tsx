@@ -196,16 +196,17 @@ export default function HangulHub() {
   const responsive = useResponsiveLayout({
     maxWidth: 920,
   });
+  const effectiveGap = Math.max(16, responsive.gridGap);
 
   const gridColumns = responsive.getColumns({
     minColumnWidth: 330,
     maxColumns: 2,
-    gap: responsive.gridGap,
+    gap: effectiveGap,
   });
 
   const gridItemWidth = responsive.getGridItemWidth(
     gridColumns,
-    responsive.gridGap,
+    effectiveGap,
   );
 
   const displayLevel = Math.max(1, progress?.hangulLevel ?? 1);
@@ -380,7 +381,7 @@ export default function HangulHub() {
                 gridColumns > 1 && styles.gridWide,
 
                 {
-                  gap: Math.max(16, responsive.gridGap),
+                  gap: effectiveGap,
                 },
               ]}
             >

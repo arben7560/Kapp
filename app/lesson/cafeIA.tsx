@@ -45,6 +45,7 @@ import {
     type SpeechTranscriptSession,
 } from "../../hooks/useKoreanSpeechRecognition";
 import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
+import { useAndroidPhonePortraitLock } from "../../hooks/useAndroidPhonePortraitLock";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import {
     createCafeConversationMemory,
@@ -182,6 +183,7 @@ function getAutoAdvanceDelay(node: DialogueNodeWithVideo, mode: ModeType) {
 
 // ==================== MAIN ====================
 export default function CafeIaScreen() {
+  useAndroidPhonePortraitLock();
   const { complete } = useStore();
   const insets = useSafeAreaInsets();
   const responsive = useResponsiveLayout({
@@ -838,7 +840,7 @@ export default function CafeIaScreen() {
         />
       */}
 
-      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
         <View
           style={[
             styles.header,

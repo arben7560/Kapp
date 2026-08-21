@@ -67,14 +67,15 @@ export default function AeroportMissionsScreen() {
   const [selectedMission, setSelectedMission] =
     React.useState<AeroportMission | null>(null);
   const responsive = useResponsiveLayout({ maxWidth: 860 });
+  const effectiveGap = Math.max(15, responsive.gridGap);
   const missionColumns = responsive.getColumns({
     minColumnWidth: 320,
     maxColumns: 2,
-    gap: responsive.gridGap,
+    gap: effectiveGap,
   });
   const missionItemWidth = responsive.getGridItemWidth(
     missionColumns,
-    responsive.gridGap,
+    effectiveGap,
   );
 
   const handleBack = React.useCallback(() => {
@@ -174,7 +175,7 @@ export default function AeroportMissionsScreen() {
               style={[
                 styles.missionStack,
                 missionColumns > 1 && styles.missionGrid,
-                { gap: Math.max(15, responsive.gridGap) },
+                { gap: effectiveGap },
               ]}
             >
               {aeroportMissions.map((mission, index) => (

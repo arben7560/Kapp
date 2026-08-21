@@ -40,6 +40,7 @@ import {
   getRestaurantMissionById,
   getRestaurantMissionScenario,
 } from "../../data/lesson/restaurant/restaurantMissions";
+import { useAndroidPhonePortraitLock } from "../../hooks/useAndroidPhonePortraitLock";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
 import {
@@ -203,6 +204,7 @@ function getAutoAdvanceDelay(node: DialogueNodeWithVideo, mode: ModeType) {
 
 // ==================== MAIN ====================
 export default function RestaurantIaScreen() {
+  useAndroidPhonePortraitLock();
   const { complete } = useStore();
   const [displayedVideoSource, setDisplayedVideoSource] = useState<
     number | null
@@ -884,7 +886,7 @@ export default function RestaurantIaScreen() {
     >
       <View pointerEvents="none" style={styles.backgroundDarkOverlay} />
 
-      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
         <View
           style={[
             styles.header,

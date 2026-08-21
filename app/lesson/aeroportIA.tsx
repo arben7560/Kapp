@@ -35,6 +35,7 @@ import {
   DEFAULT_AEROPORT_MISSION_ID,
   getAeroportMissionById,
 } from "../../data/lesson/aeroport/aeroportMissions";
+import { useAndroidPhonePortraitLock } from "../../hooks/useAndroidPhonePortraitLock";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
 import {
@@ -281,6 +282,7 @@ function buildAeroportScenarioFromScript(): DialogueScenario {
 
 // ==================== MAIN ====================
 export default function AeroportIaScreen() {
+  useAndroidPhonePortraitLock();
   const { complete } = useStore();
   const [displayedVideoSource, setDisplayedVideoSource] = useState<
     number | null
@@ -981,7 +983,7 @@ export default function AeroportIaScreen() {
     >
       <View pointerEvents="none" style={styles.backgroundDarkOverlay} />
 
-      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
         <View
           style={[
             styles.header,

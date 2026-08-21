@@ -52,14 +52,15 @@ export default function CafeMissionsScreen() {
   const [selectedMission, setSelectedMission] =
     React.useState<CafeMission | null>(null);
   const responsive = useResponsiveLayout({ maxWidth: 860 });
+  const effectiveGap = Math.max(15, responsive.gridGap);
   const missionColumns = responsive.getColumns({
     minColumnWidth: 320,
     maxColumns: 2,
-    gap: responsive.gridGap,
+    gap: effectiveGap,
   });
   const missionItemWidth = responsive.getGridItemWidth(
     missionColumns,
-    responsive.gridGap,
+    effectiveGap,
   );
 
   const handleBack = React.useCallback(() => {
@@ -159,7 +160,7 @@ export default function CafeMissionsScreen() {
               style={[
                 styles.missionStack,
                 missionColumns > 1 && styles.missionGrid,
-                { gap: Math.max(15, responsive.gridGap) },
+                { gap: effectiveGap },
               ]}
             >
               {cafeMissions.map((mission, index) => {

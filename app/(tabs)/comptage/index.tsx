@@ -136,15 +136,16 @@ export default function ComptageHub() {
   const [resumeContext, setResumeContext] = useState<HomeResumeContext | null>(
     null,
   );
+  const effectiveGap = Math.max(16, responsive.gridGap);
 
   const gridColumns = responsive.getColumns({
     minColumnWidth: 330,
     maxColumns: 2,
-    gap: responsive.gridGap,
+    gap: effectiveGap,
   });
   const gridItemWidth = responsive.getGridItemWidth(
     gridColumns,
-    responsive.gridGap,
+    effectiveGap,
   );
 
   useFocusEffect(
@@ -251,7 +252,7 @@ export default function ComptageHub() {
               style={[
                 styles.grid,
                 gridColumns > 1 && styles.gridWide,
-                { gap: Math.max(15, responsive.gridGap) },
+                { gap: effectiveGap },
               ]}
             >
               {INCLUDED_MODULES.map((module, index) => (
@@ -288,7 +289,7 @@ export default function ComptageHub() {
               style={[
                 styles.grid,
                 gridColumns > 1 && styles.gridWide,
-                { gap: Math.max(16, responsive.gridGap) },
+                { gap: effectiveGap },
               ]}
             >
               {PREMIUM_MODULES.map((module, index) => (

@@ -55,14 +55,15 @@ export default function RestaurantMissionsScreen() {
   const [selectedMission, setSelectedMission] =
     React.useState<RestaurantMission | null>(null);
   const responsive = useResponsiveLayout({ maxWidth: 860 });
+  const effectiveGap = Math.max(15, responsive.gridGap);
   const missionColumns = responsive.getColumns({
     minColumnWidth: 320,
     maxColumns: 2,
-    gap: responsive.gridGap,
+    gap: effectiveGap,
   });
   const missionItemWidth = responsive.getGridItemWidth(
     missionColumns,
-    responsive.gridGap,
+    effectiveGap,
   );
   const completeMissions = restaurantMissions.filter(
     (mission) => mission.missionKind === "complete",
@@ -192,7 +193,7 @@ export default function RestaurantMissionsScreen() {
               style={[
                 styles.missionStack,
                 missionColumns > 1 && styles.missionGrid,
-                { gap: Math.max(15, responsive.gridGap) },
+                { gap: effectiveGap },
               ]}
             >
               {completeMissions.map((mission) => renderMissionCard(mission))}
@@ -208,7 +209,7 @@ export default function RestaurantMissionsScreen() {
               style={[
                 styles.missionStack,
                 missionColumns > 1 && styles.missionGrid,
-                { gap: Math.max(15, responsive.gridGap) },
+                { gap: effectiveGap },
               ]}
             >
               {miniMissions.map((mission) => renderMissionCard(mission, true))}

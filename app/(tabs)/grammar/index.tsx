@@ -88,15 +88,16 @@ export default function GrammarHubScreen() {
   const { progress, setTrack } = useStore();
   const { hasPremiumAccess: isPremium } = usePaywall();
   const responsive = useResponsiveLayout({ maxWidth: 920 });
+  const effectiveGap = Math.max(15, responsive.gridGap);
 
   const gridColumns = responsive.getColumns({
     minColumnWidth: 330,
     maxColumns: 2,
-    gap: responsive.gridGap,
+    gap: effectiveGap,
   });
   const gridItemWidth = responsive.getGridItemWidth(
     gridColumns,
-    responsive.gridGap,
+    effectiveGap,
   );
 
   const grammarProgress = progress.grammarProgress;
@@ -219,7 +220,7 @@ export default function GrammarHubScreen() {
                   style={[
                     styles.grid,
                     gridColumns > 1 && styles.gridWide,
-                    { gap: Math.max(15, responsive.gridGap) },
+                    { gap: effectiveGap },
                   ]}
                 >
                   {chapter.stageIds.map((stageId, stageIndex) => {

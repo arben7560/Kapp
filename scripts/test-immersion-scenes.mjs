@@ -136,6 +136,61 @@ test("les quatre moteurs IA verrouillent et nettoient les transitions rapides", 
   }
 });
 
+test("les quatre simulations sécurisent l’orientation téléphone et les bords latéraux", () => {
+  const orientationHook = source("hooks/useAndroidPhonePortraitLock.ts");
+  assert.match(orientationHook, /Platform\.OS === "android"/u);
+  assert.match(
+    orientationHook,
+    /Math\.min\(width, height\) < ANDROID_TABLET_MIN_SHORTEST_SIDE/u,
+  );
+  assert.match(orientationHook, /useFocusEffect/u);
+  assert.match(orientationHook, /OrientationLock\.PORTRAIT_UP/u);
+  assert.match(orientationHook, /ScreenOrientation\.unlockAsync\(\)/u);
+
+  for (const path of [
+    "app/lesson/cafeIA.tsx",
+    "app/lesson/metroIA.tsx",
+    "app/lesson/restaurantIA.tsx",
+    "app/lesson/aeroportIA.tsx",
+  ]) {
+    const screen = source(path);
+    assert.match(screen, /useAndroidPhonePortraitLock\(\)/u, path);
+    assert.match(
+      screen,
+      /edges=\{\["top", "left", "right"\]\}/u,
+      path,
+    );
+  }
+});
+
+test("les huit hubs utilisent le même gap pour le calcul et le rendu des grilles", () => {
+  for (const path of [
+    "app/(tabs)/hangul/index.tsx",
+    "app/(tabs)/voc/index.tsx",
+    "app/(tabs)/grammar/index.tsx",
+    "app/(tabs)/comptage/index.tsx",
+    "app/lesson/cafeMissions.tsx",
+    "app/lesson/metroMissions.tsx",
+    "app/lesson/restaurantMissions.tsx",
+    "app/lesson/aeroportMissions.tsx",
+  ]) {
+    const screen = source(path);
+    assert.match(
+      screen,
+      /const effectiveGap = Math\.max\((?:15|16), responsive\.gridGap\)/u,
+      path,
+    );
+    assert.match(screen, /getColumns\(\{[\s\S]*?gap: effectiveGap,/u, path);
+    assert.match(
+      screen,
+      /getGridItemWidth\([\s\S]*?effectiveGap,[\s\S]*?\)/u,
+      path,
+    );
+    assert.match(screen, /\{ gap: effectiveGap \}|gap: effectiveGap,/u, path);
+    assert.doesNotMatch(screen, /gap: Math\.max\((?:15|16), responsive\.gridGap\)/u, path);
+  }
+});
+
 test("Aéroport réinitialise toute la session quand la mission change", () => {
   const screen = source("app/lesson/aeroportIA.tsx");
   const resetEffect = screen.match(

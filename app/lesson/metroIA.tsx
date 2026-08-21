@@ -40,6 +40,7 @@ import {
   useKoreanSpeechRecognition,
   type SpeechTranscriptSession,
 } from "../../hooks/useKoreanSpeechRecognition";
+import { useAndroidPhonePortraitLock } from "../../hooks/useAndroidPhonePortraitLock";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
@@ -362,6 +363,7 @@ function isComingSoonMetroChoice(
 
 // ==================== MAIN ====================
 export default function MetroIaScreen() {
+  useAndroidPhonePortraitLock();
   const { complete } = useStore();
 
   const insets = useSafeAreaInsets();
@@ -1137,7 +1139,7 @@ export default function MetroIaScreen() {
         />
       */}
 
-      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
         <View
           style={[
             styles.header,

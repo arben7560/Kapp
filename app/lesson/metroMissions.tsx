@@ -63,14 +63,15 @@ export default function MetroMissionsScreen() {
   const [selectedMission, setSelectedMission] =
     React.useState<MetroMission | null>(null);
   const responsive = useResponsiveLayout({ maxWidth: 900 });
+  const effectiveGap = Math.max(15, responsive.gridGap);
   const missionColumns = responsive.getColumns({
     minColumnWidth: 320,
     maxColumns: 2,
-    gap: responsive.gridGap,
+    gap: effectiveGap,
   });
   const missionItemWidth = responsive.getGridItemWidth(
     missionColumns,
-    responsive.gridGap,
+    effectiveGap,
   );
   const completeMissions = metroMissions.filter(
     (mission) => mission.missionKind === "complete",
@@ -191,7 +192,7 @@ export default function MetroMissionsScreen() {
               style={[
                 styles.missionStack,
                 missionColumns > 1 && styles.missionGrid,
-                { gap: Math.max(15, responsive.gridGap) },
+                { gap: effectiveGap },
               ]}
             >
               {completeMissions.map((mission) => renderMissionCard(mission))}
@@ -207,7 +208,7 @@ export default function MetroMissionsScreen() {
               style={[
                 styles.missionStack,
                 missionColumns > 1 && styles.missionGrid,
-                { gap: Math.max(15, responsive.gridGap) },
+                { gap: effectiveGap },
               ]}
             >
               {miniMissions.map((mission) => renderMissionCard(mission, true))}
