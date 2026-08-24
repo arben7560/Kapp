@@ -114,7 +114,7 @@ export function MissionCollectionCard({
         />
 
         <BlurView
-          intensity={7}
+          intensity={12}
           tint="dark"
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
@@ -122,9 +122,9 @@ export function MissionCollectionCard({
 
         <LinearGradient
           colors={[
-            "rgba(2,4,7,0.30)",
-            "rgba(2,4,7,0.50)",
-            "rgba(2,3,6,0.78)",
+            "rgba(2,4,7,0.24)",
+            "rgba(2,4,7,0.38)",
+            "rgba(2,3,6,0.62)",
           ]}
           locations={[0, 0.52, 1]}
           start={{ x: 0, y: 0 }}
