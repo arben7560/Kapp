@@ -228,7 +228,10 @@ export default function RootLayout() {
                       >
                         <Stack.Screen
                           name="index"
-                          options={{ animation: "none" }}
+                          options={{
+                            animation: "fade",
+                            animationDuration: 420,
+                          }}
                         />
                         <Stack.Screen
                           name="onboarding"
