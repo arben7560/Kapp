@@ -259,6 +259,7 @@ function HeroEntryScreen() {
   const fade = useMemo(() => new Animated.Value(0), []);
   const translateY = useMemo(() => new Animated.Value(20), []);
   const pulse = useMemo(() => new Animated.Value(0), []);
+  const isLeaving = useRef(false);
 
   useEffect(() => {
     const entrance = Animated.parallel([
@@ -308,7 +309,26 @@ function HeroEntryScreen() {
   });
 
   const openOnboarding = () => {
-    router.replace("/onboarding");
+    if (isLeaving.current) return;
+    isLeaving.current = true;
+
+    Animated.sequence([
+      Animated.timing(fade, {
+        toValue: 0,
+        duration: 420,
+        easing: Easing.inOut(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      // Match the intro handoff: keep the dark canvas visible for a few frames
+      // before the next screen mounts so there is no abrupt visual cut.
+      Animated.delay(80),
+    ]).start(({ finished }) => {
+      if (finished) {
+        router.replace("/onboarding");
+      } else {
+        isLeaving.current = false;
+      }
+    });
   };
 
   return (
