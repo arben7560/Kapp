@@ -232,7 +232,10 @@ export default function RootLayout() {
                         />
                         <Stack.Screen
                           name="onboarding"
-                          options={{ animation: "none" }}
+                          options={{
+                            animation: "fade",
+                            animationDuration: 420,
+                          }}
                         />
                         <Stack.Screen name="account" />
                         <Stack.Screen name="premium" />
