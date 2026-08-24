@@ -40,7 +40,7 @@ const AIRPORT_MISSION_BACKGROUNDS: Record<string, ImageSourcePropType> = {
     uri: "https://images.pexels.com/photos/11308707/pexels-photo-11308707.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
   },
   "find-platform": {
-    uri: "https://images.pexels.com/photos/18324737/pexels-photo-18324737.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
+    uri: "https://images.pexels.com/photos/31826589/pexels-photo-31826589.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
   },
   "lost-help": {
     uri: "https://images.pexels.com/photos/6544060/pexels-photo-6544060.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
