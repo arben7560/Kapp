@@ -131,14 +131,17 @@ export function getMissionMasteryProgress(
   mode: MissionMasteryMode,
 ) {
   const missions = getMasteryMissions(scene);
-  const completedCount = missions.filter((mission) =>
-    isImmersionMissionMastered(completed, scene, mode, mission.id),
-  ).length;
+  const masteredMissionIds = missions
+    .filter((mission) =>
+      isImmersionMissionMastered(completed, scene, mode, mission.id),
+    )
+    .map((mission) => mission.id);
 
   return {
-    completedCount,
+    completedCount: masteredMissionIds.length,
     total: missions.length,
     missionIds: missions.map((mission) => mission.id),
+    masteredMissionIds,
   };
 }
 
