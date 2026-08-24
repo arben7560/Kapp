@@ -18,6 +18,7 @@ import {
   MissionCollectionSectionHeader,
 } from "../../components/immersion/MissionCollectionCard";
 import { MissionLaunchModal } from "../../components/immersion/MissionLaunchModal";
+import { MissionMasteryCardFrame } from "../../components/immersion/MissionMasteryCardFrame";
 import {
   aeroportMissions,
   type AeroportMission,
@@ -179,21 +180,27 @@ export default function AeroportMissionsScreen() {
               ]}
             >
               {aeroportMissions.map((mission, index) => (
-                <MissionCollectionCard
+                <MissionMasteryCardFrame
                   key={mission.id}
-                  mission={mission}
-                  order={index + 1}
-                  hasPremiumAccess={hasPremiumAccess}
+                  scene="aeroport"
+                  missionId={mission.id}
                   accent={CYAN}
-                  background={
-                    AIRPORT_MISSION_BACKGROUNDS[mission.id] ?? airportBackground
-                  }
-                  isVocal={mission.id === AEROPORT_VOCAL_MISSION_ID}
-                  onPress={() => openMission(mission)}
                   style={
                     missionColumns > 1 ? { width: missionItemWidth } : undefined
                   }
-                />
+                >
+                  <MissionCollectionCard
+                    mission={mission}
+                    order={index + 1}
+                    hasPremiumAccess={hasPremiumAccess}
+                    accent={CYAN}
+                    background={
+                      AIRPORT_MISSION_BACKGROUNDS[mission.id] ?? airportBackground
+                    }
+                    isVocal={mission.id === AEROPORT_VOCAL_MISSION_ID}
+                    onPress={() => openMission(mission)}
+                  />
+                </MissionMasteryCardFrame>
               ))}
             </View>
           </View>
