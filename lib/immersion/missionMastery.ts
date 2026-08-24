@@ -184,6 +184,10 @@ export function queueMissionMasteryCelebration(
   progressId: string,
   firstMastery: boolean,
 ) {
+  // La grande gratification est réservée à la première maîtrise. Une mission
+  // rejouée reste marquée comme maîtrisée, sans interrompre le flux à nouveau.
+  if (!firstMastery) return;
+
   const celebration = resolveCelebrationFromProgressId(
     progressId,
     firstMastery,
