@@ -70,10 +70,6 @@ export function MissionCollectionCard({
           ? "VOCAL"
           : "INCLUSE";
 
-  const microLabel = [isPremium ? "PREMIUM" : null, isVocal ? "VOCAL" : null]
-    .filter(Boolean)
-    .join(" · ");
-
   return (
     <Pressable
       accessibilityRole="button"
@@ -205,18 +201,48 @@ export function MissionCollectionCard({
               MISSION {String(order).padStart(2, "0")}
             </AppText>
 
-            {microLabel ? (
-              <AppText
-                variant="caption"
-                lineContract="singleLine"
-                style={[
-                  styles.microLabel,
-                  isVocal && styles.microLabelVocal,
-                  premiumLocked && styles.microLabelPremiumLocked,
-                ]}
-              >
-                {microLabel}
-              </AppText>
+            {isPremium || isVocal ? (
+              <View style={styles.missionBadgesRow}>
+                {isPremium ? (
+                  <View
+                    style={[
+                      styles.missionBadge,
+                      styles.missionBadgePremium,
+                      premiumLocked && styles.missionBadgePremiumLocked,
+                    ]}
+                  >
+                    <Sparkles
+                      size={10}
+                      strokeWidth={2.2}
+                      color={premiumLocked ? PREMIUM_GOLD : PREMIUM_LIGHT}
+                    />
+                    <AppText
+                      variant="caption"
+                      lineContract="singleLine"
+                      style={[
+                        styles.missionBadgeText,
+                        styles.missionBadgeTextPremium,
+                        premiumLocked && styles.missionBadgeTextPremiumLocked,
+                      ]}
+                    >
+                      PREMIUM
+                    </AppText>
+                  </View>
+                ) : null}
+
+                {isVocal ? (
+                  <View style={[styles.missionBadge, styles.missionBadgeVocal]}>
+                    <Mic2 size={10} strokeWidth={2.2} color={VOCAL_VIOLET} />
+                    <AppText
+                      variant="caption"
+                      lineContract="singleLine"
+                      style={[styles.missionBadgeText, styles.missionBadgeTextVocal]}
+                    >
+                      VOCAL
+                    </AppText>
+                  </View>
+                ) : null}
+              </View>
             ) : null}
           </View>
 
@@ -490,17 +516,52 @@ const styles = StyleSheet.create({
   indexPremiumActive: {
     color: "rgba(216,200,154,0.58)",
   },
-  microLabel: {
-    marginTop: 3,
-    color: "rgba(216,200,154,0.58)",
-    fontSize: 10,
-    letterSpacing: 0.8,
+  missionBadgesRow: {
+    marginTop: 6,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 6,
   },
-  microLabelVocal: {
-    color: "rgba(199,178,255,0.78)",
+  missionBadge: {
+    minHeight: 23,
+    paddingHorizontal: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  microLabelPremiumLocked: {
-    color: "rgba(253,224,71,0.72)",
+  missionBadgePremium: {
+    borderColor: "rgba(255,241,168,0.44)",
+    backgroundColor: "rgba(69,55,13,0.72)",
+    shadowColor: PREMIUM_GOLD,
+  },
+  missionBadgePremiumLocked: {
+    borderColor: "rgba(253,224,71,0.62)",
+    backgroundColor: "rgba(82,65,10,0.82)",
+  },
+  missionBadgeVocal: {
+    borderColor: "rgba(167,139,250,0.56)",
+    backgroundColor: "rgba(61,42,108,0.72)",
+    shadowColor: VOCAL_VIOLET,
+  },
+  missionBadgeText: {
+    fontSize: 9,
+    letterSpacing: 0.75,
+  },
+  missionBadgeTextPremium: {
+    color: PREMIUM_LIGHT,
+  },
+  missionBadgeTextPremiumLocked: {
+    color: "#FFF5B8",
+  },
+  missionBadgeTextVocal: {
+    color: "#E2D8FF",
   },
   accessBadge: {
     minHeight: 28,
