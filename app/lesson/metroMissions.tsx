@@ -26,22 +26,22 @@ const metroCardBackground = require("../../assets/images/metroIA.jpg");
 
 const METRO_CARD_BACKGROUNDS: Record<string, { uri: string }> = {
   "hongik-gangnam": {
-    uri: "https://images.unsplash.com/photo-1581210021057-9f4cc7ac7425?auto=format&fit=crop&w=1600&h=900&q=82",
+    uri: "https://images.pexels.com/photos/32211609/pexels-photo-32211609.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
   },
   "myeongdong-itaewon": {
-    uri: "https://images.unsplash.com/photo-1540864193756-a5e299a311b6?auto=format&fit=crop&w=1600&h=900&q=82",
+    uri: "https://images.pexels.com/photos/19271594/pexels-photo-19271594.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
   },
   "ask-exit": {
-    uri: "https://images.unsplash.com/photo-1562704396-36dfbb0ac40b?auto=format&fit=crop&w=1600&h=900&q=82",
+    uri: "https://images.pexels.com/photos/31768195/pexels-photo-31768195.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
   },
   "ask-transfer": {
-    uri: "https://images.unsplash.com/photo-1545099184-90e6299b0481?auto=format&fit=crop&w=1600&h=900&q=82",
+    uri: "https://images.pexels.com/photos/31826590/pexels-photo-31826590.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
   },
   "ask-time": {
-    uri: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=1600&h=900&q=82",
+    uri: "https://images.pexels.com/photos/31768200/pexels-photo-31768200.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
   },
   "ask-direction": {
-    uri: "https://images.pexels.com/photos/72594/japan-train-railroad-railway-72594.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
+    uri: "https://images.pexels.com/photos/31768194/pexels-photo-31768194.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
   },
 };
 
