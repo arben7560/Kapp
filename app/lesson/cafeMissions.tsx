@@ -12,6 +12,7 @@ import {
   MissionCollectionSectionHeader,
 } from "../../components/immersion/MissionCollectionCard";
 import { MissionLaunchModal } from "../../components/immersion/MissionLaunchModal";
+import { MissionMasteryCardFrame } from "../../components/immersion/MissionMasteryCardFrame";
 import {
   cafeMissions,
   type CafeMission,
@@ -172,19 +173,25 @@ export default function CafeMissionsScreen() {
                   cafeMissionBackgrounds[index] ?? cafeMissionBackgrounds[0];
 
                 return (
-                  <MissionCollectionCard
+                  <MissionMasteryCardFrame
                     key={mission.id}
-                    mission={cardMission}
-                    order={index + 1}
-                    hasPremiumAccess={hasPremiumAccess}
+                    scene="cafe"
+                    missionId={mission.id}
                     accent={PINK}
-                    background={cardBackground}
-                    isVocal={isVocalMission}
-                    onPress={() => openMission(mission)}
                     style={
                       missionColumns > 1 ? { width: missionItemWidth } : undefined
                     }
-                  />
+                  >
+                    <MissionCollectionCard
+                      mission={cardMission}
+                      order={index + 1}
+                      hasPremiumAccess={hasPremiumAccess}
+                      accent={PINK}
+                      background={cardBackground}
+                      isVocal={isVocalMission}
+                      onPress={() => openMission(mission)}
+                    />
+                  </MissionMasteryCardFrame>
                 );
               })}
             </View>

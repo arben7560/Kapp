@@ -12,6 +12,7 @@ import {
   MissionCollectionSectionHeader,
 } from "../../components/immersion/MissionCollectionCard";
 import { MissionLaunchModal } from "../../components/immersion/MissionLaunchModal";
+import { MissionMasteryCardFrame } from "../../components/immersion/MissionMasteryCardFrame";
 import {
   metroMissions,
   type MetroMission,
@@ -132,19 +133,25 @@ export default function MetroMissionsScreen() {
     const background = METRO_CARD_BACKGROUNDS[mission.id] ?? metroCardBackground;
 
     return (
-      <MissionCollectionCard
+      <MissionMasteryCardFrame
         key={mission.id}
-        mission={mission}
-        order={order}
-        hasPremiumAccess={hasPremiumAccess}
+        scene="metro"
+        missionId={mission.id}
         accent={CYAN}
-        background={background}
-        compact={compact}
-        isVocal={mission.id === METRO_VOCAL_MISSION_ID}
-        isComingSoon={COMING_SOON_MISSION_IDS.has(mission.id)}
-        onPress={() => openMission(mission)}
         style={missionColumns > 1 ? { width: missionItemWidth } : undefined}
-      />
+      >
+        <MissionCollectionCard
+          mission={mission}
+          order={order}
+          hasPremiumAccess={hasPremiumAccess}
+          accent={CYAN}
+          background={background}
+          compact={compact}
+          isVocal={mission.id === METRO_VOCAL_MISSION_ID}
+          isComingSoon={COMING_SOON_MISSION_IDS.has(mission.id)}
+          onPress={() => openMission(mission)}
+        />
+      </MissionMasteryCardFrame>
     );
   };
 
