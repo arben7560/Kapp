@@ -12,6 +12,7 @@ import {
   MissionCollectionSectionHeader,
 } from "../../components/immersion/MissionCollectionCard";
 import { MissionLaunchModal } from "../../components/immersion/MissionLaunchModal";
+import { MissionMasteryCardFrame } from "../../components/immersion/MissionMasteryCardFrame";
 import {
   RESTAURANT_SPEECH_MISSION_ID,
   restaurantMissions,
@@ -134,18 +135,24 @@ export default function RestaurantMissionsScreen() {
       PEXELS_16_9["order-simple"];
 
     return (
-      <MissionCollectionCard
+      <MissionMasteryCardFrame
         key={mission.id}
-        mission={cardMission}
-        order={order}
-        hasPremiumAccess={hasPremiumAccess}
+        scene="restaurant"
+        missionId={mission.id}
         accent={ORANGE}
-        background={{ uri: backgroundUri }}
-        compact={compact}
-        isVocal={mission.id === RESTAURANT_SPEECH_MISSION_ID}
-        onPress={() => openMission(mission)}
         style={missionColumns > 1 ? { width: missionItemWidth } : undefined}
-      />
+      >
+        <MissionCollectionCard
+          mission={cardMission}
+          order={order}
+          hasPremiumAccess={hasPremiumAccess}
+          accent={ORANGE}
+          background={{ uri: backgroundUri }}
+          compact={compact}
+          isVocal={mission.id === RESTAURANT_SPEECH_MISSION_ID}
+          onPress={() => openMission(mission)}
+        />
+      </MissionMasteryCardFrame>
     );
   };
 
