@@ -272,7 +272,7 @@ function MissionMasteryCelebrationModal({
               Mission accomplie
             </AppText>
 
-            <AppText variant="body" style={[styles.sceneMeta, { color: accent }]}> 
+            <AppText variant="body" style={[styles.sceneMeta, { color: accent }]}>
               {celebration.sceneTitle} · {celebration.location}
             </AppText>
 
