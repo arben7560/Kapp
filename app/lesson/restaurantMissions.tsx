@@ -37,7 +37,7 @@ const PEXELS_16_9 = {
   "add-sides":
     "https://images.pexels.com/photos/31150502/pexels-photo-31150502.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
   "pay-receipt":
-    "https://images.pexels.com/photos/6816413/pexels-photo-6816413.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
+    "https://images.pexels.com/photos/37594401/pexels-photo-37594401.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
   [RESTAURANT_SPEECH_MISSION_ID]:
     "https://images.pexels.com/photos/31601790/pexels-photo-31601790.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
 } as const;
