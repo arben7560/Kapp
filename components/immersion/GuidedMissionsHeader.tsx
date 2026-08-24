@@ -133,8 +133,9 @@ export function GuidedMissionsHeader({
               </View>
 
               <View style={styles.masteryDots}>
-                {masteryProgress.missionIds.map((missionId, index) => {
-                  const mastered = index < masteryProgress.completedCount;
+                {masteryProgress.missionIds.map((missionId) => {
+                  const mastered =
+                    masteryProgress.masteredMissionIds.includes(missionId);
                   return (
                     <View
                       key={missionId}
@@ -258,9 +259,7 @@ function MissionMasteryCelebrationModal({
                 lineContract="singleLine"
                 style={[styles.celebrationEyebrow, { color: accent }]}
               >
-                {celebration.firstMastery
-                  ? "NOUVELLE MAÎTRISE"
-                  : "MISSION RÉUSSIE"}
+                NOUVELLE MAÎTRISE
               </AppText>
             </View>
 
@@ -278,10 +277,18 @@ function MissionMasteryCelebrationModal({
             </AppText>
 
             <View style={styles.masteredMissionCard}>
-              <AppText variant="cardTitle" tone="strong" style={styles.masteredMissionTitle}>
+              <AppText
+                variant="cardTitle"
+                tone="strong"
+                style={styles.masteredMissionTitle}
+              >
                 {celebration.missionTitle}
               </AppText>
-              <AppText variant="bodySecondary" tone="muted" style={styles.masteredMissionObjective}>
+              <AppText
+                variant="bodySecondary"
+                tone="muted"
+                style={styles.masteredMissionObjective}
+              >
                 {celebration.objective
                   ? `Objectif maîtrisé : ${celebration.objective}`
                   : "Tu as mené cette situation jusqu’au bout en coréen."}
@@ -394,8 +401,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   masteryLabel: {
-    letterSpacing: 1.05,
-    fontSize: 10,
+    color: "rgba(241,245,249,0.86)",
   },
   masteryCount: {
     marginTop: 3,
@@ -496,7 +502,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   celebrationEyebrow: {
-    letterSpacing: 1.25,
+    color: "rgba(241,245,249,0.84)",
   },
   celebrationTitle: {
     textAlign: "center",
@@ -535,7 +541,7 @@ const styles = StyleSheet.create({
     color: "rgba(241,245,249,0.55)",
   },
   celebrationProgressValue: {
-    fontWeight: "700",
+    color: "rgba(241,245,249,0.86)",
   },
   continueButton: {
     width: "100%",
