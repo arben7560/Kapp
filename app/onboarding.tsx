@@ -13,7 +13,10 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { AppText } from "../components/app-text";
 
@@ -93,23 +96,17 @@ const SCENES: SceneOption[] = [
 ];
 
 const ROUTES: Record<SceneKey, Record<ModeKey, string>> = {
-  cafe: {
-    text: "/lesson/cafe",
-    guided: "/lesson/cafeMissions",
-  },
-  metro: {
-    text: "/lesson/metro",
-    guided: "/lesson/metroMissions",
-  },
-  restaurant: {
-    text: "/lesson/restaurant",
-    guided: "/lesson/restaurantMissions",
-  },
-  airport: {
-    text: "/lesson/airport",
-    guided: "/lesson/aeroportMissions",
-  },
+  cafe: { text: "/lesson/cafe", guided: "/lesson/cafeMissions" },
+  metro: { text: "/lesson/metro", guided: "/lesson/metroMissions" },
+  restaurant: { text: "/lesson/restaurant", guided: "/lesson/restaurantMissions" },
+  airport: { text: "/lesson/airport", guided: "/lesson/aeroportMissions" },
 };
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, value));
+
+const lerp = (min: number, max: number, amount: number) =>
+  min + (max - min) * amount;
 
 async function lightTap() {
   try {
@@ -122,12 +119,7 @@ async function lightTap() {
 function SceneBackground({ dimmed = false }: { dimmed?: boolean }) {
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <Image
-        source={SCENE_BACKGROUND}
-        style={StyleSheet.absoluteFill}
-        contentFit="cover"
-        contentPosition="center"
-      />
+      <Image source={SCENE_BACKGROUND} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="center" />
       <LinearGradient
         colors={[
           dimmed ? "rgba(2,3,10,0.42)" : "rgba(2,3,10,0.04)",
@@ -142,39 +134,19 @@ function SceneBackground({ dimmed = false }: { dimmed?: boolean }) {
   );
 }
 
-function FeaturedScene({
-  scene,
-  height,
-}: {
-  scene: SceneOption;
-  height: number;
-}) {
+function FeaturedScene({ scene, height }: { scene: SceneOption; height: number }) {
   return (
     <View
       accessible
       accessibilityLabel={`${scene.title}. ${scene.subtitle} ${scene.guidance}.`}
       style={[
         styles.featuredCard,
-        {
-          height,
-          borderColor: `${scene.accent}72`,
-          shadowColor: scene.accent,
-        },
+        { height, borderColor: `${scene.accent}72`, shadowColor: scene.accent },
       ]}
     >
-      <Image
-        source={scene.image}
-        style={StyleSheet.absoluteFill}
-        contentFit="cover"
-      />
-
+      <Image source={scene.image} style={StyleSheet.absoluteFill} contentFit="cover" />
       <LinearGradient
-        colors={[
-          "rgba(2,3,7,0.00)",
-          "rgba(2,3,7,0.06)",
-          "rgba(2,3,7,0.48)",
-          "rgba(2,3,7,0.96)",
-        ]}
+        colors={["rgba(2,3,7,0.00)", "rgba(2,3,7,0.06)", "rgba(2,3,7,0.48)", "rgba(2,3,7,0.96)"]}
         locations={[0, 0.38, 0.66, 1]}
         style={StyleSheet.absoluteFill}
       />
@@ -193,20 +165,11 @@ function FeaturedScene({
       />
 
       <View style={styles.featuredTopRow}>
-        <View
-          style={[styles.recommendedPill, { borderColor: `${scene.accent}88` }]}
-        >
-          <View
-            style={[styles.recommendedDot, { backgroundColor: scene.accent }]}
-          />
-          <AppText variant="label" style={styles.recommendedText}>
-            {scene.badge}
-          </AppText>
+        <View style={[styles.recommendedPill, { borderColor: `${scene.accent}88` }]}>
+          <View style={[styles.recommendedDot, { backgroundColor: scene.accent }]} />
+          <AppText variant="label" style={styles.recommendedText}>{scene.badge}</AppText>
         </View>
-
-        <AppText variant="sectionLabel" style={styles.featuredLocation}>
-          {scene.eyebrow}
-        </AppText>
+        <AppText variant="sectionLabel" style={styles.featuredLocation}>{scene.eyebrow}</AppText>
       </View>
 
       <View style={styles.featuredCopy}>
@@ -218,22 +181,13 @@ function FeaturedScene({
         >
           {scene.phrase}
         </AppText>
-        <AppText variant="sceneTitle" style={styles.featuredTitle}>
-          {scene.title}
-        </AppText>
-        <AppText variant="bodyStrong" style={styles.featuredSubtitle}>
-          {scene.subtitle}
-        </AppText>
-
+        <AppText variant="sceneTitle" style={styles.featuredTitle}>{scene.title}</AppText>
+        <AppText variant="bodyStrong" style={styles.featuredSubtitle}>{scene.subtitle}</AppText>
         <View style={styles.beginnerRow}>
-          <View
-            style={[styles.beginnerIcon, { borderColor: `${scene.accent}B8` }]}
-          >
+          <View style={[styles.beginnerIcon, { borderColor: `${scene.accent}B8` }]}>
             <Check size={12} color={scene.accent} strokeWidth={2.3} />
           </View>
-          <AppText variant="caption" style={styles.beginnerText}>
-            {scene.guidance}
-          </AppText>
+          <AppText variant="caption" style={styles.beginnerText}>{scene.guidance}</AppText>
         </View>
       </View>
     </View>
@@ -256,17 +210,9 @@ function AlternativeScene({
       accessibilityRole="button"
       accessibilityLabel={`Choisir ${scene.title}`}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.alternativeCard,
-        { height, width },
-        pressed && styles.pressed,
-      ]}
+      style={({ pressed }) => [styles.alternativeCard, { height, width }, pressed && styles.pressed]}
     >
-      <Image
-        source={scene.image}
-        style={StyleSheet.absoluteFill}
-        contentFit="cover"
-      />
+      <Image source={scene.image} style={StyleSheet.absoluteFill} contentFit="cover" />
       <LinearGradient
         colors={["rgba(2,3,7,0.00)", "rgba(2,3,7,0.16)", "rgba(2,3,7,0.88)"]}
         locations={[0, 0.42, 1]}
@@ -278,19 +224,10 @@ function AlternativeScene({
         end={{ x: 0.72, y: 0.12 }}
         style={StyleSheet.absoluteFill}
       />
-
       <View style={styles.alternativeCopy}>
-        <AppText
-          variant="sectionLabel"
-          style={[styles.alternativeEyebrow, { color: scene.accent }]}
-        >
-          {scene.eyebrow}
-        </AppText>
-        <AppText variant="cardTitle" style={styles.alternativeTitle}>
-          {scene.title}
-        </AppText>
+        <AppText variant="sectionLabel" style={[styles.alternativeEyebrow, { color: scene.accent }]}>{scene.eyebrow}</AppText>
+        <AppText variant="cardTitle" style={styles.alternativeTitle}>{scene.title}</AppText>
       </View>
-
       <View style={styles.alternativeArrow}>
         <MoveRight size={19} color={WHITE} strokeWidth={2} />
       </View>
@@ -300,40 +237,52 @@ function AlternativeScene({
 
 export default function OnboardingScreen() {
   const { width, height, fontScale } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const [step, setStep] = useState<OnboardingStep>("scene");
   const [selectedScene, setSelectedScene] = useState<SceneKey>("cafe");
   const [selectedMode, setSelectedMode] = useState<ModeKey>("guided");
 
-  const isCompact = width <= 380 || height <= 720;
-  const isShort = height <= 700;
   const isTablet = width >= 768;
   const largeText = fontScale > 1.15;
+  const horizontalPadding = isTablet ? 30 : width <= 380 ? 18 : 22;
+
+  // Use the real drawable vertical space instead of device-specific breakpoints.
+  // This continuously adapts the scene page to any phone height while preserving
+  // scrolling as a safety net for accessibility text sizes and exceptionally small screens.
+  const viewportHeight = Math.max(0, height - insets.top - insets.bottom);
+  const verticalProgress = isTablet
+    ? 1
+    : clamp((viewportHeight - 590) / 260, 0, 1);
+  const compactness = largeText ? Math.max(verticalProgress, 0.45) : verticalProgress;
+
+  const sceneLayout = useMemo(
+    () => ({
+      contentTop: Math.round(lerp(8, 24, compactness)),
+      contentBottom: Math.round(lerp(8, 12, compactness)),
+      introBottom: Math.round(lerp(12, 24, compactness)),
+      eyebrowBottom: Math.round(lerp(7, 12, compactness)),
+      subtitleTop: Math.round(lerp(7, 12, compactness)),
+      heroHeight: isTablet ? 378 : Math.round(lerp(214, 320, compactness)),
+      alternativeTop: Math.round(lerp(10, 22, compactness)),
+      alternativeHeaderBottom: Math.round(lerp(7, 12, compactness)),
+      alternativeHeight: isTablet ? 142 : Math.round(lerp(88, 118, compactness)),
+      actionsTop: Math.round(lerp(9, 18, compactness)),
+      actionsGap: Math.round(lerp(7, 10, compactness)),
+      primaryHeight: Math.round(lerp(52, 62, compactness)),
+      hubHeight: Math.round(lerp(50, 58, compactness)),
+    }),
+    [compactness, isTablet],
+  );
 
   const selectedSceneData = useMemo(
     () => SCENES.find((scene) => scene.key === selectedScene) ?? SCENES[0],
     [selectedScene],
   );
-
   const alternativeScenes = useMemo(
     () => SCENES.filter((scene) => scene.key !== selectedScene),
     [selectedScene],
   );
-
-  const heroHeight = isTablet
-    ? 378
-    : isShort
-      ? 252
-      : height >= 850
-        ? 320
-        : height >= 790
-          ? 304
-          : 286;
-
-  const alternativeHeight = isTablet ? 142 : isShort ? 102 : 118;
-  const alternativeWidth = isTablet
-    ? 244
-    : Math.min(190, Math.max(154, width * 0.43));
-  const horizontalPadding = isTablet ? 30 : width <= 380 ? 18 : 22;
+  const alternativeWidth = isTablet ? 244 : Math.min(190, Math.max(154, width * 0.43));
 
   const selectScene = async (scene: SceneKey) => {
     await lightTap();
@@ -355,62 +304,28 @@ export default function OnboardingScreen() {
     await lightTap();
     await AsyncStorage.setItem(ONBOARDING_KEY, "true");
     const route = ROUTES[selectedScene][selectedMode];
-    const target =
-      selectedMode === "text"
-        ? route
-        : { pathname: route, params: { mode: selectedMode } };
+    const target = selectedMode === "text" ? route : { pathname: route, params: { mode: selectedMode } };
     router.replace(target as any);
   };
 
   if (step === "mode") {
     return (
       <View style={styles.screen}>
-        <StatusBar
-          barStyle="light-content"
-          translucent
-          backgroundColor="transparent"
-        />
+        <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
         <SceneBackground dimmed />
-
         <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-          <View
-            style={[styles.modePage, { paddingHorizontal: horizontalPadding }]}
-          >
-            <ScrollView
-              style={styles.modeScroll}
-              contentContainerStyle={styles.modeContent}
-              showsVerticalScrollIndicator={false}
-            >
-              <AppText variant="sectionLabel" style={styles.modeEyebrow}>
-                SCÈNE CHOISIE
-              </AppText>
-              <AppText variant="screenTitle" style={styles.modeTitle}>
-                {selectedSceneData.title}
-              </AppText>
-              <AppText variant="body" style={styles.modeSubtitle}>
-                Choisis ton approche.
-              </AppText>
+          <View style={[styles.modePage, { paddingHorizontal: horizontalPadding }]}>
+            <ScrollView style={styles.modeScroll} contentContainerStyle={styles.modeContent} showsVerticalScrollIndicator={false}>
+              <AppText variant="sectionLabel" style={styles.modeEyebrow}>SCÈNE CHOISIE</AppText>
+              <AppText variant="screenTitle" style={styles.modeTitle}>{selectedSceneData.title}</AppText>
+              <AppText variant="body" style={styles.modeSubtitle}>Choisis ton approche.</AppText>
 
               <View style={styles.modeHero}>
-                <Image
-                  source={selectedSceneData.image}
-                  style={StyleSheet.absoluteFill}
-                  contentFit="cover"
-                />
-                <LinearGradient
-                  colors={["transparent", "rgba(2,3,7,0.94)"]}
-                  style={StyleSheet.absoluteFill}
-                />
+                <Image source={selectedSceneData.image} style={StyleSheet.absoluteFill} contentFit="cover" />
+                <LinearGradient colors={["transparent", "rgba(2,3,7,0.94)"]} style={StyleSheet.absoluteFill} />
                 <View style={styles.modeHeroCopy}>
-                  <AppText
-                    variant="sectionLabel"
-                    style={{ color: selectedSceneData.accent }}
-                  >
-                    {selectedSceneData.eyebrow}
-                  </AppText>
-                  <AppText variant="cardTitle" style={styles.modeHeroTitle}>
-                    {selectedSceneData.title}
-                  </AppText>
+                  <AppText variant="sectionLabel" style={{ color: selectedSceneData.accent }}>{selectedSceneData.eyebrow}</AppText>
+                  <AppText variant="cardTitle" style={styles.modeHeroTitle}>{selectedSceneData.title}</AppText>
                 </View>
               </View>
 
@@ -418,97 +333,38 @@ export default function OnboardingScreen() {
                 <Pressable
                   accessibilityRole="radio"
                   accessibilityState={{ checked: selectedMode === "guided" }}
-                  onPress={async () => {
-                    await lightTap();
-                    setSelectedMode("guided");
-                  }}
-                  style={[
-                    styles.modeChoice,
-                    selectedMode === "guided" && styles.modeChoiceActive,
-                  ]}
+                  onPress={async () => { await lightTap(); setSelectedMode("guided"); }}
+                  style={[styles.modeChoice, selectedMode === "guided" && styles.modeChoiceActive]}
                 >
                   <View style={styles.modeChoiceCopy}>
-                    <AppText variant="cardTitle" style={styles.modeChoiceTitle}>
-                      Entre dans la scène
-                    </AppText>
-                    <AppText
-                      variant="bodySecondary"
-                      style={styles.modeChoiceText}
-                    >
-                      Écoute et réponds comme si tu étais sur place.
-                    </AppText>
+                    <AppText variant="cardTitle" style={styles.modeChoiceTitle}>Entre dans la scène</AppText>
+                    <AppText variant="bodySecondary" style={styles.modeChoiceText}>Écoute et réponds comme si tu étais sur place.</AppText>
                   </View>
-                  <View
-                    style={[
-                      styles.radio,
-                      selectedMode === "guided" && styles.radioActive,
-                    ]}
-                  />
+                  <View style={[styles.radio, selectedMode === "guided" && styles.radioActive]} />
                 </Pressable>
 
                 <Pressable
                   accessibilityRole="radio"
                   accessibilityState={{ checked: selectedMode === "text" }}
-                  onPress={async () => {
-                    await lightTap();
-                    setSelectedMode("text");
-                  }}
-                  style={[
-                    styles.modeChoice,
-                    selectedMode === "text" && styles.modeChoiceActive,
-                  ]}
+                  onPress={async () => { await lightTap(); setSelectedMode("text"); }}
+                  style={[styles.modeChoice, selectedMode === "text" && styles.modeChoiceActive]}
                 >
                   <View style={styles.modeChoiceCopy}>
-                    <AppText variant="cardTitle" style={styles.modeChoiceTitle}>
-                      Expressions utiles
-                    </AppText>
-                    <AppText
-                      variant="bodySecondary"
-                      style={styles.modeChoiceText}
-                    >
-                      Revois d’abord les mots et expressions de la situation.
-                    </AppText>
+                    <AppText variant="cardTitle" style={styles.modeChoiceTitle}>Expressions utiles</AppText>
+                    <AppText variant="bodySecondary" style={styles.modeChoiceText}>Revois d’abord les mots et expressions de la situation.</AppText>
                   </View>
-                  <View
-                    style={[
-                      styles.radio,
-                      selectedMode === "text" && styles.radioActive,
-                    ]}
-                  />
+                  <View style={[styles.radio, selectedMode === "text" && styles.radioActive]} />
                 </Pressable>
               </View>
 
-              <Pressable
-                accessibilityRole="button"
-                onPress={finish}
-                style={({ pressed }) => [
-                  styles.modePrimary,
-                  pressed && styles.pressed,
-                ]}
-              >
-                <LinearGradient
-                  colors={["#E65D9D", "#8C426C", "#3F263A"]}
-                  start={{ x: 0, y: 0.5 }}
-                  end={{ x: 1, y: 0.5 }}
-                  style={StyleSheet.absoluteFill}
-                />
-                <AppText variant="button" style={styles.buttonText}>
-                  Commencer
-                </AppText>
+              <Pressable accessibilityRole="button" onPress={finish} style={({ pressed }) => [styles.modePrimary, pressed && styles.pressed]}>
+                <LinearGradient colors={["#E65D9D", "#8C426C", "#3F263A"]} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
+                <AppText variant="button" style={styles.buttonText}>Commencer</AppText>
                 <MoveRight size={19} color={WHITE} strokeWidth={2.2} />
               </Pressable>
 
-              <Pressable
-                accessibilityRole="button"
-                onPress={async () => {
-                  await lightTap();
-                  setStep("scene");
-                }}
-                style={styles.modeBack}
-              >
-                <AppText variant="button" style={styles.modeBackText}>
-                  Retour aux immersions
-                </AppText>
+              <Pressable accessibilityRole="button" onPress={async () => { await lightTap(); setStep("scene"); }} style={styles.modeBack}>
+                <AppText variant="button" style={styles.modeBackText}>Retour aux immersions</AppText>
               </Pressable>
             </ScrollView>
           </View>
@@ -519,64 +375,37 @@ export default function OnboardingScreen() {
 
   return (
     <View style={styles.screen}>
-      <StatusBar
-        barStyle="light-content"
-        translucent
-        backgroundColor="transparent"
-      />
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       <SceneBackground />
-
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-        <View
-          style={[styles.scenePage, { paddingHorizontal: horizontalPadding }]}
-        >
+        <View style={[styles.scenePage, { paddingHorizontal: horizontalPadding }]}>
           <ScrollView
             style={styles.sceneScroll}
             contentContainerStyle={[
               styles.sceneScrollContent,
-              isCompact && styles.sceneScrollContentCompact,
+              { paddingTop: sceneLayout.contentTop, paddingBottom: sceneLayout.contentBottom },
             ]}
             showsVerticalScrollIndicator={false}
           >
-            <View style={styles.intro}>
-              <AppText variant="sectionLabel" style={styles.introEyebrow}>
-                TON POINT DE DÉPART
-              </AppText>
-              <AppText
-                accessibilityRole="header"
-                variant="screenTitle"
-                style={styles.introTitle}
-              >
-                Choisis ta première expérience
-              </AppText>
-              <AppText variant="body" style={styles.introSubtitle}>
-                Lance une scène guidée ou explore librement le Hub.
-              </AppText>
+            <View style={[styles.intro, { marginBottom: sceneLayout.introBottom }]}>
+              <AppText variant="sectionLabel" style={[styles.introEyebrow, { marginBottom: sceneLayout.eyebrowBottom }]}>TON POINT DE DÉPART</AppText>
+              <AppText accessibilityRole="header" variant="screenTitle" style={styles.introTitle}>Choisis ta première expérience</AppText>
+              <AppText variant="body" style={[styles.introSubtitle, { marginTop: sceneLayout.subtitleTop }]}>Lance une scène guidée ou explore librement le Hub.</AppText>
             </View>
 
-            <FeaturedScene scene={selectedSceneData} height={heroHeight} />
+            <FeaturedScene scene={selectedSceneData} height={sceneLayout.heroHeight} />
 
-            <View style={styles.alternativeSection}>
-              <View style={styles.alternativeHeader}>
-                <AppText variant="sectionLabel" style={styles.alternativeLabel}>
-                  AUTRES IMMERSIONS
-                </AppText>
-                <AppText variant="caption" style={styles.swipeHint}>
-                  Fais glisser pour explorer
-                </AppText>
+            <View style={[styles.alternativeSection, { marginTop: sceneLayout.alternativeTop }]}>
+              <View style={[styles.alternativeHeader, { marginBottom: sceneLayout.alternativeHeaderBottom }]}>
+                <AppText variant="sectionLabel" style={styles.alternativeLabel}>AUTRES IMMERSIONS</AppText>
+                <AppText variant="caption" style={styles.swipeHint}>Fais glisser pour explorer</AppText>
               </View>
-
-              <ScrollView
-                horizontal
-                nestedScrollEnabled
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.alternativeList}
-              >
+              <ScrollView horizontal nestedScrollEnabled showsHorizontalScrollIndicator={false} contentContainerStyle={styles.alternativeList}>
                 {alternativeScenes.map((scene) => (
                   <AlternativeScene
                     key={scene.key}
                     scene={scene}
-                    height={alternativeHeight}
+                    height={sceneLayout.alternativeHeight}
                     width={alternativeWidth}
                     onPress={() => void selectScene(scene.key)}
                   />
@@ -584,24 +413,17 @@ export default function OnboardingScreen() {
               </ScrollView>
             </View>
 
-            <View style={styles.actions}>
+            <View style={[styles.actions, { marginTop: sceneLayout.actionsTop, gap: sceneLayout.actionsGap }]}>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`Commencer par ${selectedSceneData.title}`}
                 onPress={openMode}
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  pressed && styles.pressed,
-                ]}
+                style={({ pressed }) => [styles.primaryButton, { minHeight: sceneLayout.primaryHeight }, pressed && styles.pressed]}
               >
                 <LinearGradient
                   colors={[
-                    selectedScene === "cafe"
-                      ? "#E95B9C"
-                      : selectedSceneData.accent,
-                    selectedScene === "cafe"
-                      ? "#9A476F"
-                      : `${selectedSceneData.accent}B8`,
+                    selectedScene === "cafe" ? "#E95B9C" : selectedSceneData.accent,
+                    selectedScene === "cafe" ? "#9A476F" : `${selectedSceneData.accent}B8`,
                     "#3A2838",
                   ]}
                   locations={[0, 0.58, 1]}
@@ -610,9 +432,7 @@ export default function OnboardingScreen() {
                   style={StyleSheet.absoluteFill}
                 />
                 <View style={styles.primaryHighlight} />
-                <AppText variant="button" style={styles.buttonText}>
-                  {`Commencer par ${selectedSceneData.title}`}
-                </AppText>
+                <AppText variant="button" style={styles.buttonText}>{`Commencer par ${selectedSceneData.title}`}</AppText>
                 <MoveRight size={20} color={WHITE} strokeWidth={2.2} />
               </Pressable>
 
@@ -620,17 +440,10 @@ export default function OnboardingScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Explorer le Hub"
                 onPress={openHub}
-                style={({ pressed }) => [
-                  styles.hubButton,
-                  pressed && styles.pressed,
-                ]}
+                style={({ pressed }) => [styles.hubButton, { minHeight: sceneLayout.hubHeight }, pressed && styles.pressed]}
               >
-                <View style={styles.hubIcon}>
-                  <Compass size={16} color={WHITE} strokeWidth={2.1} />
-                </View>
-                <AppText variant="button" style={styles.hubButtonText}>
-                  Explorer le Hub
-                </AppText>
+                <View style={styles.hubIcon}><Compass size={16} color={WHITE} strokeWidth={2.1} /></View>
+                <AppText variant="button" style={styles.hubButtonText}>Explorer le Hub</AppText>
               </Pressable>
             </View>
 
@@ -643,39 +456,14 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#02030A",
-  },
-  safe: {
-    flex: 1,
-  },
-  scenePage: {
-    flex: 1,
-    width: "100%",
-    maxWidth: 920,
-    alignSelf: "center",
-  },
-  sceneScroll: {
-    flex: 1,
-  },
-  sceneScrollContent: {
-    width: "100%",
-    maxWidth: 860,
-    alignSelf: "center",
-    paddingTop: 24,
-    paddingBottom: 12,
-  },
-  sceneScrollContentCompact: {
-    paddingTop: 14,
-  },
-  intro: {
-    maxWidth: 650,
-    marginBottom: 24,
-  },
+  screen: { flex: 1, backgroundColor: "#02030A" },
+  safe: { flex: 1 },
+  scenePage: { flex: 1, width: "100%", maxWidth: 920, alignSelf: "center" },
+  sceneScroll: { flex: 1 },
+  sceneScrollContent: { width: "100%", maxWidth: 860, alignSelf: "center" },
+  intro: { maxWidth: 650 },
   introEyebrow: {
     color: PINK,
-    marginBottom: 12,
     textShadowColor: "rgba(244,114,182,0.25)",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
@@ -687,11 +475,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 12,
   },
-  introSubtitle: {
-    color: "rgba(255,255,255,0.68)",
-    maxWidth: 560,
-    marginTop: 12,
-  },
+  introSubtitle: { color: "rgba(255,255,255,0.68)", maxWidth: 560 },
   featuredCard: {
     width: "100%",
     borderRadius: 28,
@@ -723,14 +507,8 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: "rgba(7,5,11,0.67)",
   },
-  recommendedDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 999,
-  },
-  recommendedText: {
-    color: "rgba(255,255,255,0.97)",
-  },
+  recommendedDot: { width: 7, height: 7, borderRadius: 999 },
+  recommendedText: { color: "rgba(255,255,255,0.97)" },
   featuredLocation: {
     color: "rgba(255,255,255,0.80)",
     textAlign: "right",
@@ -738,11 +516,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 8,
   },
-  featuredCopy: {
-    paddingHorizontal: 22,
-    paddingBottom: 20,
-    maxWidth: 540,
-  },
+  featuredCopy: { paddingHorizontal: 22, paddingBottom: 20, maxWidth: 540 },
   featuredPhrase: {
     marginBottom: 5,
     textShadowColor: "rgba(0,0,0,0.88)",
@@ -763,12 +537,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 8,
   },
-  beginnerRow: {
-    marginTop: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 9,
-  },
+  beginnerRow: { marginTop: 12, flexDirection: "row", alignItems: "center", gap: 9 },
   beginnerIcon: {
     width: 20,
     height: 20,
@@ -778,32 +547,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  beginnerText: {
-    color: "rgba(255,255,255,0.78)",
-  },
-  alternativeSection: {
-    marginTop: 22,
-  },
+  beginnerText: { color: "rgba(255,255,255,0.78)" },
+  alternativeSection: {},
   alternativeHeader: {
     minHeight: 24,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
-    marginBottom: 12,
   },
-  alternativeLabel: {
-    color: "rgba(255,255,255,0.52)",
-    marginLeft: 1,
-  },
-  swipeHint: {
-    color: "rgba(255,255,255,0.38)",
-    textAlign: "right",
-  },
-  alternativeList: {
-    gap: 12,
-    paddingRight: 18,
-  },
+  alternativeLabel: { color: "rgba(255,255,255,0.52)", marginLeft: 1 },
+  swipeHint: { color: "rgba(255,255,255,0.38)", textAlign: "right" },
+  alternativeList: { gap: 12, paddingRight: 18 },
   alternativeCard: {
     flexShrink: 0,
     borderRadius: 22,
@@ -818,11 +573,7 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
     elevation: 4,
   },
-  alternativeCopy: {
-    paddingLeft: 15,
-    paddingRight: 49,
-    paddingBottom: 14,
-  },
+  alternativeCopy: { paddingLeft: 15, paddingRight: 49, paddingBottom: 14 },
   alternativeEyebrow: {
     marginBottom: 4,
     textShadowColor: "rgba(0,0,0,0.85)",
@@ -848,12 +599,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  actions: {
-    gap: 10,
-    marginTop: 18,
-  },
+  actions: {},
   primaryButton: {
-    minHeight: 62,
     borderRadius: 24,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.20)",
@@ -877,12 +624,8 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "rgba(255,255,255,0.48)",
   },
-  buttonText: {
-    color: WHITE,
-    textAlign: "center",
-  },
+  buttonText: { color: WHITE, textAlign: "center" },
   hubButton: {
-    minHeight: 58,
     borderRadius: 23,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.20)",
@@ -901,40 +644,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  hubButtonText: {
-    color: WHITE,
-  },
-  pressed: {
-    opacity: 0.88,
-    transform: [{ scale: 0.992 }],
-  },
-  largeTextSpacer: {
-    height: 16,
-  },
-  modePage: {
-    flex: 1,
-    width: "100%",
-    maxWidth: 620,
-    alignSelf: "center",
-  },
-  modeScroll: {
-    flex: 1,
-  },
-  modeContent: {
-    paddingTop: 24,
-    paddingBottom: 18,
-  },
-  modeEyebrow: {
-    color: CYAN,
-    marginBottom: 10,
-  },
-  modeTitle: {
-    color: WHITE,
-  },
-  modeSubtitle: {
-    color: "rgba(255,255,255,0.66)",
-    marginTop: 7,
-  },
+  hubButtonText: { color: WHITE },
+  pressed: { opacity: 0.88, transform: [{ scale: 0.992 }] },
+  largeTextSpacer: { height: 16 },
+  modePage: { flex: 1, width: "100%", maxWidth: 620, alignSelf: "center" },
+  modeScroll: { flex: 1 },
+  modeContent: { paddingTop: 24, paddingBottom: 18 },
+  modeEyebrow: { color: CYAN, marginBottom: 10 },
+  modeTitle: { color: WHITE },
+  modeSubtitle: { color: "rgba(255,255,255,0.66)", marginTop: 7 },
   modeHero: {
     height: 170,
     borderRadius: 24,
@@ -944,17 +662,9 @@ const styles = StyleSheet.create({
     marginTop: 24,
     justifyContent: "flex-end",
   },
-  modeHeroCopy: {
-    padding: 18,
-  },
-  modeHeroTitle: {
-    color: WHITE,
-    marginTop: 3,
-  },
-  modeChoices: {
-    gap: 12,
-    marginTop: 18,
-  },
+  modeHeroCopy: { padding: 18 },
+  modeHeroTitle: { color: WHITE, marginTop: 3 },
+  modeChoices: { gap: 12, marginTop: 18 },
   modeChoice: {
     minHeight: 88,
     borderRadius: 22,
@@ -967,32 +677,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 14,
   },
-  modeChoiceActive: {
-    borderColor: "rgba(112,174,184,0.62)",
-    backgroundColor: "rgba(19,38,46,0.76)",
-  },
-  modeChoiceCopy: {
-    flex: 1,
-  },
-  modeChoiceTitle: {
-    color: WHITE,
-  },
-  modeChoiceText: {
-    color: "rgba(255,255,255,0.58)",
-    marginTop: 3,
-  },
-  radio: {
-    width: 18,
-    height: 18,
-    borderRadius: 999,
-    borderWidth: 1.4,
-    borderColor: "rgba(255,255,255,0.36)",
-  },
-  radioActive: {
-    borderWidth: 5,
-    borderColor: CYAN,
-    backgroundColor: "rgba(255,255,255,0.90)",
-  },
+  modeChoiceActive: { borderColor: "rgba(112,174,184,0.62)", backgroundColor: "rgba(19,38,46,0.76)" },
+  modeChoiceCopy: { flex: 1 },
+  modeChoiceTitle: { color: WHITE },
+  modeChoiceText: { color: "rgba(255,255,255,0.58)", marginTop: 3 },
+  radio: { width: 18, height: 18, borderRadius: 999, borderWidth: 1.4, borderColor: "rgba(255,255,255,0.36)" },
+  radioActive: { borderWidth: 5, borderColor: CYAN, backgroundColor: "rgba(255,255,255,0.90)" },
   modePrimary: {
     minHeight: 58,
     borderRadius: 22,
@@ -1006,13 +696,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 12,
   },
-  modeBack: {
-    minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 5,
-  },
-  modeBackText: {
-    color: "rgba(255,255,255,0.58)",
-  },
+  modeBack: { minHeight: 48, alignItems: "center", justifyContent: "center", marginTop: 5 },
+  modeBackText: { color: "rgba(255,255,255,0.58)" },
 });
