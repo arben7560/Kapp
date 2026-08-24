@@ -28,10 +28,10 @@ const cafeMissionBackgrounds = [
     uri: "https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
   },
   {
-    uri: "https://images.pexels.com/photos/808941/pexels-photo-808941.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
+    uri: "https://images.pexels.com/photos/29980679/pexels-photo-29980679.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
   },
   {
-    uri: "https://images.pexels.com/photos/1235706/pexels-photo-1235706.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
+    uri: "https://images.pexels.com/photos/16815690/pexels-photo-16815690.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop",
   },
 ] as const;
 
