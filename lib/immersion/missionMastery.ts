@@ -22,6 +22,7 @@ type MissionMasterySceneConfig = {
   title: string;
   location: string;
   missions: readonly MasteryMission[];
+  missionLocations?: Readonly<Record<string, string>>;
   excludedMissionIds?: ReadonlySet<string>;
 };
 
@@ -35,8 +36,13 @@ const SCENE_CONFIG: Record<MissionMasteryScene, MissionMasterySceneConfig> = {
     title: "Métro",
     location: "Séoul · Ligne 2",
     missions: metroMissions,
+    missionLocations: {
+      "myeongdong-itaewon": "Séoul · Ligne 4 → Ligne 6",
+      "ask-transfer": "Séoul · Ligne 4 → Ligne 6",
+    },
     // Cette mission est affichée comme « prochainement » : elle ne doit pas
-    // rendre le compteur de maîtrise impossible à compléter.
+    // rendre le compteur de maîtrise impossible à compléter. Son libellé de
+    // ligne est déjà prêt pour sa future publication.
     excludedMissionIds: new Set(["myeongdong-itaewon"]),
   },
   restaurant: {
@@ -170,7 +176,7 @@ function resolveCelebrationFromProgressId(
           missionTitle: mission.title,
           objective: mission.objective,
           sceneTitle: config.title,
-          location: config.location,
+          location: config.missionLocations?.[mission.id] ?? config.location,
           firstMastery,
         };
       }
