@@ -1,6 +1,7 @@
 import React from "react";
 import type { HangulDetailedProgress } from "./data/hangul/types";
 import type { GrammarLearningProgress } from "./data/grammar/types";
+import { queueMissionMasteryCelebration } from "./lib/immersion/missionMastery";
 import {
   COMPLETION_XP,
   reserveCompletion,
@@ -138,6 +139,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
 
   const complete = React.useCallback(async (id: string) => {
+    if (isHydratedRef.current) {
+      queueMissionMasteryCelebration(id, !completedRef.current[id]);
+    }
+
     const nextCompleted = reserveCompletion(
       completedRef.current,
       id,
