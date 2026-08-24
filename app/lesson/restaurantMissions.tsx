@@ -29,7 +29,7 @@ const ORANGE = "#FB923C";
 
 const PEXELS_16_9 = {
   "order-simple":
-    "https://images.pexels.com/photos/34688717/pexels-photo-34688717.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
+    "https://images.pexels.com/photos/33873561/pexels-photo-33873561.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
   "ask-recommendation":
     "https://images.pexels.com/photos/5774152/pexels-photo-5774152.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1600&h=900",
   "choose-grill":
