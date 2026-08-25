@@ -143,10 +143,7 @@ export default function ComptageHub() {
     maxColumns: 2,
     gap: effectiveGap,
   });
-  const gridItemWidth = responsive.getGridItemWidth(
-    gridColumns,
-    effectiveGap,
-  );
+  const gridItemWidth = responsive.getGridItemWidth(gridColumns, effectiveGap);
 
   useFocusEffect(
     useCallback(() => {
@@ -169,7 +166,9 @@ export default function ComptageHub() {
       return null;
     }
 
-    return MODULES.find((module) => module.route === resumeContext.route) ?? null;
+    return (
+      MODULES.find((module) => module.route === resumeContext.route) ?? null
+    );
   }, [resumeContext]);
 
   const featuredModule = resumeModule ?? INCLUDED_MODULES[0];
@@ -259,9 +258,7 @@ export default function ComptageHub() {
                 <AnimatedFragment
                   key={module.id}
                   index={index + 1}
-                  style={
-                    gridColumns > 1 ? { width: gridItemWidth } : undefined
-                  }
+                  style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
                 >
                   <CountingPathCard
                     module={module}
@@ -296,9 +293,7 @@ export default function ComptageHub() {
                 <AnimatedFragment
                   key={module.id}
                   index={INCLUDED_MODULES.length + index + 1}
-                  style={
-                    gridColumns > 1 ? { width: gridItemWidth } : undefined
-                  }
+                  style={gridColumns > 1 ? { width: gridItemWidth } : undefined}
                 >
                   <CountingPathCard
                     module={module}
@@ -432,7 +427,11 @@ function FeaturedPathCard({
                     "rgba(0,0,0,0)",
                     "rgba(2,3,6,0.16)",
                   ]
-                : ["rgba(130,148,175,0.09)", "rgba(0,0,0,0)", "rgba(2,3,6,0.16)"]
+                : [
+                    "rgba(130,148,175,0.09)",
+                    "rgba(0,0,0,0)",
+                    "rgba(2,3,6,0.16)",
+                  ]
           }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -692,7 +691,11 @@ function CountingPathCard({
                     "rgba(0,0,0,0)",
                     "rgba(2,3,6,0.14)",
                   ]
-                : ["rgba(130,148,175,0.07)", "rgba(0,0,0,0)", "rgba(2,3,6,0.14)"]
+                : [
+                    "rgba(130,148,175,0.07)",
+                    "rgba(0,0,0,0)",
+                    "rgba(2,3,6,0.14)",
+                  ]
           }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}

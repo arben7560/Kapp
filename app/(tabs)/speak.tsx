@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
-  Image,
   ImageBackground,
   ImageSourcePropType,
   Modal,
@@ -237,6 +236,7 @@ export default function SpeakScreen() {
           visible={sheetVisible}
           onClose={() => setSheetVisible(false)}
           selectedTheme={selectedTheme}
+          backButtonLeft={(responsive.width - responsive.contentWidth) / 2}
         />
       </ImageBackground>
     </SafeAreaView>
@@ -687,10 +687,12 @@ function ThemeModeSheet({
   visible,
   onClose,
   selectedTheme,
+  backButtonLeft,
 }: {
   visible: boolean;
   onClose: () => void;
   selectedTheme: ThemeKey | null;
+  backButtonLeft: number;
 }) {
   const [translateY] = useState(() => new Animated.Value(80));
   const [backdropOpacity] = useState(() => new Animated.Value(0));
@@ -789,6 +791,17 @@ function ThemeModeSheet({
     router.push(config.guidedRoute);
   };
 
+  const handleBack = () => {
+    onClose();
+
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/(tabs)");
+  };
+
   return (
     <Modal
       visible={mounted}
@@ -808,6 +821,17 @@ function ThemeModeSheet({
         />
 
         <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Retour depuis la sélection de scène"
+          hitSlop={8}
+          onPress={handleBack}
+          style={[
+            styles.sheetBackHitTarget,
+            { top: sheetTopInset + 8, left: backButtonLeft },
+          ]}
+        />
 
         <Animated.View
           style={[
@@ -878,9 +902,9 @@ function ThemeModeSheet({
                   },
                 ]}
               >
-                <Image
+                <ImageBackground
                   source={config.image}
-                  style={styles.sheetHeroImg}
+                  style={StyleSheet.absoluteFill}
                   resizeMode="cover"
                 />
 
@@ -1446,6 +1470,13 @@ const styles = StyleSheet.create({
   sheetBackdrop: {
     backgroundColor: "rgba(2,3,6,0.80)",
   },
+  sheetBackHitTarget: {
+    position: "absolute",
+    width: 124,
+    height: 44,
+    zIndex: 20,
+    elevation: 20,
+  },
   sheetAnimatedWrap: {
     width: "100%",
     alignItems: "center",
@@ -1499,11 +1530,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
-  },
-  sheetHeroImg: {
-    ...StyleSheet.absoluteFillObject,
-    width: "100%",
-    height: "100%",
   },
   sheetCloseIcon: {
     position: "absolute",

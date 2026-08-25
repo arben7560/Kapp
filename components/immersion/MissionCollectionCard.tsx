@@ -7,20 +7,19 @@ import {
   Mic2,
   Sparkles,
 } from "lucide-react-native";
-import React from "react";
 import {
   ImageBackground,
-  type ImageSourcePropType,
   Pressable,
   StyleSheet,
   View,
+  type ImageSourcePropType,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
 
-import { AppText } from "../app-text";
 import { SeoulMidnightGlass } from "../../constants/theme";
 import type { ImmersionMission } from "../../lib/immersion/missions";
+import { AppText } from "../app-text";
 
 const TXT = "rgba(255,255,255,0.98)";
 const MUTED = "rgba(241,245,249,0.82)";
@@ -29,6 +28,7 @@ const PREMIUM_LIGHT = "#FFF1A8";
 const PREMIUM_SOFT = "#D8C89A";
 const ACTIVE_PEARL = "#E8E3D8";
 const VOCAL_VIOLET = "#A78BFA";
+const CARD_IMAGE_BLUR_INTENSITY = 75;
 
 type MissionCollectionCardProps = {
   mission: ImmersionMission;
@@ -114,18 +114,14 @@ export function MissionCollectionCard({
         />
 
         <BlurView
-          intensity={12}
+          intensity={CARD_IMAGE_BLUR_INTENSITY}
           tint="dark"
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
 
         <LinearGradient
-          colors={[
-            "rgba(2,4,7,0.24)",
-            "rgba(2,4,7,0.38)",
-            "rgba(2,3,6,0.62)",
-          ]}
+          colors={["rgba(2,4,7,0.24)", "rgba(2,4,7,0.38)", "rgba(2,3,6,0.62)"]}
           locations={[0, 0.52, 1]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -236,7 +232,10 @@ export function MissionCollectionCard({
                     <AppText
                       variant="caption"
                       lineContract="singleLine"
-                      style={[styles.missionBadgeText, styles.missionBadgeTextVocal]}
+                      style={[
+                        styles.missionBadgeText,
+                        styles.missionBadgeTextVocal,
+                      ]}
                     >
                       VOCAL
                     </AppText>

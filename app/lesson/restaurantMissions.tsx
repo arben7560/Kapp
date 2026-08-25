@@ -24,6 +24,7 @@ import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
 const restaurantBackground = require("../../assets/images/restaurant.jpg");
+const restaurantMissionImage = require("../../assets/images/restaurant.png");
 
 const BG_DEEP = "#050508";
 const ORANGE = "#FB923C";
@@ -125,14 +126,20 @@ export default function RestaurantMissionsScreen() {
   };
 
   const renderMissionCard = (mission: RestaurantMission, compact = false) => {
-    const order = restaurantMissions.findIndex((item) => item.id === mission.id) + 1;
+    const order =
+      restaurantMissions.findIndex((item) => item.id === mission.id) + 1;
     const cardMission =
       mission.id === RESTAURANT_SPEECH_MISSION_ID
         ? { ...mission, subtitle: "Exprime toi et commande" }
         : mission;
-    const backgroundUri =
-      PEXELS_16_9[mission.id as keyof typeof PEXELS_16_9] ??
-      PEXELS_16_9["order-simple"];
+    const background =
+      mission.id === RESTAURANT_SPEECH_MISSION_ID
+        ? restaurantMissionImage
+        : {
+            uri:
+              PEXELS_16_9[mission.id as keyof typeof PEXELS_16_9] ??
+              PEXELS_16_9["order-simple"],
+          };
 
     return (
       <MissionMasteryCardFrame
@@ -147,7 +154,7 @@ export default function RestaurantMissionsScreen() {
           order={order}
           hasPremiumAccess={hasPremiumAccess}
           accent={ORANGE}
-          background={{ uri: backgroundUri }}
+          background={background}
           compact={compact}
           isVocal={mission.id === RESTAURANT_SPEECH_MISSION_ID}
           onPress={() => openMission(mission)}
@@ -180,7 +187,9 @@ export default function RestaurantMissionsScreen() {
             { paddingHorizontal: responsive.horizontalPadding },
           ]}
         >
-          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
+          <View
+            style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
+          >
             <GuidedMissionsHeader
               accent={ORANGE}
               compact={responsive.isCompact}
