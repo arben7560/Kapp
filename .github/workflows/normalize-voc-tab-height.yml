@@ -1,0 +1,69 @@
+name: Normalize vocabulary selector heights
+
+on:
+  push:
+    paths:
+      - ".github/workflows/normalize-voc-tab-height.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Normalize vocabulary selector heights
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          targets = {
+              "app/(tabs)/voc/basics.tsx": "tab",
+              "app/(tabs)/voc/gastronomie.tsx": "tab",
+              "app/(tabs)/voc/kdrama.tsx": "selectorItem",
+              "app/(tabs)/voc/nuit.tsx": "tab",
+              "app/(tabs)/voc/romance.tsx": "tab",
+              "app/(tabs)/voc/sante.tsx": "tab",
+              "app/(tabs)/voc/transport.tsx": "tab",
+          }
+
+          changed = []
+          for filename, style_name in targets.items():
+              path = Path(filename)
+              text = path.read_text(encoding="utf-8")
+              marker = f"  {style_name}: {{\n"
+              start = text.find(marker)
+              if start == -1:
+                  raise SystemExit(f"Style block {style_name!r} not found in {filename}")
+              end = text.find("\n  },", start)
+              if end == -1:
+                  raise SystemExit(f"Could not locate end of {style_name!r} in {filename}")
+              block = text[start:end]
+              if "minHeight:" in block:
+                  continue
+              insert_at = start + len(marker)
+              text = text[:insert_at] + "    minHeight: 46,\n" + text[insert_at:]
+              path.write_text(text, encoding="utf-8")
+              changed.append(filename)
+
+          print("Changed:", ", ".join(changed) if changed else "none")
+          PY
+
+      - name: Commit normalized selectors
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/normalize-voc-tab-height.yml
+          git add 'app/(tabs)/voc/'
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Normalize vocabulary selector heights"
+          git push origin HEAD:main
