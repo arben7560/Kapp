@@ -881,6 +881,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   tab: {
+    minHeight: 46,
     minWidth: 94,
     alignItems: "center",
     justifyContent: "center",
