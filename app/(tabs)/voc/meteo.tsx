@@ -286,6 +286,7 @@ const styles = StyleSheet.create({
 
   // Header Style
   topNav: {
+    paddingTop: 12,
     flexDirection: "row",
     alignItems: "center",
     gap: 15,
@@ -305,6 +306,12 @@ const styles = StyleSheet.create({
   navEyebrow: {
     color: PINK,
   },
+  navTitleWrap: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
   navTitle: { color: "#fff", opacity: 0.8 },
 
   // Hero Section

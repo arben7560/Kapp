@@ -163,7 +163,7 @@ export default function ObjectsCyber() {
             {/* Header Navigation */}
             <View style={styles.topNav}>
               <AppBackButton />
-              <View>
+              <View style={styles.navTitleWrap}>
                 <AppText variant="cardTitle" style={styles.navTitle}>Inventaire Quotidien</AppText>
               </View>
             </View>
@@ -370,6 +370,7 @@ const styles = StyleSheet.create({
 
   // Header
   topNav: {
+    paddingTop: 12,
     flexDirection: "row",
     alignItems: "center",
     gap: 15,
@@ -389,6 +390,12 @@ const styles = StyleSheet.create({
   navEyebrow: {
     color: PINK,
   },
+  navTitleWrap: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
   navTitle: { color: "#fff", opacity: 0.8 },
 
   // Hero

@@ -580,7 +580,7 @@ export default function BusinessImmersion() {
         >
           <View style={styles.topNav}>
             <AppBackButton />
-            <View>
+            <View style={styles.navTitleWrap}>
               <AppText variant="cardTitle" style={styles.navTitle}>Vie professionnelle</AppText>
             </View>
           </View>
@@ -852,6 +852,7 @@ const styles = StyleSheet.create({
   },
 
   topNav: {
+    paddingTop: 12,
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
@@ -870,6 +871,12 @@ const styles = StyleSheet.create({
   backArrow: { color: "#fff", marginTop: -2 },
   navEyebrow: {
   },
+  navTitleWrap: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
   navTitle: {
     color: "#F5F7FA",
     opacity: 0.94,
