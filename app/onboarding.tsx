@@ -36,9 +36,9 @@ const METRO_GREEN = "#31C78A";
 const GOLD = "#D58D4D";
 const WHITE = "#FFFFFF";
 const NIGHT = "#070916";
-const CARD_LINE = "rgba(255,255,255,0.065)";
+const CARD_LINE = "rgba(255,255,255,0.045)";
 
-const CARD_GRID_LINES = Array.from({ length: 13 }, (_, index) => index);
+const CARD_GRID_LINES = Array.from({ length: 15 }, (_, index) => index);
 
 type SceneKey = "cafe" | "metro" | "restaurant" | "airport";
 type ModeKey = "text" | "guided";
@@ -50,8 +50,14 @@ type SceneOption = {
   title: string;
   subtitle: string;
   phrase: string;
+  translation: string;
   accent: string;
+  glowLeft: string;
+  glowRight: string;
   image: number;
+  badge: string;
+  timelineSubtitle: string;
+  icon: string;
 };
 
 const SCENES: SceneOption[] = [
@@ -61,35 +67,59 @@ const SCENES: SceneOption[] = [
     title: "Café",
     subtitle: "Commande comme si tu y étais, dans le bruit du comptoir et la pluie dehors.",
     phrase: "아메리카노 한 잔 주세요",
+    translation: '"Un americano, s\'il vous plaît"',
     accent: PINK,
+    glowLeft: "#1AB5C3",
+    glowRight: "#E72C7D",
     image: CAFE_IMAGE,
+    badge: "Idéal pour débuter",
+    timelineSubtitle: "Ligne 2",
+    icon: "☕",
   },
   {
     key: "metro",
     eyebrow: "LIGNE 2",
     title: "Métro",
-    subtitle: "Trouve ton chemin dans Séoul.",
+    subtitle: "Trouve ton chemin dans Séoul et demande ta direction naturellement.",
     phrase: "2호선은 어디예요?",
-    accent: CYAN,
+    translation: '"Où est la ligne 2 ?"',
+    accent: METRO_GREEN,
+    glowLeft: "#1CB8B9",
+    glowRight: "#2B8C73",
     image: METRO_IMAGE,
+    badge: "Débutant +",
+    timelineSubtitle: "Ligne 2",
+    icon: "🚇",
   },
   {
     key: "restaurant",
     eyebrow: "ITAEWON",
     title: "Restaurant",
-    subtitle: "Commande naturellement à table.",
+    subtitle: "Commande naturellement à table, comme dans un vrai restaurant coréen.",
     phrase: "이거 주세요",
+    translation: '"Celui-ci, s\'il vous plaît"',
     accent: GOLD,
+    glowLeft: "#7E5137",
+    glowRight: "#D36B47",
     image: RESTAURANT_IMAGE,
+    badge: "Débutant +",
+    timelineSubtitle: "Itaewon",
+    icon: "🍜",
   },
   {
     key: "airport",
     eyebrow: "INCHEON",
     title: "Aéroport",
-    subtitle: "Repère-toi dès ton arrivée en Corée.",
+    subtitle: "Repère-toi dès ton arrivée et trouve les transports pour rejoindre Séoul.",
     phrase: "지하철은 어디예요?",
+    translation: '"Où est le métro ?"',
     accent: CYAN,
+    glowLeft: "#1A8DAD",
+    glowRight: "#615299",
     image: AIRPORT_IMAGE,
+    badge: "Intermédiaire",
+    timelineSubtitle: "Incheon",
+    icon: "✈️",
   },
 ];
 
@@ -141,22 +171,22 @@ function OnboardingBackground() {
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <LinearGradient
-        colors={["#0A0C18", NIGHT, "#050711"]}
-        locations={[0, 0.48, 1]}
+        colors={["#090B16", NIGHT, "#050711"]}
+        locations={[0, 0.5, 1]}
         style={StyleSheet.absoluteFill}
       />
-      <View style={styles.backgroundPinkGlow} />
-      <View style={styles.backgroundCyanGlow} />
     </View>
   );
 }
 
-function FeaturedCafeCard({
+function FeaturedSceneCard({
+  scene,
   height,
   compact,
   horizontalPadding,
   verticalPadding,
 }: {
+  scene: SceneOption;
   height: number;
   compact: boolean;
   horizontalPadding: number;
@@ -169,22 +199,33 @@ function FeaturedCafeCard({
   return (
     <View
       accessible
-      accessibilityLabel="Café à Hongdae. Idéal pour débuter. 아메리카노 한 잔 주세요. Un americano, s'il vous plaît."
-      style={[styles.featuredCard, { height }]}
+      accessibilityLabel={`${scene.title}, ${scene.eyebrow}. ${scene.badge}. ${scene.phrase}. ${scene.translation}.`}
+      style={[styles.featuredCard, { height, borderColor: `${scene.accent}55` }]}
     >
       <LinearGradient
-        colors={["#123940", "#351A32", "#24151D", "#090B18"]}
-        locations={[0, 0.34, 0.65, 1]}
+        colors={["#101723", "#15131E", "#0A0C17"]}
+        locations={[0, 0.52, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      <View style={styles.cardCyanGlow} />
-      <View style={styles.cardPinkGlow} />
-      <View style={styles.cardWarmGlow} />
       <LinearGradient
-        colors={["rgba(3,6,15,0.00)", "rgba(5,7,18,0.08)", "rgba(5,6,16,0.52)", "rgba(5,6,16,0.90)"]}
-        locations={[0, 0.44, 0.72, 1]}
+        colors={[`${scene.glowLeft}55`, `${scene.glowLeft}18`, "transparent"]}
+        locations={[0, 0.38, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.78, y: 0.92 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <LinearGradient
+        colors={[`${scene.glowRight}66`, `${scene.glowRight}1C`, "transparent"]}
+        locations={[0, 0.38, 1]}
+        start={{ x: 1, y: 0 }}
+        end={{ x: 0.18, y: 0.86 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <LinearGradient
+        colors={["rgba(4,6,15,0.00)", "rgba(5,7,17,0.20)", "rgba(5,6,16,0.72)", "rgba(5,6,16,0.96)"]}
+        locations={[0, 0.42, 0.72, 1]}
         style={StyleSheet.absoluteFill}
       />
 
@@ -200,14 +241,14 @@ function FeaturedCafeCard({
           { paddingHorizontal: horizontalPadding, paddingTop: verticalPadding },
         ]}
       >
-        <View style={styles.recommendedPill}>
-          <View style={styles.recommendedDot} />
-          <AppText variant="label" style={styles.recommendedText}>
-            Idéal pour débuter
+        <View style={[styles.recommendedPill, { borderColor: `${scene.accent}66` }]}>
+          <View style={[styles.recommendedDot, { backgroundColor: scene.accent }]} />
+          <AppText variant="caption" style={styles.recommendedText}>
+            {scene.badge}
           </AppText>
         </View>
         <AppText variant="sectionLabel" style={styles.featuredLocation}>
-          HONGDAE
+          {scene.eyebrow}
         </AppText>
       </View>
 
@@ -223,72 +264,89 @@ function FeaturedCafeCard({
           script="korean"
           style={styles.featuredPhrase}
         >
-          아메리카노 한 잔 주세요
+          {scene.phrase}
         </AppText>
         <AppText variant="bodySecondary" style={styles.featuredTranslation}>
-          "Un americano, s'il vous plaît"
+          {scene.translation}
         </AppText>
         <AppText variant={titleVariant} style={styles.featuredTitle}>
-          Café
+          {scene.title}
         </AppText>
         <AppText variant={bodyVariant} style={styles.featuredSubtitle}>
-          Commande comme si tu y étais, dans le bruit du comptoir et la pluie dehors.
+          {scene.subtitle}
         </AppText>
       </View>
     </View>
   );
 }
 
-const JOURNEY_STEPS = [
-  { key: "cafe", icon: "☕", title: "Café", subtitle: "Ligne 2", accent: PINK, active: true },
-  { key: "metro", icon: "🚇", title: "Métro", subtitle: "Ligne 2", accent: METRO_GREEN },
-  { key: "restaurant", icon: "🍜", title: "Restaurant", subtitle: "Itaewon", accent: GOLD },
-  { key: "later", icon: "•••", title: "À venir", subtitle: "verrouillé", accent: "#62647E", locked: true },
-] as const;
+function JourneyTimeline({
+  selectedScene,
+  nodeSize,
+  compact,
+  onSelect,
+}: {
+  selectedScene: SceneKey;
+  nodeSize: number;
+  compact: boolean;
+  onSelect: (scene: SceneKey) => void;
+}) {
+  const selectedIndex = SCENES.findIndex((scene) => scene.key === selectedScene);
+  const activeWidth = `${(selectedIndex / (SCENES.length - 1)) * 100}%` as `${number}%`;
 
-function JourneyTimeline({ nodeSize, compact }: { nodeSize: number; compact: boolean }) {
   return (
     <View style={styles.timelineWrap}>
-      <View style={[styles.timelineRail, { left: nodeSize / 2, right: nodeSize / 2, top: nodeSize / 2 - 1 }]}>
-        <View style={styles.timelineRailActive} />
+      <View
+        style={[
+          styles.timelineRail,
+          { left: nodeSize / 2, right: nodeSize / 2, top: nodeSize / 2 - 1 },
+        ]}
+      >
+        <View style={[styles.timelineRailActive, { width: activeWidth }]} />
       </View>
 
       <View style={styles.timelineRow}>
-        {JOURNEY_STEPS.map((step) => (
-          <View key={step.key} style={styles.timelineStep}>
-            <View
-              style={[
-                styles.timelineNode,
-                {
-                  width: nodeSize,
-                  height: nodeSize,
-                  borderRadius: nodeSize / 2,
-                  borderColor: step.accent,
-                  shadowColor: step.accent,
-                },
-                step.active && styles.timelineNodeActive,
-                step.locked && styles.timelineNodeLocked,
-              ]}
+        {SCENES.map((scene) => {
+          const selected = scene.key === selectedScene;
+          return (
+            <Pressable
+              key={scene.key}
+              accessibilityRole="button"
+              accessibilityLabel={`Afficher la scène ${scene.title}`}
+              accessibilityState={{ selected }}
+              hitSlop={7}
+              onPress={() => onSelect(scene.key)}
+              style={({ pressed }) => [styles.timelineStep, pressed && styles.timelineStepPressed]}
             >
-              <Text
-                allowFontScaling={false}
+              <View
                 style={[
-                  styles.timelineEmoji,
-                  compact && styles.timelineEmojiCompact,
-                  step.locked && styles.timelineLockedDots,
+                  styles.timelineNode,
+                  {
+                    width: nodeSize,
+                    height: nodeSize,
+                    borderRadius: nodeSize / 2,
+                    borderColor: scene.accent,
+                    shadowColor: scene.accent,
+                  },
+                  selected && [styles.timelineNodeActive, { backgroundColor: scene.accent }],
                 ]}
               >
-                {step.icon}
-              </Text>
-            </View>
-            <AppText variant={compact ? "caption" : "bodyStrong"} style={styles.timelineTitle}>
-              {step.title}
-            </AppText>
-            <AppText variant="caption" style={styles.timelineSubtitle}>
-              {step.subtitle}
-            </AppText>
-          </View>
-        ))}
+                <Text
+                  allowFontScaling={false}
+                  style={[styles.timelineEmoji, compact && styles.timelineEmojiCompact]}
+                >
+                  {scene.icon}
+                </Text>
+              </View>
+              <AppText variant={compact ? "caption" : "bodySecondary"} style={styles.timelineTitle}>
+                {scene.title}
+              </AppText>
+              <AppText variant="caption" style={styles.timelineSubtitle}>
+                {scene.timelineSubtitle}
+              </AppText>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
@@ -298,6 +356,7 @@ export default function OnboardingScreen() {
   const { width, height, fontScale } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [step, setStep] = useState<OnboardingStep>("scene");
+  const [selectedScene, setSelectedScene] = useState<SceneKey>("cafe");
   const [selectedMode, setSelectedMode] = useState<ModeKey>("guided");
   const entrance = useRef(new Animated.Value(0)).current;
 
@@ -312,27 +371,30 @@ export default function OnboardingScreen() {
 
   const sceneLayout = useMemo(
     () => ({
-      contentTop: Math.round(lerp(2, 14, verticalProgress)),
-      contentBottom: Math.round(lerp(3, 12, verticalProgress)),
-      headerHeight: Math.round(lerp(38, 48, verticalProgress)),
-      headerBottom: Math.round(lerp(6, 20, verticalProgress)),
+      contentTop: Math.round(lerp(2, 12, verticalProgress)),
+      contentBottom: Math.round(lerp(3, 10, verticalProgress)),
+      headerHeight: Math.round(lerp(34, 42, verticalProgress)),
+      headerBottom: Math.round(lerp(6, 17, verticalProgress)),
       eyebrowBottom: Math.round(lerp(4, 9, verticalProgress)),
       subtitleTop: Math.round(lerp(5, 10, verticalProgress)),
-      introBottom: Math.round(lerp(6, 20, verticalProgress)),
-      heroHeight: isTablet ? 390 : Math.round(lerp(198, 352, verticalProgress)),
-      heroPaddingX: Math.round(lerp(14, 22, verticalProgress)),
-      heroPaddingY: Math.round(lerp(10, 18, verticalProgress)),
-      timelineTop: Math.round(lerp(8, 24, verticalProgress)),
-      timelineLabelBottom: Math.round(lerp(4, 10, verticalProgress)),
-      nodeSize: isTablet ? 60 : Math.round(lerp(44, 58, verticalProgress)),
-      timelineBottom: Math.round(lerp(5, 20, verticalProgress)),
-      primaryHeight: Math.round(lerp(48, 64, verticalProgress)),
-      secondaryHeight: Math.round(lerp(32, 44, verticalProgress)),
+      introBottom: Math.round(lerp(6, 18, verticalProgress)),
+      heroHeight: isTablet ? 382 : Math.round(lerp(198, 344, verticalProgress)),
+      heroPaddingX: Math.round(lerp(14, 21, verticalProgress)),
+      heroPaddingY: Math.round(lerp(10, 17, verticalProgress)),
+      timelineTop: Math.round(lerp(7, 20, verticalProgress)),
+      timelineLabelBottom: Math.round(lerp(4, 8, verticalProgress)),
+      nodeSize: isTablet ? 48 : Math.round(lerp(38, 46, verticalProgress)),
+      timelineBottom: Math.round(lerp(5, 17, verticalProgress)),
+      primaryHeight: Math.round(lerp(48, 62, verticalProgress)),
+      secondaryHeight: Math.round(lerp(32, 42, verticalProgress)),
     }),
     [isTablet, verticalProgress],
   );
 
-  const cafeScene = SCENES[0];
+  const selectedSceneData = useMemo(
+    () => SCENES.find((scene) => scene.key === selectedScene) ?? SCENES[0],
+    [selectedScene],
+  );
 
   useEffect(() => {
     Animated.timing(entrance, {
@@ -349,7 +411,7 @@ export default function OnboardingScreen() {
       {
         translateY: entrance.interpolate({
           inputRange: [0, 1],
-          outputRange: [8, 0],
+          outputRange: [7, 0],
         }),
       },
     ],
@@ -366,6 +428,12 @@ export default function OnboardingScreen() {
     router.back();
   };
 
+  const selectScene = async (scene: SceneKey) => {
+    if (scene === selectedScene) return;
+    await lightTap();
+    setSelectedScene(scene);
+  };
+
   const openMode = async () => {
     await lightTap();
     setStep("mode");
@@ -374,8 +442,11 @@ export default function OnboardingScreen() {
   const finish = async () => {
     await lightTap();
     await AsyncStorage.setItem(ONBOARDING_KEY, "true");
-    const route = ROUTES.cafe[selectedMode];
-    const target = selectedMode === "text" ? route : { pathname: route, params: { mode: selectedMode } };
+    const route = ROUTES[selectedScene][selectedMode];
+    const target =
+      selectedMode === "text"
+        ? route
+        : { pathname: route, params: { mode: selectedMode } };
     router.replace(target as any);
   };
 
@@ -395,24 +466,28 @@ export default function OnboardingScreen() {
                 SCÈNE CHOISIE
               </AppText>
               <AppText variant="screenTitle" style={styles.modeTitle}>
-                {cafeScene.title}
+                {selectedSceneData.title}
               </AppText>
               <AppText variant="body" style={styles.modeSubtitle}>
                 Choisis ton approche.
               </AppText>
 
               <View style={styles.modeHero}>
-                <Image source={cafeScene.image} style={StyleSheet.absoluteFill} contentFit="cover" />
+                <Image
+                  source={selectedSceneData.image}
+                  style={StyleSheet.absoluteFill}
+                  contentFit="cover"
+                />
                 <LinearGradient
                   colors={["transparent", "rgba(2,3,7,0.94)"]}
                   style={StyleSheet.absoluteFill}
                 />
                 <View style={styles.modeHeroCopy}>
-                  <AppText variant="sectionLabel" style={{ color: cafeScene.accent }}>
-                    {cafeScene.eyebrow}
+                  <AppText variant="sectionLabel" style={{ color: selectedSceneData.accent }}>
+                    {selectedSceneData.eyebrow}
                   </AppText>
                   <AppText variant="cardTitle" style={styles.modeHeroTitle}>
-                    {cafeScene.title}
+                    {selectedSceneData.title}
                   </AppText>
                 </View>
               </View>
@@ -523,7 +598,15 @@ export default function OnboardingScreen() {
             bounces={false}
           >
             <Animated.View style={[styles.sceneInner, entranceStyle]}>
-              <View style={[styles.header, { height: sceneLayout.headerHeight, marginBottom: sceneLayout.headerBottom }]}>
+              <View
+                style={[
+                  styles.header,
+                  {
+                    height: sceneLayout.headerHeight,
+                    marginBottom: sceneLayout.headerBottom,
+                  },
+                ]}
+              >
                 <View style={styles.headerSide}>
                   <Pressable
                     accessibilityRole="button"
@@ -536,23 +619,23 @@ export default function OnboardingScreen() {
                       pressed && styles.pressed,
                     ]}
                   >
-                    <ArrowLeft size={compact ? 18 : 20} color="#A5A6BC" strokeWidth={2} />
+                    <ArrowLeft size={compact ? 17 : 18} color="#9FA1B7" strokeWidth={2} />
                   </Pressable>
                 </View>
 
                 <View
-                  style={[styles.progressSegments, { gap: compact ? 7 : 10 }]}
+                  style={[styles.progressSegments, { gap: compact ? 6 : 8 }]}
                   accessibilityLabel="Étape 1 sur 3"
                 >
                   <View
                     style={[
                       styles.progressSegment,
-                      { width: compact ? 30 : 36 },
+                      { width: compact ? 28 : 34 },
                       styles.progressSegmentActive,
                     ]}
                   />
-                  <View style={[styles.progressSegment, { width: compact ? 30 : 36 }]} />
-                  <View style={[styles.progressSegment, { width: compact ? 30 : 36 }]} />
+                  <View style={[styles.progressSegment, { width: compact ? 28 : 34 }]} />
+                  <View style={[styles.progressSegment, { width: compact ? 28 : 34 }]} />
                 </View>
 
                 <View style={[styles.headerSide, styles.headerSideRight]}>
@@ -563,7 +646,7 @@ export default function OnboardingScreen() {
                     hitSlop={10}
                     style={({ pressed }) => pressed && styles.pressed}
                   >
-                    <AppText variant={compact ? "bodySecondary" : "bodyStrong"} style={styles.skipText}>
+                    <AppText variant="bodySecondary" style={styles.skipText}>
                       Passer
                     </AppText>
                   </Pressable>
@@ -588,7 +671,8 @@ export default function OnboardingScreen() {
                 </AppText>
               </View>
 
-              <FeaturedCafeCard
+              <FeaturedSceneCard
+                scene={selectedSceneData}
                 height={sceneLayout.heroHeight}
                 compact={compact}
                 horizontalPadding={sceneLayout.heroPaddingX}
@@ -602,13 +686,18 @@ export default function OnboardingScreen() {
                 >
                   TON PARCOURS CE SOIR
                 </AppText>
-                <JourneyTimeline nodeSize={sceneLayout.nodeSize} compact={compact} />
+                <JourneyTimeline
+                  selectedScene={selectedScene}
+                  nodeSize={sceneLayout.nodeSize}
+                  compact={compact}
+                  onSelect={(scene) => void selectScene(scene)}
+                />
               </View>
 
               <View style={{ marginTop: sceneLayout.timelineBottom }}>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Commencer par Café"
+                  accessibilityLabel={`Commencer par ${selectedSceneData.title}`}
                   onPress={openMode}
                   style={({ pressed }) => [
                     styles.primaryButton,
@@ -625,7 +714,7 @@ export default function OnboardingScreen() {
                   />
                   <View style={styles.primaryHighlight} />
                   <AppText variant={compact ? "button" : "cardTitle"} style={styles.primaryButtonText}>
-                    Commencer par Café →
+                    {`Commencer par ${selectedSceneData.title} →`}
                   </AppText>
                 </Pressable>
 
@@ -657,24 +746,6 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: NIGHT },
   safe: { flex: 1 },
-  backgroundPinkGlow: {
-    position: "absolute",
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    right: -130,
-    top: 110,
-    backgroundColor: "rgba(217,22,102,0.035)",
-  },
-  backgroundCyanGlow: {
-    position: "absolute",
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    left: -145,
-    top: 300,
-    backgroundColor: "rgba(34,211,238,0.025)",
-  },
   scenePage: {
     flex: 1,
     width: "100%",
@@ -692,21 +763,21 @@ const styles = StyleSheet.create({
   headerSide: { flex: 1, alignItems: "flex-start", justifyContent: "center" },
   headerSideRight: { alignItems: "flex-end" },
   backButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.035)",
+    backgroundColor: "rgba(255,255,255,0.028)",
   },
-  backButtonCompact: { width: 40, height: 40, borderRadius: 20 },
+  backButtonCompact: { width: 36, height: 36, borderRadius: 18 },
   progressSegments: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
   },
   progressSegment: {
-    height: 6,
+    height: 4,
     borderRadius: 99,
     backgroundColor: "rgba(255,255,255,0.13)",
   },
@@ -714,197 +785,154 @@ const styles = StyleSheet.create({
     backgroundColor: PINK,
     shadowColor: PINK,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.45,
-    shadowRadius: 7,
-    elevation: 3,
+    shadowOpacity: 0.32,
+    shadowRadius: 5,
+    elevation: 2,
   },
-  skipText: { color: "#B7B7C9" },
+  skipText: { color: "#AAAABC" },
   intro: { maxWidth: 560 },
   introEyebrow: { color: CYAN },
   introTitle: { color: "#F8F5F7" },
   introTitleAccent: { color: PINK },
-  introSubtitle: { color: "#A9A8BE", maxWidth: 560 },
+  introSubtitle: { color: "#A8A7BA", maxWidth: 560 },
   featuredCard: {
     width: "100%",
-    borderRadius: 28,
+    borderRadius: 27,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(187,60,124,0.42)",
     backgroundColor: "#0B0D18",
     justifyContent: "space-between",
     shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.24,
-    shadowRadius: 20,
-    elevation: 6,
-  },
-  cardCyanGlow: {
-    position: "absolute",
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    top: -150,
-    left: -115,
-    backgroundColor: "rgba(27,201,215,0.22)",
-  },
-  cardPinkGlow: {
-    position: "absolute",
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    top: -165,
-    right: -105,
-    backgroundColor: "rgba(255,35,125,0.24)",
-  },
-  cardWarmGlow: {
-    position: "absolute",
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    bottom: -80,
-    right: 34,
-    backgroundColor: "rgba(183,101,48,0.11)",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    elevation: 4,
   },
   cardGrid: {
     ...StyleSheet.absoluteFillObject,
     flexDirection: "row",
     justifyContent: "space-around",
-    paddingHorizontal: 8,
-    opacity: 0.8,
+    paddingHorizontal: 7,
+    opacity: 0.72,
   },
   cardGridLine: {
     width: 1,
-    height: "125%",
-    marginTop: -18,
+    height: "126%",
+    marginTop: -20,
     backgroundColor: CARD_LINE,
-    transform: [{ rotate: "8deg" }],
+    transform: [{ rotate: "7deg" }],
   },
   featuredTopRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 12,
+    gap: 10,
   },
   recommendedPill: {
-    minHeight: 31,
+    minHeight: 27,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(255,47,125,0.55)",
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    backgroundColor: "rgba(18,16,29,0.28)",
+    gap: 7,
+    backgroundColor: "rgba(12,12,24,0.20)",
   },
   recommendedDot: {
-    width: 8,
-    height: 8,
+    width: 7,
+    height: 7,
     borderRadius: 4,
-    backgroundColor: PINK,
   },
-  recommendedText: { color: "#E8DDE6" },
-  featuredLocation: { color: "#C4B6C2", textAlign: "right" },
+  recommendedText: { color: "#DDD5DD" },
+  featuredLocation: { color: "#BEB2BD", textAlign: "right" },
   featuredCopy: { maxWidth: 560 },
   featuredPhrase: {
-    color: "#F7F3F0",
-    textShadowColor: "rgba(0,0,0,0.65)",
+    color: "#F2EFED",
+    textShadowColor: "rgba(0,0,0,0.55)",
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 8,
+    textShadowRadius: 6,
   },
   featuredTranslation: {
-    color: "#AAA8BA",
-    marginTop: 2,
+    color: "#A5A3B4",
+    marginTop: 1,
     fontStyle: "italic",
   },
   featuredTitle: {
     color: WHITE,
-    marginTop: 8,
-    textShadowColor: "rgba(0,0,0,0.48)",
+    marginTop: 7,
+    textShadowColor: "rgba(0,0,0,0.40)",
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 7,
+    textShadowRadius: 6,
   },
   featuredSubtitle: {
-    color: "#B2B0C2",
-    marginTop: 7,
+    color: "#AAA9BA",
+    marginTop: 6,
     maxWidth: 470,
   },
-  journeyLabel: { color: "#686B85" },
+  journeyLabel: { color: "#696C84" },
   timelineWrap: { width: "100%", position: "relative" },
   timelineRail: {
     position: "absolute",
     height: 3,
     borderRadius: 99,
-    backgroundColor: "#555970",
+    backgroundColor: "#50546A",
     overflow: "hidden",
   },
   timelineRailActive: {
-    width: "27%",
     height: "100%",
     backgroundColor: PINK,
   },
   timelineRow: { flexDirection: "row", alignItems: "flex-start" },
-  timelineStep: { flex: 1, alignItems: "center" },
+  timelineStep: { flex: 1, alignItems: "center", minWidth: 0 },
+  timelineStepPressed: { opacity: 0.76 },
   timelineNode: {
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#111423",
+    backgroundColor: "#101321",
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOpacity: 0.10,
+    shadowRadius: 6,
+    elevation: 1,
   },
   timelineNodeActive: {
     borderWidth: 0,
-    backgroundColor: PINK,
-    shadowOpacity: 0.48,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  timelineNodeLocked: {
-    borderWidth: 2,
-    borderStyle: "dashed",
-    backgroundColor: "transparent",
-    shadowOpacity: 0,
-    elevation: 0,
+    shadowOpacity: 0.30,
+    shadowRadius: 8,
+    elevation: 4,
   },
   timelineEmoji: {
-    fontSize: 20,
-    lineHeight: 24,
+    fontSize: 16,
+    lineHeight: 20,
     textAlign: "center",
     color: WHITE,
   },
-  timelineEmojiCompact: { fontSize: 17, lineHeight: 21 },
-  timelineLockedDots: {
-    fontSize: 16,
-    letterSpacing: 1,
-    color: "#73758F",
-  },
+  timelineEmojiCompact: { fontSize: 14, lineHeight: 18 },
   timelineTitle: {
-    color: "#F0EDF0",
-    marginTop: 6,
+    color: "#EDEAF0",
+    marginTop: 5,
     textAlign: "center",
   },
   timelineSubtitle: {
     color: "#5E6077",
-    marginTop: 1,
+    marginTop: 0,
     textAlign: "center",
   },
   primaryButton: {
     width: "100%",
-    borderRadius: 24,
+    borderRadius: 23,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
+    borderColor: "rgba(255,255,255,0.09)",
     paddingHorizontal: 18,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: PINK,
-    shadowOffset: { width: 0, height: 9 },
-    shadowOpacity: 0.36,
-    shadowRadius: 20,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.28,
+    shadowRadius: 16,
+    elevation: 6,
   },
   primaryHighlight: {
     position: "absolute",
@@ -912,7 +940,7 @@ const styles = StyleSheet.create({
     left: 28,
     right: 28,
     height: 1,
-    backgroundColor: "rgba(255,255,255,0.30)",
+    backgroundColor: "rgba(255,255,255,0.25)",
   },
   primaryButtonText: { color: WHITE, textAlign: "center" },
   hubLink: {
@@ -920,7 +948,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  hubLinkText: { color: "#A6A4B7", textAlign: "center" },
+  hubLinkText: { color: "#9F9DAF", textAlign: "center" },
   pressed: { opacity: 0.86, transform: [{ scale: 0.992 }] },
   largeTextSpacer: { height: 18 },
   buttonText: { color: WHITE, textAlign: "center" },
