@@ -30,7 +30,7 @@ const COLORS = {
   glass: "rgba(255,255,255,0.05)",
 };
 
-const RESTAURANT_IMAGE = require("../../assets/images/restaurant.jpg");
+const RESTAURANT_IMAGE = require("../../assets/images/restaurantIA.jpg");
 
 const RESTAURANT_EXPRESSION_AUDIO: Record<Scene["id"], readonly number[]> = {
   ai: [
@@ -335,7 +335,7 @@ export default function RestaurantLesson() {
           source={activeScene.image}
           style={styles.bgLayer}
           fadeDuration={0}
-          resizeMode="contain"
+          resizeMode="cover"
         />
         {previousBackground ? (
           <Animated.View
@@ -346,7 +346,7 @@ export default function RestaurantLesson() {
               source={previousBackground}
               style={styles.bgLayer}
               fadeDuration={0}
-              resizeMode="contain"
+              resizeMode="cover"
             />
           </Animated.View>
         ) : null}
