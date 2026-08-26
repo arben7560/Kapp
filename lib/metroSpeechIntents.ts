@@ -512,7 +512,7 @@ function getMetroIncompleteContextualFeedback(
   }
   if (
     intents.has("duration") &&
-    includesAny(value, ["강남까지", "시간", "몇분"]) &&
+    includesAny(value, ["강남까지", "몇분", "소요시간"]) &&
     !includesAny(value, ["걸", "분이에요", "얼마나", "오래", "필요"])
   ) {
     return `Tu es bien sur la durée du trajet, mais ta question s’arrête un peu trop tôt. ${expectation}`;
@@ -985,7 +985,7 @@ export function matchMetroSpeechIntent(
       if (!durationChoice) {
         return help(
           "duration-confusion",
-          "Tu as déjà demandé la durée. Ici, passe plutôt à l’autre question, demande de répéter ou termine l’échange.",
+          "Ta phrase demande bien la durée, mais cette intention n’est pas disponible à ce tour. Poursuis avec l’une des options proposées.",
           attemptNumber,
           "follow-up",
         );
@@ -1038,7 +1038,7 @@ export function matchMetroSpeechIntent(
       if (!transferChoice) {
         return help(
           "transfer-confusion",
-          "Tu as déjà demandé s’il fallait changer de ligne. Ici, passe plutôt à l’autre question, demande de répéter ou termine l’échange.",
+          "Ta phrase demande bien une correspondance, mais cette intention n’est pas disponible à ce tour. Poursuis avec l’une des options proposées.",
           attemptNumber,
           "follow-up",
         );
@@ -1320,6 +1320,8 @@ export function matchMetroSpeechIntent(
     "어디로타",
     "어디서타",
     "어떻게찾아가",
+    "어떻게강남에가",
+    "어떻게강남까지가",
   ]);
   const asksWhatToDoToGo =
     includesAny(korean, ["가려면", "갈려면"]) &&
@@ -1345,6 +1347,10 @@ export function matchMetroSpeechIntent(
     "어디로가면돼",
   ]);
   const asksShortRoute = includesAny(korean, ["강남어떻게", "강남어디로"]);
+  const asksAwkwardRouteOrder = includesAny(korean, [
+    "가요어떻게강남",
+    "어디예요강남가는",
+  ]);
   const asksForSubway =
     (includesAny(korean, ["2호선", "이호선"]) &&
       includesAny(korean, [
@@ -1363,6 +1369,7 @@ export function matchMetroSpeechIntent(
     asksWhichRoute ||
     asksRequiredRoute ||
     asksShortRoute ||
+    asksAwkwardRouteOrder ||
     asksForSubway;
   const hasExit = includesAny(korean, ["출구", "몇번출구", "나가야"]);
   const hasDuration = includesAny(korean, [
@@ -1373,7 +1380,21 @@ export function matchMetroSpeechIntent(
     "시간얼마나",
     "오래걸",
   ]);
-  const hasTransfer = includesAny(korean, ["환승", "갈아타", "바꿔타"]);
+  const hasTransferTopic = includesAny(korean, ["환승", "갈아타", "바꿔타"]);
+  const hasTransfer =
+    hasTransferTopic &&
+    (hasMetroQuestionShape(korean, transcript) ||
+      includesAny(korean, [
+        "해야",
+        "하나요",
+        "돼요",
+        "있어요",
+        "있나요",
+        "어디",
+        "필요",
+        "타요",
+      ]) ||
+      ["환승", "환승이요"].includes(korean));
   const hasNegativeDirection =
     hasGangnam &&
     includesAny(korean, [
@@ -1474,7 +1495,7 @@ export function matchMetroSpeechIntent(
 
   if (
     hasGangnam &&
-    (hasContradictoryDirection || !!wrongDestination) &&
+    hasContradictoryDirection &&
     !hasSelfCorrection
   ) {
     return help(
