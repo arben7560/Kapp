@@ -25,20 +25,34 @@ type CafeConversationSummaryModalProps = Readonly<{
   onFinish: () => void;
 }>;
 
+type ReviewCardKind = "improvement" | "confirmation" | "transcription";
+
 function ImperfectionCard({
   item,
-  uncertain = false,
+  kind = "improvement",
 }: Readonly<{
   item: CafeGroupedImperfection;
-  uncertain?: boolean;
+  kind?: ReviewCardKind;
 }>) {
   const recordedTranscript =
     item.recordedTranscripts.join(" · ") || "Aucune transcription";
+  const caption =
+    kind === "transcription"
+      ? "Transcription à vérifier"
+      : kind === "confirmation"
+        ? "Réponse à confirmer"
+        : item.stepLabel;
 
   return (
-    <View style={[styles.detailCard, uncertain && styles.uncertainCard]}>
+    <View
+      style={[
+        styles.detailCard,
+        kind === "transcription" && styles.transcriptionCard,
+        kind === "confirmation" && styles.confirmationCard,
+      ]}
+    >
       <AppText variant="caption" tone="soft" script="latin">
-        {uncertain ? "Le micro a peut-être entendu" : item.stepLabel}
+        {caption}
       </AppText>
       <AppText
         variant="koreanSecondary"
@@ -60,7 +74,7 @@ function ImperfectionCard({
       </AppText>
 
       <AppText variant="caption" tone="soft" script="latin">
-        Essaie
+        Formulation de référence
       </AppText>
       <AppText
         variant="koreanSecondary"
@@ -78,12 +92,12 @@ function ImperfectionCard({
       <View style={styles.cardMeta}>
         {item.attemptCount > 1 ? (
           <AppText variant="caption" tone="muted" script="latin">
-            {item.attemptCount} tentatives regroupées
+            {item.attemptCount} tentatives avec le même diagnostic
           </AppText>
         ) : null}
         {item.correctedDuringScene ? (
           <AppText variant="caption" tone="accent" script="latin">
-            Corrigé pendant la scène
+            Résolu pendant la scène
           </AppText>
         ) : null}
       </View>
@@ -101,7 +115,7 @@ export function CafeConversationSummaryModal({
   const [isReviewing, setIsReviewing] = useState(false);
   const [listenedPhrases, setListenedPhrases] = useState<Record<string, true>>({});
   const summary = useMemo(() => buildCafeConversationSummary(memory), [memory]);
-  const phraseToRemember = summary.canonicalReferencePhrases[0];
+  const phraseToRemember = summary.recommendedPhrase;
 
   useEffect(() => () => {
     void Speech.stop();
@@ -143,9 +157,7 @@ export function CafeConversationSummaryModal({
                 script="latin"
                 style={styles.title}
               >
-                {isReviewing
-                  ? "Phrases utiles"
-                  : "Bilan"}
+                {isReviewing ? "Phrases utiles" : "Bilan"}
               </AppText>
               <Pressable
                 accessibilityRole="button"
@@ -170,7 +182,7 @@ export function CafeConversationSummaryModal({
                     Phrases utiles
                   </AppText>
                   <AppText variant="bodySecondary" tone="muted" script="latin">
-                    Réécoute les phrases de cette mission.
+                    Réécoute les formulations de référence rencontrées pendant cette mission.
                   </AppText>
                   {summary.canonicalReferencePhrases.length > 0 ? (
                     summary.canonicalReferencePhrases.map((phrase) => (
@@ -230,8 +242,29 @@ export function CafeConversationSummaryModal({
                       <AppText variant="sectionTitle" tone="strong" script="latin">
                         À revoir
                       </AppText>
+                      <AppText variant="bodySecondary" tone="muted" script="latin">
+                        Les points non résolus apparaissent en premier. Une difficulté déjà résolue reste visible pour t’aider à la consolider.
+                      </AppText>
                       {summary.improvements.map((item) => (
                         <ImperfectionCard key={item.id} item={item} />
+                      ))}
+                    </View>
+                  ) : null}
+
+                  {summary.needsConfirmation.length > 0 ? (
+                    <View style={styles.section}>
+                      <AppText variant="sectionTitle" tone="strong" script="latin">
+                        À confirmer
+                      </AppText>
+                      <AppText variant="bodySecondary" tone="muted" script="latin">
+                        L’intention semblait plausible, mais pas assez certaine pour faire avancer la scène automatiquement. Ce n’est pas forcément une erreur de coréen.
+                      </AppText>
+                      {summary.needsConfirmation.map((item) => (
+                        <ImperfectionCard
+                          key={item.id}
+                          item={item}
+                          kind="confirmation"
+                        />
                       ))}
                     </View>
                   ) : null}
@@ -242,10 +275,14 @@ export function CafeConversationSummaryModal({
                         Transcription à vérifier
                       </AppText>
                       <AppText variant="bodySecondary" tone="muted" script="latin">
-                        Ce point peut venir du micro, pas de ta réponse.
+                        Ici, le moteur a réellement détecté un indice de transcription vocale imparfaite. Ne considère pas automatiquement ce point comme une faute de ta part.
                       </AppText>
                       {summary.uncertainRecognition.map((item) => (
-                        <ImperfectionCard key={item.id} item={item} uncertain />
+                        <ImperfectionCard
+                          key={item.id}
+                          item={item}
+                          kind="transcription"
+                        />
                       ))}
                     </View>
                   ) : null}
@@ -254,6 +291,9 @@ export function CafeConversationSummaryModal({
                     <View style={styles.section}>
                       <AppText variant="sectionTitle" tone="strong" script="latin">
                         Phrase à retenir
+                      </AppText>
+                      <AppText variant="bodySecondary" tone="muted" script="latin">
+                        Choisie en priorité à partir du point le plus utile à consolider dans cette conversation.
                       </AppText>
                       <View style={styles.phraseRow}>
                         <AppText
@@ -377,7 +417,11 @@ const styles = StyleSheet.create({
     padding: 15,
     gap: 7,
   },
-  uncertainCard: {
+  confirmationCard: {
+    borderColor: "rgba(168,85,247,0.28)",
+    backgroundColor: "rgba(168,85,247,0.07)",
+  },
+  transcriptionCard: {
     borderColor: "rgba(34,211,238,0.24)",
     backgroundColor: "rgba(34,211,238,0.06)",
   },
