@@ -27,7 +27,7 @@ const COLORS = {
   glass: "rgba(255,255,255,0.05)",
 };
 
-const CAFE_IMAGE = require("../../assets/images/cafe.jpg");
+const CAFE_IMAGE = require("../../assets/images/cafeIA.jpg");
 
 const CAFE_EXPRESSION_AUDIO = {
   server: [
