@@ -88,34 +88,159 @@ type Scene = {
 };
 
 const SERVEUR_TOOLBOX_EXPRESSIONS: Expression[] = [
-  { word: "어서 오세요.", rom: "Eoseo oseyo.", mean: "Bienvenue.", context: "Accueil naturel au restaurant." },
-  { word: "주문", rom: "jumun", mean: "Commande", context: "Mot central pour commander au restaurant." },
-  { word: "메뉴", rom: "menyu", mean: "Menu / plat", context: "Utile pour parler du choix à commander." },
-  { word: "추천", rom: "chucheon", mean: "Recommandation", context: "Pour demander ou comprendre un plat recommandé." },
-  { word: "직원", rom: "jigwon", mean: "Le personnel", context: "Le serveur ou l'employé du restaurant." },
-  { word: "고기", rom: "gogi", mean: "Viande", context: "Mot essentiel dans un restaurant BBQ." },
-  { word: "굽다", rom: "gupda", mean: "Griller la viande", context: "Verbe clé pour la cuisson au BBQ." },
-  { word: "드릴까요?", rom: "deurilkkayo?", mean: "Voulez-vous que je vous le fasse ?", context: "Forme polie utilisée par le serveur." },
-  { word: "계산", rom: "gyesan", mean: "Paiement / addition", context: "Mot à reconnaître au moment de payer." },
-  { word: "카드", rom: "kadeu", mean: "Carte", context: "Pour payer par carte." },
-  { word: "현금", rom: "hyeongeum", mean: "Espèces", context: "Pour payer en liquide." },
-  { word: "영수증", rom: "yeongsujeung", mean: "Reçu", context: "Question fréquente après le paiement." },
-  { word: "필요하세요?", rom: "piryohaseyo?", mean: "Vous en avez besoin ?", context: "Forme polie pour demander si c'est nécessaire." },
-  { word: "좋은 하루", rom: "joeun haru", mean: "Bonne journée", context: "Expression de fin d'échange." },
-  { word: "보내세요", rom: "bonaeseyo", mean: "Passez / envoyez", context: "Utilisé dans 'passez une bonne journée'." },
-  { word: "감사합니다", rom: "Gamsahamnida.", mean: "Merci.", context: "Formule polie de remerciement." },
+  {
+    word: "어서 오세요.",
+    rom: "Eoseo oseyo.",
+    mean: "Bienvenue.",
+    context: "Accueil naturel au restaurant.",
+  },
+  {
+    word: "주문",
+    rom: "jumun",
+    mean: "Commande",
+    context: "Mot central pour commander au restaurant.",
+  },
+  {
+    word: "메뉴",
+    rom: "menyu",
+    mean: "Menu / plat",
+    context: "Utile pour parler du choix à commander.",
+  },
+  {
+    word: "추천",
+    rom: "chucheon",
+    mean: "Recommandation",
+    context: "Pour demander ou comprendre un plat recommandé.",
+  },
+  {
+    word: "직원",
+    rom: "jigwon",
+    mean: "Le personnel",
+    context: "Le serveur ou l'employé du restaurant.",
+  },
+  {
+    word: "고기",
+    rom: "gogi",
+    mean: "Viande",
+    context: "Mot essentiel dans un restaurant BBQ.",
+  },
+  {
+    word: "굽다",
+    rom: "gupda",
+    mean: "Griller la viande",
+    context: "Verbe clé pour la cuisson au BBQ.",
+  },
+  {
+    word: "드릴까요?",
+    rom: "deurilkkayo?",
+    mean: "Voulez-vous que je vous le fasse ?",
+    context: "Forme polie utilisée par le serveur.",
+  },
+  {
+    word: "계산",
+    rom: "gyesan",
+    mean: "Paiement / addition",
+    context: "Mot à reconnaître au moment de payer.",
+  },
+  {
+    word: "카드",
+    rom: "kadeu",
+    mean: "Carte",
+    context: "Pour payer par carte.",
+  },
+  {
+    word: "현금",
+    rom: "hyeongeum",
+    mean: "Espèces",
+    context: "Pour payer en liquide.",
+  },
+  {
+    word: "영수증",
+    rom: "yeongsujeung",
+    mean: "Reçu",
+    context: "Question fréquente après le paiement.",
+  },
+  {
+    word: "필요하세요?",
+    rom: "piryohaseyo?",
+    mean: "Vous en avez besoin ?",
+    context: "Forme polie pour demander si c'est nécessaire.",
+  },
+  {
+    word: "좋은 하루",
+    rom: "joeun haru",
+    mean: "Bonne journée",
+    context: "Expression de fin d'échange.",
+  },
+  {
+    word: "보내세요",
+    rom: "bonaeseyo",
+    mean: "Passez / envoyez",
+    context: "Utilisé dans 'passez une bonne journée'.",
+  },
+  {
+    word: "감사합니다",
+    rom: "Gamsahamnida.",
+    mean: "Merci.",
+    context: "Formule polie de remerciement.",
+  },
 ];
 
 const CLIENT_TOOLBOX_EXPRESSIONS: Expression[] = [
-  { word: "삼겹살 2인분 주세요.", rom: "Samgyeopsal i-inbun juseyo.", mean: "Deux portions de samgyeopsal, s'il vous plaît.", context: "Commande simple dans un BBQ coréen." },
-  { word: "갈비 2인분 주세요.", rom: "Galbi i-inbun juseyo.", mean: "Deux portions de galbi, s'il vous plaît.", context: "Alternative fréquente au samgyeopsal." },
-  { word: "추천 메뉴가 있어요?", rom: "Chucheon menyuga isseoyo?", mean: "Vous avez un menu recommandé ?", context: "Question utile quand tu hésites." },
-  { word: "하고", rom: "hago", mean: "et / avec", context: "Connecteur pratique pour lier deux éléments." },
-  { word: "이랑 / 랑", rom: "irang / rang", mean: "et / avec (oral)", context: "Version très naturelle à l'oral." },
-  { word: "그럼", rom: "geureom", mean: "alors / dans ce cas", context: "Pour rebondir après une recommandation." },
-  { word: "추가", rom: "chuga", mean: "Supplément", context: "Utile pour demander ou comprendre un supplément." },
-  { word: "카드로 할게요.", rom: "Kadeuro halgeyo.", mean: "Je vais payer par carte.", context: "Phrase directe au moment du paiement." },
-  { word: "다시 한번 말씀해 주시겠어요?", rom: "Dasi hanbeon malsseumhae jusigesseoyo?", mean: "Pouvez-vous répéter, s'il vous plaît ?", context: "Phrase de secours si ça va trop vite." },
+  {
+    word: "삼겹살 2인분 주세요.",
+    rom: "Samgyeopsal i-inbun juseyo.",
+    mean: "Deux portions de samgyeopsal, s'il vous plaît.",
+    context: "Commande simple dans un BBQ coréen.",
+  },
+  {
+    word: "갈비 2인분 주세요.",
+    rom: "Galbi i-inbun juseyo.",
+    mean: "Deux portions de galbi, s'il vous plaît.",
+    context: "Alternative fréquente au samgyeopsal.",
+  },
+  {
+    word: "추천 메뉴가 있어요?",
+    rom: "Chucheon menyuga isseoyo?",
+    mean: "Vous avez un menu recommandé ?",
+    context: "Question utile quand tu hésites.",
+  },
+  {
+    word: "하고",
+    rom: "hago",
+    mean: "et / avec",
+    context: "Connecteur pratique pour lier deux éléments.",
+  },
+  {
+    word: "이랑 / 랑",
+    rom: "irang / rang",
+    mean: "et / avec (oral)",
+    context: "Version très naturelle à l'oral.",
+  },
+  {
+    word: "그럼",
+    rom: "geureom",
+    mean: "alors / dans ce cas",
+    context: "Pour rebondir après une recommandation.",
+  },
+  {
+    word: "추가",
+    rom: "chuga",
+    mean: "Supplément",
+    context: "Utile pour demander ou comprendre un supplément.",
+  },
+  {
+    word: "카드로 할게요.",
+    rom: "Kadeuro halgeyo.",
+    mean: "Je vais payer par carte.",
+    context: "Phrase directe au moment du paiement.",
+  },
+  {
+    word: "다시 한번 말씀해 주시겠어요?",
+    rom: "Dasi hanbeon malsseumhae jusigesseoyo?",
+    mean: "Pouvez-vous répéter, s'il vous plaît ?",
+    context: "Phrase de secours si ça va trop vite.",
+  },
 ];
 
 const buildScenes = (): Scene[] => {
@@ -368,7 +493,7 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   backgroundImage: {
-    opacity: 0.5,
+    opacity: 0.3,
   },
   scrollView: {
     flex: 1,

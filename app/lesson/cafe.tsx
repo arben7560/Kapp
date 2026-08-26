@@ -1,11 +1,7 @@
-import { BlurView } from "expo-blur";
 import { router } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import {
-  Animated,
-  Easing,
   ImageBackground,
-  ImageSourcePropType,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -271,11 +267,8 @@ const SCENES = [
 
 export default function CafeLesson() {
   const [activeScene, setActiveScene] = useState(SCENES[0]);
-  const [previousBackground, setPreviousBackground] =
-    useState<ImageSourcePropType | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
-  const bgFadeAnim = useRef(new Animated.Value(0)).current;
 
   const handleBack = useCallback(() => {
     stopAudio();
@@ -289,44 +282,22 @@ export default function CafeLesson() {
   const handleSceneChange = (scene: (typeof SCENES)[number]) => {
     if (scene.id === activeScene.id) return;
     stopAudio();
-    setPreviousBackground(activeScene.image);
-    bgFadeAnim.setValue(1);
     setActiveScene(scene);
-    Animated.timing(bgFadeAnim, {
-      toValue: 0,
-      duration: 420,
-      easing: Easing.inOut(Easing.quad),
-      useNativeDriver: true,
-    }).start(() => {
-      setPreviousBackground(null);
-      bgFadeAnim.setValue(0);
-    });
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.bg}>
-        <ImageBackground
-          source={CAFE_IMAGE}
-          style={styles.bgLayer}
-          fadeDuration={0}
-          resizeMode="cover"
-        />
-        {previousBackground ? (
-          <Animated.View
-            pointerEvents="none"
-            style={[StyleSheet.absoluteFillObject, { opacity: bgFadeAnim }]}
-          >
-            <ImageBackground
-              source={previousBackground}
-              style={styles.bgLayer}
-              fadeDuration={0}
-              resizeMode="cover"
-            />
-          </Animated.View>
-        ) : null}
-        <View style={styles.overlay} pointerEvents="none" />
-        <ScrollView contentContainerStyle={styles.scroll}>
+      <ImageBackground
+        source={CAFE_IMAGE}
+        style={styles.background}
+        imageStyle={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <View style={styles.backgroundDarkOverlay} pointerEvents="none" />
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scroll}
+        >
           <View style={styles.header}>
             <View style={styles.backBtn}>
               <AppBackButton onPress={handleBack} />
@@ -394,9 +365,7 @@ export default function CafeLesson() {
                       pressed && { transform: [{ scale: 0.985 }] },
                     ]}
                   >
-                    <BlurView
-                      intensity={25}
-                      tint="dark"
+                    <View
                       style={[
                         styles.expCard,
                         isActive && { borderColor: activeScene.accent },
@@ -475,27 +444,41 @@ export default function CafeLesson() {
                           {exp.context}
                         </AppText>
                       </View>
-                    </BlurView>
+                    </View>
                   </Pressable>
                 );
               })}
             </View>
           </View>
         </ScrollView>
-      </View>
+      </ImageBackground>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  bg: { flex: 1, position: "relative" },
-  bgLayer: { ...StyleSheet.absoluteFillObject },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.28)",
+  container: { flex: 1, backgroundColor: "transparent" },
+  background: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
   },
-  scroll: { paddingHorizontal: 20, paddingBottom: 50 },
+  backgroundImage: {
+    opacity: 0.3,
+  },
+  backgroundDarkOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.80)",
+  },
+  scrollView: {
+    flex: 1,
+    backgroundColor: "transparent",
+  },
+  scroll: {
+    paddingHorizontal: 20,
+    paddingBottom: 50,
+    backgroundColor: "transparent",
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -535,7 +518,8 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
+    borderColor: "rgba(255,255,255,0.16)",
+    backgroundColor: "transparent",
   },
   expAccent: { position: "absolute", left: 0, top: 0, bottom: 0, width: 4 },
   expContent: { padding: 20 },

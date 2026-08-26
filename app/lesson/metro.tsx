@@ -82,27 +82,117 @@ const METRO_EXPRESSION_AUDIO: Record<Scene["id"], readonly number[]> = {
 };
 
 const AGENT_TOOLBOX_EXPRESSIONS: Expression[] = [
-  { word: "환승", rom: "Hwanseung", mean: "Correspondance", context: "Mot essentiel pour changer de ligne." },
-  { word: "명동역에서 타세요", rom: "Myeongdong-yeogeseo taseyo", mean: "Prenez le métro à Myeongdong", context: "Point de départ du trajet." },
-  { word: "삼각지역에서 내리세요", rom: "Samgakji-yeogeseo naeriseyo", mean: "Descendez à Samgakji", context: "Arrêt où faire la correspondance." },
-  { word: "6호선을 타세요", rom: "Yukhoseoneul taseyo", mean: "Prenez la ligne 6", context: "Ligne à prendre après la correspondance." },
-  { word: "이태원역까지 가세요", rom: "Itaewon-yeokkkaji gaseyo", mean: "Allez jusqu'à Itaewon", context: "Destination finale." },
-  { word: "약 네 정거장 후에", rom: "Yak ne jeonggeojang hue", mean: "Après environ 4 arrêts", context: "Indication de distance dans le métro." },
-  { word: "그다음 6호선으로 환승하세요", rom: "Geudaeum yukhoseoneuro hwanseunghaseyo", mean: "Ensuite, changez pour la ligne 6", context: "Formulation de guidage côté agent." },
-  { word: "표지판을 따라가세요", rom: "Pyojipaneul ttaragaseyo", mean: "Suivez les panneaux", context: "Utile pour trouver une ligne ou une sortie." },
-  { word: "1번 출구", rom: "Ilbeon chulgu", mean: "Sortie 1", context: "Expression essentielle pour les sorties." },
+  {
+    word: "환승",
+    rom: "Hwanseung",
+    mean: "Correspondance",
+    context: "Mot essentiel pour changer de ligne.",
+  },
+  {
+    word: "명동역에서 타세요",
+    rom: "Myeongdong-yeogeseo taseyo",
+    mean: "Prenez le métro à Myeongdong",
+    context: "Point de départ du trajet.",
+  },
+  {
+    word: "삼각지역에서 내리세요",
+    rom: "Samgakji-yeogeseo naeriseyo",
+    mean: "Descendez à Samgakji",
+    context: "Arrêt où faire la correspondance.",
+  },
+  {
+    word: "6호선을 타세요",
+    rom: "Yukhoseoneul taseyo",
+    mean: "Prenez la ligne 6",
+    context: "Ligne à prendre après la correspondance.",
+  },
+  {
+    word: "이태원역까지 가세요",
+    rom: "Itaewon-yeokkkaji gaseyo",
+    mean: "Allez jusqu'à Itaewon",
+    context: "Destination finale.",
+  },
+  {
+    word: "약 네 정거장 후에",
+    rom: "Yak ne jeonggeojang hue",
+    mean: "Après environ 4 arrêts",
+    context: "Indication de distance dans le métro.",
+  },
+  {
+    word: "그다음 6호선으로 환승하세요",
+    rom: "Geudaeum yukhoseoneuro hwanseunghaseyo",
+    mean: "Ensuite, changez pour la ligne 6",
+    context: "Formulation de guidage côté agent.",
+  },
+  {
+    word: "표지판을 따라가세요",
+    rom: "Pyojipaneul ttaragaseyo",
+    mean: "Suivez les panneaux",
+    context: "Utile pour trouver une ligne ou une sortie.",
+  },
+  {
+    word: "1번 출구",
+    rom: "Ilbeon chulgu",
+    mean: "Sortie 1",
+    context: "Expression essentielle pour les sorties.",
+  },
 ];
 
 const VOYAGEUR_TOOLBOX_EXPRESSIONS: Expression[] = [
-  { word: "이태원역 어떻게 가요?", rom: "Itaewon-yeok eotteoke gayo?", mean: "Comment aller à Itaewon ?", context: "Question courte pour demander son chemin." },
-  { word: "어디에서 환승해요?", rom: "Eodieseo hwanseunghaeyo?", mean: "Où est-ce que je change ?", context: "Pour demander le lieu de correspondance." },
-  { word: "어디에서 내려요?", rom: "Eodieseo naeryeoyo?", mean: "Où dois-je descendre ?", context: "Question essentielle dans le métro." },
-  { word: "몇 정거장이에요?", rom: "Myeot jeonggeojang-ieyo?", mean: "C'est à combien d'arrêts ?", context: "Pour vérifier la distance." },
-  { word: "한 정거장", rom: "Han jeonggeojang", mean: "1 arrêt", context: "Réponse ou repère très fréquent." },
-  { word: "두 정거장", rom: "Du jeonggeojang", mean: "2 arrêts", context: "Réponse ou repère très fréquent." },
-  { word: "몇 번 출구예요?", rom: "Myeot beon chulgu-yeyo?", mean: "Quelle sortie ?", context: "Pour demander le numéro de sortie." },
-  { word: "다시 말해 주세요", rom: "Dasi malhae juseyo", mean: "Répétez, s'il vous plaît", context: "Phrase de secours si l'information va trop vite." },
-  { word: "감사합니다", rom: "Gamsahamnida", mean: "Merci", context: "Fin naturelle de l'échange." },
+  {
+    word: "이태원역 어떻게 가요?",
+    rom: "Itaewon-yeok eotteoke gayo?",
+    mean: "Comment aller à Itaewon ?",
+    context: "Question courte pour demander son chemin.",
+  },
+  {
+    word: "어디에서 환승해요?",
+    rom: "Eodieseo hwanseunghaeyo?",
+    mean: "Où est-ce que je change ?",
+    context: "Pour demander le lieu de correspondance.",
+  },
+  {
+    word: "어디에서 내려요?",
+    rom: "Eodieseo naeryeoyo?",
+    mean: "Où dois-je descendre ?",
+    context: "Question essentielle dans le métro.",
+  },
+  {
+    word: "몇 정거장이에요?",
+    rom: "Myeot jeonggeojang-ieyo?",
+    mean: "C'est à combien d'arrêts ?",
+    context: "Pour vérifier la distance.",
+  },
+  {
+    word: "한 정거장",
+    rom: "Han jeonggeojang",
+    mean: "1 arrêt",
+    context: "Réponse ou repère très fréquent.",
+  },
+  {
+    word: "두 정거장",
+    rom: "Du jeonggeojang",
+    mean: "2 arrêts",
+    context: "Réponse ou repère très fréquent.",
+  },
+  {
+    word: "몇 번 출구예요?",
+    rom: "Myeot beon chulgu-yeyo?",
+    mean: "Quelle sortie ?",
+    context: "Pour demander le numéro de sortie.",
+  },
+  {
+    word: "다시 말해 주세요",
+    rom: "Dasi malhae juseyo",
+    mean: "Répétez, s'il vous plaît",
+    context: "Phrase de secours si l'information va trop vite.",
+  },
+  {
+    word: "감사합니다",
+    rom: "Gamsahamnida",
+    mean: "Merci",
+    context: "Fin naturelle de l'échange.",
+  },
 ];
 
 const buildScenes = (): Scene[] => {
@@ -356,7 +446,7 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   backgroundImage: {
-    opacity: 0.5,
+    opacity: 0.3,
   },
   scrollView: {
     flex: 1,
