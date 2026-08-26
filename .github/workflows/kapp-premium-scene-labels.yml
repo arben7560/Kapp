@@ -14,20 +14,22 @@ jobs:
   update-scene-labels:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-
-      - name: Replace generic scene modal labels
+      - name: Update shared scene modal labels
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
+          endpoint="repos/${GITHUB_REPOSITORY}/contents/app/(tabs)/speak.tsx"
+          response="$(gh api "${endpoint}?ref=main")"
+          sha="$(printf '%s' "$response" | jq -r '.sha')"
+          printf '%s' "$response" | jq -r '.content' | tr -d '\n' | base64 --decode > /tmp/speak.tsx
+
           python - <<'PY'
           from pathlib import Path
 
-          path = Path("app/(tabs)/speak.tsx")
-          text = path.read_text(encoding="utf-8")
-
+          path = Path('/tmp/speak.tsx')
+          text = path.read_text(encoding='utf-8')
           replacements = [
               ('icon="IA"', 'icon="실전"'),
               ('icon="Aa"', 'icon="표현"'),
@@ -36,21 +38,19 @@ jobs:
 
           for old, new in replacements:
               count = text.count(old)
-              if count != 1:
-                  raise SystemExit(f"Expected exactly one occurrence of {old!r}, found {count}")
-              text = text.replace(old, new, 1)
+              if count == 1:
+                  text = text.replace(old, new, 1)
+              elif count == 0 and new in text:
+                  continue
+              else:
+                  raise SystemExit(f'Unexpected occurrence count for {old!r}: {count}')
 
-          path.write_text(text, encoding="utf-8")
+          path.write_text(text, encoding='utf-8')
           PY
 
-      - name: Commit premium labels
-        shell: bash
-        run: |
-          if git diff --quiet -- "app/(tabs)/speak.tsx"; then
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "app/(tabs)/speak.tsx"
-          git commit -m "Polish scene modal option labels"
-          git push origin main
+          content="$(base64 -w 0 /tmp/speak.tsx)"
+          gh api --method PUT "$endpoint" \
+            -f message='Polish scene modal option labels' \
+            -f content="$content" \
+            -f sha="$sha" \
+            -f branch='main'
