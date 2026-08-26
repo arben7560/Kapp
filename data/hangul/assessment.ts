@@ -10,7 +10,7 @@ export const HANGUL_ASSESSMENT_QUESTIONS: HangulQuestion[] = [
     audio: "여",
     options: [o("ㅕ"), o("ㅓ"), o("ㅑ")],
     answer: "ㅕ",
-    explanation: "여 contient la voyelle ㅕ.",
+    explanation: "Tu as entendu 여 : sa voyelle est ㅕ. Le deuxième petit trait est justement ce qui la distingue de ㅓ.",
     characters: ["ㅕ"],
   },
   {
@@ -20,7 +20,7 @@ export const HANGUL_ASSESSMENT_QUESTIONS: HangulQuestion[] = [
     display: "ㅇ + ㅚ",
     options: [o("외"), o("왜"), o("웨")],
     answer: "외",
-    explanation: "외 s’écrit avec la voyelle ㅚ.",
+    explanation: "Avec ㅇ devant ㅚ, tu obtiens 외. Ici, l’important est de reconnaître précisément la forme écrite de ㅚ.",
     characters: ["ㅇ", "ㅚ"],
   },
   {
@@ -30,7 +30,7 @@ export const HANGUL_ASSESSMENT_QUESTIONS: HangulQuestion[] = [
     audio: "따",
     options: [o("ㄷ"), o("ㄸ"), o("ㅌ")],
     answer: "ㄸ",
-    explanation: "따 commence par la consonne tendue ㄸ.",
+    explanation: "Tu as entendu 따 : l’attaque serrée correspond à ㄸ, la consonne tendue de la série ㄷ/ㄸ/ㅌ.",
     characters: ["ㄷ", "ㄸ", "ㅌ"],
   },
   {
@@ -40,7 +40,7 @@ export const HANGUL_ASSESSMENT_QUESTIONS: HangulQuestion[] = [
     audio: "차",
     options: [o("ㅈ"), o("ㅉ"), o("ㅊ")],
     answer: "ㅊ",
-    explanation: "차 commence par la consonne aspirée ㅊ.",
+    explanation: "Tu as entendu 차 : le souffle net au début de la syllabe te conduit vers ㅊ, la consonne aspirée.",
     characters: ["ㅈ", "ㅉ", "ㅊ"],
   },
   {
@@ -50,7 +50,7 @@ export const HANGUL_ASSESSMENT_QUESTIONS: HangulQuestion[] = [
     display: "ㄱ + ㅘ",
     options: [o("과"), o("가"), o("궈")],
     answer: "과",
-    explanation: "ㄱ et ㅘ forment 과.",
+    explanation: "ㄱ et la voyelle composée ㅘ se regroupent dans un seul bloc : 과. La voyelle reste un seul élément à l’intérieur de la syllabe.",
     characters: ["ㄱ", "ㅘ"],
   },
   {
@@ -60,7 +60,7 @@ export const HANGUL_ASSESSMENT_QUESTIONS: HangulQuestion[] = [
     display: "ㅂ + ㅕ",
     options: [o("벼"), o("버"), o("뱌")],
     answer: "벼",
-    explanation: "ㅂ se place à gauche de la voyelle verticale ㅕ.",
+    explanation: "ㅕ est verticale, donc ㅂ se place à sa gauche. Les deux éléments forment ainsi le bloc 벼.",
     characters: ["ㅂ", "ㅕ"],
   },
   {
@@ -70,7 +70,7 @@ export const HANGUL_ASSESSMENT_QUESTIONS: HangulQuestion[] = [
     display: "ㅍ + ㅛ",
     options: [o("표"), o("펴"), o("파")],
     answer: "표",
-    explanation: "ㅛ est horizontale : elle se place sous ㅍ.",
+    explanation: "ㅛ est une voyelle horizontale : elle vient sous la consonne initiale. Avec ㅍ au-dessus, le bloc correct est 표.",
     characters: ["ㅍ", "ㅛ"],
   },
   {
@@ -80,7 +80,7 @@ export const HANGUL_ASSESSMENT_QUESTIONS: HangulQuestion[] = [
     display: "ㄴ + ㅚ",
     options: [o("뇌"), o("놰"), o("눼")],
     answer: "뇌",
-    explanation: "뇌 combine ㄴ et ㅚ. À l’oral, ㅚ peut être très proche de ㅙ/ㅞ : ici on vérifie l’orthographe.",
+    explanation: "뇌 combine ㄴ et ㅚ. Comme ㅚ peut être très proche de ㅙ ou ㅞ à l’oral, cette question vérifie surtout que tu reconnais l’orthographe.",
     characters: ["ㄴ", "ㅚ"],
   },
   {
@@ -90,7 +90,7 @@ export const HANGUL_ASSESSMENT_QUESTIONS: HangulQuestion[] = [
     audio: "포도",
     options: [o("포도"), o("보도"), o("토도")],
     answer: "포도",
-    explanation: "포도 se décompose en 포 + 도.",
+    explanation: "Le mot entendu est 포도. En le découpant en 포 + 도, tu peux vérifier chaque bloc séparément avant de relire l’ensemble.",
     characters: ["ㅍ", "ㅗ", "ㄷ"],
   },
   {
@@ -100,7 +100,7 @@ export const HANGUL_ASSESSMENT_QUESTIONS: HangulQuestion[] = [
     display: "낮",
     options: [o("ㄴ"), o("ㄷ"), o("ㅈ")],
     answer: "ㄷ",
-    explanation: "La graphie ㅈ en finale rejoint le son ㄷ.",
+    explanation: "낮 s’écrit avec ㅈ en finale, mais cette graphie rejoint la famille de son ㄷ. Il fallait donc répondre avec le son final, pas avec la lettre écrite.",
     characters: ["ㄴ", "ㅏ", "ㅈ"],
   },
   {
@@ -110,7 +110,7 @@ export const HANGUL_ASSESSMENT_QUESTIONS: HangulQuestion[] = [
     display: "국",
     options: [o("ㄱ"), o("ㄴ"), o("ㅇ")],
     answer: "ㄱ",
-    explanation: "국 se termine par la classe ㄱ.",
+    explanation: "국 se ferme avec ㄱ. Ici, la graphie écrite appartient directement à la même famille de son final ㄱ.",
     characters: ["ㄱ", "ㅜ"],
   },
   {
@@ -120,7 +120,7 @@ export const HANGUL_ASSESSMENT_QUESTIONS: HangulQuestion[] = [
     display: "집에",
     options: [o("지베"), o("지메"), o("집페")],
     answer: "지베",
-    explanation: "Le ㅂ final se lie à la voyelle de 에.",
+    explanation: "Dans 집에, le ㅂ final se rattache à la voyelle de 에, puisque ㅇ est muet en position initiale. L’enchaînement devient donc 지베.",
     characters: ["ㅈ", "ㅣ", "ㅂ", "ㅇ", "ㅔ"],
   },
 ];
