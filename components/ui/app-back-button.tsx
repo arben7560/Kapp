@@ -35,6 +35,11 @@ export function AppBackButton({
   const pathname = usePathname();
 
   const handlePress = () => {
+    if (pathname === "/speak") {
+      router.replace("/(tabs)");
+      return;
+    }
+
     if (SPEAK_EXPRESSION_ROUTES.has(pathname)) {
       router.replace("/(tabs)/speak");
       return;
