@@ -5,6 +5,7 @@ export type CafeSpeechAttemptResult =
   | "understood-with-grammar-correction"
   | "word-order-error"
   | "probable-transcription-error"
+  | "needs-confirmation"
   | "ambiguous"
   | "not-understood";
 
@@ -50,8 +51,10 @@ export type CafeConversationSummary = Readonly<{
   notUnderstood: number;
   successfulPoints: readonly string[];
   improvements: readonly CafeGroupedImperfection[];
+  needsConfirmation: readonly CafeGroupedImperfection[];
   uncertainRecognition: readonly CafeGroupedImperfection[];
   canonicalReferencePhrases: readonly string[];
+  recommendedPhrase: string | null;
 }>;
 
 type RecordCafeSpeechAttemptInput = Readonly<{
@@ -82,7 +85,10 @@ function classifyResult(
     case "word-order-error":
       return "word-order-error";
     case "uncertain":
-      return "probable-transcription-error";
+      // Une intention à confirmer n'est pas automatiquement une erreur du micro.
+      // On réserve cette étiquette aux cas où le moteur a réellement récupéré
+      // une transcription et expose un recoveryEvent.
+      return "needs-confirmation";
     case "ambiguous":
       return "ambiguous";
     case "out-of-scope":
@@ -103,6 +109,19 @@ function normalizeDuplicateKey(value: string) {
     .trim();
 }
 
+function getAttemptDiagnosticKey(
+  resultType: CafeSpeechAttemptResult,
+  intentId: string | null,
+  feedback: string | null,
+  transcript: string,
+) {
+  return [
+    resultType,
+    intentId ?? "no-intent",
+    normalizeDuplicateKey(feedback ?? transcript),
+  ].join("::");
+}
+
 export function recordCafeSpeechAttempt(
   memory: CafeConversationMemory,
   input: RecordCafeSpeechAttemptInput,
@@ -112,11 +131,23 @@ export function recordCafeSpeechAttempt(
     memory.attempts.filter(({ nodeId }) => nodeId === input.nodeId).length + 1;
   const id = `${input.nodeId}:${attemptNumber}`;
   const choice = input.result.choice;
+  const inputIntentId = input.intent?.intentId ?? null;
+  const currentDiagnosticKey = getAttemptDiagnosticKey(
+    resultType,
+    inputIntentId,
+    input.result.feedback,
+    input.recordedTranscript,
+  );
 
   const attempts = memory.attempts.map((attempt) => {
+    const previousDiagnosticKey = getAttemptDiagnosticKey(
+      attempt.resultType,
+      attempt.intentId,
+      attempt.feedback,
+      attempt.recordedTranscript,
+    );
     const repeatsSameImperfection =
-      attempt.resultType === resultType &&
-      attempt.intentId === (input.intent?.intentId ?? null);
+      previousDiagnosticKey === currentDiagnosticKey;
     const isLaterSuccess =
       input.result.reason === "matched" &&
       attempt.nodeId === input.nodeId &&
@@ -142,7 +173,7 @@ export function recordCafeSpeechAttempt(
         stepIndex: input.stepIndex,
         stepLabel: input.stepLabel,
         recordedTranscript: input.recordedTranscript.trim(),
-        intentId: input.intent?.intentId ?? null,
+        intentId: inputIntentId,
         detectedIntent:
           input.intent?.detectedIntent ?? choice?.label ?? null,
         canonicalFormulation:
@@ -180,10 +211,19 @@ export function markCafeSpeechNodeCorrected(
 
 function getExplanation(attempt: CafeSpeechAttempt) {
   if (attempt.resultType === "word-order-error") {
-    return "Mets 먹고 avant 갈게요 dans cette expression.";
+    return attempt.feedback ?? "Mets 먹고 avant 갈게요 dans cette expression.";
   }
   if (attempt.resultType === "probable-transcription-error") {
-    return "Le micro a peut-être déformé un mot.";
+    return (
+      attempt.feedback ??
+      "La reconnaissance vocale a probablement déformé un mot alors que l’intention restait identifiable."
+    );
+  }
+  if (attempt.resultType === "needs-confirmation") {
+    return (
+      attempt.feedback ??
+      "L’intention semble plausible, mais il manque assez de certitude pour la valider automatiquement."
+    );
   }
   if (attempt.resultType === "ambiguous") {
     return attempt.feedback ?? "Choisis une seule réponse.";
@@ -195,11 +235,24 @@ function getExplanation(attempt: CafeSpeechAttempt) {
 }
 
 function getImperfectionGroupKey(attempt: CafeSpeechAttempt) {
-  const detailKey =
-    attempt.intentId ??
-    normalizeDuplicateKey(attempt.feedback ?? attempt.recordedTranscript);
-  return [attempt.nodeId, attempt.resultType, detailKey].join("::");
+  // Deux diagnostics différents sur une même intention doivent rester séparés.
+  // Seules les répétitions du même problème sont regroupées.
+  return [
+    attempt.nodeId,
+    attempt.resultType,
+    attempt.intentId ?? "no-intent",
+    normalizeDuplicateKey(attempt.feedback ?? attempt.recordedTranscript),
+  ].join("::");
 }
+
+const IMPERFECTION_PRIORITY: Readonly<Record<Exclude<CafeSpeechAttemptResult, "correct">, number>> = {
+  "not-understood": 0,
+  ambiguous: 1,
+  "word-order-error": 2,
+  "understood-with-grammar-correction": 3,
+  "needs-confirmation": 4,
+  "probable-transcription-error": 5,
+};
 
 export function groupCafeImperfections(
   attempts: readonly CafeSpeechAttempt[],
@@ -212,48 +265,59 @@ export function groupCafeImperfections(
     groups.set(key, [...(groups.get(key) ?? []), attempt]);
   }
 
-  return Array.from(groups.entries()).map(([id, groupedAttempts]) => {
-    const first = groupedAttempts[0];
-    const recordedTranscripts = Array.from(
-      new Set(
-        groupedAttempts
-          .map(({ recordedTranscript }) => recordedTranscript.trim())
-          .filter(Boolean),
-      ),
-    );
+  return Array.from(groups.entries())
+    .map(([id, groupedAttempts]) => {
+      const first = groupedAttempts[0];
+      const recordedTranscripts = Array.from(
+        new Set(
+          groupedAttempts
+            .map(({ recordedTranscript }) => recordedTranscript.trim())
+            .filter(Boolean),
+        ),
+      );
 
-    return {
-      id,
-      nodeId: first.nodeId,
-      stepLabel: first.stepLabel,
-      recordedTranscripts,
-      intentId: first.intentId,
-      detectedIntent: first.detectedIntent,
-      canonicalFormulation: first.canonicalFormulation,
-      resultType: first.resultType as Exclude<
-        CafeSpeechAttemptResult,
-        "correct"
-      >,
-      explanation: getExplanation(first),
-      feedback: first.feedback,
-      attemptCount: groupedAttempts.length,
-      correctedDuringScene: groupedAttempts.some(
-        ({ correctedDuringScene }) => correctedDuringScene,
-      ),
-    };
-  });
+      return {
+        id,
+        nodeId: first.nodeId,
+        stepLabel: first.stepLabel,
+        recordedTranscripts,
+        intentId: first.intentId,
+        detectedIntent: first.detectedIntent,
+        canonicalFormulation: first.canonicalFormulation,
+        resultType: first.resultType as Exclude<
+          CafeSpeechAttemptResult,
+          "correct"
+        >,
+        explanation: getExplanation(first),
+        feedback: first.feedback,
+        attemptCount: groupedAttempts.length,
+        correctedDuringScene: groupedAttempts.some(
+          ({ correctedDuringScene }) => correctedDuringScene,
+        ),
+      };
+    })
+    .sort((left, right) => {
+      if (left.correctedDuringScene !== right.correctedDuringScene) {
+        return left.correctedDuringScene ? 1 : -1;
+      }
+      return (
+        IMPERFECTION_PRIORITY[left.resultType] -
+        IMPERFECTION_PRIORITY[right.resultType]
+      );
+    });
 }
 
 function getSuccessfulPoints(attempts: readonly CafeSpeechAttempt[]) {
+  const acceptedResultTypes = new Set<CafeSpeechAttemptResult>([
+    "correct",
+    "understood-with-grammar-correction",
+    "probable-transcription-error",
+  ]);
+  const acceptedAttempts = attempts.filter(({ resultType }) =>
+    acceptedResultTypes.has(resultType),
+  );
   const understoodIntentIds = new Set(
-    attempts
-      .filter(
-        ({ resultType }) =>
-          resultType === "correct" ||
-          resultType === "understood-with-grammar-correction" ||
-          resultType === "word-order-error" ||
-          resultType === "probable-transcription-error",
-      )
+    acceptedAttempts
       .map(({ intentId }) => intentId)
       .filter((intentId): intentId is string => Boolean(intentId)),
   );
@@ -281,17 +345,69 @@ function getSuccessfulPoints(attempts: readonly CafeSpeechAttempt[]) {
   ) {
     points.push("Moyen de paiement correctement exprimé");
   }
-  if (attempts.some(({ resultType }) => resultType === "correct")) {
-    points.push("Réponse naturelle et polie");
+  if (
+    understoodIntentIds.has("receipt-yes") ||
+    understoodIntentIds.has("receipt-no")
+  ) {
+    points.push("Décision concernant le reçu comprise");
+  }
+
+  const directCorrectCount = attempts.filter(
+    ({ resultType }) => resultType === "correct",
+  ).length;
+  if (directCorrectCount > 0) {
+    points.push(
+      `${directCorrectCount} ${directCorrectCount > 1 ? "réponses validées" : "réponse validée"} sans correction`,
+    );
+  }
+
+  const resolvedCount = attempts.filter(
+    ({ resultType, correctedDuringScene }) =>
+      resultType !== "correct" && correctedDuringScene,
+  ).length;
+  if (resolvedCount > 0) {
+    points.push(
+      `${resolvedCount} ${resolvedCount > 1 ? "difficultés résolues" : "difficulté résolue"} pendant la scène`,
+    );
   }
 
   return points;
+}
+
+function pickRecommendedPhrase(
+  improvements: readonly CafeGroupedImperfection[],
+  needsConfirmation: readonly CafeGroupedImperfection[],
+  uncertainRecognition: readonly CafeGroupedImperfection[],
+  canonicalReferencePhrases: readonly string[],
+) {
+  const priorityItems = [
+    ...improvements.filter(({ correctedDuringScene }) => !correctedDuringScene),
+    ...improvements.filter(({ correctedDuringScene }) => correctedDuringScene),
+    ...needsConfirmation,
+    ...uncertainRecognition,
+  ];
+  const priorityPhrase = priorityItems.find(
+    ({ canonicalFormulation }) => Boolean(canonicalFormulation),
+  )?.canonicalFormulation;
+
+  return priorityPhrase ?? canonicalReferencePhrases[0] ?? null;
 }
 
 export function buildCafeConversationSummary(
   memory: CafeConversationMemory,
 ): CafeConversationSummary {
   const groupedImperfections = groupCafeImperfections(memory.attempts);
+  const improvements = groupedImperfections.filter(
+    ({ resultType }) =>
+      resultType !== "probable-transcription-error" &&
+      resultType !== "needs-confirmation",
+  );
+  const needsConfirmation = groupedImperfections.filter(
+    ({ resultType }) => resultType === "needs-confirmation",
+  );
+  const uncertainRecognition = groupedImperfections.filter(
+    ({ resultType }) => resultType === "probable-transcription-error",
+  );
   const canonicalReferencePhrases = Array.from(
     new Set(
       memory.attempts
@@ -317,12 +433,15 @@ export function buildCafeConversationSummary(
         resultType === "ambiguous" || resultType === "not-understood",
     ).length,
     successfulPoints: getSuccessfulPoints(memory.attempts),
-    improvements: groupedImperfections.filter(
-      ({ resultType }) => resultType !== "probable-transcription-error",
-    ),
-    uncertainRecognition: groupedImperfections.filter(
-      ({ resultType }) => resultType === "probable-transcription-error",
-    ),
+    improvements,
+    needsConfirmation,
+    uncertainRecognition,
     canonicalReferencePhrases,
+    recommendedPhrase: pickRecommendedPhrase(
+      improvements,
+      needsConfirmation,
+      uncertainRecognition,
+      canonicalReferencePhrases,
+    ),
   };
 }
