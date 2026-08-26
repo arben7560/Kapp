@@ -22,6 +22,169 @@ type GuidedSpeechTurnProps = {
   children: ReactNode;
 };
 
+const CAFE_FEEDBACK_MARKERS = [
+  "아메리카노",
+  "오렌지",
+  "라떼",
+  "치즈케이크",
+  "테이크아웃",
+  "포장",
+  "먹고",
+  "드시다",
+  "카드",
+  "현금",
+  "현찰",
+  "영수증",
+  "아아",
+  "블랙커피",
+  "우유커피",
+  "밀크커피",
+  "치즈디저트",
+  "다시 한번 말씀",
+  "보청기",
+  "물 주세요",
+  "메뉴 주세요",
+  "화장실",
+  "와이파이",
+  "빨대",
+  "냅킨",
+  "휴지",
+  "americano",
+  "jus d’orange",
+  "latte",
+  "cheesecake",
+  "sur place",
+  "à emporter",
+  "espèces",
+  "reçu",
+  "commande complète",
+  "plusieurs produits",
+  "plusieurs quantités",
+  "paiement par carte",
+  "paiement en espèces",
+  "au café",
+] as const;
+
+const CAFE_EXACT_FEEDBACK_REWRITES: Readonly<Record<string, string>> = {
+  "Tu as cité plusieurs produits. Garde seulement celui que tu veux commander.":
+    "J’ai entendu plusieurs produits dans ta réponse, donc je ne sais pas lequel tu veux réellement commander. Choisis-en un seul et redis simplement ta commande.",
+  "J’entends à la fois « sur place » et « à emporter ». Choisis l’un des deux.":
+    "J’ai entendu à la fois « sur place » et « à emporter ». Les deux se contredisent ici : choisis simplement l’option que tu veux.",
+  "Tu as cité la carte et les espèces. Dis simplement lequel tu veux utiliser.":
+    "J’ai entendu à la fois la carte et les espèces. Dis simplement lequel des deux tu veux utiliser.",
+  "Ta réponse dit à la fois oui et non pour le reçu. Choisis l’un des deux.":
+    "J’ai entendu à la fois une acceptation et un refus du reçu. Choisis simplement une réponse : oui ou non.",
+  "Je reconnais les bons mots, mais pas dans l’ordre naturel. Dis simplement : « 먹고 갈게요. »":
+    "Les bons mots sont là, mais leur ordre ne sonne pas naturel en coréen. Reprends-les simplement dans cet ordre : « 먹고 갈게요. »",
+  "« 영수증이 있어요 » veut dire que tu as déjà un reçu, pas que tu en demandes un. Ici, réponds plutôt « 네, 영수증 주세요 » ou « 아니요, 괜찮아요 ».":
+    "Attention au sens ici : « 영수증이 있어요 » signifie que tu as déjà un reçu, pas que tu réponds à la question du serveur. Réponds plutôt « 네, 영수증 주세요 » ou « 아니요, 괜찮아요 ».",
+  "Ce produit n’est pas proposé dans cette scène. Ici, tu peux commander un americano, un jus d’orange, un latte ou un cheesecake.":
+    "Ce produit n’est pas disponible dans cette scène. Pour continuer la conversation, choisis simplement parmi l’americano, le jus d’orange, le latte ou le cheesecake.",
+  "Je reconnais « 먹고 » et « 갈게요 », mais la phrase reste trop mélangée pour être sûre. Reprends simplement : « 먹고 갈게요. »":
+    "Je reconnais bien « 먹고 » et « 갈게요 », mais l’ordre est trop mélangé pour former une phrase naturelle. Reprends simplement : « 먹고 갈게요. »",
+  "J’entends plusieurs quantités dans la même commande. Garde-en une seule avant de continuer.":
+    "J’ai entendu plusieurs quantités dans la même commande. Choisis celle que tu veux vraiment donner, puis redis la commande avec une seule quantité.",
+};
+
+function isCafeSpeechFeedback(message: string) {
+  const normalized = message.toLocaleLowerCase("fr-FR");
+  return CAFE_FEEDBACK_MARKERS.some((marker) =>
+    normalized.includes(marker.toLocaleLowerCase("fr-FR")),
+  );
+}
+
+function humanizeCafeSpeechFeedback(message: string) {
+  const exactRewrite = CAFE_EXACT_FEEDBACK_REWRITES[message];
+  if (exactRewrite) return exactRewrite;
+  if (!isCafeSpeechFeedback(message)) return message;
+
+  return message
+    .replace(
+      /^C’est compris\. Pour une commande complète :/u,
+      "Oui, ta commande est claire. Pour la formuler de façon plus complète et naturelle, tu peux dire :",
+    )
+    .replace(
+      /^C’est compris\./u,
+      "Oui, l’intention est claire.",
+    )
+    .replace(
+      /^Je t’ai compris malgré le mélange de langues \((.+)\)\. Pour rester en coréen :/u,
+      "J’ai compris ce que tu voulais dire, même avec le mélange de langues ($1). Si tu veux rester entièrement en coréen, dis plutôt :",
+    )
+    .replace(
+      /^Je t’ai compris : (.+?)\. La reconnaissance a probablement accroché sur un mot ; la phrase attendue est :/u,
+      "Oui, j’ai bien compris : $1. Le micro a probablement mal accroché un mot. La formulation attendue ici est :",
+    )
+    .replace(
+      /^Je t’ai compris : (.+?)\. Pour compter ce produit,/u,
+      "Oui, j’ai bien compris que tu voulais $1. Pour compter ce produit,",
+    )
+    .replace(
+      /^Je t’ai compris, mais /u,
+      "Je vois ce que tu veux dire. ",
+    )
+    .replace(
+      /^Je t’ai compris\./u,
+      "Oui, je vois ce que tu veux dire.",
+    )
+    .replace(
+      /^On te comprend\./u,
+      "Oui, la réponse est compréhensible.",
+    )
+    .replace(
+      /^Je comprends l’idée, mais /u,
+      "L’idée est bonne. ",
+    )
+    .replace(
+      /^Tu demandes bien de répéter, mais cette forme est familière\./u,
+      "Oui, tu demandes bien à la personne de répéter. Cette tournure est cependant trop familière avec le personnel.",
+    )
+    .replace(
+      /^Tu demandes bien de répéter\. La formule polie à retenir :/u,
+      "Oui, tu demandes bien à la personne de répéter. Avec le personnel, retiens plutôt :",
+    )
+    .replace(
+      /^Tu veux rester sur place\. Réponse naturelle ici :/u,
+      "Oui, tu indiques que tu restes sur place. Dans ce contexte, la tournure la plus naturelle est :",
+    )
+    .replace(
+      /^Tu veux l’emporter\. Tu peux dire naturellement :/u,
+      "Oui, tu prends la commande à emporter. Au café, tu peux dire tout simplement :",
+    )
+    .replace(
+      /^Tu veux payer par carte\. Tu peux dire simplement :/u,
+      "Oui, tu choisis de payer par carte. Dans ce contexte, tu peux dire tout simplement :",
+    )
+    .replace(
+      /^Tu veux payer en espèces\. Tu peux dire simplement :/u,
+      "Oui, tu choisis de payer en espèces. Dans ce contexte, tu peux dire tout simplement :",
+    )
+    .replace(
+      /^Tu veux le reçu\. Tu peux répondre :/u,
+      "Oui, tu veux le reçu. La réponse la plus simple ici est :",
+    )
+    .replace(
+      /^Tu ne veux pas le reçu\. Tu peux répondre simplement :/u,
+      "D’accord, tu refuses le reçu. Tu peux répondre naturellement :",
+    )
+    .replace(
+      /^Je pense avoir entendu « ([^»]+) », mais je ne suis pas assez sûr\. Confirme si c’est bien ça, sinon réessaie\.$/u,
+      "J’ai l’impression d’avoir entendu « $1 », mais je préfère vérifier plutôt que deviner. Confirme si c’est bien ça ; sinon, réessaie.",
+    )
+    .replace(
+      /^Ta négation change le sens de la réponse, donc je ne peux pas valider ce choix\./u,
+      "Avec la négation, ta phrase dit autre chose : je ne peux donc pas la prendre comme ce choix.",
+    )
+    .replace(
+      /^Cette réponse correspond à une autre étape\./u,
+      "Ta réponse aurait du sens à un autre moment de la conversation, mais pas encore ici.",
+    )
+    .replace(
+      /^Je n’ai pas assez d’éléments pour valider cette réponse\./u,
+      "Je n’ai pas encore assez d’éléments pour comprendre précisément ce que tu choisis.",
+    );
+}
+
 function getStatusLabel(state: SpeechRecognitionState) {
   switch (state.status) {
     case "requesting-permission":
@@ -77,7 +240,9 @@ export function GuidedSpeechTurn({
       ? "Réessayer"
       : "Parler");
   const primaryIcon = isListening ? "stop" : "mic";
-  const displayedFeedback = feedback || speechState.message;
+  const displayedFeedback = feedback
+    ? humanizeCafeSpeechFeedback(feedback)
+    : speechState.message;
   const needsConfirmation = confirmationLabel !== null;
 
   return (
