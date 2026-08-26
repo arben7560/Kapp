@@ -1005,7 +1005,7 @@ function ThemeModeSheet({
                   <SheetOptionCard
                     title="Choisis la scène"
                     subtitle="Entre dans la situation, écoute et réponds comme sur place."
-                    icon="IA"
+                    icon="실전"
                     accent={config.accent}
                     onPress={goToImmersive}
                   />
@@ -1013,7 +1013,7 @@ function ThemeModeSheet({
                   <SheetOptionCard
                     title="Expressions utiles"
                     subtitle="Revois les mots et expressions utilisés couramment."
-                    icon="Aa"
+                    icon="표현"
                     accent={config.accent}
                     onPress={goToText}
                   />
@@ -1091,7 +1091,7 @@ function SheetOptionCard({
             },
           ]}
         >
-          <AppText variant="label" tone="strong" align="center">
+          <AppText variant="label" script="korean" tone="strong" align="center">
             {icon}
           </AppText>
         </View>
