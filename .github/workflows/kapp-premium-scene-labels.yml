@@ -1,0 +1,56 @@
+name: K-App premium scene labels
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/kapp-premium-scene-labels.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update-scene-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Replace generic scene modal labels
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("app/(tabs)/speak.tsx")
+          text = path.read_text(encoding="utf-8")
+
+          replacements = [
+              ('icon="IA"', 'icon="실전"'),
+              ('icon="Aa"', 'icon="표현"'),
+              ('<AppText variant="label" tone="strong" align="center">', '<AppText variant="label" script="korean" tone="strong" align="center">'),
+          ]
+
+          for old, new in replacements:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"Expected exactly one occurrence of {old!r}, found {count}")
+              text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Commit premium labels
+        shell: bash
+        run: |
+          if git diff --quiet -- "app/(tabs)/speak.tsx"; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "app/(tabs)/speak.tsx"
+          git commit -m "Polish scene modal option labels"
+          git push origin main
