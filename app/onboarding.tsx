@@ -3,7 +3,7 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { ArrowLeft, MoveRight } from "lucide-react-native";
+import { ArrowLeft, Compass, Coffee, MoveRight, TrainFront, Utensils } from "lucide-react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
@@ -20,6 +20,12 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import Svg, {
+  Defs,
+  RadialGradient as SvgRadialGradient,
+  Rect as SvgRect,
+  Stop,
+} from "react-native-svg";
 
 import { AppText } from "../components/app-text";
 import { AppFontFamily } from "../constants/theme";
@@ -52,13 +58,13 @@ type SceneOption = {
   subtitle: string;
   phrase: string;
   translation: string;
+  meta: string;
   accent: string;
   glowLeft: string;
   glowRight: string;
   image: number;
   badge: string;
   timelineSubtitle: string;
-  icon: string;
 };
 
 const SCENES: SceneOption[] = [
@@ -69,13 +75,13 @@ const SCENES: SceneOption[] = [
     subtitle: "Commande comme si tu y étais, dans le bruit du comptoir et la pluie dehors.",
     phrase: "아메리카노 한 잔 주세요",
     translation: '"Un americano, s\'il vous plaît"',
+    meta: "Aucun prérequis · ~4 min",
     accent: PINK,
     glowLeft: "#1AB5C3",
     glowRight: "#E72C7D",
     image: CAFE_IMAGE,
     badge: "Idéal pour débuter",
     timelineSubtitle: "Ligne 2",
-    icon: "☕",
   },
   {
     key: "metro",
@@ -84,13 +90,13 @@ const SCENES: SceneOption[] = [
     subtitle: "Trouve ton chemin dans Séoul et demande ta direction naturellement.",
     phrase: "2호선은 어디예요?",
     translation: '"Où est la ligne 2 ?"',
+    meta: "Débutant · ~5 min",
     accent: METRO_GREEN,
     glowLeft: "#1CB8B9",
     glowRight: "#2B8C73",
     image: METRO_IMAGE,
     badge: "Débutant +",
     timelineSubtitle: "Ligne 2",
-    icon: "🚇",
   },
   {
     key: "restaurant",
@@ -99,13 +105,13 @@ const SCENES: SceneOption[] = [
     subtitle: "Commande naturellement à table, comme dans un vrai restaurant coréen.",
     phrase: "이거 주세요",
     translation: '"Celui-ci, s\'il vous plaît"',
+    meta: "Débutant · ~5 min",
     accent: GOLD,
     glowLeft: "#7E5137",
     glowRight: "#D36B47",
     image: RESTAURANT_IMAGE,
     badge: "Débutant +",
-    timelineSubtitle: "Itaewon",
-    icon: "🍜",
+    timelineSubtitle: "Ligne 6",
   },
   {
     key: "airport",
@@ -114,15 +120,18 @@ const SCENES: SceneOption[] = [
     subtitle: "Repère-toi dès ton arrivée et trouve les transports pour rejoindre Séoul.",
     phrase: "지하철은 어디예요?",
     translation: '"Où est le métro ?"',
+    meta: "Intermédiaire · ~6 min",
     accent: CYAN,
     glowLeft: "#1A8DAD",
     glowRight: "#615299",
     image: AIRPORT_IMAGE,
     badge: "Intermédiaire",
-    timelineSubtitle: "Incheon",
-    icon: "✈️",
+    timelineSubtitle: "Aéroport",
   },
 ];
+
+const JOURNEY_SCENE_KEYS: SceneKey[] = ["cafe", "metro", "restaurant"];
+const LOCKED_SCENE_COUNT = 12;
 
 const ROUTES: Record<SceneKey, Record<ModeKey, string>> = {
   cafe: { text: "/lesson/cafe", guided: "/lesson/cafeMissions" },
@@ -180,6 +189,55 @@ function OnboardingBackground() {
   );
 }
 
+function CardAtmosphere({ scene }: { scene: SceneOption }) {
+  const leftId = `left-halo-${scene.key}`;
+  const rightId = `right-halo-${scene.key}`;
+  const warmId = `warm-halo-${scene.key}`;
+
+  return (
+    <Svg
+      pointerEvents="none"
+      style={StyleSheet.absoluteFill}
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+    >
+      <Defs>
+        <SvgRadialGradient id={leftId} cx="12%" cy="8%" r="74%">
+          <Stop offset="0%" stopColor={scene.glowLeft} stopOpacity={0.42} />
+          <Stop offset="38%" stopColor={scene.glowLeft} stopOpacity={0.18} />
+          <Stop offset="100%" stopColor={scene.glowLeft} stopOpacity={0} />
+        </SvgRadialGradient>
+        <SvgRadialGradient id={rightId} cx="88%" cy="8%" r="72%">
+          <Stop offset="0%" stopColor={scene.glowRight} stopOpacity={0.48} />
+          <Stop offset="40%" stopColor={scene.glowRight} stopOpacity={0.20} />
+          <Stop offset="100%" stopColor={scene.glowRight} stopOpacity={0} />
+        </SvgRadialGradient>
+        <SvgRadialGradient id={warmId} cx="56%" cy="66%" r="46%">
+          <Stop offset="0%" stopColor="#C67B4A" stopOpacity={0.16} />
+          <Stop offset="58%" stopColor="#9B5236" stopOpacity={0.07} />
+          <Stop offset="100%" stopColor="#9B5236" stopOpacity={0} />
+        </SvgRadialGradient>
+      </Defs>
+
+      <SvgRect x="0" y="0" width="100" height="100" fill={`url(#${leftId})`} />
+      <SvgRect x="0" y="0" width="100" height="100" fill={`url(#${rightId})`} />
+      <SvgRect x="0" y="0" width="100" height="100" fill={`url(#${warmId})`} />
+
+      <SvgRect x="0" y="84" width="9" height="16" fill="#050713" opacity={0.88} />
+      <SvgRect x="9" y="78" width="10" height="22" fill="#060814" opacity={0.84} />
+      <SvgRect x="19" y="87" width="7" height="13" fill="#050713" opacity={0.90} />
+      <SvgRect x="26" y="74" width="12" height="26" fill="#060814" opacity={0.88} />
+      <SvgRect x="38" y="82" width="8" height="18" fill="#050713" opacity={0.92} />
+      <SvgRect x="46" y="70" width="11" height="30" fill="#060814" opacity={0.90} />
+      <SvgRect x="57" y="80" width="10" height="20" fill="#050713" opacity={0.92} />
+      <SvgRect x="67" y="76" width="7" height="24" fill="#060814" opacity={0.90} />
+      <SvgRect x="74" y="85" width="10" height="15" fill="#050713" opacity={0.92} />
+      <SvgRect x="84" y="72" width="8" height="28" fill="#060814" opacity={0.90} />
+      <SvgRect x="92" y="82" width="8" height="18" fill="#050713" opacity={0.92} />
+    </Svg>
+  );
+}
+
 function FeaturedSceneCard({
   scene,
   height,
@@ -193,55 +251,41 @@ function FeaturedSceneCard({
   horizontalPadding: number;
   verticalPadding: number;
 }) {
-  const titleVariant = compact ? "featureTitle" : "sceneTitle";
+  const titleVariant = compact ? "featureTitle" : "screenTitle";
   const bodyVariant = compact ? "bodySecondary" : "body";
 
   return (
     <View
       accessible
-      accessibilityLabel={`${scene.title}, ${scene.eyebrow}. ${scene.badge}. ${scene.phrase}. ${scene.translation}.`}
+      accessibilityLabel={`${scene.title}, ${scene.eyebrow}. ${scene.badge}. ${scene.phrase}. ${scene.translation}. ${scene.meta}.`}
       style={[styles.featuredCard, { height }]}
     >
       <LinearGradient
-        colors={["#0D1823", "#17111B", "#080A15"]}
-        locations={[0, 0.46, 1]}
+        colors={["#0A111B", "#12101A", "#070913"]}
+        locations={[0, 0.52, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
+
+      <CardAtmosphere scene={scene} />
+
       <LinearGradient
-        colors={[`${scene.glowLeft}70`, `${scene.glowLeft}24`, "transparent"]}
-        locations={[0, 0.28, 0.66]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0.62, y: 0.72 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <LinearGradient
-        colors={[`${scene.glowRight}7A`, `${scene.glowRight}26`, "transparent"]}
-        locations={[0, 0.28, 0.66]}
-        start={{ x: 1, y: 0 }}
-        end={{ x: 0.38, y: 0.72 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <LinearGradient
-        colors={["rgba(4,6,15,0.00)", "rgba(5,7,17,0.08)", "rgba(5,6,16,0.66)", "rgba(5,6,16,0.97)"]}
-        locations={[0, 0.34, 0.68, 1]}
+        colors={[
+          "rgba(4,6,15,0.02)",
+          "rgba(5,7,17,0.10)",
+          "rgba(5,6,16,0.56)",
+          "rgba(5,6,16,0.90)",
+        ]}
+        locations={[0, 0.38, 0.70, 1]}
         style={StyleSheet.absoluteFill}
       />
 
-      <View style={styles.cardGrid}>
+      <View style={styles.cardRain}>
         {CARD_GRID_LINES.map((line) => (
-          <View key={line} style={styles.cardGridLine} />
+          <View key={line} style={styles.cardRainLine} />
         ))}
       </View>
-
-      <LinearGradient
-        colors={["rgba(34,211,238,0.24)", "rgba(255,255,255,0.02)", "rgba(255,47,125,0.42)"]}
-        locations={[0, 0.48, 1]}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 1, y: 0.5 }}
-        style={styles.cardBorderAccent}
-      />
 
       <View
         style={[
@@ -271,7 +315,7 @@ function FeaturedSceneCard({
           {
             left: 0,
             right: 0,
-            bottom: Math.max(16, verticalPadding + 2),
+            bottom: Math.max(14, verticalPadding),
             paddingHorizontal: horizontalPadding,
           },
         ]}
@@ -292,9 +336,30 @@ function FeaturedSceneCard({
         <AppText variant={bodyVariant} style={styles.featuredSubtitle}>
           {scene.subtitle}
         </AppText>
+        <AppText variant="caption" style={styles.featuredMeta}>
+          {scene.meta}
+        </AppText>
       </View>
     </View>
   );
+}
+
+function SceneGlyph({
+  sceneKey,
+  size,
+  color,
+}: {
+  sceneKey: SceneKey;
+  size: number;
+  color: string;
+}) {
+  if (sceneKey === "cafe") {
+    return <Coffee size={size} color={color} strokeWidth={2} />;
+  }
+  if (sceneKey === "metro") {
+    return <TrainFront size={size} color={color} strokeWidth={2} />;
+  }
+  return <Utensils size={size} color={color} strokeWidth={2} />;
 }
 
 function JourneyTimeline({
@@ -308,23 +373,30 @@ function JourneyTimeline({
   compact: boolean;
   onSelect: (scene: SceneKey) => void;
 }) {
-  const selectedIndex = SCENES.findIndex((scene) => scene.key === selectedScene);
-  const activeWidth = `${(selectedIndex / (SCENES.length - 1)) * 100}%` as `${number}%`;
+  const journeyScenes = SCENES.filter((scene) =>
+    JOURNEY_SCENE_KEYS.includes(scene.key),
+  );
 
   return (
     <View style={styles.timelineWrap}>
       <View
+        pointerEvents="none"
         style={[
-          styles.timelineRail,
-          { left: nodeSize / 2, right: nodeSize / 2, top: nodeSize / 2 - 1 },
+          styles.timelineRailFuture,
+          {
+            left: nodeSize / 2,
+            right: nodeSize / 2,
+            top: nodeSize / 2 - 1,
+          },
         ]}
-      >
-        <View style={[styles.timelineRailActive, { width: activeWidth }]} />
-      </View>
+      />
 
       <View style={styles.timelineRow}>
-        {SCENES.map((scene) => {
+        {journeyScenes.map((scene) => {
+          const active = scene.key === "cafe";
           const selected = scene.key === selectedScene;
+          const iconSize = compact ? 15 : 17;
+
           return (
             <Pressable
               key={scene.key}
@@ -333,7 +405,10 @@ function JourneyTimeline({
               accessibilityState={{ selected }}
               hitSlop={9}
               onPress={() => onSelect(scene.key)}
-              style={({ pressed }) => [styles.timelineStep, pressed && styles.timelineStepPressed]}
+              style={({ pressed }) => [
+                styles.timelineStep,
+                pressed && styles.timelineStepPressed,
+              ]}
             >
               <View
                 style={[
@@ -342,20 +417,23 @@ function JourneyTimeline({
                     width: nodeSize,
                     height: nodeSize,
                     borderRadius: nodeSize / 2,
-                    borderColor: scene.accent,
-                    shadowColor: scene.accent,
+                    borderColor: active ? PINK : scene.accent,
+                    shadowColor: active ? PINK : scene.accent,
                   },
-                  selected && [styles.timelineNodeActive, { backgroundColor: scene.accent }],
+                  active ? styles.timelineNodeActive : styles.timelineNodeUnlocked,
+                  !active && selected && styles.timelineNodePreviewSelected,
                 ]}
               >
-                <Text
-                  allowFontScaling={false}
-                  style={[styles.timelineEmoji, compact && styles.timelineEmojiCompact]}
-                >
-                  {scene.icon}
-                </Text>
+                <SceneGlyph
+                  sceneKey={scene.key}
+                  size={iconSize}
+                  color={active ? WHITE : scene.accent}
+                />
               </View>
-              <AppText variant={compact ? "caption" : "bodySecondary"} style={styles.timelineTitle}>
+              <AppText
+                variant={compact ? "caption" : "bodySecondary"}
+                style={styles.timelineTitle}
+              >
                 {scene.title}
               </AppText>
               <AppText variant="caption" style={styles.timelineSubtitle}>
@@ -364,6 +442,33 @@ function JourneyTimeline({
             </Pressable>
           );
         })}
+
+        <View style={styles.timelineStep} accessible accessibilityLabel={`${LOCKED_SCENE_COUNT} scènes à débloquer`}>
+          <View
+            style={[
+              styles.timelineNode,
+              styles.timelineNodeLocked,
+              {
+                width: nodeSize,
+                height: nodeSize,
+                borderRadius: nodeSize / 2,
+              },
+            ]}
+          >
+            <Text allowFontScaling={false} style={styles.timelineLockedCount}>
+              +{LOCKED_SCENE_COUNT}
+            </Text>
+          </View>
+          <AppText
+            variant={compact ? "caption" : "bodySecondary"}
+            style={[styles.timelineTitle, styles.timelineTitleLocked]}
+          >
+            À venir
+          </AppText>
+          <AppText variant="caption" style={styles.timelineSubtitle}>
+            à débloquer
+          </AppText>
+        </View>
       </View>
     </View>
   );
@@ -392,7 +497,7 @@ export default function OnboardingScreen() {
   const sceneLayout = useMemo(
     () => ({
       contentTop: Math.round(lerp(2, 10, verticalProgress)),
-      contentBottom: Math.round(lerp(3, 12, verticalProgress)),
+      contentBottom: Math.round(lerp(12, 24, verticalProgress)),
       headerHeight: Math.round(lerp(32, 38, verticalProgress)),
       headerBottom: Math.round(lerp(5, 13, verticalProgress)),
       eyebrowBottom: Math.round(lerp(4, 9, verticalProgress)),
@@ -404,10 +509,10 @@ export default function OnboardingScreen() {
       timelineTop: Math.round(lerp(9, 28, verticalProgress)),
       timelineLabelBottom: Math.round(lerp(6, 12, verticalProgress)),
       nodeSize: isTablet ? 45 : Math.round(lerp(36, 43, verticalProgress)),
-      timelineBottom: Math.round(lerp(9, 31, verticalProgress)),
+      timelineBottom: Math.round(lerp(11, 34, verticalProgress)),
       primaryHeight: Math.round(lerp(48, 60, verticalProgress)),
-      secondaryHeight: Math.round(lerp(34, 44, verticalProgress)),
-      hubTop: Math.round(lerp(2, 8, verticalProgress)),
+      secondaryHeight: Math.round(lerp(38, 46, verticalProgress)),
+      hubTop: Math.round(lerp(7, 11, verticalProgress)),
     }),
     [isTablet, verticalProgress],
   );
@@ -755,8 +860,13 @@ export default function OnboardingScreen() {
                     pressed && styles.pressed,
                   ]}
                 >
+                  <Compass
+                    size={compact ? 14 : 16}
+                    color="#8F8D9F"
+                    strokeWidth={1.8}
+                  />
                   <AppText variant={compact ? "caption" : "bodySecondary"} style={styles.hubLinkText}>
-                    ◇ Explorer le Hub librement
+                    Explorer le Hub librement
                   </AppText>
                 </Pressable>
               </View>
@@ -827,7 +937,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(116,72,110,0.34)",
+    borderColor: "rgba(255,255,255,0.10)",
     backgroundColor: "#0B0D18",
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 8 },
@@ -835,27 +945,19 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
     elevation: 3,
   },
-  cardBorderAccent: {
-    position: "absolute",
-    left: 20,
-    right: 20,
-    bottom: 0,
-    height: 1,
-    opacity: 0.85,
-  },
-  cardGrid: {
+  cardRain: {
     ...StyleSheet.absoluteFillObject,
     flexDirection: "row",
     justifyContent: "space-around",
     paddingHorizontal: 7,
-    opacity: 0.78,
+    opacity: 0.58,
   },
-  cardGridLine: {
+  cardRainLine: {
     width: 1,
-    height: "126%",
-    marginTop: -20,
+    height: "130%",
+    marginTop: -24,
     backgroundColor: CARD_LINE,
-    transform: [{ rotate: "7deg" }],
+    transform: [{ rotate: "9deg" }],
   },
   featuredTopRow: {
     position: "absolute",
@@ -909,27 +1011,29 @@ const styles = StyleSheet.create({
   featuredTitle: {
     color: WHITE,
     marginTop: 9,
-    textShadowColor: "rgba(0,0,0,0.38)",
+    fontFamily: AppFontFamily.outfit.medium,
+    textShadowColor: "rgba(0,0,0,0.34)",
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 5,
+    textShadowRadius: 4,
   },
   featuredSubtitle: {
     color: "#AAA9BA",
     marginTop: 8,
     maxWidth: 470,
   },
+  featuredMeta: {
+    color: "#777A90",
+    marginTop: 7,
+    letterSpacing: 0.3,
+  },
   journeyLabel: { color: "#696C84" },
   timelineWrap: { width: "100%", position: "relative" },
-  timelineRail: {
+  timelineRailFuture: {
     position: "absolute",
-    height: 2,
-    borderRadius: 99,
-    backgroundColor: "#50546A",
-    overflow: "hidden",
-  },
-  timelineRailActive: {
-    height: "100%",
-    backgroundColor: PINK,
+    height: 0,
+    borderTopWidth: 2,
+    borderStyle: "dashed",
+    borderColor: "rgba(92,96,120,0.72)",
   },
   timelineRow: { flexDirection: "row", alignItems: "flex-start" },
   timelineStep: { flex: 1, alignItems: "center", minWidth: 0 },
@@ -938,29 +1042,49 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#101321",
+    backgroundColor: "#0D101C",
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.10,
-    shadowRadius: 6,
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
     elevation: 1,
   },
   timelineNodeActive: {
     borderWidth: 0,
-    shadowOpacity: 0.28,
+    backgroundColor: PINK,
+    shadowOpacity: 0.30,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  timelineNodeUnlocked: {
+    backgroundColor: "#0D101C",
+  },
+  timelineNodePreviewSelected: {
+    backgroundColor: "rgba(255,255,255,0.035)",
+    shadowOpacity: 0.20,
     shadowRadius: 7,
-    elevation: 3,
+    elevation: 2,
   },
-  timelineEmoji: {
-    fontSize: 15,
-    lineHeight: 19,
-    textAlign: "center",
-    color: WHITE,
+  timelineNodeLocked: {
+    borderColor: "#66697F",
+    borderStyle: "dashed",
+    backgroundColor: "#0A0C16",
+    shadowOpacity: 0,
+    elevation: 0,
   },
-  timelineEmojiCompact: { fontSize: 13, lineHeight: 17 },
+  timelineLockedCount: {
+    color: "#777A90",
+    fontFamily: AppFontFamily.outfit.medium,
+    fontSize: 11,
+    lineHeight: 14,
+    letterSpacing: -0.2,
+  },
   timelineTitle: {
     color: "#EDEAF0",
     marginTop: 5,
     textAlign: "center",
+  },
+  timelineTitleLocked: {
+    color: "#AAAABD",
   },
   timelineSubtitle: {
     color: "#5E6077",
@@ -993,8 +1117,10 @@ const styles = StyleSheet.create({
   primaryButtonText: { color: WHITE, textAlign: "center" },
   hubLink: {
     width: "100%",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 7,
   },
   hubLinkText: { color: "#8F8D9F", textAlign: "center" },
   pressed: { opacity: 0.86, transform: [{ scale: 0.992 }] },
