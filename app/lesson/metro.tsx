@@ -28,7 +28,7 @@ const COLORS = {
   glass: "rgba(255,255,255,0.05)",
 };
 
-const METRO_IMAGE = require("../../assets/images/metrobg.jpg");
+const METRO_IMAGE = require("../../assets/images/metroIA.jpg");
 const metroLesson =
   metroLessons.find((lesson) => lesson.id === "myeongdong_to_itaewon") ??
   metroLessons[0];
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.85)",
+    backgroundColor: "rgba(2,3,6,0.56)",
   },
   scroll: { paddingHorizontal: 20, paddingBottom: 50 },
   header: {
