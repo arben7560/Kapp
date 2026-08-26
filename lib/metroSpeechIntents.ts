@@ -493,7 +493,10 @@ function getMetroUnavailableContextualFeedback(
   if (unavailableRules.length !== 1) return null;
 
   const [rule] = unavailableRules;
-  return `J’ai compris : ${rule.understood}. ${getMetroCurrentExpectation(choices)}`;
+  return {
+    targetIntent: rule.targetIntent,
+    feedback: `J’ai compris : ${rule.understood}. ${getMetroCurrentExpectation(choices)}`,
+  };
 }
 
 function getMetroIncompleteContextualFeedback(
@@ -824,16 +827,23 @@ export function matchMetroSpeechIntent(
     return contextualInterpretation;
   }
 
-  const unavailableContextualFeedback = getMetroUnavailableContextualFeedback(
+  const unavailableContextual = getMetroUnavailableContextualFeedback(
     korean,
     transcript,
     choices,
   );
 
-  if (unavailableContextualFeedback) {
+  if (unavailableContextual) {
+    const unavailableCategory: MetroSpeechCategory =
+      unavailableContextual.targetIntent === "duration"
+        ? "duration-confusion"
+        : unavailableContextual.targetIntent === "transfer"
+          ? "transfer-confusion"
+          : "out-of-scope";
+
     return help(
-      "out-of-scope",
-      unavailableContextualFeedback,
+      unavailableCategory,
+      unavailableContextual.feedback,
       attemptNumber,
       directionChoice ? "direction" : "follow-up",
     );
@@ -1495,12 +1505,12 @@ export function matchMetroSpeechIntent(
 
   if (
     hasGangnam &&
-    hasContradictoryDirection &&
+    (hasContradictoryDirection || !!wrongDestination) &&
     !hasSelfCorrection
   ) {
     return help(
       "wrong-destination",
-      "J’entends Gangnam et une autre direction dans la même réponse, sans marque claire d’auto-correction. Je préfère donc ne pas valider le trajet tant que la destination n’est pas univoque.",
+      "J’entends Gangnam et une autre destination dans la même réponse, sans marque claire d’auto-correction. Je préfère donc ne pas valider le trajet tant que la destination n’est pas univoque.",
       attemptNumber,
     );
   }
