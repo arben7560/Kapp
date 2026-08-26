@@ -211,13 +211,12 @@ export function markCafeSpeechNodeCorrected(
 
 function getExplanation(attempt: CafeSpeechAttempt) {
   if (attempt.resultType === "word-order-error") {
-    return attempt.feedback ?? "Mets 먹고 avant 갈게요 dans cette expression.";
+    return "Mets 먹고 avant 갈게요 dans cette expression.";
   }
   if (attempt.resultType === "probable-transcription-error") {
-    return (
-      attempt.feedback ??
-      "La reconnaissance vocale a probablement déformé un mot alors que l’intention restait identifiable."
-    );
+    return attempt.feedback
+      ? `Le micro a peut-être déformé un mot. ${attempt.feedback}`
+      : "Le micro a peut-être déformé un mot.";
   }
   if (attempt.resultType === "needs-confirmation") {
     return (
