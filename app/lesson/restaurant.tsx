@@ -1,9 +1,6 @@
-import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
-  Animated,
-  Easing,
   ImageBackground,
   ImageSourcePropType,
   Pressable,
@@ -91,159 +88,34 @@ type Scene = {
 };
 
 const SERVEUR_TOOLBOX_EXPRESSIONS: Expression[] = [
-  {
-    word: "어서 오세요.",
-    rom: "Eoseo oseyo.",
-    mean: "Bienvenue.",
-    context: "Accueil naturel au restaurant.",
-  },
-  {
-    word: "주문",
-    rom: "jumun",
-    mean: "Commande",
-    context: "Mot central pour commander au restaurant.",
-  },
-  {
-    word: "메뉴",
-    rom: "menyu",
-    mean: "Menu / plat",
-    context: "Utile pour parler du choix à commander.",
-  },
-  {
-    word: "추천",
-    rom: "chucheon",
-    mean: "Recommandation",
-    context: "Pour demander ou comprendre un plat recommandé.",
-  },
-  {
-    word: "직원",
-    rom: "jigwon",
-    mean: "Le personnel",
-    context: "Le serveur ou l'employé du restaurant.",
-  },
-  {
-    word: "고기",
-    rom: "gogi",
-    mean: "Viande",
-    context: "Mot essentiel dans un restaurant BBQ.",
-  },
-  {
-    word: "굽다",
-    rom: "gupda",
-    mean: "Griller la viande",
-    context: "Verbe clé pour la cuisson au BBQ.",
-  },
-  {
-    word: "드릴까요?",
-    rom: "deurilkkayo?",
-    mean: "Voulez-vous que je vous le fasse ?",
-    context: "Forme polie utilisée par le serveur.",
-  },
-  {
-    word: "계산",
-    rom: "gyesan",
-    mean: "Paiement / addition",
-    context: "Mot à reconnaître au moment de payer.",
-  },
-  {
-    word: "카드",
-    rom: "kadeu",
-    mean: "Carte",
-    context: "Pour payer par carte.",
-  },
-  {
-    word: "현금",
-    rom: "hyeongeum",
-    mean: "Espèces",
-    context: "Pour payer en liquide.",
-  },
-  {
-    word: "영수증",
-    rom: "yeongsujeung",
-    mean: "Reçu",
-    context: "Question fréquente après le paiement.",
-  },
-  {
-    word: "필요하세요?",
-    rom: "piryohaseyo?",
-    mean: "Vous en avez besoin ?",
-    context: "Forme polie pour demander si c'est nécessaire.",
-  },
-  {
-    word: "좋은 하루",
-    rom: "joeun haru",
-    mean: "Bonne journée",
-    context: "Expression de fin d'échange.",
-  },
-  {
-    word: "보내세요",
-    rom: "bonaeseyo",
-    mean: "Passez / envoyez",
-    context: "Utilisé dans 'passez une bonne journée'.",
-  },
-  {
-    word: "감사합니다",
-    rom: "Gamsahamnida.",
-    mean: "Merci.",
-    context: "Formule polie de remerciement.",
-  },
+  { word: "어서 오세요.", rom: "Eoseo oseyo.", mean: "Bienvenue.", context: "Accueil naturel au restaurant." },
+  { word: "주문", rom: "jumun", mean: "Commande", context: "Mot central pour commander au restaurant." },
+  { word: "메뉴", rom: "menyu", mean: "Menu / plat", context: "Utile pour parler du choix à commander." },
+  { word: "추천", rom: "chucheon", mean: "Recommandation", context: "Pour demander ou comprendre un plat recommandé." },
+  { word: "직원", rom: "jigwon", mean: "Le personnel", context: "Le serveur ou l'employé du restaurant." },
+  { word: "고기", rom: "gogi", mean: "Viande", context: "Mot essentiel dans un restaurant BBQ." },
+  { word: "굽다", rom: "gupda", mean: "Griller la viande", context: "Verbe clé pour la cuisson au BBQ." },
+  { word: "드릴까요?", rom: "deurilkkayo?", mean: "Voulez-vous que je vous le fasse ?", context: "Forme polie utilisée par le serveur." },
+  { word: "계산", rom: "gyesan", mean: "Paiement / addition", context: "Mot à reconnaître au moment de payer." },
+  { word: "카드", rom: "kadeu", mean: "Carte", context: "Pour payer par carte." },
+  { word: "현금", rom: "hyeongeum", mean: "Espèces", context: "Pour payer en liquide." },
+  { word: "영수증", rom: "yeongsujeung", mean: "Reçu", context: "Question fréquente après le paiement." },
+  { word: "필요하세요?", rom: "piryohaseyo?", mean: "Vous en avez besoin ?", context: "Forme polie pour demander si c'est nécessaire." },
+  { word: "좋은 하루", rom: "joeun haru", mean: "Bonne journée", context: "Expression de fin d'échange." },
+  { word: "보내세요", rom: "bonaeseyo", mean: "Passez / envoyez", context: "Utilisé dans 'passez une bonne journée'." },
+  { word: "감사합니다", rom: "Gamsahamnida.", mean: "Merci.", context: "Formule polie de remerciement." },
 ];
 
 const CLIENT_TOOLBOX_EXPRESSIONS: Expression[] = [
-  {
-    word: "삼겹살 2인분 주세요.",
-    rom: "Samgyeopsal i-inbun juseyo.",
-    mean: "Deux portions de samgyeopsal, s'il vous plaît.",
-    context: "Commande simple dans un BBQ coréen.",
-  },
-  {
-    word: "갈비 2인분 주세요.",
-    rom: "Galbi i-inbun juseyo.",
-    mean: "Deux portions de galbi, s'il vous plaît.",
-    context: "Alternative fréquente au samgyeopsal.",
-  },
-  {
-    word: "추천 메뉴가 있어요?",
-    rom: "Chucheon menyuga isseoyo?",
-    mean: "Vous avez un menu recommandé ?",
-    context: "Question utile quand tu hésites.",
-  },
-  {
-    word: "하고",
-    rom: "hago",
-    mean: "et / avec",
-    context: "Connecteur pratique pour lier deux éléments.",
-  },
-  {
-    word: "이랑 / 랑",
-    rom: "irang / rang",
-    mean: "et / avec (oral)",
-    context: "Version très naturelle à l'oral.",
-  },
-  {
-    word: "그럼",
-    rom: "geureom",
-    mean: "alors / dans ce cas",
-    context: "Pour rebondir après une recommandation.",
-  },
-  {
-    word: "추가",
-    rom: "chuga",
-    mean: "Supplément",
-    context: "Utile pour demander ou comprendre un supplément.",
-  },
-  {
-    word: "카드로 할게요.",
-    rom: "Kadeuro halgeyo.",
-    mean: "Je vais payer par carte.",
-    context: "Phrase directe au moment du paiement.",
-  },
-  {
-    word: "다시 한번 말씀해 주시겠어요?",
-    rom: "Dasi hanbeon malsseumhae jusigesseoyo?",
-    mean: "Pouvez-vous répéter, s'il vous plaît ?",
-    context: "Phrase de secours si ça va trop vite.",
-  },
+  { word: "삼겹살 2인분 주세요.", rom: "Samgyeopsal i-inbun juseyo.", mean: "Deux portions de samgyeopsal, s'il vous plaît.", context: "Commande simple dans un BBQ coréen." },
+  { word: "갈비 2인분 주세요.", rom: "Galbi i-inbun juseyo.", mean: "Deux portions de galbi, s'il vous plaît.", context: "Alternative fréquente au samgyeopsal." },
+  { word: "추천 메뉴가 있어요?", rom: "Chucheon menyuga isseoyo?", mean: "Vous avez un menu recommandé ?", context: "Question utile quand tu hésites." },
+  { word: "하고", rom: "hago", mean: "et / avec", context: "Connecteur pratique pour lier deux éléments." },
+  { word: "이랑 / 랑", rom: "irang / rang", mean: "et / avec (oral)", context: "Version très naturelle à l'oral." },
+  { word: "그럼", rom: "geureom", mean: "alors / dans ce cas", context: "Pour rebondir après une recommandation." },
+  { word: "추가", rom: "chuga", mean: "Supplément", context: "Utile pour demander ou comprendre un supplément." },
+  { word: "카드로 할게요.", rom: "Kadeuro halgeyo.", mean: "Je vais payer par carte.", context: "Phrase directe au moment du paiement." },
+  { word: "다시 한번 말씀해 주시겠어요?", rom: "Dasi hanbeon malsseumhae jusigesseoyo?", mean: "Pouvez-vous répéter, s'il vous plaît ?", context: "Phrase de secours si ça va trop vite." },
 ];
 
 const buildScenes = (): Scene[] => {
@@ -286,12 +158,8 @@ const buildScenes = (): Scene[] => {
 export default function RestaurantLesson() {
   const scenes = useMemo(() => buildScenes(), []);
   const [activeScene, setActiveScene] = useState<Scene>(scenes[0]);
-  const [previousBackground, setPreviousBackground] =
-    useState<ImageSourcePropType | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
-
-  const [bgFadeAnim] = useState(() => new Animated.Value(0));
 
   const handleBack = useCallback(() => {
     stopAudio();
@@ -311,48 +179,22 @@ export default function RestaurantLesson() {
 
   const handleSceneChange = (scene: Scene) => {
     if (scene.id === activeScene.id) return;
-
     stopAudio();
-    setPreviousBackground(activeScene.image);
-    bgFadeAnim.setValue(1);
     setActiveScene(scene);
-
-    Animated.timing(bgFadeAnim, {
-      toValue: 0,
-      duration: 420,
-      easing: Easing.inOut(Easing.quad),
-      useNativeDriver: true,
-    }).start(() => {
-      setPreviousBackground(null);
-      bgFadeAnim.setValue(0);
-    });
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.bg}>
-        <ImageBackground
-          source={activeScene.image}
-          style={styles.bgLayer}
-          fadeDuration={0}
-          resizeMode="cover"
-        />
-        {previousBackground ? (
-          <Animated.View
-            pointerEvents="none"
-            style={[StyleSheet.absoluteFillObject, { opacity: bgFadeAnim }]}
-          >
-            <ImageBackground
-              source={previousBackground}
-              style={styles.bgLayer}
-              fadeDuration={0}
-              resizeMode="cover"
-            />
-          </Animated.View>
-        ) : null}
-        <View style={styles.overlay} />
-
-        <ScrollView contentContainerStyle={styles.scroll}>
+      <ImageBackground
+        source={RESTAURANT_IMAGE}
+        style={styles.background}
+        imageStyle={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scroll}
+        >
           <View style={styles.header}>
             <View style={styles.backBtn}>
               <AppBackButton onPress={handleBack} />
@@ -423,9 +265,7 @@ export default function RestaurantLesson() {
                       pressed && { transform: [{ scale: 0.985 }] },
                     ]}
                   >
-                    <BlurView
-                      intensity={25}
-                      tint="dark"
+                    <View
                       style={[
                         styles.expCard,
                         isActive && {
@@ -508,30 +348,37 @@ export default function RestaurantLesson() {
                           {exp.context}
                         </AppText>
                       </View>
-                    </BlurView>
+                    </View>
                   </Pressable>
                 );
               })}
             </View>
           </View>
         </ScrollView>
-      </View>
+      </ImageBackground>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
-  bg: { flex: 1, position: "relative" },
-  bgLayer: {
-    ...StyleSheet.absoluteFillObject,
+  background: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.56)",
+  backgroundImage: {
+    opacity: 0.5,
   },
-  scroll: { paddingHorizontal: 20, paddingBottom: 50 },
-
+  scrollView: {
+    flex: 1,
+    backgroundColor: "transparent",
+  },
+  scroll: {
+    paddingHorizontal: 20,
+    paddingBottom: 50,
+    backgroundColor: "transparent",
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -546,7 +393,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: COLORS.pink,
   },
-
   selectorRow: {
     flexDirection: "row",
     justifyContent: "center",
@@ -563,9 +409,7 @@ const styles = StyleSheet.create({
   selectorText: {
     color: COLORS.muted,
   },
-
   toolbox: { marginTop: 40 },
-
   toolboxHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -576,14 +420,14 @@ const styles = StyleSheet.create({
     color: COLORS.muted,
   },
   toolboxLine: { flex: 1, height: 1, opacity: 0.2 },
-
   expressionGrid: { gap: 14 },
   expPressable: { width: "100%" },
   expCard: {
     borderRadius: 24,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
+    borderColor: "rgba(255,255,255,0.16)",
+    backgroundColor: "transparent",
   },
   expAccent: {
     position: "absolute",
