@@ -3,8 +3,15 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { ArrowLeft, Compass, Coffee, MoveRight, TrainFront, Utensils } from "lucide-react-native";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  Coffee,
+  Compass,
+  MoveRight,
+  TrainFront,
+  Utensils,
+} from "lucide-react-native";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -22,9 +29,9 @@ import {
 } from "react-native-safe-area-context";
 import Svg, {
   Defs,
+  Stop,
   RadialGradient as SvgRadialGradient,
   Rect as SvgRect,
-  Stop,
 } from "react-native-svg";
 
 import { AppText } from "../components/app-text";
@@ -72,7 +79,8 @@ const SCENES: SceneOption[] = [
     key: "cafe",
     eyebrow: "HONGDAE",
     title: "Café",
-    subtitle: "Commande comme si tu y étais, dans le bruit du comptoir et la pluie dehors.",
+    subtitle:
+      "Commande comme si tu y étais, dans le bruit du comptoir et la pluie dehors.",
     phrase: "아메리카노 한 잔 주세요",
     translation: '"Un americano, s\'il vous plaît"',
     meta: "Aucun prérequis · ~4 min",
@@ -87,7 +95,8 @@ const SCENES: SceneOption[] = [
     key: "metro",
     eyebrow: "LIGNE 2",
     title: "Métro",
-    subtitle: "Trouve ton chemin dans Séoul et demande ta direction naturellement.",
+    subtitle:
+      "Trouve ton chemin dans Séoul et demande ta direction naturellement.",
     phrase: "2호선은 어디예요?",
     translation: '"Où est la ligne 2 ?"',
     meta: "Débutant · ~5 min",
@@ -102,7 +111,8 @@ const SCENES: SceneOption[] = [
     key: "restaurant",
     eyebrow: "ITAEWON",
     title: "Restaurant",
-    subtitle: "Commande naturellement à table, comme dans un vrai restaurant coréen.",
+    subtitle:
+      "Commande naturellement à table, comme dans un vrai restaurant coréen.",
     phrase: "이거 주세요",
     translation: '"Celui-ci, s\'il vous plaît"',
     meta: "Débutant · ~5 min",
@@ -117,7 +127,8 @@ const SCENES: SceneOption[] = [
     key: "airport",
     eyebrow: "INCHEON",
     title: "Aéroport",
-    subtitle: "Repère-toi dès ton arrivée et trouve les transports pour rejoindre Séoul.",
+    subtitle:
+      "Repère-toi dès ton arrivée et trouve les transports pour rejoindre Séoul.",
     phrase: "지하철은 어디예요?",
     translation: '"Où est le métro ?"',
     meta: "Intermédiaire · ~6 min",
@@ -136,7 +147,10 @@ const LOCKED_SCENE_COUNT = 12;
 const ROUTES: Record<SceneKey, Record<ModeKey, string>> = {
   cafe: { text: "/lesson/cafe", guided: "/lesson/cafeMissions" },
   metro: { text: "/lesson/metro", guided: "/lesson/metroMissions" },
-  restaurant: { text: "/lesson/restaurant", guided: "/lesson/restaurantMissions" },
+  restaurant: {
+    text: "/lesson/restaurant",
+    guided: "/lesson/restaurantMissions",
+  },
   airport: { text: "/lesson/airport", guided: "/lesson/aeroportMissions" },
 };
 
@@ -209,7 +223,7 @@ function CardAtmosphere({ scene }: { scene: SceneOption }) {
         </SvgRadialGradient>
         <SvgRadialGradient id={rightId} cx="88%" cy="8%" r="72%">
           <Stop offset="0%" stopColor={scene.glowRight} stopOpacity={0.48} />
-          <Stop offset="40%" stopColor={scene.glowRight} stopOpacity={0.20} />
+          <Stop offset="40%" stopColor={scene.glowRight} stopOpacity={0.2} />
           <Stop offset="100%" stopColor={scene.glowRight} stopOpacity={0} />
         </SvgRadialGradient>
         <SvgRadialGradient id={warmId} cx="56%" cy="66%" r="46%">
@@ -223,17 +237,94 @@ function CardAtmosphere({ scene }: { scene: SceneOption }) {
       <SvgRect x="0" y="0" width="100" height="100" fill={`url(#${rightId})`} />
       <SvgRect x="0" y="0" width="100" height="100" fill={`url(#${warmId})`} />
 
-      <SvgRect x="0" y="84" width="9" height="16" fill="#050713" opacity={0.88} />
-      <SvgRect x="9" y="78" width="10" height="22" fill="#060814" opacity={0.84} />
-      <SvgRect x="19" y="87" width="7" height="13" fill="#050713" opacity={0.90} />
-      <SvgRect x="26" y="74" width="12" height="26" fill="#060814" opacity={0.88} />
-      <SvgRect x="38" y="82" width="8" height="18" fill="#050713" opacity={0.92} />
-      <SvgRect x="46" y="70" width="11" height="30" fill="#060814" opacity={0.90} />
-      <SvgRect x="57" y="80" width="10" height="20" fill="#050713" opacity={0.92} />
-      <SvgRect x="67" y="76" width="7" height="24" fill="#060814" opacity={0.90} />
-      <SvgRect x="74" y="85" width="10" height="15" fill="#050713" opacity={0.92} />
-      <SvgRect x="84" y="72" width="8" height="28" fill="#060814" opacity={0.90} />
-      <SvgRect x="92" y="82" width="8" height="18" fill="#050713" opacity={0.92} />
+      <SvgRect
+        x="0"
+        y="84"
+        width="9"
+        height="16"
+        fill="#050713"
+        opacity={0.88}
+      />
+      <SvgRect
+        x="9"
+        y="78"
+        width="10"
+        height="22"
+        fill="#060814"
+        opacity={0.84}
+      />
+      <SvgRect
+        x="19"
+        y="87"
+        width="7"
+        height="13"
+        fill="#050713"
+        opacity={0.9}
+      />
+      <SvgRect
+        x="26"
+        y="74"
+        width="12"
+        height="26"
+        fill="#060814"
+        opacity={0.88}
+      />
+      <SvgRect
+        x="38"
+        y="82"
+        width="8"
+        height="18"
+        fill="#050713"
+        opacity={0.92}
+      />
+      <SvgRect
+        x="46"
+        y="70"
+        width="11"
+        height="30"
+        fill="#060814"
+        opacity={0.9}
+      />
+      <SvgRect
+        x="57"
+        y="80"
+        width="10"
+        height="20"
+        fill="#050713"
+        opacity={0.92}
+      />
+      <SvgRect
+        x="67"
+        y="76"
+        width="7"
+        height="24"
+        fill="#060814"
+        opacity={0.9}
+      />
+      <SvgRect
+        x="74"
+        y="85"
+        width="10"
+        height="15"
+        fill="#050713"
+        opacity={0.92}
+      />
+      <SvgRect
+        x="84"
+        y="72"
+        width="8"
+        height="28"
+        fill="#060814"
+        opacity={0.9}
+      />
+      <SvgRect
+        x="92"
+        y="82"
+        width="8"
+        height="18"
+        fill="#050713"
+        opacity={0.92}
+      />
     </Svg>
   );
 }
@@ -277,7 +368,7 @@ function FeaturedSceneCard({
           "rgba(5,6,16,0.56)",
           "rgba(5,6,16,0.90)",
         ]}
-        locations={[0, 0.38, 0.70, 1]}
+        locations={[0, 0.38, 0.7, 1]}
         style={StyleSheet.absoluteFill}
       />
 
@@ -298,8 +389,12 @@ function FeaturedSceneCard({
           },
         ]}
       >
-        <View style={[styles.recommendedPill, { borderColor: `${scene.accent}66` }]}>
-          <View style={[styles.recommendedDot, { backgroundColor: scene.accent }]} />
+        <View
+          style={[styles.recommendedPill, { borderColor: `${scene.accent}66` }]}
+        >
+          <View
+            style={[styles.recommendedDot, { backgroundColor: scene.accent }]}
+          />
           <AppText variant="caption" style={styles.recommendedText}>
             {scene.badge}
           </AppText>
@@ -323,7 +418,10 @@ function FeaturedSceneCard({
         <Text
           accessibilityLanguage="ko-KR"
           maxFontSizeMultiplier={1.2}
-          style={[styles.featuredPhrase, compact && styles.featuredPhraseCompact]}
+          style={[
+            styles.featuredPhrase,
+            compact && styles.featuredPhraseCompact,
+          ]}
         >
           {scene.phrase}
         </Text>
@@ -376,74 +474,88 @@ function JourneyTimeline({
   const journeyScenes = SCENES.filter((scene) =>
     JOURNEY_SCENE_KEYS.includes(scene.key),
   );
+  // The connector right before the locked stub is the only one that crosses
+  // into content the user can't access yet — every other connector links two
+  // scenes that are already unlocked tonight, so it stays solid.
+  const lockedBoundaryIndex = journeyScenes.length - 1;
+
+  const renderConnector = (index: number) => (
+    <View
+      key={`connector-${index}`}
+      pointerEvents="none"
+      style={[
+        styles.timelineConnector,
+        { marginTop: nodeSize / 2 - 1 },
+        index === lockedBoundaryIndex
+          ? styles.timelineConnectorDashed
+          : styles.timelineConnectorSolid,
+      ]}
+    />
+  );
 
   return (
     <View style={styles.timelineWrap}>
-      <View
-        pointerEvents="none"
-        style={[
-          styles.timelineRailFuture,
-          {
-            left: nodeSize / 2,
-            right: nodeSize / 2,
-            top: nodeSize / 2 - 1,
-          },
-        ]}
-      />
-
       <View style={styles.timelineRow}>
-        {journeyScenes.map((scene) => {
+        {journeyScenes.map((scene, index) => {
           const active = scene.key === "cafe";
           const selected = scene.key === selectedScene;
           const iconSize = compact ? 15 : 17;
 
           return (
-            <Pressable
-              key={scene.key}
-              accessibilityRole="button"
-              accessibilityLabel={`Afficher la scène ${scene.title}`}
-              accessibilityState={{ selected }}
-              hitSlop={9}
-              onPress={() => onSelect(scene.key)}
-              style={({ pressed }) => [
-                styles.timelineStep,
-                pressed && styles.timelineStepPressed,
-              ]}
-            >
-              <View
-                style={[
-                  styles.timelineNode,
-                  {
-                    width: nodeSize,
-                    height: nodeSize,
-                    borderRadius: nodeSize / 2,
-                    borderColor: active ? PINK : scene.accent,
-                    shadowColor: active ? PINK : scene.accent,
-                  },
-                  active ? styles.timelineNodeActive : styles.timelineNodeUnlocked,
-                  !active && selected && styles.timelineNodePreviewSelected,
+            <Fragment key={scene.key}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Afficher la scène ${scene.title}`}
+                accessibilityState={{ selected }}
+                hitSlop={9}
+                onPress={() => onSelect(scene.key)}
+                style={({ pressed }) => [
+                  styles.timelineStep,
+                  pressed && styles.timelineStepPressed,
                 ]}
               >
-                <SceneGlyph
-                  sceneKey={scene.key}
-                  size={iconSize}
-                  color={active ? WHITE : scene.accent}
-                />
-              </View>
-              <AppText
-                variant={compact ? "caption" : "bodySecondary"}
-                style={styles.timelineTitle}
-              >
-                {scene.title}
-              </AppText>
-              <AppText variant="caption" style={styles.timelineSubtitle}>
-                {scene.timelineSubtitle}
-              </AppText>
-            </Pressable>
+                <View
+                  style={[
+                    styles.timelineNode,
+                    {
+                      width: nodeSize,
+                      height: nodeSize,
+                      borderRadius: nodeSize / 2,
+                      borderColor: active ? PINK : scene.accent,
+                      shadowColor: active ? PINK : scene.accent,
+                    },
+                    active
+                      ? styles.timelineNodeActive
+                      : styles.timelineNodeUnlocked,
+                    !active && selected && styles.timelineNodePreviewSelected,
+                  ]}
+                >
+                  <SceneGlyph
+                    sceneKey={scene.key}
+                    size={iconSize}
+                    color={active ? WHITE : scene.accent}
+                  />
+                </View>
+                <AppText
+                  variant={compact ? "caption" : "bodySecondary"}
+                  style={styles.timelineTitle}
+                >
+                  {scene.title}
+                </AppText>
+                <AppText variant="caption" style={styles.timelineSubtitle}>
+                  {scene.timelineSubtitle}
+                </AppText>
+              </Pressable>
+              {renderConnector(index)}
+            </Fragment>
           );
         })}
 
-        <View style={styles.timelineStep} accessible accessibilityLabel={`${LOCKED_SCENE_COUNT} scènes à débloquer`}>
+        <View
+          style={styles.timelineStep}
+          accessible
+          accessibilityLabel={`${LOCKED_SCENE_COUNT} scènes à débloquer`}
+        >
           <View
             style={[
               styles.timelineNode,
@@ -489,7 +601,13 @@ export default function OnboardingScreen() {
     ? 1
     : clamp((viewportHeight - 590) / 290, 0, 1);
   const compact = !isTablet && !largeText && viewportHeight < 690;
-  const horizontalPadding = isTablet ? 30 : width <= 370 ? 16 : width >= 425 ? 24 : 21;
+  const horizontalPadding = isTablet
+    ? 30
+    : width <= 370
+      ? 16
+      : width >= 425
+        ? 24
+        : 21;
   const introTextWidth = isTablet
     ? 560
     : Math.min(360, Math.max(0, width - horizontalPadding * 2));
@@ -579,10 +697,16 @@ export default function OnboardingScreen() {
   if (step === "mode") {
     return (
       <View style={styles.screen}>
-        <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+        <StatusBar
+          barStyle="light-content"
+          translucent
+          backgroundColor="transparent"
+        />
         <SceneBackground dimmed />
         <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-          <View style={[styles.modePage, { paddingHorizontal: horizontalPadding }]}>
+          <View
+            style={[styles.modePage, { paddingHorizontal: horizontalPadding }]}
+          >
             <ScrollView
               style={styles.modeScroll}
               contentContainerStyle={styles.modeContent}
@@ -609,7 +733,10 @@ export default function OnboardingScreen() {
                   style={StyleSheet.absoluteFill}
                 />
                 <View style={styles.modeHeroCopy}>
-                  <AppText variant="sectionLabel" style={{ color: selectedSceneData.accent }}>
+                  <AppText
+                    variant="sectionLabel"
+                    style={{ color: selectedSceneData.accent }}
+                  >
                     {selectedSceneData.eyebrow}
                   </AppText>
                   <AppText variant="cardTitle" style={styles.modeHeroTitle}>
@@ -635,11 +762,19 @@ export default function OnboardingScreen() {
                     <AppText variant="cardTitle" style={styles.modeChoiceTitle}>
                       Entre dans la scène
                     </AppText>
-                    <AppText variant="bodySecondary" style={styles.modeChoiceText}>
+                    <AppText
+                      variant="bodySecondary"
+                      style={styles.modeChoiceText}
+                    >
                       Écoute et réponds comme si tu étais sur place.
                     </AppText>
                   </View>
-                  <View style={[styles.radio, selectedMode === "guided" && styles.radioActive]} />
+                  <View
+                    style={[
+                      styles.radio,
+                      selectedMode === "guided" && styles.radioActive,
+                    ]}
+                  />
                 </Pressable>
 
                 <Pressable
@@ -658,18 +793,29 @@ export default function OnboardingScreen() {
                     <AppText variant="cardTitle" style={styles.modeChoiceTitle}>
                       Expressions utiles
                     </AppText>
-                    <AppText variant="bodySecondary" style={styles.modeChoiceText}>
+                    <AppText
+                      variant="bodySecondary"
+                      style={styles.modeChoiceText}
+                    >
                       Revois d’abord les mots et expressions de la situation.
                     </AppText>
                   </View>
-                  <View style={[styles.radio, selectedMode === "text" && styles.radioActive]} />
+                  <View
+                    style={[
+                      styles.radio,
+                      selectedMode === "text" && styles.radioActive,
+                    ]}
+                  />
                 </Pressable>
               </View>
 
               <Pressable
                 accessibilityRole="button"
                 onPress={finish}
-                style={({ pressed }) => [styles.modePrimary, pressed && styles.pressed]}
+                style={({ pressed }) => [
+                  styles.modePrimary,
+                  pressed && styles.pressed,
+                ]}
               >
                 <LinearGradient
                   colors={["#E65D9D", "#8C426C", "#3F263A"]}
@@ -707,10 +853,16 @@ export default function OnboardingScreen() {
 
   return (
     <View style={styles.screen}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <StatusBar
+        barStyle="light-content"
+        translucent
+        backgroundColor="transparent"
+      />
       <OnboardingBackground />
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-        <View style={[styles.scenePage, { paddingHorizontal: horizontalPadding }]}>
+        <View
+          style={[styles.scenePage, { paddingHorizontal: horizontalPadding }]}
+        >
           <ScrollView
             style={styles.sceneScroll}
             contentContainerStyle={[
@@ -745,7 +897,11 @@ export default function OnboardingScreen() {
                       pressed && styles.pressed,
                     ]}
                   >
-                    <ArrowLeft size={compact ? 16 : 17} color="#9FA1B7" strokeWidth={2} />
+                    <ArrowLeft
+                      size={compact ? 16 : 17}
+                      color="#9FA1B7"
+                      strokeWidth={2}
+                    />
                   </Pressable>
                 </View>
 
@@ -760,8 +916,18 @@ export default function OnboardingScreen() {
                       styles.progressSegmentActive,
                     ]}
                   />
-                  <View style={[styles.progressSegment, { width: compact ? 27 : 31 }]} />
-                  <View style={[styles.progressSegment, { width: compact ? 27 : 31 }]} />
+                  <View
+                    style={[
+                      styles.progressSegment,
+                      { width: compact ? 27 : 31 },
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.progressSegment,
+                      { width: compact ? 27 : 31 },
+                    ]}
+                  />
                 </View>
 
                 <View style={[styles.headerSide, styles.headerSideRight]}>
@@ -779,24 +945,41 @@ export default function OnboardingScreen() {
                 </View>
               </View>
 
-              <View style={[styles.intro, { marginBottom: sceneLayout.introBottom }]}>
+              <View
+                style={[
+                  styles.intro,
+                  { marginBottom: sceneLayout.introBottom },
+                ]}
+              >
                 <AppText
                   variant="sectionLabel"
-                  style={[styles.introEyebrow, { marginBottom: sceneLayout.eyebrowBottom }]}
+                  style={[
+                    styles.introEyebrow,
+                    { marginBottom: sceneLayout.eyebrowBottom },
+                  ]}
                 >
                   SÉOUL · NUIT 01
                 </AppText>
-                <AppText accessibilityRole="header" variant={titleVariant} style={styles.introTitle}>
-                  Pose le pied{"\n"}à <Text style={styles.introTitleAccent}>Séoul.</Text>
+                <AppText
+                  accessibilityRole="header"
+                  variant={titleVariant}
+                  style={styles.introTitle}
+                >
+                  Pose le pied{"\n"}à{" "}
+                  <Text style={styles.introTitleAccent}>Séoul.</Text>
                 </AppText>
                 <AppText
                   variant={introVariant}
                   style={[
                     styles.introSubtitle,
-                    { marginTop: sceneLayout.subtitleTop, maxWidth: introTextWidth },
+                    {
+                      marginTop: sceneLayout.subtitleTop,
+                      maxWidth: introTextWidth,
+                    },
                   ]}
                 >
-                  Chaque scène est une situation réelle. On ne te note pas — on t'y met.
+                  Chaque scène est une situation réelle. On ne te note pas — on
+                  t'y met.
                 </AppText>
               </View>
 
@@ -811,7 +994,10 @@ export default function OnboardingScreen() {
               <View style={{ marginTop: sceneLayout.timelineTop }}>
                 <AppText
                   variant="sectionLabel"
-                  style={[styles.journeyLabel, { marginBottom: sceneLayout.timelineLabelBottom }]}
+                  style={[
+                    styles.journeyLabel,
+                    { marginBottom: sceneLayout.timelineLabelBottom },
+                  ]}
                 >
                   TON PARCOURS CE SOIR
                 </AppText>
@@ -842,7 +1028,10 @@ export default function OnboardingScreen() {
                     style={StyleSheet.absoluteFill}
                   />
                   <View style={styles.primaryHighlight} />
-                  <AppText variant={compact ? "button" : "bodyStrong"} style={styles.primaryButtonText}>
+                  <AppText
+                    variant={compact ? "button" : "bodyStrong"}
+                    style={styles.primaryButtonText}
+                  >
                     {`Commencer par ${selectedSceneData.title} →`}
                   </AppText>
                 </Pressable>
@@ -865,7 +1054,10 @@ export default function OnboardingScreen() {
                     color="#8F8D9F"
                     strokeWidth={1.8}
                   />
-                  <AppText variant={compact ? "caption" : "bodySecondary"} style={styles.hubLinkText}>
+                  <AppText
+                    variant={compact ? "caption" : "bodySecondary"}
+                    style={styles.hubLinkText}
+                  >
                     Explorer le Hub librement
                   </AppText>
                 </Pressable>
@@ -1027,9 +1219,16 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   journeyLabel: { color: "#696C84" },
-  timelineWrap: { width: "100%", position: "relative" },
-  timelineRailFuture: {
-    position: "absolute",
+  timelineWrap: { width: "100%" },
+  timelineConnector: {
+    flex: 0.6,
+    borderRadius: 1,
+  },
+  timelineConnectorSolid: {
+    height: 2,
+    backgroundColor: "rgba(255,255,255,0.30)",
+  },
+  timelineConnectorDashed: {
     height: 0,
     borderTopWidth: 2,
     borderStyle: "dashed",
@@ -1051,7 +1250,7 @@ const styles = StyleSheet.create({
   timelineNodeActive: {
     borderWidth: 0,
     backgroundColor: PINK,
-    shadowOpacity: 0.30,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
@@ -1060,7 +1259,7 @@ const styles = StyleSheet.create({
   },
   timelineNodePreviewSelected: {
     backgroundColor: "rgba(255,255,255,0.035)",
-    shadowOpacity: 0.20,
+    shadowOpacity: 0.2,
     shadowRadius: 7,
     elevation: 2,
   },
