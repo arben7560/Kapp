@@ -38,12 +38,13 @@ const KOREAN_RUN_PATTERN =
   /([\u1100-\u11ff\u3130-\u318f\ua960-\ua97f\uac00-\ud7af\ud7b0-\ud7ff]+)/u;
 
 /**
- * A few legacy vocabulary scenes stored either bare Hangul or a French label
- * in `koreanTitle`. Vocabulary scene headers all use the `koreanSecondary`
- * token, so normalize those exact legacy values here to keep the presentation
- * consistent while leaving dialogue/expression content untouched.
+ * A few legacy vocabulary/counting scenes stored bare Hangul, an incomplete
+ * romanization, or a French label in `koreanTitle`. Scene headers all use the
+ * `koreanSecondary` token, so normalize those exact legacy values here while
+ * leaving dialogue/expression content untouched.
  */
-const VOCABULARY_KOREAN_TITLE_NORMALIZATION: Readonly<Record<string, string>> = {
+const KOREAN_TITLE_NORMALIZATION: Readonly<Record<string, string>> = {
+  // Vocabulary
   '길거리 음식': '길거리 음식 (Gilgeori eumsik)',
   '카페 투어 (Tournée des cafés)': '카페 투어 (Kape tueo)',
   '포장마차': '포장마차 (Pojangmacha)',
@@ -54,9 +55,23 @@ const VOCABULARY_KOREAN_TITLE_NORMALIZATION: Readonly<Record<string, string>> = 
   'Le rendez-vous': '소개팅 (Sogaeting)',
   'Premiers flirts': '썸 (Sseom)',
   'Le couple': '커플 (Keopeul)',
+
+  // Comptage
+  '나이가 어떻게 되세요? (Nai-ga...)':
+    '나이가 어떻게 되세요? (Naiga eotteoke doeseyo?)',
+  '카페에서 (Café-eseo)': '카페에서 (Kape-eseo)',
+  '여행 계획 (Projet de voyage)': '여행 계획 (Yeohaeng gyehoek)',
+  '요일 (Jours de la semaine)': '요일 (Yoil)',
+  '막차 시간 (Mak-cha)': '막차 시간 (Makcha sigan)',
+  '형제 순서 (Hyeongje)': '형제 순서 (Hyeongje sunseo)',
+  '연락처 교환 (Échange de contacts)': '연락처 교환 (Yeollakcheo gyohwan)',
+  '전화 통화 (Appel téléphonique)': '전화 통화 (Jeonhwa tonghwa)',
+  '문자 / 카톡 (Messages)': '문자 / 카톡 (Munja / Katok)',
+  '전통 시장 (Sijang)': '전통 시장 (Jeontong sijang)',
+  '쇼핑 (Magasin)': '쇼핑 (Syoping)',
 };
 
-function normalizeVocabularyKoreanTitle(
+function normalizeKoreanTitle(
   children: React.ReactNode,
   variant: AppTextVariant,
   script: AppTextScript,
@@ -64,7 +79,7 @@ function normalizeVocabularyKoreanTitle(
   if (variant !== 'koreanSecondary' || script !== 'korean') return children;
   if (typeof children !== 'string') return children;
 
-  return VOCABULARY_KOREAN_TITLE_NORMALIZATION[children] ?? children;
+  return KOREAN_TITLE_NORMALIZATION[children] ?? children;
 }
 
 export type AppTextProviderProps = React.PropsWithChildren<{
@@ -227,7 +242,7 @@ export const AppText = React.forwardRef<
   };
 
   const safeStyle = sanitizeTextStyle(style);
-  const normalizedChildren = normalizeVocabularyKoreanTitle(
+  const normalizedChildren = normalizeKoreanTitle(
     rest.children,
     variant,
     resolvedScript,
@@ -260,7 +275,7 @@ export type AppTextInputProps = Omit<TextInputProps, 'style'> & {
   style?: StyleProp<TextStyle>;
 };
 
-/** Text input counterpart that follows the same typography contract as AppText. */
+/** Text input counterpart that follows the same semantic typography contract as AppText. */
 export const AppTextInput = React.forwardRef<
   React.ComponentRef<typeof TextInput>,
   AppTextInputProps
