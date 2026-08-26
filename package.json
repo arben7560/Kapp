@@ -15,6 +15,7 @@
     "web": "expo start --web",
     "web:font-fallback": "node ./scripts/start-font-fallback.mjs",
     "test:cafe-speech": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-cafe-speech.mjs",
+    "test:cafe-speech-diagnostics": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-cafe-speech-diagnostics.mjs",
     "test:metro-speech": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-metro-speech.mjs",
     "test:restaurant-speech": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-restaurant-speech.mjs",
     "test:aeroport-speech": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-aeroport-speech.mjs",
