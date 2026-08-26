@@ -62,7 +62,7 @@ import {
     getCafeSpeechContextualStrings,
     matchCafeSpeechIntent,
     recordCafeSpeechRecoveryEvent,
-} from "../../lib/cafeSpeechIntents";
+} from "../../lib/cafeSpeechDiagnostics";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
