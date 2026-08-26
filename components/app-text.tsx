@@ -37,6 +37,36 @@ const KOREAN_CHARACTER_PATTERN =
 const KOREAN_RUN_PATTERN =
   /([\u1100-\u11ff\u3130-\u318f\ua960-\ua97f\uac00-\ud7af\ud7b0-\ud7ff]+)/u;
 
+/**
+ * A few legacy vocabulary scenes stored either bare Hangul or a French label
+ * in `koreanTitle`. Vocabulary scene headers all use the `koreanSecondary`
+ * token, so normalize those exact legacy values here to keep the presentation
+ * consistent while leaving dialogue/expression content untouched.
+ */
+const VOCABULARY_KOREAN_TITLE_NORMALIZATION: Readonly<Record<string, string>> = {
+  '길거리 음식': '길거리 음식 (Gilgeori eumsik)',
+  '카페 투어 (Tournée des cafés)': '카페 투어 (Kape tueo)',
+  '포장마차': '포장마차 (Pojangmacha)',
+  '노래방': '노래방 (Noraebang)',
+  '2차 가자!': '2차 가자! (I-cha gaja!)',
+  '응급 상황': '응급 상황 (Eunggeup sanghwang)',
+  '업무 메일': '업무 메일 (Eommu meil)',
+  'Le rendez-vous': '소개팅 (Sogaeting)',
+  'Premiers flirts': '썸 (Sseom)',
+  'Le couple': '커플 (Keopeul)',
+};
+
+function normalizeVocabularyKoreanTitle(
+  children: React.ReactNode,
+  variant: AppTextVariant,
+  script: AppTextScript,
+): React.ReactNode {
+  if (variant !== 'koreanSecondary' || script !== 'korean') return children;
+  if (typeof children !== 'string') return children;
+
+  return VOCABULARY_KOREAN_TITLE_NORMALIZATION[children] ?? children;
+}
+
 export type AppTextProviderProps = React.PropsWithChildren<{
   customFontsAvailable: boolean;
 }>;
@@ -197,8 +227,13 @@ export const AppText = React.forwardRef<
   };
 
   const safeStyle = sanitizeTextStyle(style);
-  const renderedChildren = renderScriptAwareChildren(
+  const normalizedChildren = normalizeVocabularyKoreanTitle(
     rest.children,
+    variant,
+    resolvedScript,
+  );
+  const renderedChildren = renderScriptAwareChildren(
+    normalizedChildren,
     resolvedScript,
     token.fontRole,
     customFontsAvailable,
