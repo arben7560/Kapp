@@ -200,7 +200,7 @@ function FeaturedSceneCard({
     <View
       accessible
       accessibilityLabel={`${scene.title}, ${scene.eyebrow}. ${scene.badge}. ${scene.phrase}. ${scene.translation}.`}
-      style={[styles.featuredCard, { height, borderColor: `${scene.accent}55` }]}
+      style={[styles.featuredCard, { height }]}
     >
       <LinearGradient
         colors={["#0D1823", "#17111B", "#080A15"]}
@@ -235,10 +235,23 @@ function FeaturedSceneCard({
         ))}
       </View>
 
+      <LinearGradient
+        colors={["rgba(34,211,238,0.24)", "rgba(255,255,255,0.02)", "rgba(255,47,125,0.42)"]}
+        locations={[0, 0.48, 1]}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        style={styles.cardBorderAccent}
+      />
+
       <View
         style={[
           styles.featuredTopRow,
-          { paddingHorizontal: horizontalPadding, paddingTop: verticalPadding },
+          {
+            left: 0,
+            right: 0,
+            top: Math.max(14, verticalPadding + 2),
+            paddingHorizontal: horizontalPadding,
+          },
         ]}
       >
         <View style={[styles.recommendedPill, { borderColor: `${scene.accent}66` }]}>
@@ -256,8 +269,10 @@ function FeaturedSceneCard({
         style={[
           styles.featuredCopy,
           {
+            left: 0,
+            right: 0,
+            bottom: Math.max(16, verticalPadding + 2),
             paddingHorizontal: horizontalPadding,
-            paddingBottom: Math.max(8, verticalPadding - 2),
           },
         ]}
       >
@@ -377,7 +392,7 @@ export default function OnboardingScreen() {
   const sceneLayout = useMemo(
     () => ({
       contentTop: Math.round(lerp(2, 10, verticalProgress)),
-      contentBottom: Math.round(lerp(3, 10, verticalProgress)),
+      contentBottom: Math.round(lerp(3, 12, verticalProgress)),
       headerHeight: Math.round(lerp(32, 38, verticalProgress)),
       headerBottom: Math.round(lerp(5, 13, verticalProgress)),
       eyebrowBottom: Math.round(lerp(4, 9, verticalProgress)),
@@ -386,12 +401,13 @@ export default function OnboardingScreen() {
       heroHeight: isTablet ? 382 : Math.round(lerp(198, 344, verticalProgress)),
       heroPaddingX: Math.round(lerp(14, 21, verticalProgress)),
       heroPaddingY: Math.round(lerp(10, 17, verticalProgress)),
-      timelineTop: Math.round(lerp(7, 20, verticalProgress)),
-      timelineLabelBottom: Math.round(lerp(4, 8, verticalProgress)),
+      timelineTop: Math.round(lerp(9, 28, verticalProgress)),
+      timelineLabelBottom: Math.round(lerp(6, 12, verticalProgress)),
       nodeSize: isTablet ? 45 : Math.round(lerp(36, 43, verticalProgress)),
-      timelineBottom: Math.round(lerp(5, 17, verticalProgress)),
+      timelineBottom: Math.round(lerp(9, 31, verticalProgress)),
       primaryHeight: Math.round(lerp(48, 60, verticalProgress)),
-      secondaryHeight: Math.round(lerp(32, 42, verticalProgress)),
+      secondaryHeight: Math.round(lerp(34, 44, verticalProgress)),
+      hubTop: Math.round(lerp(2, 8, verticalProgress)),
     }),
     [isTablet, verticalProgress],
   );
@@ -732,7 +748,10 @@ export default function OnboardingScreen() {
                   onPress={openHub}
                   style={({ pressed }) => [
                     styles.hubLink,
-                    { minHeight: sceneLayout.secondaryHeight },
+                    {
+                      minHeight: sceneLayout.secondaryHeight,
+                      marginTop: sceneLayout.hubTop,
+                    },
                     pressed && styles.pressed,
                   ]}
                 >
@@ -805,16 +824,24 @@ const styles = StyleSheet.create({
   introSubtitle: { color: "#A8A7BA" },
   featuredCard: {
     width: "100%",
-    borderRadius: 27,
+    borderRadius: 28,
     overflow: "hidden",
     borderWidth: 1,
+    borderColor: "rgba(116,72,110,0.34)",
     backgroundColor: "#0B0D18",
-    justifyContent: "space-between",
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    elevation: 4,
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    elevation: 3,
+  },
+  cardBorderAccent: {
+    position: "absolute",
+    left: 20,
+    right: 20,
+    bottom: 0,
+    height: 1,
+    opacity: 0.85,
   },
   cardGrid: {
     ...StyleSheet.absoluteFillObject,
@@ -831,6 +858,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: "7deg" }],
   },
   featuredTopRow: {
+    position: "absolute",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -854,37 +882,40 @@ const styles = StyleSheet.create({
   },
   recommendedText: { color: "#DDD5DD" },
   featuredLocation: { color: "#BEB2BD", textAlign: "right" },
-  featuredCopy: { maxWidth: 560 },
+  featuredCopy: {
+    position: "absolute",
+    maxWidth: 560,
+  },
   featuredPhrase: {
     color: "#F2EFED",
     fontFamily: AppFontFamily.korean.regular,
-    fontSize: 21,
-    lineHeight: 29,
+    fontSize: 23,
+    lineHeight: 31,
     letterSpacing: 0,
     includeFontPadding: false,
-    textShadowColor: "rgba(0,0,0,0.50)",
+    textShadowColor: "rgba(0,0,0,0.46)",
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 5,
+    textShadowRadius: 4,
   },
   featuredPhraseCompact: {
-    fontSize: 18,
-    lineHeight: 25,
+    fontSize: 19,
+    lineHeight: 26,
   },
   featuredTranslation: {
     color: "#A5A3B4",
-    marginTop: 1,
+    marginTop: 2,
     fontStyle: "italic",
   },
   featuredTitle: {
     color: WHITE,
-    marginTop: 7,
-    textShadowColor: "rgba(0,0,0,0.40)",
+    marginTop: 9,
+    textShadowColor: "rgba(0,0,0,0.38)",
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
+    textShadowRadius: 5,
   },
   featuredSubtitle: {
     color: "#AAA9BA",
-    marginTop: 6,
+    marginTop: 8,
     maxWidth: 470,
   },
   journeyLabel: { color: "#696C84" },
