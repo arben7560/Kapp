@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(2,3,6,0.85)",
+    backgroundColor: "rgba(2,3,6,0.68)",
   },
   scroll: { paddingHorizontal: 20, paddingBottom: 50 },
   header: {
