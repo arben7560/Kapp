@@ -170,7 +170,7 @@ function humanizeCafeSpeechFeedback(message: string) {
     /^(Je t’ai compris\.|Je t’ai compris, mais|Ça se comprend, mais|Je comprends l’idée, mais|L’intention est claire, mais|On te comprend\.)/u.test(
       message,
     ) &&
-    /(아메리카노|오렌지 주스|라떼|치즈케이크|먹고 갈게요|포장해 주세요|테이크아웃이요|카드로 할게요|현금으로 할게요|영수증 주세요|아니요, 괜찮아요|조각|잔)/u.test(
+    /(아메리카노|오렌지 주스|라떼|치즈케이크|먹고 갈게요|포장해 주세요|테이크아웃이요|조각|잔)/u.test(
       message,
     )
   ) {
