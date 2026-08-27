@@ -3,24 +3,13 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { Check, Compass, MoveRight } from "lucide-react-native";
+import { useMemo, useState } from "react";
 import {
-  ArrowLeft,
-  Coffee,
-  Compass,
-  MoveRight,
-  Plane,
-  TrainFront,
-  Utensils,
-} from "lucide-react-native";
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Animated,
-  Easing,
   Pressable,
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
   useWindowDimensions,
   View,
 } from "react-native";
@@ -28,15 +17,8 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import Svg, {
-  Defs,
-  Stop,
-  RadialGradient as SvgRadialGradient,
-  Rect as SvgRect,
-} from "react-native-svg";
 
 import { AppText } from "../components/app-text";
-import { AppFontFamily } from "../constants/theme";
 
 const SCENE_BACKGROUND = require("../assets/images/onboarding-scene-v2.webp");
 const CAFE_IMAGE = require("../assets/images/cafeIA.jpg");
@@ -45,15 +27,10 @@ const RESTAURANT_IMAGE = require("../assets/images/restaurantIA.jpg");
 const AIRPORT_IMAGE = require("../assets/images/airport.jpg");
 
 const ONBOARDING_KEY = "kapp_onboarding_completed";
-const PINK = "#FF2F7D";
-const CYAN = "#3DD6C6";
-const METRO_GREEN = "#31C78A";
-const GOLD = "#D58D4D";
+const PINK = "#F472B6";
+const CYAN = "#22D3EE";
+const GOLD = "#F59E0B";
 const WHITE = "#FFFFFF";
-const NIGHT = "#070916";
-const CARD_LINE = "rgba(255,255,255,0.065)";
-
-const CARD_GRID_LINES = Array.from({ length: 15 }, (_, index) => index);
 
 type SceneKey = "cafe" | "metro" | "restaurant" | "airport";
 type ModeKey = "text" | "guided";
@@ -65,14 +42,10 @@ type SceneOption = {
   title: string;
   subtitle: string;
   phrase: string;
-  translation: string;
-  meta: string;
   accent: string;
-  glowLeft: string;
-  glowRight: string;
   image: number;
   badge: string;
-  timelineSubtitle: string;
+  guidance: string;
 };
 
 const SCENES: SceneOption[] = [
@@ -80,82 +53,52 @@ const SCENES: SceneOption[] = [
     key: "cafe",
     eyebrow: "HONGDAE",
     title: "Café",
-    subtitle:
-      "Commande comme si tu y étais, dans le bruit du comptoir et la pluie dehors.",
+    subtitle: "Commande comme si tu étais à Hongdae.",
     phrase: "아메리카노 한 잔 주세요",
-    translation: '"Un americano, s\'il vous plaît"',
-    meta: "Aucun prérequis · ~4 min",
     accent: PINK,
-    glowLeft: "#1AB5C3",
-    glowRight: "#E72C7D",
     image: CAFE_IMAGE,
-    badge: "Idéal pour débuter",
-    timelineSubtitle: "Pour commencer",
+    badge: "IDÉAL POUR DÉBUTER",
+    guidance: "Aucun prérequis",
   },
   {
     key: "metro",
     eyebrow: "LIGNE 2",
     title: "Métro",
-    subtitle:
-      "Trouve ton chemin dans Séoul et demande ta direction naturellement.",
+    subtitle: "Trouve ton chemin dans Séoul.",
     phrase: "2호선은 어디예요?",
-    translation: '"Où est la ligne 2 ?"',
-    meta: "Débutant · ~5 min",
-    accent: METRO_GREEN,
-    glowLeft: "#1CB8B9",
-    glowRight: "#2B8C73",
+    accent: CYAN,
     image: METRO_IMAGE,
-    badge: "Débutant +",
-    timelineSubtitle: "Débutant +",
+    badge: "DÉBUTANT +",
+    guidance: "Scène guidée",
   },
   {
     key: "restaurant",
     eyebrow: "ITAEWON",
     title: "Restaurant",
-    subtitle:
-      "Commande naturellement à table, comme dans un vrai restaurant coréen.",
+    subtitle: "Commande naturellement à table.",
     phrase: "이거 주세요",
-    translation: '"Celui-ci, s\'il vous plaît"',
-    meta: "Débutant · ~5 min",
     accent: GOLD,
-    glowLeft: "#7E5137",
-    glowRight: "#D36B47",
     image: RESTAURANT_IMAGE,
-    badge: "Débutant +",
-    timelineSubtitle: "Débutant +",
+    badge: "DÉBUTANT +",
+    guidance: "Scène guidée",
   },
   {
     key: "airport",
     eyebrow: "INCHEON",
     title: "Aéroport",
-    subtitle:
-      "Repère-toi dès ton arrivée et trouve les transports pour rejoindre Séoul.",
+    subtitle: "Repère-toi dès ton arrivée en Corée.",
     phrase: "지하철은 어디예요?",
-    translation: '"Où est le métro ?"',
-    meta: "Intermédiaire · ~6 min",
     accent: CYAN,
-    glowLeft: "#1A8DAD",
-    glowRight: "#615299",
     image: AIRPORT_IMAGE,
-    badge: "Intermédiaire",
-    timelineSubtitle: "Intermédiaire",
+    badge: "INTERMEDIAIRE",
+    guidance: "Vocabulaire + grammaire guidés",
   },
-];
-
-const SELECTABLE_SCENE_KEYS: SceneKey[] = [
-  "cafe",
-  "metro",
-  "restaurant",
-  "airport",
 ];
 
 const ROUTES: Record<SceneKey, Record<ModeKey, string>> = {
   cafe: { text: "/lesson/cafe", guided: "/lesson/cafeMissions" },
   metro: { text: "/lesson/metro", guided: "/lesson/metroMissions" },
-  restaurant: {
-    text: "/lesson/restaurant",
-    guided: "/lesson/restaurantMissions",
-  },
+  restaurant: { text: "/lesson/restaurant", guided: "/lesson/restaurantMissions" },
   airport: { text: "/lesson/airport", guided: "/lesson/aeroportMissions" },
 };
 
@@ -176,12 +119,7 @@ async function lightTap() {
 function SceneBackground({ dimmed = false }: { dimmed?: boolean }) {
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <Image
-        source={SCENE_BACKGROUND}
-        style={StyleSheet.absoluteFill}
-        contentFit="cover"
-        contentPosition="center"
-      />
+      <Image source={SCENE_BACKGROUND} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="center" />
       <LinearGradient
         colors={[
           dimmed ? "rgba(2,3,10,0.42)" : "rgba(2,3,10,0.04)",
@@ -196,283 +134,104 @@ function SceneBackground({ dimmed = false }: { dimmed?: boolean }) {
   );
 }
 
-function OnboardingBackground() {
-  return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <LinearGradient
-        colors={["#090B16", NIGHT, "#050711"]}
-        locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFill}
-      />
-    </View>
-  );
-}
-
-function CardAtmosphere({ scene }: { scene: SceneOption }) {
-  const leftId = `left-halo-${scene.key}`;
-  const rightId = `right-halo-${scene.key}`;
-  const warmId = `warm-halo-${scene.key}`;
-
-  return (
-    <Svg
-      pointerEvents="none"
-      style={StyleSheet.absoluteFill}
-      viewBox="0 0 100 100"
-      preserveAspectRatio="none"
-    >
-      <Defs>
-        <SvgRadialGradient id={leftId} cx="12%" cy="8%" r="74%">
-          <Stop offset="0%" stopColor={scene.glowLeft} stopOpacity={0.42} />
-          <Stop offset="38%" stopColor={scene.glowLeft} stopOpacity={0.18} />
-          <Stop offset="100%" stopColor={scene.glowLeft} stopOpacity={0} />
-        </SvgRadialGradient>
-        <SvgRadialGradient id={rightId} cx="88%" cy="8%" r="72%">
-          <Stop offset="0%" stopColor={scene.glowRight} stopOpacity={0.48} />
-          <Stop offset="40%" stopColor={scene.glowRight} stopOpacity={0.2} />
-          <Stop offset="100%" stopColor={scene.glowRight} stopOpacity={0} />
-        </SvgRadialGradient>
-        <SvgRadialGradient id={warmId} cx="56%" cy="66%" r="46%">
-          <Stop offset="0%" stopColor="#C67B4A" stopOpacity={0.16} />
-          <Stop offset="58%" stopColor="#9B5236" stopOpacity={0.07} />
-          <Stop offset="100%" stopColor="#9B5236" stopOpacity={0} />
-        </SvgRadialGradient>
-      </Defs>
-
-      <SvgRect x="0" y="0" width="100" height="100" fill={`url(#${leftId})`} />
-      <SvgRect x="0" y="0" width="100" height="100" fill={`url(#${rightId})`} />
-      <SvgRect x="0" y="0" width="100" height="100" fill={`url(#${warmId})`} />
-
-      <SvgRect x="0" y="84" width="9" height="16" fill="#050713" opacity={0.88} />
-      <SvgRect x="9" y="78" width="10" height="22" fill="#060814" opacity={0.84} />
-      <SvgRect x="19" y="87" width="7" height="13" fill="#050713" opacity={0.9} />
-      <SvgRect x="26" y="74" width="12" height="26" fill="#060814" opacity={0.88} />
-      <SvgRect x="38" y="82" width="8" height="18" fill="#050713" opacity={0.92} />
-      <SvgRect x="46" y="70" width="11" height="30" fill="#060814" opacity={0.9} />
-      <SvgRect x="57" y="80" width="10" height="20" fill="#050713" opacity={0.92} />
-      <SvgRect x="67" y="76" width="7" height="24" fill="#060814" opacity={0.9} />
-      <SvgRect x="74" y="85" width="10" height="15" fill="#050713" opacity={0.92} />
-      <SvgRect x="84" y="72" width="8" height="28" fill="#060814" opacity={0.9} />
-      <SvgRect x="92" y="82" width="8" height="18" fill="#050713" opacity={0.92} />
-    </Svg>
-  );
-}
-
-function FeaturedSceneCard({
-  scene,
-  height,
-  compact,
-  horizontalPadding,
-  verticalPadding,
-}: {
-  scene: SceneOption;
-  height: number;
-  compact: boolean;
-  horizontalPadding: number;
-  verticalPadding: number;
-}) {
-  const titleVariant = compact ? "featureTitle" : "screenTitle";
-  const bodyVariant = compact ? "bodySecondary" : "body";
-
+function FeaturedScene({ scene, height }: { scene: SceneOption; height: number }) {
   return (
     <View
       accessible
-      accessibilityLabel={`${scene.title}, ${scene.eyebrow}. ${scene.badge}. ${scene.phrase}. ${scene.translation}. ${scene.meta}.`}
-      style={[styles.featuredCard, { height }]}
+      accessibilityLabel={`${scene.title}. ${scene.subtitle} ${scene.guidance}.`}
+      style={[
+        styles.featuredCard,
+        { height, borderColor: `${scene.accent}72`, shadowColor: scene.accent },
+      ]}
     >
+      <Image source={scene.image} style={StyleSheet.absoluteFill} contentFit="cover" />
       <LinearGradient
-        colors={["#0A111B", "#12101A", "#070913"]}
-        locations={[0, 0.52, 1]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        colors={["rgba(2,3,7,0.00)", "rgba(2,3,7,0.06)", "rgba(2,3,7,0.48)", "rgba(2,3,7,0.96)"]}
+        locations={[0, 0.38, 0.66, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+      <LinearGradient
+        colors={["rgba(3,3,8,0.56)", "rgba(3,3,8,0.18)", "transparent"]}
+        locations={[0, 0.54, 1]}
+        start={{ x: 0, y: 0.6 }}
+        end={{ x: 1, y: 0.55 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <LinearGradient
+        colors={[`${scene.accent}1C`, "transparent", "transparent"]}
+        start={{ x: 0, y: 1 }}
+        end={{ x: 0.84, y: 0.15 }}
         style={StyleSheet.absoluteFill}
       />
 
-      <CardAtmosphere scene={scene} />
-
-      <LinearGradient
-        colors={[
-          "rgba(4,6,15,0.02)",
-          "rgba(5,7,17,0.10)",
-          "rgba(5,6,16,0.56)",
-          "rgba(5,6,16,0.90)",
-        ]}
-        locations={[0, 0.38, 0.7, 1]}
-        style={StyleSheet.absoluteFill}
-      />
-
-      <View style={styles.cardRain}>
-        {CARD_GRID_LINES.map((line) => (
-          <View key={line} style={styles.cardRainLine} />
-        ))}
-      </View>
-
-      <View
-        style={[
-          styles.featuredTopRow,
-          {
-            left: 0,
-            right: 0,
-            top: Math.max(14, verticalPadding + 2),
-            paddingHorizontal: horizontalPadding,
-          },
-        ]}
-      >
-        <View
-          style={[styles.recommendedPill, { borderColor: `${scene.accent}66` }]}
-        >
-          <View
-            style={[styles.recommendedDot, { backgroundColor: scene.accent }]}
-          />
-          <AppText variant="caption" style={styles.recommendedText}>
-            {scene.badge}
-          </AppText>
+      <View style={styles.featuredTopRow}>
+        <View style={[styles.recommendedPill, { borderColor: `${scene.accent}88` }]}>
+          <View style={[styles.recommendedDot, { backgroundColor: scene.accent }]} />
+          <AppText variant="label" style={styles.recommendedText}>{scene.badge}</AppText>
         </View>
-        <AppText variant="sectionLabel" style={styles.featuredLocation}>
-          {scene.eyebrow}
-        </AppText>
+        <AppText variant="sectionLabel" style={styles.featuredLocation}>{scene.eyebrow}</AppText>
       </View>
 
-      <View
-        style={[
-          styles.featuredCopy,
-          {
-            left: 0,
-            right: 0,
-            bottom: Math.max(14, verticalPadding),
-            paddingHorizontal: horizontalPadding,
-          },
-        ]}
-      >
-        <Text
+      <View style={styles.featuredCopy}>
+        <AppText
           accessibilityLanguage="ko-KR"
-          maxFontSizeMultiplier={1.2}
-          style={[
-            styles.featuredPhrase,
-            compact && styles.featuredPhraseCompact,
-          ]}
+          variant="koreanSecondary"
+          script="korean"
+          style={[styles.featuredPhrase, { color: scene.accent }]}
         >
           {scene.phrase}
-        </Text>
-        <AppText variant="bodySecondary" style={styles.featuredTranslation}>
-          {scene.translation}
         </AppText>
-        <AppText variant={titleVariant} style={styles.featuredTitle}>
-          {scene.title}
-        </AppText>
-        <AppText variant={bodyVariant} style={styles.featuredSubtitle}>
-          {scene.subtitle}
-        </AppText>
-        <AppText variant="caption" style={styles.featuredMeta}>
-          {scene.meta}
-        </AppText>
+        <AppText variant="sceneTitle" style={styles.featuredTitle}>{scene.title}</AppText>
+        <AppText variant="bodyStrong" style={styles.featuredSubtitle}>{scene.subtitle}</AppText>
+        <View style={styles.beginnerRow}>
+          <View style={[styles.beginnerIcon, { borderColor: `${scene.accent}B8` }]}>
+            <Check size={12} color={scene.accent} strokeWidth={2.3} />
+          </View>
+          <AppText variant="caption" style={styles.beginnerText}>{scene.guidance}</AppText>
+        </View>
       </View>
     </View>
   );
 }
 
-function SceneGlyph({
-  sceneKey,
-  size,
-  color,
+function AlternativeScene({
+  scene,
+  height,
+  width,
+  onPress,
 }: {
-  sceneKey: SceneKey;
-  size: number;
-  color: string;
+  scene: SceneOption;
+  height: number;
+  width: number;
+  onPress: () => void;
 }) {
-  if (sceneKey === "cafe") {
-    return <Coffee size={size} color={color} strokeWidth={2} />;
-  }
-  if (sceneKey === "metro") {
-    return <TrainFront size={size} color={color} strokeWidth={2} />;
-  }
-  if (sceneKey === "restaurant") {
-    return <Utensils size={size} color={color} strokeWidth={2} />;
-  }
-  return <Plane size={size} color={color} strokeWidth={2} />;
-}
-
-function SceneSelector({
-  selectedScene,
-  nodeSize,
-  compact,
-  onSelect,
-}: {
-  selectedScene: SceneKey;
-  nodeSize: number;
-  compact: boolean;
-  onSelect: (scene: SceneKey) => void;
-}) {
-  const selectableScenes = SCENES.filter((scene) =>
-    SELECTABLE_SCENE_KEYS.includes(scene.key),
-  );
-
   return (
-    <View style={styles.sceneSelectorWrap}>
-      <View style={styles.sceneSelectorRow}>
-        {selectableScenes.map((scene) => {
-          const selected = scene.key === selectedScene;
-          const iconSize = compact ? 15 : 17;
-
-          return (
-            <Pressable
-              key={scene.key}
-              accessibilityRole="button"
-              accessibilityLabel={`Afficher la scène ${scene.title}`}
-              accessibilityState={{ selected }}
-              hitSlop={7}
-              onPress={() => onSelect(scene.key)}
-              style={({ pressed }) => [
-                styles.sceneSelectorStep,
-                pressed && styles.sceneSelectorStepPressed,
-              ]}
-            >
-              <View
-                style={[
-                  styles.sceneSelectorNode,
-                  {
-                    width: nodeSize,
-                    height: nodeSize,
-                    borderRadius: nodeSize / 2,
-                    borderColor: scene.accent,
-                    backgroundColor: selected ? scene.accent : "#0D101C",
-                    shadowColor: scene.accent,
-                  },
-                  selected
-                    ? styles.sceneSelectorNodeSelected
-                    : styles.sceneSelectorNodeIdle,
-                ]}
-              >
-                <SceneGlyph
-                  sceneKey={scene.key}
-                  size={iconSize}
-                  color={selected ? WHITE : scene.accent}
-                />
-              </View>
-              <AppText
-                variant={compact ? "caption" : "bodySecondary"}
-                numberOfLines={1}
-                style={[
-                  styles.sceneSelectorTitle,
-                  selected && styles.sceneSelectorTitleSelected,
-                ]}
-              >
-                {scene.title}
-              </AppText>
-              <AppText
-                variant="caption"
-                numberOfLines={1}
-                style={[
-                  styles.sceneSelectorSubtitle,
-                  scene.key === "cafe" && styles.sceneSelectorRecommended,
-                ]}
-              >
-                {scene.timelineSubtitle}
-              </AppText>
-            </Pressable>
-          );
-        })}
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Choisir ${scene.title}`}
+      onPress={onPress}
+      style={({ pressed }) => [styles.alternativeCard, { height, width }, pressed && styles.pressed]}
+    >
+      <Image source={scene.image} style={StyleSheet.absoluteFill} contentFit="cover" />
+      <LinearGradient
+        colors={["rgba(2,3,7,0.00)", "rgba(2,3,7,0.16)", "rgba(2,3,7,0.88)"]}
+        locations={[0, 0.42, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+      <LinearGradient
+        colors={[`${scene.accent}1F`, "transparent"]}
+        start={{ x: 0, y: 1 }}
+        end={{ x: 0.72, y: 0.12 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <View style={styles.alternativeCopy}>
+        <AppText variant="sectionLabel" style={[styles.alternativeEyebrow, { color: scene.accent }]}>{scene.eyebrow}</AppText>
+        <AppText variant="cardTitle" style={styles.alternativeTitle}>{scene.title}</AppText>
       </View>
-    </View>
+      <View style={styles.alternativeArrow}>
+        <MoveRight size={19} color={WHITE} strokeWidth={2} />
+      </View>
+    </Pressable>
   );
 }
 
@@ -482,90 +241,58 @@ export default function OnboardingScreen() {
   const [step, setStep] = useState<OnboardingStep>("scene");
   const [selectedScene, setSelectedScene] = useState<SceneKey>("cafe");
   const [selectedMode, setSelectedMode] = useState<ModeKey>("guided");
-  const entrance = useRef(new Animated.Value(0)).current;
 
   const isTablet = width >= 768;
   const largeText = fontScale > 1.15;
+  const horizontalPadding = isTablet ? 30 : width <= 380 ? 18 : 22;
+
+  // Use the real drawable vertical space instead of device-specific breakpoints.
+  // This continuously adapts the scene page to any phone height while preserving
+  // scrolling as a safety net for accessibility text sizes and exceptionally small screens.
   const viewportHeight = Math.max(0, height - insets.top - insets.bottom);
   const verticalProgress = isTablet
     ? 1
-    : clamp((viewportHeight - 590) / 290, 0, 1);
-  const compact = !isTablet && !largeText && viewportHeight < 690;
-  const horizontalPadding = isTablet
-    ? 30
-    : width <= 370
-      ? 16
-      : width >= 425
-        ? 24
-        : 21;
-  const introTextWidth = isTablet
-    ? 560
-    : Math.min(360, Math.max(0, width - horizontalPadding * 2));
+    : clamp((viewportHeight - 590) / 260, 0, 1);
+  const compactness = largeText ? Math.max(verticalProgress, 0.45) : verticalProgress;
 
   const sceneLayout = useMemo(
     () => ({
-      contentTop: Math.round(lerp(2, 10, verticalProgress)),
-      contentBottom: Math.round(lerp(12, 24, verticalProgress)),
-      headerHeight: Math.round(lerp(32, 38, verticalProgress)),
-      headerBottom: Math.round(lerp(5, 13, verticalProgress)),
-      eyebrowBottom: Math.round(lerp(4, 9, verticalProgress)),
-      subtitleTop: Math.round(lerp(5, 10, verticalProgress)),
-      introBottom: Math.round(lerp(6, 18, verticalProgress)),
-      heroHeight: isTablet ? 382 : Math.round(lerp(198, 344, verticalProgress)),
-      heroPaddingX: Math.round(lerp(14, 21, verticalProgress)),
-      heroPaddingY: Math.round(lerp(10, 17, verticalProgress)),
-      selectorTop: Math.round(lerp(9, 28, verticalProgress)),
-      selectorLabelBottom: Math.round(lerp(6, 12, verticalProgress)),
-      nodeSize: isTablet ? 45 : Math.round(lerp(36, 43, verticalProgress)),
-      selectorBottom: Math.round(lerp(11, 34, verticalProgress)),
-      primaryHeight: Math.round(lerp(48, 60, verticalProgress)),
-      secondaryHeight: Math.round(lerp(38, 46, verticalProgress)),
-      hubTop: Math.round(lerp(7, 11, verticalProgress)),
+      contentTop: Math.round(lerp(8, 24, compactness)),
+      contentBottom: Math.round(lerp(8, 12, compactness)),
+      introBottom: Math.round(lerp(12, 24, compactness)),
+      eyebrowBottom: Math.round(lerp(7, 12, compactness)),
+      subtitleTop: Math.round(lerp(7, 12, compactness)),
+      heroHeight: isTablet ? 378 : Math.round(lerp(214, 320, compactness)),
+      alternativeTop: Math.round(lerp(10, 22, compactness)),
+      alternativeHeaderBottom: Math.round(lerp(7, 12, compactness)),
+      alternativeHeight: isTablet ? 142 : Math.round(lerp(88, 118, compactness)),
+      actionsTop: Math.round(lerp(9, 18, compactness)),
+      actionsGap: Math.round(lerp(7, 10, compactness)),
+      primaryHeight: Math.round(lerp(52, 62, compactness)),
+      hubHeight: Math.round(lerp(50, 58, compactness)),
     }),
-    [isTablet, verticalProgress],
+    [compactness, isTablet],
   );
 
   const selectedSceneData = useMemo(
     () => SCENES.find((scene) => scene.key === selectedScene) ?? SCENES[0],
     [selectedScene],
   );
+  const alternativeScenes = useMemo(
+    () => SCENES.filter((scene) => scene.key !== selectedScene),
+    [selectedScene],
+  );
+  const alternativeWidth = isTablet ? 244 : Math.min(190, Math.max(154, width * 0.43));
 
-  useEffect(() => {
-    Animated.timing(entrance, {
-      toValue: 1,
-      duration: 430,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [entrance]);
-
-  const entranceStyle = {
-    opacity: entrance,
-    transform: [
-      {
-        translateY: entrance.interpolate({
-          inputRange: [0, 1],
-          outputRange: [7, 0],
-        }),
-      },
-    ],
+  const selectScene = async (scene: SceneKey) => {
+    await lightTap();
+    setSelectedScene(scene);
   };
 
   const openHub = async () => {
     await lightTap();
     await AsyncStorage.setItem(ONBOARDING_KEY, "true");
     router.replace("/(tabs)" as any);
-  };
-
-  const goBack = async () => {
-    await lightTap();
-    router.back();
-  };
-
-  const selectScene = async (scene: SceneKey) => {
-    if (scene === selectedScene) return;
-    await lightTap();
-    setSelectedScene(scene);
   };
 
   const openMode = async () => {
@@ -577,61 +304,28 @@ export default function OnboardingScreen() {
     await lightTap();
     await AsyncStorage.setItem(ONBOARDING_KEY, "true");
     const route = ROUTES[selectedScene][selectedMode];
-    const target =
-      selectedMode === "text"
-        ? route
-        : { pathname: route, params: { mode: selectedMode } };
+    const target = selectedMode === "text" ? route : { pathname: route, params: { mode: selectedMode } };
     router.replace(target as any);
   };
 
   if (step === "mode") {
     return (
       <View style={styles.screen}>
-        <StatusBar
-          barStyle="light-content"
-          translucent
-          backgroundColor="transparent"
-        />
+        <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
         <SceneBackground dimmed />
         <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-          <View
-            style={[styles.modePage, { paddingHorizontal: horizontalPadding }]}
-          >
-            <ScrollView
-              style={styles.modeScroll}
-              contentContainerStyle={styles.modeContent}
-              showsVerticalScrollIndicator={false}
-            >
-              <AppText variant="sectionLabel" style={styles.modeEyebrow}>
-                SCÈNE CHOISIE
-              </AppText>
-              <AppText variant="screenTitle" style={styles.modeTitle}>
-                {selectedSceneData.title}
-              </AppText>
-              <AppText variant="body" style={styles.modeSubtitle}>
-                Choisis ton approche.
-              </AppText>
+          <View style={[styles.modePage, { paddingHorizontal: horizontalPadding }]}>
+            <ScrollView style={styles.modeScroll} contentContainerStyle={styles.modeContent} showsVerticalScrollIndicator={false}>
+              <AppText variant="sectionLabel" style={styles.modeEyebrow}>SCÈNE CHOISIE</AppText>
+              <AppText variant="screenTitle" style={styles.modeTitle}>{selectedSceneData.title}</AppText>
+              <AppText variant="body" style={styles.modeSubtitle}>Choisis ton approche.</AppText>
 
               <View style={styles.modeHero}>
-                <Image
-                  source={selectedSceneData.image}
-                  style={StyleSheet.absoluteFill}
-                  contentFit="cover"
-                />
-                <LinearGradient
-                  colors={["transparent", "rgba(2,3,7,0.94)"]}
-                  style={StyleSheet.absoluteFill}
-                />
+                <Image source={selectedSceneData.image} style={StyleSheet.absoluteFill} contentFit="cover" />
+                <LinearGradient colors={["transparent", "rgba(2,3,7,0.94)"]} style={StyleSheet.absoluteFill} />
                 <View style={styles.modeHeroCopy}>
-                  <AppText
-                    variant="sectionLabel"
-                    style={{ color: selectedSceneData.accent }}
-                  >
-                    {selectedSceneData.eyebrow}
-                  </AppText>
-                  <AppText variant="cardTitle" style={styles.modeHeroTitle}>
-                    {selectedSceneData.title}
-                  </AppText>
+                  <AppText variant="sectionLabel" style={{ color: selectedSceneData.accent }}>{selectedSceneData.eyebrow}</AppText>
+                  <AppText variant="cardTitle" style={styles.modeHeroTitle}>{selectedSceneData.title}</AppText>
                 </View>
               </View>
 
@@ -639,97 +333,38 @@ export default function OnboardingScreen() {
                 <Pressable
                   accessibilityRole="radio"
                   accessibilityState={{ checked: selectedMode === "guided" }}
-                  onPress={async () => {
-                    await lightTap();
-                    setSelectedMode("guided");
-                  }}
-                  style={[
-                    styles.modeChoice,
-                    selectedMode === "guided" && styles.modeChoiceActive,
-                  ]}
+                  onPress={async () => { await lightTap(); setSelectedMode("guided"); }}
+                  style={[styles.modeChoice, selectedMode === "guided" && styles.modeChoiceActive]}
                 >
                   <View style={styles.modeChoiceCopy}>
-                    <AppText variant="cardTitle" style={styles.modeChoiceTitle}>
-                      Entre dans la scène
-                    </AppText>
-                    <AppText
-                      variant="bodySecondary"
-                      style={styles.modeChoiceText}
-                    >
-                      Écoute et réponds comme si tu étais sur place.
-                    </AppText>
+                    <AppText variant="cardTitle" style={styles.modeChoiceTitle}>Entre dans la scène</AppText>
+                    <AppText variant="bodySecondary" style={styles.modeChoiceText}>Écoute et réponds comme si tu étais sur place.</AppText>
                   </View>
-                  <View
-                    style={[
-                      styles.radio,
-                      selectedMode === "guided" && styles.radioActive,
-                    ]}
-                  />
+                  <View style={[styles.radio, selectedMode === "guided" && styles.radioActive]} />
                 </Pressable>
 
                 <Pressable
                   accessibilityRole="radio"
                   accessibilityState={{ checked: selectedMode === "text" }}
-                  onPress={async () => {
-                    await lightTap();
-                    setSelectedMode("text");
-                  }}
-                  style={[
-                    styles.modeChoice,
-                    selectedMode === "text" && styles.modeChoiceActive,
-                  ]}
+                  onPress={async () => { await lightTap(); setSelectedMode("text"); }}
+                  style={[styles.modeChoice, selectedMode === "text" && styles.modeChoiceActive]}
                 >
                   <View style={styles.modeChoiceCopy}>
-                    <AppText variant="cardTitle" style={styles.modeChoiceTitle}>
-                      Expressions utiles
-                    </AppText>
-                    <AppText
-                      variant="bodySecondary"
-                      style={styles.modeChoiceText}
-                    >
-                      Revois d’abord les mots et expressions de la situation.
-                    </AppText>
+                    <AppText variant="cardTitle" style={styles.modeChoiceTitle}>Expressions utiles</AppText>
+                    <AppText variant="bodySecondary" style={styles.modeChoiceText}>Revois d’abord les mots et expressions de la situation.</AppText>
                   </View>
-                  <View
-                    style={[
-                      styles.radio,
-                      selectedMode === "text" && styles.radioActive,
-                    ]}
-                  />
+                  <View style={[styles.radio, selectedMode === "text" && styles.radioActive]} />
                 </Pressable>
               </View>
 
-              <Pressable
-                accessibilityRole="button"
-                onPress={finish}
-                style={({ pressed }) => [
-                  styles.modePrimary,
-                  pressed && styles.pressed,
-                ]}
-              >
-                <LinearGradient
-                  colors={["#E65D9D", "#8C426C", "#3F263A"]}
-                  start={{ x: 0, y: 0.5 }}
-                  end={{ x: 1, y: 0.5 }}
-                  style={StyleSheet.absoluteFill}
-                />
-                <AppText variant="button" style={styles.buttonText}>
-                  Commencer
-                </AppText>
+              <Pressable accessibilityRole="button" onPress={finish} style={({ pressed }) => [styles.modePrimary, pressed && styles.pressed]}>
+                <LinearGradient colors={["#E65D9D", "#8C426C", "#3F263A"]} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
+                <AppText variant="button" style={styles.buttonText}>Commencer</AppText>
                 <MoveRight size={19} color={WHITE} strokeWidth={2.2} />
               </Pressable>
 
-              <Pressable
-                accessibilityRole="button"
-                onPress={async () => {
-                  await lightTap();
-                  setStep("scene");
-                }}
-                style={styles.modeBack}
-              >
-                <AppText variant="button" style={styles.modeBackText}>
-                  Retour aux immersions
-                </AppText>
+              <Pressable accessibilityRole="button" onPress={async () => { await lightTap(); setStep("scene"); }} style={styles.modeBack}>
+                <AppText variant="button" style={styles.modeBackText}>Retour aux immersions</AppText>
               </Pressable>
             </ScrollView>
           </View>
@@ -738,198 +373,81 @@ export default function OnboardingScreen() {
     );
   }
 
-  const titleVariant = compact ? "featureTitle" : "screenTitle";
-  const introVariant = compact ? "bodySecondary" : "body";
-
   return (
     <View style={styles.screen}>
-      <StatusBar
-        barStyle="light-content"
-        translucent
-        backgroundColor="transparent"
-      />
-      <OnboardingBackground />
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <SceneBackground />
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-        <View
-          style={[styles.scenePage, { paddingHorizontal: horizontalPadding }]}
-        >
+        <View style={[styles.scenePage, { paddingHorizontal: horizontalPadding }]}>
           <ScrollView
             style={styles.sceneScroll}
             contentContainerStyle={[
               styles.sceneScrollContent,
-              {
-                paddingTop: sceneLayout.contentTop,
-                paddingBottom: sceneLayout.contentBottom,
-              },
+              { paddingTop: sceneLayout.contentTop, paddingBottom: sceneLayout.contentBottom },
             ]}
             showsVerticalScrollIndicator={false}
-            bounces={false}
           >
-            <Animated.View style={[styles.sceneInner, entranceStyle]}>
-              <View
-                style={[
-                  styles.header,
-                  {
-                    height: sceneLayout.headerHeight,
-                    marginBottom: sceneLayout.headerBottom,
-                  },
-                ]}
-              >
-                <View style={styles.headerSide}>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Retour"
-                    onPress={goBack}
-                    hitSlop={10}
-                    style={({ pressed }) => [
-                      styles.backButton,
-                      compact && styles.backButtonCompact,
-                      pressed && styles.pressed,
-                    ]}
-                  >
-                    <ArrowLeft
-                      size={compact ? 16 : 17}
-                      color="#9FA1B7"
-                      strokeWidth={2}
-                    />
-                  </Pressable>
-                </View>
+            <View style={[styles.intro, { marginBottom: sceneLayout.introBottom }]}>
+              <AppText variant="sectionLabel" style={[styles.introEyebrow, { marginBottom: sceneLayout.eyebrowBottom }]}>TON POINT DE DÉPART</AppText>
+              <AppText accessibilityRole="header" variant="screenTitle" style={styles.introTitle}>Choisis ta première expérience</AppText>
+              <AppText variant="body" style={[styles.introSubtitle, { marginTop: sceneLayout.subtitleTop }]}>Lance une scène guidée ou explore librement le Hub.</AppText>
+            </View>
 
-                <View style={[styles.headerSide, styles.headerSideRight]}>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Passer l'onboarding"
-                    onPress={openHub}
-                    hitSlop={10}
-                    style={({ pressed }) => pressed && styles.pressed}
-                  >
-                    <AppText variant="bodySecondary" style={styles.skipText}>
-                      Passer
-                    </AppText>
-                  </Pressable>
-                </View>
+            <FeaturedScene scene={selectedSceneData} height={sceneLayout.heroHeight} />
+
+            <View style={[styles.alternativeSection, { marginTop: sceneLayout.alternativeTop }]}>
+              <View style={[styles.alternativeHeader, { marginBottom: sceneLayout.alternativeHeaderBottom }]}>
+                <AppText variant="sectionLabel" style={styles.alternativeLabel}>AUTRES IMMERSIONS</AppText>
+                <AppText variant="caption" style={styles.swipeHint}>Fais glisser pour explorer</AppText>
               </View>
+              <ScrollView horizontal nestedScrollEnabled showsHorizontalScrollIndicator={false} contentContainerStyle={styles.alternativeList}>
+                {alternativeScenes.map((scene) => (
+                  <AlternativeScene
+                    key={scene.key}
+                    scene={scene}
+                    height={sceneLayout.alternativeHeight}
+                    width={alternativeWidth}
+                    onPress={() => void selectScene(scene.key)}
+                  />
+                ))}
+              </ScrollView>
+            </View>
 
-              <View
-                style={[
-                  styles.intro,
-                  { marginBottom: sceneLayout.introBottom },
-                ]}
+            <View style={[styles.actions, { marginTop: sceneLayout.actionsTop, gap: sceneLayout.actionsGap }]}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Commencer par ${selectedSceneData.title}`}
+                onPress={openMode}
+                style={({ pressed }) => [styles.primaryButton, { minHeight: sceneLayout.primaryHeight }, pressed && styles.pressed]}
               >
-                <AppText
-                  variant="sectionLabel"
-                  style={[
-                    styles.introEyebrow,
-                    { marginBottom: sceneLayout.eyebrowBottom },
+                <LinearGradient
+                  colors={[
+                    selectedScene === "cafe" ? "#E95B9C" : selectedSceneData.accent,
+                    selectedScene === "cafe" ? "#9A476F" : `${selectedSceneData.accent}B8`,
+                    "#3A2838",
                   ]}
-                >
-                  SÉOUL · NUIT 01
-                </AppText>
-                <AppText
-                  accessibilityRole="header"
-                  variant={titleVariant}
-                  style={styles.introTitle}
-                >
-                  Pose le pied{"\n"}à{" "}
-                  <Text style={styles.introTitleAccent}>Séoul.</Text>
-                </AppText>
-                <AppText
-                  variant={introVariant}
-                  style={[
-                    styles.introSubtitle,
-                    {
-                      marginTop: sceneLayout.subtitleTop,
-                      maxWidth: introTextWidth,
-                    },
-                  ]}
-                >
-                  Chaque scène est une situation réelle. On ne te note pas — on
-                  t'y met.
-                </AppText>
-              </View>
-
-              <FeaturedSceneCard
-                scene={selectedSceneData}
-                height={sceneLayout.heroHeight}
-                compact={compact}
-                horizontalPadding={sceneLayout.heroPaddingX}
-                verticalPadding={sceneLayout.heroPaddingY}
-              />
-
-              <View style={{ marginTop: sceneLayout.selectorTop }}>
-                <AppText
-                  variant="sectionLabel"
-                  style={[
-                    styles.selectorLabel,
-                    { marginBottom: sceneLayout.selectorLabelBottom },
-                  ]}
-                >
-                  CHOISIS TA PREMIÈRE IMMERSION
-                </AppText>
-                <SceneSelector
-                  selectedScene={selectedScene}
-                  nodeSize={sceneLayout.nodeSize}
-                  compact={compact}
-                  onSelect={(scene) => void selectScene(scene)}
+                  locations={[0, 0.58, 1]}
+                  start={{ x: 0, y: 0.45 }}
+                  end={{ x: 1, y: 0.55 }}
+                  style={StyleSheet.absoluteFill}
                 />
-              </View>
+                <View style={styles.primaryHighlight} />
+                <AppText variant="button" style={styles.buttonText}>{`Commencer par ${selectedSceneData.title}`}</AppText>
+                <MoveRight size={20} color={WHITE} strokeWidth={2.2} />
+              </Pressable>
 
-              <View style={{ marginTop: sceneLayout.selectorBottom }}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`Commencer par ${selectedSceneData.title}`}
-                  onPress={openMode}
-                  style={({ pressed }) => [
-                    styles.primaryButton,
-                    { minHeight: sceneLayout.primaryHeight },
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <LinearGradient
-                    colors={["#FF2F7D", "#D81668", "#C10C59"]}
-                    locations={[0, 0.58, 1]}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 1, y: 0.5 }}
-                    style={StyleSheet.absoluteFill}
-                  />
-                  <View style={styles.primaryHighlight} />
-                  <AppText
-                    variant={compact ? "button" : "bodyStrong"}
-                    style={styles.primaryButtonText}
-                  >
-                    {`Commencer par ${selectedSceneData.title} →`}
-                  </AppText>
-                </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Explorer le Hub"
+                onPress={openHub}
+                style={({ pressed }) => [styles.hubButton, { minHeight: sceneLayout.hubHeight }, pressed && styles.pressed]}
+              >
+                <View style={styles.hubIcon}><Compass size={16} color={WHITE} strokeWidth={2.1} /></View>
+                <AppText variant="button" style={styles.hubButtonText}>Explorer le Hub</AppText>
+              </Pressable>
+            </View>
 
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Explorer le Hub librement"
-                  onPress={openHub}
-                  style={({ pressed }) => [
-                    styles.hubLink,
-                    {
-                      minHeight: sceneLayout.secondaryHeight,
-                      marginTop: sceneLayout.hubTop,
-                    },
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <Compass
-                    size={compact ? 14 : 16}
-                    color="#8F8D9F"
-                    strokeWidth={1.8}
-                  />
-                  <AppText
-                    variant={compact ? "caption" : "bodySecondary"}
-                    style={styles.hubLinkText}
-                  >
-                    Explorer le Hub librement
-                  </AppText>
-                </Pressable>
-              </View>
-
-              {largeText ? <View style={styles.largeTextSpacer} /> : null}
-            </Animated.View>
+            {largeText ? <View style={styles.largeTextSpacer} /> : null}
           </ScrollView>
         </View>
       </SafeAreaView>
@@ -938,215 +456,197 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: NIGHT },
+  screen: { flex: 1, backgroundColor: "#02030A" },
   safe: { flex: 1 },
-  scenePage: {
-    flex: 1,
-    width: "100%",
-    maxWidth: 680,
-    alignSelf: "center",
-  },
+  scenePage: { flex: 1, width: "100%", maxWidth: 920, alignSelf: "center" },
   sceneScroll: { flex: 1 },
-  sceneScrollContent: { flexGrow: 1, width: "100%" },
-  sceneInner: { width: "100%" },
-  header: {
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
+  sceneScrollContent: { width: "100%", maxWidth: 860, alignSelf: "center" },
+  intro: { maxWidth: 650 },
+  introEyebrow: {
+    color: PINK,
+    textShadowColor: "rgba(244,114,182,0.25)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
-  headerSide: { flex: 1, alignItems: "flex-start", justifyContent: "center" },
-  headerSideRight: { alignItems: "flex-end" },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.026)",
+  introTitle: {
+    color: "#FFF9FC",
+    maxWidth: 560,
+    textShadowColor: "rgba(0,0,0,0.44)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 12,
   },
-  backButtonCompact: { width: 34, height: 34, borderRadius: 17 },
-  skipText: { color: "#AAAABC" },
-  intro: { maxWidth: 520 },
-  introEyebrow: { color: CYAN },
-  introTitle: { color: "#F8F5F7" },
-  introTitleAccent: { color: PINK },
-  introSubtitle: { color: "#A8A7BA" },
+  introSubtitle: { color: "rgba(255,255,255,0.68)", maxWidth: 560 },
   featuredCard: {
     width: "100%",
     borderRadius: 28,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    backgroundColor: "#0B0D18",
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 14,
-    elevation: 3,
-  },
-  cardRain: {
-    ...StyleSheet.absoluteFillObject,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingHorizontal: 7,
-    opacity: 0.58,
-  },
-  cardRainLine: {
-    width: 1,
-    height: "130%",
-    marginTop: -24,
-    backgroundColor: CARD_LINE,
-    transform: [{ rotate: "9deg" }],
+    backgroundColor: "rgba(2,3,7,0.62)",
+    justifyContent: "space-between",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.13,
+    shadowRadius: 22,
+    elevation: 7,
   },
   featuredTopRow: {
-    position: "absolute",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 10,
+    gap: 12,
+    paddingHorizontal: 18,
+    paddingTop: 18,
   },
   recommendedPill: {
-    minHeight: 27,
+    minHeight: 31,
     borderRadius: 999,
     borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     flexDirection: "row",
     alignItems: "center",
-    gap: 7,
-    backgroundColor: "rgba(12,12,24,0.20)",
+    gap: 8,
+    backgroundColor: "rgba(7,5,11,0.67)",
   },
-  recommendedDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-  },
-  recommendedText: { color: "#DDD5DD" },
-  featuredLocation: { color: "#BEB2BD", textAlign: "right" },
-  featuredCopy: {
-    position: "absolute",
-    maxWidth: 560,
-  },
-  featuredPhrase: {
-    color: "#F2EFED",
-    fontFamily: AppFontFamily.korean.regular,
-    fontSize: 23,
-    lineHeight: 31,
-    letterSpacing: 0,
-    includeFontPadding: false,
-    textShadowColor: "rgba(0,0,0,0.46)",
+  recommendedDot: { width: 7, height: 7, borderRadius: 999 },
+  recommendedText: { color: "rgba(255,255,255,0.97)" },
+  featuredLocation: {
+    color: "rgba(255,255,255,0.80)",
+    textAlign: "right",
+    textShadowColor: "rgba(0,0,0,0.88)",
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    textShadowRadius: 8,
   },
-  featuredPhraseCompact: {
-    fontSize: 19,
-    lineHeight: 26,
-  },
-  featuredTranslation: {
-    color: "#A5A3B4",
-    marginTop: 2,
-    fontStyle: "italic",
+  featuredCopy: { paddingHorizontal: 22, paddingBottom: 20, maxWidth: 540 },
+  featuredPhrase: {
+    marginBottom: 5,
+    textShadowColor: "rgba(0,0,0,0.88)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 12,
   },
   featuredTitle: {
     color: WHITE,
-    marginTop: 9,
-    fontFamily: AppFontFamily.outfit.medium,
-    textShadowColor: "rgba(0,0,0,0.34)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    textShadowColor: "rgba(0,0,0,0.90)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 16,
   },
   featuredSubtitle: {
-    color: "#AAA9BA",
+    color: "rgba(255,255,255,0.88)",
     marginTop: 8,
-    maxWidth: 470,
+    maxWidth: 410,
+    textShadowColor: "rgba(0,0,0,0.78)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 8,
   },
-  featuredMeta: {
-    color: "#777A90",
-    marginTop: 7,
-    letterSpacing: 0.3,
-  },
-  selectorLabel: { color: "#696C84" },
-  sceneSelectorWrap: { width: "100%" },
-  sceneSelectorRow: {
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-  },
-  sceneSelectorStep: {
-    flex: 1,
-    minWidth: 0,
-    alignItems: "center",
-    paddingHorizontal: 2,
-  },
-  sceneSelectorStepPressed: { opacity: 0.76 },
-  sceneSelectorNode: {
-    borderWidth: 2,
+  beginnerRow: { marginTop: 12, flexDirection: "row", alignItems: "center", gap: 9 },
+  beginnerIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 999,
+    borderWidth: 1.2,
+    backgroundColor: "rgba(255,255,255,0.04)",
     alignItems: "center",
     justifyContent: "center",
-    shadowOffset: { width: 0, height: 0 },
   },
-  sceneSelectorNodeIdle: {
-    shadowOpacity: 0.08,
-    shadowRadius: 5,
-    elevation: 1,
+  beginnerText: { color: "rgba(255,255,255,0.78)" },
+  alternativeSection: {},
+  alternativeHeader: {
+    minHeight: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
   },
-  sceneSelectorNodeSelected: {
-    borderWidth: 0,
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  sceneSelectorTitle: {
-    color: "#C9C7D0",
-    marginTop: 5,
-    textAlign: "center",
-  },
-  sceneSelectorTitleSelected: { color: WHITE },
-  sceneSelectorSubtitle: {
-    color: "#5E6077",
-    marginTop: 0,
-    textAlign: "center",
-  },
-  sceneSelectorRecommended: {
-    color: "#C997AA",
-    fontFamily: AppFontFamily.outfit.medium,
-  },
-  primaryButton: {
-    width: "100%",
-    borderRadius: 23,
+  alternativeLabel: { color: "rgba(255,255,255,0.52)", marginLeft: 1 },
+  swipeHint: { color: "rgba(255,255,255,0.38)", textAlign: "right" },
+  alternativeList: { gap: 12, paddingRight: 18 },
+  alternativeCard: {
+    flexShrink: 0,
+    borderRadius: 22,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.09)",
-    paddingHorizontal: 18,
+    borderColor: "rgba(255,255,255,0.13)",
+    backgroundColor: "rgba(2,3,7,0.62)",
+    justifyContent: "flex-end",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.24,
+    shadowRadius: 14,
+    elevation: 4,
+  },
+  alternativeCopy: { paddingLeft: 15, paddingRight: 49, paddingBottom: 14 },
+  alternativeEyebrow: {
+    marginBottom: 4,
+    textShadowColor: "rgba(0,0,0,0.85)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 8,
+  },
+  alternativeTitle: {
+    color: WHITE,
+    textShadowColor: "rgba(0,0,0,0.88)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 10,
+  },
+  alternativeArrow: {
+    position: "absolute",
+    right: 12,
+    bottom: 13,
+    width: 38,
+    height: 38,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+    backgroundColor: "rgba(3,4,8,0.58)",
     alignItems: "center",
     justifyContent: "center",
+  },
+  actions: {},
+  primaryButton: {
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.20)",
+    overflow: "hidden",
+    paddingHorizontal: 22,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 14,
     shadowColor: PINK,
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: { width: 0, height: 7 },
     shadowOpacity: 0.22,
-    shadowRadius: 14,
-    elevation: 5,
+    shadowRadius: 18,
+    elevation: 6,
   },
   primaryHighlight: {
     position: "absolute",
     top: 0,
-    left: 28,
-    right: 28,
+    left: 18,
+    right: 18,
     height: 1,
-    backgroundColor: "rgba(255,255,255,0.23)",
+    backgroundColor: "rgba(255,255,255,0.48)",
   },
-  primaryButtonText: { color: WHITE, textAlign: "center" },
-  hubLink: {
-    width: "100%",
+  buttonText: { color: WHITE, textAlign: "center" },
+  hubButton: {
+    borderRadius: 23,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.20)",
+    backgroundColor: "rgba(4,6,12,0.70)",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 7,
+    gap: 11,
   },
-  hubLinkText: { color: "#8F8D9F", textAlign: "center" },
-  pressed: { opacity: 0.86, transform: [{ scale: 0.992 }] },
-  largeTextSpacer: { height: 18 },
-  buttonText: { color: WHITE, textAlign: "center" },
+  hubIcon: {
+    width: 27,
+    height: 27,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.34)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  hubButtonText: { color: WHITE },
+  pressed: { opacity: 0.88, transform: [{ scale: 0.992 }] },
+  largeTextSpacer: { height: 16 },
   modePage: { flex: 1, width: "100%", maxWidth: 620, alignSelf: "center" },
   modeScroll: { flex: 1 },
   modeContent: { paddingTop: 24, paddingBottom: 18 },
@@ -1177,25 +677,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 14,
   },
-  modeChoiceActive: {
-    borderColor: "rgba(112,174,184,0.62)",
-    backgroundColor: "rgba(19,38,46,0.76)",
-  },
+  modeChoiceActive: { borderColor: "rgba(112,174,184,0.62)", backgroundColor: "rgba(19,38,46,0.76)" },
   modeChoiceCopy: { flex: 1 },
   modeChoiceTitle: { color: WHITE },
   modeChoiceText: { color: "rgba(255,255,255,0.58)", marginTop: 3 },
-  radio: {
-    width: 18,
-    height: 18,
-    borderRadius: 999,
-    borderWidth: 1.4,
-    borderColor: "rgba(255,255,255,0.36)",
-  },
-  radioActive: {
-    borderWidth: 5,
-    borderColor: CYAN,
-    backgroundColor: "rgba(255,255,255,0.90)",
-  },
+  radio: { width: 18, height: 18, borderRadius: 999, borderWidth: 1.4, borderColor: "rgba(255,255,255,0.36)" },
+  radioActive: { borderWidth: 5, borderColor: CYAN, backgroundColor: "rgba(255,255,255,0.90)" },
   modePrimary: {
     minHeight: 58,
     borderRadius: 22,
@@ -1209,11 +696,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 12,
   },
-  modeBack: {
-    minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 5,
-  },
+  modeBack: { minHeight: 48, alignItems: "center", justifyContent: "center", marginTop: 5 },
   modeBackText: { color: "rgba(255,255,255,0.58)" },
 });
