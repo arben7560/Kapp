@@ -242,94 +242,17 @@ function CardAtmosphere({ scene }: { scene: SceneOption }) {
       <SvgRect x="0" y="0" width="100" height="100" fill={`url(#${rightId})`} />
       <SvgRect x="0" y="0" width="100" height="100" fill={`url(#${warmId})`} />
 
-      <SvgRect
-        x="0"
-        y="84"
-        width="9"
-        height="16"
-        fill="#050713"
-        opacity={0.88}
-      />
-      <SvgRect
-        x="9"
-        y="78"
-        width="10"
-        height="22"
-        fill="#060814"
-        opacity={0.84}
-      />
-      <SvgRect
-        x="19"
-        y="87"
-        width="7"
-        height="13"
-        fill="#050713"
-        opacity={0.9}
-      />
-      <SvgRect
-        x="26"
-        y="74"
-        width="12"
-        height="26"
-        fill="#060814"
-        opacity={0.88}
-      />
-      <SvgRect
-        x="38"
-        y="82"
-        width="8"
-        height="18"
-        fill="#050713"
-        opacity={0.92}
-      />
-      <SvgRect
-        x="46"
-        y="70"
-        width="11"
-        height="30"
-        fill="#060814"
-        opacity={0.9}
-      />
-      <SvgRect
-        x="57"
-        y="80"
-        width="10"
-        height="20"
-        fill="#050713"
-        opacity={0.92}
-      />
-      <SvgRect
-        x="67"
-        y="76"
-        width="7"
-        height="24"
-        fill="#060814"
-        opacity={0.9}
-      />
-      <SvgRect
-        x="74"
-        y="85"
-        width="10"
-        height="15"
-        fill="#050713"
-        opacity={0.92}
-      />
-      <SvgRect
-        x="84"
-        y="72"
-        width="8"
-        height="28"
-        fill="#060814"
-        opacity={0.9}
-      />
-      <SvgRect
-        x="92"
-        y="82"
-        width="8"
-        height="18"
-        fill="#050713"
-        opacity={0.92}
-      />
+      <SvgRect x="0" y="84" width="9" height="16" fill="#050713" opacity={0.88} />
+      <SvgRect x="9" y="78" width="10" height="22" fill="#060814" opacity={0.84} />
+      <SvgRect x="19" y="87" width="7" height="13" fill="#050713" opacity={0.9} />
+      <SvgRect x="26" y="74" width="12" height="26" fill="#060814" opacity={0.88} />
+      <SvgRect x="38" y="82" width="8" height="18" fill="#050713" opacity={0.92} />
+      <SvgRect x="46" y="70" width="11" height="30" fill="#060814" opacity={0.9} />
+      <SvgRect x="57" y="80" width="10" height="20" fill="#050713" opacity={0.92} />
+      <SvgRect x="67" y="76" width="7" height="24" fill="#060814" opacity={0.9} />
+      <SvgRect x="74" y="85" width="10" height="15" fill="#050713" opacity={0.92} />
+      <SvgRect x="84" y="72" width="8" height="28" fill="#060814" opacity={0.9} />
+      <SvgRect x="92" y="82" width="8" height="18" fill="#050713" opacity={0.92} />
     </Svg>
   );
 }
@@ -482,9 +405,6 @@ function JourneyTimeline({
   const journeyScenes = SCENES.filter((scene) =>
     JOURNEY_SCENE_KEYS.includes(scene.key),
   );
-  const lockedBoundaryIndex = journeyScenes.findIndex(
-    (scene) => scene.key === "airport",
-  ) - 1;
 
   const renderConnector = (index: number) => (
     <View
@@ -492,10 +412,8 @@ function JourneyTimeline({
       pointerEvents="none"
       style={[
         styles.timelineConnector,
+        styles.timelineConnectorSolid,
         { marginTop: nodeSize / 2 - 1 },
-        index === lockedBoundaryIndex
-          ? styles.timelineConnectorDashed
-          : styles.timelineConnectorSolid,
       ]}
     />
   );
@@ -505,31 +423,21 @@ function JourneyTimeline({
       <View style={styles.timelineRow}>
         {journeyScenes.map((scene, index) => {
           const active = scene.key === "cafe";
-          const locked = scene.key === "airport";
           const selected = scene.key === selectedScene;
           const iconSize = compact ? 15 : 17;
-          const iconColor = locked
-            ? "#777A90"
-            : active
-              ? WHITE
-              : scene.accent;
+          const iconColor = active ? WHITE : scene.accent;
 
           return (
             <Fragment key={scene.key}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={
-                  locked
-                    ? `${scene.title}, à venir`
-                    : `Afficher la scène ${scene.title}`
-                }
-                accessibilityState={{ selected, disabled: locked }}
-                disabled={locked}
+                accessibilityLabel={`Afficher la scène ${scene.title}`}
+                accessibilityState={{ selected }}
                 hitSlop={9}
                 onPress={() => onSelect(scene.key)}
                 style={({ pressed }) => [
                   styles.timelineStep,
-                  pressed && !locked && styles.timelineStepPressed,
+                  pressed && styles.timelineStepPressed,
                 ]}
               >
                 <View
@@ -539,20 +447,13 @@ function JourneyTimeline({
                       width: nodeSize,
                       height: nodeSize,
                       borderRadius: nodeSize / 2,
-                      borderColor: active
-                        ? PINK
-                        : locked
-                          ? "#66697F"
-                          : scene.accent,
+                      borderColor: active ? PINK : scene.accent,
                       shadowColor: active ? PINK : scene.accent,
                     },
-                    locked
-                      ? styles.timelineNodeLocked
-                      : active
-                        ? styles.timelineNodeActive
-                        : styles.timelineNodeUnlocked,
-                    !locked && !active && selected &&
-                      styles.timelineNodePreviewSelected,
+                    active
+                      ? styles.timelineNodeActive
+                      : styles.timelineNodeUnlocked,
+                    !active && selected && styles.timelineNodePreviewSelected,
                   ]}
                 >
                   <SceneGlyph
@@ -563,15 +464,12 @@ function JourneyTimeline({
                 </View>
                 <AppText
                   variant={compact ? "caption" : "bodySecondary"}
-                  style={[
-                    styles.timelineTitle,
-                    locked && styles.timelineTitleLocked,
-                  ]}
+                  style={styles.timelineTitle}
                 >
                   {scene.title}
                 </AppText>
                 <AppText variant="caption" style={styles.timelineSubtitle}>
-                  {locked ? "À venir" : scene.timelineSubtitle}
+                  {scene.timelineSubtitle}
                 </AppText>
               </Pressable>
               {index < journeyScenes.length - 1
@@ -915,18 +813,8 @@ export default function OnboardingScreen() {
                       styles.progressSegmentActive,
                     ]}
                   />
-                  <View
-                    style={[
-                      styles.progressSegment,
-                      { width: compact ? 27 : 31 },
-                    ]}
-                  />
-                  <View
-                    style={[
-                      styles.progressSegment,
-                      { width: compact ? 27 : 31 },
-                    ]}
-                  />
+                  <View style={[styles.progressSegment, { width: compact ? 27 : 31 }]} />
+                  <View style={[styles.progressSegment, { width: compact ? 27 : 31 }]} />
                 </View>
 
                 <View style={[styles.headerSide, styles.headerSideRight]}>
