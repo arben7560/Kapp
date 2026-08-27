@@ -802,21 +802,6 @@ export default function OnboardingScreen() {
                   </Pressable>
                 </View>
 
-                <View
-                  style={[styles.progressSegments, { gap: compact ? 6 : 8 }]}
-                  accessibilityLabel="Étape 1 sur 3"
-                >
-                  <View
-                    style={[
-                      styles.progressSegment,
-                      { width: compact ? 27 : 31 },
-                      styles.progressSegmentActive,
-                    ]}
-                  />
-                  <View style={[styles.progressSegment, { width: compact ? 27 : 31 }]} />
-                  <View style={[styles.progressSegment, { width: compact ? 27 : 31 }]} />
-                </View>
-
                 <View style={[styles.headerSide, styles.headerSideRight]}>
                   <Pressable
                     accessibilityRole="button"
@@ -987,24 +972,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.026)",
   },
   backButtonCompact: { width: 34, height: 34, borderRadius: 17 },
-  progressSegments: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  progressSegment: {
-    height: 4,
-    borderRadius: 99,
-    backgroundColor: "rgba(255,255,255,0.13)",
-  },
-  progressSegmentActive: {
-    backgroundColor: PINK,
-    shadowColor: PINK,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.28,
-    shadowRadius: 4,
-    elevation: 2,
-  },
   skipText: { color: "#AAAABC" },
   intro: { maxWidth: 520 },
   introEyebrow: { color: CYAN },
