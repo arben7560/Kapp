@@ -431,19 +431,18 @@ export default function OnboardingScreen() {
                   end={{ x: 1, y: 0.55 }}
                   style={StyleSheet.absoluteFill}
                 />
-                <View style={styles.primaryHighlight} />
                 <AppText variant="button" style={styles.buttonText}>{`Commencer par ${selectedSceneData.title}`}</AppText>
                 <MoveRight size={20} color={WHITE} strokeWidth={2.2} />
               </Pressable>
 
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Explorer le Hub"
+                accessibilityLabel="Explorer le Hub librement"
                 onPress={openHub}
-                style={({ pressed }) => [styles.hubButton, { minHeight: sceneLayout.hubHeight }, pressed && styles.pressed]}
+                style={({ pressed }) => [styles.hubLink, { minHeight: sceneLayout.hubHeight }, pressed && styles.pressed]}
               >
-                <View style={styles.hubIcon}><Compass size={16} color={WHITE} strokeWidth={2.1} /></View>
-                <AppText variant="button" style={styles.hubButtonText}>Explorer le Hub</AppText>
+                <View style={styles.hubIcon}><Compass size={16} color="#8F8D9F" strokeWidth={1.9} /></View>
+                <AppText variant="bodySecondary" style={styles.hubLinkText}>Explorer le Hub librement</AppText>
               </Pressable>
             </View>
 
@@ -616,35 +615,23 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
     elevation: 6,
   },
-  primaryHighlight: {
-    position: "absolute",
-    top: 0,
-    left: 18,
-    right: 18,
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.48)",
-  },
   buttonText: { color: WHITE, textAlign: "center" },
-  hubButton: {
-    borderRadius: 23,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.20)",
-    backgroundColor: "rgba(4,6,12,0.70)",
+  hubLink: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 11,
+    gap: 8,
   },
   hubIcon: {
     width: 27,
     height: 27,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.34)",
+    borderColor: "rgba(143,141,159,0.62)",
     alignItems: "center",
     justifyContent: "center",
   },
-  hubButtonText: { color: WHITE },
+  hubLinkText: { color: "#8F8D9F", textAlign: "center" },
   pressed: { opacity: 0.88, transform: [{ scale: 0.992 }] },
   largeTextSpacer: { height: 16 },
   modePage: { flex: 1, width: "100%", maxWidth: 620, alignSelf: "center" },
