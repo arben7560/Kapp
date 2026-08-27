@@ -8,6 +8,7 @@ import {
   Coffee,
   Compass,
   MoveRight,
+  Plane,
   TrainFront,
   Utensils,
 } from "lucide-react-native";
@@ -141,8 +142,12 @@ const SCENES: SceneOption[] = [
   },
 ];
 
-const JOURNEY_SCENE_KEYS: SceneKey[] = ["cafe", "metro", "restaurant"];
-const LOCKED_SCENE_COUNT = 12;
+const JOURNEY_SCENE_KEYS: SceneKey[] = [
+  "cafe",
+  "metro",
+  "restaurant",
+  "airport",
+];
 
 const ROUTES: Record<SceneKey, Record<ModeKey, string>> = {
   cafe: { text: "/lesson/cafe", guided: "/lesson/cafeMissions" },
@@ -457,7 +462,10 @@ function SceneGlyph({
   if (sceneKey === "metro") {
     return <TrainFront size={size} color={color} strokeWidth={2} />;
   }
-  return <Utensils size={size} color={color} strokeWidth={2} />;
+  if (sceneKey === "restaurant") {
+    return <Utensils size={size} color={color} strokeWidth={2} />;
+  }
+  return <Plane size={size} color={color} strokeWidth={2} />;
 }
 
 function JourneyTimeline({
@@ -474,10 +482,9 @@ function JourneyTimeline({
   const journeyScenes = SCENES.filter((scene) =>
     JOURNEY_SCENE_KEYS.includes(scene.key),
   );
-  // The connector right before the locked stub is the only one that crosses
-  // into content the user can't access yet — every other connector links two
-  // scenes that are already unlocked tonight, so it stays solid.
-  const lockedBoundaryIndex = journeyScenes.length - 1;
+  const lockedBoundaryIndex = journeyScenes.findIndex(
+    (scene) => scene.key === "airport",
+  ) - 1;
 
   const renderConnector = (index: number) => (
     <View
@@ -498,20 +505,31 @@ function JourneyTimeline({
       <View style={styles.timelineRow}>
         {journeyScenes.map((scene, index) => {
           const active = scene.key === "cafe";
+          const locked = scene.key === "airport";
           const selected = scene.key === selectedScene;
           const iconSize = compact ? 15 : 17;
+          const iconColor = locked
+            ? "#777A90"
+            : active
+              ? WHITE
+              : scene.accent;
 
           return (
             <Fragment key={scene.key}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Afficher la scène ${scene.title}`}
-                accessibilityState={{ selected }}
+                accessibilityLabel={
+                  locked
+                    ? `${scene.title}, à venir`
+                    : `Afficher la scène ${scene.title}`
+                }
+                accessibilityState={{ selected, disabled: locked }}
+                disabled={locked}
                 hitSlop={9}
                 onPress={() => onSelect(scene.key)}
                 style={({ pressed }) => [
                   styles.timelineStep,
-                  pressed && styles.timelineStepPressed,
+                  pressed && !locked && styles.timelineStepPressed,
                 ]}
               >
                 <View
@@ -521,66 +539,47 @@ function JourneyTimeline({
                       width: nodeSize,
                       height: nodeSize,
                       borderRadius: nodeSize / 2,
-                      borderColor: active ? PINK : scene.accent,
+                      borderColor: active
+                        ? PINK
+                        : locked
+                          ? "#66697F"
+                          : scene.accent,
                       shadowColor: active ? PINK : scene.accent,
                     },
-                    active
-                      ? styles.timelineNodeActive
-                      : styles.timelineNodeUnlocked,
-                    !active && selected && styles.timelineNodePreviewSelected,
+                    locked
+                      ? styles.timelineNodeLocked
+                      : active
+                        ? styles.timelineNodeActive
+                        : styles.timelineNodeUnlocked,
+                    !locked && !active && selected &&
+                      styles.timelineNodePreviewSelected,
                   ]}
                 >
                   <SceneGlyph
                     sceneKey={scene.key}
                     size={iconSize}
-                    color={active ? WHITE : scene.accent}
+                    color={iconColor}
                   />
                 </View>
                 <AppText
                   variant={compact ? "caption" : "bodySecondary"}
-                  style={styles.timelineTitle}
+                  style={[
+                    styles.timelineTitle,
+                    locked && styles.timelineTitleLocked,
+                  ]}
                 >
                   {scene.title}
                 </AppText>
                 <AppText variant="caption" style={styles.timelineSubtitle}>
-                  {scene.timelineSubtitle}
+                  {locked ? "À venir" : scene.timelineSubtitle}
                 </AppText>
               </Pressable>
-              {renderConnector(index)}
+              {index < journeyScenes.length - 1
+                ? renderConnector(index)
+                : null}
             </Fragment>
           );
         })}
-
-        <View
-          style={styles.timelineStep}
-          accessible
-          accessibilityLabel={`${LOCKED_SCENE_COUNT} scènes à débloquer`}
-        >
-          <View
-            style={[
-              styles.timelineNode,
-              styles.timelineNodeLocked,
-              {
-                width: nodeSize,
-                height: nodeSize,
-                borderRadius: nodeSize / 2,
-              },
-            ]}
-          >
-            <Text allowFontScaling={false} style={styles.timelineLockedCount}>
-              +{LOCKED_SCENE_COUNT}
-            </Text>
-          </View>
-          <AppText
-            variant={compact ? "caption" : "bodySecondary"}
-            style={[styles.timelineTitle, styles.timelineTitleLocked]}
-          >
-            À venir
-          </AppText>
-          <AppText variant="caption" style={styles.timelineSubtitle}>
-            à débloquer
-          </AppText>
-        </View>
       </View>
     </View>
   );
