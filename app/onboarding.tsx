@@ -90,7 +90,7 @@ const SCENES: SceneOption[] = [
     glowRight: "#E72C7D",
     image: CAFE_IMAGE,
     badge: "Idéal pour débuter",
-    timelineSubtitle: "Ligne 2",
+    timelineSubtitle: "Pour commencer",
   },
   {
     key: "metro",
@@ -106,7 +106,7 @@ const SCENES: SceneOption[] = [
     glowRight: "#2B8C73",
     image: METRO_IMAGE,
     badge: "Débutant +",
-    timelineSubtitle: "Ligne 2",
+    timelineSubtitle: "Débutant +",
   },
   {
     key: "restaurant",
@@ -122,7 +122,7 @@ const SCENES: SceneOption[] = [
     glowRight: "#D36B47",
     image: RESTAURANT_IMAGE,
     badge: "Débutant +",
-    timelineSubtitle: "Ligne 6",
+    timelineSubtitle: "Débutant +",
   },
   {
     key: "airport",
@@ -138,7 +138,7 @@ const SCENES: SceneOption[] = [
     glowRight: "#615299",
     image: AIRPORT_IMAGE,
     badge: "Intermédiaire",
-    timelineSubtitle: "Aéroport",
+    timelineSubtitle: "Intermédiaire",
   },
 ];
 
@@ -461,7 +461,10 @@ function SceneSelector({
               <AppText
                 variant="caption"
                 numberOfLines={1}
-                style={styles.sceneSelectorSubtitle}
+                style={[
+                  styles.sceneSelectorSubtitle,
+                  scene.key === "cafe" && styles.sceneSelectorRecommended,
+                ]}
               >
                 {scene.timelineSubtitle}
               </AppText>
@@ -1104,6 +1107,10 @@ const styles = StyleSheet.create({
     color: "#5E6077",
     marginTop: 0,
     textAlign: "center",
+  },
+  sceneSelectorRecommended: {
+    color: "#C997AA",
+    fontFamily: AppFontFamily.outfit.medium,
   },
   primaryButton: {
     width: "100%",
