@@ -12,7 +12,7 @@ import {
   TrainFront,
   Utensils,
 } from "lucide-react-native";
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -142,7 +142,7 @@ const SCENES: SceneOption[] = [
   },
 ];
 
-const JOURNEY_SCENE_KEYS: SceneKey[] = [
+const SELECTABLE_SCENE_KEYS: SceneKey[] = [
   "cafe",
   "metro",
   "restaurant",
@@ -391,7 +391,7 @@ function SceneGlyph({
   return <Plane size={size} color={color} strokeWidth={2} />;
 }
 
-function JourneyTimeline({
+function SceneSelector({
   selectedScene,
   nodeSize,
   compact,
@@ -402,80 +402,70 @@ function JourneyTimeline({
   compact: boolean;
   onSelect: (scene: SceneKey) => void;
 }) {
-  const journeyScenes = SCENES.filter((scene) =>
-    JOURNEY_SCENE_KEYS.includes(scene.key),
-  );
-
-  const renderConnector = (index: number) => (
-    <View
-      key={`connector-${index}`}
-      pointerEvents="none"
-      style={[
-        styles.timelineConnector,
-        styles.timelineConnectorSolid,
-        { marginTop: nodeSize / 2 - 1 },
-      ]}
-    />
+  const selectableScenes = SCENES.filter((scene) =>
+    SELECTABLE_SCENE_KEYS.includes(scene.key),
   );
 
   return (
-    <View style={styles.timelineWrap}>
-      <View style={styles.timelineRow}>
-        {journeyScenes.map((scene, index) => {
-          const active = scene.key === "cafe";
+    <View style={styles.sceneSelectorWrap}>
+      <View style={styles.sceneSelectorRow}>
+        {selectableScenes.map((scene) => {
           const selected = scene.key === selectedScene;
           const iconSize = compact ? 15 : 17;
-          const iconColor = active ? WHITE : scene.accent;
 
           return (
-            <Fragment key={scene.key}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Afficher la scène ${scene.title}`}
-                accessibilityState={{ selected }}
-                hitSlop={9}
-                onPress={() => onSelect(scene.key)}
-                style={({ pressed }) => [
-                  styles.timelineStep,
-                  pressed && styles.timelineStepPressed,
+            <Pressable
+              key={scene.key}
+              accessibilityRole="button"
+              accessibilityLabel={`Afficher la scène ${scene.title}`}
+              accessibilityState={{ selected }}
+              hitSlop={7}
+              onPress={() => onSelect(scene.key)}
+              style={({ pressed }) => [
+                styles.sceneSelectorStep,
+                pressed && styles.sceneSelectorStepPressed,
+              ]}
+            >
+              <View
+                style={[
+                  styles.sceneSelectorNode,
+                  {
+                    width: nodeSize,
+                    height: nodeSize,
+                    borderRadius: nodeSize / 2,
+                    borderColor: scene.accent,
+                    backgroundColor: selected ? scene.accent : "#0D101C",
+                    shadowColor: scene.accent,
+                  },
+                  selected
+                    ? styles.sceneSelectorNodeSelected
+                    : styles.sceneSelectorNodeIdle,
                 ]}
               >
-                <View
-                  style={[
-                    styles.timelineNode,
-                    {
-                      width: nodeSize,
-                      height: nodeSize,
-                      borderRadius: nodeSize / 2,
-                      borderColor: active ? PINK : scene.accent,
-                      shadowColor: active ? PINK : scene.accent,
-                    },
-                    active
-                      ? styles.timelineNodeActive
-                      : styles.timelineNodeUnlocked,
-                    !active && selected && styles.timelineNodePreviewSelected,
-                  ]}
-                >
-                  <SceneGlyph
-                    sceneKey={scene.key}
-                    size={iconSize}
-                    color={iconColor}
-                  />
-                </View>
-                <AppText
-                  variant={compact ? "caption" : "bodySecondary"}
-                  style={styles.timelineTitle}
-                >
-                  {scene.title}
-                </AppText>
-                <AppText variant="caption" style={styles.timelineSubtitle}>
-                  {scene.timelineSubtitle}
-                </AppText>
-              </Pressable>
-              {index < journeyScenes.length - 1
-                ? renderConnector(index)
-                : null}
-            </Fragment>
+                <SceneGlyph
+                  sceneKey={scene.key}
+                  size={iconSize}
+                  color={selected ? WHITE : scene.accent}
+                />
+              </View>
+              <AppText
+                variant={compact ? "caption" : "bodySecondary"}
+                numberOfLines={1}
+                style={[
+                  styles.sceneSelectorTitle,
+                  selected && styles.sceneSelectorTitleSelected,
+                ]}
+              >
+                {scene.title}
+              </AppText>
+              <AppText
+                variant="caption"
+                numberOfLines={1}
+                style={styles.sceneSelectorSubtitle}
+              >
+                {scene.timelineSubtitle}
+              </AppText>
+            </Pressable>
           );
         })}
       </View>
@@ -521,10 +511,10 @@ export default function OnboardingScreen() {
       heroHeight: isTablet ? 382 : Math.round(lerp(198, 344, verticalProgress)),
       heroPaddingX: Math.round(lerp(14, 21, verticalProgress)),
       heroPaddingY: Math.round(lerp(10, 17, verticalProgress)),
-      timelineTop: Math.round(lerp(9, 28, verticalProgress)),
-      timelineLabelBottom: Math.round(lerp(6, 12, verticalProgress)),
+      selectorTop: Math.round(lerp(9, 28, verticalProgress)),
+      selectorLabelBottom: Math.round(lerp(6, 12, verticalProgress)),
       nodeSize: isTablet ? 45 : Math.round(lerp(36, 43, verticalProgress)),
-      timelineBottom: Math.round(lerp(11, 34, verticalProgress)),
+      selectorBottom: Math.round(lerp(11, 34, verticalProgress)),
       primaryHeight: Math.round(lerp(48, 60, verticalProgress)),
       secondaryHeight: Math.round(lerp(38, 46, verticalProgress)),
       hubTop: Math.round(lerp(7, 11, verticalProgress)),
@@ -863,17 +853,17 @@ export default function OnboardingScreen() {
                 verticalPadding={sceneLayout.heroPaddingY}
               />
 
-              <View style={{ marginTop: sceneLayout.timelineTop }}>
+              <View style={{ marginTop: sceneLayout.selectorTop }}>
                 <AppText
                   variant="sectionLabel"
                   style={[
-                    styles.journeyLabel,
-                    { marginBottom: sceneLayout.timelineLabelBottom },
+                    styles.selectorLabel,
+                    { marginBottom: sceneLayout.selectorLabelBottom },
                   ]}
                 >
-                  TON PARCOURS CE SOIR
+                  CHOISIS TA PREMIÈRE IMMERSION
                 </AppText>
-                <JourneyTimeline
+                <SceneSelector
                   selectedScene={selectedScene}
                   nodeSize={sceneLayout.nodeSize}
                   compact={compact}
@@ -881,7 +871,7 @@ export default function OnboardingScreen() {
                 />
               </View>
 
-              <View style={{ marginTop: sceneLayout.timelineBottom }}>
+              <View style={{ marginTop: sceneLayout.selectorBottom }}>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={`Commencer par ${selectedSceneData.title}`}
@@ -1072,74 +1062,45 @@ const styles = StyleSheet.create({
     marginTop: 7,
     letterSpacing: 0.3,
   },
-  journeyLabel: { color: "#696C84" },
-  timelineWrap: { width: "100%" },
-  timelineConnector: {
-    flex: 0.6,
-    borderRadius: 1,
+  selectorLabel: { color: "#696C84" },
+  sceneSelectorWrap: { width: "100%" },
+  sceneSelectorRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
   },
-  timelineConnectorSolid: {
-    height: 2,
-    backgroundColor: "rgba(255,255,255,0.30)",
+  sceneSelectorStep: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: "center",
+    paddingHorizontal: 2,
   },
-  timelineConnectorDashed: {
-    height: 0,
-    borderTopWidth: 2,
-    borderStyle: "dashed",
-    borderColor: "rgba(92,96,120,0.72)",
-  },
-  timelineRow: { flexDirection: "row", alignItems: "flex-start" },
-  timelineStep: { flex: 1, alignItems: "center", minWidth: 0 },
-  timelineStepPressed: { opacity: 0.76 },
-  timelineNode: {
+  sceneSelectorStepPressed: { opacity: 0.76 },
+  sceneSelectorNode: {
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#0D101C",
     shadowOffset: { width: 0, height: 0 },
+  },
+  sceneSelectorNodeIdle: {
     shadowOpacity: 0.08,
     shadowRadius: 5,
     elevation: 1,
   },
-  timelineNodeActive: {
+  sceneSelectorNodeSelected: {
     borderWidth: 0,
-    backgroundColor: PINK,
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
-  timelineNodeUnlocked: {
-    backgroundColor: "#0D101C",
-  },
-  timelineNodePreviewSelected: {
-    backgroundColor: "rgba(255,255,255,0.035)",
-    shadowOpacity: 0.2,
-    shadowRadius: 7,
-    elevation: 2,
-  },
-  timelineNodeLocked: {
-    borderColor: "#66697F",
-    borderStyle: "dashed",
-    backgroundColor: "#0A0C16",
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  timelineLockedCount: {
-    color: "#777A90",
-    fontFamily: AppFontFamily.outfit.medium,
-    fontSize: 11,
-    lineHeight: 14,
-    letterSpacing: -0.2,
-  },
-  timelineTitle: {
-    color: "#EDEAF0",
+  sceneSelectorTitle: {
+    color: "#C9C7D0",
     marginTop: 5,
     textAlign: "center",
   },
-  timelineTitleLocked: {
-    color: "#AAAABD",
-  },
-  timelineSubtitle: {
+  sceneSelectorTitleSelected: { color: WHITE },
+  sceneSelectorSubtitle: {
     color: "#5E6077",
     marginTop: 0,
     textAlign: "center",
