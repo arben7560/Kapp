@@ -1038,19 +1038,22 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                           variant="bodyStrong"
                           style={{ color: isCurrentAnswerCorrect ? SUCCESS : ERROR }}
                         >
-                          {isCurrentAnswerCorrect ? "Bien vu" : "À revoir"}
+                          {isCurrentAnswerCorrect ? "Bonne réponse" : "Mauvaise réponse"}
                         </AppText>
-                        <AppText variant="bodyStrong" style={styles.teacherFeedbackText}>
-                          {teacherFeedback}
-                        </AppText>
-                        {!isCurrentAnswerCorrect ? (
-                          <AppText variant="bodySecondary" style={styles.expectedAnswerText}>
-                            À retenir : {correctAnswerLabel}
+                        {isCurrentAnswerCorrect ? (
+                          <AppText variant="bodyStrong" style={styles.teacherFeedbackText}>
+                            {teacherFeedback}
                           </AppText>
-                        ) : null}
-                        <AppText variant="bodySecondary" style={styles.feedbackText}>
-                          {currentQuestion.explanation}
-                        </AppText>
+                        ) : (
+                          <>
+                            <AppText variant="bodySecondary" style={styles.expectedAnswerText}>
+                              À retenir : {correctAnswerLabel}
+                            </AppText>
+                            <AppText variant="bodySecondary" style={styles.feedbackText}>
+                              {currentQuestion.explanation}
+                            </AppText>
+                          </>
+                        )}
                         <Pressable onPress={continueQuiz} style={styles.continueButton}>
                           <LinearGradient
                             colors={[HANGUL_ACCENT, HANGUL_SECONDARY]}
