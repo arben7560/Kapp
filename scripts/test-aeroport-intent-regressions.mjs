@@ -29,6 +29,12 @@ const route = {
   korean: "서울역까지 어떻게 가요?",
   nextNodeId: "ia_transport",
 };
+const continueChoice = {
+  id: "choice_ready",
+  label: "Demander la suite",
+  korean: "네, 그다음은요?",
+  nextNodeId: "ia_train_choice",
+};
 const trainChoice = {
   id: "choice_which_train",
   label: "Demander quel train choisir",
@@ -46,6 +52,12 @@ const repeat = {
   label: "Demander de répéter",
   korean: "다시 한번 말씀해 주세요.",
   nextNodeId: "ia_recommend_repeat",
+};
+const thanks = {
+  id: "choice_thanks",
+  label: "Remercier l’agent",
+  korean: "감사합니다.",
+  nextNodeId: "ia_end",
 };
 
 test("l’intention trajet accepte les formulations méthode/chemin sans exiger la phrase modèle", () => {
@@ -101,12 +113,50 @@ test("une simple localisation de Seoul Station reste distincte d’une demande d
   }
 });
 
-test("les fins déclaratives ne sont plus prises pour une question de quai", () => {
+test("un acquiescement peut précéder la vraie intention sans créer une fausse ambiguïté", () => {
+  for (const transcript of [
+    "알겠습니다. 그다음은요?",
+    "네, 알겠습니다. 그다음은요?",
+    "감사합니다. 그다음은요?",
+  ]) {
+    const result = matchAeroportSpeechIntent(transcript, [continueChoice, repeat]);
+    assert.equal(result.reason, "matched", transcript);
+    assert.equal(result.choice?.id, continueChoice.id, transcript);
+    assert.equal(result.interpretedIntent, "continue", transcript);
+  }
+
+  const acknowledgementOnly = matchAeroportSpeechIntent(
+    "네, 알겠습니다.",
+    [continueChoice, repeat],
+  );
+  assert.equal(acknowledgementOnly.reason, "needs-help");
+  assert.equal(acknowledgementOnly.category, "incomplete");
+  assert.equal(acknowledgementOnly.choice, null);
+});
+
+test("un acquiescement reste une clôture valable au dernier tour", () => {
+  for (const transcript of ["알겠습니다.", "네, 알겠습니다.", "이해했어요."]) {
+    const result = matchAeroportSpeechIntent(transcript, [thanks, repeat]);
+    assert.equal(result.reason, "matched", transcript);
+    assert.equal(result.choice?.id, thanks.id, transcript);
+  }
+});
+
+test("les fins déclaratives ou confirmations vagues ne deviennent pas une question de quai", () => {
   for (const transcript of [
     "플랫폼 좋아요.",
     "승강장 맞아요.",
+    "플랫폼 맞아요?",
   ]) {
     const result = matchAeroportSpeechIntent(transcript, [platform, repeat]);
+    assert.notEqual(result.reason, "matched", transcript);
+    assert.equal(result.choice, null, transcript);
+  }
+});
+
+test("un avis vague sur un train ne devient pas une demande de recommandation", () => {
+  for (const transcript of ["직통열차 좋아요.", "직통열차 좋아요?"]) {
+    const result = matchAeroportSpeechIntent(transcript, [trainChoice, repeat]);
     assert.notEqual(result.reason, "matched", transcript);
     assert.equal(result.choice, null, transcript);
   }
