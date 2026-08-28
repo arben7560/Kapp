@@ -542,9 +542,6 @@ function getIntentSignals(value: string, transcript: string) {
     "다시",
     "한번더",
     "천천히",
-    "못들었",
-    "잘안들려",
-    "뭐라고하셨어",
   ])) {
     signals.add("repeat");
   }
@@ -555,9 +552,6 @@ function getIntentSignals(value: string, transcript: string) {
     "이해했",
     "알겠습니다",
     "알겠어요",
-    "도움이됐",
-    "덕분에알겠",
-    "이제찾을수있",
   ])) {
     signals.add("thanks");
   }
@@ -688,8 +682,8 @@ function getIncompleteFeedback(
   }
   if (
     intents.has("continue") &&
-    (["네", "예", "알겠어요", "알겠습니다", "이해했어요"].includes(value) ||
-      includesAny(value, ["다음"])) &&
+    (["네", "예"].includes(value) ||
+      includesAny(value, ["알겠어요", "알겠습니다", "이해했어요", "다음"])) &&
     !signals.includes("continue")
   ) {
     return `Tu montres que tu as compris, mais tu n’as pas encore demandé l’étape suivante. ${expectation}`;
