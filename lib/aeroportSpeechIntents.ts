@@ -114,6 +114,9 @@ const NATURAL_VARIANTS: Readonly<
   ],
   continue: [
     "알겠어요그다음어떻게하면돼요",
+    "알겠습니다그다음어떻게하면돼요",
+    "알겠습니다그다음은요",
+    "네알겠습니다그다음은요",
     "네그다음은요",
     "그다음은요",
     "다음은요",
@@ -226,6 +229,30 @@ function hasAirportRailLocationRequest(value: string, transcript: string) {
     "가야해",
     "가면돼",
   ]);
+}
+
+function hasTrainChoiceRequest(value: string) {
+  if (includesAny(value, ["뭘타야", "어떤걸타", "무슨열차", "어느열차", "어떤열차"])) {
+    return true;
+  }
+
+  const hasTrainAnchor = includesAny(value, ["열차", "기차", "직통", "일반"]);
+  if (!hasTrainAnchor) return false;
+
+  if (includesAny(value, ["추천", "타야", "타면", "어느", "어떤", "뭐", "무엇"])) {
+    return true;
+  }
+
+  return includesAny(value, ["직통"]) &&
+    includesAny(value, ["일반"]) &&
+    includesAny(value, ["좋", "나아"]);
+}
+
+function hasPlatformLocationRequest(value: string) {
+  const hasPlatformAnchor = includesAny(value, ["플랫폼", "승강장", "타는곳"]);
+  if (!hasPlatformAnchor) return false;
+
+  return includesAny(value, ["어디", "위치", "몇번", "어느쪽"]);
 }
 
 function recoverProbableTranscription(value: string) {
@@ -459,14 +486,7 @@ const CONTEXTUAL_RULES: readonly ContextualRule[] = [
     understood: "tu demandes quel train choisir entre le direct et le train avec arrêts",
     guidance:
       "La question est suffisamment claire. « 어느 열차를 타는 게 좋을까요? » est une autre possibilité, pas une correction obligatoire.",
-    matches: (value) => includesAny(value, [
-      "직통이좋",
-      "일반이좋",
-      "뭘타야돼",
-      "무슨열차",
-      "어떤걸타",
-      "빠른열차",
-    ]),
+    matches: (value) => hasTrainChoiceRequest(value),
   },
   {
     targetIntent: "platform",
@@ -509,6 +529,10 @@ const CONTEXTUAL_RULES: readonly ContextualRule[] = [
         "이제찾을수있",
         "어디로갈지알겠",
         "도움이됐",
+        "알겠어요",
+        "알겠습니다",
+        "이해했어요",
+        "이해했습니다",
       ]) || ["네", "예"].includes(value),
   },
 ] as const;
@@ -548,16 +572,11 @@ function getIntentSignals(value: string, transcript: string) {
   if (includesAny(value, ["그다음", "다음은", "이제뭐", "이제어디로", "그후"])) {
     signals.add("continue");
   }
-  if (
-    (includesAny(value, ["열차", "기차", "직통", "일반"]) &&
-      includesAny(value, ["어느", "어떤", "뭐", "추천", "좋", "타야", "타면"])) ||
-    includesAny(value, ["뭘타야", "어떤걸타"])
-  ) {
+  if (hasTrainChoiceRequest(value)) {
     signals.add("train-choice");
   }
   if (
-    (includesAny(value, ["플랫폼", "승강장", "타는곳"]) &&
-      hasQuestionShape(value, transcript)) ||
+    hasPlatformLocationRequest(value) ||
     includesAny(value, ["어디서타", "어디에서타"])
   ) {
     signals.add("platform");
@@ -569,14 +588,10 @@ function getIntentSignals(value: string, transcript: string) {
   ])) {
     signals.add("repeat");
   }
-  if (includesAny(value, [
-    "감사",
-    "고맙",
-    "고마",
-    "이해했",
-    "알겠습니다",
-    "알겠어요",
-  ])) {
+  if (
+    signals.size === 0 &&
+    includesAny(value, ["감사", "고맙", "고마"])
+  ) {
     signals.add("thanks");
   }
 
