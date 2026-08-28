@@ -107,6 +107,10 @@ const NATURAL_VARIANTS: Readonly<
     "서울역가려면어디로가면돼요",
     "서울역가는길좀알려주세요",
     "서울역가는길알려주실수있어요",
+    "서울역가는방법이뭐예요",
+    "서울역가는방법좀알려주세요",
+    "서울역가는법이뭐예요",
+    "서울역가는법좀알려주세요",
   ],
   continue: [
     "알겠어요그다음어떻게하면돼요",
@@ -186,25 +190,41 @@ function hasQuestionShape(value: string, transcript: string) {
     "무엇",
     "나요",
     "까요",
-    "돼요",
-    "좋아요",
-    "타요",
-    "해야해요",
     "있나요",
-    "맞아요",
     "주실수있어요",
   ]);
 }
 
 function hasNegation(value: string) {
   return includesAny(value, [
-    "안",
     "못",
     "않",
     "아니",
     "말고",
     "필요없",
     "싫",
+  ]);
+}
+
+function hasAirportRailLocationRequest(value: string, transcript: string) {
+  if (!includesAny(value, ["공항철도", "arex"])) return false;
+
+  const locationOrBoardingCue = includesAny(value, [
+    "어디",
+    "위치",
+    "타는곳",
+    "승차",
+    "타려면",
+    "이용하려면",
+    "찾아가",
+  ]);
+  if (!locationOrBoardingCue) return false;
+
+  return hasQuestionShape(value, transcript) || includesAny(value, [
+    "알려주",
+    "찾고있",
+    "가야해",
+    "가면돼",
   ]);
 }
 
@@ -406,13 +426,16 @@ const CONTEXTUAL_RULES: readonly ContextualRule[] = [
   },
   {
     targetIntent: "route",
-    examples: ["공항철도는 어디예요?", "AREX는 어디서 타요?"],
+    examples: [
+      "공항철도는 어디예요?",
+      "AREX는 어디서 타요?",
+      "공항철도 타려면 어디로 가야 해요?",
+    ],
     confidence: "matched",
     understood: "tu cherches l’AREX ou le train de l’aéroport",
     guidance:
       "C’est une demande naturelle dans ce contexte. Si tu veux préciser la destination, tu peux ajouter « 서울역 가는… », mais ce n’est pas obligatoire ici.",
-    matches: (value, transcript) =>
-      includesAny(value, ["공항철도", "arex"]) && hasQuestionShape(value, transcript),
+    matches: (value, transcript) => hasAirportRailLocationRequest(value, transcript),
   },
   {
     targetIntent: "continue",
@@ -506,18 +529,19 @@ function getIntentSignals(value: string, transcript: string) {
   const signals = new Set<Exclude<AeroportSpeechIntent, "unknown">>();
   const seoulStation = hasSeoulStation(value);
 
+  const routeMovementRequest = includesAny(value, [
+    "어떻게가",
+    "어디로가",
+    "어디로가면",
+    "가려면",
+    "가는길",
+    "가는방법",
+    "가는법",
+    "가는공항철도",
+  ]);
   if (
     seoulStation &&
-    (includesAny(value, [
-      "어떻게가",
-      "어디로가",
-      "어디로가면",
-      "가려면",
-      "가는길",
-      "가는공항철도",
-      "어디서타",
-      "알려주",
-    ]) || includesAny(value, ["공항철도", "arex"]))
+    (routeMovementRequest || includesAny(value, ["공항철도", "arex"]))
   ) {
     signals.add("route");
   }
@@ -668,7 +692,12 @@ function getIncompleteFeedback(
   const expectation = getCurrentExpectation(choices);
 
   if (intents.has("route") && hasSeoulStation(value) && !signals.includes("route")) {
-    if (includesAny(value, ["서울역어디예요", "seoulstation어디예요"])) {
+    if (includesAny(value, [
+      "서울역어디예요",
+      "서울역위치",
+      "seoulstation어디예요",
+      "seoulstation위치",
+    ])) {
       return `Tu demandes où se trouve Seoul Station, mais pas encore comment la rejoindre depuis l’aéroport. ${expectation}`;
     }
     return `La destination Seoul Station est claire, mais tu n’as pas encore formulé la demande de trajet. ${expectation}`;
