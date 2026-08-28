@@ -82,8 +82,8 @@ const SCENES = [
       },
       {
         char: "Barista",
-        kr: "총 9 500원입니다. 카드로 결제하시겠어요, 아니면 현금으로 하시겠어요?",
-        fr: "Cela fait 9 500 wons au total. Vous souhaitez payer par carte ou en espèces ?",
+        kr: "카드로 결제하시겠어요, 아니면 현금으로 하시겠어요?",
+        fr: "Vous souhaitez payer par carte ou en espèces ?",
         side: "server",
       },
       {
