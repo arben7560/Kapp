@@ -4,7 +4,10 @@ import { resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { releaseAudioResources } from "../lib/audioPlayerLifecycle.ts";
+import {
+  pauseAudioResources,
+  releaseAudioResources,
+} from "../lib/audioPlayerLifecycle.ts";
 import { runIfCurrentGeneration } from "../lib/callbackGeneration.ts";
 import { createSerializedLatestRequest } from "../lib/latestMediaRequest.ts";
 import { shouldStartVideoPlayback } from "../lib/mediaPlaybackPolicy.ts";
@@ -734,6 +737,59 @@ test("a native Hangul error cleans the player and releases shortPlayback", async
   assert.match(hangulHook, /\.catch\(\(\) =>/u);
 
   assert.match(hangulHook, /releaseAudioResources/u);
+});
+
+test("reusable audio playback pauses without releasing the native player", () => {
+  let listenerRemovals = 0;
+  let pauses = 0;
+  let playerRemovals = 0;
+
+  const player = {
+    pause() {
+      pauses += 1;
+    },
+
+    remove() {
+      playerRemovals += 1;
+    },
+  };
+
+  const listener = {
+    remove() {
+      listenerRemovals += 1;
+    },
+  };
+
+  pauseAudioResources(player, listener);
+
+  assert.equal(listenerRemovals, 1);
+  assert.equal(pauses, 1);
+  assert.equal(playerRemovals, 0);
+
+  releaseAudioResources(player, null);
+
+  assert.equal(pauses, 2);
+  assert.equal(playerRemovals, 1);
+});
+
+test("Android short audio hooks reuse players between sources", () => {
+  const vocHook = source("hooks/useVocAudio.ts");
+  const hangulHook = source("hooks/useHangulAudio.ts");
+
+  assert.match(
+    vocHook,
+    /if \(playerRef\.current\)[\s\S]*?player\.replace\(audioSource\)[\s\S]*?else[\s\S]*?createAudioPlayer\(audioSource/u,
+  );
+  assert.match(
+    hangulHook,
+    /const player = playerRef\.current[\s\S]*?createAudioPlayer\(source[\s\S]*?if \(playerRef\.current\)[\s\S]*?player\.replace\(source\)/u,
+  );
+
+  assert.equal(vocHook.match(/createAudioPlayer\(audioSource/gu)?.length, 1);
+  assert.equal(hangulHook.match(/createAudioPlayer\(source/gu)?.length, 1);
+
+  assert.match(vocHook, /discardPlayer\(activePlayer, "error"\)/u);
+  assert.match(hangulHook, /if \(status\.error\)[\s\S]*?discardPlayer\(\)/u);
 });
 
 test("late video events from source A cannot affect source B", () => {

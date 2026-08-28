@@ -10,7 +10,10 @@ import {
   hasHangulAudio,
   type HangulAudioSource,
 } from "../data/hangul/audio";
-import { releaseAudioResources } from "../lib/audioPlayerLifecycle";
+import {
+  pauseAudioResources,
+  releaseAudioResources,
+} from "../lib/audioPlayerLifecycle";
 import { mediaSession } from "../lib/mediaSession";
 import type { MediaSessionLease } from "../lib/mediaSessionCore";
 
@@ -50,7 +53,19 @@ export function useHangulAudio() {
   const requestIdRef = useRef(0);
   const leaseRef = useRef<MediaSessionLease | null>(null);
 
-  const releasePlayer = useCallback(() => {
+  const stopPlayer = useCallback(() => {
+    if (sequenceTimerRef.current) {
+      clearTimeout(sequenceTimerRef.current);
+      sequenceTimerRef.current = null;
+    }
+
+    const listener = listenerRef.current;
+    listenerRef.current = null;
+    const player = playerRef.current;
+    pauseAudioResources(player, listener);
+  }, []);
+
+  const discardPlayer = useCallback(() => {
     if (sequenceTimerRef.current) {
       clearTimeout(sequenceTimerRef.current);
       sequenceTimerRef.current = null;
@@ -65,13 +80,13 @@ export function useHangulAudio() {
 
   const stopAudio = useCallback(() => {
     requestIdRef.current += 1;
-    releasePlayer();
+    stopPlayer();
     const lease = leaseRef.current;
     leaseRef.current = null;
     if (lease) {
       void mediaSession.release(lease);
     }
-  }, [releasePlayer]);
+  }, [stopPlayer]);
 
   const playAudio = useCallback(
     (value: string) => {
@@ -100,22 +115,30 @@ export function useHangulAudio() {
           return;
         }
 
-        releasePlayer();
+        stopPlayer();
 
         try {
-          const player = createAudioPlayer(source, { updateInterval: 100 });
-          playerRef.current = player;
+          const player = playerRef.current
+            ? playerRef.current
+            : createAudioPlayer(source, { updateInterval: 100 });
+
+          if (playerRef.current) {
+            player.replace(source);
+          } else {
+            playerRef.current = player;
+          }
+
           listenerRef.current = player.addListener(
             "playbackStatusUpdate",
             (status) => {
               if (requestId !== requestIdRef.current) {
-                releasePlayer();
+                stopPlayer();
                 return;
               }
 
               if (status.error) {
                 requestIdRef.current += 1;
-                releasePlayer();
+                discardPlayer();
                 const lease = leaseRef.current;
                 leaseRef.current = null;
                 if (lease) {
@@ -126,7 +149,7 @@ export function useHangulAudio() {
 
               if (!didPlaybackFinish(status)) return;
 
-              releasePlayer();
+              stopPlayer();
               if (index + 1 >= sources.length) {
                 const lease = leaseRef.current;
                 leaseRef.current = null;
@@ -144,7 +167,7 @@ export function useHangulAudio() {
           );
           player.play();
         } catch {
-          releasePlayer();
+          discardPlayer();
           const lease = leaseRef.current;
           leaseRef.current = null;
           if (lease) {
@@ -161,7 +184,7 @@ export function useHangulAudio() {
             if (requestId !== requestIdRef.current) return;
             requestIdRef.current += 1;
             leaseRef.current = null;
-            releasePlayer();
+            stopPlayer();
           },
         })
         .then((lease) => {
@@ -179,11 +202,11 @@ export function useHangulAudio() {
           if (requestId !== requestIdRef.current) return;
           requestIdRef.current += 1;
           leaseRef.current = null;
-          releasePlayer();
+          discardPlayer();
         });
       return true;
     },
-    [releasePlayer, stopAudio],
+    [discardPlayer, stopAudio, stopPlayer],
   );
 
   useFocusEffect(
@@ -193,8 +216,16 @@ export function useHangulAudio() {
   );
 
   useEffect(() => {
-    return stopAudio;
-  }, [stopAudio]);
+    return () => {
+      requestIdRef.current += 1;
+      discardPlayer();
+      const lease = leaseRef.current;
+      leaseRef.current = null;
+      if (lease) {
+        void mediaSession.release(lease);
+      }
+    };
+  }, [discardPlayer]);
 
   return { hasAudio: hasHangulAudio, playAudio, stopAudio };
 }
