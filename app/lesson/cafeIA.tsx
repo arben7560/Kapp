@@ -680,6 +680,11 @@ export default function CafeIaScreen() {
     router.replace("/(tabs)");
   }, [cancelSpeechRecognition]);
 
+  const handleOpenVocabulary = useCallback(() => {
+    cancelSpeechRecognition();
+    router.push("/lesson/cafe");
+  }, [cancelSpeechRecognition]);
+
   const handleRetryVideo = useCallback(() => {
     hasAdvancedFromVideoRef.current = false;
     markMediaLoading();
@@ -1065,6 +1070,27 @@ export default function CafeIaScreen() {
                           Rejouer la scène
                         </AppText>
                       </LinearGradient>
+                    </Pressable>
+
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Ouvrir la fiche vocabulaire du café"
+                      hitSlop={6}
+                      onPress={handleOpenVocabulary}
+                      style={({ pressed }) => [
+                        styles.endActionSecondary,
+                        { opacity: pressed ? 0.9 : 1 },
+                      ]}
+                    >
+                      <AppText
+                        variant="button"
+                        tone="strong"
+                        script="latin"
+                        align="center"
+                        style={styles.endActionSecondaryText}
+                      >
+                        Fiche vocabulaire
+                      </AppText>
                     </Pressable>
 
                     <Pressable
