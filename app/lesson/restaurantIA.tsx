@@ -762,6 +762,11 @@ export default function RestaurantIaScreen() {
     router.replace("/(tabs)");
   }, [cancelSpeechRecognition]);
 
+  const handleOpenVocabulary = useCallback(() => {
+    cancelSpeechRecognition();
+    router.push("/lesson/restaurant");
+  }, [cancelSpeechRecognition]);
+
   const handleRetryVideo = useCallback(() => {
     confirmedVideoNodeIdRef.current = null;
     hasAdvancedFromVideoRef.current = false;
@@ -1132,6 +1137,27 @@ export default function RestaurantIaScreen() {
                           Rejouer la scène
                         </AppText>
                       </LinearGradient>
+                    </Pressable>
+
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Ouvrir la fiche vocabulaire du restaurant"
+                      hitSlop={6}
+                      onPress={handleOpenVocabulary}
+                      style={({ pressed }) => [
+                        styles.endActionSecondary,
+                        { opacity: pressed ? 0.9 : 1 },
+                      ]}
+                    >
+                      <AppText
+                        variant="button"
+                        tone="strong"
+                        script="latin"
+                        align="center"
+                        style={styles.endActionSecondaryText}
+                      >
+                        Fiche vocabulaire
+                      </AppText>
                     </Pressable>
 
                     <Pressable
