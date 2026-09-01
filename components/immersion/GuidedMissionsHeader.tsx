@@ -248,7 +248,9 @@ function MissionMasteryCelebrationModal({
                   },
                 ]}
               >
-                <Check size={40} strokeWidth={2.6} color="#F8FAFC" />
+                <View style={styles.successCheck}>
+                  <Check size={40} strokeWidth={2.6} color="#F8FAFC" />
+                </View>
               </View>
             </View>
 
@@ -494,6 +496,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.52,
     shadowRadius: 18,
     elevation: 7,
+  },
+  successCheck: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    transform: [{ translateY: -2 }],
   },
   celebrationEyebrowRow: {
     flexDirection: "row",

@@ -101,6 +101,46 @@ function classifyResult(
   }
 }
 
+const CAFE_PRODUCT_ORDER_INTENT_IDS = new Set([
+  "americano-order",
+  "orange-juice-order",
+  "latte-order",
+  "cheesecake-order",
+]);
+
+function getMissingProductQuantityFeedback(
+  intentId: string | null,
+  transcript: string,
+  canonicalFormulation: string | null,
+  result: CafeSpeechIntentMatch,
+) {
+  if (
+    result.reason !== "matched" ||
+    result.feedback ||
+    !intentId ||
+    !CAFE_PRODUCT_ORDER_INTENT_IDS.has(intentId)
+  ) {
+    return null;
+  }
+
+  const normalized = transcript
+    .normalize("NFKC")
+    .toLocaleLowerCase("ko-KR")
+    .replace(/[\s\p{P}\p{S}]+/gu, "");
+  const hasExplicitQuantity =
+    /(?:한|두|세|네)(?:잔|조각|개)/u.test(normalized) ||
+    /(?:하나|둘|셋|넷)(?:주세요|줘요|줘|잔|조각|개|요)/u.test(normalized) ||
+    /[1-9](?:잔|조각|개)/u.test(normalized);
+
+  if (hasExplicitQuantity) return null;
+
+  const model = canonicalFormulation
+    ? ` Par exemple : « ${canonicalFormulation.replace(/[.!?…]+$/u, "")} ».`
+    : "";
+
+  return `Ta commande est comprise, mais tu n’as pas précisé la quantité. Au café, pense à indiquer combien tu en veux avec le compteur adapté.${model}`;
+}
+
 function normalizeDuplicateKey(value: string) {
   return value
     .normalize("NFKC")
@@ -126,16 +166,27 @@ export function recordCafeSpeechAttempt(
   memory: CafeConversationMemory,
   input: RecordCafeSpeechAttemptInput,
 ): CafeConversationMemory {
-  const resultType = classifyResult(input.result);
+  const choice = input.result.choice;
+  const inputIntentId = input.intent?.intentId ?? null;
+  const canonicalFormulation =
+    input.intent?.canonicalFormulation ?? choice?.korean ?? null;
+  const missingQuantityFeedback = getMissingProductQuantityFeedback(
+    inputIntentId,
+    input.recordedTranscript,
+    canonicalFormulation,
+    input.result,
+  );
+  const feedback = missingQuantityFeedback ?? input.result.feedback;
+  const resultType = missingQuantityFeedback
+    ? "understood-with-grammar-correction"
+    : classifyResult(input.result);
   const attemptNumber =
     memory.attempts.filter(({ nodeId }) => nodeId === input.nodeId).length + 1;
   const id = `${input.nodeId}:${attemptNumber}`;
-  const choice = input.result.choice;
-  const inputIntentId = input.intent?.intentId ?? null;
   const currentDiagnosticKey = getAttemptDiagnosticKey(
     resultType,
     inputIntentId,
-    input.result.feedback,
+    feedback,
     input.recordedTranscript,
   );
 
@@ -176,10 +227,9 @@ export function recordCafeSpeechAttempt(
         intentId: inputIntentId,
         detectedIntent:
           input.intent?.detectedIntent ?? choice?.label ?? null,
-        canonicalFormulation:
-          input.intent?.canonicalFormulation ?? choice?.korean ?? null,
+        canonicalFormulation,
         resultType,
-        feedback: input.result.feedback,
+        feedback,
         attemptNumber,
         correctedDuringScene: false,
         correctedByAttemptId: null,

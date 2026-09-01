@@ -4,6 +4,20 @@ import { shuffleArray, type RandomSource } from "./choiceOrder.ts";
 const correctAnswerIndex = (question: HangulQuestion) =>
   question.options.findIndex((option) => option.value === question.answer);
 
+const relabelAudioChoicesByPosition = (
+  question: HangulQuestion,
+): HangulQuestion => {
+  if (question.type !== "character-to-sound") return question;
+
+  return {
+    ...question,
+    options: question.options.map((option, index) => ({
+      ...option,
+      label: `Son ${index + 1}`,
+    })),
+  };
+};
+
 const moveCorrectAnswerAwayFrom = (
   question: HangulQuestion,
   avoidedIndex: number,
@@ -75,7 +89,7 @@ export function shuffleHangulQuestions(
       repeatedPositionCount = 1;
     }
 
-    return shuffledQuestion;
+    return relabelAudioChoicesByPosition(shuffledQuestion);
   });
 }
 
@@ -167,10 +181,12 @@ export function advanceHangulQuiz(
           ...question,
           options: shuffleArray(question.options, random),
         };
-        return moveCorrectAnswerAwayFrom(
-          shuffledQuestion,
-          previousCorrectIndex,
-          random,
+        return relabelAudioChoicesByPosition(
+          moveCorrectAnswerAwayFrom(
+            shuffledQuestion,
+            previousCorrectIndex,
+            random,
+          ),
         );
       });
 
@@ -282,11 +298,11 @@ const restoreQuestionFromBank = (
         option !== undefined,
     );
 
-  return {
+  return relabelAudioChoicesByPosition({
     ...canonicalQuestion,
     options:
       restoredOptions.length === canonicalQuestion.options.length
         ? restoredOptions
         : canonicalQuestion.options,
-  };
+  });
 };

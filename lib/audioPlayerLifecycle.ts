@@ -7,8 +7,8 @@ export type ReleasableAudioPlayer = {
   remove: () => void;
 };
 
-export function releaseAudioResources(
-  player: ReleasableAudioPlayer | null,
+export function pauseAudioResources(
+  player: Pick<ReleasableAudioPlayer, "pause"> | null,
   listener: RemovableAudioSubscription | null,
 ) {
   try {
@@ -20,8 +20,15 @@ export function releaseAudioResources(
   try {
     player?.pause();
   } catch {
-    // A failed player can reject pause while still requiring release.
+    // A failed player may reject pause while it is being recreated.
   }
+}
+
+export function releaseAudioResources(
+  player: ReleasableAudioPlayer | null,
+  listener: RemovableAudioSubscription | null,
+) {
+  pauseAudioResources(player, listener);
 
   try {
     player?.remove();

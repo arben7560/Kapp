@@ -78,8 +78,10 @@ export function buildAeroportConversationSummary(
   memory: AeroportConversationMemory,
 ): AeroportConversationSummary {
   const directSuccesses = memory.attempts.filter(
-    ({ matched, understoodWithCorrection }) =>
-      matched && !understoodWithCorrection,
+    ({ matched, understoodWithCorrection, category }) =>
+      matched &&
+      !understoodWithCorrection &&
+      category !== "transcription-recovery",
   ).length;
   const understoodWithCorrection = memory.attempts.filter(
     ({ matched, understoodWithCorrection: corrected }) => matched && corrected,
@@ -95,7 +97,17 @@ export function buildAeroportConversationSummary(
       )
       .map(({ nodeId }) => nodeId),
   ).size;
-  const categories = new Set(memory.attempts.map(({ category }) => category));
+
+  // Une variante naturelle comprise par contexte n'est pas une lacune à revoir.
+  // On ne conserve ici que les diagnostics réellement bloquants ou les réponses
+  // explicitement comprises avec une correction pédagogique.
+  const pedagogicalIssues = memory.attempts.filter(
+    ({ matched, understoodWithCorrection }) =>
+      !matched || understoodWithCorrection,
+  );
+  const issueCategories = new Set(
+    pedagogicalIssues.map(({ category }) => category),
+  );
   const successfulIntents = new Set(
     memory.attempts
       .filter(({ matched }) => matched)
@@ -119,28 +131,40 @@ export function buildAeroportConversationSummary(
     achievements.push("Quai de l’AREX demandé");
   }
   if (successfulIntents.has("repeat")) {
-    achievements.push("Répétition demandée poliment");
+    achievements.push("Répétition demandée ou signalée clairement");
   }
   if (successfulIntents.has("thanks")) {
     achievements.push("Échange terminé naturellement");
   }
 
-  if (categories.has("contextual-interpretation")) {
-    vocabularyToReview.add("Reformuler précisément l’intention comprise");
+  if (issueCategories.has("contextual-interpretation")) {
+    vocabularyToReview.add("Transformer une intention comprise en demande suffisamment explicite");
   }
-  if (categories.has("wrong-destination")) {
+  if (issueCategories.has("minor-imperfection")) {
+    vocabularyToReview.add("Préciser la formulation sans changer l’intention");
+  }
+  if (issueCategories.has("register-imperfection")) {
+    vocabularyToReview.add("Avec un agent : garder une forme polie en 요 / 주세요");
+  }
+  if (issueCategories.has("wrong-destination")) {
     vocabularyToReview.add("Destination de la mission : 서울역");
   }
-  if (categories.has("quantity-conflict")) {
-    vocabularyToReview.add("Étage : ne donner qu’un seul numéro");
+  if (issueCategories.has("floor-conflict")) {
+    vocabularyToReview.add("Repère d’étage : 지하 1층 = sous-sol 1, différent de 1층");
   }
-  if (categories.has("negation-conflict")) {
-    vocabularyToReview.add("Négation : vérifier l’intention affirmée ou refusée");
+  if (issueCategories.has("quantity-conflict")) {
+    vocabularyToReview.add("Étage : ne donner qu’un seul repère après correction");
   }
-  if (categories.has("incomplete")) {
-    vocabularyToReview.add("Former une question complète avec 어디 / 어떻게");
+  if (issueCategories.has("negation-conflict")) {
+    vocabularyToReview.add("Négation : distinguer affirmation négative et question de confirmation");
   }
-  if (categories.has("out-of-scope")) {
+  if (issueCategories.has("incomplete")) {
+    vocabularyToReview.add("Compléter la demande avec l’information attendue à ce tour");
+  }
+  if (issueCategories.has("ambiguous")) {
+    vocabularyToReview.add("Exprimer une seule intention ou destination à la fois");
+  }
+  if (issueCategories.has("out-of-scope")) {
     vocabularyToReview.add("Répondre à l’étape actuelle de la conversation");
   }
 

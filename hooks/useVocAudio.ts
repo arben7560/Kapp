@@ -7,6 +7,7 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Vibration } from "react-native";
 import {
+  pauseAudioResources,
   releaseAudioResources,
   type RemovableAudioSubscription,
 } from "../lib/audioPlayerLifecycle";
@@ -73,7 +74,39 @@ export function useVocAudio(
     }
   }, []);
 
-  const releasePlayer = useCallback(
+  const stopPlayer = useCallback(
+    (
+      player: AudioPlayer,
+      nextState: VocAudioPlaybackState,
+      updateSelection = true,
+    ) => {
+      const activeListener =
+        playbackListenerRef.current?.player === player
+          ? playbackListenerRef.current.subscription
+          : null;
+
+      if (activeListener) {
+        playbackListenerRef.current = null;
+      }
+
+      pauseAudioResources(player, activeListener);
+
+      if (playerRef.current === player) {
+        playbackStartedRef.current = false;
+
+        if (updateSelection && mountedRef.current) {
+          setSelectedAudio(null);
+        }
+
+        if (mountedRef.current) {
+          setPlaybackState(nextState);
+        }
+      }
+    },
+    [setSelectedAudio],
+  );
+
+  const discardPlayer = useCallback(
     (
       player: AudioPlayer,
       nextState: VocAudioPlaybackState,
@@ -111,7 +144,7 @@ export function useVocAudio(
     const player = playerRef.current;
 
     if (player) {
-      releasePlayer(player, "idle");
+      stopPlayer(player, "idle");
     } else {
       const orphanedListener =
         playbackListenerRef.current?.subscription ?? null;
@@ -129,7 +162,7 @@ export function useVocAudio(
     if (lease) {
       void mediaSession.release(lease);
     }
-  }, [releasePlayer, setSelectedAudio]);
+  }, [setSelectedAudio, stopPlayer]);
 
   const playAudio = useCallback(
     async (
@@ -177,7 +210,7 @@ export function useVocAudio(
             leaseRef.current = null;
             const interruptedPlayer = playerRef.current;
             if (interruptedPlayer) {
-              releasePlayer(interruptedPlayer, "interrupted");
+              stopPlayer(interruptedPlayer, "interrupted");
             }
             playbackCallbacksRef.current.onInterrupted?.();
           },
@@ -190,11 +223,25 @@ export function useVocAudio(
         }
         leaseRef.current = lease;
 
-        player = createAudioPlayer(audioSource, {
-          updateInterval: 250,
-        });
+        if (playerRef.current) {
+          player = playerRef.current;
+          player.replace(audioSource);
+        } else {
+          player = createAudioPlayer(audioSource, {
+            updateInterval: 250,
+          });
+          playerRef.current = player;
+        }
         const activePlayer = player;
-        playerRef.current = activePlayer;
+
+        await activePlayer.seekTo(0);
+        if (
+          requestId !== requestIdRef.current ||
+          playerRef.current !== activePlayer
+        ) {
+          stopPlayer(activePlayer, "idle");
+          return;
+        }
 
         const subscription = activePlayer.addListener(
           "playbackStatusUpdate",
@@ -204,7 +251,7 @@ export function useVocAudio(
             if (status.error) {
               const playbackError = toPlaybackError(status.error);
               requestIdRef.current += 1;
-              releasePlayer(activePlayer, "error");
+              discardPlayer(activePlayer, "error");
               const currentLease = leaseRef.current;
               leaseRef.current = null;
               if (currentLease) {
@@ -249,7 +296,7 @@ export function useVocAudio(
             if (didFinish) {
               requestIdRef.current += 1;
               const completedAfterNativeStart = playbackStartedRef.current;
-              releasePlayer(activePlayer, "completed");
+              stopPlayer(activePlayer, "completed");
               const currentLease = leaseRef.current;
               leaseRef.current = null;
               if (currentLease) {
@@ -272,7 +319,7 @@ export function useVocAudio(
 
             if (wasInterrupted) {
               requestIdRef.current += 1;
-              releasePlayer(activePlayer, "interrupted");
+              stopPlayer(activePlayer, "interrupted");
               const currentLease = leaseRef.current;
               leaseRef.current = null;
               if (currentLease) {
@@ -288,15 +335,6 @@ export function useVocAudio(
           subscription,
         };
 
-        await activePlayer.seekTo(0);
-        if (
-          requestId !== requestIdRef.current ||
-          playerRef.current !== activePlayer
-        ) {
-          releasePlayer(activePlayer, "idle");
-          return;
-        }
-
         activePlayer.play();
       } catch (caughtError) {
         if (requestId !== requestIdRef.current) return;
@@ -305,7 +343,7 @@ export function useVocAudio(
         requestIdRef.current += 1;
 
         if (player) {
-          releasePlayer(player, "error");
+          discardPlayer(player, "error");
         } else {
           if (mountedRef.current) {
             setSelectedAudio(null);
@@ -327,8 +365,9 @@ export function useVocAudio(
     },
     [
       clearError,
-      releasePlayer,
+      discardPlayer,
       setSelectedAudio,
+      stopPlayer,
       stopAudio,
     ],
   );
@@ -352,7 +391,7 @@ export function useVocAudio(
 
       const player = playerRef.current;
       if (player) {
-        releasePlayer(player, "idle", false);
+        discardPlayer(player, "idle", false);
       } else {
         const orphanedListener =
           playbackListenerRef.current?.subscription ?? null;
@@ -365,7 +404,7 @@ export function useVocAudio(
         void mediaSession.release(lease);
       }
     };
-  }, [releasePlayer]);
+  }, [discardPlayer]);
 
   return {
     playAudio,
