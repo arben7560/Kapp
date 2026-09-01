@@ -483,7 +483,7 @@ export default function AccountScreen() {
       : mode === "sign-in"
         ? "J’ai déjà un compte"
         : mode === "reset"
-          ? "Mot de passe oublié"
+          ? "Email de récupération"
           : mode === "confirmation"
             ? "Confirmez votre email"
             : mode === "protection-success"
