@@ -789,7 +789,7 @@ function FeedbackCard({
   return (
     <BlurView intensity={58} tint="dark" style={[styles.feedbackCard, response.correct ? styles.feedbackCorrect : styles.feedbackWrong]}>
       <AppText variant="sectionLabel" style={response.correct ? styles.successText : styles.errorText}>
-        {response.correct ? "BIEN VU" : "À REVOIR"}
+        {response.correct ? "BONNE RÉPONSE" : "MAUVAISE RÉPONSE"}
       </AppText>
       <AppText variant="bodyStrong">{teacherLead}</AppText>
       {!response.correct ? (
@@ -845,7 +845,7 @@ function LessonResult({
         </AppText>
         <View style={styles.resultMetrics}>
           <Metric value={`${Math.round(ratio * 100)}%`} label="PRÉCISION" />
-          <Metric value={`${wrongResponses.length}`} label="À REVOIR" />
+          <Metric value={`${wrongResponses.length}`} label="MAUVAISE RÉPONSE" />
           <Metric value={`${session.attemptNumber}`} label="TENTATIVE" />
         </View>
       </BlurView>
