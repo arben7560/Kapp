@@ -1,0 +1,55 @@
+name: Add vocabulary links
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/add-vocabulary-links.yml'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch completion screens
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          configs = [
+              ('app/lesson/cafeIA.tsx', '/lesson/cafe', 'du café'),
+              ('app/lesson/restaurantIA.tsx', '/lesson/restaurant', 'du restaurant'),
+              ('app/lesson/aeroportIA.tsx', '/lesson/airport', "de l’aéroport"),
+          ]
+
+          for filename, route, label in configs:
+              path = Path(filename)
+              text = path.read_text(encoding='utf-8')
+
+              anchor = '    router.replace("/(tabs)");\n  }, [cancelSpeechRecognition]);\n\n  const handleRetryVideo = useCallback(() => {'
+              replacement = f'''    router.replace("/(tabs)");\n  }}, [cancelSpeechRecognition]);\n\n  const handleOpenVocabulary = useCallback(() => {{\n    cancelSpeechRecognition();\n    router.push("{route}");\n  }}, [cancelSpeechRecognition]);\n\n  const handleRetryVideo = useCallback(() => {{'''
+              if 'const handleOpenVocabulary = useCallback' not in text:
+                  if anchor not in text:
+                      raise RuntimeError(f'handler anchor missing in {filename}')
+                  text = text.replace(anchor, replacement, 1)
+
+              button_anchor = '                    <Pressable\n                      accessibilityRole="button"\n                      accessibilityLabel="Retour aux missions"'
+              if 'accessibilityLabel="Ouvrir la fiche vocabulaire' not in text:
+                  button = f'''                    <Pressable\n                      accessibilityRole="button"\n                      accessibilityLabel="Ouvrir la fiche vocabulaire {label}"\n                      hitSlop={{6}}\n                      onPress={{handleOpenVocabulary}}\n                      style={{({{ pressed }}) => [\n                        styles.endActionSecondary,\n                        {{ opacity: pressed ? 0.9 : 1 }},\n                      ]}}\n                    >\n                      <AppText\n                        variant="button"\n                        tone="strong"\n                        script="latin"\n                        align="center"\n                        style={{styles.endActionSecondaryText}}\n                      >\n                        Fiche vocabulaire\n                      </AppText>\n                    </Pressable>\n\n'''
+                  if button_anchor not in text:
+                      raise RuntimeError(f'button anchor missing in {filename}')
+                  text = text.replace(button_anchor, button + button_anchor, 1)
+
+              path.write_text(text, encoding='utf-8')
+          PY
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: Add vocabulary links to scene completions
+          title: Add vocabulary links to remaining scene completions
+          body: Adds the same vocabulary-sheet action used by Metro to Café, Restaurant and Aéroport.
+          branch: automation/vocabulary-links
