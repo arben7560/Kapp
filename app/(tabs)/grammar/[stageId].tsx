@@ -76,7 +76,26 @@ function scoreLabel(score: number) {
 function getTeacherFeedbackLead(
   question: GrammarPracticeQuestion,
   correct: boolean,
+  answer: GrammarPracticeAnswer,
 ) {
+  if (question.ruleAspect === "short-negation") {
+    if (correct) {
+      return "Oui, c’est bien la négation courte avec 안.";
+    }
+
+    if (typeof answer === "string") {
+      if (answer.endsWith("지 않아요")) {
+        return "Ta phrase est correcte en coréen, mais elle emploie la négation longue -지 않아요. Ici, l’exercice cible la forme courte avec 안.";
+      }
+      if (answer.startsWith("못 ")) {
+        return "Ici, 못 changerait le sens : il exprime plutôt une impossibilité ou une contrainte. L’exercice cible la négation courte avec 안.";
+      }
+      if (answer === "아니에요") {
+        return "아니에요 sert surtout à nier un nom ou une identité. Ici, il faut nier directement le prédicat avec 안.";
+      }
+    }
+  }
+
   if (correct) {
     switch (question.skill) {
       case "particles": return "Oui, bonne particule ici.";
@@ -765,7 +784,7 @@ function FeedbackCard({
   onContinue: () => void;
   isLast: boolean;
 }) {
-  const teacherLead = getTeacherFeedbackLead(question, response.correct);
+  const teacherLead = getTeacherFeedbackLead(question, response.correct, response.answer);
 
   return (
     <BlurView intensity={58} tint="dark" style={[styles.feedbackCard, response.correct ? styles.feedbackCorrect : styles.feedbackWrong]}>
