@@ -45,6 +45,7 @@ import {
   canAccessGrammarStage,
   canRepeatGrammarPractice,
   createGrammarPracticeSession,
+  getGrammarIncorrectFeedback,
   getGrammarStageAccess,
   markGrammarSessionStreakRecorded,
   recordGrammarSessionCompletion,
@@ -73,53 +74,22 @@ function scoreLabel(score: number) {
   return `${score} réponse${plural} correcte${plural}`;
 }
 
-function getTeacherFeedbackLead(
+function getCorrectFeedbackLead(
   question: GrammarPracticeQuestion,
-  correct: boolean,
-  answer: GrammarPracticeAnswer,
 ) {
   if (question.ruleAspect === "short-negation") {
-    if (correct) {
-      return "Oui, c’est bien la négation courte avec 안.";
-    }
-
-    if (typeof answer === "string") {
-      if (answer.endsWith("지 않아요")) {
-        return "Cette forme est correcte en coréen, mais elle emploie la négation longue -지 않아요. Ici, l’exercice cible la forme courte avec 안.";
-      }
-      if (answer.startsWith("못 ")) {
-        return "Ici, 못 changerait le sens : il exprime plutôt une impossibilité ou une contrainte. L’exercice cible la négation courte avec 안.";
-      }
-      if (answer === "아니에요") {
-        return "아니에요 sert surtout à nier un nom ou une identité. Ici, il faut nier directement le prédicat avec 안.";
-      }
-    }
-  }
-
-  if (correct) {
-    switch (question.skill) {
-      case "particles": return "Oui, bonne particule ici.";
-      case "conjugation": return "Oui, la conjugaison est juste.";
-      case "modality": return "Oui, tu as choisi la bonne nuance.";
-      case "connectors": return "Oui, le lien entre les deux idées est bon.";
-      case "syntax": return "Oui, la construction est correcte ici.";
-      case "register": return "Oui, le registre convient bien ici.";
-      case "forms": return "Oui, c’est la bonne forme.";
-      default: return "Oui, c’est ça.";
-    }
+    return "Oui, c’est bien la négation courte avec 안.";
   }
 
   switch (question.skill) {
-    case "particles": return "Ici, c’est la particule qu’il faut revoir.";
-    case "conjugation": return "Ici, c’est la conjugaison qu’il faut ajuster.";
-    case "modality": return "La forme est proche, mais la nuance n’est pas la bonne ici.";
-    case "connectors": return "Ici, regarde surtout le lien entre les deux idées.";
-    case "syntax": return "Ici, regarde surtout la construction attendue.";
-    case "register": return question.kind === "transformation"
-      ? "La forme est proche, mais le registre ne convient pas ici."
-      : "Le choix est proche, mais le registre ne convient pas ici.";
-    case "forms": return "Ici, il faut une autre forme.";
-    default: return "Pas tout à fait. Regarde le point corrigé juste dessous.";
+    case "particles": return "Oui, bonne particule ici.";
+    case "conjugation": return "Oui, la conjugaison est juste.";
+    case "modality": return "Oui, tu as choisi la bonne nuance.";
+    case "connectors": return "Oui, le lien entre les deux idées est bon.";
+    case "syntax": return "Oui, la construction est correcte ici.";
+    case "register": return "Oui, le registre convient bien ici.";
+    case "forms": return "Oui, c’est la bonne forme.";
+    default: return "Oui, c’est ça.";
   }
 }
 
@@ -786,12 +756,14 @@ function FeedbackCard({
   onContinue: () => void;
   isLast: boolean;
 }) {
-  const teacherLead = getTeacherFeedbackLead(question, response.correct, response.answer);
+  const teacherLead = response.correct
+    ? getCorrectFeedbackLead(question)
+    : getGrammarIncorrectFeedback(question, response.answer);
 
   return (
     <BlurView intensity={58} tint="dark" style={[styles.feedbackCard, response.correct ? styles.feedbackCorrect : styles.feedbackWrong]}>
       <AppText variant="sectionLabel" style={response.correct ? styles.successText : styles.errorText}>
-        {response.correct ? "BONNE RÉPONSE" : "MAUVAISE RÉPONSE"}
+        {response.correct ? "BONNE RÉPONSE" : "À AJUSTER ICI"}
       </AppText>
       <AppText variant="bodyStrong">{teacherLead}</AppText>
       {!response.correct ? (
@@ -800,7 +772,9 @@ function FeedbackCard({
           <AppText variant="bodyStrong">{answerLabel(question.answer)}</AppText>
         </View>
       ) : null}
-      <AppText variant="bodySecondary" tone="muted">{question.explanation}</AppText>
+      {response.correct ? (
+        <AppText variant="bodySecondary" tone="muted">{question.explanation}</AppText>
+      ) : null}
       {question.memo ? <EditorialNote note={question.memo} /> : null}
       <PrimaryButton label={isLast ? "VOIR MON BILAN" : "CONTINUER"} onPress={onContinue} />
     </BlurView>
@@ -847,7 +821,7 @@ function LessonResult({
         </AppText>
         <View style={styles.resultMetrics}>
           <Metric value={`${Math.round(ratio * 100)}%`} label="PRÉCISION" />
-          <Metric value={`${wrongResponses.length}`} label="MAUVAISE RÉPONSE" />
+          <Metric value={`${wrongResponses.length}`} label="POINTS À REVOIR" />
           <Metric value={`${session.attemptNumber}`} label="TENTATIVE" />
         </View>
       </BlurView>
@@ -861,7 +835,9 @@ function LessonResult({
             return (
               <View key={response.questionId} style={styles.reviewRow}>
                 <AppText variant="bodyStrong">{answerLabel(question.answer)}</AppText>
-                <AppText variant="bodySecondary" tone="muted">{question.explanation}</AppText>
+                <AppText variant="bodySecondary" tone="muted">
+                  {getGrammarIncorrectFeedback(question, response.answer)}
+                </AppText>
               </View>
             );
           })}

@@ -19,6 +19,7 @@ import {
   canRepeatGrammarPractice,
   createEmptyGrammarLearningProgress,
   createGrammarPracticeSession,
+  getGrammarIncorrectFeedback,
   getGrammarJourneyCompletion,
   getGrammarStageAccess,
   getGrammarStageState,
@@ -306,6 +307,88 @@ test("all rotated question wordings keep one answer and a coherent correction", 
       }
     }
   }
+});
+
+test("incorrect grammar feedback starts with the exact rule instead of a generic lead", () => {
+  const genericLead = /^(?:presque|pas tout à fait|la (?:phrase|forme|structure) est proche|le choix est proche|ici, (?:regarde|il faut une autre forme|c’est .* qu’il faut revoir))/iu;
+
+  for (const stageId of GRAMMAR_STAGE_IDS) {
+    const attempts = GRAMMAR_STAGE_BY_ID[stageId].mode === "review" ? 9 : 5;
+    for (let attempt = 1; attempt <= attempts; attempt += 1) {
+      for (const question of buildGrammarPracticeQuestions(stageId, attempt, () => 0.42)) {
+        const wrongAnswers = Array.isArray(question.answer)
+          ? [[...question.answer].reverse()]
+          : question.options.filter((option) => option !== question.answer);
+
+        for (const wrongAnswer of wrongAnswers) {
+          const feedback = getGrammarIncorrectFeedback(question, wrongAnswer);
+          assert.ok(feedback.trim().length > 0, question.id);
+          assert.doesNotMatch(feedback, genericLead, `${question.id}: ${feedback}`);
+          assert.ok(feedback.length <= 260, `${question.id}: feedback too long (${feedback.length})`);
+        }
+      }
+    }
+  }
+});
+
+test("high-confusion grammar distractors receive answer-specific explanations", () => {
+  const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
+  assert.match(getGrammarIncorrectFeedback(dailyRegister, "좋습니다"), /registre formel/u);
+  assert.match(getGrammarIncorrectFeedback(dailyRegister, "좋았어요"), /passé/u);
+
+  const staticLocation = buildGrammarPracticeQuestions("locate-thing", 1, () => 0.42)
+    .find(({ options }) => options.includes("에서"));
+  assert.ok(staticLocation);
+  assert.match(getGrammarIncorrectFeedback(staticLocation, "에서"), /action.*statique/u);
+
+  const ability = buildGrammarPracticeQuestions("express-ability", 1, () => 0.42)[0];
+  assert.match(getGrammarIncorrectFeedback(ability, "읽어도 돼요"), /autorisation.*capacité/u);
+
+  const reason = buildGrammarPracticeQuestions("give-reason", 1, () => 0.42)[0];
+  assert.match(getGrammarIncorrectFeedback(reason, "오지만"), /contraste.*cause/u);
+});
+
+test("valid Korean alternatives are disambiguated by the requested nuance", () => {
+  const topic = buildGrammarPracticeQuestions("introduce-topic", 1, () => 0.42)
+    .find(({ answer, display, options }) =>
+      answer === "는" && display?.includes("커피__") && options.includes("를")
+    );
+  assert.ok(topic);
+  assert.match(topic.prompt, /thème contrastif/u);
+  assert.match(topic.display, /opposer explicitement/u);
+  assert.match(
+    getGrammarIncorrectFeedback(topic, "를"),
+    /particule d’objet.*phrase correcte.*contraste demandé/u,
+  );
+
+  const destination = buildGrammarPracticeQuestions("destination-and-time", 1, () => 0.42)
+    .find(({ options }) => options.includes("에서"));
+  assert.ok(destination);
+  assert.match(destination.display, /point de départ n’est pas indiqué/u);
+  assert.match(
+    getGrammarIncorrectFeedback(destination, "에서"),
+    /phrase grammaticale.*point de départ.*destination/u,
+  );
+
+  const alternative = buildGrammarPracticeQuestions("choose-alternative", 1, () => 0.42)
+    .find(({ options }) => options.includes("하고"));
+  assert.ok(alternative);
+  assert.match(alternative.prompt, /alternative/u);
+  assert.match(getGrammarIncorrectFeedback(alternative, "하고"), /correctement.*« et ».*« ou »/u);
+
+  const people = buildGrammarPracticeQuestions("request-quantity", 1, () => 0.42)
+    .find(({ ruleAspect }) => ruleAspect === "people-classifier");
+  assert.ok(people);
+  assert.match(people.display, /personnes composent ton groupe/u);
+
+  const rangeStart = buildGrammarPracticeQuestions("range-and-limit", 1, () => 0.42)
+    .find(({ ruleAspect, display }) => ruleAspect === "range-start" && display?.includes("아홉 시"));
+  assert.ok(rangeStart);
+  assert.equal(rangeStart.options.includes("에서"), false);
+
+  const lesson = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  assert.doesNotMatch(lesson, /MAUVAISE RÉPONSE/u);
+  assert.match(lesson, /À AJUSTER ICI/u);
 });
 
 test("받침-sensitive forms evaluate both consonant and vowel variants", () => {
