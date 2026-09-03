@@ -85,7 +85,7 @@ function getTeacherFeedbackLead(
 
     if (typeof answer === "string") {
       if (answer.endsWith("지 않아요")) {
-        return "Ta phrase est correcte en coréen, mais elle emploie la négation longue -지 않아요. Ici, l’exercice cible la forme courte avec 안.";
+        return "Cette forme est correcte en coréen, mais elle emploie la négation longue -지 않아요. Ici, l’exercice cible la forme courte avec 안.";
       }
       if (answer.startsWith("못 ")) {
         return "Ici, 못 changerait le sens : il exprime plutôt une impossibilité ou une contrainte. L’exercice cible la négation courte avec 안.";
@@ -102,7 +102,7 @@ function getTeacherFeedbackLead(
       case "conjugation": return "Oui, la conjugaison est juste.";
       case "modality": return "Oui, tu as choisi la bonne nuance.";
       case "connectors": return "Oui, le lien entre les deux idées est bon.";
-      case "syntax": return "Oui, l’ordre de la phrase est bon.";
+      case "syntax": return "Oui, la construction est correcte ici.";
       case "register": return "Oui, le registre convient bien ici.";
       case "forms": return "Oui, c’est la bonne forme.";
       default: return "Oui, c’est ça.";
@@ -114,8 +114,10 @@ function getTeacherFeedbackLead(
     case "conjugation": return "Ici, c’est la conjugaison qu’il faut ajuster.";
     case "modality": return "La forme est proche, mais la nuance n’est pas la bonne ici.";
     case "connectors": return "Ici, regarde surtout le lien entre les deux idées.";
-    case "syntax": return "Ici, regarde surtout l’ordre de la phrase.";
-    case "register": return "La phrase est proche, mais le registre ne convient pas ici.";
+    case "syntax": return "Ici, regarde surtout la construction attendue.";
+    case "register": return question.kind === "transformation"
+      ? "La forme est proche, mais le registre ne convient pas ici."
+      : "Le choix est proche, mais le registre ne convient pas ici.";
     case "forms": return "Ici, il faut une autre forme.";
     default: return "Pas tout à fait. Regarde le point corrigé juste dessous.";
   }
