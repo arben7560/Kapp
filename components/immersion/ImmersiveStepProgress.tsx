@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 
 import { AppText } from "../app-text";
 
@@ -6,13 +6,36 @@ type Props = Readonly<{
   steps: readonly string[];
   activeIndex: number;
   accent: string;
+  compactLandscapeHeight?: number;
+  style?: StyleProp<ViewStyle>;
 }>;
 
-export function ImmersiveStepProgress({ steps, activeIndex, accent }: Props) {
+export function ImmersiveStepProgress({
+  steps,
+  activeIndex,
+  accent,
+  compactLandscapeHeight,
+  style,
+}: Props) {
   const isDense = steps.length >= 5;
+  const landscapeComfort =
+    compactLandscapeHeight === undefined
+      ? null
+      : Math.min(1, Math.max(0, (compactLandscapeHeight - 360) / 240));
+  const compactContainerStyle =
+    landscapeComfort === null
+      ? undefined
+      : {
+          marginTop: Math.round(landscapeComfort * 6),
+          marginBottom: Math.round(8 + landscapeComfort * 14),
+        };
+  const compactDotStyle =
+    landscapeComfort === null
+      ? undefined
+      : { marginBottom: Math.round(3 + landscapeComfort * 5) };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, compactContainerStyle, style]}>
       {steps.map((step, index) => {
         const active = index === activeIndex;
         const done = index <= activeIndex;
@@ -26,6 +49,7 @@ export function ImmersiveStepProgress({ steps, activeIndex, accent }: Props) {
                   backgroundColor: accent,
                   opacity: active ? 1 : 0.7,
                 },
+                compactDotStyle,
               ]}
             />
             <AppText

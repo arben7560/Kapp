@@ -159,7 +159,9 @@ function humanizeCafeSpeechFeedback(message: string) {
     );
   }
 
-  if (/^Tu ne veux pas le reçu\. Tu peux répondre simplement :/u.test(message)) {
+  if (
+    /^Tu ne veux pas le reçu\. Tu peux répondre simplement :/u.test(message)
+  ) {
     return message.replace(
       /^Tu ne veux pas le reçu\. Tu peux répondre simplement :/u,
       "D’accord, tu refuses le reçu. Tu peux répondre naturellement :",
@@ -179,7 +181,10 @@ function humanizeCafeSpeechFeedback(message: string) {
       .replace(/^Je t’ai compris\./u, "Oui, je vois ce que tu veux dire.")
       .replace(/^Ça se comprend, mais /u, "La phrase se comprend bien. ")
       .replace(/^Je comprends l’idée, mais /u, "L’idée est bonne. ")
-      .replace(/^L’intention est claire, mais /u, "Oui, ton intention est claire. ")
+      .replace(
+        /^L’intention est claire, mais /u,
+        "Oui, ton intention est claire. ",
+      )
       .replace(/^On te comprend\./u, "Oui, la réponse est compréhensible.");
   }
 
@@ -207,7 +212,7 @@ function getStatusLabel(state: SpeechRecognitionState) {
     case "error":
       return "Erreur du micro";
     case "idle":
-      return "Réponds en coréen quand tu es prêt.";
+      return "Appuie sur 'Besoin d'aide' pour lire une réponse suggérée, ou sur 'Parler' pour t’exprimer.";
   }
 }
 
@@ -233,13 +238,10 @@ export function GuidedSpeechTurn({
     speechState.status === "requesting-permission" ||
     speechState.status === "starting" ||
     speechState.status === "processing";
-  const canRetry =
-    speechState.status !== "idle" && !isListening && !isBusy;
-  const primaryLabel = interactionDisabledLabel || (isListening
-    ? "Arrêter"
-    : canRetry
-      ? "Réessayer"
-      : "Parler");
+  const canRetry = speechState.status !== "idle" && !isListening && !isBusy;
+  const primaryLabel =
+    interactionDisabledLabel ||
+    (isListening ? "Arrêter" : canRetry ? "Réessayer" : "Parler");
   const primaryIcon = isListening ? "stop" : "mic";
   const displayedFeedback = feedback
     ? humanizeCafeSpeechFeedback(feedback)
@@ -274,16 +276,17 @@ export function GuidedSpeechTurn({
 
       <View
         accessibilityLiveRegion="polite"
-        style={[
-          styles.statusCard,
-          isListening && { borderColor: accent },
-        ]}
+        style={[styles.statusCard, isListening && { borderColor: accent }]}
       >
         <View style={styles.statusRow}>
           <View
             style={[
               styles.statusDot,
-              { backgroundColor: isListening ? accent : "rgba(255,255,255,0.35)" },
+              {
+                backgroundColor: isListening
+                  ? accent
+                  : "rgba(255,255,255,0.35)",
+              },
             ]}
           />
           <AppText
@@ -535,8 +538,7 @@ const styles = StyleSheet.create({
   transcriptEyebrow: {
     marginBottom: 5,
   },
-  transcriptText: {
-  },
+  transcriptText: {},
   feedbackCard: {
     borderRadius: 14,
     borderWidth: 1,
@@ -545,8 +547,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-  feedbackText: {
-  },
+  feedbackText: {},
   actions: {
     flexDirection: "row",
     gap: 10,
@@ -577,8 +578,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 7,
   },
-  helpButtonText: {
-  },
+  helpButtonText: {},
   disabledButton: {
     opacity: 0.55,
   },

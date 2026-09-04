@@ -20,12 +20,16 @@ import { CafeConversationSummaryModal } from "../../components/cafe/CafeConversa
 import { GuidedSpeechTurn } from "../../components/GuidedSpeechTurn";
 import { ImmersiveMediaStatusOverlay } from "../../components/immersion/ImmersiveMediaStatusOverlay";
 import { ImmersiveStepProgress } from "../../components/immersion/ImmersiveStepProgress";
+import { ImmersiveTranscriptViewport } from "../../components/immersion/ImmersiveTranscriptViewport";
 import { AppBackButton } from "../../components/ui/app-back-button";
 import {
     getImmersiveBottomPadding,
+    getImmersivePhoneLandscapeLayout,
     getImmersivePortraitMediaLayout,
     IMMERSIVE_CONTENT_MAX_WIDTH,
     IMMERSIVE_MIN_TOUCH_TARGET,
+    IMMERSIVE_PHONE_LANDSCAPE_MAX_HEIGHT,
+    IMMERSIVE_PHONE_LANDSCAPE_STYLES,
     IMMERSIVE_VIDEO_VIEW_PROPS,
 } from "../../constants/immersive-layout";
 import { ABSOLUTE_FILL } from "../../constants/layout";
@@ -286,12 +290,26 @@ export default function CafeIaScreen() {
     router.replace("/premium");
   }, [canEnterMission, isPaywallLoading]);
 
-  const { width: avatarFrameWidth, height: avatarFrameHeight } =
-    getImmersivePortraitMediaLayout({
-      contentWidth: responsive.contentWidth,
-      viewportHeight: responsive.height,
-      maxHeight: 420,
-    });
+  const portraitMediaLayout = getImmersivePortraitMediaLayout({
+    contentWidth: responsive.contentWidth,
+    viewportHeight: responsive.height,
+    maxHeight: 420,
+  });
+  const isPhoneLandscape =
+    responsive.isLandscape &&
+    responsive.height <= IMMERSIVE_PHONE_LANDSCAPE_MAX_HEIGHT;
+  const landscapeLayout = isPhoneLandscape
+    ? getImmersivePhoneLandscapeLayout({
+        windowWidth: responsive.width,
+        windowHeight: responsive.height,
+        horizontalSafeArea: insets.left + insets.right,
+        topSafeArea: insets.top,
+      })
+    : null;
+  const avatarFrameWidth =
+    landscapeLayout?.mediaWidth ?? portraitMediaLayout.width;
+  const avatarFrameHeight =
+    landscapeLayout?.mediaHeight ?? portraitMediaLayout.height;
   const avatarVideoHeight = avatarFrameHeight;
 
   const goToNextNode = useCallback((node?: DialogueNodeWithVideo) => {
@@ -856,18 +874,45 @@ export default function CafeIaScreen() {
           />
         </View>
 
-        <View style={styles.body}>
+        <View
+          style={[
+            styles.body,
+            isPhoneLandscape && IMMERSIVE_PHONE_LANDSCAPE_STYLES.body,
+          ]}
+        >
           <View
             style={[
               styles.topFixedSection,
-              { paddingHorizontal: responsive.horizontalPadding },
+              isPhoneLandscape
+                ? [
+                    IMMERSIVE_PHONE_LANDSCAPE_STYLES.topFixedSection,
+                    {
+                      paddingLeft: landscapeLayout?.horizontalPadding,
+                      width:
+                        (landscapeLayout?.primaryColumnWidth ?? 0) +
+                        (landscapeLayout?.horizontalPadding ?? 0),
+                    },
+                  ]
+                : { paddingHorizontal: responsive.horizontalPadding },
             ]}
           >
-            <View style={[styles.topInner, { maxWidth: responsive.maxWidth }]}>
+            <View
+              style={[
+                styles.topInner,
+                {
+                  maxWidth: isPhoneLandscape
+                    ? landscapeLayout?.primaryColumnWidth
+                    : responsive.maxWidth,
+                },
+              ]}
+            >
               <ImmersiveStepProgress
                 steps={CAFE_STEPS}
                 activeIndex={progressIndex}
                 accent={mode === "real" ? CYAN : PURPLE}
+                compactLandscapeHeight={
+                  isPhoneLandscape ? responsive.height : undefined
+                }
               />
 
               <View
@@ -922,7 +967,9 @@ export default function CafeIaScreen() {
                 />
               </View>
 
-              <Pressable
+              <ImmersiveTranscriptViewport
+                enabled={isPhoneLandscape}
+                maxHeight={landscapeLayout?.transcriptMaxHeight}
                 accessibilityRole="button"
                 accessibilityLabel={
                   isTranscriptOpen
@@ -943,65 +990,86 @@ export default function CafeIaScreen() {
                 }}
                 style={[
                   styles.aiCard,
+                  isPhoneLandscape &&
+                    IMMERSIVE_PHONE_LANDSCAPE_STYLES.transcriptCard,
                   shouldCollapseTranscript && styles.aiCardCollapsed,
                 ]}
               >
-                <AppText
-                  variant="koreanSecondary"
-                  tone="strong"
-                  script="korean"
-                  accessibilityLanguage="ko-KR"
-                  align="center"
-                  style={[
-                    styles.aiKr,
-                    shouldCollapseTranscript && styles.aiDotsText,
-                  ]}
-                >
-                  {displayedKoreanText}
-                </AppText>
-
-                {shouldShowFrench ? (
                   <AppText
-                    variant="bodySecondary"
-                    tone="muted"
-                    script="latin"
+                    variant="koreanSecondary"
+                    tone="strong"
+                    script="korean"
+                    accessibilityLanguage="ko-KR"
                     align="center"
-                    style={styles.aiFr}
+                    style={[
+                      styles.aiKr,
+                      isPhoneLandscape &&
+                        IMMERSIVE_PHONE_LANDSCAPE_STYLES.transcriptKorean,
+                      shouldCollapseTranscript && styles.aiDotsText,
+                    ]}
                   >
-                    {transcriptFrench}
+                    {displayedKoreanText}
                   </AppText>
-                ) : null}
 
-                {isReviewableTranscript ? (
-                  <AppText
-                    variant="caption"
-                    tone="soft"
-                    script="latin"
-                    align="center"
-                    style={styles.transcriptHint}
-                  >
-                    {isTranscriptOpen
-                      ? "Appuyer pour refermer"
-                      : "Appuyer pour revoir"}
-                  </AppText>
-                ) : null}
-              </Pressable>
+                  {shouldShowFrench ? (
+                    <AppText
+                      variant="bodySecondary"
+                      tone="muted"
+                      script="latin"
+                      align="center"
+                      style={styles.aiFr}
+                    >
+                      {transcriptFrench}
+                    </AppText>
+                  ) : null}
+
+                  {isReviewableTranscript ? (
+                    <AppText
+                      variant="caption"
+                      tone="soft"
+                      script="latin"
+                      align="center"
+                      style={styles.transcriptHint}
+                    >
+                      {isTranscriptOpen
+                        ? "Appuyer pour refermer"
+                        : "Appuyer pour revoir"}
+                    </AppText>
+                  ) : null}
+              </ImmersiveTranscriptViewport>
             </View>
           </View>
 
           <ScrollView
             ref={scrollRef}
+            style={
+              isPhoneLandscape
+                ? [
+                    IMMERSIVE_PHONE_LANDSCAPE_STYLES.interactionScroll,
+                    { marginLeft: landscapeLayout?.columnGap },
+                  ]
+                : undefined
+            }
             showsVerticalScrollIndicator={false}
             contentContainerStyle={[
               styles.interactionScroll,
-              { paddingHorizontal: responsive.horizontalPadding },
+              isPhoneLandscape
+                ? [
+                    IMMERSIVE_PHONE_LANDSCAPE_STYLES.interactionScrollContent,
+                    { paddingRight: landscapeLayout?.horizontalPadding },
+                  ]
+                : { paddingHorizontal: responsive.horizontalPadding },
               { paddingBottom: getImmersiveBottomPadding(insets.bottom) },
             ]}
           >
             <View
               style={[
                 styles.interactionSection,
-                { maxWidth: responsive.maxWidth },
+                {
+                  maxWidth: isPhoneLandscape
+                    ? landscapeLayout?.interactionContentWidth
+                    : responsive.maxWidth,
+                },
               ]}
             >
               <AppText

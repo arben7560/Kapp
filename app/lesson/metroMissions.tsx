@@ -130,7 +130,8 @@ export default function MetroMissionsScreen() {
 
   const renderMissionCard = (mission: MetroMission, compact = false) => {
     const order = metroMissions.findIndex((item) => item.id === mission.id) + 1;
-    const background = METRO_CARD_BACKGROUNDS[mission.id] ?? metroCardBackground;
+    const background =
+      METRO_CARD_BACKGROUNDS[mission.id] ?? metroCardBackground;
 
     return (
       <MissionMasteryCardFrame
@@ -181,7 +182,9 @@ export default function MetroMissionsScreen() {
             { paddingHorizontal: responsive.horizontalPadding },
           ]}
         >
-          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
+          <View
+            style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
+          >
             <GuidedMissionsHeader
               accent={CYAN}
               compact={responsive.isCompact}
@@ -232,7 +235,7 @@ export default function MetroMissionsScreen() {
           immersionNoticeTitle={isVocalMission ? "IMMERSION RÉELLE" : undefined}
           immersionNoticeBody={
             isVocalMission
-              ? "Ici, on te parle comme dans une vraie station à Séoul. Tu n’as pas besoin de tout comprendre : essaie, utilise les mémos et reviens autant de fois que nécessaire."
+              ? "L'agent te répondra de manière naturel, comme un vrai coréen le ferait. Tu n'as pas besoin de tout comprendre et de réussir du premier coup: reviens autant de fois que nécessaire pour te familiariser progressivement avec le scénario."
               : undefined
           }
           onCancel={() => setSelectedMission(null)}

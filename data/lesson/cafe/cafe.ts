@@ -177,10 +177,8 @@ export const cafeDialogueData = {
       ped_payment_here: {
         id: "ped_payment_here",
         type: "ia",
-        korean:
-          "총 9,500원입니다. 카드로 결제하시겠어요, 아니면 현금으로 하시겠어요?",
-        french:
-          "Cela fait 9 500 wons au total. Vous souhaitez payer par carte ou en espèces ?",
+        korean: "카드로 결제하시겠어요, 아니면 현금으로 하시겠어요?",
+        french: "Vous souhaitez payer par carte ou en espèces ?",
         romanization:
           "Chong gucheon obaegwonimnida. Kadeuro gyeoljehasigesseoyo, animyeon hyeongeumeuro hasigesseoyo?",
         videoSource: pricePaimentChooseVideo,
@@ -190,10 +188,8 @@ export const cafeDialogueData = {
       ped_payment_takeout: {
         id: "ped_payment_takeout",
         type: "ia",
-        korean:
-          "총 9,500원입니다. 카드로 결제하시겠어요, 아니면 현금으로 하시겠어요?",
-        french:
-          "Cela fait 9 500 wons au total. Vous souhaitez payer par carte ou en espèces ?",
+        korean: "카드로 결제하시겠어요, 아니면 현금으로 하시겠어요?",
+        french: "Vous souhaitez payer par carte ou en espèces ?",
         romanization:
           "Chong gucheon obaegwonimnida. Kadeuro gyeoljehasigesseoyo, animyeon hyeongeumeuro hasigesseoyo?",
         videoSource: pricePaimentChooseVideo,
@@ -483,8 +479,8 @@ export const cafeDialogueData = {
       real_payment_here: {
         id: "real_payment_here",
         type: "ia",
-        korean: "총 9,500원이요. 카드세요, 현금이세요?",
-        french: "Cela fait 9 500 wons. Carte ou espèces ?",
+        korean: "카드세요, 현금이세요?",
+        french: "Carte ou espèces ?",
         romanization: "Chong gucheon obaegwoniyo. Kadeuseyo, hyeongeumiseyo?",
         nextNodeId: "real_choice3_here",
       },
@@ -492,8 +488,8 @@ export const cafeDialogueData = {
       real_payment_takeout: {
         id: "real_payment_takeout",
         type: "ia",
-        korean: "총 9,500원이요. 카드세요, 현금이세요?",
-        french: "Cela fait 9 500 wons. Carte ou espèces ?",
+        korean: "카드세요, 현금이세요?",
+        french: "Carte ou espèces ?",
         romanization: "Chong gucheon obaegwoniyo. Kadeuseyo, hyeongeumiseyo?",
         nextNodeId: "real_choice3_takeout",
       },

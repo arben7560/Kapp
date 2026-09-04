@@ -1,15 +1,8 @@
 import * as Speech from "@/lib/speechPlayback";
 import { useEffect, useMemo, useState } from "react";
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AppText } from "../app-text";
 import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
 import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
 import {
@@ -17,6 +10,7 @@ import {
   type CafeConversationMemory,
   type CafeGroupedImperfection,
 } from "../../lib/cafeConversationMemory";
+import { AppText } from "../app-text";
 
 type CafeConversationSummaryModalProps = Readonly<{
   memory: CafeConversationMemory;
@@ -80,9 +74,7 @@ function ImperfectionCard({
         variant="koreanSecondary"
         tone="strong"
         script={item.canonicalFormulation ? "korean" : "latin"}
-        accessibilityLanguage={
-          item.canonicalFormulation ? "ko-KR" : undefined
-        }
+        accessibilityLanguage={item.canonicalFormulation ? "ko-KR" : undefined}
         style={styles.canonical}
       >
         {item.canonicalFormulation ??
@@ -113,13 +105,18 @@ export function CafeConversationSummaryModal({
 }: CafeConversationSummaryModalProps) {
   useSpeechLifecycle();
   const [isReviewing, setIsReviewing] = useState(false);
-  const [listenedPhrases, setListenedPhrases] = useState<Record<string, true>>({});
+  const [listenedPhrases, setListenedPhrases] = useState<Record<string, true>>(
+    {},
+  );
   const summary = useMemo(() => buildCafeConversationSummary(memory), [memory]);
   const phraseToRemember = summary.recommendedPhrase;
 
-  useEffect(() => () => {
-    void Speech.stop();
-  }, []);
+  useEffect(
+    () => () => {
+      void Speech.stop();
+    },
+    [],
+  );
 
   const handleClose = () => {
     void Speech.stop();
@@ -182,7 +179,8 @@ export function CafeConversationSummaryModal({
                     Phrases utiles
                   </AppText>
                   <AppText variant="bodySecondary" tone="muted" script="latin">
-                    Réécoute les formulations de référence rencontrées pendant cette mission.
+                    Réécoute les formulations de référence rencontrées pendant
+                    cette mission.
                   </AppText>
                   {summary.canonicalReferencePhrases.length > 0 ? (
                     summary.canonicalReferencePhrases.map((phrase) => (
@@ -203,14 +201,22 @@ export function CafeConversationSummaryModal({
                           onPress={() => speak(phrase)}
                           style={styles.listenButton}
                         >
-                          <AppText variant="button" tone="strong" script="latin">
+                          <AppText
+                            variant="button"
+                            tone="strong"
+                            script="latin"
+                          >
                             {listenedPhrases[phrase] ? "Réécouter" : "Écouter"}
                           </AppText>
                         </Pressable>
                       </View>
                     ))
                   ) : (
-                    <AppText variant="bodySecondary" tone="muted" script="latin">
+                    <AppText
+                      variant="bodySecondary"
+                      tone="muted"
+                      script="latin"
+                    >
                       Aucune phrase vocale à revoir pour cette mission.
                     </AppText>
                   )}
@@ -218,7 +224,11 @@ export function CafeConversationSummaryModal({
               ) : (
                 <>
                   <View style={styles.section}>
-                    <AppText variant="sectionTitle" tone="strong" script="latin">
+                    <AppText
+                      variant="sectionTitle"
+                      tone="strong"
+                      script="latin"
+                    >
                       Réussi
                     </AppText>
                     {(summary.successfulPoints.length > 0
@@ -239,12 +249,14 @@ export function CafeConversationSummaryModal({
 
                   {summary.improvements.length > 0 ? (
                     <View style={styles.section}>
-                      <AppText variant="sectionTitle" tone="strong" script="latin">
+                      <AppText
+                        variant="sectionTitle"
+                        tone="strong"
+                        script="latin"
+                      >
                         À revoir
                       </AppText>
-                      <AppText variant="bodySecondary" tone="muted" script="latin">
-                        Les points non résolus apparaissent en premier. Une difficulté déjà résolue reste visible pour t’aider à la consolider.
-                      </AppText>
+
                       {summary.improvements.map((item) => (
                         <ImperfectionCard key={item.id} item={item} />
                       ))}
@@ -253,11 +265,21 @@ export function CafeConversationSummaryModal({
 
                   {summary.needsConfirmation.length > 0 ? (
                     <View style={styles.section}>
-                      <AppText variant="sectionTitle" tone="strong" script="latin">
+                      <AppText
+                        variant="sectionTitle"
+                        tone="strong"
+                        script="latin"
+                      >
                         À confirmer
                       </AppText>
-                      <AppText variant="bodySecondary" tone="muted" script="latin">
-                        L’intention semblait plausible, mais pas assez certaine pour faire avancer la scène automatiquement. Ce n’est pas forcément une erreur de coréen.
+                      <AppText
+                        variant="bodySecondary"
+                        tone="muted"
+                        script="latin"
+                      >
+                        L’intention semblait plausible, mais pas assez certaine
+                        pour faire avancer la scène automatiquement. Ce n’est
+                        pas forcément une erreur de coréen.
                       </AppText>
                       {summary.needsConfirmation.map((item) => (
                         <ImperfectionCard
@@ -271,11 +293,21 @@ export function CafeConversationSummaryModal({
 
                   {summary.uncertainRecognition.length > 0 ? (
                     <View style={styles.section}>
-                      <AppText variant="sectionTitle" tone="strong" script="latin">
+                      <AppText
+                        variant="sectionTitle"
+                        tone="strong"
+                        script="latin"
+                      >
                         Transcription à vérifier
                       </AppText>
-                      <AppText variant="bodySecondary" tone="muted" script="latin">
-                        Ici, le moteur a réellement détecté un indice de transcription vocale imparfaite. Ne considère pas automatiquement ce point comme une faute de ta part.
+                      <AppText
+                        variant="bodySecondary"
+                        tone="muted"
+                        script="latin"
+                      >
+                        Ici, le moteur a réellement détecté un indice de
+                        transcription vocale imparfaite. Ne considère pas
+                        automatiquement ce point comme une faute de ta part.
                       </AppText>
                       {summary.uncertainRecognition.map((item) => (
                         <ImperfectionCard
@@ -289,11 +321,20 @@ export function CafeConversationSummaryModal({
 
                   {phraseToRemember ? (
                     <View style={styles.section}>
-                      <AppText variant="sectionTitle" tone="strong" script="latin">
+                      <AppText
+                        variant="sectionTitle"
+                        tone="strong"
+                        script="latin"
+                      >
                         Phrase à retenir
                       </AppText>
-                      <AppText variant="bodySecondary" tone="muted" script="latin">
-                        Choisie en priorité à partir du point le plus utile à consolider dans cette conversation.
+                      <AppText
+                        variant="bodySecondary"
+                        tone="muted"
+                        script="latin"
+                      >
+                        Choisie en priorité à partir du point le plus utile à
+                        consolider dans cette conversation.
                       </AppText>
                       <View style={styles.phraseRow}>
                         <AppText
@@ -312,8 +353,14 @@ export function CafeConversationSummaryModal({
                           onPress={() => speak(phraseToRemember)}
                           style={styles.listenButton}
                         >
-                          <AppText variant="button" tone="strong" script="latin">
-                            {listenedPhrases[phraseToRemember] ? "Réécouter" : "Écouter"}
+                          <AppText
+                            variant="button"
+                            tone="strong"
+                            script="latin"
+                          >
+                            {listenedPhrases[phraseToRemember]
+                              ? "Réécouter"
+                              : "Écouter"}
                           </AppText>
                         </Pressable>
                       </View>
@@ -333,7 +380,12 @@ export function CafeConversationSummaryModal({
                 onPress={() => setIsReviewing((current) => !current)}
                 style={styles.secondaryAction}
               >
-                <AppText variant="button" tone="strong" script="latin" align="center">
+                <AppText
+                  variant="button"
+                  tone="strong"
+                  script="latin"
+                  align="center"
+                >
                   {isReviewing ? "Retour au bilan" : "Ouvrir les phrases"}
                 </AppText>
               </Pressable>
@@ -344,7 +396,12 @@ export function CafeConversationSummaryModal({
                 onPress={handleFinish}
                 style={styles.primaryAction}
               >
-                <AppText variant="button" tone="strong" script="latin" align="center">
+                <AppText
+                  variant="button"
+                  tone="strong"
+                  script="latin"
+                  align="center"
+                >
                   Terminer
                 </AppText>
               </Pressable>

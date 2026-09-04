@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
 
 import { AppText } from "../app-text";
 import { ActionButton } from "../ui/action-button";
@@ -20,11 +20,32 @@ type MissionLaunchModalProps = {
   onStart: () => void;
 };
 
-function DetailList({ items, accent }: { items?: string[]; accent: string }) {
+type LandscapeSpacing = {
+  detailGap: number;
+  detailMarginTop: number;
+};
+
+function DetailList({
+  items,
+  accent,
+  landscapeSpacing,
+}: {
+  items?: string[];
+  accent: string;
+  landscapeSpacing?: LandscapeSpacing;
+}) {
   if (!items?.length) return null;
 
   return (
-    <View style={styles.detailSection}>
+    <View
+      style={[
+        styles.detailSection,
+        landscapeSpacing && {
+          gap: landscapeSpacing.detailGap,
+          marginTop: landscapeSpacing.detailMarginTop,
+        },
+      ]}
+    >
       {items.slice(0, 3).map((item) => (
         <View key={item} style={styles.detailRow}>
           <View style={[styles.detailDot, { backgroundColor: accent }]} />
@@ -47,6 +68,22 @@ export function MissionLaunchModal({
   onStart,
 }: MissionLaunchModalProps) {
   const startLockRef = React.useRef(false);
+  const { height, width } = useWindowDimensions();
+  const isPhoneLandscape = width > height && height <= 600;
+  const landscapeProgress = isPhoneLandscape
+    ? Math.min(1, Math.max(0, (height - 360) / 240))
+    : 1;
+  const interpolateLandscape = (compact: number, comfortable: number) =>
+    Math.round(compact + (comfortable - compact) * landscapeProgress);
+  const landscapeSpacing = isPhoneLandscape
+    ? {
+        detailGap: interpolateLandscape(5, 8),
+        detailMarginTop: interpolateLandscape(8, 14),
+      }
+    : undefined;
+  const landscapeModalHeight = isPhoneLandscape
+    ? Math.min(Math.round(height * 0.9), 520)
+    : undefined;
 
   React.useEffect(() => {
     if (visible) startLockRef.current = false;
@@ -62,15 +99,16 @@ export function MissionLaunchModal({
     onStart();
   };
 
-  return (
-    <AppDialog
-      visible={visible}
-      onRequestClose={onCancel}
-      accentColor={accent}
-      accessibilityLabel={`Lancer la mission ${mission.title}`}
-      contentContainerStyle={styles.cardContent}
-    >
-      <View style={styles.topRow}>
+  const details = (
+    <>
+      <View
+        style={[
+          styles.topRow,
+          isPhoneLandscape && {
+            marginBottom: interpolateLandscape(8, 14),
+          },
+        ]}
+      >
         <MissionAccessBadge access={mission.access} accent={accent} />
 
         {mission.duration ? (
@@ -85,14 +123,26 @@ export function MissionLaunchModal({
       </AppText>
 
       {mission.objective ? (
-        <View style={styles.objectiveBox}>
+        <View
+          style={[
+            styles.objectiveBox,
+            isPhoneLandscape && {
+              marginTop: interpolateLandscape(8, 16),
+              paddingVertical: interpolateLandscape(9, 13),
+            },
+          ]}
+        >
           <AppText variant="body" tone="muted">
             {mission.objective}
           </AppText>
         </View>
       ) : null}
 
-      <DetailList items={highlights} accent={accent} />
+      <DetailList
+        items={highlights}
+        accent={accent}
+        landscapeSpacing={landscapeSpacing}
+      />
 
       {showImmersionNotice ? (
         <View
@@ -102,6 +152,11 @@ export function MissionLaunchModal({
             {
               borderColor: `${accent}55`,
               backgroundColor: `${accent}10`,
+            },
+            isPhoneLandscape && {
+              gap: interpolateLandscape(5, 7),
+              marginTop: interpolateLandscape(9, 16),
+              paddingVertical: interpolateLandscape(9, 13),
             },
           ]}
         >
@@ -120,16 +175,85 @@ export function MissionLaunchModal({
           </AppText>
         </View>
       ) : null}
+    </>
+  );
 
-      <DialogActions style={styles.actions}>
-        <ActionButton
-          label="Commencer la mission"
-          size="large"
-          accentColor={accent}
-          onPress={handleStart}
-        />
-        <ActionButton label="Annuler" variant="secondary" onPress={onCancel} />
-      </DialogActions>
+  const actions = (
+    <DialogActions
+      style={[
+        styles.actions,
+        isPhoneLandscape && {
+          gap: interpolateLandscape(8, 10),
+          marginTop: interpolateLandscape(10, 16),
+        },
+      ]}
+    >
+      <ActionButton
+        label="Commencer la mission"
+        size="large"
+        accentColor={accent}
+        onPress={handleStart}
+        style={
+          isPhoneLandscape
+            ? {
+                minHeight: interpolateLandscape(44, 50),
+                paddingVertical: 0,
+              }
+            : undefined
+        }
+      />
+      <ActionButton
+        label="Annuler"
+        variant="secondary"
+        onPress={onCancel}
+        style={
+          isPhoneLandscape
+            ? {
+                minHeight: interpolateLandscape(44, 48),
+                paddingVertical: 0,
+              }
+            : undefined
+        }
+      />
+    </DialogActions>
+  );
+
+  return (
+    <AppDialog
+      visible={visible}
+      onRequestClose={onCancel}
+      accentColor={accent}
+      accessibilityLabel={`Lancer la mission ${mission.title}`}
+      maxHeight={landscapeModalHeight}
+      fillAvailableHeight={isPhoneLandscape}
+      respectHorizontalSafeArea={isPhoneLandscape}
+      scrollable={!isPhoneLandscape}
+      contentContainerStyle={[
+        styles.cardContent,
+        isPhoneLandscape && {
+          flex: 1,
+          paddingVertical: interpolateLandscape(10, 18),
+        },
+      ]}
+    >
+      {isPhoneLandscape ? (
+        <>
+          <ScrollView
+            style={styles.landscapeDetailsScroller}
+            contentContainerStyle={styles.landscapeDetailsContent}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            {details}
+          </ScrollView>
+          {actions}
+        </>
+      ) : (
+        <>
+          {details}
+          {actions}
+        </>
+      )}
     </AppDialog>
   );
 }
@@ -137,6 +261,12 @@ export function MissionLaunchModal({
 const styles = StyleSheet.create({
   cardContent: {
     padding: 20,
+  },
+  landscapeDetailsScroller: {
+    flex: 1,
+  },
+  landscapeDetailsContent: {
+    paddingBottom: 2,
   },
   topRow: {
     flexDirection: "row",

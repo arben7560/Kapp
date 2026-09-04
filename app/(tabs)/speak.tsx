@@ -326,6 +326,7 @@ function Scenes({
 }: {
   onSelectTheme: (theme: ThemeKey) => void;
 }) {
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const listRef = useRef<Animated.FlatList<ThemeKey>>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const [viewportWidth, setViewportWidth] = useState(0);
@@ -335,7 +336,11 @@ function Scenes({
   const cardWidth = Math.min(Math.max(viewportWidth - 62, 278), 590);
   const itemSize = cardWidth + gap;
   const sidePadding = Math.max(0, (viewportWidth - cardWidth) / 2);
-  const cardHeight = Math.min(Math.max(cardWidth * 1.16, 372), 520);
+  const defaultCardHeight = Math.min(Math.max(cardWidth * 1.16, 372), 520);
+  const isLandscapePhone = windowWidth > windowHeight && windowHeight < 600;
+  const cardHeight = isLandscapePhone
+    ? Math.min(windowHeight * 0.66, 360)
+    : defaultCardHeight;
 
   const scrollToIndex = (index: number) => {
     const nextIndex = Math.max(
@@ -700,6 +705,7 @@ function ThemeModeSheet({
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
+  const isLandscapePhone = windowWidth > windowHeight && windowHeight < 600;
   const sheetWidth = Math.min(Math.max(windowWidth - 32, 0), 520);
   const sheetTopInset = Math.max(12, insets.top + 8);
   const sheetBottomInset = Math.max(16, insets.bottom + 12);
@@ -707,12 +713,23 @@ function ThemeModeSheet({
     300,
     windowHeight - sheetTopInset - sheetBottomInset,
   );
-  const sheetMaxHeight = Math.min(
-    Math.max(300, availableSheetHeight * (windowHeight < 600 ? 0.94 : 0.9)),
-    availableSheetHeight,
-    680,
-  );
-  const heroHeight = windowHeight < 500 ? 104 : windowHeight < 700 ? 128 : 152;
+  const sheetMaxHeight = isLandscapePhone
+    ? Math.max(
+        0,
+        (windowHeight - insets.top - insets.bottom) * 0.88,
+      )
+    : Math.min(
+        Math.max(300, availableSheetHeight * (windowHeight < 600 ? 0.94 : 0.9)),
+        availableSheetHeight,
+        680,
+      );
+  const heroHeight = isLandscapePhone
+    ? Math.min(Math.max(windowHeight * 0.23, 72), 96)
+    : windowHeight < 500
+      ? 104
+      : windowHeight < 700
+        ? 128
+        : 152;
 
   useEffect(() => {
     if (visible && selectedTheme) {
@@ -810,7 +827,12 @@ function ThemeModeSheet({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <View style={styles.sheetRoot}>
+      <View
+        style={[
+          styles.sheetRoot,
+          isLandscapePhone && styles.sheetRootLandscapePhone,
+        ]}
+      >
         <Animated.View
           pointerEvents="none"
           style={[
@@ -837,7 +859,7 @@ function ThemeModeSheet({
           style={[
             styles.sheetAnimatedWrap,
             {
-              paddingBottom: sheetBottomInset,
+              paddingBottom: isLandscapePhone ? 0 : sheetBottomInset,
               transform: [{ translateY }],
             },
           ]}
@@ -881,12 +903,21 @@ function ThemeModeSheet({
             />
 
             <View style={styles.sheetTopSpecular} />
-            <View style={styles.sheetHandle} />
+            <View
+              style={[
+                styles.sheetHandle,
+                isLandscapePhone && styles.sheetHandleLandscapePhone,
+              ]}
+            />
 
             <ScrollView
-              style={styles.sheetScroll}
+              style={[
+                styles.sheetScroll,
+                isLandscapePhone && styles.sheetScrollLandscapePhone,
+              ]}
               contentContainerStyle={[
                 styles.sheetScrollContent,
+                isLandscapePhone && styles.sheetScrollContentLandscapePhone,
                 { paddingBottom: insets.bottom > 0 ? 8 : 2 },
               ]}
               showsVerticalScrollIndicator={false}
@@ -929,12 +960,18 @@ function ThemeModeSheet({
                   accessibilityRole="button"
                   accessibilityLabel="Fermer"
                   onPress={onClose}
+                  hitSlop={6}
                   style={styles.sheetCloseIcon}
                 >
                   <X size={18} strokeWidth={2} color={MUTED} />
                 </Pressable>
 
-                <View style={styles.sheetHeroCopy}>
+                <View
+                  style={[
+                    styles.sheetHeroCopy,
+                    isLandscapePhone && styles.sheetHeroCopyLandscapePhone,
+                  ]}
+                >
                   <View style={styles.sheetKickerRow}>
                     <View
                       style={[
@@ -970,12 +1007,18 @@ function ThemeModeSheet({
                 </View>
               </View>
 
-              <View style={styles.sheetMetaRow}>
+              <View
+                style={[
+                  styles.sheetMetaRow,
+                  isLandscapePhone && styles.sheetMetaRowLandscapePhone,
+                ]}
+              >
                 {["Guidé", "Interactif"].map((label) => (
                   <View
                     key={label}
                     style={[
                       styles.sheetMetaPill,
+                      isLandscapePhone && styles.sheetMetaPillLandscapePhone,
                       { borderColor: `${config.accent}26` },
                     ]}
                   >
@@ -986,7 +1029,12 @@ function ThemeModeSheet({
                 ))}
               </View>
 
-              <View style={styles.sheetBody}>
+              <View
+                style={[
+                  styles.sheetBody,
+                  isLandscapePhone && styles.sheetBodyLandscapePhone,
+                ]}
+              >
                 <View style={styles.sheetModeHeader}>
                   <AppText variant="sectionTitle" tone="strong">
                     Choisis ton approche
@@ -1001,13 +1049,19 @@ function ThemeModeSheet({
                   </AppText>
                 </View>
 
-                <View style={styles.sheetOptions}>
+                <View
+                  style={[
+                    styles.sheetOptions,
+                    isLandscapePhone && styles.sheetOptionsLandscapePhone,
+                  ]}
+                >
                   <SheetOptionCard
                     title="Choisis la scène"
                     subtitle="Entre dans la situation, écoute et réponds comme sur place."
                     icon="실전"
                     accent={config.accent}
                     onPress={goToImmersive}
+                    compact={isLandscapePhone}
                   />
 
                   <SheetOptionCard
@@ -1016,11 +1070,18 @@ function ThemeModeSheet({
                     icon="표현"
                     accent={config.accent}
                     onPress={goToText}
+                    compact={isLandscapePhone}
                   />
                 </View>
               </View>
 
-              <Pressable onPress={onClose} style={styles.sheetCloseButton}>
+              <Pressable
+                onPress={onClose}
+                style={[
+                  styles.sheetCloseButton,
+                  isLandscapePhone && styles.sheetCloseButtonLandscapePhone,
+                ]}
+              >
                 <AppText variant="button" tone="soft" align="center">
                   Fermer
                 </AppText>
@@ -1039,12 +1100,14 @@ function SheetOptionCard({
   icon,
   accent,
   onPress,
+  compact = false,
 }: {
   title: string;
   subtitle: string;
   icon: string;
   accent: string;
   onPress: () => void;
+  compact?: boolean;
 }) {
   const [scaleAnim] = useState(() => new Animated.Value(1));
 
@@ -1076,6 +1139,7 @@ function SheetOptionCard({
       <Animated.View
         style={[
           styles.sheetOptionCard,
+          compact && styles.sheetOptionCardLandscapePhone,
           {
             borderColor: `${accent}33`,
             transform: [{ scale: scaleAnim }],
@@ -1467,6 +1531,9 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     alignItems: "center",
   },
+  sheetRootLandscapePhone: {
+    justifyContent: "center",
+  },
   sheetBackdrop: {
     backgroundColor: "rgba(2,3,6,0.80)",
   },
@@ -1514,11 +1581,22 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 4,
   },
+  sheetHandleLandscapePhone: {
+    marginTop: 6,
+    marginBottom: 2,
+  },
   sheetScroll: {
     width: "100%",
   },
+  sheetScrollLandscapePhone: {
+    flexShrink: 1,
+  },
   sheetScrollContent: {
     padding: 16,
+  },
+  sheetScrollContentLandscapePhone: {
+    paddingTop: 10,
+    paddingHorizontal: 10,
   },
   sheetHeroFrame: {
     width: "100%",
@@ -1548,6 +1626,9 @@ const styles = StyleSheet.create({
   sheetHeroCopy: {
     padding: 14,
   },
+  sheetHeroCopyLandscapePhone: {
+    padding: 10,
+  },
   sheetKickerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1568,6 +1649,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 16,
   },
+  sheetMetaRowLandscapePhone: {
+    gap: 6,
+    marginTop: 7,
+    marginBottom: 9,
+  },
   sheetMetaPill: {
     paddingHorizontal: 12,
     paddingVertical: 5,
@@ -1575,8 +1661,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: "rgba(255,255,255,0.04)",
   },
+  sheetMetaPillLandscapePhone: {
+    paddingVertical: 3,
+  },
   sheetBody: {
     gap: 12,
+  },
+  sheetBodyLandscapePhone: {
+    gap: 6,
   },
   sheetModeHeader: {
     gap: 2,
@@ -1588,6 +1680,10 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 8,
   },
+  sheetOptionsLandscapePhone: {
+    gap: 6,
+    marginTop: 4,
+  },
   sheetOptionCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -1596,6 +1692,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: "rgba(255,255,255,0.035)",
     gap: 12,
+  },
+  sheetOptionCardLandscapePhone: {
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    gap: 10,
   },
   sheetOptionIconBox: {
     width: 42,
@@ -1626,5 +1727,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
     backgroundColor: "rgba(255,255,255,0.045)",
+  },
+  sheetCloseButtonLandscapePhone: {
+    minHeight: 44,
+    marginTop: 8,
+    paddingVertical: 8,
+    justifyContent: "center",
   },
 });
