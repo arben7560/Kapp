@@ -2,11 +2,15 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { ImageBackground, ScrollView, StyleSheet, View } from "react-native";
+import { ImageBackground, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
 import { GuidedMissionsHeader } from "../../components/immersion/GuidedMissionsHeader";
+import {
+  GuidedMissionsScaffold,
+  type GuidedMissionsGridLayout,
+} from "../../components/immersion/GuidedMissionsScaffold";
 import {
   MissionCollectionCard,
   MissionCollectionSectionHeader,
@@ -64,16 +68,6 @@ export default function MetroMissionsScreen() {
   const [selectedMission, setSelectedMission] =
     React.useState<MetroMission | null>(null);
   const responsive = useResponsiveLayout({ maxWidth: 900 });
-  const effectiveGap = Math.max(15, responsive.gridGap);
-  const missionColumns = responsive.getColumns({
-    minColumnWidth: 320,
-    maxColumns: 2,
-    gap: effectiveGap,
-  });
-  const missionItemWidth = responsive.getGridItemWidth(
-    missionColumns,
-    effectiveGap,
-  );
   const completeMissions = metroMissions.filter(
     (mission) => mission.missionKind === "complete",
   );
@@ -128,7 +122,11 @@ export default function MetroMissionsScreen() {
     }
   };
 
-  const renderMissionCard = (mission: MetroMission, compact = false) => {
+  const renderMissionCard = (
+    mission: MetroMission,
+    compact = false,
+    itemStyle?: GuidedMissionsGridLayout["itemStyle"],
+  ) => {
     const order = metroMissions.findIndex((item) => item.id === mission.id) + 1;
     const background =
       METRO_CARD_BACKGROUNDS[mission.id] ?? metroCardBackground;
@@ -139,7 +137,7 @@ export default function MetroMissionsScreen() {
         scene="metro"
         missionId={mission.id}
         accent={CYAN}
-        style={missionColumns > 1 ? { width: missionItemWidth } : undefined}
+        style={itemStyle}
       >
         <MissionCollectionCard
           mission={mission}
@@ -175,27 +173,24 @@ export default function MetroMissionsScreen() {
       <View style={[styles.ambientGlow, { backgroundColor: `${CYAN}0E` }]} />
 
       <SafeAreaView style={styles.safe}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.content,
-            { paddingHorizontal: responsive.horizontalPadding },
-          ]}
-        >
-          <View
-            style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
-          >
+        <GuidedMissionsScaffold
+          responsive={responsive}
+          renderHeader={(isLandscape) => (
             <GuidedMissionsHeader
               accent={CYAN}
               compact={responsive.isCompact}
               intro="Apprends à te déplacer en métro en immersion"
+              landscape={isLandscape}
               onBack={handleBack}
               title="Métro"
             />
-
+          )}
+          renderMissions={({ columns, gap, isLandscape, itemStyle }) => (
+            <>
             <MissionCollectionSectionHeader
               first
               accent={CYAN}
+              landscape={isLandscape}
               title="MISSIONS COMPLÈTES"
               subtitle="Choisis ton trajet réel dans le métro de Séoul."
             />
@@ -203,15 +198,19 @@ export default function MetroMissionsScreen() {
             <View
               style={[
                 styles.missionStack,
-                missionColumns > 1 && styles.missionGrid,
-                { gap: effectiveGap },
+                columns > 1 && styles.missionGrid,
+                isLandscape && styles.missionStackLandscape,
+                { gap },
               ]}
             >
-              {completeMissions.map((mission) => renderMissionCard(mission))}
+              {completeMissions.map((mission) =>
+                renderMissionCard(mission, false, itemStyle),
+              )}
             </View>
 
             <MissionCollectionSectionHeader
               accent={CYAN}
+              landscape={isLandscape}
               title="MINI-MISSIONS CIBLÉES"
               subtitle="Des scènes courtes centrées sur une compétence."
             />
@@ -219,14 +218,18 @@ export default function MetroMissionsScreen() {
             <View
               style={[
                 styles.missionStack,
-                missionColumns > 1 && styles.missionGrid,
-                { gap: effectiveGap },
+                columns > 1 && styles.missionGrid,
+                isLandscape && styles.missionStackLandscape,
+                { gap },
               ]}
             >
-              {miniMissions.map((mission) => renderMissionCard(mission, true))}
+              {miniMissions.map((mission) =>
+                renderMissionCard(mission, true, itemStyle),
+              )}
             </View>
-          </View>
-        </ScrollView>
+            </>
+          )}
+        />
 
         <MissionLaunchModal
           visible={!!selectedMission}
@@ -263,16 +266,11 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
   },
-  contentFrame: {
-    width: "100%",
-    alignSelf: "center",
-  },
-  content: {
-    paddingTop: 0,
-    paddingBottom: 96,
-  },
   missionStack: {
     gap: 15,
+  },
+  missionStackLandscape: {
+    alignItems: "flex-start",
   },
   missionGrid: {
     flexDirection: "row",

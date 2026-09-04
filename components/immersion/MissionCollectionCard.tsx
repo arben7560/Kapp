@@ -338,6 +338,7 @@ type MissionCollectionSectionHeaderProps = {
   premium?: boolean;
   premiumActive?: boolean;
   first?: boolean;
+  landscape?: boolean;
 };
 
 export function MissionCollectionSectionHeader({
@@ -347,11 +348,19 @@ export function MissionCollectionSectionHeader({
   premium = false,
   premiumActive = false,
   first = false,
+  landscape = false,
 }: MissionCollectionSectionHeaderProps) {
   const headerAccent = premiumActive ? PREMIUM_SOFT : PREMIUM_GOLD;
 
   return (
-    <View style={[styles.sectionHeader, first && styles.sectionHeaderFirst]}>
+    <View
+      style={[
+        styles.sectionHeader,
+        first && styles.sectionHeaderFirst,
+        landscape && styles.sectionHeaderLandscape,
+        first && landscape && styles.sectionHeaderFirstLandscape,
+      ]}
+    >
       <View style={styles.sectionCopy}>
         <View style={styles.sectionTitleRow}>
           {premium ? (
@@ -673,6 +682,13 @@ const styles = StyleSheet.create({
   },
   sectionHeaderFirst: {
     marginTop: 8,
+  },
+  sectionHeaderLandscape: {
+    marginTop: 24,
+    marginBottom: 12,
+  },
+  sectionHeaderFirstLandscape: {
+    marginTop: 0,
   },
   sectionCopy: {
     flexShrink: 0,

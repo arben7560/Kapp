@@ -30,6 +30,7 @@ type GuidedMissionsHeaderProps = {
   accent: string;
   compact?: boolean;
   intro: string;
+  landscape?: boolean;
   onBack?: () => void;
   title: string;
 };
@@ -45,6 +46,7 @@ export function GuidedMissionsHeader({
   accent,
   compact = false,
   intro,
+  landscape = false,
   onBack,
   title,
 }: GuidedMissionsHeaderProps) {
@@ -76,15 +78,30 @@ export function GuidedMissionsHeader({
 
   return (
     <>
-      <View style={[styles.root, compact && styles.rootCompact]}>
+      <View
+        style={[
+          styles.root,
+          compact && styles.rootCompact,
+          landscape && styles.rootLandscape,
+        ]}
+      >
         <AppBackButton
           accessibilityLabel={`Retour depuis les missions ${title}`}
           onPress={onBack}
-          style={[styles.backButton, compact && styles.backButtonCompact]}
+          style={[
+            styles.backButton,
+            compact && styles.backButtonCompact,
+            landscape && styles.backButtonLandscape,
+          ]}
         />
 
         <View style={styles.copy}>
-          <View style={styles.eyebrowRow}>
+          <View
+            style={[
+              styles.eyebrowRow,
+              landscape && styles.eyebrowRowLandscape,
+            ]}
+          >
             <View style={[styles.eyebrowMarker, { backgroundColor: accent }]} />
             <AppText
               variant="sectionLabel"
@@ -103,7 +120,11 @@ export function GuidedMissionsHeader({
             {title}
           </AppText>
 
-          <AppText variant="body" tone="muted" style={styles.intro}>
+          <AppText
+            variant="body"
+            tone="muted"
+            style={[styles.intro, landscape && styles.introLandscape]}
+          >
             {intro}
           </AppText>
 
@@ -112,6 +133,7 @@ export function GuidedMissionsHeader({
               accessibilityLabel={`${masteryProgress.completedCount} missions maîtrisées sur ${masteryProgress.total}`}
               style={[
                 styles.masteryPanel,
+                landscape && styles.masteryPanelLandscape,
                 { borderColor: `${accent}30` },
               ]}
             >
@@ -157,7 +179,13 @@ export function GuidedMissionsHeader({
           ) : null}
         </View>
 
-        <View style={[styles.divider, compact && styles.dividerCompact]}>
+        <View
+          style={[
+            styles.divider,
+            compact && styles.dividerCompact,
+            landscape && styles.dividerLandscape,
+          ]}
+        >
           <View style={[styles.dividerAccent, { backgroundColor: accent }]} />
           <View style={styles.dividerLine} />
         </View>
@@ -355,11 +383,18 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     marginBottom: 20,
   },
+  rootLandscape: {
+    paddingTop: 0,
+    marginBottom: 0,
+  },
   backButton: {
     marginBottom: 28,
   },
   backButtonCompact: {
     marginBottom: 20,
+  },
+  backButtonLandscape: {
+    marginBottom: 16,
   },
   copy: {
     width: "100%",
@@ -376,9 +411,15 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 999,
   },
+  eyebrowRowLandscape: {
+    marginBottom: 6,
+  },
   intro: {
     maxWidth: 580,
     marginTop: 12,
+  },
+  introLandscape: {
+    marginTop: 8,
   },
   masteryPanel: {
     marginTop: 18,
@@ -392,6 +433,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
+  },
+  masteryPanelLandscape: {
+    marginTop: 12,
+    minHeight: 56,
+    paddingVertical: 9,
   },
   masteryCopy: {
     flex: 1,
@@ -439,6 +485,9 @@ const styles = StyleSheet.create({
   },
   dividerCompact: {
     marginTop: 20,
+  },
+  dividerLandscape: {
+    marginTop: 16,
   },
   dividerAccent: {
     width: 44,

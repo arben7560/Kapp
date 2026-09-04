@@ -2,11 +2,12 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { ImageBackground, ScrollView, StyleSheet, View } from "react-native";
+import { ImageBackground, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
 import { GuidedMissionsHeader } from "../../components/immersion/GuidedMissionsHeader";
+import { GuidedMissionsScaffold } from "../../components/immersion/GuidedMissionsScaffold";
 import {
   MissionCollectionCard,
   MissionCollectionSectionHeader,
@@ -53,16 +54,6 @@ export default function CafeMissionsScreen() {
   const [selectedMission, setSelectedMission] =
     React.useState<CafeMission | null>(null);
   const responsive = useResponsiveLayout({ maxWidth: 860 });
-  const effectiveGap = Math.max(15, responsive.gridGap);
-  const missionColumns = responsive.getColumns({
-    minColumnWidth: 320,
-    maxColumns: 2,
-    gap: effectiveGap,
-  });
-  const missionItemWidth = responsive.getGridItemWidth(
-    missionColumns,
-    effectiveGap,
-  );
 
   const handleBack = React.useCallback(() => {
     if (router.canGoBack()) {
@@ -134,25 +125,24 @@ export default function CafeMissionsScreen() {
       <View style={[styles.ambientGlow, { backgroundColor: `${PINK}10` }]} />
 
       <SafeAreaView style={styles.safe}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.content,
-            { paddingHorizontal: responsive.horizontalPadding },
-          ]}
-        >
-          <View style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}>
+        <GuidedMissionsScaffold
+          responsive={responsive}
+          renderHeader={(isLandscape) => (
             <GuidedMissionsHeader
               accent={PINK}
               compact={responsive.isCompact}
               intro="Apprends à commander un café en immersion"
+              landscape={isLandscape}
               onBack={handleBack}
               title="Café"
             />
-
+          )}
+          renderMissions={({ columns, gap, isLandscape, itemStyle }) => (
+            <>
             <MissionCollectionSectionHeader
               first
               accent={PINK}
+              landscape={isLandscape}
               title="MISSIONS DISPONIBLES"
               subtitle={`${cafeMissions.length} situations à pratiquer`}
             />
@@ -160,8 +150,9 @@ export default function CafeMissionsScreen() {
             <View
               style={[
                 styles.missionStack,
-                missionColumns > 1 && styles.missionGrid,
-                { gap: effectiveGap },
+                columns > 1 && styles.missionGrid,
+                isLandscape && styles.missionStackLandscape,
+                { gap },
               ]}
             >
               {cafeMissions.map((mission, index) => {
@@ -178,9 +169,7 @@ export default function CafeMissionsScreen() {
                     scene="cafe"
                     missionId={mission.id}
                     accent={PINK}
-                    style={
-                      missionColumns > 1 ? { width: missionItemWidth } : undefined
-                    }
+                    style={itemStyle}
                   >
                     <MissionCollectionCard
                       mission={cardMission}
@@ -195,8 +184,9 @@ export default function CafeMissionsScreen() {
                 );
               })}
             </View>
-          </View>
-        </ScrollView>
+            </>
+          )}
+        />
 
         <MissionLaunchModal
           visible={!!selectedMission}
@@ -227,16 +217,11 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
   },
-  contentFrame: {
-    width: "100%",
-    alignSelf: "center",
-  },
-  content: {
-    paddingTop: 0,
-    paddingBottom: 96,
-  },
   missionStack: {
     gap: 15,
+  },
+  missionStackLandscape: {
+    alignItems: "flex-start",
   },
   missionGrid: {
     flexDirection: "row",
