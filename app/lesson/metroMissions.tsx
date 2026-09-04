@@ -155,6 +155,8 @@ export default function MetroMissionsScreen() {
     );
   };
 
+  const isVocalMission = selectedMission?.id === METRO_VOCAL_MISSION_ID;
+
   return (
     <ImageBackground source={metroBackground} style={styles.background}>
       <BlurView
@@ -227,6 +229,12 @@ export default function MetroMissionsScreen() {
           visible={!!selectedMission}
           mission={selectedMission}
           accent={CYAN}
+          immersionNoticeTitle={isVocalMission ? "IMMERSION RÉELLE" : undefined}
+          immersionNoticeBody={
+            isVocalMission
+              ? "Ici, on te parle comme dans une vraie station à Séoul. Tu n’as pas besoin de tout comprendre : essaie, utilise les mémos et reviens autant de fois que nécessaire."
+              : undefined
+          }
           onCancel={() => setSelectedMission(null)}
           onStart={startSelectedMission}
         />
