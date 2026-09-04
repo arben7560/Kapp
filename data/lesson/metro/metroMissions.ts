@@ -22,11 +22,11 @@ export const metroMissions: MetroMission[] = [
   {
     id: DEFAULT_METRO_MISSION_ID,
     title: "Hongik → Gangnam",
-    subtitle: "Un trajet direct pour demander la ligne, la durée et la sortie.",
+    subtitle: "Une première immersion pour demander simplement comment aller à Gangnam.",
     access: "free",
-    duration: "5-7 min",
-    objective: "Réussir un trajet complet jusqu’à Gangnam.",
-    goals: ["Ligne", "Quai", "Durée", "Sortie"],
+    duration: "2 min",
+    objective: "Demander comment aller à Gangnam et comprendre une indication simple.",
+    goals: ["Demander", "Comprendre", "Merci"],
     scenarioKey: "hongik_to_gangnam_full",
     lessonId: "hongik_to_gangnam",
     missionKind: "complete",
@@ -144,80 +144,55 @@ function applyMetroMissionToLesson(
 }
 
 function createHongikCompleteLesson(lesson: MetroLesson): MetroLesson {
-  return createFocusedLesson(lesson, [
+  const focusedLesson = createFocusedLesson(lesson, [
     { stepId: "start", keepChoiceIds: ["ask1"] },
-
     {
       stepId: "ia_intro_route",
-      keepChoiceIds: ["repeat_intro", "ask_platform"],
+      keepChoiceIds: ["repeat_intro"],
+      extraChoices: [createThankChoice("thank_after_intro", "ia_end")],
     },
-
     {
       stepId: "ia_repeat_intro_route",
-      keepChoiceIds: ["ask_platform_after_repeat"],
-    },
-
-    {
-      stepId: "ia_platform_direction",
-      keepChoiceIds: ["repeat_platform"],
-      extraChoices: [
-        getSourceChoice(lesson, "ia_intro_route", "ask_trip", "ia_trip_time"),
-      ],
-    },
-
-    {
-      stepId: "ia_repeat_platform_direction",
       keepChoiceIds: [],
-      extraChoices: [
-        getSourceChoice(lesson, "ia_intro_route", "ask_trip", "ia_trip_time"),
-      ],
+      extraChoices: [createThankChoice("thank_after_intro_repeat", "ia_end")],
     },
-
-    {
-      stepId: "ia_trip_time",
-      keepChoiceIds: ["repeat_trip", "ask_transfer_from_trip"],
-    },
-
-    {
-      stepId: "ia_repeat_trip_time",
-      keepChoiceIds: ["ask_transfer_after_trip_repeat"],
-    },
-
-    {
-      stepId: "ia_transfer_info",
-      keepChoiceIds: ["repeat_transfer", "ask_exit_after_transfer"],
-    },
-
-    {
-      stepId: "ia_repeat_transfer_info",
-      keepChoiceIds: ["ask_exit_after_transfer_repeat"],
-    },
-
-    {
-      stepId: "ia_exit_info",
-      keepChoiceIds: ["repeat_exit", "ask_more_exit", "thank_final"],
-    },
-
-    {
-      stepId: "ia_repeat_exit_info",
-      keepChoiceIds: [
-        "ask_landmark_after_exit_repeat",
-        "thank_after_exit_repeat",
-      ],
-    },
-
-    {
-      stepId: "ia_exit_landmark_info",
-      keepChoiceIds: ["repeat_landmark", "thank_after_landmark"],
-    },
-
-    {
-      stepId: "ia_repeat_exit_landmark_info",
-      keepChoiceIds: ["thank_after_landmark_repeat"],
-    },
-
     { stepId: "ia_end" },
   ]);
+
+  return {
+    ...focusedLesson,
+    objective:
+      "Demander comment aller à Gangnam et comprendre une indication simple.",
+    steps: focusedLesson.steps.map((step) => {
+      if (step.id === "ia_intro_route") {
+        return {
+          ...step,
+          narrator: "Le passant vous donne une première indication simple.",
+          text: "Oui, bien sûr. À Hongik University, prenez la ligne 2 pour aller à Gangnam.",
+          korean:
+            "네, 물론입니다. 홍대입구역에서 강남역까지 2호선을 타시면 돼요.",
+          french:
+            "Oui, bien sûr. À Hongik University, prenez la ligne 2 pour aller à Gangnam.",
+          romanization:
+            "Ne, mullonimnida. Hongdaeipgu-yeogeseo Gangnam-yeokkkaji ihoseoneul tasimyeon dwaeyo.",
+        };
+      }
+
+      if (step.id === "ia_repeat_intro_route") {
+        return {
+          ...step,
+          text: "Bien sûr. Pour aller à Gangnam, prenez simplement la ligne 2.",
+          korean: "물론이죠. 강남역까지는 2호선을 타시면 돼요.",
+          french:
+            "Bien sûr. Pour aller à Gangnam, prenez simplement la ligne 2.",
+          romanization:
+            "Mullonijyo. Gangnam-yeokkkajineun ihoseoneul tasimyeon dwaeyo.",
+        };
+      }
+
+      return step;
+    }),
+  };
 }
 
 function createMyeongdongCompleteLesson(lesson: MetroLesson): MetroLesson {
