@@ -67,7 +67,7 @@ const THEMES: VocabularyTheme[] = [
     sub: "Restaurants et cuisine de rue",
     route: "/voc/gastronomie",
     isLocked: false,
-    background: require("../../../assets/images/bbq-card.png"),
+    background: require("../../../assets/images/bbq-card.jpg"),
   },
   {
     id: 2,
@@ -75,7 +75,7 @@ const THEMES: VocabularyTheme[] = [
     sub: "Salutations et survie",
     route: "/voc/basics",
     isLocked: false,
-    background: require("../../../assets/images/meet-card.png"),
+    background: require("../../../assets/images/meet-card.jpg"),
   },
   {
     id: 6,
@@ -83,7 +83,7 @@ const THEMES: VocabularyTheme[] = [
     sub: "S'orienter dans Séoul",
     route: "/voc/transport",
     isLocked: false,
-    background: require("../../../assets/images/transport-card.png"),
+    background: require("../../../assets/images/transport-card.jpg"),
   },
   {
     id: 3,
@@ -107,7 +107,7 @@ const THEMES: VocabularyTheme[] = [
     sub: "Sorties, bars et soju",
     route: "/voc/nuit",
     isLocked: true,
-    background: require("../../../assets/images/pocha2-card.png"),
+    background: require("../../../assets/images/pocha2-card.jpg"),
   },
   {
     id: 7,
@@ -123,7 +123,7 @@ const THEMES: VocabularyTheme[] = [
     sub: "Travail et réseautage",
     route: "/voc/work",
     isLocked: true,
-    background: require("../../../assets/images/businessmeeting-card.png"),
+    background: require("../../../assets/images/businessmeeting-card.jpg"),
   },
 ];
 

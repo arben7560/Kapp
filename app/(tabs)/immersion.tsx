@@ -141,7 +141,7 @@ export default function ImmersionScreen() {
 
         <CapsuleCard
           emoji="🏪"
-          imageSource={require("../../assets/immersion/convenience-night.png")}
+          imageSource={require("../../assets/immersion/convenience-night.jpg")}
           title="Convenience store de nuit"
           mood="Lumières froides, silence léger, passages discrets à la caisse."
           tags={["caisse", "snacks", "gestes", "ambiance"]}
@@ -150,7 +150,7 @@ export default function ImmersionScreen() {
 
         <CapsuleCard
           emoji="🚇"
-          imageSource={require("../../assets/immersion/gangnam.png")}
+          imageSource={require("../../assets/immersion/gangnam.jpg")}
           title="Sortie de métro à Gangnam"
           mood="Flux pressé, panneaux colorés, repères urbains et directions multiples."
           tags={["sorties", "lignes", "panneaux", "foule"]}
@@ -159,7 +159,7 @@ export default function ImmersionScreen() {
 
         <CapsuleCard
           emoji="☕"
-          imageSource={require("../../assets/immersion/seongsu.png")}
+          imageSource={require("../../assets/immersion/seongsu.jpg")}
           title="Café calme à Seongsu"
           mood="Décor posé, commandes simples, conversations basses et temps suspendu."
           tags={["menu", "commande", "ambiance", "gestes"]}
@@ -168,7 +168,7 @@ export default function ImmersionScreen() {
 
         <CapsuleCard
           emoji="🌆"
-          imageSource={require("../../assets/immersion/myeongdong.png")}
+          imageSource={require("../../assets/immersion/myeongdong.jpg")}
           title="Rue commerçante de Myeongdong"
           mood="Enseignes lumineuses, promotions vocales et énergie vibrante."
           tags={["enseignes", "promos", "mouvement", "ville"]}
@@ -177,7 +177,7 @@ export default function ImmersionScreen() {
 
         <CapsuleCard
           emoji="🤝"
-          imageSource={require("../../assets/immersion/social.png")}
+          imageSource={require("../../assets/immersion/social.jpg")}
           title="Codes sociaux du quotidien"
           mood="Politesse discrète, gestes respectueux et interactions implicites."
           tags={["politesse", "gestes", "respect", "habitudes"]}

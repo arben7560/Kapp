@@ -166,7 +166,6 @@ const SEQUENCES: any[] = [
     trackKey: "numbers",
     place: "HONGDAE • QUANTITÉS",
     narrative: "Maîtrise les nombres dans le réel.",
-    background: require("../../assets/images/count-card.png"),
     type: "pedagogical",
   },
   {

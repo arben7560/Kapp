@@ -66,7 +66,7 @@ const MODULES: CountingModule[] = [
     sub: "Système coréen natif",
     route: "/comptage/base",
     isLocked: false,
-    background: require("../../../assets/images/counting-base-card.png"),
+    background: require("../../../assets/images/counting-base-card.jpg"),
   },
   {
     id: 2,
@@ -74,7 +74,7 @@ const MODULES: CountingModule[] = [
     sub: "Système sino-coréen",
     route: "/comptage/sino",
     isLocked: false,
-    background: require("../../../assets/images/counting-sino-card.png"),
+    background: require("../../../assets/images/counting-sino-card.jpg"),
   },
   {
     id: 3,
@@ -82,7 +82,7 @@ const MODULES: CountingModule[] = [
     sub: "Le défi du système mixte",
     route: "/comptage/heures",
     isLocked: true,
-    background: require("../../../assets/images/counting-hours-card.png"),
+    background: require("../../../assets/images/counting-hours-card.jpg"),
   },
   {
     id: 4,
@@ -90,7 +90,7 @@ const MODULES: CountingModule[] = [
     sub: "Gérer l'argent au quotidien",
     route: "/comptage/prix",
     isLocked: true,
-    background: require("../../../assets/images/counting-prices-card.png"),
+    background: require("../../../assets/images/counting-prices-card.jpg"),
   },
   {
     id: 5,
@@ -98,7 +98,7 @@ const MODULES: CountingModule[] = [
     sub: "Numéros, étages et bus",
     route: "/comptage/phone",
     isLocked: true,
-    background: require("../../../assets/images/counting-phone-card.png"),
+    background: require("../../../assets/images/counting-phone-card.jpg"),
   },
   {
     id: 6,
@@ -106,7 +106,7 @@ const MODULES: CountingModule[] = [
     sub: "Jours, mois et années",
     route: "/comptage/dates",
     isLocked: true,
-    background: require("../../../assets/images/counting-dates-card.png"),
+    background: require("../../../assets/images/counting-dates-card.jpg"),
   },
   {
     id: 7,
@@ -114,7 +114,7 @@ const MODULES: CountingModule[] = [
     sub: "Le système coréen unique",
     route: "/comptage/age",
     isLocked: true,
-    background: require("../../../assets/images/counting-age-card.png"),
+    background: require("../../../assets/images/counting-age-card.jpg"),
   },
   {
     id: 8,
@@ -122,7 +122,7 @@ const MODULES: CountingModule[] = [
     sub: "Premier, deuxième, troisième...",
     route: "/comptage/ordinals",
     isLocked: true,
-    background: require("../../../assets/images/counting-ordinals-card.png"),
+    background: require("../../../assets/images/counting-ordinals-card.jpg"),
   },
 ];
 

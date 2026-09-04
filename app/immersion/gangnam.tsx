@@ -3,7 +3,7 @@ import { ImmersionPlaceholder } from "../../components/immersion/ImmersionPlaceh
 export default function GangnamImmersionScreen() {
   return (
     <ImmersionPlaceholder
-      imageSource={require("../../assets/immersion/gangnam.png")}
+      imageSource={require("../../assets/immersion/gangnam.jpg")}
       title="Sortie de métro à Gangnam"
       description="Flux pressé, panneaux colorés, repères urbains et directions multiples."
     />

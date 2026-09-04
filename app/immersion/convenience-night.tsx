@@ -503,7 +503,7 @@ export default function GangnamRainRunScreen() {
             }}
           >
             <Image
-              source={require("../../assets/immersion/gangnam.png")}
+              source={require("../../assets/immersion/gangnam.jpg")}
               resizeMode="cover"
               style={{ width: "100%", height: 240 }}
             />

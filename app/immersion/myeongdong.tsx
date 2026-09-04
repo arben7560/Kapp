@@ -3,7 +3,7 @@ import { ImmersionPlaceholder } from "../../components/immersion/ImmersionPlaceh
 export default function MyeongdongImmersionScreen() {
   return (
     <ImmersionPlaceholder
-      imageSource={require("../../assets/immersion/myeongdong.png")}
+      imageSource={require("../../assets/immersion/myeongdong.jpg")}
       title="Rue commerçante de Myeongdong"
       description="Enseignes lumineuses, promotions vocales et énergie vibrante."
     />

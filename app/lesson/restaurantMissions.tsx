@@ -24,7 +24,7 @@ import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 
 const restaurantBackground = require("../../assets/images/restaurant.jpg");
-const restaurantMissionImage = require("../../assets/images/restaurant.png");
+const restaurantMissionImage = require("../../assets/images/restaurant-missions.jpg");
 
 const BG_DEEP = "#050508";
 const ORANGE = "#FB923C";
