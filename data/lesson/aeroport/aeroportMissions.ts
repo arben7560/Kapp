@@ -212,23 +212,57 @@ export function applyAeroportMissionToScenario<TScenario extends ScenarioLike>(
   const thanksChoice = getThanksChoice(scenario);
 
   switch (scenarioKey) {
-    case "go_seoul_station":
+    case "go_seoul_station": {
+      const exactLocationChoice: ChoiceLike = {
+        id: "choice_exact_location_free",
+        label: "C’est où exactement ?",
+        korean: "정확히 어디로 가면 돼요?",
+        romanization: "Jeonghwakhi eodiro gamyeon dwaeyo?",
+        nextNodeId: "ia_welcome_repeat",
+      };
+      const repeatDetailChoice = cloneChoice(
+        getChoice(scenario, "user_after_transport", "repeat_transport"),
+      );
+
+      if (repeatDetailChoice) {
+        repeatDetailChoice.id = "repeat_free_location_detail";
+        repeatDetailChoice.nextNodeId = "ia_transport_repeat";
+      }
+
       keepChoices(scenario, "user_start", ["choice_ask_seoul_station"]);
       keepChoices(
         scenario,
         "user_after_welcome",
         ["repeat_welcome"],
-        thanksChoice ? [thanksChoice] : [],
+        [exactLocationChoice, ...(thanksChoice ? [thanksChoice] : [])],
       );
-      redirectRepeatToCleanChoices(
-        scenario,
-        "ia_welcome_repeat",
-        "user_after_welcome",
-        "user_after_welcome_after_repeat",
-        [],
-        thanksChoice ? [thanksChoice] : [],
-      );
+
+      const welcomeRepeatNode = scenario.nodes.ia_welcome_repeat;
+      const sourceAfterWelcome = scenario.nodes.user_after_welcome;
+      if (welcomeRepeatNode && sourceAfterWelcome) {
+        scenario.nodes.user_after_welcome_free_detail = {
+          ...sourceAfterWelcome,
+          id: "user_after_welcome_free_detail",
+          choices: [
+            ...(repeatDetailChoice ? [repeatDetailChoice] : []),
+            ...(thanksChoice ? [thanksChoice] : []),
+          ],
+        };
+        welcomeRepeatNode.nextNodeId = "user_after_welcome_free_detail";
+      }
+
+      const transportRepeatNode = scenario.nodes.ia_transport_repeat;
+      if (transportRepeatNode && sourceAfterWelcome) {
+        scenario.nodes.user_after_welcome_free_detail_after_repeat = {
+          ...sourceAfterWelcome,
+          id: "user_after_welcome_free_detail_after_repeat",
+          choices: thanksChoice ? [thanksChoice] : [],
+        };
+        transportRepeatNode.nextNodeId =
+          "user_after_welcome_free_detail_after_repeat";
+      }
       break;
+    }
 
     case "arrival_voice":
       keepChoices(scenario, "user_start", ["choice_ask_seoul_station"]);
