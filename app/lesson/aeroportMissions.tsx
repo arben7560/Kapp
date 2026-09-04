@@ -132,6 +132,8 @@ export default function AeroportMissionsScreen() {
     }
   };
 
+  const isVocalMission = selectedMission?.id === AEROPORT_VOCAL_MISSION_ID;
+
   return (
     <ImageBackground source={airportBackground} style={styles.background}>
       <BlurView
@@ -210,6 +212,12 @@ export default function AeroportMissionsScreen() {
           visible={!!selectedMission}
           mission={selectedMission}
           accent={CYAN}
+          immersionNoticeTitle={isVocalMission ? "IMMERSION RÉELLE" : undefined}
+          immersionNoticeBody={
+            isVocalMission
+              ? "L’agent te répondra de manière naturelle, comme un vrai Coréen le ferait. Tu n’as pas besoin de tout comprendre ni de réussir du premier coup : reviens autant de fois que nécessaire pour te familiariser progressivement avec le scénario."
+              : undefined
+          }
           onCancel={() => setSelectedMission(null)}
           onStart={startSelectedMission}
         />
