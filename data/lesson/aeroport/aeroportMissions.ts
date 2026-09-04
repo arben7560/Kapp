@@ -18,9 +18,9 @@ export const aeroportMissions: AeroportMission[] = [
     title: "Aller à Seoul Station",
     subtitle: "Demande le chemin depuis Incheon.",
     access: "free",
-    duration: "3-5 min",
-    objective: "Trouver le train vers Seoul Station.",
-    goals: ["Demander", "Comprendre", "Partir"],
+    duration: "2 min",
+    objective: "Demander le chemin et comprendre une première indication.",
+    goals: ["Demander", "Comprendre", "Merci"],
     scenarioKey: "go_seoul_station",
   },
   {
@@ -214,50 +214,17 @@ export function applyAeroportMissionToScenario<TScenario extends ScenarioLike>(
   switch (scenarioKey) {
     case "go_seoul_station":
       keepChoices(scenario, "user_start", ["choice_ask_seoul_station"]);
-      keepChoices(scenario, "user_after_welcome", [
-        "repeat_welcome",
-        "choice_ready",
-      ]);
+      keepChoices(
+        scenario,
+        "user_after_welcome",
+        ["repeat_welcome"],
+        thanksChoice ? [thanksChoice] : [],
+      );
       redirectRepeatToCleanChoices(
         scenario,
         "ia_welcome_repeat",
         "user_after_welcome",
         "user_after_welcome_after_repeat",
-        ["choice_ready"],
-      );
-      keepChoices(scenario, "user_after_transport", [
-        "repeat_transport",
-        "choice_which_train",
-      ]);
-      redirectRepeatToCleanChoices(
-        scenario,
-        "ia_transport_repeat",
-        "user_after_transport",
-        "user_after_transport_after_repeat",
-        ["choice_which_train"],
-      );
-      keepChoices(scenario, "user_after_recommend", [
-        "repeat_recommend",
-        "choice_time_after_recommend",
-      ]);
-      redirectRepeatToCleanChoices(
-        scenario,
-        "ia_recommend_repeat",
-        "user_after_recommend",
-        "user_after_recommend_after_repeat",
-        ["choice_time_after_recommend"],
-      );
-      keepChoices(
-        scenario,
-        "user_after_time",
-        ["repeat_time"],
-        thanksChoice ? [thanksChoice] : [],
-      );
-      redirectRepeatToCleanChoices(
-        scenario,
-        "ia_time_repeat",
-        "user_after_time",
-        "user_after_time_after_repeat",
         [],
         thanksChoice ? [thanksChoice] : [],
       );
