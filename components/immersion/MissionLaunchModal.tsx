@@ -14,6 +14,8 @@ type MissionLaunchModalProps = {
   visible: boolean;
   mission: ImmersionMission | null;
   accent?: string;
+  immersionNoticeTitle?: string;
+  immersionNoticeBody?: string;
   onCancel: () => void;
   onStart: () => void;
 };
@@ -39,6 +41,8 @@ export function MissionLaunchModal({
   visible,
   mission,
   accent = CYAN,
+  immersionNoticeTitle,
+  immersionNoticeBody,
   onCancel,
   onStart,
 }: MissionLaunchModalProps) {
@@ -51,6 +55,7 @@ export function MissionLaunchModal({
   if (!mission) return null;
 
   const highlights = mission.goals?.length ? mission.goals : mission.skills;
+  const showImmersionNotice = Boolean(immersionNoticeTitle && immersionNoticeBody);
   const handleStart = () => {
     if (startLockRef.current) return;
     startLockRef.current = true;
@@ -75,10 +80,7 @@ export function MissionLaunchModal({
         ) : null}
       </View>
 
-      <AppText
-        accessibilityRole="header"
-        variant="screenTitle"
-      >
+      <AppText accessibilityRole="header" variant="screenTitle">
         {mission.title}
       </AppText>
 
@@ -91,6 +93,33 @@ export function MissionLaunchModal({
       ) : null}
 
       <DetailList items={highlights} accent={accent} />
+
+      {showImmersionNotice ? (
+        <View
+          accessibilityRole="summary"
+          style={[
+            styles.immersionNotice,
+            {
+              borderColor: `${accent}55`,
+              backgroundColor: `${accent}10`,
+            },
+          ]}
+        >
+          <View style={styles.immersionNoticeHeader}>
+            <View style={[styles.immersionNoticeDot, { backgroundColor: accent }]} />
+            <AppText
+              variant="sectionLabel"
+              lineContract="singleLine"
+              style={[styles.immersionNoticeTitle, { color: accent }]}
+            >
+              {immersionNoticeTitle}
+            </AppText>
+          </View>
+          <AppText variant="bodySecondary" style={styles.immersionNoticeBody}>
+            {immersionNoticeBody}
+          </AppText>
+        </View>
+      ) : null}
 
       <DialogActions style={styles.actions}>
         <ActionButton
@@ -141,7 +170,33 @@ const styles = StyleSheet.create({
   detailText: {
     flex: 1,
   },
+  immersionNotice: {
+    marginTop: 18,
+    borderRadius: 18,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    gap: 7,
+  },
+  immersionNoticeHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  immersionNoticeDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  immersionNoticeTitle: {
+    flex: 1,
+    letterSpacing: 0.7,
+  },
+  immersionNoticeBody: {
+    color: "rgba(255,255,255,0.84)",
+    lineHeight: 20,
+  },
   actions: {
-    marginTop: 22,
+    marginTop: 20,
   },
 });
