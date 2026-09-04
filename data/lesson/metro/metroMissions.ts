@@ -144,7 +144,7 @@ function applyMetroMissionToLesson(
 }
 
 function createHongikCompleteLesson(lesson: MetroLesson): MetroLesson {
-  const focusedLesson = createFocusedLesson(lesson, [
+  return createFocusedLesson(lesson, [
     { stepId: "start", keepChoiceIds: ["ask1"] },
     {
       stepId: "ia_intro_route",
@@ -158,41 +158,6 @@ function createHongikCompleteLesson(lesson: MetroLesson): MetroLesson {
     },
     { stepId: "ia_end" },
   ]);
-
-  return {
-    ...focusedLesson,
-    objective:
-      "Demander comment aller à Gangnam et comprendre une indication simple.",
-    steps: focusedLesson.steps.map((step) => {
-      if (step.id === "ia_intro_route") {
-        return {
-          ...step,
-          narrator: "Le passant vous donne une première indication simple.",
-          text: "Oui, bien sûr. À Hongik University, prenez la ligne 2 pour aller à Gangnam.",
-          korean:
-            "네, 물론입니다. 홍대입구역에서 강남역까지 2호선을 타시면 돼요.",
-          french:
-            "Oui, bien sûr. À Hongik University, prenez la ligne 2 pour aller à Gangnam.",
-          romanization:
-            "Ne, mullonimnida. Hongdaeipgu-yeogeseo Gangnam-yeokkkaji ihoseoneul tasimyeon dwaeyo.",
-        };
-      }
-
-      if (step.id === "ia_repeat_intro_route") {
-        return {
-          ...step,
-          text: "Bien sûr. Pour aller à Gangnam, prenez simplement la ligne 2.",
-          korean: "물론이죠. 강남역까지는 2호선을 타시면 돼요.",
-          french:
-            "Bien sûr. Pour aller à Gangnam, prenez simplement la ligne 2.",
-          romanization:
-            "Mullonijyo. Gangnam-yeokkkajineun ihoseoneul tasimyeon dwaeyo.",
-        };
-      }
-
-      return step;
-    }),
-  };
 }
 
 function createMyeongdongCompleteLesson(lesson: MetroLesson): MetroLesson {
