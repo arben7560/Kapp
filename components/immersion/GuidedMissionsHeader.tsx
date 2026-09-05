@@ -9,7 +9,9 @@ import {
   type ImageSourcePropType,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -222,7 +224,179 @@ function MissionMasteryCelebrationModal({
   total,
   onContinue,
 }: MissionMasteryCelebrationModalProps) {
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
+  const isCompactLandscape = isLandscape && height < 440;
+
   if (!celebration) return null;
+
+  const landscapeHorizontalPadding = Math.max(
+    22,
+    Math.min(52, Math.round(width * 0.045)),
+  );
+  const landscapeColumnGap = Math.max(
+    22,
+    Math.min(56, Math.round(width * 0.04)),
+  );
+  const landscapeContent = (
+    <View
+      style={[
+        styles.celebrationContent,
+        isLandscape && styles.celebrationContentLandscape,
+        isLandscape && {
+          maxWidth: Math.min(1120, width - landscapeHorizontalPadding * 2),
+          paddingHorizontal: landscapeHorizontalPadding,
+          gap: landscapeColumnGap,
+        },
+        isCompactLandscape && styles.celebrationContentLandscapeCompact,
+      ]}
+    >
+      <View
+        style={[
+          styles.celebrationIdentity,
+          isLandscape && styles.celebrationIdentityLandscape,
+        ]}
+      >
+        <View
+          style={[
+            styles.successHaloOuter,
+            isLandscape && styles.successHaloOuterLandscape,
+            isCompactLandscape && styles.successHaloOuterLandscapeCompact,
+            { borderColor: `${accent}42` },
+          ]}
+        >
+          <View
+            style={[
+              styles.successHaloInner,
+              isLandscape && styles.successHaloInnerLandscape,
+              isCompactLandscape && styles.successHaloInnerLandscapeCompact,
+              {
+                borderColor: `${accent}A8`,
+                backgroundColor: `${accent}16`,
+                shadowColor: accent,
+              },
+            ]}
+          >
+            <View style={styles.successCheck}>
+              <Check
+                size={isCompactLandscape ? 30 : isLandscape ? 34 : 40}
+                strokeWidth={2.6}
+                color="#F8FAFC"
+              />
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.celebrationEyebrowRow}>
+          <Sparkles size={14} strokeWidth={2} color={accent} />
+          <AppText
+            variant="sectionLabel"
+            lineContract="singleLine"
+            style={[styles.celebrationEyebrow, { color: accent }]}
+          >
+            NOUVELLE MAÎTRISE
+          </AppText>
+        </View>
+
+        <AppText
+          accessibilityRole="header"
+          variant="screenTitle"
+          tone="strong"
+          style={styles.celebrationTitle}
+        >
+          Mission accomplie
+        </AppText>
+
+        <AppText variant="body" style={[styles.sceneMeta, { color: accent }]}>
+          {celebration.sceneTitle} · {celebration.location}
+        </AppText>
+      </View>
+
+      <View
+        style={[
+          styles.celebrationDetails,
+          isLandscape && styles.celebrationDetailsLandscape,
+        ]}
+      >
+        <View
+          style={[
+            styles.masteredMissionCard,
+            isLandscape && styles.masteredMissionCardLandscape,
+            isCompactLandscape && styles.masteredMissionCardLandscapeCompact,
+          ]}
+        >
+          <AppText
+            variant="cardTitle"
+            tone="strong"
+            style={styles.masteredMissionTitle}
+          >
+            {celebration.missionTitle}
+          </AppText>
+          <AppText
+            variant="bodySecondary"
+            tone="muted"
+            style={styles.masteredMissionObjective}
+          >
+            {celebration.objective
+              ? `Objectif maîtrisé : ${celebration.objective}`
+              : "Tu as mené cette situation jusqu’au bout en coréen."}
+          </AppText>
+        </View>
+
+        {total > 0 ? (
+          <View
+            style={[
+              styles.celebrationProgressRow,
+              isLandscape && styles.celebrationProgressRowLandscape,
+            ]}
+          >
+            <AppText variant="caption" style={styles.celebrationProgressLabel}>
+              Progression de la scène
+            </AppText>
+            <AppText
+              variant="caption"
+              style={[styles.celebrationProgressValue, { color: accent }]}
+            >
+              {completedCount} / {total} maîtrisées
+            </AppText>
+          </View>
+        ) : null}
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Continuer vers les missions"
+          onPress={onContinue}
+          style={({ pressed }) => [
+            styles.continueButton,
+            isLandscape && styles.continueButtonLandscape,
+            pressed && styles.continueButtonPressed,
+          ]}
+        >
+          <LinearGradient
+            colors={[accent, "#A855F7"]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={[
+              styles.continueGradient,
+              isCompactLandscape && styles.continueGradientLandscapeCompact,
+            ]}
+          >
+            <AppText
+              variant="button"
+              lineContract="singleLine"
+              style={styles.continueLabel}
+            >
+              Continuer
+            </AppText>
+          </LinearGradient>
+        </Pressable>
+
+        <AppText variant="caption" style={styles.continueHint}>
+          Ta progression est enregistrée automatiquement.
+        </AppText>
+      </View>
+    </View>
+  );
 
   return (
     <Modal
@@ -255,119 +429,25 @@ function MissionMasteryCelebrationModal({
         />
         <View
           pointerEvents="none"
-          style={[styles.celebrationGlow, { backgroundColor: accent }]}
+          style={[
+            styles.celebrationGlow,
+            isLandscape && styles.celebrationGlowLandscape,
+            { backgroundColor: accent },
+          ]}
         />
 
         <SafeAreaView style={styles.celebrationSafe}>
-          <View style={styles.celebrationContent}>
-            <View
-              style={[
-                styles.successHaloOuter,
-                { borderColor: `${accent}42` },
-              ]}
+          {isLandscape ? (
+            <ScrollView
+              bounces={false}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.celebrationLandscapeScroll}
             >
-              <View
-                style={[
-                  styles.successHaloInner,
-                  {
-                    borderColor: `${accent}A8`,
-                    backgroundColor: `${accent}16`,
-                    shadowColor: accent,
-                  },
-                ]}
-              >
-                <View style={styles.successCheck}>
-                  <Check size={40} strokeWidth={2.6} color="#F8FAFC" />
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.celebrationEyebrowRow}>
-              <Sparkles size={14} strokeWidth={2} color={accent} />
-              <AppText
-                variant="sectionLabel"
-                lineContract="singleLine"
-                style={[styles.celebrationEyebrow, { color: accent }]}
-              >
-                NOUVELLE MAÎTRISE
-              </AppText>
-            </View>
-
-            <AppText
-              accessibilityRole="header"
-              variant="screenTitle"
-              tone="strong"
-              style={styles.celebrationTitle}
-            >
-              Mission accomplie
-            </AppText>
-
-            <AppText variant="body" style={[styles.sceneMeta, { color: accent }]}>
-              {celebration.sceneTitle} · {celebration.location}
-            </AppText>
-
-            <View style={styles.masteredMissionCard}>
-              <AppText
-                variant="cardTitle"
-                tone="strong"
-                style={styles.masteredMissionTitle}
-              >
-                {celebration.missionTitle}
-              </AppText>
-              <AppText
-                variant="bodySecondary"
-                tone="muted"
-                style={styles.masteredMissionObjective}
-              >
-                {celebration.objective
-                  ? `Objectif maîtrisé : ${celebration.objective}`
-                  : "Tu as mené cette situation jusqu’au bout en coréen."}
-              </AppText>
-            </View>
-
-            {total > 0 ? (
-              <View style={styles.celebrationProgressRow}>
-                <AppText variant="caption" style={styles.celebrationProgressLabel}>
-                  Progression de la scène
-                </AppText>
-                <AppText
-                  variant="caption"
-                  style={[styles.celebrationProgressValue, { color: accent }]}
-                >
-                  {completedCount} / {total} maîtrisées
-                </AppText>
-              </View>
-            ) : null}
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Continuer vers les missions"
-              onPress={onContinue}
-              style={({ pressed }) => [
-                styles.continueButton,
-                pressed && styles.continueButtonPressed,
-              ]}
-            >
-              <LinearGradient
-                colors={[accent, "#A855F7"]}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                style={styles.continueGradient}
-              >
-                <AppText
-                  variant="button"
-                  lineContract="singleLine"
-                  style={styles.continueLabel}
-                >
-                  Continuer
-                </AppText>
-              </LinearGradient>
-            </Pressable>
-
-            <AppText variant="caption" style={styles.continueHint}>
-              Ta progression est enregistrée automatiquement.
-            </AppText>
-          </View>
+              {landscapeContent}
+            </ScrollView>
+          ) : (
+            landscapeContent
+          )}
         </SafeAreaView>
       </ImageBackground>
     </Modal>
@@ -512,9 +592,19 @@ const styles = StyleSheet.create({
     borderRadius: 160,
     opacity: 0.10,
   },
+  celebrationGlowLandscape: {
+    top: "2%",
+    left: "8%",
+    alignSelf: "flex-start",
+  },
   celebrationSafe: {
     flex: 1,
     justifyContent: "center",
+  },
+  celebrationLandscapeScroll: {
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingVertical: 14,
   },
   celebrationContent: {
     width: "100%",
@@ -523,6 +613,33 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 28,
     paddingVertical: 34,
+  },
+  celebrationContentLandscape: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 18,
+  },
+  celebrationContentLandscapeCompact: {
+    paddingVertical: 10,
+  },
+  celebrationIdentity: {
+    width: "100%",
+    alignItems: "center",
+  },
+  celebrationIdentityLandscape: {
+    flex: 0.88,
+    minWidth: 0,
+    justifyContent: "center",
+  },
+  celebrationDetails: {
+    width: "100%",
+    alignItems: "center",
+  },
+  celebrationDetailsLandscape: {
+    flex: 1.12,
+    minWidth: 0,
+    justifyContent: "center",
   },
   successHaloOuter: {
     width: 112,
@@ -533,6 +650,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 24,
     backgroundColor: "rgba(3,5,10,0.42)",
+  },
+  successHaloOuterLandscape: {
+    width: 94,
+    height: 94,
+    borderRadius: 47,
+    marginBottom: 16,
+  },
+  successHaloOuterLandscapeCompact: {
+    width: 78,
+    height: 78,
+    borderRadius: 39,
+    marginBottom: 11,
   },
   successHaloInner: {
     width: 82,
@@ -545,6 +674,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.52,
     shadowRadius: 18,
     elevation: 7,
+  },
+  successHaloInnerLandscape: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+  },
+  successHaloInnerLandscapeCompact: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
   },
   successCheck: {
     width: 40,
@@ -579,6 +718,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 18,
   },
+  masteredMissionCardLandscape: {
+    marginTop: 0,
+  },
+  masteredMissionCardLandscapeCompact: {
+    paddingVertical: 14,
+  },
   masteredMissionTitle: {
     textAlign: "center",
   },
@@ -594,6 +739,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
+  },
+  celebrationProgressRowLandscape: {
+    marginTop: 13,
   },
   celebrationProgressLabel: {
     color: "rgba(241,245,249,0.55)",
@@ -612,6 +760,9 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
     elevation: 6,
   },
+  continueButtonLandscape: {
+    marginTop: 18,
+  },
   continueButtonPressed: {
     opacity: 0.9,
     transform: [{ scale: 0.992 }],
@@ -621,6 +772,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 20,
+  },
+  continueGradientLandscapeCompact: {
+    minHeight: 48,
   },
   continueLabel: {
     color: "#FFFFFF",
