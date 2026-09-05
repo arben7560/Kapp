@@ -17,6 +17,7 @@ import {
   StyleSheet,
   Vibration,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -48,18 +49,14 @@ const BACKGROUND_SOURCE = require("../../assets/images/vowelbasic.jpg");
 
 const BG_DEEP = SeoulMidnightGlass.colors.bgDeep;
 const TXT = SeoulMidnightGlass.colors.text;
-
 const MUTED = "rgba(241,245,249,0.78)";
 const SOFT = "rgba(241,245,249,0.58)";
 const HAIRLINE = "rgba(255,255,255,0.12)";
-
 const HANGUL_ACCENT = HubModuleAccents.hangul.base;
 const HANGUL_SECONDARY = "#5EEAD4";
-
 const SUCCESS = "#4ADE80";
 const WARNING = "#FDE047";
 const ERROR = "#F87171";
-
 const FUTURE = "rgba(148,163,184,0.42)";
 
 const normalizeLesson = (
@@ -77,7 +74,13 @@ const normalizeLesson = (
 export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
   const module = getHangulModule(moduleId);
   const { progress, updateHangulProgress, complete } = useStore();
-  const responsive = useResponsiveLayout({ maxWidth: 920 });
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
+  const responsive = useResponsiveLayout({ maxWidth: isLandscape ? 1120 : 920 });
+  const landscapeTwoColumns = isLandscape && responsive.contentWidth >= 640;
+  const landscapeCardWidth = landscapeTwoColumns
+    ? responsive.getGridItemWidth(2, 14)
+    : "100%";
   const { playAudio, stopAudio } = useHangulAudio();
 
   const savedLesson = normalizeLesson(progress.hangulProgress.lessons[module.id]);
@@ -376,18 +379,14 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
   const BackgroundLayers = () => (
     <>
       <BlurView intensity={18} tint="dark" style={styles.bgBlur} />
-
       <View style={styles.vignetteOverlay} />
-
       <LinearGradient
         colors={["rgba(2,3,6,0.10)", "rgba(2,3,6,0.22)", "rgba(2,3,6,0.72)"]}
         locations={[0, 0.44, 1]}
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
-
       <View style={styles.ambientGlowTop} pointerEvents="none" />
-
       <View style={styles.ambientGlowBottom} pointerEvents="none" />
     </>
   );
@@ -395,13 +394,8 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
   if (!moduleUnlocked && prerequisite) {
     return (
       <SafeAreaView style={styles.safe}>
-        <ImageBackground
-          source={BACKGROUND_SOURCE}
-          style={styles.bgImage}
-          resizeMode="cover"
-        >
+        <ImageBackground source={BACKGROUND_SOURCE} style={styles.bgImage} resizeMode="cover">
           <BackgroundLayers />
-
           <View
             style={[
               styles.gateFrame,
@@ -464,64 +458,85 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground
-        source={BACKGROUND_SOURCE}
-        style={styles.bgImage}
-        resizeMode="cover"
-        >
+      <ImageBackground source={BACKGROUND_SOURCE} style={styles.bgImage} resizeMode="cover">
         <BackgroundLayers />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.scroll,
+            isLandscape && styles.scrollLandscape,
             { paddingHorizontal: responsive.horizontalPadding },
           ]}
         >
           <View style={[styles.frame, { maxWidth: responsive.maxWidth }]}>
-            <View style={styles.header}>
-              <AppBackButton />
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={
-                  showRomanization
-                    ? "Désactiver l'aide latine"
-                    : "Activer l'aide latine"
-                }
-                onPress={() => setShowRomanization((current) => !current)}
-                style={({ pressed }) => [
-                  styles.helpToggle,
-                  showRomanization && styles.helpToggleActive,
-                  pressed && styles.helpTogglePressed,
-                ]}
-              >
-                <View style={[styles.helpDot, showRomanization && styles.helpDotActive]} />
-                <AppText
-                  variant="caption"
-                  lineContract="singleLine"
-                  style={[styles.helpText, showRomanization && styles.helpTextActive]}
+            <View style={[styles.header, isLandscape && styles.headerLandscape]}>
+              <View style={isLandscape ? styles.headerSide : undefined}>
+                <AppBackButton />
+              </View>
+
+              {isLandscape ? (
+                <View style={styles.headerCenter} pointerEvents="none">
+                  <AppText
+                    variant="screenTitle"
+                    lineContract="singleLine"
+                    style={styles.headerLandscapeTitle}
+                  >
+                    {module.title}
+                  </AppText>
+                </View>
+              ) : null}
+
+              <View style={isLandscape ? styles.headerSideRight : undefined}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    showRomanization
+                      ? "Désactiver l'aide latine"
+                      : "Activer l'aide latine"
+                  }
+                  onPress={() => setShowRomanization((current) => !current)}
+                  style={({ pressed }) => [
+                    styles.helpToggle,
+                    isLandscape && styles.helpToggleLandscape,
+                    showRomanization && styles.helpToggleActive,
+                    pressed && styles.helpTogglePressed,
+                  ]}
                 >
-                  {showRomanization
-                    ? "Aide latine · activée"
-                    : "Aide latine · désactivée"}
-                </AppText>
-              </Pressable>
+                  <View style={[styles.helpDot, showRomanization && styles.helpDotActive]} />
+                  <AppText
+                    variant="caption"
+                    lineContract="singleLine"
+                    style={[styles.helpText, showRomanization && styles.helpTextActive]}
+                  >
+                    {showRomanization
+                      ? "Aide latine · activée"
+                      : "Aide latine · désactivée"}
+                  </AppText>
+                </Pressable>
+              </View>
             </View>
 
-            <View style={styles.hero}>
-              <View style={styles.heroEyebrowRow}>
+            <View style={[styles.hero, isLandscape && styles.heroLandscape]}>
+              <View style={[styles.heroEyebrowRow, isLandscape && styles.heroEyebrowRowLandscape]}>
                 <View style={styles.heroDot} />
                 <AppText variant="sectionLabel" style={styles.heroEyebrow}>
                   HANGUL · {module.eyebrow}
                 </AppText>
               </View>
-              <AppText variant="screenTitle" style={styles.heroTitle}>
-                {module.title}
-              </AppText>
-              <AppText variant="bodySecondary" tone="muted" style={styles.heroSubtitle}>
+              {!isLandscape ? (
+                <AppText variant="screenTitle" style={styles.heroTitle}>
+                  {module.title}
+                </AppText>
+              ) : null}
+              <AppText
+                variant="bodySecondary"
+                tone="muted"
+                style={[styles.heroSubtitle, isLandscape && styles.heroSubtitleLandscape]}
+              >
                 {module.subtitle}
               </AppText>
-              <View style={styles.heroMetaRow}>
+              <View style={[styles.heroMetaRow, isLandscape && styles.heroMetaRowLandscape]}>
                 <View style={styles.heroLevelPill}>
                   <Sparkles size={15} strokeWidth={2} color={HANGUL_ACCENT} />
                   <AppText variant="sectionLabel" lineContract="singleLine" style={styles.heroLevelText}>
@@ -532,7 +547,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                   {masteredSceneCount} / {module.scenes.length} scènes maîtrisées
                 </AppText>
               </View>
-              <View style={styles.heroProgressBlock}>
+              <View style={[styles.heroProgressBlock, isLandscape && styles.heroProgressBlockLandscape]}>
                 <View style={styles.heroProgressMeta}>
                   <AppText variant="caption" style={styles.heroProgressLabel}>
                     PROGRESSION DE L'ÉTAPE
@@ -554,7 +569,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.tabs}
+              contentContainerStyle={[styles.tabs, isLandscape && styles.tabsLandscape]}
             >
               {module.scenes.map((scene, index) => {
                 const mastered = !!lesson.masteredScenes[scene.id];
@@ -570,6 +585,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                     onPress={() => selectScene(scene.id)}
                     style={({ pressed }) => [
                       styles.tab,
+                      isLandscape && styles.tabLandscape,
                       selected && styles.tabActive,
                       mastered && styles.tabMastered,
                       !unlocked && styles.tabLocked,
@@ -613,7 +629,11 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               })}
             </ScrollView>
 
-            <BlurView intensity={68} tint="dark" style={styles.sceneCard}>
+            <BlurView
+              intensity={68}
+              tint="dark"
+              style={[styles.sceneCard, isLandscape && styles.sceneCardLandscape]}
+            >
               <LinearGradient
                 colors={[
                   "rgba(34,211,238,0.10)",
@@ -627,7 +647,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               />
               <View style={styles.sceneGlow} />
               <View style={styles.glassTopHairline} />
-              <View style={styles.sceneTopRow}>
+              <View style={[styles.sceneTopRow, isLandscape && styles.sceneTopRowLandscape]}>
                 <View style={styles.sceneKicker}>
                   <View style={styles.sceneKickerDot} />
                   <AppText variant="sectionLabel" style={styles.sceneKickerText}>
@@ -671,16 +691,22 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                   {activeScene.koreanTitle}
                 </AppText>
               </View>
-              <AppText variant="body" style={styles.sceneDescription}>
+              <AppText
+                variant="body"
+                style={[styles.sceneDescription, isLandscape && styles.sceneDescriptionLandscape]}
+              >
                 {activeScene.description}
               </AppText>
-              <View style={styles.instruction}>
+              <View style={[styles.instruction, isLandscape && styles.instructionLandscape]}>
                 <View style={styles.instructionAccent} />
-                <AppText variant="bodySecondary" style={styles.instructionText}>
+                <AppText
+                  variant="bodySecondary"
+                  style={[styles.instructionText, isLandscape && styles.instructionTextLandscape]}
+                >
                   {activeScene.instruction}
                 </AppText>
               </View>
-              <View style={styles.sceneProgressBlock}>
+              <View style={[styles.sceneProgressBlock, isLandscape && styles.sceneProgressBlockLandscape]}>
                 <View style={styles.sceneProgressMeta}>
                   <AppText variant="caption" style={styles.sceneProgressLabel}>
                     DÉCOUVERTE
@@ -693,7 +719,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               </View>
             </BlurView>
 
-            <View style={styles.sectionHeader}>
+            <View style={[styles.sectionHeader, isLandscape && styles.sectionHeaderLandscape]}>
               <View>
                 <AppText variant="sectionLabel" style={styles.sectionEyebrow}>
                   DÉCOUVERTE
@@ -716,7 +742,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               </AppText>
             </View>
 
-            <View style={styles.cardGrid}>
+            <View style={[styles.cardGrid, isLandscape && styles.cardGridLandscape]}>
               {activeScene.cards.map((item) => {
                 const discovered = !!lesson.discovered[item.id];
                 return (
@@ -725,13 +751,22 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                     onPress={() => discover(item.id, item.audio)}
                     style={({ pressed }) => [
                       styles.cardPressable,
+                      landscapeTwoColumns && {
+                        width: landscapeCardWidth,
+                        flexBasis: "auto",
+                        flexGrow: 0,
+                      },
                       pressed && styles.pressablePressed,
                     ]}
                   >
                     <BlurView
                       intensity={discovered ? 58 : 48}
                       tint="dark"
-                      style={[styles.card, discovered && styles.cardDiscovered]}
+                      style={[
+                        styles.card,
+                        isLandscape && styles.cardLandscape,
+                        discovered && styles.cardDiscovered,
+                      ]}
                     >
                       <LinearGradient
                         colors={
@@ -753,11 +788,12 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                       />
                       <View style={styles.glassTopHairline} />
                       {discovered ? <View style={styles.cardGlow} /> : null}
-                      <View style={styles.cardTop}>
-                        <View>
+                      <View style={[styles.cardTop, isLandscape && styles.cardTopLandscape]}>
+                        <View style={isLandscape ? styles.glyphGroupLandscape : undefined}>
                           <AppText
                             variant="koreanPrimary"
                             script="korean"
+                            align={isLandscape ? "center" : undefined}
                             style={[
                               styles.glyph,
                               discovered ? styles.glyphDiscovered : styles.glyphIdle,
@@ -766,32 +802,45 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                             {item.glyph}
                           </AppText>
                           {showRomanization && item.romanization ? (
-                            <AppText variant="caption" style={styles.romanization}>
+                            <AppText
+                              variant="caption"
+                              align={isLandscape ? "center" : undefined}
+                              style={styles.romanization}
+                            >
                               {item.romanization}
                             </AppText>
                           ) : null}
                         </View>
                         {item.audio ? <HangulAudioBadge accent={HANGUL_ACCENT} /> : null}
                       </View>
-                      <View style={styles.cardCopy}>
-                        <AppText variant="bodyStrong" style={styles.cardLabel}>
+                      <View style={[styles.cardCopy, isLandscape && styles.cardCopyLandscape]}>
+                        <AppText
+                          variant="bodyStrong"
+                          align={isLandscape ? "center" : undefined}
+                          style={styles.cardLabel}
+                        >
                           {item.label}
                         </AppText>
                         {discovered ? (
                           <AppText
                             variant="bodySecondary"
                             tone="muted"
+                            align={isLandscape ? "center" : undefined}
                             style={styles.cardExplanation}
                           >
                             {item.explanation}
                           </AppText>
                         ) : (
-                          <AppText variant="caption" style={styles.cardRevealHint}>
+                          <AppText
+                            variant="caption"
+                            align={isLandscape ? "center" : undefined}
+                            style={styles.cardRevealHint}
+                          >
                             TOUCHER POUR DÉCOUVRIR
                           </AppText>
                         )}
                       </View>
-                      <View style={styles.cardFooter}>
+                      <View style={[styles.cardFooter, isLandscape && styles.cardFooterLandscape]}>
                         <View style={styles.cardFooterLine}>
                           {discovered ? <View style={styles.cardFooterAccent} /> : null}
                         </View>
@@ -812,6 +861,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               onPress={startQuiz}
               style={({ pressed }) => [
                 styles.primaryButton,
+                isLandscape && styles.primaryButtonLandscape,
                 !canStartQuiz && styles.buttonDisabled,
                 pressed && canStartQuiz && styles.pressablePressed,
               ]}
@@ -824,7 +874,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={styles.primaryGradient}
+                style={[styles.primaryGradient, isLandscape && styles.primaryGradientLandscape]}
               >
                 <AppText
                   variant="button"
@@ -949,19 +999,10 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                         {currentQuestion.display}
                       </AppText>
                     ) : null}
-                    <AppText
-                      variant="sceneTitle"
-                      align="center"
-                      style={styles.prompt}
-                    >
+                    <AppText variant="sceneTitle" align="center" style={styles.prompt}>
                       {currentQuestion.prompt}
                     </AppText>
-                    <View
-                      style={[
-                        styles.options,
-                        useCompactOptions && styles.compactOptions,
-                      ]}
-                    >
+                    <View style={[styles.options, useCompactOptions && styles.compactOptions]}>
                       {currentQuestion.options.map((item, index) => {
                         const isSelected = answered === item.value;
                         const isCorrect =
@@ -1174,27 +1215,10 @@ function AnimatedProgressBar({ progress }: { progress: number }) {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: BG_DEEP,
-  },
-  bgImage: {
-    flex: 1,
-
-    overflow: "hidden",
-
-    backgroundColor: BG_DEEP,
-  },
-
-  bgBlur: {
-    ...ABSOLUTE_FILL,
-  },
-
-  vignetteOverlay: {
-    ...ABSOLUTE_FILL,
-
-    backgroundColor: "rgba(2,3,6,0.52)",
-  },
+  safe: { flex: 1, backgroundColor: BG_DEEP },
+  bgImage: { flex: 1, overflow: "hidden", backgroundColor: BG_DEEP },
+  bgBlur: { ...ABSOLUTE_FILL },
+  vignetteOverlay: { ...ABSOLUTE_FILL, backgroundColor: "rgba(2,3,6,0.52)" },
   ambientGlowTop: {
     position: "absolute",
     top: 100,
@@ -1216,6 +1240,7 @@ const styles = StyleSheet.create({
     boxShadow: "0px 0px 100px rgba(94,234,212,0.07)",
   },
   scroll: { paddingTop: 8, paddingBottom: 120 },
+  scrollLandscape: { paddingTop: 4, paddingBottom: 64 },
   frame: { width: "100%", alignSelf: "center" },
   pressablePressed: { opacity: 0.84, transform: [{ scale: 0.992 }] },
   glassTopHairline: {
@@ -1235,6 +1260,14 @@ const styles = StyleSheet.create({
     gap: 14,
     marginBottom: 28,
   },
+  headerLandscape: {
+    minHeight: 52,
+    marginBottom: 10,
+  },
+  headerSide: { flex: 1, alignItems: "flex-start" },
+  headerSideRight: { flex: 1, alignItems: "flex-end" },
+  headerCenter: { flex: 1, alignItems: "center", justifyContent: "center" },
+  headerLandscapeTitle: { color: TXT, textAlign: "center", fontSize: 24, lineHeight: 30 },
   helpToggle: {
     minHeight: 38,
     flexDirection: "row",
@@ -1245,6 +1278,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.12)",
     backgroundColor: "rgba(3,8,14,0.66)",
   },
+  helpToggleLandscape: { minHeight: 34, paddingHorizontal: 11 },
   helpToggleActive: {
     borderColor: "rgba(103,232,249,0.22)",
     backgroundColor: "rgba(12,28,38,0.76)",
@@ -1264,11 +1298,9 @@ const styles = StyleSheet.create({
   helpText: { color: "rgba(241,245,249,0.66)" },
   helpTextActive: { color: "rgba(103,232,249,0.88)" },
   hero: { paddingHorizontal: 2, marginBottom: 20 },
-  heroEyebrowRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 13,
-  },
+  heroLandscape: { marginBottom: 8, paddingHorizontal: 0 },
+  heroEyebrowRow: { flexDirection: "row", alignItems: "center", marginBottom: 13 },
+  heroEyebrowRowLandscape: { marginBottom: 5 },
   heroDot: {
     width: 5,
     height: 5,
@@ -1280,6 +1312,7 @@ const styles = StyleSheet.create({
   heroEyebrow: { color: "rgba(226,242,254,0.68)", letterSpacing: 1.3 },
   heroTitle: { color: TXT, maxWidth: 700 },
   heroSubtitle: { marginTop: 8, maxWidth: 600, color: MUTED },
+  heroSubtitleLandscape: { marginTop: 0, maxWidth: 760 },
   heroMetaRow: {
     marginTop: 20,
     flexDirection: "row",
@@ -1287,6 +1320,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 14,
   },
+  heroMetaRowLandscape: { marginTop: 10 },
   heroLevelPill: {
     minHeight: 32,
     flexDirection: "row",
@@ -1300,6 +1334,7 @@ const styles = StyleSheet.create({
   heroLevelText: { marginLeft: 7, color: "rgba(150,226,255,0.84)" },
   heroSceneCount: { color: "rgba(241,245,249,0.62)", textAlign: "right" },
   heroProgressBlock: { marginTop: 17 },
+  heroProgressBlockLandscape: { marginTop: 9 },
   heroProgressMeta: {
     flexDirection: "row",
     alignItems: "center",
@@ -1318,6 +1353,7 @@ const styles = StyleSheet.create({
   },
   progressFill: { height: "100%", borderRadius: 2, overflow: "hidden" },
   tabs: { gap: 8, paddingTop: 12, paddingBottom: 18 },
+  tabsLandscape: { paddingTop: 6, paddingBottom: 10 },
   tab: {
     minHeight: 42,
     flexDirection: "row",
@@ -1328,6 +1364,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.10)",
     backgroundColor: "rgba(3,8,14,0.68)",
   },
+  tabLandscape: { minHeight: 36, paddingHorizontal: 10 },
   tabActive: {
     borderColor: "rgba(103,232,249,0.26)",
     backgroundColor: "rgba(12,28,38,0.82)",
@@ -1380,6 +1417,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(2,3,6,0.56)",
     boxShadow: "0px 12px 30px rgba(10,18,28,0.30)",
   },
+  sceneCardLandscape: { minHeight: 0, padding: 16, borderRadius: 24 },
   sceneGlow: {
     position: "absolute",
     top: -84,
@@ -1398,6 +1436,7 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 22,
   },
+  sceneTopRowLandscape: { marginBottom: 10 },
   sceneKicker: {
     minHeight: 30,
     flexDirection: "row",
@@ -1450,6 +1489,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 10,
   },
   sceneDescription: { marginTop: 18, maxWidth: 650, color: "rgba(245,247,250,0.90)" },
+  sceneDescriptionLandscape: { marginTop: 9, maxWidth: 900 },
   instruction: {
     marginTop: 17,
     flexDirection: "row",
@@ -1457,6 +1497,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     backgroundColor: "rgba(7,12,18,0.68)",
   },
+  instructionLandscape: { marginTop: 10 },
   instructionAccent: { width: 3, backgroundColor: HANGUL_ACCENT },
   instructionText: {
     flex: 1,
@@ -1464,7 +1505,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     color: "rgba(241,245,249,0.82)",
   },
+  instructionTextLandscape: { paddingVertical: 9 },
   sceneProgressBlock: { marginTop: 22 },
+  sceneProgressBlockLandscape: { marginTop: 11 },
   sceneProgressMeta: {
     flexDirection: "row",
     alignItems: "center",
@@ -1480,6 +1523,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     gap: 12,
   },
+  sectionHeaderLandscape: { marginTop: 16, marginBottom: 10 },
   sectionEyebrow: { color: "rgba(241,245,249,0.72)", letterSpacing: 1.15 },
   sectionSubtitle: { marginTop: 3, color: "rgba(241,245,249,0.54)" },
   sectionLineWrap: {
@@ -1493,6 +1537,7 @@ const styles = StyleSheet.create({
   sectionLineGlow: { position: "absolute", right: 0, width: 92, height: 1, opacity: 0.82 },
   sectionCount: { color: "rgba(241,245,249,0.86)", marginBottom: 1 },
   cardGrid: { flexDirection: "row", flexWrap: "wrap", gap: 14 },
+  cardGridLandscape: { alignItems: "stretch" },
   cardPressable: { flexGrow: 1, flexBasis: 280, minWidth: 0 },
   card: {
     minHeight: 168,
@@ -1504,6 +1549,12 @@ const styles = StyleSheet.create({
     borderColor: HAIRLINE,
     backgroundColor: "rgba(2,3,6,0.56)",
     boxShadow: "0px 10px 24px rgba(0,0,0,0.28)",
+  },
+  cardLandscape: {
+    minHeight: 154,
+    padding: 16,
+    borderRadius: 22,
+    justifyContent: "space-between",
   },
   cardDiscovered: {
     borderColor: "rgba(103,232,249,0.26)",
@@ -1525,6 +1576,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 14,
   },
+  cardTopLandscape: { alignItems: "center" },
+  glyphGroupLandscape: { flex: 1, alignItems: "center", paddingLeft: 34 },
   glyph: { flexShrink: 1 },
   glyphIdle: { color: "rgba(241,245,249,0.82)" },
   glyphDiscovered: {
@@ -1535,6 +1588,7 @@ const styles = StyleSheet.create({
   },
   romanization: { marginTop: 2, color: "rgba(103,232,249,0.86)" },
   cardCopy: { marginTop: 14, maxWidth: 540 },
+  cardCopyLandscape: { marginTop: 8, maxWidth: "100%", alignItems: "center" },
   cardLabel: { color: TXT },
   cardExplanation: { marginTop: 6, color: "rgba(241,245,249,0.84)" },
   cardRevealHint: { marginTop: 8, color: "rgba(241,245,249,0.46)", letterSpacing: 0.7 },
@@ -1545,6 +1599,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
+  cardFooterLandscape: { paddingTop: 10 },
   cardFooterLine: {
     flex: 1,
     height: 1,
@@ -1574,6 +1629,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(103,232,249,0.18)",
   },
+  primaryButtonLandscape: { marginTop: 16 },
   buttonDisabled: { borderColor: "rgba(148,163,184,0.10)" },
   primaryGradient: {
     minHeight: 56,
@@ -1584,6 +1640,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
   },
+  primaryGradientLandscape: { minHeight: 50, paddingVertical: 13 },
   primaryText: { color: "#020306" },
   primaryTextDisabled: { color: "rgba(241,245,249,0.48)" },
   nextCardWrap: {
