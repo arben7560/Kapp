@@ -196,13 +196,19 @@ export default function HangulHub() {
   const responsive = useResponsiveLayout({
     maxWidth: 920,
   });
-  const effectiveGap = Math.max(16, responsive.gridGap);
+  const isLandscape = responsive.isLandscape;
+  const effectiveGap = isLandscape
+    ? Math.max(12, responsive.gridGap)
+    : Math.max(16, responsive.gridGap);
 
-  const gridColumns = responsive.getColumns({
+  const autoGridColumns = responsive.getColumns({
     minColumnWidth: 330,
     maxColumns: 2,
     gap: effectiveGap,
   });
+
+  const gridColumns =
+    isLandscape && responsive.contentWidth >= 620 ? 2 : autoGridColumns;
 
   const gridItemWidth = responsive.getGridItemWidth(
     gridColumns,
@@ -324,7 +330,7 @@ export default function HangulHub() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.scrollContent,
-
+            isLandscape && styles.scrollContentLandscape,
             {
               paddingHorizontal: responsive.horizontalPadding,
             },
@@ -341,12 +347,13 @@ export default function HangulHub() {
           >
             {/* NAVIGATION */}
 
-            <UnifiedNavHeader />
+            <UnifiedNavHeader landscape={isLandscape} />
 
             {/* HERO */}
 
             <HangulHero
               compact={responsive.isCompact}
+              landscape={isLandscape}
               level={displayLevel}
               progress={overallProgress}
               completedCount={completedCount}
@@ -361,6 +368,7 @@ export default function HangulHub() {
                 subtitle={continueSubtitle}
                 progress={continueProgress}
                 completed={journeyCompleted}
+                landscape={isLandscape}
                 onPress={() =>
                   openModule(continueModule, continueState.requirement)
                 }
@@ -372,6 +380,7 @@ export default function HangulHub() {
             <JourneySectionHeader
               completedCount={completedCount}
               totalCount={HANGUL_MODULES.length}
+              landscape={isLandscape}
             />
 
             <View
@@ -411,6 +420,7 @@ export default function HangulHub() {
                         completed={completed}
                         requirement={requirement}
                         progress={moduleProgress}
+                        landscape={isLandscape}
                         onPress={() => openModule(module, requirement)}
                       />
                     </AnimatedFragment>
@@ -429,9 +439,9 @@ export default function HangulHub() {
 // NAV HEADER
 // ──────────────────────────────────────────────
 
-function UnifiedNavHeader() {
+function UnifiedNavHeader({ landscape }: { landscape: boolean }) {
   return (
-    <View style={styles.navHeader}>
+    <View style={[styles.navHeader, landscape && styles.navHeaderLandscape]}>
       <AppBackButton />
     </View>
   );
@@ -443,12 +453,14 @@ function UnifiedNavHeader() {
 
 function HangulHero({
   compact,
+  landscape,
   level,
   progress,
   completedCount,
   totalCount,
 }: {
   compact: boolean;
+  landscape: boolean;
   level: number;
   progress: number;
   completedCount: number;
@@ -457,8 +469,13 @@ function HangulHero({
   const percentage = Math.round(progress * 100);
 
   return (
-    <View style={styles.hero}>
-      <View style={styles.heroEyebrowRow}>
+    <View style={[styles.hero, landscape && styles.heroLandscape]}>
+      <View
+        style={[
+          styles.heroEyebrowRow,
+          landscape && styles.heroEyebrowRowLandscape,
+        ]}
+      >
         <View style={styles.heroDot} />
 
         <AppText variant="sectionLabel" style={styles.heroEyebrow}>
@@ -470,7 +487,11 @@ function HangulHero({
         variant="koreanPrimary"
         script="korean"
         lineContract="singleLine"
-        style={[styles.heroKorean, compact && styles.heroKoreanCompact]}
+        style={[
+          styles.heroKorean,
+          compact && styles.heroKoreanCompact,
+          landscape && styles.heroKoreanLandscape,
+        ]}
       >
         한글
       </AppText>
@@ -483,7 +504,12 @@ function HangulHero({
         Lis le coréen. Décode la ville.
       </AppText>
 
-      <View style={styles.heroMetaRow}>
+      <View
+        style={[
+          styles.heroMetaRow,
+          landscape && styles.heroMetaRowLandscape,
+        ]}
+      >
         <View style={styles.levelPill}>
           <View style={styles.levelDot} />
 
@@ -501,7 +527,12 @@ function HangulHero({
         </AppText>
       </View>
 
-      <View style={styles.heroProgress}>
+      <View
+        style={[
+          styles.heroProgress,
+          landscape && styles.heroProgressLandscape,
+        ]}
+      >
         <View style={styles.heroProgressMeta}>
           <AppText variant="caption" style={styles.heroProgressLabel}>
             PROGRESSION HANGUL
@@ -534,12 +565,14 @@ function ContinueCard({
   subtitle,
   progress,
   completed,
+  landscape,
   onPress,
 }: {
   title: string;
   subtitle: string;
   progress: number;
   completed: boolean;
+  landscape: boolean;
   onPress: () => void;
 }) {
   const percentage = Math.round(progress * 100);
@@ -558,11 +591,18 @@ function ContinueCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.continueWrap,
-
+        landscape && styles.continueWrapLandscape,
         pressed && styles.pressablePressed,
       ]}
     >
-      <BlurView intensity={68} tint="dark" style={styles.continueCard}>
+      <BlurView
+        intensity={68}
+        tint="dark"
+        style={[
+          styles.continueCard,
+          landscape && styles.continueCardLandscape,
+        ]}
+      >
         <LinearGradient
           colors={[
             "rgba(52,166,203,0.20)",
@@ -585,7 +625,12 @@ function ContinueCard({
 
         <View style={styles.glassTopHairline} />
 
-        <View style={styles.continueTopRow}>
+        <View
+          style={[
+            styles.continueTopRow,
+            landscape && styles.continueTopRowLandscape,
+          ]}
+        >
           <View style={styles.continueKicker}>
             <View style={styles.continueKickerDot} />
 
@@ -613,7 +658,12 @@ function ContinueCard({
           </AppText>
         </View>
 
-        <View style={styles.continueProgressBlock}>
+        <View
+          style={[
+            styles.continueProgressBlock,
+            landscape && styles.continueProgressBlockLandscape,
+          ]}
+        >
           <View style={styles.continueProgressMeta}>
             <AppText variant="caption" style={styles.continueProgressLabel}>
               PROGRESSION DE L'ÉTAPE
@@ -648,12 +698,19 @@ function ContinueCard({
 function JourneySectionHeader({
   completedCount,
   totalCount,
+  landscape,
 }: {
   completedCount: number;
   totalCount: number;
+  landscape: boolean;
 }) {
   return (
-    <View style={styles.sectionHeader}>
+    <View
+      style={[
+        styles.sectionHeader,
+        landscape && styles.sectionHeaderLandscape,
+      ]}
+    >
       <View>
         <AppText variant="sectionLabel" style={styles.sectionTitle}>
           TON PARCOURS
@@ -695,6 +752,7 @@ function HangulPathCard({
   completed,
   requirement,
   progress,
+  landscape,
   onPress,
 }: {
   module: HangulHubModule;
@@ -703,6 +761,7 @@ function HangulPathCard({
   completed: boolean;
   requirement?: Requirement;
   progress: number;
+  landscape: boolean;
   onPress: () => void;
 }) {
   const isFuture = !!requirement;
@@ -743,13 +802,10 @@ function HangulPathCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.pathCardWrap,
-
+        landscape && styles.pathCardWrapLandscape,
         active && styles.pathCardWrapActive,
-
         completed && styles.pathCardWrapCompleted,
-
         isFuture && styles.pathCardWrapFuture,
-
         {
           borderColor: active
             ? "rgba(103,232,249,0.26)"
@@ -757,14 +813,16 @@ function HangulPathCard({
               ? "rgba(45,212,191,0.16)"
               : HAIRLINE,
         },
-
         pressed && styles.pressablePressed,
       ]}
     >
       <BlurView
         intensity={active ? 60 : isFuture ? 34 : 46}
         tint="dark"
-        style={styles.pathCard}
+        style={[
+          styles.pathCard,
+          landscape && styles.pathCardLandscape,
+        ]}
       >
         <LinearGradient
           colors={
@@ -903,7 +961,12 @@ function HangulPathCard({
           </View>
         </View>
 
-        <View style={styles.pathTextBlock}>
+        <View
+          style={[
+            styles.pathTextBlock,
+            landscape && styles.pathTextBlockLandscape,
+          ]}
+        >
           <AppText
             variant="cardTitle"
             style={[styles.pathTitle, isFuture && styles.pathTitleFuture]}
@@ -920,7 +983,12 @@ function HangulPathCard({
           </AppText>
         </View>
 
-        <View style={styles.pathFooter}>
+        <View
+          style={[
+            styles.pathFooter,
+            landscape && styles.pathFooterLandscape,
+          ]}
+        >
           <View style={styles.pathFooterLine}>
             {!isFuture ? (
               <View
@@ -1163,6 +1231,12 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
 
+  scrollContentLandscape: {
+    paddingTop: 2,
+
+    paddingBottom: 72,
+  },
+
   contentFrame: {
     width: "100%",
 
@@ -1207,6 +1281,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
+  navHeaderLandscape: {
+    minHeight: 48,
+
+    marginBottom: 4,
+  },
+
   // ─────────────────────────────
   // HERO
   // ─────────────────────────────
@@ -1219,12 +1299,22 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
 
+  heroLandscape: {
+    marginTop: 4,
+
+    marginBottom: 18,
+  },
+
   heroEyebrowRow: {
     flexDirection: "row",
 
     alignItems: "center",
 
     marginBottom: 12,
+  },
+
+  heroEyebrowRowLandscape: {
+    marginBottom: 8,
   },
 
   heroDot: {
@@ -1269,6 +1359,12 @@ const styles = StyleSheet.create({
     lineHeight: 68,
   },
 
+  heroKoreanLandscape: {
+    fontSize: 60,
+
+    lineHeight: 66,
+  },
+
   heroTitle: {
     color: TXT,
 
@@ -1293,6 +1389,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
 
     gap: 14,
+  },
+
+  heroMetaRowLandscape: {
+    marginTop: 14,
   },
 
   levelPill: {
@@ -1334,6 +1434,10 @@ const styles = StyleSheet.create({
 
   heroProgress: {
     marginTop: 19,
+  },
+
+  heroProgressLandscape: {
+    marginTop: 13,
   },
 
   heroProgressMeta: {
@@ -1382,6 +1486,10 @@ const styles = StyleSheet.create({
     boxShadow: "0px 12px 30px rgba(41,151,203,0.14)",
   },
 
+  continueWrapLandscape: {
+    marginBottom: 4,
+  },
+
   continueCard: {
     minHeight: 214,
 
@@ -1390,6 +1498,12 @@ const styles = StyleSheet.create({
     position: "relative",
 
     overflow: "hidden",
+  },
+
+  continueCardLandscape: {
+    minHeight: 180,
+
+    padding: 16,
   },
 
   continueGlow: {
@@ -1418,6 +1532,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
 
     marginBottom: 24,
+  },
+
+  continueTopRowLandscape: {
+    marginBottom: 16,
   },
 
   continueKicker: {
@@ -1490,6 +1608,10 @@ const styles = StyleSheet.create({
     marginTop: 25,
   },
 
+  continueProgressBlockLandscape: {
+    marginTop: 18,
+  },
+
   continueProgressMeta: {
     flexDirection: "row",
 
@@ -1554,6 +1676,12 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
 
     gap: 14,
+  },
+
+  sectionHeaderLandscape: {
+    marginTop: 22,
+
+    marginBottom: 12,
   },
 
   sectionTitle: {
@@ -1632,6 +1760,10 @@ const styles = StyleSheet.create({
     boxShadow: "0px 10px 24px rgba(0,0,0,0.22)",
   },
 
+  pathCardWrapLandscape: {
+    minHeight: 154,
+  },
+
   pathCardWrapActive: {
     boxShadow: "0px 12px 28px rgba(48,167,215,0.12)",
   },
@@ -1654,6 +1786,12 @@ const styles = StyleSheet.create({
     position: "relative",
 
     overflow: "hidden",
+  },
+
+  pathCardLandscape: {
+    minHeight: 154,
+
+    padding: 14,
   },
 
   pathAmbientGlow: {
@@ -1770,6 +1908,10 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
 
+  pathTextBlockLandscape: {
+    marginTop: 13,
+  },
+
   pathTitle: {
     color: TXT,
   },
@@ -1800,6 +1942,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
 
     gap: 10,
+  },
+
+  pathFooterLandscape: {
+    paddingTop: 12,
   },
 
   pathFooterLine: {
