@@ -66,15 +66,23 @@ test("the grammar modal keeps controls fixed around one scroll region", () => {
   assert.match(modal, /fillAvailableHeight/u);
   assert.match(modal, /respectHorizontalSafeArea/u);
   assert.match(modal, /scrollable=\{false\}/u);
-  assert.match(modal, /<ScrollView/u);
+  assert.match(modal, /<Animated\.ScrollView/u);
   assert.match(modal, /bodyScrollRef\.current\?\.scrollTo/u);
   assert.match(modal, /styles\.exerciseFooter/u);
   assert.match(modal, /const HEADER_COLLAPSE_DISTANCE = 56/u);
-  assert.match(modal, /headerScrollY\.setValue\(scrollY\)/u);
   assert.match(modal, /const compactHeroHeight = 60/u);
   assert.match(modal, /lineContract="singleLine"/u);
+  assert.match(modal, /transform: \[\{ translateY: animatedHeaderTranslateY \}\]/u);
+  assert.match(modal, /transform: \[\{ translateY: animatedBodyTranslateY \}\]/u);
+  assert.match(
+    modal,
+    /onScroll=\{Animated\.event\([\s\S]*?\{ useNativeDriver: true \},\s*\)\}/u,
+  );
+  assert.doesNotMatch(modal, /height: animatedHeroHeight/u);
+  assert.doesNotMatch(modal, /headerScrollY\.setValue\(scrollY\)/u);
+  assert.doesNotMatch(modal, /setIsHeaderCompact/u);
 
-  const scrollEnd = modal.indexOf("</ScrollView>");
+  const scrollEnd = modal.indexOf("</Animated.ScrollView>");
   const closeButton = modal.indexOf('accessibilityLabel="Fermer l’explication"');
   const exerciseButton = modal.indexOf('label="Accéder aux exercices"');
   assert.ok(closeButton >= 0 && closeButton < scrollEnd);
