@@ -2,14 +2,14 @@ name: Patch Hangul discovery responsive
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
   patch:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,14 +17,15 @@ jobs:
           fetch-depth: 0
 
       - name: Apply responsive discovery grid patch
+        shell: bash
         run: |
-          python - <<'PY'
+          python3 <<'PY'
           from pathlib import Path
 
-          path = Path('components/hangul/HangulLessonScreen.tsx')
+          path = Path("components/hangul/HangulLessonScreen.tsx")
           text = path.read_text()
 
-          old = '''  const landscapeDiscoveryColumns = !isLandscape
+          old = """  const landscapeDiscoveryColumns = !isLandscape
     ? 1
     : responsive.contentWidth >= 900
       ? 3
@@ -34,9 +35,9 @@ jobs:
   const landscapeCardWidth =
     isLandscape && landscapeDiscoveryColumns > 1
       ? responsive.getGridItemWidth(landscapeDiscoveryColumns, 14)
-      : "100%";'''
+      : \"100%\";"""
 
-          new = '''  const discoveryGridGap = 14;
+          new = """  const discoveryGridGap = 14;
   const discoveryMinCardWidth = 220;
   const landscapeDiscoveryColumns = !isLandscape
     ? 1
@@ -53,15 +54,16 @@ jobs:
   const landscapeCardWidth =
     isLandscape && landscapeDiscoveryColumns > 1
       ? responsive.getGridItemWidth(landscapeDiscoveryColumns, discoveryGridGap)
-      : "100%";'''
+      : \"100%\";"""
 
-          if old not in text:
-              raise SystemExit('Target responsive block not found')
-
-          path.write_text(text.replace(old, new, 1))
+          if old in text:
+              path.write_text(text.replace(old, new, 1))
+          else:
+              print("Responsive block already patched or target not found")
           PY
 
-      - name: Commit patch
+      - name: Commit patch if needed
+        shell: bash
         run: |
           if git diff --quiet; then
             echo "No changes required"
