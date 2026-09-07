@@ -24,8 +24,6 @@ import { useGrammarModalLayout } from "./useGrammarModalLayout";
 const COLORS = SeoulMidnightGlass.colors;
 const GRAMMAR_ACCENT = HubModuleAccents.grammar;
 
-const HEADER_COLLAPSE_DISTANCE = 56;
-
 type GrammarLessonGuideModalProps = React.PropsWithChildren<{
   visible: boolean;
   title: string;
@@ -107,12 +105,6 @@ export function GrammarLessonGuideModal({
     return () => cancelAnimationFrame(frame);
   }, [headerScrollY, title, visible]);
 
-  const headerProgress = headerScrollY.interpolate({
-    inputRange: [0, HEADER_COLLAPSE_DISTANCE],
-    outputRange: [0, 1],
-    extrapolate: "clamp",
-  });
-
   const expandedHeroHeight = layout.isVeryShortHeight
     ? 150
     : layout.isShortHeight
@@ -124,6 +116,13 @@ export function GrammarLessonGuideModal({
           : 250;
 
   const compactHeroHeight = 60;
+  const headerCollapseDistance = expandedHeroHeight - compactHeroHeight;
+
+  const headerProgress = headerScrollY.interpolate({
+    inputRange: [0, headerCollapseDistance],
+    outputRange: [0, 1],
+    extrapolate: "clamp",
+  });
 
   const heroHorizontalPadding = layout.isVeryShortHeight
     ? 16
@@ -158,14 +157,6 @@ export function GrammarLessonGuideModal({
   const animatedHeaderTranslateY = headerProgress.interpolate({
     inputRange: [0, 1],
     outputRange: [0, -(expandedHeroHeight - compactHeroHeight)],
-  });
-
-  const animatedBodyTranslateY = headerProgress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [
-      expandedHeroHeight - compactHeroHeight - HEADER_COLLAPSE_DISTANCE,
-      0,
-    ],
   });
 
   const animatedCloseTranslateY = headerProgress.interpolate({
@@ -429,22 +420,19 @@ export function GrammarLessonGuideModal({
         >
           <View
             pointerEvents="none"
-            style={{ height: compactHeroHeight + HEADER_COLLAPSE_DISTANCE }}
+            style={{ height: expandedHeroHeight }}
           />
 
-          <Animated.View
+          <View
             style={[
               styles.body,
               layout.isCompactWidth && styles.bodyCompact,
               layout.useWideLayout && styles.bodyWide,
               layout.isShortHeight && styles.bodyShort,
-              {
-                transform: [{ translateY: animatedBodyTranslateY }],
-              },
             ]}
           >
             {guide ? <GrammarLessonGuideContent guide={guide} /> : children}
-          </Animated.View>
+          </View>
         </Animated.ScrollView>
 
         <View
