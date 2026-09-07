@@ -15,9 +15,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
   Vibration,
   View,
-  useWindowDimensions,
 } from "react-native";
 import {
   SafeAreaView,
@@ -80,26 +80,20 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const isLandscape = width > height;
-  const responsive = useResponsiveLayout({ maxWidth: isLandscape ? 1120 : 920 });
+  const responsive = useResponsiveLayout({
+    maxWidth: isLandscape ? 1120 : 920,
+  });
   const discoveryGridGap = 14;
   const discoveryMinCardWidth = 220;
   const safeContentWidth = Math.min(
     responsive.maxWidth,
     Math.max(
       0,
-      width -
-        insets.left -
-        insets.right -
-        responsive.horizontalPadding * 2,
+      width - insets.left - insets.right - responsive.horizontalPadding * 2,
     ),
   );
   const landscapeDiscoveryColumns = !isLandscape
     ? 1
-    : safeContentWidth >= 900
-      ? 3
-      : safeContentWidth >= 640
-        ? 2
-        : 1;
     : Math.max(
         1,
         Math.min(
@@ -112,13 +106,13 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
       );
   const landscapeCardWidth =
     isLandscape && landscapeDiscoveryColumns > 1
-      ? (safeContentWidth - 14 * (landscapeDiscoveryColumns - 1)) /
-        landscapeDiscoveryColumns
       ? responsive.getGridItemWidth(landscapeDiscoveryColumns, discoveryGridGap)
       : "100%";
   const { playAudio, stopAudio } = useHangulAudio();
 
-  const savedLesson = normalizeLesson(progress.hangulProgress.lessons[module.id]);
+  const savedLesson = normalizeLesson(
+    progress.hangulProgress.lessons[module.id],
+  );
   const savedSceneIndex = module.scenes.findIndex(
     (scene) => scene.id === savedLesson.currentSceneId,
   );
@@ -147,7 +141,8 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
   });
 
   const activeScene =
-    module.scenes.find((scene) => scene.id === activeSceneId) ?? module.scenes[0];
+    module.scenes.find((scene) => scene.id === activeSceneId) ??
+    module.scenes[0];
   const lesson = normalizeLesson(progress.hangulProgress.lessons[module.id]);
   const questions = quizSession?.questions ?? [];
   const questionIndex = quizSession?.questionIndex ?? 0;
@@ -241,7 +236,8 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
 
   const selectScene = (sceneId: string) => {
     const index = module.scenes.findIndex((scene) => scene.id === sceneId);
-    if (index > 0 && !lesson.masteredScenes[module.scenes[index - 1].id]) return;
+    if (index > 0 && !lesson.masteredScenes[module.scenes[index - 1].id])
+      return;
     setActiveSceneId(sceneId);
     setQuizActive(false);
     setQuizSession(null);
@@ -410,7 +406,9 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
   const closeResult = () => {
     setQuizActive(false);
     if (!result.mastered) return;
-    const index = module.scenes.findIndex((scene) => scene.id === activeScene.id);
+    const index = module.scenes.findIndex(
+      (scene) => scene.id === activeScene.id,
+    );
     const nextScene = module.scenes[index + 1];
     if (nextScene) selectScene(nextScene.id);
   };
@@ -433,7 +431,11 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
   if (!moduleUnlocked && prerequisite) {
     return (
       <SafeAreaView style={styles.safe}>
-        <ImageBackground source={BACKGROUND_SOURCE} style={styles.bgImage} resizeMode="cover">
+        <ImageBackground
+          source={BACKGROUND_SOURCE}
+          style={styles.bgImage}
+          resizeMode="cover"
+        >
           <BackgroundLayers />
           <View
             style={[
@@ -470,7 +472,11 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               <AppText variant="screenTitle" style={styles.gateTitle}>
                 Une étape avant celle-ci
               </AppText>
-              <AppText variant="bodySecondary" tone="muted" style={styles.gateText}>
+              <AppText
+                variant="bodySecondary"
+                tone="muted"
+                style={styles.gateText}
+              >
                 Termine d’abord « {prerequisite.title} ». Les exemples
                 n’utilisent que les caractères déjà étudiés.
               </AppText>
@@ -505,7 +511,11 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground source={BACKGROUND_SOURCE} style={styles.bgImage} resizeMode="cover">
+      <ImageBackground
+        source={BACKGROUND_SOURCE}
+        style={styles.bgImage}
+        resizeMode="cover"
+      >
         <BackgroundLayers />
 
         <ScrollView
@@ -517,7 +527,9 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
           ]}
         >
           <View style={[styles.frame, { maxWidth: responsive.maxWidth }]}>
-            <View style={[styles.header, isLandscape && styles.headerLandscape]}>
+            <View
+              style={[styles.header, isLandscape && styles.headerLandscape]}
+            >
               <View style={isLandscape ? styles.headerSide : undefined}>
                 <AppBackButton />
               </View>
@@ -550,11 +562,19 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                     pressed && styles.helpTogglePressed,
                   ]}
                 >
-                  <View style={[styles.helpDot, showRomanization && styles.helpDotActive]} />
+                  <View
+                    style={[
+                      styles.helpDot,
+                      showRomanization && styles.helpDotActive,
+                    ]}
+                  />
                   <AppText
                     variant="caption"
                     lineContract="singleLine"
-                    style={[styles.helpText, showRomanization && styles.helpTextActive]}
+                    style={[
+                      styles.helpText,
+                      showRomanization && styles.helpTextActive,
+                    ]}
                   >
                     {showRomanization
                       ? "Aide latine · activée"
@@ -565,7 +585,12 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
             </View>
 
             <View style={[styles.hero, isLandscape && styles.heroLandscape]}>
-              <View style={[styles.heroEyebrowRow, isLandscape && styles.heroEyebrowRowLandscape]}>
+              <View
+                style={[
+                  styles.heroEyebrowRow,
+                  isLandscape && styles.heroEyebrowRowLandscape,
+                ]}
+              >
                 <View style={styles.heroDot} />
                 <AppText variant="sectionLabel" style={styles.heroEyebrow}>
                   HANGUL · {module.eyebrow}
@@ -579,22 +604,40 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               <AppText
                 variant="bodySecondary"
                 tone="muted"
-                style={[styles.heroSubtitle, isLandscape && styles.heroSubtitleLandscape]}
+                style={[
+                  styles.heroSubtitle,
+                  isLandscape && styles.heroSubtitleLandscape,
+                ]}
               >
                 {module.subtitle}
               </AppText>
-              <View style={[styles.heroMetaRow, isLandscape && styles.heroMetaRowLandscape]}>
+              <View
+                style={[
+                  styles.heroMetaRow,
+                  isLandscape && styles.heroMetaRowLandscape,
+                ]}
+              >
                 <View style={styles.heroLevelPill}>
                   <Sparkles size={15} strokeWidth={2} color={HANGUL_ACCENT} />
-                  <AppText variant="sectionLabel" lineContract="singleLine" style={styles.heroLevelText}>
+                  <AppText
+                    variant="sectionLabel"
+                    lineContract="singleLine"
+                    style={styles.heroLevelText}
+                  >
                     ÉTAPE HANGUL
                   </AppText>
                 </View>
                 <AppText variant="caption" style={styles.heroSceneCount}>
-                  {masteredSceneCount} / {module.scenes.length} scènes maîtrisées
+                  {masteredSceneCount} / {module.scenes.length} scènes
+                  maîtrisées
                 </AppText>
               </View>
-              <View style={[styles.heroProgressBlock, isLandscape && styles.heroProgressBlockLandscape]}>
+              <View
+                style={[
+                  styles.heroProgressBlock,
+                  isLandscape && styles.heroProgressBlockLandscape,
+                ]}
+              >
                 <View style={styles.heroProgressMeta}>
                   <AppText variant="caption" style={styles.heroProgressLabel}>
                     PROGRESSION DE L'ÉTAPE
@@ -606,7 +649,9 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                       modulePercentage === 0 && styles.heroProgressStart,
                     ]}
                   >
-                    {modulePercentage === 0 ? "Commencer" : `${modulePercentage}%`}
+                    {modulePercentage === 0
+                      ? "Commencer"
+                      : `${modulePercentage}%`}
                   </AppText>
                 </View>
                 <AnimatedProgressBar progress={moduleProgress} />
@@ -616,13 +661,17 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={[styles.tabs, isLandscape && styles.tabsLandscape]}
+              contentContainerStyle={[
+                styles.tabs,
+                isLandscape && styles.tabsLandscape,
+              ]}
             >
               {module.scenes.map((scene, index) => {
                 const mastered = !!lesson.masteredScenes[scene.id];
                 const completed = !!lesson.completedScenes[scene.id];
                 const unlocked =
-                  index === 0 || !!lesson.masteredScenes[module.scenes[index - 1].id];
+                  index === 0 ||
+                  !!lesson.masteredScenes[module.scenes[index - 1].id];
                 const selected = activeScene.id === scene.id;
 
                 return (
@@ -653,7 +702,10 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                       ) : (
                         <AppText
                           variant="caption"
-                          style={[styles.tabNumber, selected && styles.tabNumberActive]}
+                          style={[
+                            styles.tabNumber,
+                            selected && styles.tabNumberActive,
+                          ]}
                         >
                           {index + 1}
                         </AppText>
@@ -670,7 +722,9 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                     >
                       {scene.title}
                     </AppText>
-                    {completed && !mastered ? <View style={styles.tabReviewDot} /> : null}
+                    {completed && !mastered ? (
+                      <View style={styles.tabReviewDot} />
+                    ) : null}
                   </Pressable>
                 );
               })}
@@ -679,7 +733,10 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
             <BlurView
               intensity={68}
               tint="dark"
-              style={[styles.sceneCard, isLandscape && styles.sceneCardLandscape]}
+              style={[
+                styles.sceneCard,
+                isLandscape && styles.sceneCardLandscape,
+              ]}
             >
               <LinearGradient
                 colors={[
@@ -694,10 +751,18 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               />
               <View style={styles.sceneGlow} />
               <View style={styles.glassTopHairline} />
-              <View style={[styles.sceneTopRow, isLandscape && styles.sceneTopRowLandscape]}>
+              <View
+                style={[
+                  styles.sceneTopRow,
+                  isLandscape && styles.sceneTopRowLandscape,
+                ]}
+              >
                 <View style={styles.sceneKicker}>
                   <View style={styles.sceneKickerDot} />
-                  <AppText variant="sectionLabel" style={styles.sceneKickerText}>
+                  <AppText
+                    variant="sectionLabel"
+                    style={styles.sceneKickerText}
+                  >
                     SCÈNE {activeSceneIndex + 1}
                   </AppText>
                 </View>
@@ -734,31 +799,54 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                 <AppText variant="sceneTitle" style={styles.sceneTitle}>
                   {activeScene.title}
                 </AppText>
-                <AppText variant="koreanSecondary" script="korean" style={styles.sceneKorean}>
+                <AppText
+                  variant="koreanSecondary"
+                  script="korean"
+                  style={styles.sceneKorean}
+                >
                   {activeScene.koreanTitle}
                 </AppText>
               </View>
               <AppText
                 variant="body"
-                style={[styles.sceneDescription, isLandscape && styles.sceneDescriptionLandscape]}
+                style={[
+                  styles.sceneDescription,
+                  isLandscape && styles.sceneDescriptionLandscape,
+                ]}
               >
                 {activeScene.description}
               </AppText>
-              <View style={[styles.instruction, isLandscape && styles.instructionLandscape]}>
+              <View
+                style={[
+                  styles.instruction,
+                  isLandscape && styles.instructionLandscape,
+                ]}
+              >
                 <View style={styles.instructionAccent} />
                 <AppText
                   variant="bodySecondary"
-                  style={[styles.instructionText, isLandscape && styles.instructionTextLandscape]}
+                  style={[
+                    styles.instructionText,
+                    isLandscape && styles.instructionTextLandscape,
+                  ]}
                 >
                   {activeScene.instruction}
                 </AppText>
               </View>
-              <View style={[styles.sceneProgressBlock, isLandscape && styles.sceneProgressBlockLandscape]}>
+              <View
+                style={[
+                  styles.sceneProgressBlock,
+                  isLandscape && styles.sceneProgressBlockLandscape,
+                ]}
+              >
                 <View style={styles.sceneProgressMeta}>
                   <AppText variant="caption" style={styles.sceneProgressLabel}>
                     DÉCOUVERTE
                   </AppText>
-                  <AppText variant="bodyStrong" style={styles.sceneProgressValue}>
+                  <AppText
+                    variant="bodyStrong"
+                    style={styles.sceneProgressValue}
+                  >
                     {discoveredCount} / {activeScene.cards.length}
                   </AppText>
                 </View>
@@ -766,7 +854,12 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               </View>
             </BlurView>
 
-            <View style={[styles.sectionHeader, isLandscape && styles.sectionHeaderLandscape]}>
+            <View
+              style={[
+                styles.sectionHeader,
+                isLandscape && styles.sectionHeaderLandscape,
+              ]}
+            >
               <View>
                 <AppText variant="sectionLabel" style={styles.sectionEyebrow}>
                   DÉCOUVERTE
@@ -789,7 +882,9 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               </AppText>
             </View>
 
-            <View style={[styles.cardGrid, isLandscape && styles.cardGridLandscape]}>
+            <View
+              style={[styles.cardGrid, isLandscape && styles.cardGridLandscape]}
+            >
               {activeScene.cards.map((item) => {
                 const discovered = !!lesson.discovered[item.id];
                 return (
@@ -835,15 +930,26 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                       />
                       <View style={styles.glassTopHairline} />
                       {discovered ? <View style={styles.cardGlow} /> : null}
-                      <View style={[styles.cardTop, isLandscape && styles.cardTopLandscape]}>
-                        <View style={isLandscape ? styles.glyphGroupLandscape : undefined}>
+                      <View
+                        style={[
+                          styles.cardTop,
+                          isLandscape && styles.cardTopLandscape,
+                        ]}
+                      >
+                        <View
+                          style={
+                            isLandscape ? styles.glyphGroupLandscape : undefined
+                          }
+                        >
                           <AppText
                             variant="koreanPrimary"
                             script="korean"
                             align={isLandscape ? "center" : undefined}
                             style={[
                               styles.glyph,
-                              discovered ? styles.glyphDiscovered : styles.glyphIdle,
+                              discovered
+                                ? styles.glyphDiscovered
+                                : styles.glyphIdle,
                             ]}
                           >
                             {item.glyph}
@@ -858,9 +964,16 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                             </AppText>
                           ) : null}
                         </View>
-                        {item.audio ? <HangulAudioBadge accent={HANGUL_ACCENT} /> : null}
+                        {item.audio ? (
+                          <HangulAudioBadge accent={HANGUL_ACCENT} />
+                        ) : null}
                       </View>
-                      <View style={[styles.cardCopy, isLandscape && styles.cardCopyLandscape]}>
+                      <View
+                        style={[
+                          styles.cardCopy,
+                          isLandscape && styles.cardCopyLandscape,
+                        ]}
+                      >
                         <AppText
                           variant="bodyStrong"
                           align={isLandscape ? "center" : undefined}
@@ -887,13 +1000,24 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                           </AppText>
                         )}
                       </View>
-                      <View style={[styles.cardFooter, isLandscape && styles.cardFooterLandscape]}>
+                      <View
+                        style={[
+                          styles.cardFooter,
+                          isLandscape && styles.cardFooterLandscape,
+                        ]}
+                      >
                         <View style={styles.cardFooterLine}>
-                          {discovered ? <View style={styles.cardFooterAccent} /> : null}
+                          {discovered ? (
+                            <View style={styles.cardFooterAccent} />
+                          ) : null}
                         </View>
                         {discovered ? (
                           <View style={styles.discoveredBadge}>
-                            <Check size={12} strokeWidth={2.5} color={HANGUL_ACCENT} />
+                            <Check
+                              size={12}
+                              strokeWidth={2.5}
+                              color={HANGUL_ACCENT}
+                            />
                           </View>
                         ) : null}
                       </View>
@@ -921,7 +1045,10 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={[styles.primaryGradient, isLandscape && styles.primaryGradientLandscape]}
+                style={[
+                  styles.primaryGradient,
+                  isLandscape && styles.primaryGradientLandscape,
+                ]}
               >
                 <AppText
                   variant="button"
@@ -967,7 +1094,10 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                     <Check size={18} strokeWidth={2.4} color={SUCCESS} />
                   </View>
                   <View style={styles.nextCardCopy}>
-                    <AppText variant="sectionLabel" style={styles.nextCardEyebrow}>
+                    <AppText
+                      variant="sectionLabel"
+                      style={styles.nextCardEyebrow}
+                    >
                       ÉTAPE TERMINÉE
                     </AppText>
                     <AppText variant="bodyStrong" style={styles.nextCardTitle}>
@@ -1025,7 +1155,8 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                   <View
                     style={[
                       styles.quizQuestionLayout,
-                      useLandscapeQuizLayout && styles.quizQuestionLayoutLandscape,
+                      useLandscapeQuizLayout &&
+                        styles.quizQuestionLayoutLandscape,
                     ]}
                   >
                     <View
@@ -1035,57 +1166,63 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                           : undefined
                       }
                     >
-                    <View style={styles.quizHeader}>
-                      <View>
-                        <AppText variant="sectionLabel" style={styles.quizEyebrow}>
-                          QUESTION {questionIndex + 1} / {questions.length}
-                        </AppText>
-                        <AppText variant="caption" style={styles.quizContext}>
-                          {activeScene.title}
-                        </AppText>
+                      <View style={styles.quizHeader}>
+                        <View>
+                          <AppText
+                            variant="sectionLabel"
+                            style={styles.quizEyebrow}
+                          >
+                            QUESTION {questionIndex + 1} / {questions.length}
+                          </AppText>
+                          <AppText variant="caption" style={styles.quizContext}>
+                            {activeScene.title}
+                          </AppText>
+                        </View>
+                        {currentQuestion.audio ? (
+                          <HangulReplayButton
+                            accent={HANGUL_ACCENT}
+                            onPress={() => playAudio(currentQuestion.audio!)}
+                          />
+                        ) : null}
                       </View>
-                      {currentQuestion.audio ? (
-                        <HangulReplayButton
-                          accent={HANGUL_ACCENT}
-                          onPress={() => playAudio(currentQuestion.audio!)}
+                      <View style={styles.quizProgressTrack}>
+                        <View
+                          style={[
+                            styles.quizProgressFill,
+                            {
+                              width: `${
+                                ((questionIndex + 1) /
+                                  Math.max(questions.length, 1)) *
+                                100
+                              }%`,
+                            },
+                          ]}
                         />
+                      </View>
+                      {currentQuestion.display ? (
+                        <AppText
+                          variant="koreanHero"
+                          script="korean"
+                          align="center"
+                          style={[
+                            styles.questionDisplay,
+                            useLandscapeQuizLayout &&
+                              styles.questionDisplayLandscape,
+                          ]}
+                        >
+                          {currentQuestion.display}
+                        </AppText>
                       ) : null}
-                    </View>
-                    <View style={styles.quizProgressTrack}>
-                      <View
-                        style={[
-                          styles.quizProgressFill,
-                          {
-                            width: `${
-                              ((questionIndex + 1) / Math.max(questions.length, 1)) * 100
-                            }%`,
-                          },
-                        ]}
-                      />
-                    </View>
-                    {currentQuestion.display ? (
                       <AppText
-                        variant="koreanHero"
-                        script="korean"
+                        variant="sceneTitle"
                         align="center"
                         style={[
-                          styles.questionDisplay,
-                          useLandscapeQuizLayout && styles.questionDisplayLandscape,
+                          styles.prompt,
+                          useLandscapeQuizLayout && styles.promptLandscape,
                         ]}
                       >
-                        {currentQuestion.display}
+                        {currentQuestion.prompt}
                       </AppText>
-                    ) : null}
-                    <AppText
-                      variant="sceneTitle"
-                      align="center"
-                      style={[
-                        styles.prompt,
-                        useLandscapeQuizLayout && styles.promptLandscape,
-                      ]}
-                    >
-                      {currentQuestion.prompt}
-                    </AppText>
                     </View>
 
                     <View
@@ -1095,122 +1232,157 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                           : undefined
                       }
                     >
-                    <View
-                      style={[
-                        styles.options,
-                        useCompactOptions && styles.compactOptions,
-                        useLandscapeQuizOptionGrid && styles.optionsLandscape,
-                      ]}
-                    >
-                      {currentQuestion.options.map((item, index) => {
-                        const isSelected = answered === item.value;
-                        const isCorrect =
-                          answered !== null && item.value === currentQuestion.answer;
-
-                        if (item.audio) {
-                          return (
-                            <View
-                              key={`${currentQuestion.id}-${item.value}-${index}`}
-                              style={[
-                                styles.option,
-                                styles.audioOption,
-                                isSelected && styles.optionWrong,
-                                isCorrect && styles.optionCorrect,
-                              ]}
-                            >
-                              <Pressable
-                                onPress={() => playAudio(item.audio!)}
-                                style={styles.audioListen}
-                              >
-                                <HangulAudioBadge accent={HANGUL_ACCENT} />
-                                <View style={styles.audioListenCopy}>
-                                  <AppText variant="caption" style={styles.audioListenLabel}>
-                                    ÉCOUTER
-                                  </AppText>
-                                  <AppText variant="bodyStrong">{item.label}</AppText>
-                                </View>
-                              </Pressable>
-                              <Pressable
-                                disabled={answered !== null}
-                                onPress={() => answerQuestion(item.value)}
-                                style={styles.audioChoose}
-                              >
-                                <AppText variant="caption" style={styles.audioChooseText}>
-                                  CHOISIR
-                                </AppText>
-                              </Pressable>
-                            </View>
-                          );
-                        }
-
-                        return (
-                          <Pressable
-                            key={`${currentQuestion.id}-${item.value}-${index}`}
-                            disabled={answered !== null}
-                            onPress={() => answerQuestion(item.value)}
-                            style={({ pressed }) => [
-                              styles.option,
-                              useCompactOptions && styles.compactOption,
-                              useLandscapeQuizOptionGrid && styles.optionLandscape,
-                              isSelected && styles.optionWrong,
-                              isCorrect && styles.optionCorrect,
-                              pressed && answered === null && styles.optionPressed,
-                            ]}
-                          >
-                            <AppText variant="bodyStrong" align="center">
-                              {item.label}
-                            </AppText>
-                          </Pressable>
-                        );
-                      })}
-                    </View>
-                    {answered !== null ? (
-                      <BlurView
-                        intensity={52}
-                        tint="dark"
+                      <View
                         style={[
-                          styles.feedback,
-                          useLandscapeQuizLayout && styles.feedbackLandscape,
-                          isCurrentAnswerCorrect
-                            ? styles.feedbackCorrect
-                            : styles.feedbackWrong,
+                          styles.options,
+                          useCompactOptions && styles.compactOptions,
+                          useLandscapeQuizOptionGrid && styles.optionsLandscape,
                         ]}
                       >
-                        <AppText
-                          variant="bodyStrong"
-                          style={{ color: isCurrentAnswerCorrect ? SUCCESS : ERROR }}
+                        {currentQuestion.options.map((item, index) => {
+                          const isSelected = answered === item.value;
+                          const isCorrect =
+                            answered !== null &&
+                            item.value === currentQuestion.answer;
+
+                          if (item.audio) {
+                            return (
+                              <View
+                                key={`${currentQuestion.id}-${item.value}-${index}`}
+                                style={[
+                                  styles.option,
+                                  styles.audioOption,
+                                  isSelected && styles.optionWrong,
+                                  isCorrect && styles.optionCorrect,
+                                ]}
+                              >
+                                <Pressable
+                                  onPress={() => playAudio(item.audio!)}
+                                  style={styles.audioListen}
+                                >
+                                  <HangulAudioBadge accent={HANGUL_ACCENT} />
+                                  <View style={styles.audioListenCopy}>
+                                    <AppText
+                                      variant="caption"
+                                      style={styles.audioListenLabel}
+                                    >
+                                      ÉCOUTER
+                                    </AppText>
+                                    <AppText variant="bodyStrong">
+                                      {item.label}
+                                    </AppText>
+                                  </View>
+                                </Pressable>
+                                <Pressable
+                                  disabled={answered !== null}
+                                  onPress={() => answerQuestion(item.value)}
+                                  style={styles.audioChoose}
+                                >
+                                  <AppText
+                                    variant="caption"
+                                    style={styles.audioChooseText}
+                                  >
+                                    CHOISIR
+                                  </AppText>
+                                </Pressable>
+                              </View>
+                            );
+                          }
+
+                          return (
+                            <Pressable
+                              key={`${currentQuestion.id}-${item.value}-${index}`}
+                              disabled={answered !== null}
+                              onPress={() => answerQuestion(item.value)}
+                              style={({ pressed }) => [
+                                styles.option,
+                                useCompactOptions && styles.compactOption,
+                                useLandscapeQuizOptionGrid &&
+                                  styles.optionLandscape,
+                                isSelected && styles.optionWrong,
+                                isCorrect && styles.optionCorrect,
+                                pressed &&
+                                  answered === null &&
+                                  styles.optionPressed,
+                              ]}
+                            >
+                              <AppText variant="bodyStrong" align="center">
+                                {item.label}
+                              </AppText>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
+                      {answered !== null ? (
+                        <BlurView
+                          intensity={52}
+                          tint="dark"
+                          style={[
+                            styles.feedback,
+                            useLandscapeQuizLayout && styles.feedbackLandscape,
+                            isCurrentAnswerCorrect
+                              ? styles.feedbackCorrect
+                              : styles.feedbackWrong,
+                          ]}
                         >
-                          {isCurrentAnswerCorrect ? "Bonne réponse" : "Mauvaise réponse"}
-                        </AppText>
-                        {isCurrentAnswerCorrect ? (
-                          <AppText variant="bodyStrong" style={styles.teacherFeedbackText}>
-                            {teacherFeedback}
-                          </AppText>
-                        ) : (
-                          <>
-                            <AppText variant="bodySecondary" style={styles.expectedAnswerText}>
-                              À retenir : {correctAnswerLabel}
-                            </AppText>
-                            <AppText variant="bodySecondary" style={styles.feedbackText}>
-                              {currentQuestion.explanation}
-                            </AppText>
-                          </>
-                        )}
-                        <Pressable onPress={continueQuiz} style={styles.continueButton}>
-                          <LinearGradient
-                            colors={[HANGUL_ACCENT, HANGUL_SECONDARY]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={styles.continueGradient}
+                          <AppText
+                            variant="bodyStrong"
+                            style={{
+                              color: isCurrentAnswerCorrect ? SUCCESS : ERROR,
+                            }}
                           >
-                            <AppText variant="button" style={styles.primaryText}>
-                              {willContinueQuiz ? "SUIVANT" : "TERMINER"}
+                            {isCurrentAnswerCorrect
+                              ? "Bonne réponse"
+                              : "Mauvaise réponse"}
+                          </AppText>
+                          {isCurrentAnswerCorrect ? (
+                            <AppText
+                              variant="bodyStrong"
+                              style={styles.teacherFeedbackText}
+                            >
+                              {teacherFeedback}
                             </AppText>
-                            <ChevronRight size={17} strokeWidth={2.3} color="#020306" />
-                          </LinearGradient>
-                        </Pressable>
-                      </BlurView>
-                    ) : null}
+                          ) : (
+                            <>
+                              <AppText
+                                variant="bodySecondary"
+                                style={styles.expectedAnswerText}
+                              >
+                                À retenir : {correctAnswerLabel}
+                              </AppText>
+                              <AppText
+                                variant="bodySecondary"
+                                style={styles.feedbackText}
+                              >
+                                {currentQuestion.explanation}
+                              </AppText>
+                            </>
+                          )}
+                          <Pressable
+                            onPress={continueQuiz}
+                            style={styles.continueButton}
+                          >
+                            <LinearGradient
+                              colors={[HANGUL_ACCENT, HANGUL_SECONDARY]}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 0 }}
+                              style={styles.continueGradient}
+                            >
+                              <AppText
+                                variant="button"
+                                style={styles.primaryText}
+                              >
+                                {willContinueQuiz ? "SUIVANT" : "TERMINER"}
+                              </AppText>
+                              <ChevronRight
+                                size={17}
+                                strokeWidth={2.3}
+                                color="#020306"
+                              />
+                            </LinearGradient>
+                          </Pressable>
+                        </BlurView>
+                      ) : null}
                     </View>
                   </View>
                 ) : (
@@ -1276,7 +1448,11 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                             : "REVOIR L’ÉTAPE"}
                         </AppText>
                         {result.mastered ? (
-                          <ChevronRight size={17} strokeWidth={2.3} color="#020306" />
+                          <ChevronRight
+                            size={17}
+                            strokeWidth={2.3}
+                            color="#020306"
+                          />
                         ) : null}
                       </LinearGradient>
                     </Pressable>
@@ -1315,7 +1491,7 @@ function AnimatedProgressBar({ progress }: { progress: number }) {
 
   return (
     <View style={styles.progressTrack}>
-      <Animated.View style={[styles.progressFill, { width }]}> 
+      <Animated.View style={[styles.progressFill, { width }]}>
         <LinearGradient
           colors={[HANGUL_ACCENT, HANGUL_SECONDARY]}
           start={{ x: 0, y: 0 }}
@@ -1380,7 +1556,12 @@ const styles = StyleSheet.create({
   headerSide: { flex: 1, alignItems: "flex-start" },
   headerSideRight: { flex: 1, alignItems: "flex-end" },
   headerCenter: { flex: 1, alignItems: "center", justifyContent: "center" },
-  headerLandscapeTitle: { color: TXT, textAlign: "center", fontSize: 24, lineHeight: 30 },
+  headerLandscapeTitle: {
+    color: TXT,
+    textAlign: "center",
+    fontSize: 24,
+    lineHeight: 30,
+  },
   helpToggle: {
     minHeight: 38,
     flexDirection: "row",
@@ -1412,7 +1593,11 @@ const styles = StyleSheet.create({
   helpTextActive: { color: "rgba(103,232,249,0.88)" },
   hero: { paddingHorizontal: 2, marginBottom: 20 },
   heroLandscape: { marginBottom: 8, paddingHorizontal: 0 },
-  heroEyebrowRow: { flexDirection: "row", alignItems: "center", marginBottom: 13 },
+  heroEyebrowRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 13,
+  },
   heroEyebrowRowLandscape: { marginBottom: 5 },
   heroDot: {
     width: 5,
@@ -1601,7 +1786,11 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
-  sceneDescription: { marginTop: 18, maxWidth: 650, color: "rgba(245,247,250,0.90)" },
+  sceneDescription: {
+    marginTop: 18,
+    maxWidth: 650,
+    color: "rgba(245,247,250,0.90)",
+  },
   sceneDescriptionLandscape: { marginTop: 9, maxWidth: 900 },
   instruction: {
     marginTop: 17,
@@ -1647,7 +1836,13 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   sectionLineBase: { height: 1, backgroundColor: "rgba(255,255,255,0.075)" },
-  sectionLineGlow: { position: "absolute", right: 0, width: 92, height: 1, opacity: 0.82 },
+  sectionLineGlow: {
+    position: "absolute",
+    right: 0,
+    width: 92,
+    height: 1,
+    opacity: 0.82,
+  },
   sectionCount: { color: "rgba(241,245,249,0.86)", marginBottom: 1 },
   cardGrid: { flexDirection: "row", flexWrap: "wrap", gap: 14 },
   cardGridLandscape: { alignItems: "stretch" },
@@ -1704,7 +1899,11 @@ const styles = StyleSheet.create({
   cardCopyLandscape: { marginTop: 6, maxWidth: "100%", alignItems: "center" },
   cardLabel: { color: TXT },
   cardExplanation: { marginTop: 6, color: "rgba(241,245,249,0.84)" },
-  cardRevealHint: { marginTop: 8, color: "rgba(241,245,249,0.46)", letterSpacing: 0.7 },
+  cardRevealHint: {
+    marginTop: 8,
+    color: "rgba(241,245,249,0.46)",
+    letterSpacing: 0.7,
+  },
   cardFooter: {
     marginTop: "auto",
     paddingTop: 16,

@@ -16,11 +16,15 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
   View,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
@@ -130,20 +134,50 @@ const INCLUDED_MODULES = MODULES.filter((module) => !module.isLocked);
 const PREMIUM_MODULES = MODULES.filter((module) => module.isLocked);
 
 export default function ComptageHub() {
-  const responsive = useResponsiveLayout({ maxWidth: 920 });
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const isLandscape = width > height;
+
+  const responsive = useResponsiveLayout({
+    maxWidth: isLandscape ? 1120 : 920,
+  });
   const { hasPremiumAccess } = usePaywall();
   const { setTrack } = useStore();
   const [resumeContext, setResumeContext] = useState<HomeResumeContext | null>(
     null,
   );
-  const effectiveGap = Math.max(16, responsive.gridGap);
+  const effectiveGap = isLandscape
+    ? 14
+    : Math.max(16, responsive.gridGap);
+  const safeContentWidth = Math.min(
+    responsive.maxWidth,
+    Math.max(
+      0,
+      width -
+        insets.left -
+        insets.right -
+        responsive.horizontalPadding * 2,
+    ),
+  );
 
-  const gridColumns = responsive.getColumns({
+  const autoGridColumns = responsive.getColumns({
     minColumnWidth: 330,
     maxColumns: 2,
     gap: effectiveGap,
   });
-  const gridItemWidth = responsive.getGridItemWidth(gridColumns, effectiveGap);
+
+  const gridColumns = !isLandscape
+    ? autoGridColumns
+    : safeContentWidth >= 900
+      ? 3
+      : safeContentWidth >= 640
+        ? 2
+        : 1;
+
+  const gridItemWidth =
+    isLandscape && gridColumns > 1
+      ? (safeContentWidth - effectiveGap * (gridColumns - 1)) / gridColumns
+      : responsive.getGridItemWidth(gridColumns, effectiveGap);
 
   useFocusEffect(
     useCallback(() => {
@@ -221,23 +255,33 @@ export default function ComptageHub() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.scrollContent,
+            isLandscape && styles.scrollContentLandscape,
             { paddingHorizontal: responsive.horizontalPadding },
           ]}
         >
           <View
             style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
           >
-            <View style={styles.navHeader}>
+            <View
+              style={[
+                styles.navHeader,
+                isLandscape && styles.navHeaderLandscape,
+              ]}
+            >
               <AppBackButton />
             </View>
 
-            <CountingHero compact={responsive.isCompact} />
+            <CountingHero
+              compact={responsive.isCompact}
+              landscape={isLandscape}
+            />
 
             <AnimatedFragment index={0}>
               <FeaturedPathCard
                 module={featuredModule}
                 isResume={isResume}
                 hasPremiumAccess={hasPremiumAccess}
+                landscape={isLandscape}
                 onPress={() => void openModule(featuredModule)}
               />
             </AnimatedFragment>
@@ -245,6 +289,7 @@ export default function ComptageHub() {
             <PathSectionHeader
               title="PARCOURS INCLUS"
               subtitle={`${INCLUDED_MODULES.length} parcours essentiels`}
+              landscape={isLandscape}
             />
 
             <View
@@ -265,6 +310,7 @@ export default function ComptageHub() {
                     order={index + 1}
                     hasPremiumAccess={hasPremiumAccess}
                     isCurrent={resumeModule?.id === module.id}
+                    landscape={isLandscape}
                     onPress={() => void openModule(module)}
                   />
                 </AnimatedFragment>
@@ -280,6 +326,7 @@ export default function ComptageHub() {
               }
               premium
               premiumActive={hasPremiumAccess}
+              landscape={isLandscape}
             />
 
             <View
@@ -300,6 +347,7 @@ export default function ComptageHub() {
                     order={INCLUDED_MODULES.length + index + 1}
                     hasPremiumAccess={hasPremiumAccess}
                     isCurrent={resumeModule?.id === module.id}
+                    landscape={isLandscape}
                     onPress={() => void openModule(module)}
                   />
                 </AnimatedFragment>
@@ -312,10 +360,21 @@ export default function ComptageHub() {
   );
 }
 
-function CountingHero({ compact }: { compact: boolean }) {
+function CountingHero({
+  compact,
+  landscape,
+}: {
+  compact: boolean;
+  landscape: boolean;
+}) {
   return (
-    <View style={styles.hero}>
-      <View style={styles.heroEyebrowRow}>
+    <View style={[styles.hero, landscape && styles.heroLandscape]}>
+      <View
+        style={[
+          styles.heroEyebrowRow,
+          landscape && styles.heroEyebrowRowLandscape,
+        ]}
+      >
         <View style={styles.heroDot} />
         <AppText variant="sectionLabel" style={styles.heroEyebrow}>
           PARCOURS · COMPTAGE
@@ -326,7 +385,11 @@ function CountingHero({ compact }: { compact: boolean }) {
         variant="koreanPrimary"
         script="korean"
         lineContract="singleLine"
-        style={[styles.heroKorean, compact && styles.heroKoreanCompact]}
+        style={[
+          styles.heroKorean,
+          compact && styles.heroKoreanCompact,
+          landscape && styles.heroKoreanLandscape,
+        ]}
       >
         숫자
       </AppText>
@@ -339,7 +402,12 @@ function CountingHero({ compact }: { compact: boolean }) {
         Comprends le rythme numérique de la ville.
       </AppText>
 
-      <View style={styles.heroMetaRow}>
+      <View
+        style={[
+          styles.heroMetaRow,
+          landscape && styles.heroMetaRowLandscape,
+        ]}
+      >
         <View style={styles.levelPill}>
           <Sparkles size={15} strokeWidth={2} color={COUNTING_ACCENT} />
           <AppText
@@ -365,11 +433,13 @@ function FeaturedPathCard({
   module,
   isResume,
   hasPremiumAccess,
+  landscape,
   onPress,
 }: {
   module: CountingModule;
   isResume: boolean;
   hasPremiumAccess: boolean;
+  landscape: boolean;
   onPress: () => void;
 }) {
   const isPremium = module.isLocked;
@@ -388,12 +458,18 @@ function FeaturedPathCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.featuredWrap,
+        landscape && styles.featuredWrapLandscape,
         premiumLocked && styles.featuredWrapPremiumLocked,
         premiumActive && styles.featuredWrapPremiumActive,
         pressed && styles.pressablePressed,
       ]}
     >
-      <View style={styles.featuredCard}>
+      <View
+        style={[
+          styles.featuredCard,
+          landscape && styles.featuredCardLandscape,
+        ]}
+      >
         <ImageBackground
           source={module.background}
           resizeMode="cover"
@@ -448,7 +524,12 @@ function FeaturedPathCard({
           ]}
         />
 
-        <View style={styles.featuredTopRow}>
+        <View
+          style={[
+            styles.featuredTopRow,
+            landscape && styles.featuredTopRowLandscape,
+          ]}
+        >
           <View style={styles.featuredKicker}>
             <View
               style={[
@@ -524,7 +605,12 @@ function FeaturedPathCard({
           </AppText>
         </View>
 
-        <View style={styles.featuredFooter}>
+        <View
+          style={[
+            styles.featuredFooter,
+            landscape && styles.featuredFooterLandscape,
+          ]}
+        >
           <AppText
             variant="caption"
             style={[
@@ -561,17 +647,23 @@ function PathSectionHeader({
   subtitle,
   premium = false,
   premiumActive = false,
+  landscape,
 }: {
   title: string;
   subtitle: string;
   premium?: boolean;
   premiumActive?: boolean;
+  landscape: boolean;
 }) {
   const headerAccent = premiumActive ? PREMIUM_SOFT : PREMIUM_GOLD;
 
   return (
     <View
-      style={[styles.sectionHeader, premium && styles.sectionHeaderPremium]}
+      style={[
+        styles.sectionHeader,
+        premium && styles.sectionHeaderPremium,
+        landscape && styles.sectionHeaderLandscape,
+      ]}
     >
       <View style={styles.sectionCopy}>
         <View style={styles.sectionTitleRow}>
@@ -626,12 +718,14 @@ function CountingPathCard({
   order,
   hasPremiumAccess,
   isCurrent,
+  landscape,
   onPress,
 }: {
   module: CountingModule;
   order: number;
   hasPremiumAccess: boolean;
   isCurrent: boolean;
+  landscape: boolean;
   onPress: () => void;
 }) {
   const isPremium = module.isLocked;
@@ -651,13 +745,19 @@ function CountingPathCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.collectionWrap,
+        landscape && styles.collectionWrapLandscape,
         premiumLocked && styles.collectionWrapPremiumLocked,
         premiumActive && styles.collectionWrapPremiumActive,
         isCurrent && styles.collectionWrapCurrent,
         pressed && styles.pressablePressed,
       ]}
     >
-      <View style={styles.collectionCard}>
+      <View
+        style={[
+          styles.collectionCard,
+          landscape && styles.collectionCardLandscape,
+        ]}
+      >
         <ImageBackground
           source={module.background}
           resizeMode="cover"
@@ -819,7 +919,12 @@ function CountingPathCard({
           </View>
         </View>
 
-        <View style={styles.collectionCopy}>
+        <View
+          style={[
+            styles.collectionCopy,
+            landscape && styles.collectionCopyLandscape,
+          ]}
+        >
           <AppText variant="cardTitle" style={styles.collectionTitle}>
             {module.title}
           </AppText>
@@ -832,7 +937,12 @@ function CountingPathCard({
           </AppText>
         </View>
 
-        <View style={styles.collectionFooter}>
+        <View
+          style={[
+            styles.collectionFooter,
+            landscape && styles.collectionFooterLandscape,
+          ]}
+        >
           <View style={styles.collectionFooterLine} />
           <View
             style={[
@@ -924,6 +1034,10 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 120,
   },
+  scrollContentLandscape: {
+    paddingTop: 2,
+    paddingBottom: 72,
+  },
   contentFrame: {
     width: "100%",
     alignSelf: "center",
@@ -967,15 +1081,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
+  navHeaderLandscape: {
+    minHeight: 48,
+    marginBottom: 4,
+  },
   hero: {
     paddingHorizontal: 2,
     marginTop: 12,
     marginBottom: 28,
   },
+  heroLandscape: {
+    marginTop: 4,
+    marginBottom: 18,
+  },
   heroEyebrowRow: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
+  },
+  heroEyebrowRowLandscape: {
+    marginBottom: 8,
   },
   heroDot: {
     width: 5,
@@ -1001,6 +1126,10 @@ const styles = StyleSheet.create({
     fontSize: 36,
     lineHeight: 44,
   },
+  heroKoreanLandscape: {
+    fontSize: 36,
+    lineHeight: 42,
+  },
   heroTitle: {
     color: TXT,
     marginTop: -2,
@@ -1016,6 +1145,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: 14,
+  },
+  heroMetaRowLandscape: {
+    marginTop: 14,
   },
   levelPill: {
     minHeight: 32,
@@ -1044,6 +1176,9 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(2,3,6,0.48)",
     boxShadow: `0px 12px 30px ${COUNTING.featuredShadow}`,
   },
+  featuredWrapLandscape: {
+    marginBottom: 4,
+  },
   featuredWrapPremiumLocked: {
     borderColor: "rgba(253,224,71,0.25)",
     boxShadow: "0px 12px 32px rgba(253,224,71,0.06)",
@@ -1057,6 +1192,10 @@ const styles = StyleSheet.create({
     padding: 20,
     position: "relative",
     overflow: "hidden",
+  },
+  featuredCardLandscape: {
+    minHeight: 180,
+    padding: 16,
   },
   featuredImage: {
     borderRadius: 29,
@@ -1088,6 +1227,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 10,
     marginBottom: 20,
+  },
+  featuredTopRowLandscape: {
+    marginBottom: 16,
   },
   featuredTopActions: {
     flexDirection: "row",
@@ -1196,6 +1338,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 14,
   },
+  featuredFooterLandscape: {
+    marginTop: 18,
+  },
   featuredFooterLabel: {
     color: "rgba(184,198,218,0.82)",
     letterSpacing: 0.45,
@@ -1218,6 +1363,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
     gap: 14,
+  },
+  sectionHeaderLandscape: {
+    marginTop: 22,
+    marginBottom: 12,
   },
   sectionHeaderPremium: {
     marginTop: 38,
@@ -1285,6 +1434,9 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(2,3,6,0.50)",
     boxShadow: "0px 10px 24px rgba(0,0,0,0.26)",
   },
+  collectionWrapLandscape: {
+    minHeight: 154,
+  },
   collectionWrapPremiumLocked: {
     borderColor: "rgba(253,224,71,0.18)",
     backgroundColor: "rgba(10,9,5,0.56)",
@@ -1305,6 +1457,10 @@ const styles = StyleSheet.create({
     position: "relative",
     overflow: "hidden",
     justifyContent: "flex-start",
+  },
+  collectionCardLandscape: {
+    minHeight: 154,
+    padding: 14,
   },
   collectionImage: {
     borderRadius: 24,
@@ -1476,6 +1632,9 @@ const styles = StyleSheet.create({
     marginTop: 18,
     paddingRight: 8,
   },
+  collectionCopyLandscape: {
+    marginTop: 13,
+  },
   collectionTitle: {
     color: TXT,
     textShadowColor: "rgba(0,0,0,0.65)",
@@ -1496,6 +1655,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+  },
+  collectionFooterLandscape: {
+    paddingTop: 12,
   },
   collectionFooterLine: {
     flex: 1,
