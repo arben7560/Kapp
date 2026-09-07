@@ -69,6 +69,10 @@ test("the grammar modal keeps controls fixed around one scroll region", () => {
   assert.match(modal, /<ScrollView/u);
   assert.match(modal, /bodyScrollRef\.current\?\.scrollTo/u);
   assert.match(modal, /styles\.exerciseFooter/u);
+  assert.match(modal, /const HEADER_COLLAPSE_DISTANCE = 56/u);
+  assert.match(modal, /headerScrollY\.setValue\(scrollY\)/u);
+  assert.match(modal, /const compactHeroHeight = 60/u);
+  assert.match(modal, /lineContract="singleLine"/u);
 
   const scrollEnd = modal.indexOf("</ScrollView>");
   const closeButton = modal.indexOf('accessibilityLabel="Fermer l’explication"');
