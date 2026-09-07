@@ -77,10 +77,17 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
   const responsive = useResponsiveLayout({ maxWidth: isLandscape ? 1120 : 920 });
-  const landscapeTwoColumns = isLandscape && responsive.contentWidth >= 640;
-  const landscapeCardWidth = landscapeTwoColumns
-    ? responsive.getGridItemWidth(2, 14)
-    : "100%";
+  const landscapeDiscoveryColumns = !isLandscape
+    ? 1
+    : responsive.contentWidth >= 900
+      ? 3
+      : responsive.contentWidth >= 640
+        ? 2
+        : 1;
+  const landscapeCardWidth =
+    isLandscape && landscapeDiscoveryColumns > 1
+      ? responsive.getGridItemWidth(landscapeDiscoveryColumns, 14)
+      : "100%";
   const { playAudio, stopAudio } = useHangulAudio();
 
   const savedLesson = normalizeLesson(progress.hangulProgress.lessons[module.id]);
@@ -751,7 +758,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                     onPress={() => discover(item.id, item.audio)}
                     style={({ pressed }) => [
                       styles.cardPressable,
-                      landscapeTwoColumns && {
+                      isLandscape && {
                         width: landscapeCardWidth,
                         flexBasis: "auto",
                         flexGrow: 0,
@@ -1551,9 +1558,9 @@ const styles = StyleSheet.create({
     boxShadow: "0px 10px 24px rgba(0,0,0,0.28)",
   },
   cardLandscape: {
-    minHeight: 154,
-    padding: 16,
-    borderRadius: 22,
+    minHeight: 138,
+    padding: 14,
+    borderRadius: 20,
     justifyContent: "space-between",
   },
   cardDiscovered: {
@@ -1588,7 +1595,7 @@ const styles = StyleSheet.create({
   },
   romanization: { marginTop: 2, color: "rgba(103,232,249,0.86)" },
   cardCopy: { marginTop: 14, maxWidth: 540 },
-  cardCopyLandscape: { marginTop: 8, maxWidth: "100%", alignItems: "center" },
+  cardCopyLandscape: { marginTop: 6, maxWidth: "100%", alignItems: "center" },
   cardLabel: { color: TXT },
   cardExplanation: { marginTop: 6, color: "rgba(241,245,249,0.84)" },
   cardRevealHint: { marginTop: 8, color: "rgba(241,245,249,0.46)", letterSpacing: 0.7 },
@@ -1599,7 +1606,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
-  cardFooterLandscape: { paddingTop: 10 },
+  cardFooterLandscape: { paddingTop: 8 },
   cardFooterLine: {
     flex: 1,
     height: 1,
