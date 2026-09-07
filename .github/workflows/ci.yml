@@ -5,6 +5,79 @@ on:
   pull_request:
 
 jobs:
+  apply-hangul-discovery-patch:
+    name: Apply Hangul discovery responsive patch
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch Hangul discovery grid
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          path = Path("components/hangul/HangulLessonScreen.tsx")
+          text = path.read_text()
+
+          old = """  const landscapeDiscoveryColumns = !isLandscape
+    ? 1
+    : responsive.contentWidth >= 900
+      ? 3
+      : responsive.contentWidth >= 640
+        ? 2
+        : 1;
+  const landscapeCardWidth =
+    isLandscape && landscapeDiscoveryColumns > 1
+      ? responsive.getGridItemWidth(landscapeDiscoveryColumns, 14)
+      : \"100%\";"""
+
+          new = """  const discoveryGridGap = 14;
+  const discoveryMinCardWidth = 220;
+  const landscapeDiscoveryColumns = !isLandscape
+    ? 1
+    : Math.max(
+        1,
+        Math.min(
+          3,
+          Math.floor(
+            (responsive.contentWidth + discoveryGridGap) /
+              (discoveryMinCardWidth + discoveryGridGap),
+          ),
+        ),
+      );
+  const landscapeCardWidth =
+    isLandscape && landscapeDiscoveryColumns > 1
+      ? responsive.getGridItemWidth(landscapeDiscoveryColumns, discoveryGridGap)
+      : \"100%\";"""
+
+          if old in text:
+              path.write_text(text.replace(old, new, 1))
+              print("Hangul discovery grid patched")
+          else:
+              print("Hangul discovery grid already patched or target not found")
+          PY
+
+      - name: Commit patch if needed
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No changes required"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add components/hangul/HangulLessonScreen.tsx
+          git commit -m "Fix Hangul discovery landscape grid"
+          git push origin main
+
   runtime-corrections:
     name: Runtime corrections (blocking)
     runs-on: ubuntu-latest
