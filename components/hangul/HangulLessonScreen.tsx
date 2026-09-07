@@ -77,16 +77,23 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
   const responsive = useResponsiveLayout({ maxWidth: isLandscape ? 1120 : 920 });
+  const discoveryGridGap = 14;
+  const discoveryMinCardWidth = 220;
   const landscapeDiscoveryColumns = !isLandscape
     ? 1
-    : responsive.contentWidth >= 900
-      ? 3
-      : responsive.contentWidth >= 640
-        ? 2
-        : 1;
+    : Math.max(
+        1,
+        Math.min(
+          3,
+          Math.floor(
+            (responsive.contentWidth + discoveryGridGap) /
+              (discoveryMinCardWidth + discoveryGridGap),
+          ),
+        ),
+      );
   const landscapeCardWidth =
     isLandscape && landscapeDiscoveryColumns > 1
-      ? responsive.getGridItemWidth(landscapeDiscoveryColumns, 14)
+      ? responsive.getGridItemWidth(landscapeDiscoveryColumns, discoveryGridGap)
       : "100%";
   const { playAudio, stopAudio } = useHangulAudio();
 
