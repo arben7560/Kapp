@@ -19,7 +19,10 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
 import { ABSOLUTE_FILL } from "../../constants/layout";
@@ -75,12 +78,28 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
   const module = getHangulModule(moduleId);
   const { progress, updateHangulProgress, complete } = useStore();
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isLandscape = width > height;
   const responsive = useResponsiveLayout({ maxWidth: isLandscape ? 1120 : 920 });
   const discoveryGridGap = 14;
   const discoveryMinCardWidth = 220;
+  const safeContentWidth = Math.min(
+    responsive.maxWidth,
+    Math.max(
+      0,
+      width -
+        insets.left -
+        insets.right -
+        responsive.horizontalPadding * 2,
+    ),
+  );
   const landscapeDiscoveryColumns = !isLandscape
     ? 1
+    : safeContentWidth >= 900
+      ? 3
+      : safeContentWidth >= 640
+        ? 2
+        : 1;
     : Math.max(
         1,
         Math.min(
@@ -93,6 +112,8 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
       );
   const landscapeCardWidth =
     isLandscape && landscapeDiscoveryColumns > 1
+      ? (safeContentWidth - 14 * (landscapeDiscoveryColumns - 1)) /
+        landscapeDiscoveryColumns
       ? responsive.getGridItemWidth(landscapeDiscoveryColumns, discoveryGridGap)
       : "100%";
   const { playAudio, stopAudio } = useHangulAudio();
@@ -142,6 +163,10 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
     ? getHangulTeacherFeedback(currentQuestion.type, isCurrentAnswerCorrect)
     : "";
   const useCompactOptions = (currentQuestion?.options.length ?? 0) > 4;
+  const useLandscapeQuizLayout = isLandscape && safeContentWidth >= 680;
+  const useLandscapeQuizOptionGrid =
+    useLandscapeQuizLayout &&
+    !currentQuestion?.options.some((option) => !!option.audio);
   const discoveredCount = activeScene.cards.filter(
     (item) => lesson.discovered[item.id],
   ).length;
@@ -413,13 +438,18 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
           <View
             style={[
               styles.gateFrame,
+              isLandscape && styles.gateFrameLandscape,
               {
                 paddingHorizontal: responsive.horizontalPadding,
-                maxWidth: responsive.maxWidth,
+                maxWidth: isLandscape ? 680 : responsive.maxWidth,
               },
             ]}
           >
-            <BlurView intensity={72} tint="dark" style={styles.gateCard}>
+            <BlurView
+              intensity={72}
+              tint="dark"
+              style={[styles.gateCard, isLandscape && styles.gateCardLandscape]}
+            >
               <LinearGradient
                 colors={[
                   "rgba(103,232,249,0.08)",
@@ -455,7 +485,10 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                   colors={[HANGUL_ACCENT, HANGUL_SECONDARY]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
-                  style={styles.primaryGradient}
+                  style={[
+                    styles.primaryGradient,
+                    isLandscape && styles.primaryGradientLandscape,
+                  ]}
                 >
                   <AppText variant="button" style={styles.primaryText}>
                     OUVRIR {prerequisite.title.toUpperCase()}
@@ -954,8 +987,20 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
         </ScrollView>
 
         {quizActive ? (
-          <View style={styles.overlay}>
-            <BlurView intensity={100} tint="dark" style={styles.quizSheet}>
+          <View
+            style={[
+              styles.overlay,
+              useLandscapeQuizLayout && styles.overlayLandscape,
+            ]}
+          >
+            <BlurView
+              intensity={100}
+              tint="dark"
+              style={[
+                styles.quizSheet,
+                useLandscapeQuizLayout && styles.quizSheetLandscape,
+              ]}
+            >
               <LinearGradient
                 colors={[
                   "rgba(15,27,36,0.98)",
@@ -970,11 +1015,26 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               <ScrollView
                 bounces={false}
                 style={styles.quizScroll}
-                contentContainerStyle={styles.quizContent}
+                contentContainerStyle={[
+                  styles.quizContent,
+                  useLandscapeQuizLayout && styles.quizContentLandscape,
+                ]}
                 showsVerticalScrollIndicator={false}
               >
                 {!quizComplete && currentQuestion ? (
-                  <>
+                  <View
+                    style={[
+                      styles.quizQuestionLayout,
+                      useLandscapeQuizLayout && styles.quizQuestionLayoutLandscape,
+                    ]}
+                  >
+                    <View
+                      style={
+                        useLandscapeQuizLayout
+                          ? styles.quizPromptColumnLandscape
+                          : undefined
+                      }
+                    >
                     <View style={styles.quizHeader}>
                       <View>
                         <AppText variant="sectionLabel" style={styles.quizEyebrow}>
@@ -1008,15 +1068,40 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                         variant="koreanHero"
                         script="korean"
                         align="center"
-                        style={styles.questionDisplay}
+                        style={[
+                          styles.questionDisplay,
+                          useLandscapeQuizLayout && styles.questionDisplayLandscape,
+                        ]}
                       >
                         {currentQuestion.display}
                       </AppText>
                     ) : null}
-                    <AppText variant="sceneTitle" align="center" style={styles.prompt}>
+                    <AppText
+                      variant="sceneTitle"
+                      align="center"
+                      style={[
+                        styles.prompt,
+                        useLandscapeQuizLayout && styles.promptLandscape,
+                      ]}
+                    >
                       {currentQuestion.prompt}
                     </AppText>
-                    <View style={[styles.options, useCompactOptions && styles.compactOptions]}>
+                    </View>
+
+                    <View
+                      style={
+                        useLandscapeQuizLayout
+                          ? styles.quizAnswersColumnLandscape
+                          : undefined
+                      }
+                    >
+                    <View
+                      style={[
+                        styles.options,
+                        useCompactOptions && styles.compactOptions,
+                        useLandscapeQuizOptionGrid && styles.optionsLandscape,
+                      ]}
+                    >
                       {currentQuestion.options.map((item, index) => {
                         const isSelected = answered === item.value;
                         const isCorrect =
@@ -1066,6 +1151,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                             style={({ pressed }) => [
                               styles.option,
                               useCompactOptions && styles.compactOption,
+                              useLandscapeQuizOptionGrid && styles.optionLandscape,
                               isSelected && styles.optionWrong,
                               isCorrect && styles.optionCorrect,
                               pressed && answered === null && styles.optionPressed,
@@ -1084,6 +1170,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                         tint="dark"
                         style={[
                           styles.feedback,
+                          useLandscapeQuizLayout && styles.feedbackLandscape,
                           isCurrentAnswerCorrect
                             ? styles.feedbackCorrect
                             : styles.feedbackWrong,
@@ -1124,9 +1211,15 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                         </Pressable>
                       </BlurView>
                     ) : null}
-                  </>
+                    </View>
+                  </View>
                 ) : (
-                  <View style={styles.result}>
+                  <View
+                    style={[
+                      styles.result,
+                      useLandscapeQuizLayout && styles.resultLandscape,
+                    ]}
+                  >
                     <View
                       style={[
                         styles.resultIcon,
@@ -1162,7 +1255,13 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                           : "Lecture réussie. Tu peux continuer."
                         : "Revois les caractères signalés, puis recommence."}
                     </AppText>
-                    <Pressable onPress={closeResult} style={styles.resultButton}>
+                    <Pressable
+                      onPress={closeResult}
+                      style={[
+                        styles.resultButton,
+                        useLandscapeQuizLayout && styles.resultButtonLandscape,
+                      ]}
+                    >
                       <LinearGradient
                         colors={[HANGUL_ACCENT, HANGUL_SECONDARY]}
                         start={{ x: 0, y: 0 }}
@@ -1705,6 +1804,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     justifyContent: "center",
   },
+  gateFrameLandscape: { paddingVertical: 12 },
   gateCard: {
     minHeight: 280,
     padding: 24,
@@ -1714,6 +1814,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(103,232,249,0.20)",
     backgroundColor: "rgba(2,3,6,0.70)",
+  },
+  gateCardLandscape: {
+    minHeight: 0,
+    padding: 20,
+    borderRadius: 24,
   },
   gateIcon: {
     width: 52,
@@ -1734,6 +1839,11 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(2,3,6,0.84)",
     justifyContent: "flex-end",
   },
+  overlayLandscape: {
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 8,
+  },
   quizSheet: {
     height: "92%",
     borderTopLeftRadius: 30,
@@ -1743,6 +1853,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
     borderColor: "rgba(103,232,249,0.14)",
     backgroundColor: BG_DEEP,
+  },
+  quizSheetLandscape: {
+    width: "100%",
+    maxWidth: 1040,
+    height: "100%",
+    alignSelf: "center",
+    borderRadius: 24,
+    borderBottomWidth: 1,
   },
   quizTopHairline: {
     position: "absolute",
@@ -1755,6 +1873,27 @@ const styles = StyleSheet.create({
   },
   quizScroll: { flex: 1 },
   quizContent: { paddingHorizontal: 22, paddingTop: 25, paddingBottom: 38 },
+  quizContentLandscape: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 18,
+    justifyContent: "center",
+  },
+  quizQuestionLayout: { width: "100%" },
+  quizQuestionLayoutLandscape: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 28,
+  },
+  quizPromptColumnLandscape: {
+    flex: 0.9,
+    minWidth: 0,
+  },
+  quizAnswersColumnLandscape: {
+    flex: 1.1,
+    minWidth: 0,
+  },
   quizHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -1782,9 +1921,12 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 12,
   },
+  questionDisplayLandscape: { marginTop: 16 },
   prompt: { marginTop: 20, marginBottom: 22, color: TXT },
+  promptLandscape: { marginTop: 12, marginBottom: 0 },
   options: { gap: 11 },
   compactOptions: { flexDirection: "row", flexWrap: "wrap" },
+  optionsLandscape: { flexDirection: "row", flexWrap: "wrap" },
   option: {
     borderRadius: 18,
     borderWidth: 1,
@@ -1794,6 +1936,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   compactOption: { width: "46%" },
+  optionLandscape: { width: "47%" },
   optionPressed: {
     backgroundColor: "rgba(15,40,50,0.86)",
     borderColor: "rgba(103,232,249,0.22)",
@@ -1838,6 +1981,7 @@ const styles = StyleSheet.create({
     padding: 17,
     overflow: "hidden",
   },
+  feedbackLandscape: { marginTop: 14, padding: 15 },
   feedbackCorrect: {
     borderColor: "rgba(74,222,128,0.26)",
     backgroundColor: "rgba(7,30,19,0.78)",
@@ -1860,6 +2004,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   result: { alignItems: "center", paddingVertical: 34 },
+  resultLandscape: {
+    width: "100%",
+    maxWidth: 620,
+    alignSelf: "center",
+    paddingVertical: 16,
+  },
   resultIcon: {
     width: 62,
     height: 62,
@@ -1885,4 +2035,5 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
   },
+  resultButtonLandscape: { maxWidth: 420 },
 });

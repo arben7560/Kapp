@@ -14,11 +14,15 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
   View,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
@@ -192,14 +196,26 @@ function getCurrentSceneTitle(module: HangulHubModule, progress: any) {
 
 export default function HangulHub() {
   const { progress } = useStore();
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const isLandscape = width > height;
 
   const responsive = useResponsiveLayout({
-    maxWidth: 920,
+    maxWidth: isLandscape ? 1120 : 920,
   });
-  const isLandscape = responsive.isLandscape;
   const effectiveGap = isLandscape
-    ? Math.max(12, responsive.gridGap)
+    ? 14
     : Math.max(16, responsive.gridGap);
+  const safeContentWidth = Math.min(
+    responsive.maxWidth,
+    Math.max(
+      0,
+      width -
+        insets.left -
+        insets.right -
+        responsive.horizontalPadding * 2,
+    ),
+  );
 
   const autoGridColumns = responsive.getColumns({
     minColumnWidth: 330,
@@ -207,13 +223,18 @@ export default function HangulHub() {
     gap: effectiveGap,
   });
 
-  const gridColumns =
-    isLandscape && responsive.contentWidth >= 620 ? 2 : autoGridColumns;
+  const gridColumns = !isLandscape
+    ? autoGridColumns
+    : safeContentWidth >= 900
+      ? 3
+      : safeContentWidth >= 640
+        ? 2
+        : 1;
 
-  const gridItemWidth = responsive.getGridItemWidth(
-    gridColumns,
-    effectiveGap,
-  );
+  const gridItemWidth =
+    isLandscape && gridColumns > 1
+      ? (safeContentWidth - effectiveGap * (gridColumns - 1)) / gridColumns
+      : responsive.getGridItemWidth(gridColumns, effectiveGap);
 
   const displayLevel = Math.max(1, progress?.hangulLevel ?? 1);
 

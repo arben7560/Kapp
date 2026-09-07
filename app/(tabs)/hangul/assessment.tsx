@@ -4,8 +4,18 @@ import { router } from "expo-router";
 import { AppBackButton } from "../../../components/ui/app-back-button";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 import React from "react";
-import { ImageBackground, Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  ImageBackground,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { trackHangulExerciseCompleted } from "../../../lib/immersionStreak";
 
 import { useStore } from "../../../_store";
@@ -27,7 +37,31 @@ const createAssessmentQuestions = () =>
 
 export default function HangulAssessmentScreen() {
   const { progress, updateHangulProgress, complete, isHydrated } = useStore();
-  const responsive = useResponsiveLayout({ maxWidth: 760 });
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const isLandscape = width > height;
+  const responsive = useResponsiveLayout({ maxWidth: isLandscape ? 1040 : 760 });
+  const landscapeGap = height <= 380 ? 20 : 28;
+  const safeContentWidth = Math.min(
+    responsive.maxWidth,
+    Math.max(
+      0,
+      width -
+        insets.left -
+        insets.right -
+        responsive.horizontalPadding * 2,
+    ),
+  );
+  const useLandscapeLayout = isLandscape && safeContentWidth >= 600;
+  const introWidth = Math.min(300, Math.max(220, safeContentWidth * 0.34));
+  const assessmentWidth = Math.max(
+    0,
+    safeContentWidth - introWidth - landscapeGap,
+  );
+  const useLandscapeOptionGrid =
+    useLandscapeLayout && assessmentWidth >= 440;
+  const landscapeOptionWidth =
+    (assessmentWidth - 36 - 10) / 2;
   const { playAudio } = useHangulAudio();
   const [started, setStarted] = React.useState(false);
   const [index, setIndex] = React.useState(0);
@@ -140,45 +174,90 @@ export default function HangulAssessmentScreen() {
         />
         <View style={styles.ambientGlowTop} pointerEvents="none" />
         <View style={styles.ambientGlowBottom} pointerEvents="none" />
-        <ScrollView contentContainerStyle={[styles.scroll, { paddingHorizontal: responsive.horizontalPadding }]}>
-          <View style={[styles.frame, { maxWidth: responsive.maxWidth }]}>
-            <View style={styles.back}>
-              <AppBackButton />
+        <ScrollView
+          showsVerticalScrollIndicator={!useLandscapeLayout}
+          contentContainerStyle={[
+            styles.scroll,
+            useLandscapeLayout && styles.scrollLandscape,
+            { paddingHorizontal: responsive.horizontalPadding },
+          ]}
+        >
+          <View
+            style={[
+              styles.frame,
+              useLandscapeLayout && styles.frameLandscape,
+              useLandscapeLayout && { gap: landscapeGap },
+              { maxWidth: responsive.maxWidth },
+            ]}
+          >
+            <View
+              style={
+                useLandscapeLayout
+                  ? [styles.introColumn, { width: introWidth }]
+                  : undefined
+              }
+            >
+              <View style={[styles.back, useLandscapeLayout && styles.backLandscape]}>
+                <AppBackButton />
+              </View>
+              <AppText variant="sectionLabel" style={styles.gold}>VALIDATION FINALE</AppText>
+              <AppText
+                variant="screenTitle"
+                style={[styles.title, useLandscapeLayout && styles.titleLandscape]}
+              >
+                Lire sans romanisation
+              </AppText>
+              <AppText variant="bodySecondary" tone="muted">
+                12 défis, majoritairement inédits. Il faut 11 bonnes réponses pour réussir.
+              </AppText>
             </View>
-            <AppText variant="sectionLabel" style={styles.gold}>VALIDATION FINALE</AppText>
-            <AppText variant="screenTitle" style={styles.title}>Lire sans romanisation</AppText>
-            <AppText variant="bodySecondary" tone="muted">
-              12 défis, majoritairement inédits. Il faut 11 bonnes réponses pour réussir.
-            </AppText>
 
-            {!started ? (
-              <BlurView intensity={55} tint="dark" style={styles.card}>
+            <View style={useLandscapeLayout ? styles.assessmentColumn : undefined}>
+              {!started ? (
+              <BlurView
+                intensity={55}
+                tint="dark"
+                style={[styles.card, useLandscapeLayout && styles.cardLandscape]}
+              >
                 <AppText variant="sceneTitle">Au programme</AppText>
                 <AppText variant="body">Reconnaissance visuelle · écoute · assemblage · lecture inédite · batchim · liaison</AppText>
                 {saved ? <AppText variant="bodySecondary" tone="muted">Meilleur résultat : {saved.bestScore}/{saved.total} · {saved.attempts} tentative(s)</AppText> : null}
                 {!curriculumReady && missingModule ? <AppText variant="bodySecondary" style={styles.warning}>Termine d’abord « {missingModule.title} ».</AppText> : null}
                 <Pressable onPress={start} style={styles.button}><AppText variant="button" style={styles.buttonText}>{curriculumReady ? "Commencer sans aide latine" : `Ouvrir ${missingModule?.title}`}</AppText></Pressable>
               </BlurView>
-            ) : finished ? (
-              <BlurView intensity={55} tint="dark" style={styles.card}>
+              ) : finished ? (
+              <BlurView
+                intensity={55}
+                tint="dark"
+                style={[styles.card, useLandscapeLayout && styles.cardLandscape]}
+              >
                 <AppText variant="sectionLabel" style={{ color: score >= HANGUL_ASSESSMENT_PASS_SCORE ? "#4ADE80" : "#FDE047" }}>{score >= HANGUL_ASSESSMENT_PASS_SCORE ? "LECTURE RÉUSSIE" : "SONS À REVOIR"}</AppText>
                 <AppText variant="numericValue">{score}/{HANGUL_ASSESSMENT_QUESTIONS.length}</AppText>
                 <AppText variant="bodySecondary" tone="muted" align="center">{score >= HANGUL_ASSESSMENT_PASS_SCORE ? "Tu peux maintenant lire des phrases guidées." : "Revois les sons concernés avant une nouvelle tentative."}</AppText>
                 <Pressable onPress={() => score >= HANGUL_ASSESSMENT_PASS_SCORE ? router.push("/(tabs)/hangul/bridge" as never) : start()} style={styles.button}><AppText variant="button" style={styles.buttonText}>{score >= HANGUL_ASSESSMENT_PASS_SCORE ? "OUVRIR LA LECTURE GUIDÉE" : "RECOMMENCER L’ÉVALUATION"}</AppText></Pressable>
               </BlurView>
-            ) : (
-              <BlurView intensity={70} tint="dark" style={styles.card}>
+              ) : (
+              <BlurView
+                intensity={70}
+                tint="dark"
+                style={[styles.card, useLandscapeLayout && styles.cardLandscape]}
+              >
                 <View style={styles.questionHeader}>
                   <AppText variant="sectionLabel" style={styles.gold}>QUESTION {index + 1}/12</AppText>
                   {current.audio ? <HangulReplayButton accent="#FDE047" onPress={() => playAudio(current.audio!)} /> : null}
                 </View>
                 {current.display ? <AppText variant="koreanHero" script="korean" align="center" style={styles.display}>{current.display}</AppText> : null}
                 <AppText variant="sceneTitle" align="center">{current.prompt}</AppText>
-                <View style={styles.options}>
+                <View
+                  style={[
+                    styles.options,
+                    useLandscapeOptionGrid && styles.optionsLandscape,
+                  ]}
+                >
                   {current.options.map((option) => {
                     const correct = answered !== null && option.value === current.answer;
                     const wrong = answered === option.value && option.value !== current.answer;
-                    return <Pressable key={option.value} onPress={() => answer(option.value)} style={[styles.option, correct && styles.correct, wrong && styles.wrong]}><AppText variant="bodyStrong" align="center">{option.label}</AppText></Pressable>;
+                    return <Pressable key={option.value} onPress={() => answer(option.value)} style={[styles.option, useLandscapeOptionGrid && { width: landscapeOptionWidth }, correct && styles.correct, wrong && styles.wrong]}><AppText variant="bodyStrong" align="center">{option.label}</AppText></Pressable>;
                   })}
                 </View>
                 {answered !== null ? (
@@ -195,7 +274,8 @@ export default function HangulAssessmentScreen() {
                   </View>
                 ) : null}
               </BlurView>
-            )}
+              )}
+            </View>
           </View>
         </ScrollView>
       </ImageBackground>
@@ -232,16 +312,27 @@ const styles = StyleSheet.create({
     boxShadow: "0px 0px 100px rgba(94,234,212,0.07)",
   },
   scroll: { paddingTop: 16, paddingBottom: 100 },
+  scrollLandscape: { paddingTop: 8, paddingBottom: 36 },
   frame: { width: "100%", alignSelf: "center" },
+  frameLandscape: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  introColumn: { flexShrink: 0, paddingTop: 2 },
+  assessmentColumn: { flex: 1, minWidth: 0 },
   back: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 26 },
+  backLandscape: { marginBottom: 18 },
   gold: { color: "#FDE047" },
   title: { marginTop: 15, marginBottom: 18 },
+  titleLandscape: { marginTop: 10, marginBottom: 12 },
   card: { marginTop: 24, borderRadius: 26, borderWidth: 1, borderColor: "rgba(255,255,255,0.14)", padding: 22, gap: 16, overflow: "hidden" },
+  cardLandscape: { marginTop: 0, padding: 18, gap: 12 },
   button: { marginTop: 8, borderRadius: 15, paddingVertical: 15, paddingHorizontal: 18, alignItems: "center", backgroundColor: "#FDE047" },
   buttonText: { color: "#020306" },
   questionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   display: { color: "#FDE047", marginVertical: 10 },
   options: { gap: 10 },
+  optionsLandscape: { flexDirection: "row", flexWrap: "wrap" },
   option: { borderWidth: 1, borderColor: "rgba(255,255,255,0.16)", backgroundColor: "rgba(255,255,255,0.07)", borderRadius: 15, padding: 15 },
   correct: { borderColor: "#4ADE80", backgroundColor: "rgba(74,222,128,0.14)" },
   wrong: { borderColor: "#F87171", backgroundColor: "rgba(248,113,113,0.14)" },

@@ -114,7 +114,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
     choose("syntax", "home-order", "« Moi, je rentre à la maison. »", "저는 집에 가요.", ["가요 저는 집에.", "저는 가요 집에.", "집에 가요 저는."], "Le groupe de destination précède le verbe final : 저는 집에 가요.", "predicate-final", undefined, "Choisis la phrase dont le verbe est correctement placé à la fin."),
     choose("syntax", "book-order", "« Je lis un livre à la bibliothèque. »", "도서관에서 책을 읽어요.", ["도서관에서 읽어요 책을.", "읽어요 도서관에서 책을.", "책을 읽어요 도서관에서."], "Le lieu et l’objet précèdent le verbe final : 도서관에서 책을 읽어요.", "predicate-final", undefined, "Choisis la phrase dont le verbe est correctement placé à la fin."),
     choose("syntax", "friend-order", "« Je rencontre un ami demain. »", "내일 친구를 만나요.", ["내일 만나요 친구를.", "만나요 내일 친구를.", "친구를 만나요 내일."], "Le temps et l’objet précèdent le verbe final : 내일 친구를 만나요.", "predicate-final", undefined, "Choisis la phrase dont le verbe est correctement placé à la fin."),
-    choose("syntax", "subject-omission", "Réponse naturelle à « Où allez-vous ? »", "학교에 가요.", ["저는 학교에 가요.", "학교에 가요 저는.", "가요 학교에."], "Le sujet déjà compris s’omet ici et le verbe reste à la fin : 학교에 가요.", "subject-omission", "La question vient d’identifier clairement la personne qui répond ; la consigne exige une réponse sans sujet répété.", "Choisis la réponse naturelle avec le verbe final et sans sujet inutile."),
+    choose("syntax", "subject-omission", "Réponse naturelle à « Où allez-vous ? »", "학교에 가요.", ["저는 학교에 가요.", "학교에 가요 저는.", "가요 학교에."], "On comprend déjà qui répond, donc inutile de répéter le sujet. Garde aussi le verbe à la fin : 학교에 가요.", "subject-omission", "La question vient d’identifier clairement la personne qui répond ; la consigne exige une réponse sans sujet répété.", "Choisis la réponse naturelle avec le verbe final et sans sujet inutile."),
   ],
 
   "copula-ieyo-yeyo": [
@@ -134,34 +134,34 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
   ],
 
   "demonstratives-i-geu-jeo": [
-    gap("forms", "this-bag", "__ 가방이에요.", "이", ["그", "저", "거기"], "이 désigne le sac proche du locuteur.", "near-speaker", "Le sac est dans ta main."),
-    gap("forms", "that-shoes", "__ 신발이에요.", "그", ["이", "저", "거기"], "그 désigne les chaussures proches de l’interlocuteur.", "near-listener", "Les chaussures sont juste devant la vendeuse, loin de toi."),
-    gap("forms", "far-building", "__ 건물이에요.", "저", ["이", "그", "저기"], "저 désigne le bâtiment éloigné des deux interlocuteurs.", "far-both", "Le bâtiment est loin de vous deux, au bout de la rue."),
+    gap("forms", "this-bag", "__ 가방이에요.", "이", ["그", "저", "거기"], "Le sac est près de toi, donc on dit 이 가방.", "near-speaker", "Le sac est dans ta main."),
+    gap("forms", "that-shoes", "__ 신발이에요.", "그", ["이", "저", "거기"], "Les chaussures sont près de l’autre personne, donc on dit 그 신발.", "near-listener", "Les chaussures sont juste devant la vendeuse, loin de toi."),
+    gap("forms", "far-building", "__ 건물이에요.", "저", ["이", "그", "저기"], "Le bâtiment est loin de vous deux, donc on dit 저 건물.", "far-both", "Le bâtiment est loin de vous deux, au bout de la rue."),
     choose("forms", "this-object-pronoun", "__ 뭐예요?", "이거", ["그거", "저거", "거기"], "이거 remplace un nom pour désigner cet objet-ci, proche de toi.", "near-speaker", "Tu tiens l’objet dans ta main."),
     choose("forms", "far-object-pronoun", "__ 뭐예요?", "저거", ["이거", "그거", "저기"], "저거 désigne un objet éloigné ; 저기 désignerait un lieu.", "far-both", "L’objet est loin de vous deux, derrière la vitrine."),
   ],
 
   "question-mwo-nugu-myeot": [
-    gap("forms", "what-object", "이거 __예요?", "뭐", ["누구", "몇", "어디"], "뭐 interroge sur l’identité d’une chose.", "what", "Tu demandes ce qu’est l’objet que l’on te montre."),
+    gap("forms", "what-object", "이거 __예요?", "뭐", ["누구", "몇", "어디"], "Tu demandes ce qu’est l’objet, donc on utilise 뭐.", "what", "Tu demandes ce qu’est l’objet que l’on te montre."),
     gap("forms", "who-person", "저 사람은 __예요?", "누구", ["뭐", "몇", "어디"], "누구 interroge sur une personne.", "who", "Tu demandes qui est cette personne."),
-    gap("forms", "how-many-people", "__ 명이에요?", "몇", ["뭐", "누구", "얼마"], "몇 se place devant le classificateur pour demander une quantité.", "how-many", "Au restaurant, le serveur demande la taille du groupe."),
+    gap("forms", "how-many-people", "__ 명이에요?", "몇", ["뭐", "누구", "얼마"], "Pour demander combien de personnes il y a, on met 몇 devant 명.", "how-many", "Au restaurant, le serveur demande la taille du groupe."),
     gap("forms", "how-many-tickets", "표 __ 장이에요?", "몇", ["뭐", "누구", "얼마"], "몇 précède 장 pour demander le nombre de billets.", "how-many", "Tu demandes le nombre de billets, pas leur prix."),
     gap("forms", "what-food", "__ 먹어요?", "뭐", ["누구", "몇", "어디"], "뭐 demande quelle chose est mangée.", "what", "Tu demandes ce que ton ami mange."),
   ],
 
   "topic-eun-neun": [
-    gap("particles", "je-vowel", "저__ 학생이에요.", "는", ["은", "를", "가"], "La consigne demande la particule de thème : 저 finit par une voyelle et prend 는.", "no-batchim", undefined, "Choisis la particule de thème 은/는 adaptée au nom."),
-    gap("particles", "today-batchim", "오늘__ 쉬어요.", "은", ["는", "을", "이"], "오늘 possède un 받침 : le thème contrastif demandé prend 은.", "batchim", "Tu opposes aujourd’hui aux autres jours.", "Marque explicitement aujourd’hui comme thème contrastif avec 은/는."),
-    gap("particles", "coffee-vowel", "커피__ 안 마셔요.", "는", ["은", "를", "가"], "커피를 안 마셔요 serait une phrase correcte avec un objet neutre. Ici, la consigne demande d’opposer le café aux autres boissons : le thème contrastif est 커피는.", "no-batchim", "Tu bois d’autres boissons, mais tu veux opposer explicitement le café, que tu ne bois pas.", "Marque explicitement le café comme thème contrastif avec 은/는."),
-    gap("particles", "book-batchim", "책__ 여기 있어요.", "은", ["는", "을", "이"], "책이 여기 있어요 serait correct pour focaliser le sujet. Ici, tu reprends le livre comme thème déjà évoqué : 책은.", "batchim", "Vous cherchez plusieurs objets ; tu reprends explicitement le livre déjà évoqué comme thème.", "Choisis 은/는 pour reprendre le livre comme thème, sans le focaliser comme nouvelle information."),
-    gap("particles", "friend-vowel", "친구__ 한국 사람이에요.", "는", ["은", "를", "가"], "친구가 한국 사람이에요 serait correct pour focaliser le sujet. Ici, 친구 est le thème déjà établi et prend 는.", "no-batchim", "Ton ami est déjà le sujet de la conversation ; tu ajoutes qu’il est coréen.", "Choisis la particule de thème 은/는 adaptée au nom déjà établi."),
+    gap("particles", "je-vowel", "저__ 학생이에요.", "는", ["은", "를", "가"], "저 n’a pas de 받침 : sans 받침, on utilise 는.", "no-batchim", undefined, "Choisis la particule de thème 은/는 adaptée au nom."),
+    gap("particles", "today-batchim", "오늘__ 쉬어요.", "은", ["는", "을", "이"], "오늘 a un 받침, donc on met 은.", "batchim", "Tu opposes aujourd’hui aux autres jours.", "Marque explicitement aujourd’hui comme thème contrastif avec 은/는."),
+    gap("particles", "coffee-vowel", "커피__ 안 마셔요.", "는", ["은", "를", "가"], "커피 n’a pas de 받침, donc on met 는. Ici, 는 oppose aussi le café aux autres boissons.", "no-batchim", "Tu bois d’autres boissons, mais tu veux opposer explicitement le café, que tu ne bois pas.", "Marque explicitement le café comme thème contrastif avec 은/는."),
+    gap("particles", "book-batchim", "책__ 여기 있어요.", "은", ["는", "을", "이"], "책 a un 받침, donc la particule de thème est 은.", "batchim", "Vous cherchez plusieurs objets ; tu reprends explicitement le livre déjà évoqué comme thème.", "Choisis 은/는 pour reprendre le livre comme thème, sans le focaliser comme nouvelle information."),
+    gap("particles", "friend-vowel", "친구__ 한국 사람이에요.", "는", ["은", "를", "가"], "가 n’est pas faux, mais il mettrait l’accent sur 친구. Ici, tu parles de ton ami comme thème, donc 는 est plus naturel.", "no-batchim", "Ton ami est déjà le sujet de la conversation ; tu ajoutes qu’il est coréen.", "Choisis la particule de thème 은/는 adaptée au nom déjà établi."),
   ],
 
   "subject-i-ga": [
-    gap("particles", "rain-vowel", "비__ 와요.", "가", ["이", "는", "를"], "비는 와요 serait grammatical avec une nuance de thème ou de contraste. Ici, la consigne demande le sujet neutre : 비 finit par une voyelle et prend 가.", "no-batchim", "Tu annonces simplement qu’il pleut, sans contraste avec une autre information.", "Choisis la particule de sujet 이/가, sans transformer le sujet en thème contrastif."),
-    gap("particles", "time-batchim", "시간__ 없어요.", "이", ["가", "은", "을"], "시간은 없어요 serait grammatical avec une nuance de thème ou de contraste. Ici, 시간 est le sujet neutre de 없어요 et prend 이.", "batchim", "Tu réponds simplement que tu n’as pas de temps, sans opposer le temps à autre chose.", "Choisis la particule de sujet 이/가, sans ajouter de contraste."),
-    gap("particles", "bus-vowel", "버스__ 와요.", "가", ["이", "는", "를"], "버스는 와요 serait grammatical dans un contraste. Ici, tu annonces l’arrivée du bus comme information nouvelle : 버스가 와요.", "no-batchim", "Quelqu’un demande ce qui arrive ; tu réponds simplement que c’est le bus.", "Choisis la particule de sujet 이/가 qui focalise la nouvelle information."),
-    gap("particles", "book-batchim", "책__ 있어요.", "이", ["가", "은", "을"], "책은 있어요 serait grammatical avec une nuance contrastive. Ici, tu signales simplement l’existence d’un livre : 책이 있어요.", "batchim", "On demande ce qui est disponible ; tu annonces un livre comme nouvelle information.", "Choisis la particule de sujet 이/가 qui présente la nouvelle information."),
+    gap("particles", "rain-vowel", "비__ 와요.", "가", ["이", "는", "를"], "비는 와요 serait possible avec un contraste. Ici, tu dis simplement qu’il pleut : 비 n’a pas de 받침, donc on met 가.", "no-batchim", "Tu annonces simplement qu’il pleut, sans contraste avec une autre information.", "Choisis la particule de sujet 이/가, sans transformer le sujet en thème contrastif."),
+    gap("particles", "time-batchim", "시간__ 없어요.", "이", ["가", "은", "을"], "시간은 없어요 serait possible avec un contraste. Ici, 시간 est simplement le sujet de 없어요 et, comme il a un 받침, prend 이.", "batchim", "Tu réponds simplement que tu n’as pas de temps, sans opposer le temps à autre chose.", "Choisis la particule de sujet 이/가, sans ajouter de contraste."),
+    gap("particles", "bus-vowel", "버스__ 와요.", "가", ["이", "는", "를"], "버스는 와요 serait possible avec un contraste. Ici, tu annonces simplement que le bus arrive : 버스가 와요.", "no-batchim", "Quelqu’un demande ce qui arrive ; tu réponds simplement que c’est le bus.", "Choisis la particule de sujet 이/가 qui focalise la nouvelle information."),
+    gap("particles", "book-batchim", "책__ 있어요.", "이", ["가", "은", "을"], "책은 있어요 serait possible avec un contraste. Ici, tu dis simplement qu’il y a un livre : 책이 있어요.", "batchim", "On demande ce qui est disponible ; tu annonces un livre comme nouvelle information.", "Choisis la particule de sujet 이/가 qui présente la nouvelle information."),
     gap("particles", "friend-vowel", "친구__ 한국어를 공부해요.", "가", ["이", "는", "를"], "친구는 한국어를 공부해요 serait grammatical si l’ami était déjà le thème ou mis en contraste. Ici, il répond à « qui ? » et prend 가.", "no-batchim", "Tu réponds à la question « Qui étudie le coréen ? », sans opposer cette personne à une autre.", "Choisis la particule de sujet 이/가 qui répond directement à « qui ? »."),
   ],
 
@@ -182,11 +182,11 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
   ],
 
   "object-eul-reul": [
-    gap("particles", "book-batchim", "책__ 읽어요.", "을", ["를", "은", "이"], "책은 읽어요 serait grammatical avec une nuance de thème ou de contraste. Ici, la consigne demande l’objet direct neutre : 책 prend 을.", "batchim", "Tu réponds simplement à « Que lis-tu ? », sans contraste.", "Choisis la particule d’objet 을/를, sans transformer l’objet en thème."),
-    gap("particles", "coffee-vowel", "커피__ 마셔요.", "를", ["을", "는", "가"], "커피는 마셔요 serait grammatical avec une nuance contrastive. Ici, la consigne demande l’objet direct neutre : 커피 prend 를.", "no-batchim", "Tu réponds simplement à « Que bois-tu ? », sans opposer le café à une autre boisson.", "Choisis la particule d’objet 을/를, sans ajouter de contraste."),
-    gap("particles", "meal-batchim", "밥__ 먹어요.", "을", ["를", "은", "이"], "밥은 먹어요 serait grammatical avec une nuance contrastive. Ici, 밥 est l’objet direct neutre et prend 을.", "batchim", "Tu indiques simplement ce que tu manges, sans mise en contraste.", "Choisis la particule d’objet 을/를 adaptée au nom."),
+    gap("particles", "book-batchim", "책__ 읽어요.", "을", ["를", "은", "이"], "책은 읽어요 serait possible si tu voulais mettre le livre en contraste. Ici, 책 est simplement l’objet de 읽어요 et prend 을.", "batchim", "Tu réponds simplement à « Que lis-tu ? », sans contraste.", "Choisis la particule d’objet 을/를, sans transformer l’objet en thème."),
+    gap("particles", "coffee-vowel", "커피__ 마셔요.", "를", ["을", "는", "가"], "커피는 마셔요 serait possible avec un contraste. Ici, 커피 est simplement l’objet de 마셔요 et prend 를.", "no-batchim", "Tu réponds simplement à « Que bois-tu ? », sans opposer le café à une autre boisson.", "Choisis la particule d’objet 을/를, sans ajouter de contraste."),
+    gap("particles", "meal-batchim", "밥__ 먹어요.", "을", ["를", "은", "이"], "밥은 먹어요 serait possible avec un contraste. Ici, 밥 est simplement l’objet de 먹어요 et prend 을.", "batchim", "Tu indiques simplement ce que tu manges, sans mise en contraste.", "Choisis la particule d’objet 을/를 adaptée au nom."),
     gap("particles", "korean-vowel", "한국어__ 공부해요.", "를", ["을", "는", "가"], "한국어는 공부해요 serait grammatical si le coréen était mis en contraste. Ici, 한국어 est l’objet direct neutre et prend 를.", "no-batchim", "Tu réponds simplement à « Qu’étudies-tu ? », sans comparer plusieurs matières.", "Choisis la particule d’objet 을/를, sans transformer l’objet en thème."),
-    gap("particles", "film-vowel", "영화__ 봐요.", "를", ["을", "는", "가"], "영화는 봐요 serait grammatical avec une nuance contrastive. Ici, 영화 est l’objet direct neutre et prend 를.", "no-batchim", "Tu réponds simplement à « Que regardes-tu ? », sans contraste.", "Choisis la particule d’objet 을/를, sans ajouter de contraste."),
+    gap("particles", "film-vowel", "영화__ 봐요.", "를", ["을", "는", "가"], "영화는 봐요 serait possible avec un contraste. Ici, 영화 est simplement l’objet de 봐요 et prend 를.", "no-batchim", "Tu réponds simplement à « Que regardes-tu ? », sans contraste.", "Choisis la particule d’objet 을/를, sans ajouter de contraste."),
   ],
 
   "action-location-eseo": [
@@ -230,11 +230,11 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
   ],
 
   "negation-an": [
-    choose("modality", "not-go-choice", "오늘은 __.", "안 가요", ["못 가요", "가지 않아요", "아니에요"], "La consigne demande la négation courte d’un choix : 안 가요.", "short-negation", "Tu pourrais sortir, mais tu choisis de ne pas y aller aujourd’hui.", "Utilise précisément la négation courte 안 + verbe."),
+    choose("modality", "not-go-choice", "오늘은 __.", "안 가요", ["못 가요", "가지 않아요", "아니에요"], "Tu peux y aller, mais tu choisis de ne pas le faire. La forme courte est 안 가요.", "short-negation", "Tu pourrais sortir, mais tu choisis de ne pas y aller aujourd’hui.", "Utilise précisément la négation courte 안 + verbe."),
     choose("modality", "not-drink-choice", "커피를 __.", "안 마셔요", ["못 마셔요", "마시지 않아요", "아니에요"], "La forme courte volontaire est 안 마셔요.", "short-negation", "Tu peux boire du café, mais tu as choisi de ne pas en boire.", "Utilise précisément la négation courte 안 + verbe."),
     choose("modality", "not-spicy-short", "이 음식은 __.", "안 매워요", ["못 매워요", "맵지 않아요", "아니에요"], "La négation courte place 안 devant l’adjectif : 안 매워요.", "short-negation", "Décris le plat avec la forme négative courte étudiée.", "Utilise précisément la négation courte 안 + adjectif."),
     choose("modality", "not-buy-choice", "오늘은 빵을 __.", "안 사요", ["못 사요", "사지 않아요", "아니에요"], "Le refus volontaire en négation courte se dit 안 사요.", "short-negation", "Tu as assez d’argent, mais tu décides de ne pas acheter de pain.", "Utilise précisément la négation courte 안 + verbe."),
-    choose("modality", "not-study-choice", "오늘은 한국어를 __.", "안 공부해요", ["못 공부해요", "공부하지 않아요", "아니에요"], "La consigne cible la forme courte : 안 공부해요.", "short-negation", "Tu as le temps, mais tu choisis de ne pas étudier aujourd’hui.", "Utilise précisément la négation courte 안 + verbe."),
+    choose("modality", "not-study-choice", "오늘은 한국어를 __.", "안 공부해요", ["못 공부해요", "공부하지 않아요", "아니에요"], "Tu choisis de ne pas étudier. Avec la négation courte, on dit 안 공부해요.", "short-negation", "Tu as le temps, mais tu choisis de ne pas étudier aujourd’hui.", "Utilise précisément la négation courte 안 + verbe."),
   ],
 
   "copula-negation-anieyo": [
@@ -254,7 +254,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
   ],
 
   "request-v-a-eo-juseyo": [
-    transform("modality", "speak-request", "말하다 → ?", "말해 주세요", ["말하세요", "말해요", "말할까요"], "말해 주세요 formule une demande adressée à l’interlocuteur.", "action-request", "Ton interlocuteur parle trop vite ; tu lui demandes de parler lentement.", "Forme une demande d’action polie avec -아/어 주세요."),
+    transform("modality", "speak-request", "말하다 → ?", "말해 주세요", ["말하세요", "말해요", "말할까요"], "Tu demandes poliment à l’autre personne de parler : 말해 주세요.", "action-request", "Ton interlocuteur parle trop vite ; tu lui demandes de parler lentement.", "Forme une demande d’action polie avec -아/어 주세요."),
     transform("modality", "show-request", "보여 주다 → ?", "보여 주세요", ["보이세요", "보여요", "보일까요"], "보여 주세요 demande à l’employé de montrer quelque chose.", "action-request", "Tu demandes à un employé de te montrer le menu.", "Forme une demande d’action polie avec -아/어 주세요."),
     transform("modality", "wait-request", "기다리다 → ?", "기다려 주세요", ["기다리세요", "기다려요", "기다릴까요"], "기다려 주세요 exprime explicitement une demande de patienter.", "action-request", "Tu demandes à un client de patienter un instant.", "Forme une demande d’action polie avec -아/어 주세요."),
     transform("modality", "open-request", "열다 → ?", "열어 주세요", ["여세요", "열어요", "열까요"], "열어 주세요 demande au destinataire d’ouvrir l’objet.", "action-request", "Tu demandes à un employé d’ouvrir la porte pour toi.", "Forme une demande d’action polie avec -아/어 주세요."),
@@ -360,7 +360,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
   "classifiers-basic": [
     gap("forms", "coffee-cup", "커피 한 __ 주세요.", "잔", ["개", "명", "장"], "커피 한 개 est courant pour compter un produit de façon générique. Ici, tu comptes précisément le récipient de boisson : 한 잔.", "drink-classifier", "Le café est servi dans une tasse et tu veux compter cette tasse, pas une unité de produit générique.", "Choisis le classificateur propre aux boissons servies en tasse ou en verre."),
     gap("forms", "people-count", "두 __이에요.", "명", ["개", "잔", "장"], "두 개예요, 두 잔이에요 et 두 장이에요 seraient grammaticales pour d’autres éléments omis. Ici, le serveur compte des personnes : 두 명이에요.", "people-classifier", "Au restaurant, le serveur demande combien de personnes composent ton groupe.", "Choisis le classificateur courant des personnes."),
-    gap("forms", "ticket-count", "표 두 __ 주세요.", "장", ["개", "명", "잔"], "표 두 개 peut s’entendre avec le compteur générique. Ici, la consigne demande le classificateur précis des objets plats : 표 두 장.", "flat-classifier", "Tu comptes les billets comme des objets plats, et non comme de simples unités génériques.", "Choisis le classificateur spécifique aux billets et autres objets plats."),
+    gap("forms", "ticket-count", "표 두 __ 주세요.", "장", ["개", "명", "잔"], "표 두 개 peut s’entendre avec le compteur général. Mais pour des billets, le compteur précis est 장 : 표 두 장.", "flat-classifier", "Tu comptes les billets comme des objets plats, et non comme de simples unités génériques.", "Choisis le classificateur spécifique aux billets et autres objets plats."),
     gap("forms", "apple-count", "사과 세 __ 주세요.", "개", ["명", "잔", "장"], "개 est le classificateur générique adapté aux pommes.", "generic-classifier"),
     gap("forms", "portion-count", "삼겹살 2__ 주세요.", "인분", ["개", "잔", "장"], "삼겹살 2개 pourrait compter deux articles ou paquets. Ici, tu commandes de quoi servir deux personnes : 2인분.", "portion-classifier", "Au restaurant, tu commandes une quantité de samgyeopsal prévue pour deux personnes, pas deux articles ou paquets.", "Choisis le classificateur des portions prévues pour un nombre de personnes."),
   ],
@@ -383,9 +383,9 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
 
   "additive-do": [
     gap("particles", "water-too", "물__ 주세요.", "도", ["만", "하고", "나"], "도 ajoute l’eau à une commande déjà commencée.", "additive", "Tu as déjà commandé un plat et tu ajoutes de l’eau."),
-    gap("particles", "me-too", "저__ 가요.", "도", ["만", "는", "를"], "저는 가요 serait grammatical et pourrait opposer le locuteur à quelqu’un. Ici, tu dois encoder explicitement « moi aussi » avec la particule additive : 저도.", "additive", "Un ami a annoncé qu’il part ; tu veux ajouter explicitement que toi aussi, tu pars.", "Exprime explicitement l’addition « moi aussi » avec la particule dédiée."),
+    gap("particles", "me-too", "저__ 가요.", "도", ["만", "는", "를"], "저는 가요 serait possible pour opposer « moi » à quelqu’un. Ici, tu veux dire « moi aussi », donc on dit 저도.", "additive", "Un ami a annoncé qu’il part ; tu veux ajouter explicitement que toi aussi, tu pars.", "Exprime explicitement l’addition « moi aussi » avec la particule dédiée."),
     gap("particles", "kimchi-too", "김치__ 주세요.", "도", ["만", "하고", "나"], "김치도 ajoute le kimchi à ce qui a déjà été demandé.", "additive", "Après une première commande, tu ajoutes du kimchi."),
-    gap("particles", "coffee-too", "커피__ 마셔요.", "도", ["만", "는", "를"], "커피는 마셔요 et 커피를 마셔요 seraient grammaticales avec d’autres focalisations. Ici, tu dois encoder explicitement « aussi » avec 도 : 커피도 마셔요.", "additive", "Tu bois déjà du thé et tu veux ajouter explicitement que tu bois aussi du café.", "Exprime explicitement l’addition « aussi du café » avec la particule dédiée."),
+    gap("particles", "coffee-too", "커피__ 마셔요.", "도", ["만", "는", "를"], "커피는 마셔요 et 커피를 마셔요 sont possibles, mais ne veulent pas dire « aussi ». Pour ajouter le café au thé, dis 커피도 마셔요.", "additive", "Tu bois déjà du thé et tu veux ajouter explicitement que tu bois aussi du café.", "Exprime explicitement l’addition « aussi du café » avec la particule dédiée."),
     choose("particles", "too-vs-only", "빵__ 주세요.", "도", ["만", "하고", "나"], "도 signifie « aussi » ; 만 limiterait la commande au pain.", "additive-vs-restrictive", "Tu as commandé du lait et tu ajoutes du pain."),
   ],
 
@@ -393,7 +393,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
     gap("particles", "water-only", "물__ 마셔요.", "만", ["도", "하고", "나"], "만 limite les boissons à l’eau seulement.", "restrictive", "On te propose plusieurs boissons, mais tu ne bois que de l’eau."),
     gap("particles", "one-only", "한 잔__ 주세요.", "만", ["도", "하고", "나"], "만 limite la quantité à un seul verre.", "restrictive", "Le serveur en propose davantage, mais tu n’en veux qu’un."),
     gap("particles", "card-only", "카드__ 있어요.", "만", ["도", "하고", "나"], "카드만 signifie que tu n’as rien d’autre que la carte.", "restrictive", "Tu n’as ni espèces ni autre moyen de paiement."),
-    gap("particles", "today-only", "오늘__ 쉬어요.", "만", ["도", "은", "부터"], "오늘은 쉬어요 serait grammatical et créerait un contraste avec les autres jours. Ici, tu dois encoder explicitement « seulement aujourd’hui » avec 만 : 오늘만 쉬어요.", "restrictive", "Tu travailles les autres jours et veux dire explicitement que ton repos se limite à aujourd’hui.", "Exprime explicitement la restriction « seulement aujourd’hui » avec la particule dédiée."),
+    gap("particles", "today-only", "오늘__ 쉬어요.", "만", ["도", "은", "부터"], "오늘은 쉬어요 serait possible pour opposer aujourd’hui aux autres jours. Pour dire clairement « seulement aujourd’hui », utilise 만 : 오늘만 쉬어요.", "restrictive", "Tu travailles les autres jours et veux dire explicitement que ton repos se limite à aujourd’hui.", "Exprime explicitement la restriction « seulement aujourd’hui » avec la particule dédiée."),
     choose("particles", "only-vs-too", "빵__ 주세요.", "만", ["도", "하고", "나"], "만 signifie « seulement » ; 도 ajouterait le pain à autre chose.", "restrictive-vs-additive", "Tu refuses les autres produits et demandes uniquement du pain."),
   ],
 
@@ -455,9 +455,9 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
 
   "honorific-si": [
     choose("register", "teacher-arrives", "선생님이 __.", "오세요", ["와요", "오셨어요", "오실 거예요"], "오세요 contient -시- et honore le professeur qui arrive maintenant.", "honorific-present", "À l’accueil, on annonce respectueusement que le professeur arrive en ce moment.", "Choisis la forme présente qui honore le sujet de l’action."),
-    gap("register", "honorific-people", "몇 __이세요?", "분", ["명", "개", "잔"], "몇 명이세요? est grammatical et poli. Ici, la consigne demande en plus le classificateur honorifique qui élève les clients : 몇 분이세요?", "honorific-lexicon", "Au restaurant, l’employé veut honorer explicitement les clients qu’il compte.", "Choisis le classificateur honorifique des personnes, et non le compteur courant."),
-    choose("register", "teacher-present", "선생님은 교실에 __.", "계세요", ["있어요", "계셨어요", "계실 거예요"], "선생님은 교실에 있어요 est grammatical et poli envers l’interlocuteur. Ici, tu dois aussi honorer le professeur, sujet de la phrase, avec 계세요.", "honorific-lexicon", "Tu dois honorer explicitement le professeur, qui se trouve actuellement dans la salle.", "Choisis la forme présente qui honore le sujet de la phrase."),
-    gap("register", "customer-name", "__이 어떻게 되세요?", "성함", ["이름", "말씀", "나이"], "이름이 어떻게 되세요? est courant et poli. Ici, la consigne demande le nom honorifique qui élève explicitement le client : 성함.", "honorific-lexicon", "Un employé veut employer le nom honorifique réservé au nom du client.", "Choisis le mot honorifique pour « nom », et non le terme courant."),
+    gap("register", "honorific-people", "몇 __이세요?", "분", ["명", "개", "잔"], "몇 명이세요? est correct et poli. Pour montrer davantage de respect aux clients, on choisit le compteur honorifique 분 : 몇 분이세요?", "honorific-lexicon", "Au restaurant, l’employé veut honorer explicitement les clients qu’il compte.", "Choisis le classificateur honorifique des personnes, et non le compteur courant."),
+    choose("register", "teacher-present", "선생님은 교실에 __.", "계세요", ["있어요", "계셨어요", "계실 거예요"], "선생님은 교실에 있어요 est correct et poli. Mais pour montrer aussi du respect envers le professeur, on dit 계세요.", "honorific-lexicon", "Tu dois honorer explicitement le professeur, qui se trouve actuellement dans la salle.", "Choisis la forme présente qui honore le sujet de la phrase."),
+    gap("register", "customer-name", "__이 어떻게 되세요?", "성함", ["이름", "말씀", "나이"], "이름이 어떻게 되세요? est courant et poli. Pour parler du nom du client avec davantage de respect, on utilise 성함.", "honorific-lexicon", "Un employé veut employer le nom honorifique réservé au nom du client.", "Choisis le mot honorifique pour « nom », et non le terme courant."),
     choose("register", "repeat-respectfully", "다시 한번 __?", "말씀해 주시겠어요", ["말해요", "말씀하세요", "말할까요"], "말씀해 주시겠어요? formule une demande très respectueuse de répétition.", "honorific-request", "Tu demandes à une personne âgée ou à un supérieur de répéter."),
   ],
 };

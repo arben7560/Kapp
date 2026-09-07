@@ -15,11 +15,15 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
   View,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
@@ -87,18 +91,42 @@ function prerequisiteLabel(prerequisite: GrammarPrerequisite): string {
 export default function GrammarHubScreen() {
   const { progress, setTrack } = useStore();
   const { hasPremiumAccess: isPremium } = usePaywall();
-  const responsive = useResponsiveLayout({ maxWidth: 920 });
-  const effectiveGap = Math.max(15, responsive.gridGap);
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const isLandscape = width > height;
+  const responsive = useResponsiveLayout({
+    maxWidth: isLandscape ? 1120 : 920,
+  });
+  const effectiveGap = isLandscape
+    ? 14
+    : Math.max(15, responsive.gridGap);
+  const safeContentWidth = Math.min(
+    responsive.maxWidth,
+    Math.max(
+      0,
+      width -
+        insets.left -
+        insets.right -
+        responsive.horizontalPadding * 2,
+    ),
+  );
 
-  const gridColumns = responsive.getColumns({
+  const portraitGridColumns = responsive.getColumns({
     minColumnWidth: 330,
     maxColumns: 2,
     gap: effectiveGap,
   });
-  const gridItemWidth = responsive.getGridItemWidth(
-    gridColumns,
-    effectiveGap,
-  );
+  const gridColumns = !isLandscape
+    ? portraitGridColumns
+    : safeContentWidth >= 900
+      ? 3
+      : safeContentWidth >= 640
+        ? 2
+        : 1;
+  const gridItemWidth =
+    isLandscape && gridColumns > 1
+      ? (safeContentWidth - effectiveGap * (gridColumns - 1)) / gridColumns
+      : responsive.getGridItemWidth(gridColumns, effectiveGap);
 
   const grammarProgress = progress.grammarProgress;
   const completedContentRefs = React.useMemo(
@@ -183,18 +211,25 @@ export default function GrammarHubScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.scrollContent,
+            isLandscape && styles.scrollContentLandscape,
             { paddingHorizontal: responsive.horizontalPadding },
           ]}
         >
           <View
             style={[styles.contentFrame, { maxWidth: responsive.maxWidth }]}
           >
-            <View style={styles.navHeader}>
+            <View
+              style={[
+                styles.navHeader,
+                isLandscape && styles.navHeaderLandscape,
+              ]}
+            >
               <AppBackButton accessibilityLabel="Retour à l’accueil" />
             </View>
 
             <GrammarHero
               compact={responsive.isCompact}
+              landscape={isLandscape}
               completedStages={completedStages}
             />
 
@@ -205,6 +240,7 @@ export default function GrammarHubScreen() {
                 premiumLocked={nextStagePremiumLocked}
                 prerequisiteLocked={nextStagePrerequisiteLocked}
                 completion={completion}
+                landscape={isLandscape}
                 onPress={() => openStage(nextStageId)}
               />
             </AnimatedFragment>
@@ -212,6 +248,7 @@ export default function GrammarHubScreen() {
             {GRAMMAR_CHAPTERS.map((chapter, chapterIndex) => (
               <View key={chapter.id}>
                 <GrammarSectionHeader
+                  landscape={isLandscape}
                   title={`CHAPITRE ${String(chapter.number).padStart(2, "0")} · ${chapter.title}`}
                   subtitle={`${chapter.stageIds.length} étapes · progression A0 → A1`}
                 />
@@ -299,6 +336,7 @@ export default function GrammarHubScreen() {
                           completed={completed}
                           isCurrent={isCurrent}
                           disabled={disabled}
+                          landscape={isLandscape}
                           onPress={() => openStage(stageId, true)}
                         />
                       </AnimatedFragment>
@@ -316,14 +354,21 @@ export default function GrammarHubScreen() {
 
 function GrammarHero({
   compact,
+  landscape,
   completedStages,
 }: {
   compact: boolean;
+  landscape: boolean;
   completedStages: number;
 }) {
   return (
-    <View style={styles.hero}>
-      <View style={styles.heroEyebrowRow}>
+    <View style={[styles.hero, landscape && styles.heroLandscape]}>
+      <View
+        style={[
+          styles.heroEyebrowRow,
+          landscape && styles.heroEyebrowRowLandscape,
+        ]}
+      >
         <View style={styles.heroDot} />
         <AppText variant="sectionLabel" style={styles.heroEyebrow}>
           PARCOURS · GRAMMAIRE
@@ -334,7 +379,11 @@ function GrammarHero({
         variant="koreanPrimary"
         script="korean"
         lineContract="singleLine"
-        style={[styles.heroKorean, compact && styles.heroKoreanCompact]}
+        style={[
+          styles.heroKorean,
+          compact && styles.heroKoreanCompact,
+          landscape && styles.heroKoreanLandscape,
+        ]}
       >
         문법
       </AppText>
@@ -345,7 +394,12 @@ function GrammarHero({
         Construis des phrases naturelles, étape par étape.
       </AppText>
 
-      <View style={styles.heroMetaRow}>
+      <View
+        style={[
+          styles.heroMetaRow,
+          landscape && styles.heroMetaRowLandscape,
+        ]}
+      >
         <View style={styles.levelPill}>
           <Sparkles size={15} strokeWidth={2} color={GRAMMAR_ACCENT} />
           <AppText
@@ -370,6 +424,7 @@ function FeaturedGrammarCard({
   premiumLocked,
   prerequisiteLocked,
   completion,
+  landscape,
   onPress,
 }: {
   stageId: GrammarStageId;
@@ -377,6 +432,7 @@ function FeaturedGrammarCard({
   premiumLocked: boolean;
   prerequisiteLocked: boolean;
   completion: number;
+  landscape: boolean;
   onPress: () => void;
 }) {
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
@@ -390,6 +446,7 @@ function FeaturedGrammarCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.featuredWrap,
+        landscape && styles.featuredWrapLandscape,
         premiumLocked && styles.premiumBorder,
         prerequisiteLocked && styles.blocked,
         pressed && styles.pressablePressed,
@@ -403,11 +460,19 @@ function FeaturedGrammarCard({
         ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.featuredCard}
+        style={[
+          styles.featuredCard,
+          landscape && styles.featuredCardLandscape,
+        ]}
       >
         <View style={styles.glassGlow} pointerEvents="none" />
 
-        <View style={styles.featuredTopRow}>
+        <View
+          style={[
+            styles.featuredTopRow,
+            landscape && styles.featuredTopRowLandscape,
+          ]}
+        >
           <View style={styles.kicker}>
             <View style={styles.kickerDot} />
             <AppText variant="sectionLabel" style={styles.kickerText}>
@@ -457,7 +522,12 @@ function FeaturedGrammarCard({
           {stage.communicativeGoal}
         </AppText>
 
-        <View style={styles.featuredFooter}>
+        <View
+          style={[
+            styles.featuredFooter,
+            landscape && styles.featuredFooterLandscape,
+          ]}
+        >
           <AppText variant="caption" style={styles.ctaText}>
             {premiumLocked
               ? "DÉBLOQUER PREMIUM"
@@ -480,12 +550,19 @@ function FeaturedGrammarCard({
 function GrammarSectionHeader({
   title,
   subtitle,
+  landscape,
 }: {
   title: string;
   subtitle: string;
+  landscape: boolean;
 }) {
   return (
-    <View style={styles.sectionHeader}>
+    <View
+      style={[
+        styles.sectionHeader,
+        landscape && styles.sectionHeaderLandscape,
+      ]}
+    >
       <View style={styles.sectionCopy}>
         <AppText variant="sectionLabel" style={styles.sectionTitle}>
           {title}
@@ -510,6 +587,7 @@ function GrammarStageCard({
   completed,
   isCurrent,
   disabled,
+  landscape,
   onPress,
 }: {
   stageId: GrammarStageId;
@@ -522,6 +600,7 @@ function GrammarStageCard({
   completed: boolean;
   isCurrent: boolean;
   disabled: boolean;
+  landscape: boolean;
   onPress: () => void;
 }) {
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
@@ -535,6 +614,7 @@ function GrammarStageCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.stageWrap,
+        landscape && styles.stageWrapLandscape,
         isCurrent && styles.currentBorder,
         completed && styles.completedBorder,
         premiumLocked && styles.premiumBorder,
@@ -550,7 +630,7 @@ function GrammarStageCard({
         }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.stageCard}
+        style={[styles.stageCard, landscape && styles.stageCardLandscape]}
       >
         <View style={styles.glassGlowSmall} pointerEvents="none" />
 
@@ -574,7 +654,13 @@ function GrammarStageCard({
           />
         </View>
 
-        <AppText variant="cardTitle" style={styles.stageTitle}>
+        <AppText
+          variant="cardTitle"
+          style={[
+            styles.stageTitle,
+            landscape && styles.stageTitleLandscape,
+          ]}
+        >
           {stage.title}
         </AppText>
         <AppText variant="bodySecondary" style={styles.stageSubtitle}>
@@ -586,7 +672,12 @@ function GrammarStageCard({
           </AppText>
         ) : null}
 
-        <View style={styles.stageFooter}>
+        <View
+          style={[
+            styles.stageFooter,
+            landscape && styles.stageFooterLandscape,
+          ]}
+        >
           <View style={styles.footerLine} />
           <View style={styles.smallArrow}>
             {premiumLocked || prerequisiteLocked ? (
@@ -693,6 +784,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG_DEEP },
   background: { flex: 1, overflow: "hidden", backgroundColor: BG_DEEP },
   scrollContent: { paddingTop: 8, paddingBottom: 120 },
+  scrollContentLandscape: { paddingTop: 2, paddingBottom: 72 },
   contentFrame: { width: "100%", alignSelf: "center" },
   navHeader: {
     minHeight: 60,
@@ -700,14 +792,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
+  navHeaderLandscape: { minHeight: 48, marginBottom: 4 },
   pressablePressed: { opacity: 0.86, transform: [{ scale: 0.992 }] },
 
   hero: { paddingHorizontal: 2, marginTop: 12, marginBottom: 28 },
+  heroLandscape: { marginTop: 4, marginBottom: 18, paddingHorizontal: 0 },
   heroEyebrowRow: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
   },
+  heroEyebrowRowLandscape: { marginBottom: 8 },
   heroDot: {
     width: 5,
     height: 5,
@@ -726,6 +821,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 14,
   },
   heroKoreanCompact: { fontSize: 36, lineHeight: 44 },
+  heroKoreanLandscape: { fontSize: 36, lineHeight: 42 },
   heroTitle: { color: TXT, marginTop: -2 },
   heroSubtitle: { maxWidth: 560, marginTop: 8, color: MUTED },
   heroMetaRow: {
@@ -735,6 +831,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 14,
   },
+  heroMetaRowLandscape: { marginTop: 14 },
   levelPill: {
     minHeight: 32,
     paddingHorizontal: 12,
@@ -757,7 +854,9 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     boxShadow: "0px 12px 30px rgba(119,114,170,0.10)",
   },
+  featuredWrapLandscape: { marginBottom: 4 },
   featuredCard: { minHeight: 220, padding: 20, overflow: "hidden" },
+  featuredCardLandscape: { minHeight: 180, padding: 16 },
   glassGlow: {
     position: "absolute",
     top: -90,
@@ -774,6 +873,7 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 18,
   },
+  featuredTopRowLandscape: { marginBottom: 14 },
   kicker: {
     minHeight: 30,
     flexDirection: "row",
@@ -828,6 +928,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
+  featuredFooterLandscape: { marginTop: 18 },
   ctaText: { color: "rgba(184,180,226,0.88)", letterSpacing: 0.45 },
   footerLine: { flex: 1, height: 1, backgroundColor: "rgba(184,180,226,0.28)" },
   progressText: {
@@ -843,6 +944,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     gap: 14,
   },
+  sectionHeaderLandscape: { marginTop: 22, marginBottom: 12 },
   sectionCopy: { flexShrink: 0, maxWidth: "72%" },
   sectionTitle: { color: "rgba(241,245,249,0.66)", letterSpacing: 1.05 },
   sectionSubtitle: { marginTop: 3, color: "rgba(241,245,249,0.46)" },
@@ -864,7 +966,9 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     boxShadow: "0px 10px 24px rgba(0,0,0,0.24)",
   },
+  stageWrapLandscape: { minHeight: 154, borderRadius: 22 },
   stageCard: { flex: 1, minHeight: 174, padding: 16, overflow: "hidden" },
+  stageCardLandscape: { minHeight: 154, padding: 14 },
   glassGlowSmall: {
     position: "absolute",
     top: -60,
@@ -911,6 +1015,7 @@ const styles = StyleSheet.create({
   },
   statusText: { color: "rgba(217,214,243,0.84)" },
   stageTitle: { color: TXT, marginTop: 18 },
+  stageTitleLandscape: { marginTop: 13 },
   stageSubtitle: {
     marginTop: 5,
     color: "rgba(241,245,249,0.80)",
@@ -924,6 +1029,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
+  stageFooterLandscape: { paddingTop: 12 },
   smallArrow: {
     width: 31,
     height: 31,

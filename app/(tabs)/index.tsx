@@ -21,11 +21,15 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useStore, type Progress } from "../../_store";
 import { AppText } from "../../components/app-text";
 import { ActionButton } from "../../components/ui/action-button";
@@ -610,11 +614,12 @@ function getDerivedResumeSequence(
 
 type SeoulHeroProps = {
   cityTime: string;
+  landscape: boolean;
 };
 
-function SeoulHero({ cityTime }: SeoulHeroProps) {
+function SeoulHero({ cityTime, landscape }: SeoulHeroProps) {
   return (
-    <View style={styles.hero}>
+    <View style={[styles.hero, landscape && styles.heroLandscape]}>
       <View style={styles.heroEyebrowRow}>
         <View style={styles.heroLiveDot} />
 
@@ -658,25 +663,48 @@ function SeoulHero({ cityTime }: SeoulHeroProps) {
 
 export default function Home() {
   const { progress, setTrack, isHydrated } = useStore();
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const isLandscape = width > height;
 
   const auth = useAuth();
 
   const { refreshStreak, streak } = useDailyStreak();
 
   const responsive = useResponsiveLayout({
-    maxWidth: 900,
+    maxWidth: isLandscape ? 1120 : 900,
   });
 
-  const gridColumns = responsive.getColumns({
+  const effectiveGap = isLandscape ? 14 : responsive.gridGap;
+  const safeContentWidth = Math.min(
+    responsive.maxWidth,
+    Math.max(
+      0,
+      width -
+        insets.left -
+        insets.right -
+        responsive.horizontalPadding * 2,
+    ),
+  );
+
+  const portraitGridColumns = responsive.getColumns({
     minColumnWidth: 330,
     maxColumns: 2,
-    gap: responsive.gridGap,
+    gap: effectiveGap,
   });
 
-  const gridItemWidth = responsive.getGridItemWidth(
-    gridColumns,
-    responsive.gridGap,
-  );
+  const gridColumns = !isLandscape
+    ? portraitGridColumns
+    : safeContentWidth >= 900
+      ? 3
+      : safeContentWidth >= 640
+        ? 2
+        : 1;
+
+  const gridItemWidth =
+    isLandscape && gridColumns > 1
+      ? (safeContentWidth - effectiveGap * (gridColumns - 1)) / gridColumns
+      : responsive.getGridItemWidth(gridColumns, effectiveGap);
 
   const [resumeContext, setResumeContext] = useState<HomeResumeContext | null>(
     null,
@@ -963,6 +991,7 @@ export default function Home() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.scrollContent,
+            isLandscape && styles.scrollContentLandscape,
 
             {
               paddingHorizontal: responsive.horizontalPadding,
@@ -990,13 +1019,14 @@ export default function Home() {
 
             {/* HERO */}
 
-            <SeoulHero cityTime={seoulTime} />
+            <SeoulHero cityTime={seoulTime} landscape={isLandscape} />
 
             {/* DAILY RHYTHM */}
 
             <AnimatedFragment index={0}>
               <DailyMomentumCard
                 compact={responsive.isCompact}
+                landscape={isLandscape}
                 streak={streak}
                 onPress={() => router.push("/streak")}
               />
@@ -1009,6 +1039,7 @@ export default function Home() {
                 sequence={activeSeq}
                 narrative={activeSeqNarrative}
                 progress={activeSeqProgress}
+                landscape={isLandscape}
                 onPress={() => openSequence(activeSeq)}
               />
             </AnimatedFragment>
@@ -1035,6 +1066,7 @@ export default function Home() {
               title="PARCOURS"
               subtitle="Construis tes bases"
               colors={[TEAL, CYAN]}
+              landscape={isLandscape}
             />
 
             <View
@@ -1044,7 +1076,7 @@ export default function Home() {
                 gridColumns > 1 && styles.gridWide,
 
                 {
-                  gap: responsive.gridGap,
+                  gap: effectiveGap,
                 },
               ]}
             >
@@ -1063,6 +1095,7 @@ export default function Home() {
                   <SequenceCard
                     item={sequence}
                     isActive={sequence.trackKey === currentTrack}
+                    landscape={isLandscape}
                     onPress={() => openSequence(sequence)}
                   />
                 </AnimatedFragment>
@@ -1075,6 +1108,7 @@ export default function Home() {
               title="IMMERSION"
               subtitle="Vis le coréen"
               colors={[CYAN, PINK]}
+              landscape={isLandscape}
             />
 
             <View
@@ -1084,7 +1118,7 @@ export default function Home() {
                 gridColumns > 1 && styles.gridWide,
 
                 {
-                  gap: responsive.gridGap,
+                  gap: effectiveGap,
                 },
               ]}
             >
@@ -1103,6 +1137,7 @@ export default function Home() {
                   <SequenceCard
                     item={sequence}
                     isActive={sequence.trackKey === currentTrack}
+                    landscape={isLandscape}
                     onPress={() => openSequence(sequence)}
                   />
                 </AnimatedFragment>
@@ -1311,10 +1346,12 @@ function AccountProtectionCard({
 
 function DailyMomentumCard({
   compact,
+  landscape,
   streak,
   onPress,
 }: {
   compact: boolean;
+  landscape: boolean;
   streak: DailyStreakState | null;
   onPress: () => void;
 }) {
@@ -1341,7 +1378,11 @@ function DailyMomentumCard({
       <BlurView
         intensity={58}
         tint="dark"
-        style={[styles.dailyCard, compact && styles.dailyCardCompact]}
+        style={[
+          styles.dailyCard,
+          compact && styles.dailyCardCompact,
+          landscape && styles.dailyCardLandscape,
+        ]}
       >
         <LinearGradient
           colors={[
@@ -1369,7 +1410,12 @@ function DailyMomentumCard({
 
         {/* HEADER */}
 
-        <View style={styles.dailyHeader}>
+        <View
+          style={[
+            styles.dailyHeader,
+            landscape && styles.dailyHeaderLandscape,
+          ]}
+        >
           <View style={styles.dailyKickerRow}>
             <Sparkles size={18} strokeWidth={2} color={CYAN} />
 
@@ -1389,7 +1435,12 @@ function DailyMomentumCard({
 
         {/* INFORMATION PRINCIPALE */}
 
-        <View style={styles.dailyMain}>
+        <View
+          style={[
+            styles.dailyMain,
+            landscape && styles.dailyMainLandscape,
+          ]}
+        >
           <AppText variant="featureTitle" style={styles.dailyTitle}>
             {isValidated ? "Journée validée" : "Continue ta journée"}
           </AppText>
@@ -1483,7 +1534,13 @@ function DailyMomentumCard({
 // MAIN ACTION
 // ──────────────────────────────────────────────
 
-function MainActionCard({ sequence, narrative, progress, onPress }: any) {
+function MainActionCard({
+  sequence,
+  narrative,
+  progress,
+  landscape,
+  onPress,
+}: any) {
   const displayLabel = sequence.label;
 
   const resumeMeta = sequence.resumeMeta as string | undefined;
@@ -1541,7 +1598,11 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
         pressed && styles.pressablePressed,
       ]}
     >
-      <BlurView intensity={72} tint="dark" style={styles.mainCard}>
+      <BlurView
+        intensity={72}
+        tint="dark"
+        style={[styles.mainCard, landscape && styles.mainCardLandscape]}
+      >
         <LinearGradient
           colors={[
             accent.surfaceStrong,
@@ -1574,7 +1635,12 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
 
         <View style={styles.glassTopHairline} />
 
-        <View style={styles.mainCardTopRow}>
+        <View
+          style={[
+            styles.mainCardTopRow,
+            landscape && styles.mainCardTopRowLandscape,
+          ]}
+        >
           <View style={styles.mainCardKickerPill}>
             <View
               style={[
@@ -1621,7 +1687,12 @@ function MainActionCard({ sequence, narrative, progress, onPress }: any) {
         </View>
 
         {hasProgress ? (
-          <View style={styles.mainProgressBlock}>
+          <View
+            style={[
+              styles.mainProgressBlock,
+              landscape && styles.mainProgressBlockLandscape,
+            ]}
+          >
             <View style={styles.mainProgressMeta}>
               <AppText variant="caption" style={styles.mainProgressLabel}>
                 PROGRESSION
@@ -1694,13 +1765,20 @@ function SectionHeader({
   title,
   subtitle,
   colors,
+  landscape,
 }: {
   title: string;
   subtitle: string;
   colors: [string, string];
+  landscape: boolean;
 }) {
   return (
-    <View style={styles.sectionHeader}>
+    <View
+      style={[
+        styles.sectionHeader,
+        landscape && styles.sectionHeaderLandscape,
+      ]}
+    >
       <View>
         <AppText variant="sectionLabel" style={styles.sectionTitle}>
           {title}
@@ -1873,7 +1951,7 @@ function SequenceIconGlyph({ icon, color }: { icon: string; color: string }) {
 // SEQUENCE CARD
 // ──────────────────────────────────────────────
 
-function SequenceCard({ item, isActive, onPress }: any) {
+function SequenceCard({ item, isActive, landscape, onPress }: any) {
   const accent = item.hubAccent;
 
   const icon = getSequenceIcon(item.trackKey);
@@ -1890,6 +1968,7 @@ function SequenceCard({ item, isActive, onPress }: any) {
       onPress={onPress}
       style={({ pressed }) => [
         styles.sequenceCardWrap,
+        landscape && styles.sequenceCardWrapLandscape,
 
         isActive && {
           borderColor: accent.selectedBorder,
@@ -1903,7 +1982,10 @@ function SequenceCard({ item, isActive, onPress }: any) {
       <BlurView
         intensity={isActive ? 62 : 48}
         tint="dark"
-        style={styles.sequenceCard}
+        style={[
+          styles.sequenceCard,
+          landscape && styles.sequenceCardLandscape,
+        ]}
       >
         <LinearGradient
           colors={[accent.surface, "rgba(5,7,12,0.62)", "rgba(2,3,6,0.66)"]}
@@ -1972,7 +2054,12 @@ function SequenceCard({ item, isActive, onPress }: any) {
           </View>
         </View>
 
-        <View style={styles.sequenceTextBlock}>
+        <View
+          style={[
+            styles.sequenceTextBlock,
+            landscape && styles.sequenceTextBlockLandscape,
+          ]}
+        >
           <AppText variant="cardTitle" style={styles.sequenceTitle}>
             {item.title}
           </AppText>
@@ -1986,7 +2073,12 @@ function SequenceCard({ item, isActive, onPress }: any) {
           </AppText>
         </View>
 
-        <View style={styles.sequenceFooter}>
+        <View
+          style={[
+            styles.sequenceFooter,
+            landscape && styles.sequenceFooterLandscape,
+          ]}
+        >
           <View style={styles.sequenceFooterLine}>
             <View
               style={[
@@ -2087,6 +2179,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 8,
     paddingBottom: 112,
+  },
+
+  scrollContentLandscape: {
+    paddingTop: 4,
+    paddingBottom: 64,
   },
 
   contentFrame: {
@@ -2272,6 +2369,12 @@ const styles = StyleSheet.create({
     marginBottom: 34,
   },
 
+  heroLandscape: {
+    marginTop: 24,
+    marginBottom: 20,
+    paddingHorizontal: 0,
+  },
+
   heroEyebrowRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -2382,6 +2485,13 @@ const styles = StyleSheet.create({
     paddingBottom: 18,
   },
 
+  dailyCardLandscape: {
+    minHeight: 0,
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
+
   dailyGlow: {
     position: "absolute",
 
@@ -2407,6 +2517,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
 
     marginBottom: 17,
+  },
+
+  dailyHeaderLandscape: {
+    marginBottom: 10,
   },
 
   dailyKickerRow: {
@@ -2449,6 +2563,10 @@ const styles = StyleSheet.create({
     paddingRight: 4,
 
     marginBottom: 21,
+  },
+
+  dailyMainLandscape: {
+    marginBottom: 14,
   },
 
   dailyTitle: {
@@ -2586,6 +2704,11 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
 
+  mainCardLandscape: {
+    minHeight: 180,
+    padding: 16,
+  },
+
   mainAmbientGlow: {
     position: "absolute",
 
@@ -2608,6 +2731,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
 
     marginBottom: 22,
+  },
+
+  mainCardTopRowLandscape: {
+    marginBottom: 14,
   },
 
   mainCardKickerPill: {
@@ -2672,6 +2799,10 @@ const styles = StyleSheet.create({
 
   mainProgressBlock: {
     marginTop: 24,
+  },
+
+  mainProgressBlockLandscape: {
+    marginTop: 16,
   },
 
   mainProgressMeta: {
@@ -2841,6 +2972,11 @@ const styles = StyleSheet.create({
     gap: 14,
   },
 
+  sectionHeaderLandscape: {
+    marginTop: 16,
+    marginBottom: 10,
+  },
+
   sectionTitle: {
     color: "rgba(241,245,249,0.54)",
 
@@ -2918,6 +3054,11 @@ const styles = StyleSheet.create({
     boxShadow: "0px 10px 24px rgba(0,0,0,0.24)",
   },
 
+  sequenceCardWrapLandscape: {
+    minHeight: 138,
+    borderRadius: 20,
+  },
+
   sequenceCard: {
     flex: 1,
 
@@ -2928,6 +3069,11 @@ const styles = StyleSheet.create({
     position: "relative",
 
     overflow: "hidden",
+  },
+
+  sequenceCardLandscape: {
+    minHeight: 138,
+    padding: 14,
   },
 
   sequenceAmbientGlow: {
@@ -2997,6 +3143,10 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
 
+  sequenceTextBlockLandscape: {
+    marginTop: 13,
+  },
+
   sequenceTitle: {
     color: TXT,
   },
@@ -3017,6 +3167,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
 
     gap: 10,
+  },
+
+  sequenceFooterLandscape: {
+    paddingTop: 12,
   },
 
   sequenceFooterLine: {

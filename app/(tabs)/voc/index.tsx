@@ -16,11 +16,15 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
   View,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
@@ -132,8 +136,12 @@ const INCLUDED_THEMES = THEMES.filter((theme) => !theme.isLocked);
 const PREMIUM_THEMES = THEMES.filter((theme) => theme.isLocked);
 
 export default function VocabHub() {
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const isLandscape = width > height;
+
   const responsive = useResponsiveLayout({
-    maxWidth: 920,
+    maxWidth: isLandscape ? 1120 : 920,
   });
 
   const { hasPremiumAccess } = usePaywall();
@@ -142,18 +150,38 @@ export default function VocabHub() {
   const [resumeContext, setResumeContext] = useState<HomeResumeContext | null>(
     null,
   );
-  const effectiveGap = Math.max(16, responsive.gridGap);
+  const effectiveGap = isLandscape
+    ? 14
+    : Math.max(16, responsive.gridGap);
+  const safeContentWidth = Math.min(
+    responsive.maxWidth,
+    Math.max(
+      0,
+      width -
+        insets.left -
+        insets.right -
+        responsive.horizontalPadding * 2,
+    ),
+  );
 
-  const gridColumns = responsive.getColumns({
+  const autoGridColumns = responsive.getColumns({
     minColumnWidth: 330,
     maxColumns: 2,
     gap: effectiveGap,
   });
 
-  const gridItemWidth = responsive.getGridItemWidth(
-    gridColumns,
-    effectiveGap,
-  );
+  const gridColumns = !isLandscape
+    ? autoGridColumns
+    : safeContentWidth >= 900
+      ? 3
+      : safeContentWidth >= 640
+        ? 2
+        : 1;
+
+  const gridItemWidth =
+    isLandscape && gridColumns > 1
+      ? (safeContentWidth - effectiveGap * (gridColumns - 1)) / gridColumns
+      : responsive.getGridItemWidth(gridColumns, effectiveGap);
 
   useFocusEffect(
     useCallback(() => {
@@ -233,6 +261,7 @@ export default function VocabHub() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.scrollContent,
+            isLandscape && styles.scrollContentLandscape,
             {
               paddingHorizontal: responsive.horizontalPadding,
             },
@@ -246,17 +275,26 @@ export default function VocabHub() {
               },
             ]}
           >
-            <View style={styles.navHeader}>
+            <View
+              style={[
+                styles.navHeader,
+                isLandscape && styles.navHeaderLandscape,
+              ]}
+            >
               <AppBackButton />
             </View>
 
-            <VocabularyHero compact={responsive.isCompact} />
+            <VocabularyHero
+              compact={responsive.isCompact}
+              landscape={isLandscape}
+            />
 
             <AnimatedFragment index={0}>
               <FeaturedCollectionCard
                 theme={featuredTheme}
                 isResume={isResume}
                 hasPremiumAccess={hasPremiumAccess}
+                landscape={isLandscape}
                 onPress={() => void openTheme(featuredTheme)}
               />
             </AnimatedFragment>
@@ -264,6 +302,7 @@ export default function VocabHub() {
             <CollectionSectionHeader
               title="COLLECTIONS INCLUSES"
               subtitle={`${INCLUDED_THEMES.length} collections essentielles`}
+              landscape={isLandscape}
             />
 
             <View
@@ -292,6 +331,7 @@ export default function VocabHub() {
                     order={index + 1}
                     hasPremiumAccess={hasPremiumAccess}
                     isCurrent={resumeTheme?.id === theme.id}
+                    landscape={isLandscape}
                     onPress={() => void openTheme(theme)}
                   />
                 </AnimatedFragment>
@@ -307,6 +347,7 @@ export default function VocabHub() {
               }
               premium
               premiumActive={hasPremiumAccess}
+              landscape={isLandscape}
             />
 
             <View
@@ -335,6 +376,7 @@ export default function VocabHub() {
                     order={INCLUDED_THEMES.length + index + 1}
                     hasPremiumAccess={hasPremiumAccess}
                     isCurrent={resumeTheme?.id === theme.id}
+                    landscape={isLandscape}
                     onPress={() => void openTheme(theme)}
                   />
                 </AnimatedFragment>
@@ -347,10 +389,21 @@ export default function VocabHub() {
   );
 }
 
-function VocabularyHero({ compact }: { compact: boolean }) {
+function VocabularyHero({
+  compact,
+  landscape,
+}: {
+  compact: boolean;
+  landscape: boolean;
+}) {
   return (
-    <View style={styles.hero}>
-      <View style={styles.heroEyebrowRow}>
+    <View style={[styles.hero, landscape && styles.heroLandscape]}>
+      <View
+        style={[
+          styles.heroEyebrowRow,
+          landscape && styles.heroEyebrowRowLandscape,
+        ]}
+      >
         <View style={styles.heroDot} />
 
         <AppText variant="sectionLabel" style={styles.heroEyebrow}>
@@ -362,7 +415,11 @@ function VocabularyHero({ compact }: { compact: boolean }) {
         variant="koreanPrimary"
         script="korean"
         lineContract="singleLine"
-        style={[styles.heroKorean, compact && styles.heroKoreanCompact]}
+        style={[
+          styles.heroKorean,
+          compact && styles.heroKoreanCompact,
+          landscape && styles.heroKoreanLandscape,
+        ]}
       >
         어휘
       </AppText>
@@ -375,7 +432,12 @@ function VocabularyHero({ compact }: { compact: boolean }) {
         Apprends les mots dans leur contexte.
       </AppText>
 
-      <View style={styles.heroMetaRow}>
+      <View
+        style={[
+          styles.heroMetaRow,
+          landscape && styles.heroMetaRowLandscape,
+        ]}
+      >
         <View style={styles.levelPill}>
           <Sparkles size={15} strokeWidth={2} color={VOCABULARY_ACCENT} />
 
@@ -402,11 +464,13 @@ function FeaturedCollectionCard({
   theme,
   isResume,
   hasPremiumAccess,
+  landscape,
   onPress,
 }: {
   theme: VocabularyTheme;
   isResume: boolean;
   hasPremiumAccess: boolean;
+  landscape: boolean;
   onPress: () => void;
 }) {
   const isPremium = theme.isLocked;
@@ -427,12 +491,18 @@ function FeaturedCollectionCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.featuredWrap,
+        landscape && styles.featuredWrapLandscape,
         premiumLocked && styles.featuredWrapPremiumLocked,
         premiumActive && styles.featuredWrapPremiumActive,
         pressed && styles.pressablePressed,
       ]}
     >
-      <View style={styles.featuredCard}>
+      <View
+        style={[
+          styles.featuredCard,
+          landscape && styles.featuredCardLandscape,
+        ]}
+      >
         {/* Image de la carte */}
         <ImageBackground
           source={theme.background}
@@ -488,7 +558,12 @@ function FeaturedCollectionCard({
           ]}
         />
 
-        <View style={styles.featuredTopRow}>
+        <View
+          style={[
+            styles.featuredTopRow,
+            landscape && styles.featuredTopRowLandscape,
+          ]}
+        >
           <View style={styles.featuredKicker}>
             <View
               style={[
@@ -568,7 +643,12 @@ function FeaturedCollectionCard({
           </AppText>
         </View>
 
-        <View style={styles.featuredFooter}>
+        <View
+          style={[
+            styles.featuredFooter,
+            landscape && styles.featuredFooterLandscape,
+          ]}
+        >
           <AppText
             variant="caption"
             style={[
@@ -611,17 +691,23 @@ function CollectionSectionHeader({
   subtitle,
   premium = false,
   premiumActive = false,
+  landscape,
 }: {
   title: string;
   subtitle: string;
   premium?: boolean;
   premiumActive?: boolean;
+  landscape: boolean;
 }) {
   const headerAccent = premiumActive ? PREMIUM_SOFT : PREMIUM_GOLD;
 
   return (
     <View
-      style={[styles.sectionHeader, premium && styles.sectionHeaderPremium]}
+      style={[
+        styles.sectionHeader,
+        premium && styles.sectionHeaderPremium,
+        landscape && styles.sectionHeaderLandscape,
+      ]}
     >
       <View style={styles.sectionCopy}>
         <View style={styles.sectionTitleRow}>
@@ -678,12 +764,14 @@ function VocabularyCollectionCard({
   order,
   hasPremiumAccess,
   isCurrent,
+  landscape,
   onPress,
 }: {
   theme: VocabularyTheme;
   order: number;
   hasPremiumAccess: boolean;
   isCurrent: boolean;
+  landscape: boolean;
   onPress: () => void;
 }) {
   const isPremium = theme.isLocked;
@@ -706,13 +794,19 @@ function VocabularyCollectionCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.collectionWrap,
+        landscape && styles.collectionWrapLandscape,
         premiumLocked && styles.collectionWrapPremiumLocked,
         premiumActive && styles.collectionWrapPremiumActive,
         isCurrent && styles.collectionWrapCurrent,
         pressed && styles.pressablePressed,
       ]}
     >
-      <View style={styles.collectionCard}>
+      <View
+        style={[
+          styles.collectionCard,
+          landscape && styles.collectionCardLandscape,
+        ]}
+      >
         {/* Image de fond */}
         <ImageBackground
           source={theme.background}
@@ -877,7 +971,12 @@ function VocabularyCollectionCard({
           </View>
         </View>
 
-        <View style={styles.collectionCopy}>
+        <View
+          style={[
+            styles.collectionCopy,
+            landscape && styles.collectionCopyLandscape,
+          ]}
+        >
           <AppText variant="cardTitle" style={styles.collectionTitle}>
             {theme.title}
           </AppText>
@@ -891,7 +990,12 @@ function VocabularyCollectionCard({
           </AppText>
         </View>
 
-        <View style={styles.collectionFooter}>
+        <View
+          style={[
+            styles.collectionFooter,
+            landscape && styles.collectionFooterLandscape,
+          ]}
+        >
           <View style={styles.collectionFooterLine} />
 
           <View
@@ -992,6 +1096,11 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
 
+  scrollContentLandscape: {
+    paddingTop: 2,
+    paddingBottom: 72,
+  },
+
   contentFrame: {
     width: "100%",
     alignSelf: "center",
@@ -1045,16 +1154,30 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
+  navHeaderLandscape: {
+    minHeight: 48,
+    marginBottom: 4,
+  },
+
   hero: {
     paddingHorizontal: 2,
     marginTop: 12,
     marginBottom: 28,
   },
 
+  heroLandscape: {
+    marginTop: 4,
+    marginBottom: 18,
+  },
+
   heroEyebrowRow: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
+  },
+
+  heroEyebrowRowLandscape: {
+    marginBottom: 8,
   },
 
   heroDot: {
@@ -1088,6 +1211,11 @@ const styles = StyleSheet.create({
     lineHeight: 44,
   },
 
+  heroKoreanLandscape: {
+    fontSize: 36,
+    lineHeight: 42,
+  },
+
   heroTitle: {
     color: TXT,
     marginTop: -2,
@@ -1105,6 +1233,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: 14,
+  },
+
+  heroMetaRowLandscape: {
+    marginTop: 14,
   },
 
   levelPill: {
@@ -1138,6 +1270,10 @@ const styles = StyleSheet.create({
     boxShadow: `0px 12px 30px ${VOCABULARY.featuredShadow}`,
   },
 
+  featuredWrapLandscape: {
+    marginBottom: 4,
+  },
+
   featuredWrapPremiumLocked: {
     borderColor: "rgba(253,224,71,0.25)",
     boxShadow: "0px 12px 32px rgba(253,224,71,0.06)",
@@ -1153,6 +1289,11 @@ const styles = StyleSheet.create({
     padding: 20,
     position: "relative",
     overflow: "hidden",
+  },
+
+  featuredCardLandscape: {
+    minHeight: 180,
+    padding: 16,
   },
 
   featuredImage: {
@@ -1189,6 +1330,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 10,
     marginBottom: 20,
+  },
+
+  featuredTopRowLandscape: {
+    marginBottom: 16,
   },
 
   featuredTopActions: {
@@ -1322,6 +1467,10 @@ const styles = StyleSheet.create({
     gap: 14,
   },
 
+  featuredFooterLandscape: {
+    marginTop: 18,
+  },
+
   featuredFooterLabel: {
     color: "rgba(226,190,125,0.76)",
     letterSpacing: 0.45,
@@ -1352,6 +1501,11 @@ const styles = StyleSheet.create({
 
   sectionHeaderPremium: {
     marginTop: 38,
+  },
+
+  sectionHeaderLandscape: {
+    marginTop: 22,
+    marginBottom: 12,
   },
 
   sectionCopy: {
@@ -1431,6 +1585,10 @@ const styles = StyleSheet.create({
     boxShadow: "0px 10px 24px rgba(0,0,0,0.26)",
   },
 
+  collectionWrapLandscape: {
+    minHeight: 154,
+  },
+
   collectionWrapPremiumLocked: {
     borderColor: "rgba(253,224,71,0.18)",
     backgroundColor: "rgba(10,9,5,0.56)",
@@ -1454,6 +1612,11 @@ const styles = StyleSheet.create({
     position: "relative",
     overflow: "hidden",
     justifyContent: "flex-start",
+  },
+
+  collectionCardLandscape: {
+    minHeight: 154,
+    padding: 14,
   },
 
   collectionImage: {
@@ -1657,6 +1820,10 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
 
+  collectionCopyLandscape: {
+    marginTop: 13,
+  },
+
   collectionTitle: {
     color: TXT,
     textShadowColor: "rgba(0,0,0,0.65)",
@@ -1685,6 +1852,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+  },
+
+  collectionFooterLandscape: {
+    paddingTop: 12,
   },
 
   collectionFooterLine: {
