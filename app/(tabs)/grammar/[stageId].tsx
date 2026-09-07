@@ -189,6 +189,7 @@ export default function GrammarLessonScreen() {
   const completionRecorded = !!session && stageProgress?.completedSessionIds.includes(session.id);
   const streakRecorded = !!session && stageProgress?.streakSessionIds.includes(session.id);
   const theoryModalVisible =
+    isHydrated &&
     !premiumLocked &&
     access.canOpen &&
     (theoryEntryRequested ||
@@ -279,6 +280,15 @@ export default function GrammarLessonScreen() {
     stageProgress?.attempts,
     updateGrammarProgress,
   ]);
+
+  const closeTheory = React.useCallback(() => {
+    setDismissedTheoryStageId(stageId);
+    setRequestedTheoryStageId(undefined);
+    if (theoryEntryRequested) {
+      router.setParams({ theory: "closed" } as never);
+    }
+    if (!session) startPractice();
+  }, [session, stageId, startPractice, theoryEntryRequested]);
 
   const openStage = React.useCallback((nextStageId: GrammarStageId) => {
     const nextStage = GRAMMAR_STAGE_BY_ID[nextStageId];
@@ -413,21 +423,8 @@ export default function GrammarLessonScreen() {
         title={stage.title}
         communicativeGoal={stage.communicativeGoal}
         guide={lessonGuide}
-        onRequestClose={() => {
-          setDismissedTheoryStageId(stageId);
-          setRequestedTheoryStageId(undefined);
-          if (theoryEntryRequested) {
-            router.setParams({ theory: "closed" } as never);
-          }
-        }}
-        onAccessExercises={() => {
-          setDismissedTheoryStageId(stageId);
-          setRequestedTheoryStageId(undefined);
-          if (theoryEntryRequested) {
-            router.setParams({ theory: "closed" } as never);
-          }
-          if (!session) startPractice();
-        }}
+        onRequestClose={closeTheory}
+        onAccessExercises={closeTheory}
       >
         {!lessonGuide ? (
           <GrammarLessonTheory

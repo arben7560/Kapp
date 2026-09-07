@@ -83,6 +83,8 @@ test("grammar theory opens in a reusable modal and resumes without replacing its
   assert.match(lesson, /router\.setParams\(\{ theory: "closed" \}/u);
   assert.match(lesson, /!session && dismissedTheoryStageId !== stageId/u);
   assert.match(lesson, /onReviewExplanation=\{\(\) => setRequestedTheoryStageId\(stageId\)\}/u);
+  assert.match(lesson, /onRequestClose=\{closeTheory\}/u);
+  assert.match(lesson, /onAccessExercises=\{closeTheory\}/u);
   assert.match(lesson, /if \(!session\) startPractice\(\)/u);
   assert.match(lesson, /Revoir l’explication/u);
   assert.match(modal, /export function GrammarLessonGuideModal/u);

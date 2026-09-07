@@ -3,10 +3,12 @@ import { useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AccessibilityInfo,
+  Animated,
   ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -145,8 +147,12 @@ export default function ListenScreen() {
     requestedTraining,
     requestedExercise,
   );
+  const { height, width } = useWindowDimensions();
+  const isLandscape = width > height;
+  const isShortLandscape = isLandscape && height <= 430;
   const { complete, isHydrated, setTrack } = useStore();
   const scrollRef = useRef<ScrollView | null>(null);
+  const [scrollY] = useState(() => new Animated.Value(0));
   const validationLockRef = useRef(false);
   const dailyActivityPromiseRef = useRef<ReturnType<
     typeof completeDailyActivity
@@ -190,6 +196,35 @@ export default function ListenScreen() {
   const hasCompletedCurrentAudio = !!completedAudioIds[item.id];
   const isPlayingCurrentAudio = playingAudioId === item.id;
   const isLastExercise = exerciseIndex === exercises.length - 1;
+  const landscapeHeaderStyle = useMemo(() => {
+    if (!isLandscape) return undefined;
+
+    const collapseDistance = isShortLandscape ? 48 : 72;
+    const compactPadding = isShortLandscape ? 4 : 8;
+
+    return {
+      paddingTop: scrollY.interpolate({
+        inputRange: [0, collapseDistance],
+        outputRange: [35, compactPadding],
+        extrapolate: "clamp" as const,
+      }),
+      paddingBottom: scrollY.interpolate({
+        inputRange: [0, collapseDistance],
+        outputRange: [18, compactPadding],
+        extrapolate: "clamp" as const,
+      }),
+    };
+  }, [isLandscape, isShortLandscape, scrollY]);
+  const handleScroll = useMemo(
+    () =>
+      isLandscape
+        ? Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false },
+          )
+        : undefined,
+    [isLandscape, scrollY],
+  );
 
   useEffect(() => {
     const requestKey = `${requestedTraining ?? ""}:${requestedExercise ?? ""}`;
@@ -556,14 +591,16 @@ export default function ListenScreen() {
       <View style={styles.overlay} />
 
       <SafeAreaView style={styles.safe}>
-        <View style={styles.header}>
+        <Animated.View style={[styles.header, landscapeHeaderStyle]}>
           <AppBackButton />
-        </View>
+        </Animated.View>
 
-        <ScrollView
+        <Animated.ScrollView
           ref={scrollRef}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}
+          scrollEventThrottle={isLandscape ? 16 : undefined}
+          onScroll={handleScroll}
         >
           <View style={styles.modePill}>
             <Ionicons
@@ -983,7 +1020,7 @@ export default function ListenScreen() {
               validation.
             </AppText>
           </View>
-        </ScrollView>
+        </Animated.ScrollView>
       </SafeAreaView>
     </ImageBackground>
   );

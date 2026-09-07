@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -167,6 +167,23 @@ test("all 25 active exercises expose coherent answers and audio assets", () => {
       );
     }
   }
+});
+
+test("the shared Listen exercise header collapses only in landscape", () => {
+  const listenScreen = readFileSync(
+    resolve(projectRoot, "app/(tabs)/listen.tsx"),
+    "utf8",
+  );
+
+  assert.match(listenScreen, /const isLandscape = width > height/u);
+  assert.match(listenScreen, /const isShortLandscape = isLandscape && height <= 430/u);
+  assert.match(listenScreen, /const landscapeHeaderStyle = useMemo/u);
+  assert.match(listenScreen, /if \(!isLandscape\) return undefined/u);
+  assert.match(listenScreen, /<Animated\.View style=\{\[styles\.header, landscapeHeaderStyle\]\}>/u);
+  assert.match(listenScreen, /<Animated\.ScrollView/u);
+  assert.match(listenScreen, /scrollEventThrottle=\{isLandscape \? 16 : undefined\}/u);
+  assert.match(listenScreen, /onScroll=\{handleScroll\}/u);
+  assert.match(listenScreen, /useNativeDriver: false/u);
 });
 
 test("every situation and reaction has a non-empty Korean source text", () => {
