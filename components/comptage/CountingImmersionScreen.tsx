@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { useVocAudio } from "../../hooks/useVocAudio";
+import { VOC_DIALOGUE_COPY } from "../../hooks/useVocDialogue";
 import { saveHomeResumeContext } from "../../lib/homeResume";
 import { trackSceneCompleted } from "../../lib/immersionStreak";
 import { buildProgressId } from "../../lib/progressIds";
@@ -106,8 +107,13 @@ export default function CountingImmersionScreen({
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const tapHintPulse = useRef(new Animated.Value(0)).current;
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const advanceLockRef = useRef(false);
   const completedSceneIdsRef = useRef<Set<string>>(new Set());
   const preserveInitialPositionRef = useRef(Boolean(requestedScene));
+
+  useEffect(() => {
+    advanceLockRef.current = false;
+  }, [isTyping, visibleMessages]);
 
   useEffect(() => {
     fadeAnim.setValue(0);
@@ -189,7 +195,7 @@ export default function CountingImmersionScreen({
   };
 
   const advanceDialogue = () => {
-    if (isTyping) return;
+    if (isTyping || advanceLockRef.current) return;
 
     if (stopAudioOnDialogueChange) {
       stopAudio();
@@ -212,7 +218,10 @@ export default function CountingImmersionScreen({
     }
 
     const nextIndex = visibleMessages;
-    const shouldType = activeScene.dialogue[nextIndex]?.char !== "Moi";
+    const nextMessage = activeScene.dialogue[nextIndex];
+    const nextMessageId = `${activeScene.id}-dialogue-${nextIndex}`;
+    const shouldType = nextMessage.char !== "Moi";
+    advanceLockRef.current = true;
 
     Vibration.vibrate(8);
 
@@ -225,6 +234,7 @@ export default function CountingImmersionScreen({
         setVisibleMessages((prev) =>
           Math.min(prev + 1, activeScene.dialogue.length),
         );
+        void playAudio(nextMessage.audio, nextMessageId);
       }, delay);
 
       return;
@@ -233,6 +243,7 @@ export default function CountingImmersionScreen({
     setVisibleMessages((prev) =>
       Math.min(prev + 1, activeScene.dialogue.length),
     );
+    void playAudio(nextMessage.audio, nextMessageId);
   };
 
   const shouldHighlightHint =
@@ -410,7 +421,7 @@ export default function CountingImmersionScreen({
                   variant="sectionLabel"
                   tone="soft"
                   align="center"
-                  lineContract="twoLines"
+                  lineContract="fluid"
                   style={[
                     styles.tapHint,
                     shouldHighlightHint && {
@@ -431,10 +442,10 @@ export default function CountingImmersionScreen({
                   ]}
                 >
                   {visibleMessages >= activeScene.dialogue.length
-                    ? "Toucher pour recommencer l’étape"
+                    ? VOC_DIALOGUE_COPY.restart
                     : isTyping
-                      ? "Réponse en cours..."
-                      : "Toucher pour continuer"}
+                      ? VOC_DIALOGUE_COPY.typing
+                      : VOC_DIALOGUE_COPY.continue}
                 </AnimatedAppText>
               </Pressable>
             </BlurView>

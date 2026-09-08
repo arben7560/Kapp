@@ -626,6 +626,7 @@ export default function FirstStepsImmersion() {
                 <Pressable onPress={advanceDialogue} disabled={isTyping}>
                   <AnimatedAppText
                     variant="caption"
+                    lineContract="fluid"
                     style={[
                       styles.tapHint,
                       shouldHighlightHint && {

@@ -333,6 +333,11 @@ export default function RomanceDating() {
   const [bgFadeAnim] = useState(() => new Animated.Value(0));
   const [tapHintPulse] = useState(() => new Animated.Value(0));
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const advanceLockRef = useRef(false);
+
+  useEffect(() => {
+    advanceLockRef.current = false;
+  }, [isTyping, visibleMessages]);
 
   useEffect(() => {
     fadeAnim.setValue(0);
@@ -384,7 +389,7 @@ export default function RomanceDating() {
   }, [tapHintPulse, stopAudio]);
 
   const advanceDialogue = () => {
-    if (isTyping) return;
+    if (isTyping || advanceLockRef.current) return;
 
     if (visibleMessages >= activeScene.dialogue.length) {
       Vibration.vibrate(8);
@@ -394,6 +399,8 @@ export default function RomanceDating() {
     }
 
     const nextMessage = activeScene.dialogue[visibleMessages];
+    const nextMessageId = `${activeScene.id}-dialogue-${visibleMessages}`;
+    advanceLockRef.current = true;
 
     Vibration.vibrate(8);
 
@@ -407,6 +414,7 @@ export default function RomanceDating() {
         setVisibleMessages((prev) =>
           Math.min(prev + 1, activeScene.dialogue.length),
         );
+        void playAudio(nextMessage.audio, nextMessageId);
       }, delay);
 
       return;
@@ -415,6 +423,7 @@ export default function RomanceDating() {
     setVisibleMessages((prev) =>
       Math.min(prev + 1, activeScene.dialogue.length),
     );
+    void playAudio(nextMessage.audio, nextMessageId);
   };
 
   const handleSceneChange = (scene: (typeof SCENES)[number]) => {
@@ -618,7 +627,7 @@ export default function RomanceDating() {
                   </View>
                 )}
 
-                <AnimatedAppText variant="caption"
+                <AnimatedAppText variant="caption" lineContract="fluid"
                   style={[
                     styles.tapHint,
                     shouldHighlightHint && {

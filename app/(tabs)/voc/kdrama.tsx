@@ -353,6 +353,11 @@ export default function KDramaCulture() {
   const bgFadeAnim = useRef(new Animated.Value(0)).current;
   const tapHintPulse = useRef(new Animated.Value(0)).current;
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const advanceLockRef = useRef(false);
+
+  useEffect(() => {
+    advanceLockRef.current = false;
+  }, [isTyping, visibleMessages]);
 
   useEffect(() => {
     setVisibleMessages(1);
@@ -409,7 +414,7 @@ export default function KDramaCulture() {
     !isTyping && visibleMessages < activeScene.dialogue.length;
 
   const advanceDialogue = () => {
-    if (isTyping) return;
+    if (isTyping || advanceLockRef.current) return;
 
     if (visibleMessages >= activeScene.dialogue.length) {
       Vibration.vibrate(8);
@@ -419,6 +424,8 @@ export default function KDramaCulture() {
     }
 
     const nextMessage = activeScene.dialogue[visibleMessages];
+    const nextMessageId = `${activeScene.id}-dialogue-${visibleMessages}`;
+    advanceLockRef.current = true;
 
     Vibration.vibrate(8);
 
@@ -432,6 +439,7 @@ export default function KDramaCulture() {
         setVisibleMessages((prev) =>
           Math.min(prev + 1, activeScene.dialogue.length),
         );
+        void playAudio(nextMessage.audio, nextMessageId);
       }, delay);
 
       return;
@@ -440,6 +448,7 @@ export default function KDramaCulture() {
     setVisibleMessages((prev) =>
       Math.min(prev + 1, activeScene.dialogue.length),
     );
+    void playAudio(nextMessage.audio, nextMessageId);
   };
 
   const handleSceneChange = (scene: (typeof SCENES)[number]) => {
@@ -666,6 +675,7 @@ export default function KDramaCulture() {
 
                 <AnimatedAppText
                   variant="caption"
+                  lineContract="fluid"
                   style={[
                     styles.tapHint,
                     shouldHighlightHint && {

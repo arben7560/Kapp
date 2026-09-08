@@ -650,7 +650,7 @@ export default function TransportCity() {
                 )}
 
                 <Pressable onPress={advanceDialogue} disabled={isTyping}>
-                  <AnimatedAppText variant="caption"
+                  <AnimatedAppText variant="caption" lineContract="fluid"
                     style={[
                       styles.tapHint,
                       shouldHighlightHint && {

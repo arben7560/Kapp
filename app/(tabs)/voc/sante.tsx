@@ -1,7 +1,6 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { AppBackButton } from "../../../components/ui/app-back-button";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -14,9 +13,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AnimatedAppText, AppText } from "../../../components/app-text";
+import { AppBackButton } from "../../../components/ui/app-back-button";
+import {
+  ABSOLUTE_FILL,
+  RESPONSIVE_AUDIO_COPY_MIN_WIDTH,
+} from "../../../constants/layout";
 import { useVocAudio } from "../../../hooks/useVocAudio";
 import { VOC_DIALOGUE_COPY } from "../../../hooks/useVocDialogue";
-import { ABSOLUTE_FILL, RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../../constants/layout";
 
 const COLORS = {
   bg: "#020306",
@@ -309,6 +312,11 @@ export default function HealthEmergency() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const tapHintPulse = useRef(new Animated.Value(0)).current;
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const advanceLockRef = useRef(false);
+
+  useEffect(() => {
+    advanceLockRef.current = false;
+  }, [isTyping, visibleMessages]);
 
   useEffect(() => {
     stopAudio();
@@ -362,7 +370,7 @@ export default function HealthEmergency() {
   }, [tapHintPulse, stopAudio]);
 
   const advanceDialogue = () => {
-    if (isTyping) return;
+    if (isTyping || advanceLockRef.current) return;
 
     if (visibleMessages >= activeScene.dialogue.length) {
       Vibration.vibrate(8);
@@ -372,6 +380,8 @@ export default function HealthEmergency() {
     }
 
     const nextMessage = activeScene.dialogue[visibleMessages];
+    const nextMessageId = `${activeScene.id}-dialogue-${visibleMessages}`;
+    advanceLockRef.current = true;
 
     Vibration.vibrate(8);
 
@@ -385,6 +395,7 @@ export default function HealthEmergency() {
         setVisibleMessages((prev) =>
           Math.min(prev + 1, activeScene.dialogue.length),
         );
+        void playAudio(nextMessage.audio, nextMessageId);
       }, delay);
 
       return;
@@ -393,6 +404,7 @@ export default function HealthEmergency() {
     setVisibleMessages((prev) =>
       Math.min(prev + 1, activeScene.dialogue.length),
     );
+    void playAudio(nextMessage.audio, nextMessageId);
   };
 
   const shouldHighlightHint =
@@ -402,11 +414,7 @@ export default function HealthEmergency() {
     <SafeAreaView style={styles.container}>
       <ImageBackground source={activeScene.image} style={styles.bg}>
         <LinearGradient
-          colors={[
-            "rgba(2,3,6,0.34)",
-            "rgba(2,3,6,0.64)",
-            "rgba(2,3,6,0.93)",
-          ]}
+          colors={["rgba(2,3,6,0.34)", "rgba(2,3,6,0.64)", "rgba(2,3,6,0.93)"]}
           locations={[0, 0.48, 1]}
           style={styles.overlay}
           pointerEvents="none"
@@ -419,7 +427,9 @@ export default function HealthEmergency() {
           <View style={styles.topNav}>
             <AppBackButton />
             <View style={styles.navTitleWrap}>
-              <AppText variant="cardTitle" style={styles.navTitle}>Urgences et santé</AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>
+                Urgences et santé
+              </AppText>
             </View>
           </View>
 
@@ -436,7 +446,9 @@ export default function HealthEmergency() {
                   },
                 ]}
               >
-                <AppText variant="label" lineContract="singleLine"
+                <AppText
+                  variant="label"
+                  lineContract="singleLine"
                   style={[
                     styles.tabText,
                     activeScene.id === scene.id && {
@@ -465,7 +477,11 @@ export default function HealthEmergency() {
           >
             <BlurView intensity={45} tint="dark" style={styles.medicalCard}>
               <LinearGradient
-                colors={[`${activeScene.accent}28`, "rgba(4,8,18,0.18)", "transparent"]}
+                colors={[
+                  `${activeScene.accent}28`,
+                  "rgba(4,8,18,0.18)",
+                  "transparent",
+                ]}
                 style={ABSOLUTE_FILL}
               />
 
@@ -486,8 +502,16 @@ export default function HealthEmergency() {
                 </AppText>
               </View>
 
-              <AppText accessibilityRole="header" variant="sceneTitle" style={styles.sceneTitle}>{activeScene.title}</AppText>
-              <AppText variant="body" style={styles.sceneDesc}>{activeScene.description}</AppText>
+              <AppText
+                accessibilityRole="header"
+                variant="sceneTitle"
+                style={styles.sceneTitle}
+              >
+                {activeScene.title}
+              </AppText>
+              <AppText variant="body" style={styles.sceneDesc}>
+                {activeScene.description}
+              </AppText>
 
               <Pressable onPress={advanceDialogue} style={styles.dialogueArea}>
                 {activeScene.dialogue
@@ -518,7 +542,8 @@ export default function HealthEmergency() {
                             { backgroundColor: `${activeScene.accent}20` },
                           ]}
                         >
-                          <AppText variant="label"
+                          <AppText
+                            variant="label"
                             style={[
                               styles.roleText,
                               { color: activeScene.accent },
@@ -528,8 +553,20 @@ export default function HealthEmergency() {
                           </AppText>
                         </View>
 
-                        <AppText variant="koreanSecondary" script="korean" style={styles.krDialogue}>{item.kr}</AppText>
-                        <AppText variant="bodySecondary" tone="muted" style={styles.frDialogue}>{item.fr}</AppText>
+                        <AppText
+                          variant="koreanSecondary"
+                          script="korean"
+                          style={styles.krDialogue}
+                        >
+                          {item.kr}
+                        </AppText>
+                        <AppText
+                          variant="bodySecondary"
+                          tone="muted"
+                          style={styles.frDialogue}
+                        >
+                          {item.fr}
+                        </AppText>
                       </Pressable>
                     );
                   })}
@@ -548,7 +585,8 @@ export default function HealthEmergency() {
                         { backgroundColor: `${activeScene.accent}20` },
                       ]}
                     >
-                      <AppText variant="label"
+                      <AppText
+                        variant="label"
                         style={[styles.roleText, { color: activeScene.accent }]}
                       >
                         {activeScene.dialogue[visibleMessages]?.char}
@@ -578,7 +616,9 @@ export default function HealthEmergency() {
                   </View>
                 )}
 
-                <AnimatedAppText variant="caption"
+                <AnimatedAppText
+                  variant="caption"
+                  lineContract="fluid"
                   style={[
                     styles.tapHint,
                     shouldHighlightHint && {
@@ -598,11 +638,11 @@ export default function HealthEmergency() {
                     },
                   ]}
                 >
-                    {visibleMessages >= activeScene.dialogue.length
-                      ? VOC_DIALOGUE_COPY.restart
-                      : isTyping
-                        ? VOC_DIALOGUE_COPY.typing
-                        : VOC_DIALOGUE_COPY.continue}
+                  {visibleMessages >= activeScene.dialogue.length
+                    ? VOC_DIALOGUE_COPY.restart
+                    : isTyping
+                      ? VOC_DIALOGUE_COPY.typing
+                      : VOC_DIALOGUE_COPY.continue}
                 </AnimatedAppText>
               </Pressable>
             </BlurView>
@@ -610,7 +650,9 @@ export default function HealthEmergency() {
 
           <View style={styles.toolbox}>
             <View style={styles.toolboxTitleBox}>
-              <AppText variant="sectionTitle" style={styles.toolboxTitle}>Expressions clés</AppText>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>
+                Expressions clés
+              </AppText>
               <View
                 style={[
                   styles.toolboxLine,
@@ -652,9 +694,21 @@ export default function HealthEmergency() {
                       />
                       <View style={styles.expContent}>
                         <View style={styles.expTopRow}>
-                          <View style={{ flex: 1, minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH }}>
-                            <AppText variant="koreanPrimary" script="korean" style={styles.expKr}>{exp.word}</AppText>
-                            <AppText variant="caption"
+                          <View
+                            style={{
+                              flex: 1,
+                              minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH,
+                            }}
+                          >
+                            <AppText
+                              variant="koreanPrimary"
+                              script="korean"
+                              style={styles.expKr}
+                            >
+                              {exp.word}
+                            </AppText>
+                            <AppText
+                              variant="caption"
                               style={[
                                 styles.expRom,
                                 { color: activeScene.accent },
@@ -672,7 +726,9 @@ export default function HealthEmergency() {
                               },
                             ]}
                           >
-                            <AppText variant="caption" lineContract="singleLine"
+                            <AppText
+                              variant="caption"
+                              lineContract="singleLine"
                               style={[
                                 styles.listenIcon,
                                 { color: activeScene.accent },
@@ -680,11 +736,25 @@ export default function HealthEmergency() {
                             >
                               {isActive ? "●" : "▶"}
                             </AppText>
-                            <AppText variant="label" lineContract="singleLine" style={styles.listenText}>ÉCOUTER</AppText>
+                            <AppText
+                              variant="label"
+                              lineContract="singleLine"
+                              style={styles.listenText}
+                            >
+                              ÉCOUTER
+                            </AppText>
                           </View>
                         </View>
-                        <AppText variant="bodyStrong" style={styles.expMean}>{exp.mean}</AppText>
-                        <AppText variant="bodySecondary" tone="muted" style={styles.expCtx}>{exp.context}</AppText>
+                        <AppText variant="bodyStrong" style={styles.expMean}>
+                          {exp.mean}
+                        </AppText>
+                        <AppText
+                          variant="bodySecondary"
+                          tone="muted"
+                          style={styles.expCtx}
+                        >
+                          {exp.context}
+                        </AppText>
                       </View>
                     </BlurView>
                   </Pressable>
@@ -727,8 +797,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.15)",
   },
   backArrow: { color: "#fff", marginTop: -2 },
-  navEyebrow: {
-  },
+  navEyebrow: {},
   navTitleWrap: {
     flex: 1,
     alignItems: "center",
@@ -836,8 +905,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     marginBottom: 8,
   },
-  roleText: {
-  },
+  roleText: {},
   krDialogue: {
     color: COLORS.txt,
     marginBottom: 4,
@@ -918,13 +986,12 @@ const styles = StyleSheet.create({
     color: COLORS.txt,
     marginBottom: 2,
   },
-  expRom: {
-  },
+  expRom: {},
   expMean: {
     color: COLORS.txt,
     marginBottom: 4,
   },
-  expCtx: { color: COLORS.muted},
+  expCtx: { color: COLORS.muted },
   listenPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -934,8 +1001,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     paddingVertical: 7,
   },
-  listenIcon: {
-  },
+  listenIcon: {},
   listenText: {
     color: "rgba(255,255,255,0.84)",
   },

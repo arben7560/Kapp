@@ -433,6 +433,11 @@ export default function BusinessImmersion() {
   const bgFadeAnim = useRef(new Animated.Value(0)).current;
   const tapHintPulse = useRef(new Animated.Value(0)).current;
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const advanceLockRef = useRef(false);
+
+  useEffect(() => {
+    advanceLockRef.current = false;
+  }, [isTyping, visibleMessages]);
 
   useEffect(() => {
     fadeAnim.setValue(0);
@@ -505,7 +510,7 @@ export default function BusinessImmersion() {
   };
 
   const advanceDialogue = () => {
-    if (isTyping) return;
+    if (isTyping || advanceLockRef.current) return;
 
     if (visibleMessages >= activeScene.dialogue.length) {
       Vibration.vibrate(8);
@@ -515,6 +520,8 @@ export default function BusinessImmersion() {
     }
 
     const nextMessage = activeScene.dialogue[visibleMessages];
+    const nextMessageId = `${activeScene.id}-dialogue-${visibleMessages}`;
+    advanceLockRef.current = true;
 
     Vibration.vibrate(8);
 
@@ -528,6 +535,7 @@ export default function BusinessImmersion() {
         setVisibleMessages((prev) =>
           Math.min(prev + 1, activeScene.dialogue.length),
         );
+        void playAudio(nextMessage.audio, nextMessageId);
       }, delay);
 
       return;
@@ -536,6 +544,7 @@ export default function BusinessImmersion() {
     setVisibleMessages((prev) =>
       Math.min(prev + 1, activeScene.dialogue.length),
     );
+    void playAudio(nextMessage.audio, nextMessageId);
   };
 
   const shouldHighlightHint =
@@ -712,7 +721,7 @@ export default function BusinessImmersion() {
                   </View>
                 )}
 
-                <AnimatedAppText variant="caption"
+                <AnimatedAppText variant="caption" lineContract="fluid"
                   style={[
                     styles.tapHint,
                     shouldHighlightHint && {

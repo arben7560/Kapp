@@ -709,6 +709,7 @@ export default function GastronomyImmersion() {
                 <Pressable onPress={advanceDialogue} disabled={isTyping}>
                   <AnimatedAppText
                     variant="caption"
+                    lineContract="fluid"
                     style={[
                       styles.tapHint,
                       shouldHighlightHint && {

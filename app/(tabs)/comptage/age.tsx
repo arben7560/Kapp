@@ -243,22 +243,22 @@ const SCENES = withSceneAudio(
         "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=80",
       dialogue: [
         {
-          char: "Ami",
+          char: "Minji",
           kr: "드디어 만 열아홉 살이네! 성인이 된 걸 축하해!",
           fr: "Enfin 19 ans révolus ! Félicitations pour ta majorité !",
         },
         {
-          char: "Moi",
+          char: "Seo-jun",
           kr: "고마워! 술은 이미 올해 1월 1일부터 살 수 있었어.",
           fr: "Merci ! Je pouvais déjà acheter de l'alcool depuis le 1er janvier de cette année.",
         },
         {
-          char: "Ami",
+          char: "Minji",
           kr: "그래도 천천히 마셔. 오늘은 특별한 날이야.",
           fr: "Bois quand même doucement. Aujourd'hui est un jour spécial.",
         },
         {
-          char: "Moi",
+          char: "Seo-jun",
           kr: "알겠어. 성년이 되는 날과 술을 살 수 있는 기준은 다르구나.",
           fr: "Compris. La majorité civile et la règle applicable à l'achat d'alcool ne suivent donc pas la même date.",
         },

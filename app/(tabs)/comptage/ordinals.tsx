@@ -174,22 +174,22 @@ const SCENES = withSceneAudio(
         "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=800&q=80",
       dialogue: [
         {
-          char: "Ami",
+          char: "Minji",
           kr: "형제가 어떻게 되세요?",
           fr: "Comment est composée votre fratrie ?",
         },
         {
-          char: "Moi",
+          char: "Seo-jun",
           kr: "저는 첫째 아들이고, 둘째는 여동생이에요.",
           fr: "Je suis le premier fils (cheot-jjae), et la deuxième est ma sœur cadette.",
         },
         {
-          char: "Ami",
+          char: "Minji",
           kr: "그럼 막내는 누구예요?",
           fr: "Alors, qui est le petit dernier ?",
         },
         {
-          char: "Moi",
+          char: "Seo-jun",
           kr: "셋째 남동생이 막내예요.",
           fr: "Mon troisième petit frère est le benjamin.",
         },

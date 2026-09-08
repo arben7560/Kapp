@@ -37,7 +37,7 @@ export function useVocDialogue<Message extends VocDialogueMessage>({
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const shouldAutoPlayNextMessageRef = useRef(false);
+  const advanceLockRef = useRef(false);
 
   const clearTypingTimer = useCallback(() => {
     if (typingTimer.current) {
@@ -48,31 +48,19 @@ export function useVocDialogue<Message extends VocDialogueMessage>({
 
   const resetDialogue = useCallback(() => {
     clearTypingTimer();
-    shouldAutoPlayNextMessageRef.current = false;
+    advanceLockRef.current = false;
     setVisibleMessages(1);
     setIsTyping(false);
   }, [clearTypingTimer]);
 
   useEffect(() => {
-    if (!shouldAutoPlayNextMessageRef.current || isTyping) return;
-
-    shouldAutoPlayNextMessageRef.current = false;
-
-    const currentMessageIndex = visibleMessages - 1;
-    const currentMessage = messages[currentMessageIndex];
-
-    if (!currentMessage) return;
-
-    playAudio(
-      currentMessage.audio,
-      `${sceneId}-dialogue-${currentMessageIndex}`,
-    );
-  }, [isTyping, messages, playAudio, sceneId, visibleMessages]);
+    advanceLockRef.current = false;
+  }, [isTyping, visibleMessages]);
 
   useEffect(() => clearTypingTimer, [clearTypingTimer]);
 
   const advanceDialogue = useCallback(() => {
-    if (isTyping) return;
+    if (isTyping || advanceLockRef.current) return;
 
     Vibration.vibrate(8);
 
@@ -84,7 +72,8 @@ export function useVocDialogue<Message extends VocDialogueMessage>({
     }
 
     const nextMessage = messages[visibleMessages];
-    shouldAutoPlayNextMessageRef.current = true;
+    const nextMessageId = `${sceneId}-dialogue-${visibleMessages}`;
+    advanceLockRef.current = true;
 
     if (nextMessage.side === "server") {
       setIsTyping(true);
@@ -92,15 +81,19 @@ export function useVocDialogue<Message extends VocDialogueMessage>({
       typingTimer.current = setTimeout(() => {
         setIsTyping(false);
         setVisibleMessages((current) => Math.min(current + 1, messages.length));
+        playAudio(nextMessage.audio, nextMessageId);
       }, 600 + Math.floor(Math.random() * 301));
       return;
     }
 
     setVisibleMessages((current) => Math.min(current + 1, messages.length));
+    playAudio(nextMessage.audio, nextMessageId);
   }, [
     isTyping,
     messages,
+    playAudio,
     resetDialogue,
+    sceneId,
     setSelectedAudio,
     stopAudio,
     visibleMessages,
