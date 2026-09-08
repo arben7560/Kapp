@@ -655,6 +655,7 @@ export default function NightlifeImmersion() {
 
                 <AnimatedAppText
                   variant="caption"
+                  align="center"
                   lineContract="fluid"
                   style={[
                     styles.tapHint,
@@ -982,7 +983,9 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   tapHint: {
-    alignSelf: "center",
+    alignSelf: "stretch",
+    flexShrink: 1,
+    paddingHorizontal: 8,
     color: "rgba(255,255,255,0.48)",
     marginTop: 8,
   },

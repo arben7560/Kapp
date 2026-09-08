@@ -652,7 +652,9 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   tapHint: {
-    alignSelf: "center",
+    alignSelf: "stretch",
+    flexShrink: 1,
+    paddingHorizontal: 8,
     marginTop: 4,
   },
 

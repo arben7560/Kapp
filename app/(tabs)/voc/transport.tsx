@@ -650,7 +650,10 @@ export default function TransportCity() {
                 )}
 
                 <Pressable onPress={advanceDialogue} disabled={isTyping}>
-                  <AnimatedAppText variant="caption" lineContract="fluid"
+                  <AnimatedAppText
+                    variant="caption"
+                    align="center"
+                    lineContract="fluid"
                     style={[
                       styles.tapHint,
                       shouldHighlightHint && {
@@ -960,7 +963,9 @@ const styles = StyleSheet.create({
   },
 
   tapHint: {
-    alignSelf: "center",
+    alignSelf: "stretch",
+    flexShrink: 1,
+    paddingHorizontal: 8,
     color: "rgba(255,255,255,0.48)",
     marginTop: 8,
   },

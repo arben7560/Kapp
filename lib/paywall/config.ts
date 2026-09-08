@@ -1,5 +1,5 @@
-// Preserve the development default while allowing locked-state QA against the
-// same native build and route graph.
+// Premium bypasses are opt-in: local development uses DEV_UNLOCK_ALL, while a
+// dedicated EAS test profile can grant internal access in a release build.
 const IS_DEVELOPMENT =
   typeof __DEV__ === "boolean"
     ? __DEV__
@@ -11,8 +11,8 @@ export function isDeveloperPremiumUnlockEnabled(
   internalAccessValue: string | undefined,
 ) {
   return (
-    isDevelopment &&
-    (devUnlockValue !== "0" || internalAccessValue === "1")
+    (isDevelopment && devUnlockValue === "1") ||
+    internalAccessValue === "1"
   );
 }
 

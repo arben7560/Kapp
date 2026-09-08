@@ -170,17 +170,34 @@ test("les fallbacks tarifaires de référence correspondent à la nouvelle offre
   assert.equal(PREMIUM_PRICE_FALLBACKS.yearly, "69,99 € / an");
 });
 
-test("aucun accès interne ne peut déverrouiller Premium en production", () => {
-  assert.equal(isDeveloperPremiumUnlockEnabled(false, "1", "1"), false);
+test("les bypass Premium sont explicites et fonctionnent pour le profil test release", () => {
+  assert.equal(isDeveloperPremiumUnlockEnabled(false, "1", "1"), true);
+  assert.equal(isDeveloperPremiumUnlockEnabled(false, "1", "0"), false);
   assert.equal(isDeveloperPremiumUnlockEnabled(true, "1", "0"), true);
+  assert.equal(isDeveloperPremiumUnlockEnabled(true, "false", "0"), false);
+  assert.equal(isDeveloperPremiumUnlockEnabled(true, undefined, "0"), false);
   assert.equal(isDeveloperPremiumUnlockEnabled(true, "0", "1"), true);
 
   const eas = JSON.parse(readFileSync(new URL("../eas.json", import.meta.url)));
+  assert.equal(eas.build.closedTest.env.EXPO_PUBLIC_DEV_UNLOCK_ALL, "0");
+  assert.equal(
+    eas.build.closedTest.env.EXPO_PUBLIC_INTERNAL_PREMIUM_ACCESS,
+    "1",
+  );
+  assert.equal(eas.build.closedTest.env.EXPO_PUBLIC_ENABLE_NATIVE_IAP, "0");
+  assert.equal(eas.build.production.env.EXPO_PUBLIC_DEV_UNLOCK_ALL, "0");
   assert.equal(
     eas.build.production.env.EXPO_PUBLIC_INTERNAL_PREMIUM_ACCESS,
     "0",
   );
   assert.equal(eas.build.production.env.EXPO_PUBLIC_ENABLE_NATIVE_IAP, "1");
+
+  const envExample = readFileSync(
+    new URL("../.env.example", import.meta.url),
+    "utf8",
+  );
+  assert.match(envExample, /^EXPO_PUBLIC_DEV_UNLOCK_ALL=0$/mu);
+  assert.match(envExample, /^EXPO_PUBLIC_INTERNAL_PREMIUM_ACCESS=0$/mu);
 });
 
 test("les routes Premium déclarées sont bloquées sans inclure les contenus gratuits", () => {
