@@ -158,10 +158,14 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       instruction: "Écoute l'annonce et choisis quoi faire.",
       audioAsset: "assets/audio/listen/ibeon-yeogeun-hongdaeipguyeogimnida.mp3",
       sourceText: "이번 역은 홍대입구역입니다.",
-      options: ["여기서 내려요.", "2호선으로 갈아타요.", "다음 역에서 내려요."],
+      options: [
+        "아, 홍대입구역이네요.",
+        "다음 역이 홍대입구역이네요.",
+        "홍대입구역에 가려면 2호선으로 갈아타야 해요.",
+      ],
       answer: 0,
       explanation:
-        "L'annonce dit que la station actuelle est 홍대입구역. Si c'est ton arrêt, c'est donc ici que tu descends.",
+        "이번 역은 홍대입구역입니다 signifie « Cette station est la station Hongdae-ipgu ». La bonne réponse confirme donc que vous êtes arrivé à 홍대입구역. Les autres choix parlent de la station suivante ou d'une correspondance, ce que l'annonce ne dit pas.",
     },
     {
       id: "shop-situation-04",
@@ -270,11 +274,11 @@ export const EXERCISES_BY_KIND: Record<ExerciseKind, ListenExercise[]> = {
       theme: "Métro",
       title: "Remets en ordre",
       instruction: "Écoute, puis reconstruis la phrase.",
-      audioAsset: "assets/audio/listen/jjuk-ijjogeuro-gaseyo.mp3",
+      audioAsset: "assets/audio/listen/ijjogeuro-jjuk-gaseyo.mp3",
       words: ["가세요", "이쪽으로", "쭉"],
-      answer: ["쭉", "이쪽으로", "가세요"],
+      answer: ["이쪽으로", "쭉", "가세요"],
       explanation:
-        "Tu entends 쭉 이쪽으로 가세요 : « Continuez tout droit par ici. » Garde cet ordre quand tu reconstruis la phrase.",
+        "Tu entends 이쪽으로 쭉 가세요 : « Continuez tout droit par ici. » Garde cet ordre quand tu reconstruis la phrase.",
     },
     {
       id: "cafe-order-02",

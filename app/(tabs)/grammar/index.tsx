@@ -245,6 +245,13 @@ export default function GrammarHubScreen() {
               />
             </AnimatedFragment>
 
+            <AnimatedFragment index={1}>
+              <GrammarStartingPointCard
+                landscape={isLandscape}
+                onPress={() => openStage("present-actions", true)}
+              />
+            </AnimatedFragment>
+
             {GRAMMAR_CHAPTERS.map((chapter, chapterIndex) => (
               <View key={chapter.id}>
                 <GrammarSectionHeader
@@ -541,6 +548,56 @@ function FeaturedGrammarCard({
           <AppText variant="caption" style={styles.progressText}>
             {Math.round(completion * 100)}%
           </AppText>
+        </View>
+      </LinearGradient>
+    </Pressable>
+  );
+}
+
+function GrammarStartingPointCard({
+  landscape,
+  onPress,
+}: {
+  landscape: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Commencer par une phrase simple"
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.startingPointWrap,
+        landscape && styles.startingPointWrapLandscape,
+        pressed && styles.pressablePressed,
+      ]}
+    >
+      <LinearGradient
+        colors={["rgba(119,114,170,0.18)", "rgba(7,7,16,0.76)"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[
+          styles.startingPointCard,
+          landscape && styles.startingPointCardLandscape,
+        ]}
+      >
+        <View style={styles.startingPointIcon}>
+          <Sparkles size={16} strokeWidth={2} color={GRAMMAR_LIGHT} />
+        </View>
+        <View style={styles.startingPointCopy}>
+          <AppText variant="sectionLabel" style={styles.startingPointKicker}>
+            POUR BIEN COMMENCER
+          </AppText>
+          <AppText variant="cardTitle" style={styles.startingPointTitle}>
+            Commencer par une phrase simple
+          </AppText>
+          <AppText variant="bodySecondary" style={styles.startingPointSubtitle}>
+            Avant d’étudier la grammaire, découvre d’abord la structure de la
+            phrase coréenne.
+          </AppText>
+        </View>
+        <View style={styles.startingPointArrow}>
+          <ChevronRight size={17} color={GRAMMAR_LIGHT} />
         </View>
       </LinearGradient>
     </Pressable>
@@ -935,6 +992,52 @@ const styles = StyleSheet.create({
     minWidth: 34,
     color: "rgba(217,214,243,0.90)",
     textAlign: "right",
+  },
+
+  startingPointWrap: {
+    marginTop: 10,
+    marginBottom: 2,
+    borderRadius: 22,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(184,180,226,0.24)",
+    backgroundColor: "transparent",
+  },
+  startingPointWrapLandscape: { marginTop: 8 },
+  startingPointCard: {
+    minHeight: 96,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 13,
+  },
+  startingPointCardLandscape: { minHeight: 82, paddingVertical: 13 },
+  startingPointIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(184,180,226,0.30)",
+    backgroundColor: "rgba(12,10,22,0.50)",
+  },
+  startingPointCopy: { flex: 1, minWidth: 0 },
+  startingPointKicker: {
+    color: "rgba(184,180,226,0.72)",
+    letterSpacing: 0.9,
+  },
+  startingPointTitle: { color: TXT, marginTop: 5 },
+  startingPointSubtitle: { color: MUTED, marginTop: 3 },
+  startingPointArrow: {
+    width: 31,
+    height: 31,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(119,114,170,0.30)",
+    backgroundColor: "rgba(12,10,22,0.48)",
   },
 
   sectionHeader: {

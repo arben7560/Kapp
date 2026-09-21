@@ -61,7 +61,7 @@ const LISTEN_AUDIO_BY_ID: Partial<Record<string, number>> = {
   "shop-gap-03": require("../../assets/audio/listen/kadeuro-gyesanhalgeyo.mp3"),
   "metro-gap-04": require("../../assets/audio/listen/hongdaeipgueseo-naeryeoyo.mp3"),
   "hotel-gap-05": require("../../assets/audio/listen/yeyakhaesseoyo-2.mp3"),
-  "metro-order-01": require("../../assets/audio/listen/jjuk-ijjogeuro-gaseyo.mp3"),
+  "metro-order-01": require("../../assets/audio/listen/ijjogeuro-jjuk-gaseyo.mp3"),
   "cafe-order-02": require("../../assets/audio/listen/aiseu-amerikano-juseyo-2.mp3"),
   "shop-order-03": require("../../assets/audio/listen/igeo-eolmayeyo.mp3"),
   "restaurant-order-04": require("../../assets/audio/listen/mul-jom-juseyo.mp3"),

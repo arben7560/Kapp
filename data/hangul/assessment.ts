@@ -106,12 +106,12 @@ export const HANGUL_ASSESSMENT_QUESTIONS: HangulQuestion[] = [
   {
     id: "assessment-final-guk",
     type: "batchim",
-    prompt: "Quel son final ferme 국 ?",
-    display: "국",
+    prompt: "Écoute puis choisis le son final.",
+    audio: "각",
     options: [o("ㄱ"), o("ㄴ"), o("ㅇ")],
     answer: "ㄱ",
-    explanation: "국 se ferme avec ㄱ. Ici, la graphie écrite appartient directement à la même famille de son final ㄱ.",
-    characters: ["ㄱ", "ㅜ"],
+    explanation: "Dans 각, tu entends la réalisation finale ㄱ.",
+    characters: ["ㄱ", "ㅏ", "ㄱ"],
   },
   {
     id: "assessment-link-jibe",

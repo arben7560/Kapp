@@ -34,14 +34,23 @@ const projectRoot = fileURLToPath(new URL("..", import.meta.url));
 const FIRST_STAGE = "sentence-structure";
 const SECOND_STAGE = "identify-with-copula";
 
-test("the foundations chapter has complete mini-lessons without filling later chapters", () => {
-  const foundationStageIds = GRAMMAR_STAGE_IDS.filter(
-    (stageId) => GRAMMAR_STAGE_BY_ID[stageId].chapterId === "foundations",
+test("the six grammar chapters have complete mini-lessons", () => {
+  const coveredChapterStageIds = GRAMMAR_STAGE_IDS.filter(
+    (stageId) => [
+      "foundations",
+      "build-a-sentence",
+      "daily-actions",
+      "express-needs",
+      "time-and-linking",
+      "a1-validation",
+    ].includes(
+      GRAMMAR_STAGE_BY_ID[stageId].chapterId,
+    ),
   );
 
-  assert.deepEqual(Object.keys(GRAMMAR_LESSON_GUIDES), foundationStageIds);
+  assert.deepEqual(Object.keys(GRAMMAR_LESSON_GUIDES), coveredChapterStageIds);
 
-  for (const stageId of foundationStageIds) {
+  for (const stageId of coveredChapterStageIds) {
     const guide = getGrammarLessonGuide(stageId);
     assert.ok(guide, stageId);
     assert.equal(guide.stageId, stageId);
@@ -59,7 +68,10 @@ test("the foundations chapter has complete mini-lessons without filling later ch
     assert.ok(guide.memoryTip.length > 30, `${stageId}: memory tip`);
   }
 
-  assert.equal(getGrammarLessonGuide("present-actions"), undefined);
+  assert.ok(getGrammarLessonGuide("present-actions"));
+  assert.ok(getGrammarLessonGuide("range-and-limit"));
+  assert.ok(getGrammarLessonGuide("past-event"));
+  assert.ok(getGrammarLessonGuide("a1-validation"));
 });
 
 test("grammar theory opens in a reusable modal and resumes without replacing its session", () => {

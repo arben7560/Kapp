@@ -94,7 +94,7 @@ const SCENE_COPY: Record<string, SceneCopy> = {
     description:
       "En finale, plusieurs consonnes écrites différemment se regroupent autour de seulement sept réalisations essentielles. C’est pour cela qu’il faut distinguer l’orthographe du son réellement entendu.",
     instruction:
-      "Écoute les graphies avec ㅏ pour bien les identifier, puis retiens leur famille finale. Pour ㅇ, l’exemple 앙 te fait entendre clairement le son ng en fin de bloc.",
+      "Écoute les syllabes fermées pour bien identifier leur son final, puis retiens leur famille. Chaque famille rassemble des graphies différentes autour d’une même réalisation.",
   },
   "hangul_batchim:batchim-reading": {
     description:
@@ -395,13 +395,13 @@ const QUESTION_EXPLANATIONS: Record<string, string> = {
   "hangul_batchim:cvc-structure:cvc-t":
     "Dans 갇, ㄷ est placé en finale et ferme la syllabe avec la réalisation attendue de cette famille.",
   "hangul_batchim:cvc-structure:cvc-ng":
-    "강 se termine par ㅇ. En finale, ce ㅇ n’est plus muet : il donne le son ng.",
+    "Dans l’audio 간, tu entends le son n final, représenté par ㄴ.",
   "hangul_batchim:cvc-structure:cvc-p":
-    "갑 se ferme avec ㅂ. Les lèvres terminent la syllabe sans ajouter une nouvelle voyelle après le p final.",
+    "Dans l’audio 갑, tu entends le son p final, représenté par ㅂ, sans ajouter une nouvelle voyelle.",
   "hangul_batchim:cvc-structure:cvc-l":
     "갈 se termine par ㄹ, qui ferme le bloc avec une valeur proche de l.",
   "hangul_batchim:simple-final-spellings:fs-book":
-    "Dans 책, le ㄱ écrit en finale appartient directement à la famille de son ㄱ. L’orthographe et la classe finale coïncident ici.",
+    "Dans l’audio 각, tu entends la réalisation finale ㄱ. Ici, l’orthographe et la classe finale coïncident.",
   "hangul_batchim:simple-final-spellings:fs-clothes":
     "Dans 옷, le ㅅ écrit en finale ne garde pas un s : il rejoint la famille de son ㄷ.",
   "hangul_batchim:simple-final-spellings:fs-flower":
@@ -417,17 +417,17 @@ const QUESTION_EXPLANATIONS: Record<string, string> = {
   "hangul_batchim:batchim-reading:br-bap":
     "밥 se termine par ㅂ. À l’oreille, concentre-toi sur la fermeture finale plutôt que sur le début du mot.",
   "hangul_batchim:batchim-reading:br-mul":
-    "물 se termine par ㄹ. Le dernier élément placé au bas du bloc est bien la finale à repérer.",
+    "Le mot entendu est 물, qui se termine par ㄹ. Concentre-toi sur sa fermeture finale.",
   "hangul_batchim:batchim-reading:br-bam":
     "밤 se ferme sur m avec ㅁ, alors que 밥 se ferme sur p avec ㅂ. C’est la finale qui permet de les distinguer ici.",
   "hangul_batchim:batchim-reading:br-jip":
-    "Dans 집, le dernier élément du bloc est ㅂ. C’est donc le batchim écrit, même avant de réfléchir à sa réalisation sonore.",
+    "Dans l’audio 집, tu entends le son p final, représenté par ㅂ.",
   "hangul_batchim:batchim-reading:br-ot":
     "옷 s’écrit avec ㅅ en finale, mais ce ㅅ se réalise dans la famille ㄷ. L’exercice te demande bien le son final, pas la graphie.",
   "hangul_batchim:batchim-reading:br-mun":
     "문 se termine par ㄴ, donc par un son n. Le batchim est le dernier élément du bloc 문.",
   "hangul_batchim:batchim-reading:br-gang":
-    "강 se ferme avec ㅇ, qui donne ng en finale. C’est le rôle sonore de ㅇ lorsqu’il se trouve sous le bloc.",
+    "Dans l’audio 강, tu entends le son ng final, représenté par ㅇ.",
   "hangul_batchim:liaison:link-rule":
     "Comme ㅇ est muet au début de la syllabe suivante, le son final précédent peut se rattacher directement à sa voyelle. C’est ce qui rend l’enchaînement plus fluide.",
   "hangul_batchim:liaison:link-jibe":
@@ -439,7 +439,7 @@ const QUESTION_EXPLANATIONS: Record<string, string> = {
   "hangul_batchim:liaison:link-hangugeo":
     "Dans 한국어, le ㄱ de 국 se rattache à 어. C’est ce qui donne la lecture liée 한구거.",
   "hangul_batchim:liaison:link-final-k":
-    "Le son qui passe vers 어 vient du ㄱ final de 국. En liaison, 한국 + 어 s’enchaîne donc en 한구거.",
+    "À l’écoute de 한국어, le son qui passe vers 어 vient du ㄱ final de 국. En liaison, 한국 + 어 s’enchaîne donc en 한구거.",
 };
 
 let applied = false;

@@ -24,10 +24,30 @@ import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
 const READINGS = [
-  { text: "아이와 여우", audio: "아이와 여우", guide: "아이 + 와 + 여우", meaning: "L’enfant et le renard" },
-  { text: "사과와 우유", audio: "사과와 우유", guide: "사과 + 와 + 우유", meaning: "Une pomme et du lait" },
-  { text: "집에 가요", audio: "집에 가요", guide: "집 + 에 → 지베 · 가요", meaning: "Je vais à la maison" },
-  { text: "한국어", audio: "한국어", guide: "한국 + 어 → 한구거", meaning: "Langue coréenne" },
+  {
+    text: "아이가 와요",
+    audio: "아이가 와요",
+    guide: "아이 + 가 + 와요 · sujet + verbe",
+    meaning: "L’enfant arrive.",
+  },
+  {
+    text: "여우가 와요",
+    audio: "여우가 와요",
+    guide: "여우 + 가 + 와요 · sujet + verbe",
+    meaning: "Le renard arrive.",
+  },
+  {
+    text: "아이가 집에 가요",
+    audio: "아이가 집에 가요",
+    guide: "아이 + 가 · 집 + 에 · 가요 · sujet + lieu + verbe",
+    meaning: "L’enfant va à la maison.",
+  },
+  {
+    text: "사과와 우유를 먹어요",
+    audio: "사과와 우유를 먹어요",
+    guide: "사과 + 와 · 우유 + 를 · 먹어요 · objets + verbe",
+    meaning: "Je mange une pomme et du lait.",
+  },
 ];
 
 export default function HangulBridgeScreen() {
@@ -99,7 +119,7 @@ export default function HangulBridgeScreen() {
               <View style={[styles.back, useLandscapeLayout && styles.backLandscape]}><AppBackButton /></View>
               <AppText variant="sectionLabel" style={styles.teal}>LECTURE GUIDÉE</AppText>
               <AppText variant="screenTitle" style={[styles.title, useLandscapeLayout && styles.titleLandscape]}>Lire des phrases complètes</AppText>
-              <AppText variant="bodySecondary" tone="muted">Lis chaque ligne avant de lancer l’écoute lente. Aucun texte latin n’est nécessaire.</AppText>
+              <AppText variant="bodySecondary" tone="muted">Lis chaque phrase, puis écoute-la. Observe les petits éléments attachés aux mots ; tu verras leur rôle plus tard.</AppText>
             </View>
 
             <View style={useLandscapeLayout ? styles.readingColumn : undefined}>
@@ -111,10 +131,9 @@ export default function HangulBridgeScreen() {
 
               <BlurView intensity={55} tint="dark" style={[styles.transitionCard, useLandscapeLayout && styles.transitionCardLandscape]}>
               <AppText variant="sceneTitle">Choisis la suite</AppText>
-              <AppText variant="bodySecondary" tone="muted">Le vocabulaire et l’écoute utilisent maintenant des phrases plus longues. Observe les nouvelles règles ; tu les apprendras plus tard.</AppText>
-              <Pressable onPress={() => router.push("/(tabs)/voc/basics" as never)} style={styles.primary}><AppText variant="button" style={styles.primaryText}>OUVRIR LE VOCABULAIRE</AppText></Pressable>
-              <Pressable onPress={() => router.push("/(tabs)/listen" as never)} style={styles.secondary}><AppText variant="button" style={styles.teal}>OUVRIR L’ÉCOUTE ET LA DICTÉE</AppText></Pressable>
-              <Pressable onPress={() => router.push("/(tabs)" as never)} style={styles.home}><AppText variant="caption" tone="muted">Retour à l’accueil</AppText></Pressable>
+              <AppText variant="bodySecondary" tone="muted">La grammaire est la prochaine étape recommandée pour comprendre l’ordre des mots et les petits éléments que tu viens d’observer.</AppText>
+              <Pressable onPress={() => router.push("/(tabs)/grammar" as never)} style={styles.primary}><AppText variant="button" style={styles.primaryText}>CONTINUER VERS LA GRAMMAIRE</AppText></Pressable>
+              <Pressable onPress={() => router.push("/(tabs)" as never)} style={styles.secondary}><AppText variant="button" style={styles.teal}>RETOURNER À L’ACCUEIL</AppText></Pressable>
               </BlurView>
               </> : (
               <BlurView intensity={55} tint="dark" style={[styles.transitionCard, useLandscapeLayout && styles.transitionCardLandscape]}>

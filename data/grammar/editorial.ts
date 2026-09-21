@@ -121,7 +121,24 @@ export const GRAMMAR_EDITORIAL = {
     ),
   },
   "present-a-eoyo": {
-    rule: "Ajoute 아요 si la dernière voyelle est ㅏ ou ㅗ, sinon 어요 ; 하다 devient 해요.",
+    rule: "Au présent poli courant, choisis 아요 après ㅏ ou ㅗ, 어요 après les autres voyelles ; 하다 se contracte toujours en 해요.",
+    ruleParts: [
+      {
+        form: "ㅏ ou ㅗ → 아요",
+        explanation:
+          "Quand la dernière voyelle du radical est ㅏ ou ㅗ, ajoute 아요 : 가다 devient 가요 et 보다 devient 봐요.",
+      },
+      {
+        form: "Autres voyelles → 어요",
+        explanation:
+          "Avec les autres voyelles, utilise 어요 : 먹다 devient 먹어요 et 마시다 devient 마셔요.",
+      },
+      {
+        form: "하다 → 해요",
+        explanation:
+          "Les verbes en 하다 forment leur présent avec 해요 : 공부하다 devient 공부해요. Cette forme sert à parler d’une action actuelle ou habituelle.",
+      },
+    ],
     practice: practice(
       "sentence",
       "Tu décris une habitude de ta routine du matin.",

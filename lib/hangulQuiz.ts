@@ -7,7 +7,12 @@ const correctAnswerIndex = (question: HangulQuestion) =>
 const relabelAudioChoicesByPosition = (
   question: HangulQuestion,
 ): HangulQuestion => {
-  if (question.type !== "character-to-sound") return question;
+  if (
+    question.type !== "character-to-sound" ||
+    !question.options.every((option) => /^Son \d+$/u.test(option.label))
+  ) {
+    return question;
+  }
 
   return {
     ...question,
