@@ -298,10 +298,9 @@ export default function OnboardingScreen() {
   const [selectedMode, setSelectedMode] = useState<ModeKey>("guided");
 
   const isTablet = width >= 768;
-  const isNarrow = width <= 400;
-  const isShortPhone = height <= 800;
-  const isTallPhone = height >= 820;
-  const isHdPlusNarrow = isNarrow && isShortPhone;
+  // S23 Ultra measured 384x742; Realme HD+ ≈ 360 wide.
+  const isHdPlusNarrow = width <= 370;
+  const isTallPhone = width >= 375 && height >= 720;
   const largeText = fontScale > 1.15;
   const horizontalPadding = isTablet ? 30 : isHdPlusNarrow ? 18 : 22;
 

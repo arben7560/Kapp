@@ -253,14 +253,11 @@ function HeroBackground() {
 
 function HeroEntryScreen() {
   const { fontScale, height, width } = useWindowDimensions();
-  // Logical dp, not physical px. Short-narrow = Realme HD+ (~360x800).
-  // Tall flagships (S23 Ultra ~384x824 default) share a similar width
-  // but need a vertical rhythm that actually uses the extra height.
-  const isNarrow = width <= 400;
-  const isShortPhone = height <= 800;
-  const isTallPhone = height >= 820;
-  const isHdPlusNarrow = isNarrow && isShortPhone;
-  const isCompactScreen = isShortPhone || width <= 360;
+  // Measured: S23 Ultra Expo Go = 384 x 742 (nav 48 + status 33).
+  // Realme HD+ ≈ 360 x 800. Width 384 must NOT inherit Realme compact.
+  const isHdPlusNarrow = width <= 370;
+  const isTallPhone = width >= 375 && height >= 720;
+  const isCompactScreen = isHdPlusNarrow || height <= 700;
   const isLargeText = fontScale > 1.15;
   const titleVariant = isHdPlusNarrow || isLargeText ? "featureTitle" : "display";
   const cardTitleVariant =
