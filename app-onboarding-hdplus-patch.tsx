@@ -4,7 +4,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Check, Compass, MoveRight } from "lucide-react-native";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -292,7 +292,6 @@ function AlternativeScene({
 export default function OnboardingScreen() {
   const { width, height, fontScale } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const { bottom, left, right, top } = insets;
   const [step, setStep] = useState<OnboardingStep>("scene");
   const [selectedScene, setSelectedScene] = useState<SceneKey>("cafe");
   const [selectedMode, setSelectedMode] = useState<ModeKey>("guided");
@@ -301,31 +300,6 @@ export default function OnboardingScreen() {
   const isHdPlusNarrow = width <= 400;
   const largeText = fontScale > 1.15;
   const horizontalPadding = isTablet ? 30 : isHdPlusNarrow ? 18 : 22;
-
-  useEffect(() => {
-    if (__DEV__) {
-      console.log("[hd+] window", {
-        width,
-        height,
-        fontScale,
-        isHdPlusNarrow,
-        isTablet,
-        largeText,
-        insets: { top, bottom, left, right },
-      });
-    }
-  }, [
-    fontScale,
-    height,
-    bottom,
-    left,
-    isHdPlusNarrow,
-    isTablet,
-    largeText,
-    right,
-    top,
-    width,
-  ]);
 
   // Use the real drawable vertical space instead of device-specific breakpoints.
   // This continuously adapts the scene page to any phone height while preserving

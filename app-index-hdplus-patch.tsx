@@ -261,18 +261,6 @@ function HeroEntryScreen() {
   const cardTitleVariant =
     isHdPlusNarrow || isLargeText ? "sectionTitle" : "sceneTitle";
 
-  useEffect(() => {
-    if (__DEV__) {
-      console.log("[hd+] window", {
-        width,
-        height,
-        fontScale,
-        isHdPlusNarrow,
-        isCompactScreen,
-      });
-    }
-  }, [fontScale, height, isCompactScreen, isHdPlusNarrow, width]);
-
   const fade = useMemo(() => new Animated.Value(0), []);
   const translateY = useMemo(() => new Animated.Value(20), []);
   const pulse = useMemo(() => new Animated.Value(0), []);
