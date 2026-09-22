@@ -346,15 +346,21 @@ export default function OnboardingScreen() {
 
   const sceneLayout = useMemo(
     () => ({
-      contentTop: Math.round(lerp(8, 24, compactness)),
-      contentBottom: Math.round(lerp(8, 12, compactness)),
-      introBottom: Math.round(lerp(12, 24, compactness)),
+      contentTop: isTallPhone
+        ? 18
+        : Math.round(lerp(8, 24, compactness)),
+      contentBottom: isTallPhone
+        ? 10
+        : Math.round(lerp(8, 12, compactness)),
+      introBottom: isTallPhone
+        ? 16
+        : Math.round(lerp(12, 24, compactness)),
       eyebrowBottom: Math.round(lerp(7, 12, compactness)),
       subtitleTop: Math.round(lerp(7, 12, compactness)),
       heroHeight: isTablet
         ? 378
         : isTallPhone
-          ? Math.round(lerp(228, 268, compactness))
+          ? Math.round(lerp(236, 258, compactness))
           : Math.round(lerp(214, 320, compactness)),
       alternativeTop: Math.round(lerp(10, 22, compactness)),
       alternativeHeaderBottom: Math.round(lerp(7, 12, compactness)),
@@ -581,9 +587,11 @@ export default function OnboardingScreen() {
             contentContainerStyle={[
               styles.sceneScrollContent,
               {
+                flexGrow: 1,
                 paddingTop: sceneLayout.contentTop,
                 paddingBottom: sceneLayout.contentBottom,
               },
+              isTallPhone && styles.sceneScrollContentTall,
             ]}
             showsVerticalScrollIndicator={false}
           >
@@ -738,6 +746,10 @@ const styles = StyleSheet.create({
   scenePage: { flex: 1, width: "100%", maxWidth: 920, alignSelf: "center" },
   sceneScroll: { flex: 1 },
   sceneScrollContent: { width: "100%", maxWidth: 860, alignSelf: "center" },
+  sceneScrollContentTall: {
+    flexGrow: 1,
+    justifyContent: "space-between",
+  },
   intro: { maxWidth: 650 },
   introEyebrow: {
     color: PINK,
