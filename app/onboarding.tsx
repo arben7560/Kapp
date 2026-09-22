@@ -342,9 +342,7 @@ export default function OnboardingScreen() {
     ? Math.max(verticalProgress, 0.45)
     : isHdPlusNarrow
       ? Math.min(verticalProgress, 0.32)
-      : isTallPhone
-        ? Math.max(verticalProgress, 0.78)
-        : verticalProgress;
+      : verticalProgress;
 
   const sceneLayout = useMemo(
     () => ({
@@ -356,14 +354,14 @@ export default function OnboardingScreen() {
       heroHeight: isTablet
         ? 378
         : isTallPhone
-          ? Math.round(lerp(280, 372, compactness))
+          ? Math.round(lerp(228, 268, compactness))
           : Math.round(lerp(214, 320, compactness)),
       alternativeTop: Math.round(lerp(10, 22, compactness)),
       alternativeHeaderBottom: Math.round(lerp(7, 12, compactness)),
       alternativeHeight: isTablet
         ? 142
         : isTallPhone
-          ? Math.round(lerp(108, 136, compactness))
+          ? Math.round(lerp(90, 104, compactness))
           : Math.round(lerp(88, 118, compactness)),
       actionsTop: Math.round(lerp(9, 18, compactness)),
       actionsGap: Math.round(lerp(7, 10, compactness)),
@@ -603,7 +601,11 @@ export default function OnboardingScreen() {
               </AppText>
               <AppText
                 accessibilityRole="header"
-                variant={isHdPlusNarrow || largeText ? "featureTitle" : "screenTitle"}
+                variant={
+                  isHdPlusNarrow || largeText || viewportHeight < 680
+                    ? "featureTitle"
+                    : "screenTitle"
+                }
                 lineContract="threeLines"
                 style={styles.introTitle}
               >
