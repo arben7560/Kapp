@@ -298,7 +298,10 @@ export default function OnboardingScreen() {
   const [selectedMode, setSelectedMode] = useState<ModeKey>("guided");
 
   const isTablet = width >= 768;
-  const isHdPlusNarrow = width <= 400;
+  const isNarrow = width <= 400;
+  const isShortPhone = height <= 800;
+  const isTallPhone = height >= 820;
+  const isHdPlusNarrow = isNarrow && isShortPhone;
   const largeText = fontScale > 1.15;
   const horizontalPadding = isTablet ? 30 : isHdPlusNarrow ? 18 : 22;
 
@@ -309,6 +312,7 @@ export default function OnboardingScreen() {
         height,
         fontScale,
         isHdPlusNarrow,
+        isTallPhone,
         isTablet,
         largeText,
         insets: { top, bottom, left, right },
@@ -320,6 +324,7 @@ export default function OnboardingScreen() {
     bottom,
     left,
     isHdPlusNarrow,
+    isTallPhone,
     isTablet,
     largeText,
     right,
@@ -338,7 +343,9 @@ export default function OnboardingScreen() {
     ? Math.max(verticalProgress, 0.45)
     : isHdPlusNarrow
       ? Math.min(verticalProgress, 0.32)
-      : verticalProgress;
+      : isTallPhone
+        ? Math.max(verticalProgress, 0.78)
+        : verticalProgress;
 
   const sceneLayout = useMemo(
     () => ({
@@ -347,18 +354,24 @@ export default function OnboardingScreen() {
       introBottom: Math.round(lerp(12, 24, compactness)),
       eyebrowBottom: Math.round(lerp(7, 12, compactness)),
       subtitleTop: Math.round(lerp(7, 12, compactness)),
-      heroHeight: isTablet ? 378 : Math.round(lerp(214, 320, compactness)),
+      heroHeight: isTablet
+        ? 378
+        : isTallPhone
+          ? Math.round(lerp(280, 372, compactness))
+          : Math.round(lerp(214, 320, compactness)),
       alternativeTop: Math.round(lerp(10, 22, compactness)),
       alternativeHeaderBottom: Math.round(lerp(7, 12, compactness)),
       alternativeHeight: isTablet
         ? 142
-        : Math.round(lerp(88, 118, compactness)),
+        : isTallPhone
+          ? Math.round(lerp(108, 136, compactness))
+          : Math.round(lerp(88, 118, compactness)),
       actionsTop: Math.round(lerp(9, 18, compactness)),
       actionsGap: Math.round(lerp(7, 10, compactness)),
       primaryHeight: Math.round(lerp(52, 62, compactness)),
       hubHeight: Math.round(lerp(50, 58, compactness)),
     }),
-    [compactness, isTablet],
+    [compactness, isTablet, isTallPhone],
   );
 
   const selectedSceneData = useMemo(
