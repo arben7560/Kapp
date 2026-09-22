@@ -253,8 +253,13 @@ function HeroBackground() {
 
 function HeroEntryScreen() {
   const { fontScale, height, width } = useWindowDimensions();
-  const isCompactScreen = height <= 700 || width <= 380;
+  // HD+ 720x1600 class (Realme C25Y / C21Y, ~360x800 dp at 2x).
+  const isHdPlusNarrow = width <= 400;
+  const isCompactScreen = height <= 820 || width <= 400;
   const isLargeText = fontScale > 1.15;
+  const titleVariant = isHdPlusNarrow || isLargeText ? "featureTitle" : "display";
+  const cardTitleVariant =
+    isHdPlusNarrow || isLargeText ? "sectionTitle" : "sceneTitle";
 
   const fade = useMemo(() => new Animated.Value(0), []);
   const translateY = useMemo(() => new Animated.Value(20), []);
@@ -379,7 +384,12 @@ function HeroEntryScreen() {
               </View>
             </View>
 
-            <View style={styles.heroCenter}>
+            <View
+              style={[
+                styles.heroCenter,
+                isHdPlusNarrow && styles.heroCenterCompact,
+              ]}
+            >
               <AppText
                 variant="koreanPrimary"
                 script="korean"
@@ -389,22 +399,39 @@ function HeroEntryScreen() {
               </AppText>
               <AppText
                 accessibilityRole="header"
-                variant="display"
+                variant={titleVariant}
+                align="center"
+                lineContract="twoLines"
                 style={styles.heroBigTitle}
               >
                 Bienvenue à Séoul
               </AppText>
-              <AppText variant="subtitle" style={styles.heroSubtitle}>
+              <AppText
+                variant="subtitle"
+                align="center"
+                style={[
+                  styles.heroSubtitle,
+                  isHdPlusNarrow && styles.heroSubtitleWide,
+                ]}
+              >
                 Tu n’apprends pas le coréen. Tu entres dans des scènes réelles.
               </AppText>
 
               <AnimatedView
                 style={[
                   styles.heroCardWrap,
+                  isHdPlusNarrow && styles.heroCardWrapCompact,
                   { transform: [{ translateY: cardFloat }] },
                 ]}
               >
-                <BlurView intensity={35} tint="dark" style={styles.heroCard}>
+                <BlurView
+                  intensity={35}
+                  tint="dark"
+                  style={[
+                    styles.heroCard,
+                    isHdPlusNarrow && styles.heroCardCompact,
+                  ]}
+                >
                   <ExpoLinearGradient
                     colors={[
                       "rgba(255,255,255,0.08)",
@@ -433,7 +460,11 @@ function HeroEntryScreen() {
                   >
                     IMMERSION
                   </AppText>
-                  <AppText variant="sceneTitle" style={styles.heroTitle}>
+                  <AppText
+                    variant={cardTitleVariant}
+                    lineContract="twoLines"
+                    style={styles.heroTitle}
+                  >
                     La ville s’ouvre devant toi
                   </AppText>
                   <AppText variant="body" style={styles.heroText}>
@@ -459,7 +490,10 @@ function HeroEntryScreen() {
                 <BlurView
                   intensity={20}
                   tint="dark"
-                  style={styles.heroPrimaryButton}
+                  style={[
+                    styles.heroPrimaryButton,
+                    isHdPlusNarrow && styles.heroPrimaryButtonCompact,
+                  ]}
                 >
                   <ExpoLinearGradient
                     colors={[
@@ -919,6 +953,10 @@ const styles = StyleSheet.create({
     maxWidth: 520,
     alignSelf: "center",
   },
+  heroCenterCompact: {
+    paddingTop: 12,
+    paddingBottom: 12,
+  },
   heroKoreanLine: {
     color: "rgba(255,255,255,0.85)",
     textAlign: "center",
@@ -935,11 +973,18 @@ const styles = StyleSheet.create({
     maxWidth: 290,
     alignSelf: "center",
   },
+  heroSubtitleWide: {
+    maxWidth: 340,
+    marginTop: 10,
+  },
   heroCardWrap: {
     marginTop: 38,
     width: "100%",
     maxWidth: 520,
     alignSelf: "center",
+  },
+  heroCardWrapCompact: {
+    marginTop: 20,
   },
   heroCard: {
     borderRadius: 24,
@@ -948,6 +993,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.14)",
     backgroundColor: "rgba(255,255,255,0.02)",
+  },
+  heroCardCompact: {
+    padding: 18,
+    borderRadius: 20,
   },
   heroEyebrow: {
     color: HERO_TEXT_SOFT,
@@ -986,6 +1035,10 @@ const styles = StyleSheet.create({
     borderTopColor: "rgba(255,255,255,0.35)",
     alignItems: "center",
     justifyContent: "center",
+  },
+  heroPrimaryButtonCompact: {
+    minHeight: 52,
+    paddingVertical: 12,
   },
   heroPrimaryText: {
     color: "#FFFFFF",

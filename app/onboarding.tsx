@@ -297,8 +297,9 @@ export default function OnboardingScreen() {
   const [selectedMode, setSelectedMode] = useState<ModeKey>("guided");
 
   const isTablet = width >= 768;
+  const isHdPlusNarrow = width <= 400;
   const largeText = fontScale > 1.15;
-  const horizontalPadding = isTablet ? 30 : width <= 380 ? 18 : 22;
+  const horizontalPadding = isTablet ? 30 : isHdPlusNarrow ? 18 : 22;
 
   // Use the real drawable vertical space instead of device-specific breakpoints.
   // This continuously adapts the scene page to any phone height while preserving
@@ -309,7 +310,9 @@ export default function OnboardingScreen() {
     : clamp((viewportHeight - 590) / 260, 0, 1);
   const compactness = largeText
     ? Math.max(verticalProgress, 0.45)
-    : verticalProgress;
+    : isHdPlusNarrow
+      ? Math.min(verticalProgress, 0.32)
+      : verticalProgress;
 
   const sceneLayout = useMemo(
     () => ({
@@ -562,7 +565,8 @@ export default function OnboardingScreen() {
               </AppText>
               <AppText
                 accessibilityRole="header"
-                variant="screenTitle"
+                variant={isHdPlusNarrow || largeText ? "featureTitle" : "screenTitle"}
+                lineContract="threeLines"
                 style={styles.introTitle}
               >
                 Choisis ta première expérience
