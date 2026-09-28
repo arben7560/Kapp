@@ -1,10 +1,23 @@
 import type {
   GrammarConceptId,
+  GrammarContrastFamily,
   GrammarPracticeDrill,
   GrammarPracticeSkill,
 } from "./types.ts";
 
 type DrillOptions = readonly [string, string, string];
+
+const ACTION_LOCATION_CONTRAST: GrammarContrastFamily = {
+  id: "location-action-vs-state",
+  label: "Lieu : action ou position",
+  expectedMeaning: "lieu où une action se déroule",
+};
+
+const STATIC_LOCATION_CONTRAST: GrammarContrastFamily = {
+  id: "location-action-vs-state",
+  label: "Lieu : action ou position",
+  expectedMeaning: "lieu où une personne ou une chose se trouve",
+};
 
 function gap(
   skill: GrammarPracticeSkill,
@@ -16,6 +29,7 @@ function gap(
   ruleAspect?: string,
   context?: string,
   prompt = "Complète la phrase avec la forme grammaticalement correcte.",
+  contrastFamily?: GrammarContrastFamily,
 ): GrammarPracticeDrill {
   return {
     id,
@@ -29,6 +43,7 @@ function gap(
     distractors,
     explanation,
     ...(ruleAspect ? { ruleAspect } : {}),
+    ...(contrastFamily ? { contrastFamily } : {}),
   };
 }
 
@@ -190,11 +205,11 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
   ],
 
   "action-location-eseo": [
-    gap("particles", "cafe-action", "카페__ 공부해요.", "에서", ["에", "으로", "까지"], "공부해요 est une action réalisée au café : le lieu prend 에서.", "action-location"),
-    gap("particles", "school-action", "학교__ 한국어를 배워요.", "에서", ["에", "로", "부터"], "배워요 se déroule à l’école : le lieu de l’action prend 에서.", "action-location"),
-    gap("particles", "home-action", "집__ 밥을 먹어요.", "에서", ["에", "으로", "까지"], "먹어요 est une action faite à la maison : 집에서.", "action-location"),
-    gap("particles", "library-action", "도서관__ 책을 읽어요.", "에서", ["에", "으로", "까지"], "읽어요 se déroule à la bibliothèque : 도서관에서.", "action-location"),
-    gap("particles", "restaurant-action", "식당__ 친구를 만나요.", "에서", ["에", "으로", "까지"], "Le restaurant est le lieu où la rencontre a lieu : 식당에서.", "action-location"),
+    gap("particles", "cafe-action", "카페__ 공부해요.", "에서", ["에", "으로", "까지"], "공부해요 décrit une action réalisée au café : le lieu de l’action prend 에서.", "action-location", "Tu es au café et tu y étudies maintenant.", "Complète avec la particule du lieu où se déroule l’action.", ACTION_LOCATION_CONTRAST),
+    gap("particles", "school-static", "학교__ 있어요.", "에", ["에서", "으로", "까지"], "있어요 décrit une position statique : l’école prend 에, pas 에서.", "static-location", "Tu indiques où se trouve ton ami ; il ne fait pas une action à l’école.", "Complète avec la particule du lieu où se trouve la personne.", STATIC_LOCATION_CONTRAST),
+    gap("particles", "home-action", "집__ 밥을 먹어요.", "에서", ["에", "으로", "까지"], "먹어요 décrit une action faite à la maison : le lieu de l’action prend 에서.", "action-location", "À la maison, tu es en train de manger.", "Complète avec la particule du lieu où se déroule l’action.", ACTION_LOCATION_CONTRAST),
+    gap("particles", "library-static", "도서관__ 있어요.", "에", ["에서", "으로", "까지"], "있어요 décrit une présence dans la bibliothèque : le lieu statique prend 에.", "static-location", "Tu dis simplement où se trouve le livre, sans décrire une lecture.", "Complète avec la particule du lieu où se trouve la chose.", STATIC_LOCATION_CONTRAST),
+    gap("particles", "restaurant-action", "식당__ 친구를 만나요.", "에서", ["에", "으로", "까지"], "만나요 décrit une rencontre qui a lieu au restaurant : le lieu de l’action prend 에서.", "action-location", "Tu retrouves ton ami au restaurant.", "Complète avec la particule du lieu où se déroule l’action.", ACTION_LOCATION_CONTRAST),
   ],
 
   "destination-time-e": [

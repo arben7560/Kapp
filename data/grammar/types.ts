@@ -166,6 +166,12 @@ export type GrammarPracticeSkill =
   | "register"
   | "forms";
 
+export type GrammarContrastFamily = {
+  id: string;
+  label: string;
+  expectedMeaning: string;
+};
+
 type GrammarPracticeDrillBase = {
   id: string;
   skill: GrammarPracticeSkill;
@@ -175,6 +181,7 @@ type GrammarPracticeDrillBase = {
   context?: string;
   explanation: string;
   ruleAspect?: string;
+  contrastFamily?: GrammarContrastFamily;
 };
 
 export type GrammarPracticeDrill = GrammarPracticeDrillBase &
@@ -330,6 +337,7 @@ export type GrammarPracticeQuestion = GrammarExercise & {
   memo?: string;
   skill?: GrammarPracticeSkill;
   ruleAspect?: string;
+  contrastFamily?: GrammarContrastFamily;
 };
 
 export type GrammarPracticeResponse = {
