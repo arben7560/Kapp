@@ -3,7 +3,7 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Check, Compass, MoveRight, Play } from "lucide-react-native";
+import { Check, Compass, MoveRight } from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
 import {
   Pressable,
@@ -145,11 +145,9 @@ function SceneBackground({ dimmed = false }: { dimmed?: boolean }) {
 function FeaturedScene({
   scene,
   height,
-  onStart,
 }: {
   scene: SceneOption;
   height: number;
-  onStart: () => void;
 }) {
   return (
     <View
@@ -221,33 +219,14 @@ function FeaturedScene({
           {scene.subtitle}
         </AppText>
         <View style={styles.beginnerRow}>
-          <View style={styles.beginnerMeta}>
-            <View
-              style={[styles.beginnerIcon, { borderColor: `${scene.accent}B8` }]}
-            >
-              <Check size={12} color={scene.accent} strokeWidth={2.3} />
-            </View>
-            <AppText variant="caption" style={styles.beginnerText}>
-              {scene.guidance}
-            </AppText>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Commencer l'immersion ${scene.title}`}
-            onPress={onStart}
-            hitSlop={4}
-            style={({ pressed }) => [
-              styles.featuredCta,
-              pressed && styles.pressed,
-            ]}
+          <View
+            style={[styles.beginnerIcon, { borderColor: `${scene.accent}B8` }]}
           >
-            <AppText variant="label" style={styles.featuredCtaText}>
-              Commencer l’immersion
-            </AppText>
-            <View style={styles.featuredCtaPlay}>
-              <Play size={11} color={WHITE} strokeWidth={2.4} fill={WHITE} />
-            </View>
-          </Pressable>
+            <Check size={12} color={scene.accent} strokeWidth={2.3} />
+          </View>
+          <AppText variant="caption" style={styles.beginnerText}>
+            {scene.guidance}
+          </AppText>
         </View>
       </View>
     </View>
@@ -319,9 +298,10 @@ export default function OnboardingScreen() {
   const [selectedMode, setSelectedMode] = useState<ModeKey>("guided");
 
   const isTablet = width >= 768;
-  // S23 Ultra measured 384x742; Realme HD+ ≈ 360 wide.
-  const isHdPlusNarrow = width <= 370;
-  const isTallPhone = width >= 375 && height >= 720;
+  const isNarrow = width <= 400;
+  const isShortPhone = height <= 800;
+  const isTallPhone = height >= 820;
+  const isHdPlusNarrow = isNarrow && isShortPhone;
   const largeText = fontScale > 1.15;
   const horizontalPadding = isTablet ? 30 : isHdPlusNarrow ? 18 : 22;
 
@@ -363,43 +343,33 @@ export default function OnboardingScreen() {
     ? Math.max(verticalProgress, 0.45)
     : isHdPlusNarrow
       ? Math.min(verticalProgress, 0.32)
-      : verticalProgress;
+      : isTallPhone
+        ? Math.max(verticalProgress, 0.78)
+        : verticalProgress;
 
   const sceneLayout = useMemo(
     () => ({
-      contentTop: isTallPhone
-        ? 8
-        : Math.round(lerp(8, 24, compactness)),
-      contentBottom: isTallPhone
-        ? 8
-        : Math.round(lerp(8, 12, compactness)),
-      introBottom: isTallPhone
-        ? 22
-        : Math.round(lerp(12, 24, compactness)),
-      eyebrowBottom: isTallPhone
-        ? 10
-        : Math.round(lerp(7, 12, compactness)),
-      subtitleTop: isTallPhone
-        ? 12
-        : Math.round(lerp(7, 12, compactness)),
-      alternativeTop: isTallPhone
-        ? 14
-        : Math.round(lerp(10, 22, compactness)),
+      contentTop: Math.round(lerp(8, 24, compactness)),
+      contentBottom: Math.round(lerp(8, 12, compactness)),
+      introBottom: Math.round(lerp(12, 24, compactness)),
+      eyebrowBottom: Math.round(lerp(7, 12, compactness)),
+      subtitleTop: Math.round(lerp(7, 12, compactness)),
       heroHeight: isTablet
         ? 378
         : isTallPhone
-          ? Math.round(lerp(208, 228, compactness))
-          : Math.round(lerp(200, 280, compactness)),
+          ? Math.round(lerp(280, 372, compactness))
+          : Math.round(lerp(214, 320, compactness)),
+      alternativeTop: Math.round(lerp(10, 22, compactness)),
       alternativeHeaderBottom: Math.round(lerp(7, 12, compactness)),
       alternativeHeight: isTablet
         ? 142
         : isTallPhone
-          ? Math.round(lerp(82, 92, compactness))
-          : Math.round(lerp(80, 108, compactness)),
+          ? Math.round(lerp(108, 136, compactness))
+          : Math.round(lerp(88, 118, compactness)),
       actionsTop: Math.round(lerp(9, 18, compactness)),
-      actionsGap: isTallPhone ? 10 : Math.round(lerp(7, 10, compactness)),
+      actionsGap: Math.round(lerp(7, 10, compactness)),
       primaryHeight: Math.round(lerp(52, 62, compactness)),
-      hubHeight: Math.round(lerp(52, 58, compactness)),
+      hubHeight: Math.round(lerp(50, 58, compactness)),
     }),
     [compactness, isTablet, isTallPhone],
   );
@@ -614,11 +584,9 @@ export default function OnboardingScreen() {
             contentContainerStyle={[
               styles.sceneScrollContent,
               {
-                flexGrow: 1,
                 paddingTop: sceneLayout.contentTop,
                 paddingBottom: sceneLayout.contentBottom,
               },
-              isTallPhone && styles.sceneScrollContentTall,
             ]}
             showsVerticalScrollIndicator={false}
           >
@@ -636,11 +604,7 @@ export default function OnboardingScreen() {
               </AppText>
               <AppText
                 accessibilityRole="header"
-                variant={
-                  isHdPlusNarrow || largeText || viewportHeight < 680
-                    ? "featureTitle"
-                    : "screenTitle"
-                }
+                variant={isHdPlusNarrow || largeText ? "featureTitle" : "screenTitle"}
                 lineContract="threeLines"
                 style={styles.introTitle}
               >
@@ -660,7 +624,6 @@ export default function OnboardingScreen() {
             <FeaturedScene
               scene={selectedSceneData}
               height={sceneLayout.heroHeight}
-              onStart={openMode}
             />
 
             <View
@@ -678,17 +641,9 @@ export default function OnboardingScreen() {
                 <AppText variant="sectionLabel" style={styles.alternativeLabel}>
                   AUTRES IMMERSIONS
                 </AppText>
-                <View style={styles.sceneDots} accessibilityLabel="Scènes disponibles">
-                  {SCENES.map((scene) => (
-                    <View
-                      key={scene.key}
-                      style={[
-                        styles.sceneDot,
-                        selectedScene === scene.key && styles.sceneDotActive,
-                      ]}
-                    />
-                  ))}
-                </View>
+                <AppText variant="caption" style={styles.swipeHint}>
+                  Fais glisser pour explorer
+                </AppText>
               </View>
               <ScrollView
                 horizontal
@@ -708,45 +663,65 @@ export default function OnboardingScreen() {
               </ScrollView>
             </View>
 
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Entrer dans le Hub"
-              accessibilityHint="Ouvre le Hub pour le Hangul, le vocabulaire et la progression"
-              onPress={openHub}
-              style={({ pressed }) => [
-                styles.hubCard,
-                { marginTop: sceneLayout.actionsTop },
-                pressed && styles.pressed,
+            <View
+              style={[
+                styles.actions,
+                {
+                  marginTop: sceneLayout.actionsTop,
+                  gap: sceneLayout.actionsGap,
+                },
               ]}
             >
-              <LinearGradient
-                colors={[
-                  "rgba(34,211,238,0.16)",
-                  "rgba(116,91,255,0.10)",
-                  "rgba(5,6,14,0.55)",
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Commencer par ${selectedSceneData.title}`}
+                onPress={openMode}
+                style={({ pressed }) => [
+                  styles.primaryButton,
+                  { minHeight: sceneLayout.primaryHeight },
+                  pressed && styles.pressed,
                 ]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
-              <View style={styles.hubCardIcon}>
-                <Compass size={18} color={CYAN} strokeWidth={2} />
-              </View>
-              <View style={styles.hubCardCopy}>
-                <AppText variant="sectionLabel" style={styles.hubCardEyebrow}>
-                  AUTRE PORTE D’ENTRÉE
+              >
+                <LinearGradient
+                  colors={[
+                    selectedScene === "cafe"
+                      ? "#E95B9C"
+                      : selectedSceneData.accent,
+                    selectedScene === "cafe"
+                      ? "#9A476F"
+                      : `${selectedSceneData.accent}B8`,
+                    "#3A2838",
+                  ]}
+                  locations={[0, 0.58, 1]}
+                  start={{ x: 0, y: 0.45 }}
+                  end={{ x: 1, y: 0.55 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                <AppText
+                  variant="button"
+                  style={styles.buttonText}
+                >{`Commencer par ${selectedSceneData.title}`}</AppText>
+                <MoveRight size={20} color={WHITE} strokeWidth={2.2} />
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Explorer le Hub"
+                onPress={openHub}
+                style={({ pressed }) => [
+                  styles.hubLink,
+                  { minHeight: sceneLayout.hubHeight },
+                  pressed && styles.pressed,
+                ]}
+              >
+                <View style={styles.hubIcon}>
+                  <Compass size={16} color="#8F8D9F" strokeWidth={1.9} />
+                </View>
+                <AppText variant="bodySecondary" style={styles.hubLinkText}>
+                  Explorer le hub
                 </AppText>
-                <AppText variant="sectionTitle" style={styles.hubCardTitle}>
-                  Le Hub
-                </AppText>
-                <AppText variant="caption" style={styles.hubCardSubtitle}>
-                  Hangul, vocabulaire et ta progression — à ton rythme.
-                </AppText>
-              </View>
-              <View style={styles.hubCardArrow}>
-                <MoveRight size={16} color={WHITE} strokeWidth={2.2} />
-              </View>
-            </Pressable>
+              </Pressable>
+            </View>
 
             {largeText ? <View style={styles.largeTextSpacer} /> : null}
           </ScrollView>
@@ -762,10 +737,6 @@ const styles = StyleSheet.create({
   scenePage: { flex: 1, width: "100%", maxWidth: 920, alignSelf: "center" },
   sceneScroll: { flex: 1 },
   sceneScrollContent: { width: "100%", maxWidth: 860, alignSelf: "center" },
-  sceneScrollContentTall: {
-    flexGrow: 1,
-    justifyContent: "space-evenly",
-  },
   intro: { maxWidth: 650 },
   introEyebrow: {
     color: PINK,
@@ -846,37 +817,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  beginnerMeta: {
-    flexDirection: "row",
-    alignItems: "center",
     gap: 9,
-    flexShrink: 1,
-  },
-  featuredCta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    minHeight: 34,
-    paddingLeft: 12,
-    paddingRight: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.28)",
-    backgroundColor: "rgba(8,8,14,0.62)",
-  },
-  featuredCtaText: {
-    color: WHITE,
-  },
-  featuredCtaPlay: {
-    width: 22,
-    height: 22,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.16)",
-    alignItems: "center",
-    justifyContent: "center",
   },
   beginnerIcon: {
     width: 20,
@@ -897,67 +838,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   alternativeLabel: { color: "rgba(255,255,255,0.52)", marginLeft: 1 },
-  sceneDots: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  sceneDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.22)",
-  },
-  sceneDotActive: {
-    width: 8,
-    height: 8,
-    backgroundColor: "rgba(255,255,255,0.88)",
-  },
-  hubCard: {
-    minHeight: 92,
-    borderRadius: 22,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(34,211,238,0.28)",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  hubCardIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(34,211,238,0.38)",
-    backgroundColor: "rgba(2,10,16,0.45)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  hubCardCopy: {
-    flex: 1,
-  },
-  hubCardEyebrow: {
-    color: CYAN,
-    marginBottom: 3,
-  },
-  hubCardTitle: {
-    color: WHITE,
-  },
-  hubCardSubtitle: {
-    color: "rgba(226,232,240,0.72)",
-    marginTop: 3,
-  },
-  hubCardArrow: {
-    width: 32,
-    height: 32,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.16)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   swipeHint: { color: "rgba(255,255,255,0.38)", textAlign: "right" },
   alternativeList: { gap: 12, paddingRight: 18 },
   alternativeCard: {
@@ -1034,39 +914,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   hubLinkText: { color: "#d9d8e2", textAlign: "center" },
-  hubButton: {
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "rgba(34,211,238,0.42)",
-    backgroundColor: "rgba(34,211,238,0.08)",
-    paddingHorizontal: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-  },
-  hubButtonIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(34,211,238,0.35)",
-    backgroundColor: "rgba(2,8,14,0.35)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  hubButtonCopy: {
-    alignItems: "flex-start",
-    justifyContent: "center",
-  },
-  hubButtonTitle: {
-    color: WHITE,
-    textAlign: "left",
-  },
-  hubButtonSubtitle: {
-    color: "rgba(165,243,252,0.82)",
-    marginTop: 1,
-  },
   pressed: { opacity: 0.88, transform: [{ scale: 0.992 }] },
   largeTextSpacer: { height: 16 },
   modePage: { flex: 1, width: "100%", maxWidth: 620, alignSelf: "center" },

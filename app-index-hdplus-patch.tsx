@@ -253,28 +253,13 @@ function HeroBackground() {
 
 function HeroEntryScreen() {
   const { fontScale, height, width } = useWindowDimensions();
-  // Measured: S23 Ultra Expo Go = 384 x 742 (nav 48 + status 33).
-  // Realme HD+ ≈ 360 x 800. Width 384 must NOT inherit Realme compact.
-  const isHdPlusNarrow = width <= 370;
-  const isTallPhone = width >= 375 && height >= 720;
-  const isCompactScreen = isHdPlusNarrow || height <= 700;
+  // HD+ 720x1600 class (Realme C25Y / C21Y, ~360x800 dp at 2x).
+  const isHdPlusNarrow = width <= 400;
+  const isCompactScreen = height <= 820 || width <= 400;
   const isLargeText = fontScale > 1.15;
   const titleVariant = isHdPlusNarrow || isLargeText ? "featureTitle" : "display";
   const cardTitleVariant =
     isHdPlusNarrow || isLargeText ? "sectionTitle" : "sceneTitle";
-
-  useEffect(() => {
-    if (__DEV__) {
-      console.log("[hd+] window", {
-        width,
-        height,
-        fontScale,
-        isHdPlusNarrow,
-        isCompactScreen,
-        isTallPhone,
-      });
-    }
-  }, [fontScale, height, isCompactScreen, isHdPlusNarrow, isTallPhone, width]);
 
   const fade = useMemo(() => new Animated.Value(0), []);
   const translateY = useMemo(() => new Animated.Value(20), []);
@@ -403,7 +388,6 @@ function HeroEntryScreen() {
               style={[
                 styles.heroCenter,
                 isHdPlusNarrow && styles.heroCenterCompact,
-                isTallPhone && styles.heroCenterTall,
               ]}
             >
               <AppText
@@ -427,8 +411,7 @@ function HeroEntryScreen() {
                 align="center"
                 style={[
                   styles.heroSubtitle,
-                  (isHdPlusNarrow || isTallPhone) && styles.heroSubtitleWide,
-                  isTallPhone && styles.heroSubtitleTall,
+                  isHdPlusNarrow && styles.heroSubtitleWide,
                 ]}
               >
                 Tu n’apprends pas le coréen. Tu entres dans des scènes réelles.
@@ -438,7 +421,6 @@ function HeroEntryScreen() {
                 style={[
                   styles.heroCardWrap,
                   isHdPlusNarrow && styles.heroCardWrapCompact,
-                  isTallPhone && styles.heroCardWrapTall,
                   { transform: [{ translateY: cardFloat }] },
                 ]}
               >
@@ -448,7 +430,6 @@ function HeroEntryScreen() {
                   style={[
                     styles.heroCard,
                     isHdPlusNarrow && styles.heroCardCompact,
-                    isTallPhone && styles.heroCardTall,
                   ]}
                 >
                   <ExpoLinearGradient
@@ -494,12 +475,7 @@ function HeroEntryScreen() {
               </AnimatedView>
             </View>
 
-            <View
-              style={[
-                styles.heroBottomCtaArea,
-                isTallPhone && styles.heroBottomCtaAreaTall,
-              ]}
-            >
+            <View style={styles.heroBottomCtaArea}>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Choisir une scène"
@@ -981,11 +957,6 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 12,
   },
-  heroCenterTall: {
-    justifyContent: "space-evenly",
-    paddingTop: 36,
-    paddingBottom: 28,
-  },
   heroKoreanLine: {
     color: "rgba(255,255,255,0.85)",
     textAlign: "center",
@@ -1006,10 +977,6 @@ const styles = StyleSheet.create({
     maxWidth: 340,
     marginTop: 10,
   },
-  heroSubtitleTall: {
-    maxWidth: 380,
-    marginTop: 16,
-  },
   heroCardWrap: {
     marginTop: 38,
     width: "100%",
@@ -1018,9 +985,6 @@ const styles = StyleSheet.create({
   },
   heroCardWrapCompact: {
     marginTop: 20,
-  },
-  heroCardWrapTall: {
-    marginTop: 44,
   },
   heroCard: {
     borderRadius: 24,
@@ -1033,11 +997,6 @@ const styles = StyleSheet.create({
   heroCardCompact: {
     padding: 18,
     borderRadius: 20,
-  },
-  heroCardTall: {
-    paddingVertical: 28,
-    paddingHorizontal: 26,
-    borderRadius: 26,
   },
   heroEyebrow: {
     color: HERO_TEXT_SOFT,
@@ -1055,10 +1014,6 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 520,
     alignSelf: "center",
-  },
-  heroBottomCtaAreaTall: {
-    paddingBottom: 36,
-    paddingTop: 8,
   },
   heroPrimaryWrap: {
     borderRadius: 999,
