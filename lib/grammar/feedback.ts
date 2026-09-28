@@ -286,6 +286,15 @@ function selectedSpecificFallback(
   }
 
   if (conceptId === "request-n-juseyo") {
+    if (aspect === "item-request-choice" && selected.includes("있어요")) {
+      return `${choice} demande si le café existe. Ici, tu veux le commander : nom + 주세요, donc ${expected}`;
+    }
+    if (aspect === "item-request-choice" && selected.endsWith("마셔요.")) {
+      return `${choice} affirme que quelqu’un boit le café. Ici, tu veux le recevoir : il faut commander avec ${expected}`;
+    }
+    if (aspect === "item-request-choice" && selected.endsWith("주세요.") && selected !== expected) {
+      return `${choice} demande à quelqu’un de boire le café. Ici, tu veux recevoir l’objet : ${expected}`;
+    }
     if (aspect === "item-vs-action" && selected === "있어요") {
       return `${choice} demande si la porte existe, ou dit qu’elle existe. Ici, tu veux que l’employé l’ouvre : ${expected}.`;
     }
@@ -352,19 +361,19 @@ function selectedSpecificFallback(
 
   if (conceptId === "polite-instruction-euseyo") {
     if (/주세요$/u.test(selected)) {
-      return `${choice} est possible pour demander un service. Ici, tu donnes plutôt une instruction ou une invitation polie : ${expected}.`;
+      return `${choice} est possible pour demander un service. Ici, tu donnes plutôt un ordre ou une invitation à l’impératif poli : ${expected}.`;
     }
     if (/^[앉읽].*세요$/u.test(selected) && !selected.includes("으")) {
-      return `${choice} omet 으 après un radical avec 받침. L’instruction polie se forme ici avec ${expected}.`;
+      return `${choice} omet 으 après un radical avec 받침. L’impératif poli se forme ici avec ${expected}.`;
     }
     if (/^가으|오으/u.test(selected)) {
       return `${choice} ajoute 으 après un radical terminé par une voyelle. Dans ce cas, -세요 s’attache directement : ${expected}.`;
     }
     if (/까요$/u.test(selected)) {
-      return `${choice} propose de faire quelque chose ensemble. Ici, tu donnes une instruction ou une invitation : ${expected}.`;
+      return `${choice} propose de faire quelque chose ensemble. Ici, tu donnes un ordre ou une invitation à l’impératif poli : ${expected}.`;
     }
     if (/요$/u.test(selected)) {
-      return `${choice} est poli, mais ne donne pas vraiment d’instruction. Le professeur dira ${expected}.`;
+      return `${choice} est poli, mais ne forme pas l’impératif. Le professeur dira ${expected}.`;
     }
   }
 
@@ -685,8 +694,38 @@ export function getGrammarIncorrectFeedback(
     }
   }
 
-  if (question.ruleAspect === "additive-vs-restrictive" && selected === "만") {
+  if (conceptId === "additive-do" && question.ruleAspect === "additive-meaning-person") {
+    if (/seulement|seul/u.test(selected)) {
+      return `${quoted(selected)} exprime une limitation. Ici, 도 ajoute le locuteur à l’ami qui part déjà : « moi aussi ».`;
+    }
+    if (/contraste/u.test(selected)) {
+      return `${quoted(selected)} met « je » en contraste avec les autres. Ici, 도 exprime l’addition : ${expected}.`;
+    }
+    if (/Est-ce que/u.test(selected)) {
+      return `${quoted(selected)} transforme la phrase en question. 저도 가요 signifie une affirmation : « moi aussi, j’y vais ».`;
+    }
+  }
+
+  if (conceptId === "additive-do" && question.ruleAspect === "additive-object-choice") {
+    if (selected === "김치를 주세요." || selected === "커피를 마셔요.") {
+      return `${quoted(selected)} est grammatical, mais reste neutre : la phrase ne dit pas « aussi ». Pour ajouter cet élément à ce qui est déjà mentionné, il faut ${expected}.`;
+    }
+    if (selected === "김치만 주세요." || selected === "커피만 마셔요.") {
+      return `${quoted(selected)} signifie « seulement ». Ici, tu ajoutes l’élément à un autre déjà mentionné : il faut ${expected}.`;
+    }
+    if (selected === "김치는 주세요." || selected === "커피는 마셔요.") {
+      return `${quoted(selected)} met l’élément en thème ou en contraste, mais n’exprime pas explicitement « aussi ». Ici, il faut ${expected}.`;
+    }
+  }
+
+  if (question.ruleAspect === "additive-vs-restrictive" && (selected === "만" || /만 주세요\.?$/u.test(selected))) {
     return "만 signifie « seulement » et limiterait la commande au pain. Ici, tu ajoutes le pain à ce qui est déjà commandé, donc il faut 도.";
+  }
+  if (question.ruleAspect === "additive-vs-restrictive" && selected === "빵을 주세요.") {
+    return "빵을 주세요 est une demande neutre : elle ne dit pas que le pain s’ajoute au lait déjà commandé. Pour dire « du pain aussi », il faut 빵도 주세요.";
+  }
+  if (question.ruleAspect === "additive-vs-restrictive" && selected === "빵은 주세요.") {
+    return "빵은 주세요 met le pain en thème ou en contraste, mais n’exprime pas explicitement « aussi ». Ici, il faut 빵도 주세요.";
   }
   if (conceptId === "additive-do" && ["은", "는"].includes(selected)) {
     return `${quoted(selected)} peut marquer un thème ou un contraste. Ici, tu veux dire « aussi », donc il faut 도.`;
@@ -733,17 +772,20 @@ export function getGrammarIncorrectFeedback(
     question.ruleAspect === "ability" ||
     question.ruleAspect === "ability-vs-permission"
   ) {
+    const possibilityMeaning = question.exerciseGroup === "situational-feasibility"
+      ? "la faisabilité dans cette situation"
+      : "une capacité personnelle";
     if (/도 돼요\??$/u.test(selected)) {
-      return `${quoted(selected)} demande une autorisation. Ici, tu vérifies sa capacité réelle à faire l’action, donc utilise -(으)ㄹ 수 있어요.`;
+      return `${quoted(selected)} demande si c’est autorisé, pas si c’est réalisable. Ici, tu vérifies ${possibilityMeaning}, donc utilise -(으)ㄹ 수 있어요.`;
     }
     if (/고 싶어요\.?$/u.test(selected)) {
-      return `${quoted(selected)} dit ce qu’on a envie de faire, pas ce qu’on peut faire. Pour parler d’une capacité, utilise -(으)ㄹ 수 있어요.`;
+      return `${quoted(selected)} dit ce qu’on a envie de faire, pas ${possibilityMeaning}. Utilise -(으)ㄹ 수 있어요.`;
     }
     if (/야 해요\.?$/u.test(selected)) {
-      return `${quoted(selected)} dit qu’il faut faire l’action. Ici, tu demandes simplement si elle est possible.`;
+      return `${quoted(selected)} dit qu’il faut faire l’action. Ici, tu vérifies ${possibilityMeaning}.`;
     }
     if (/^못 /u.test(selected)) {
-      return `${quoted(selected)} dit qu’on ne peut pas faire l’action. Ici, tu veux au contraire dire qu’elle est possible.`;
+      return `${quoted(selected)} dit que l’action est impossible. Ici, tu veux au contraire dire que ${possibilityMeaning} est possible.`;
     }
   }
 
@@ -752,7 +794,7 @@ export function getGrammarIncorrectFeedback(
     question.ruleAspect === "permission-vs-ability"
   ) {
     if (/수 있어요\??$/u.test(selected)) {
-      return `${quoted(selected)} demande si l’action est possible. Ici, tu demandes si tu as le droit de la faire, donc utilise -아/어도 돼요.`;
+      return `${quoted(selected)} vérifie si l’action est réalisable, pas si elle est autorisée. Ici, tu demandes si tu as le droit de la faire, donc utilise -아/어도 돼요.`;
     }
     if (/세요\??$/u.test(selected)) {
       return `${quoted(selected)} dit à l’autre personne quoi faire. Ici, tu lui demandes si toi, tu as le droit d’agir.`;
@@ -763,6 +805,9 @@ export function getGrammarIncorrectFeedback(
   }
 
   if (question.ruleAspect === "inability-vs-choice") {
+    if (selected === "잘 안 들려요") {
+      return "« 잘 안 들려요 » convient quand le son est trop faible ou difficile à percevoir. Ici, la douleur à l’oreille t’empêche réellement d’entendre : pour exprimer cette incapacité, utilise 잘 못 들어요.";
+    }
     if (/^안 /u.test(selected) || /지 않아요\.?$/u.test(selected)) {
       return `${quoted(selected)} laisse entendre qu’on choisit de ne pas faire l’action. Ici, on en est empêché, donc on emploie 못.`;
     }
@@ -852,7 +897,7 @@ export function getGrammarIncorrectFeedback(
     return "주세요 après un nom demande l’objet lui-même. Comme 문을 est déjà l’objet, précise l’action : 열어 주세요.";
   }
   if (question.ruleAspect === "instruction" && /주세요\.?$/u.test(selected)) {
-    return `${quoted(selected)} sert à demander un service. Ici, le professeur s’adresse à toute la classe avec une instruction en -(으)세요.`;
+    return `${quoted(selected)} sert à demander un service. Ici, le professeur s’adresse à toute la classe avec l’impératif poli en -(으)세요.`;
   }
   if (question.ruleAspect === "item-vs-action" && /세요\.?$/u.test(selected)) {
     return `${quoted(selected)} donne une instruction. Ici, tu demandes à l’employé de faire l’action pour toi, donc utilise -아/어 주세요.`;

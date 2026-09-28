@@ -571,8 +571,8 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     id: "polite-instructions",
     number: 22,
     chapterId: "daily-actions",
-    title: "Donner une instruction polie",
-    communicativeGoal: "Comprendre et donner une instruction polie",
+    title: "Parler à l'impératif",
+    communicativeGoal: "Comprendre et formuler l'impératif coréen poli",
     conceptIds: ["polite-instruction-euseyo"],
     prerequisites: recommendedStages(["present-actions"]),
     canonicalExamples: [
@@ -638,8 +638,8 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     id: "express-ability",
     number: 25,
     chapterId: "express-needs",
-    title: "Dire ce qui est possible",
-    communicativeGoal: "Exprimer une possibilité",
+    title: "Exprimer une capacité ou une possibilité",
+    communicativeGoal: "Dire ce qu’on peut faire ou ce qui est faisable dans une situation",
     conceptIds: ["ability-eul-su-isseoyo"],
     prerequisites: recommendedStages(["present-actions"]),
     canonicalExamples: [
@@ -653,6 +653,7 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     validationCriteria: ["M", "L", "P", "D"],
     reviewAfterDays: REVIEW_AFTER_DAYS,
     status: "a1",
+    practiceQuestionCount: 7,
   },
   {
     id: "ask-permission",
@@ -687,8 +688,8 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     ]),
     canonicalExamples: [
       {
-        korean: "잘 못 알아들어요.",
-        french: "Je ne comprends pas bien.",
+        korean: "아파서 오늘 못 가요.",
+        french: "Je ne peux pas y aller aujourd’hui parce que je suis malade.",
       },
     ],
     reuseContentRefIds: [
@@ -725,7 +726,7 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     number: 29,
     chapterId: "express-needs",
     title: "Limiter une demande",
-    communicativeGoal: "Préciser que l’on ne veut qu’un élément",
+    communicativeGoal: "Préciser qu’un seul élément est disponible",
     conceptIds: ["restrictive-man"],
     prerequisites: recommendedStages([
       "request-quantity",
@@ -733,8 +734,8 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     ]),
     canonicalExamples: [
       {
-        korean: "한 잔만 주세요.",
-        french: "Un seul verre, s’il vous plaît.",
+        korean: "카드만 있어요.",
+        french: "Je n’ai que ma carte.",
       },
     ],
     reuseContentRefIds: ["scene:cafe", "counting:base", "scene:metro"],

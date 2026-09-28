@@ -293,10 +293,10 @@ export const GRAMMAR_EDITORIAL = {
     ),
   },
   "polite-instruction-euseyo": {
-    rule: "Ajoute 으세요 après une consonne et 세요 après une voyelle pour donner une instruction polie. La forme peut aussi inviter respectueusement quelqu’un à agir : 앉으세요 signifie « asseyez-vous ».",
+    rule: "Ajoute 으세요 après une consonne et 세요 après une voyelle pour parler à l’impératif de façon polie. En coréen courant, la forme peut aussi servir à inviter respectueusement quelqu’un à agir : 앉으세요 signifie « asseyez-vous ».",
     practice: practice(
       "quantity-request",
-      "Tu invites poliment une personne à prendre place ici.",
+      "Tu demandes poliment à une personne de s’asseoir ici.",
       "여기에 앉으세요.",
       "Asseyez-vous ici.",
     ),
@@ -330,7 +330,7 @@ export const GRAMMAR_EDITORIAL = {
     ),
   },
   "ability-eul-su-isseoyo": {
-    rule: "Ajoute ㄹ 수 있어요 après une voyelle et 을 수 있어요 après une consonne pour exprimer une capacité ou une possibilité. Remplace 있어요 par 없어요 quand l’action est impossible dans la situation décrite.",
+    rule: "Ajoute ㄹ 수 있어요 après une voyelle et 을 수 있어요 après une consonne pour exprimer une capacité ou une possibilité. La forme vérifie si l’action est réalisable, jamais si elle est autorisée. Remplace 있어요 par 없어요 quand elle est impossible.",
     practice: practice(
       "ability-needs",
       "À la caisse, tu demandes si le paiement par carte est possible ici.",
@@ -348,16 +348,16 @@ export const GRAMMAR_EDITORIAL = {
     ),
   },
   "inability-mot": {
-    rule: "Place 못 juste avant le verbe pour signaler qu’une action est impossible ou hors de tes capacités. 안 indique plutôt un choix ou une simple négation : 못 가요, « je ne peux pas y aller ».",
+    rule: "Ce module entraîne 못 : place-le avant le verbe quand l’action est impossible ou hors de tes capacités. 안 exprime un choix ; un son trop faible se décrit avec 잘 안 들려요. Retiens 못 가요 : « je ne peux pas y aller ».",
     practice: practice(
       "ability-needs",
-      "Tu expliques qu’aujourd’hui, tu es incapable de conduire.",
-      "오늘은 운전을 못 해요.",
-      "Je ne peux pas conduire aujourd’hui.",
+      "Tu expliques que tu voudrais venir, mais qu’une urgence t’en empêche.",
+      "오늘은 못 가요.",
+      "Je ne peux pas y aller aujourd’hui.",
     ),
   },
   "additive-do": {
-    rule: "Ajoute 도 directement au nom pour signifier « aussi » ou « même ». La particule remplace généralement 은/는, 이/가 ou 을/를 : 저도 가요 signifie « moi aussi, j’y vais ».",
+    rule: "Ajoute 도 directement au nom pour signifier « aussi » ou « même ». La particule remplace généralement 은/는, 이/가 ou 을/를 : 저도 가요 signifie « moi aussi, j’y vais ». Compare 물도 주세요 et 물만 주세요.",
     practice: practice(
       "sentence",
       "Après une première commande, tu ajoutes du kimchi.",
@@ -366,12 +366,12 @@ export const GRAMMAR_EDITORIAL = {
     ),
   },
   "restrictive-man": {
-    rule: "Ajoute 만 directement au nom pour limiter le choix à cet élément : 물만 마셔요, « je ne bois que de l’eau ». Contrairement à 도, 만 exclut les autres possibilités.",
+    rule: "Ajoute 만 directement au groupe disponible et garde la phrase affirmative : 물만 있어요, « il n’y a que de l’eau ». Contrairement à 도, 만 exclut les autres possibilités.",
     practice: practice(
       "sentence",
-      "On te propose plusieurs boissons, mais tu précises que tu bois seulement de l’eau.",
-      "물만 마셔요.",
-      "Je ne bois que de l’eau.",
+      "On te demande quelle boisson est disponible ; tu l’annonces directement avec la forme positive de la leçon.",
+      "물만 있어요.",
+      "Il n’y a que de l’eau.",
     ),
   },
   "range-buteo-kkaji": {

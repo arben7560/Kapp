@@ -166,6 +166,10 @@ export type GrammarPracticeSkill =
   | "register"
   | "forms";
 
+export type GrammarPracticeGroup =
+  | "capacity"
+  | "situational-feasibility";
+
 export type GrammarContrastFamily = {
   id: string;
   label: string;
@@ -182,6 +186,7 @@ type GrammarPracticeDrillBase = {
   explanation: string;
   ruleAspect?: string;
   contrastFamily?: GrammarContrastFamily;
+  exerciseGroup?: GrammarPracticeGroup;
 };
 
 export type GrammarPracticeDrill = GrammarPracticeDrillBase &
@@ -284,6 +289,7 @@ export type GrammarStage = {
   validationCriteria: readonly GrammarCriterion[];
   reviewAfterDays: readonly number[];
   status: GrammarLevel;
+  practiceQuestionCount?: number;
   mode?: "lesson" | "review";
 };
 
@@ -338,6 +344,7 @@ export type GrammarPracticeQuestion = GrammarExercise & {
   skill?: GrammarPracticeSkill;
   ruleAspect?: string;
   contrastFamily?: GrammarContrastFamily;
+  exerciseGroup?: GrammarPracticeGroup;
 };
 
 export type GrammarPracticeResponse = {

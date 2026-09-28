@@ -208,11 +208,12 @@ function answerRemainingCorrectly(session, completedAt = "2026-07-21T10:10:00.00
   return current;
 }
 
-test("lessons keep five exercises and the general review covers twelve structures", () => {
+test("lessons keep their configured exercise count and the general review covers twelve structures", () => {
   for (const stageId of GRAMMAR_STAGE_IDS) {
     const questions = buildGrammarPracticeQuestions(stageId);
     const isReview = GRAMMAR_STAGE_BY_ID[stageId].mode === "review";
-    assert.equal(questions.length, isReview ? 12 : 5, stageId);
+    const expectedCount = GRAMMAR_STAGE_BY_ID[stageId].practiceQuestionCount ?? 5;
+    assert.equal(questions.length, isReview ? 12 : expectedCount, stageId);
     assert.ok(questions.every(({ skill }) => !!skill), `${stageId}: targeted drills`);
     if (GRAMMAR_STAGE_BY_ID[stageId].mode === "review") {
       assert.ok(questions.every(({ kind }) => kind !== "order"), stageId);
@@ -233,6 +234,20 @@ test("lessons keep five exercises and the general review covers twelve structure
       assert.ok(question.explanation.length > 0, question.id);
     }
   }
+
+  const abilityQuestions = buildGrammarPracticeQuestions("express-ability", 1, () => 0.42);
+  assert.deepEqual(
+    abilityQuestions.map(({ exerciseGroup }) => exerciseGroup),
+    [
+      "capacity",
+      "capacity",
+      "capacity",
+      "situational-feasibility",
+      "situational-feasibility",
+      "situational-feasibility",
+      "situational-feasibility",
+    ],
+  );
 });
 
 test("distractors stay specific to the notion and corrections are question-specific", () => {
@@ -356,7 +371,7 @@ test("high-confusion grammar distractors receive answer-specific explanations", 
   assert.match(getGrammarIncorrectFeedback(staticLocation, "에서"), /action.*statique/u);
 
   const ability = buildGrammarPracticeQuestions("express-ability", 1, () => 0.42)[0];
-  assert.match(getGrammarIncorrectFeedback(ability, "읽어도 돼요"), /autorisation.*capacité/u);
+  assert.match(getGrammarIncorrectFeedback(ability, "읽어도 돼요"), /autorisé.*réalisable/u);
 
   const reason = buildGrammarPracticeQuestions("give-reason", 1, () => 0.42)[0];
   assert.match(getGrammarIncorrectFeedback(reason, "오지만"), /contraste.*cause/u);
@@ -440,6 +455,70 @@ test("negation and inability use the same vocabulary with an explicit semantic c
   assert.ok(inability.options.includes("안 가요"));
   assert.match(shortNegation.prompt, /négation courte 안/u);
   assert.match(inability.display, /empêche/u);
+});
+
+test("adding-item drills vary the task and keep grammatical distractors", () => {
+  const questions = buildGrammarPracticeQuestions("add-item", 1, () => 0.42);
+  const water = questions.find((question) => question.id.includes("water-too"));
+  const meaning = questions.find((question) => question.id.includes("me-too"));
+  const kimchi = questions.find((question) => question.id.includes("kimchi-too"));
+  const bread = questions.find((question) => question.id.includes("too-vs-only"));
+
+  assert.equal(questions.length, 5);
+  assert.ok(water);
+  assert.deepEqual(new Set(["도", "을", "만", "은"]), new Set([water.answer, ...water.options]));
+  assert.ok(meaning);
+  assert.equal(meaning.kind, "choice");
+  assert.equal(meaning.answer, "Moi aussi, j’y vais.");
+  assert.ok(kimchi);
+  assert.equal(kimchi.kind, "scene");
+  assert.ok(kimchi.options.includes("김치를 주세요."));
+  assert.match(getGrammarIncorrectFeedback(kimchi, "김치를 주세요."), /grammatical.*neutre.*« aussi »/u);
+  assert.ok(bread);
+  assert.match(getGrammarIncorrectFeedback(bread, "빵을 주세요."), /demande neutre.*빵도 주세요/u);
+});
+
+test("limit-request drills stay on affirmative 만 있어요", () => {
+  const questions = buildGrammarPracticeQuestions("limit-request", 1, () => 0.42);
+  const guide = getGrammarLessonGuide("limit-request");
+  const exerciseText = questions
+    .flatMap(({ prompt, display, explanation, options }) => [prompt, display, explanation, ...options])
+    .join(" ");
+
+  assert.equal(questions.length, 5);
+  assert.deepEqual(new Set(questions.map(({ kind }) => kind)), new Set(["gap", "choice", "order"]));
+  assert.equal(questions.find(({ id }) => id.includes("sentence-card-only"))?.answer, "카드만 있어요.");
+  assert.equal(questions.find(({ id }) => id.includes("meaning-bread-only"))?.answer, "Il n’y a que du pain.");
+  assert.deepEqual(
+    questions.find(({ id }) => id.includes("one-only-order"))?.answer,
+    ["지금", "한 잔만", "있어요."],
+  );
+  assert.match(exerciseText, /만 있어요/u);
+  assert.doesNotMatch(exerciseText, /밖에|없어요/u);
+  assert.match(guide.formula.pattern, /만 \+ 있어요/u);
+  assert.match(
+    guide.commonMistakes.map(({ correction }) => correction).join(" "),
+    /밖에 \+ 없어요.*forme affirmative 만 있어요/u,
+  );
+});
+
+test("inability module keeps 못 as the only correct negation", () => {
+  const questions = buildGrammarPracticeQuestions("express-inability", 1, () => 0.42);
+  const hearing = questions.find((question) => question.id.includes("cannot-hear"));
+  const guide = getGrammarLessonGuide("express-inability");
+
+  assert.equal(questions.length, 5);
+  assert.ok(questions.every(({ answer }) => answer.includes("못")));
+  assert.ok(hearing);
+  assert.equal(hearing.answer, "잘 못 들어요");
+  assert.ok(hearing.options.includes("잘 안 들려요"));
+  assert.match(hearing.display, /귀가 아파서/u);
+  assert.match(getGrammarIncorrectFeedback(hearing, "잘 안 들려요"), /son est trop faible/u);
+  assert.match(guide.introduction, /uniquement 못/u);
+  assert.match(
+    guide.commonMistakes.map(({ correction }) => correction).join(" "),
+    /잘 안 들려요/u,
+  );
 });
 
 test("register and request distractors are disambiguated by explicit situations", () => {
@@ -675,6 +754,27 @@ test("grammar screens guard premium navigation at the hub and lesson route", () 
   assert.match(lesson, /router\.replace\("\/premium"\)/u);
   assert.match(lesson, /canRepeatGrammarPractice/u);
   assert.match(lesson, /label=\{stage\.access === "premium" \? "PREMIUM" : "GRATUIT"\}/u);
+});
+
+test("capacity and permission stay adjacent and distinct in the journey", () => {
+  const abilityIndex = GRAMMAR_STAGE_IDS.indexOf("express-ability");
+  assert.equal(GRAMMAR_STAGE_IDS[abilityIndex + 1], "ask-permission");
+  assert.equal(
+    GRAMMAR_STAGE_BY_ID["express-ability"].title,
+    "Exprimer une capacité ou une possibilité",
+  );
+  assert.equal(
+    GRAMMAR_STAGE_BY_ID["express-ability"].communicativeGoal,
+    "Dire ce qu’on peut faire ou ce qui est faisable dans une situation",
+  );
+  assert.match(
+    getGrammarLessonGuide("express-ability").mainRule,
+    /ne demande jamais directement la permission/u,
+  );
+  assert.match(
+    getGrammarLessonGuide("ask-permission").mainRule,
+    /autorisée/u,
+  );
 });
 
 test("the public screens keep explicit compact and tablet layouts", () => {

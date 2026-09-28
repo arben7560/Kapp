@@ -145,6 +145,7 @@ function buildDrillQuestion(
     skill: drill.skill,
     ...(drill.ruleAspect ? { ruleAspect: drill.ruleAspect } : {}),
     ...(drill.contrastFamily ? { contrastFamily: drill.contrastFamily } : {}),
+    ...(drill.exerciseGroup ? { exerciseGroup: drill.exerciseGroup } : {}),
   };
 }
 
@@ -296,9 +297,10 @@ export function buildGrammarPracticeQuestions(
 
   const concepts = getConcepts(stageId);
   const drillEntries = getInterleavedDrills(concepts, attemptNumber);
-  if (drillEntries.length >= 5) {
+  const drillLimit = stage.practiceQuestionCount ?? 5;
+  if (drillEntries.length >= drillLimit) {
     return drillEntries
-      .slice(0, 5)
+      .slice(0, drillLimit)
       .map(({ concept, drill }, index) =>
         buildDrillQuestion(
           stageId,

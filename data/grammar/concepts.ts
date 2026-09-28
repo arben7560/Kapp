@@ -471,7 +471,7 @@ export const GRAMMAR_CONCEPTS = [
   defineConcept({
     id: "polite-instruction-euseyo",
     form: "-(으)세요",
-    shortFunction: "Comprendre ou donner une instruction polie.",
+    shortFunction: "Parler à l’impératif de façon polie.",
     level: "a1",
     a1Usage: "productive",
     prerequisiteIds: ["present-a-eoyo", "polite-style-yo"],
@@ -523,7 +523,7 @@ export const GRAMMAR_CONCEPTS = [
   defineConcept({
     id: "ability-eul-su-isseoyo",
     form: "-(으)ㄹ 수 있어요/없어요",
-    shortFunction: "Dire ce qui est possible ou impossible.",
+    shortFunction: "Dire ce qu’on peut faire ou ce qui est faisable dans une situation.",
     level: "a1",
     a1Usage: "productive",
     prerequisiteIds: ["present-a-eoyo"],
@@ -547,7 +547,7 @@ export const GRAMMAR_CONCEPTS = [
   defineConcept({
     id: "permission-a-eodo-dwaeyo",
     form: "-아/어도 돼요?",
-    shortFunction: "Demander une permission simplement.",
+    shortFunction: "Demander si une action est autorisée.",
     level: "a1",
     a1Usage: "productive",
     prerequisiteIds: ["present-a-eoyo", "negation-an"],
@@ -594,12 +594,12 @@ export const GRAMMAR_CONCEPTS = [
   defineConcept({
     id: "restrictive-man",
     form: "만",
-    shortFunction: "Limiter une demande ou une information.",
+    shortFunction: "Dire qu’un seul élément est disponible.",
     level: "a1",
     a1Usage: "productive",
     prerequisiteIds: ["request-n-juseyo", "native-numbers"],
     examples: [
-      { korean: "한 잔만 주세요.", french: "Un seul verre, s’il vous plaît." },
+      { korean: "물만 있어요.", french: "Il n’y a que de l’eau." },
       { korean: "카드만 있어요.", french: "Je n’ai que ma carte." },
     ],
   }),

@@ -648,6 +648,11 @@ function PracticePanel({
       </View>
 
       <BlurView intensity={58} tint="dark" style={styles.questionCard}>
+        {question.exerciseGroup ? (
+          <AppText variant="sectionLabel" style={styles.accentText}>
+            {exerciseGroupLabel(question.exerciseGroup)}
+          </AppText>
+        ) : null}
         <AppText variant="sectionLabel" tone="soft">{exerciseKindLabel(question)}</AppText>
         <AppText variant="sectionTitle">{question.prompt}</AppText>
         {question.display ? <QuestionDisplay value={question.display} /> : null}
@@ -959,6 +964,12 @@ function exerciseKindLabel(question: GrammarPracticeQuestion) {
     case "scene": return "MISE EN SITUATION";
     default: return "CHOIX GUIDÉ";
   }
+}
+
+function exerciseGroupLabel(group: NonNullable<GrammarPracticeQuestion["exerciseGroup"]>) {
+  return group === "capacity"
+    ? "CAPACITÉ PERSONNELLE"
+    : "FAISABILITÉ DANS CETTE SITUATION";
 }
 
 const styles = StyleSheet.create({
