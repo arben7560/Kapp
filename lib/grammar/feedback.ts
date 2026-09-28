@@ -670,6 +670,9 @@ export function getGrammarIncorrectFeedback(
   if (question.ruleAspect === "action-location" && selected === "에") {
     return "에 indique notamment où se trouve une chose ou où l’on va. Ici, une action se passe dans ce lieu, donc il faut 에서.";
   }
+  if (question.ruleAspect === "static-location" && selected === "에서") {
+    return "에서 marque le lieu où une action se déroule. Ici, 있어요 décrit seulement une position, donc il faut 에.";
+  }
   if (question.ruleAspect === "destination" && selected === "에서") {
     return "에서 donnerait une phrase grammaticale, mais ferait de ce lieu le point de départ. Ici, c’est la destination, donc on met 에.";
   }

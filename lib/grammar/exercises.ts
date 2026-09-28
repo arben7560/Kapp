@@ -144,6 +144,7 @@ function buildDrillQuestion(
     explanation: drill.explanation,
     skill: drill.skill,
     ...(drill.ruleAspect ? { ruleAspect: drill.ruleAspect } : {}),
+    ...(drill.contrastFamily ? { contrastFamily: drill.contrastFamily } : {}),
   };
 }
 
