@@ -600,7 +600,7 @@ export const GRAMMAR_CONCEPTS = [
     prerequisiteIds: ["request-n-juseyo", "native-numbers"],
     examples: [
       { korean: "물만 있어요.", french: "Il n’y a que de l’eau." },
-      { korean: "카드만 있어요.", french: "Je n’ai que ma carte." },
+      { korean: "커피만 있어요.", french: "Il n’y a que du café." },
     ],
   }),
   defineConcept({

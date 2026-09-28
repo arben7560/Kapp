@@ -114,7 +114,13 @@ function EditorialNote({ note, boxed = false }: { note: string; boxed?: boolean 
   );
 }
 
-function QuestionDisplay({ value }: { value: string }) {
+function QuestionDisplay({
+  value,
+  vocabulary,
+}: {
+  value: string;
+  vocabulary?: readonly { korean: string; french: string }[];
+}) {
   const sections = value.split("\n\n");
 
   return (
@@ -123,19 +129,61 @@ function QuestionDisplay({ value }: { value: string }) {
         const [label, ...contentParts] = section.split("\n");
         const content = contentParts.join("\n");
         const isKorean = /[가-힣]/u.test(content);
-        const contentVariant = isKorean
+        const contentVariant = label === "CONTEXTE" ? "bodyStrong" : isKorean
           ? "koreanPrimary"
-          : content.length > 70
-            ? "bodyStrong"
-            : "featureTitle";
-
+          : "featureTitle";
         return (
           <View key={`${label}-${index}`} style={styles.questionSection}>
             <AppText variant="sectionLabel" tone="soft">{label}</AppText>
             {content ? (
-              <AppText variant={contentVariant} script={isKorean ? "korean" : "latin"}>
-                {content}
-              </AppText>
+              vocabulary && isKorean ? (
+                <View style={styles.vocabularyPhrase}>
+                  {(() => {
+                    const hints = vocabulary
+                      .map((hint) => ({ ...hint, index: content.indexOf(hint.korean) }))
+                      .filter((hint) => hint.index >= 0)
+                      .sort((left, right) => left.index - right.index);
+                    const parts: React.ReactNode[] = [];
+                    let cursor = 0;
+                    hints.forEach((hint, hintIndex) => {
+                      if (hint.index > cursor) {
+                        parts.push(
+                          <View key={`text-${hintIndex}`} style={styles.vocabularyTextUnit}>
+                            <AppText variant="koreanPrimary" script="korean">
+                              {content.slice(cursor, hint.index)}
+                            </AppText>
+                          </View>,
+                        );
+                      }
+                      parts.push(
+                        <View key={`hint-${hint.korean}`} style={styles.vocabularyUnit}>
+                          <AppText variant="koreanPrimary" script="korean" align="center">
+                            {hint.korean}
+                          </AppText>
+                          <AppText variant="caption" tone="muted" align="center" style={styles.vocabularyTranslation}>
+                            {hint.french}
+                          </AppText>
+                        </View>,
+                      );
+                      cursor = hint.index + hint.korean.length;
+                    });
+                    if (cursor < content.length) {
+                      parts.push(
+                        <View key="text-tail" style={styles.vocabularyTextUnit}>
+                          <AppText variant="koreanPrimary" script="korean">
+                            {content.slice(cursor)}
+                          </AppText>
+                        </View>,
+                      );
+                    }
+                    return parts;
+                  })()}
+                </View>
+              ) : (
+                <AppText variant={contentVariant} script={isKorean ? "korean" : "latin"}>
+                  {content}
+                </AppText>
+              )
             ) : null}
           </View>
         );
@@ -655,7 +703,7 @@ function PracticePanel({
         ) : null}
         <AppText variant="sectionLabel" tone="soft">{exerciseKindLabel(question)}</AppText>
         <AppText variant="sectionTitle">{question.prompt}</AppText>
-        {question.display ? <QuestionDisplay value={question.display} /> : null}
+        {question.display ? <QuestionDisplay value={question.display} vocabulary={question.vocabulary} /> : null}
       </BlurView>
 
       {question.kind === "order" ? (
@@ -1016,6 +1064,10 @@ const styles = StyleSheet.create({
   questionCard: { minHeight: 190, borderRadius: 26, borderWidth: 1, borderColor: GRAMMAR_ACCENT.selectedShadow, padding: 22, justifyContent: "center", gap: 12, overflow: "hidden" },
   questionSections: { marginTop: 5, gap: 14 },
   questionSection: { gap: 4 },
+  vocabularyPhrase: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-end", rowGap: 4 },
+  vocabularyTextUnit: { flexShrink: 0, alignSelf: "flex-end" },
+  vocabularyUnit: { alignItems: "center", maxWidth: "45%", marginHorizontal: 2 },
+  vocabularyTranslation: { fontSize: 11, lineHeight: 14, marginTop: -1 },
   optionGrid: { gap: 10 },
   optionGridTablet: { flexDirection: "row", flexWrap: "wrap" },
   optionButton: { minHeight: 62, borderRadius: 18, borderWidth: 1, borderColor: "rgba(255,255,255,0.13)", backgroundColor: "rgba(255,255,255,0.045)", alignItems: "center", justifyContent: "center", padding: 14 },

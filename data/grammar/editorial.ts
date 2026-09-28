@@ -366,7 +366,7 @@ export const GRAMMAR_EDITORIAL = {
     ),
   },
   "restrictive-man": {
-    rule: "Ajoute 만 directement au groupe disponible et garde la phrase affirmative : 물만 있어요, « il n’y a que de l’eau ». Contrairement à 도, 만 exclut les autres possibilités.",
+    rule: "Ajoute 만 au groupe disponible et garde la phrase affirmative : 물만 있어요, « il n’y a que de l’eau ». Pour annoncer une disponibilité, 만 convient ; pour une possession exclusive, 밖에 없어요 peut être plus naturel.",
     practice: practice(
       "sentence",
       "On te demande quelle boisson est disponible ; tu l’annonces directement avec la forme positive de la leçon.",

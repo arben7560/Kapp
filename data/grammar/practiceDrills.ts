@@ -8,6 +8,28 @@ import type {
 
 type DrillOptions = readonly [string, string, string];
 
+const GRAMMAR_VOCABULARY_HINTS: Record<string, readonly { korean: string; french: string }[]> = {
+  "hours-range-start": [
+    { korean: "\uC544\uD649 \uC2DC", french: "neuf heures" },
+    { korean: "\uB2E4\uC12F \uC2DC", french: "cinq heures" },
+  ],
+  "hours-range-end": [
+    { korean: "\uC544\uD649 \uC2DC", french: "neuf heures" },
+    { korean: "\uB2E4\uC12F \uC2DC", french: "cinq heures" },
+  ],
+  "days-range-start": [
+    { korean: "\uC6D4\uC694\uC77C", french: "lundi" },
+    { korean: "\uAE08\uC694\uC77C", french: "vendredi" },
+  ],
+  "days-range-end": [
+    { korean: "\uC6D4\uC694\uC77C", french: "lundi" },
+    { korean: "\uAE08\uC694\uC77C", french: "vendredi" },
+  ],
+  "destination-limit": [
+    { korean: "\uC11C\uC6B8\uC5ED", french: "la gare de S\u00E9oul" },
+  ],
+};
+
 const ACTION_LOCATION_CONTRAST: GrammarContrastFamily = {
   id: "location-action-vs-state",
   label: "Lieu : action ou position",
@@ -45,6 +67,7 @@ function gap(
     explanation,
     ...(ruleAspect ? { ruleAspect } : {}),
     ...(contrastFamily ? { contrastFamily } : {}),
+    ...(GRAMMAR_VOCABULARY_HINTS[id] ? { vocabulary: GRAMMAR_VOCABULARY_HINTS[id] } : {}),
   };
 }
 
@@ -2059,7 +2082,11 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       "me-too",
       "저도 가요.",
       "Moi aussi, j’y vais.",
-      ["Je suis le seul à y aller.", "Je pars, moi, par contraste avec les autres.", "Est-ce que j’y vais ?"],
+      [
+        "Je suis le seul à y aller.",
+        "Je pars, moi, par contraste avec les autres.",
+        "Est-ce que j’y vais ?",
+      ],
       "Dans 저도 가요, la réponse « Moi aussi, j’y vais. » montre que 도 ajoute le locuteur à quelqu’un qui part déjà. Ce n’est ni une restriction, ni une question.",
       "additive-meaning-person",
       undefined,
@@ -2111,11 +2138,11 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
     ),
     choose(
       "forms",
-      "sentence-card-only",
-      "On te demande quel moyen de paiement tu as avec toi. Tu réponds qu’il y a ta carte, et aucun autre moyen n’est évoqué.",
-      "카드만 있어요.",
-      ["카드가 있어요.", "카드도 있어요.", "카드나 있어요?"],
-      "카드만 있어요 annonce directement la carte comme unique élément disponible. 카드가 있어요 est neutre ; 카드도 ajoute la carte à ce qui est déjà mentionné.",
+      "sentence-seat-only",
+      "Vous êtes quatre à vouloir vous installer pour manger. Le serveur vous annonce qu’il ne reste pour le moment qu’une seule place assise disponible.",
+      "자리 하나만 있어요.",
+      ["자리가 하나 있어요.", "자리도 하나 있어요.", "자리 두 개만 있어요."],
+      "자리 하나만 있어요 annonce qu’il reste une seule place. 자리가 하나 있어요 est neutre ; 자리도 하나 있어요 ajoute une place à ce qui est déjà mentionné.",
       "restrictive",
       undefined,
       "Choisis la phrase qui correspond exactement au contexte.",
@@ -2131,9 +2158,13 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
     choose(
       "forms",
       "meaning-bread-only",
-      "« 빵만 있어요. »\nQuel sens exprime cette phrase ?",
+      "« 빵만 있어요. »\n Quel sens exprime cette phrase ?",
       "Il n’y a que du pain.",
-      ["Il y a aussi du pain.", "Le pain est délicieux.", "Y a-t-il du pain ou du riz ?"],
+      [
+        "Il y a aussi du pain.",
+        "Le pain est délicieux.",
+        "Y a-t-il du pain ou du riz ?",
+      ],
       "만 limite l’information au pain ; 있어요 indique que le pain est disponible. La phrase ne signifie ni « aussi », ni une question de choix.",
       "restrictive",
       undefined,

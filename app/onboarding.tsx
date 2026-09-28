@@ -223,7 +223,10 @@ function FeaturedScene({
         <View style={styles.beginnerRow}>
           <View style={styles.beginnerMeta}>
             <View
-              style={[styles.beginnerIcon, { borderColor: `${scene.accent}B8` }]}
+              style={[
+                styles.beginnerIcon,
+                { borderColor: `${scene.accent}B8` },
+              ]}
             >
               <Check size={12} color={scene.accent} strokeWidth={2.3} />
             </View>
@@ -367,24 +370,12 @@ export default function OnboardingScreen() {
 
   const sceneLayout = useMemo(
     () => ({
-      contentTop: isTallPhone
-        ? 8
-        : Math.round(lerp(8, 24, compactness)),
-      contentBottom: isTallPhone
-        ? 8
-        : Math.round(lerp(8, 12, compactness)),
-      introBottom: isTallPhone
-        ? 22
-        : Math.round(lerp(12, 24, compactness)),
-      eyebrowBottom: isTallPhone
-        ? 10
-        : Math.round(lerp(7, 12, compactness)),
-      subtitleTop: isTallPhone
-        ? 12
-        : Math.round(lerp(7, 12, compactness)),
-      alternativeTop: isTallPhone
-        ? 14
-        : Math.round(lerp(10, 22, compactness)),
+      contentTop: isTallPhone ? 8 : Math.round(lerp(8, 24, compactness)),
+      contentBottom: isTallPhone ? 8 : Math.round(lerp(8, 12, compactness)),
+      introBottom: isTallPhone ? 22 : Math.round(lerp(12, 24, compactness)),
+      eyebrowBottom: isTallPhone ? 10 : Math.round(lerp(7, 12, compactness)),
+      subtitleTop: isTallPhone ? 12 : Math.round(lerp(7, 12, compactness)),
+      alternativeTop: isTallPhone ? 14 : Math.round(lerp(10, 22, compactness)),
       heroHeight: isTablet
         ? 378
         : isTallPhone
@@ -678,7 +669,10 @@ export default function OnboardingScreen() {
                 <AppText variant="sectionLabel" style={styles.alternativeLabel}>
                   AUTRES IMMERSIONS
                 </AppText>
-                <View style={styles.sceneDots} accessibilityLabel="Scènes disponibles">
+                <View
+                  style={styles.sceneDots}
+                  accessibilityLabel="Scènes disponibles"
+                >
                   {SCENES.map((scene) => (
                     <View
                       key={scene.key}

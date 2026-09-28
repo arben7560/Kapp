@@ -187,6 +187,12 @@ type GrammarPracticeDrillBase = {
   ruleAspect?: string;
   contrastFamily?: GrammarContrastFamily;
   exerciseGroup?: GrammarPracticeGroup;
+  vocabulary?: readonly GrammarVocabularyHint[];
+};
+
+export type GrammarVocabularyHint = {
+  korean: string;
+  french: string;
 };
 
 export type GrammarPracticeDrill = GrammarPracticeDrillBase &
@@ -345,6 +351,7 @@ export type GrammarPracticeQuestion = GrammarExercise & {
   ruleAspect?: string;
   contrastFamily?: GrammarContrastFamily;
   exerciseGroup?: GrammarPracticeGroup;
+  vocabulary?: readonly GrammarVocabularyHint[];
 };
 
 export type GrammarPracticeResponse = {

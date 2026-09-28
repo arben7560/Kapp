@@ -109,8 +109,16 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     receptiveConceptIds: ["polite-style-yo"],
     prerequisites: recommendedStages(["sentence-structure"]),
     canonicalExamples: [
-      { korean: "학생이에요.", french: "Je suis étudiant.", note: "REGISTRE\nPoli courant" },
-      { korean: "마크예요.", french: "C’est Marc.", note: "REGISTRE\nPoli courant" },
+      {
+        korean: "학생이에요.",
+        french: "Je suis étudiant.",
+        note: "REGISTRE\nPoli courant",
+      },
+      {
+        korean: "마크예요.",
+        french: "C’est Marc.",
+        note: "REGISTRE\nPoli courant",
+      },
     ],
     reuseContentRefIds: ["vocabulary:basics", "counting:base"],
     validationCriteria: ["R", "M", "P", "D"],
@@ -127,8 +135,16 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     receptiveConceptIds: ["copula-imnida"],
     prerequisites: recommendedStages(["identify-with-copula"]),
     canonicalExamples: [
-      { korean: "학생이에요.", french: "Je suis étudiant.", note: "REGISTRE\nPoli courant" },
-      { korean: "학생입니다.", french: "Je suis étudiant.", note: "REGISTRE\nFormel" },
+      {
+        korean: "학생이에요.",
+        french: "Je suis étudiant.",
+        note: "REGISTRE\nPoli courant",
+      },
+      {
+        korean: "학생입니다.",
+        french: "Je suis étudiant.",
+        note: "REGISTRE\nFormel",
+      },
     ],
     reuseContentRefIds: [
       "scene:cafe",
@@ -158,11 +174,7 @@ const GRAMMAR_STAGE_DEFINITIONS = [
         french: "Moi, je suis français.",
       },
     ],
-    reuseContentRefIds: [
-      "vocabulary:basics",
-      "counting:age",
-      "counting:dates",
-    ],
+    reuseContentRefIds: ["vocabulary:basics", "counting:age", "counting:dates"],
     validationCriteria: ["M", "P", "D"],
     reviewAfterDays: REVIEW_AFTER_DAYS,
     status: "pre-a1",
@@ -179,11 +191,7 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     canonicalExamples: [
       { korean: "이거 뭐예요?", french: "Qu’est-ce que cet objet-ci ?" },
     ],
-    reuseContentRefIds: [
-      "scene:magasin",
-      "scene:cafe",
-      "listening:active",
-    ],
+    reuseContentRefIds: ["scene:magasin", "scene:cafe", "listening:active"],
     validationCriteria: ["R", "M", "L", "D"],
     reviewAfterDays: REVIEW_AFTER_DAYS,
     status: "pre-a1",
@@ -201,8 +209,16 @@ const GRAMMAR_STAGE_DEFINITIONS = [
       "demonstratives",
     ]),
     canonicalExamples: [
-      { korean: "누구예요?", french: "Qui est cette personne ?", note: "REGISTRE\nPoli courant" },
-      { korean: "몇 명이에요?", french: "Vous êtes combien ?", note: "REGISTRE\nPoli courant" },
+      {
+        korean: "누구예요?",
+        french: "Qui est cette personne ?",
+        note: "REGISTRE\nPoli courant",
+      },
+      {
+        korean: "몇 명이에요?",
+        french: "Vous êtes combien ?",
+        note: "REGISTRE\nPoli courant",
+      },
     ],
     reuseContentRefIds: [
       "scene:cafe",
@@ -225,11 +241,7 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     canonicalExamples: [
       { korean: "시간이 없어요.", french: "Je n’ai pas le temps." },
     ],
-    reuseContentRefIds: [
-      "scene:restaurant",
-      "scene:magasin",
-      "scene:metro",
-    ],
+    reuseContentRefIds: ["scene:restaurant", "scene:magasin", "scene:metro"],
     validationCriteria: ["M", "L", "P", "D"],
     reviewAfterDays: REVIEW_AFTER_DAYS,
     status: "pre-a1",
@@ -249,11 +261,7 @@ const GRAMMAR_STAGE_DEFINITIONS = [
         french: "Les toilettes sont au deuxième étage.",
       },
     ],
-    reuseContentRefIds: [
-      "scene:magasin",
-      "scene:aeroport",
-      "scene:metro",
-    ],
+    reuseContentRefIds: ["scene:magasin", "scene:aeroport", "scene:metro"],
     validationCriteria: ["M", "L", "P", "D"],
     reviewAfterDays: REVIEW_AFTER_DAYS,
     status: "pre-a1",
@@ -265,10 +273,7 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     title: "Parler au présent",
     communicativeGoal: "Parler d’une action présente ou habituelle",
     conceptIds: ["present-a-eoyo"],
-    prerequisites: recommendedStages([
-      "sentence-structure",
-      "polite-register",
-    ]),
+    prerequisites: recommendedStages(["sentence-structure", "polite-register"]),
     canonicalExamples: [
       { korean: "매일 공부해요.", french: "J’étudie tous les jours." },
     ],
@@ -291,10 +296,7 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     title: "Agir sur un objet",
     communicativeGoal: "Dire ce que l’on fait à un objet",
     conceptIds: ["object-eul-reul"],
-    prerequisites: recommendedStages([
-      "sentence-structure",
-      "present-actions",
-    ]),
+    prerequisites: recommendedStages(["sentence-structure", "present-actions"]),
     canonicalExamples: [
       { korean: "커피를 마셔요.", french: "Je bois du café." },
     ],
@@ -516,11 +518,7 @@ const GRAMMAR_STAGE_DEFINITIONS = [
         french: "Un café et un gâteau, s’il vous plaît.",
       },
     ],
-    reuseContentRefIds: [
-      "scene:cafe",
-      "scene:restaurant",
-      "scene:magasin",
-    ],
+    reuseContentRefIds: ["scene:cafe", "scene:restaurant", "scene:magasin"],
     validationCriteria: ["M", "L", "P", "D"],
     reviewAfterDays: REVIEW_AFTER_DAYS,
     status: "a1",
@@ -581,11 +579,7 @@ const GRAMMAR_STAGE_DEFINITIONS = [
         french: "Descendez ici.",
       },
     ],
-    reuseContentRefIds: [
-      "scene:metro",
-      "scene:aeroport",
-      "scene:restaurant",
-    ],
+    reuseContentRefIds: ["scene:metro", "scene:aeroport", "scene:restaurant"],
     validationCriteria: ["R", "M", "L", "P", "D"],
     reviewAfterDays: REVIEW_AFTER_DAYS,
     status: "a1",
@@ -600,7 +594,11 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     receptiveConceptIds: ["intention-eulgeyo"],
     prerequisites: recommendedStages(["destination-and-time"]),
     canonicalExamples: [
-      { korean: "카드로 할게요.", french: "Ce sera par carte.", note: "CONTEXTE\nOn te demande : « Carte ou espèces ? »" },
+      {
+        korean: "카드로 할게요.",
+        french: "Ce sera par carte.",
+        note: "CONTEXTE\nOn te demande : « Carte ou espèces ? »",
+      },
     ],
     reuseContentRefIds: [
       "scene:cafe",
@@ -626,10 +624,7 @@ const GRAMMAR_STAGE_DEFINITIONS = [
         french: "Je voudrais acheter une carte T-money.",
       },
     ],
-    reuseContentRefIds: [
-      "scene:aeroport",
-      "vocabulary:romance",
-    ],
+    reuseContentRefIds: ["scene:aeroport", "vocabulary:romance"],
     validationCriteria: ["M", "L", "P", "D"],
     reviewAfterDays: REVIEW_AFTER_DAYS,
     status: "a1",
@@ -639,7 +634,8 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     number: 25,
     chapterId: "express-needs",
     title: "Exprimer une capacité ou une possibilité",
-    communicativeGoal: "Dire ce qu’on peut faire ou ce qui est faisable dans une situation",
+    communicativeGoal:
+      "Dire ce qu’on peut faire ou ce qui est faisable dans une situation",
     conceptIds: ["ability-eul-su-isseoyo"],
     prerequisites: recommendedStages(["present-actions"]),
     canonicalExamples: [
@@ -664,7 +660,11 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     conceptIds: ["permission-a-eodo-dwaeyo"],
     prerequisites: recommendedStages(["present-actions", "simple-negation"]),
     canonicalExamples: [
-      { korean: "사진 찍어도 돼요?", french: "Puis-je prendre une photo ?", note: "INTENTION\nDemande d’autorisation" },
+      {
+        korean: "사진 찍어도 돼요?",
+        french: "Puis-je prendre une photo ?",
+        note: "INTENTION\nDemande d’autorisation",
+      },
     ],
     reuseContentRefIds: [
       "vocabulary:gastronomie",
@@ -682,10 +682,7 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     title: "Dire qu’on ne peut pas",
     communicativeGoal: "Distinguer refus et incapacité",
     conceptIds: ["inability-mot"],
-    prerequisites: recommendedStages([
-      "simple-negation",
-      "express-ability",
-    ]),
+    prerequisites: recommendedStages(["simple-negation", "express-ability"]),
     canonicalExamples: [
       {
         korean: "아파서 오늘 못 가요.",
@@ -734,8 +731,8 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     ]),
     canonicalExamples: [
       {
-        korean: "카드만 있어요.",
-        french: "Je n’ai que ma carte.",
+        korean: "물만 있어요.",
+        french: "Il n’y a que de l’eau.",
       },
     ],
     reuseContentRefIds: ["scene:cafe", "counting:base", "scene:metro"],
@@ -760,11 +757,7 @@ const GRAMMAR_STAGE_DEFINITIONS = [
         french: "Les horaires sont de neuf heures à cinq heures.",
       },
     ],
-    reuseContentRefIds: [
-      "counting:dates",
-      "counting:heures",
-      "scene:metro",
-    ],
+    reuseContentRefIds: ["counting:dates", "counting:heures", "scene:metro"],
     validationCriteria: ["M", "L", "P", "D"],
     reviewAfterDays: REVIEW_AFTER_DAYS,
     status: "a1",
@@ -777,14 +770,8 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     communicativeGoal: "Parler d’un événement terminé",
     conceptIds: ["past-ass-eosseoyo"],
     prerequisites: recommendedStages(["present-actions"]),
-    canonicalExamples: [
-      { korean: "예약했어요.", french: "J’ai réservé." },
-    ],
-    reuseContentRefIds: [
-      "listening:active",
-      "scene:aeroport",
-      "scene:metro",
-    ],
+    canonicalExamples: [{ korean: "예약했어요.", french: "J’ai réservé." }],
+    reuseContentRefIds: ["listening:active", "scene:aeroport", "scene:metro"],
     validationCriteria: ["M", "L", "P", "D"],
     reviewAfterDays: REVIEW_AFTER_DAYS,
     status: "a1",
@@ -817,7 +804,11 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     conceptIds: ["intention-eulgeyo"],
     prerequisites: recommendedStages(["future-plan"]),
     canonicalExamples: [
-      { korean: "카드로 계산할게요.", french: "Je vais régler par carte.", note: "NUANCE\nDécision prise maintenant" },
+      {
+        korean: "카드로 계산할게요.",
+        french: "Je vais régler par carte.",
+        note: "NUANCE\nDécision prise maintenant",
+      },
     ],
     reuseContentRefIds: [
       "scene:cafe",
@@ -839,7 +830,11 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     receptiveConceptIds: ["intention-eulgeyo"],
     prerequisites: recommendedStages(["present-actions"]),
     canonicalExamples: [
-      { korean: "먹고 갈게요.", french: "Je vais manger ici avant de partir.", note: "CONTEXTE\nAu restaurant, on te demande : « Sur place ou à emporter ? »" },
+      {
+        korean: "먹고 갈게요.",
+        french: "Je vais manger ici avant de partir.",
+        note: "CONTEXTE\nAu restaurant, on te demande : « Sur place ou à emporter ? »",
+      },
     ],
     reuseContentRefIds: ["scene:cafe", "scene:metro"],
     validationCriteria: ["M", "L", "P", "D"],
@@ -894,13 +889,13 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     conceptIds: ["condition-eumyeon"],
     prerequisites: recommendedStages(["present-actions", "link-actions"]),
     canonicalExamples: [
-      { korean: "시간이 있으면 가요.", french: "J’y vais si j’ai le temps.", note: "CONTEXTE\nTu parles d’une sortie déjà prévue." },
+      {
+        korean: "시간이 있으면 가요.",
+        french: "J’y vais si j’ai le temps.",
+        note: "CONTEXTE\nTu parles d’une sortie déjà prévue.",
+      },
     ],
-    reuseContentRefIds: [
-      "scene:metro",
-      "scene:aeroport",
-      "counting:base",
-    ],
+    reuseContentRefIds: ["scene:metro", "scene:aeroport", "counting:base"],
     validationCriteria: ["M", "L", "P", "D"],
     reviewAfterDays: REVIEW_AFTER_DAYS,
     status: "a1",
@@ -912,10 +907,7 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     title: "Dire ce qu’il faut faire",
     communicativeGoal: "Exprimer nécessité ou obligation",
     conceptIds: ["obligation-a-eoya-haeyo"],
-    prerequisites: recommendedStages([
-      "present-actions",
-      "simple-condition",
-    ]),
+    prerequisites: recommendedStages(["present-actions", "simple-condition"]),
     canonicalExamples: [
       { korean: "표를 사야 해요.", french: "Il faut acheter un billet." },
     ],
@@ -956,7 +948,11 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     conceptIds: ["suggestion-eulkkayo"],
     prerequisites: recommendedStages(["present-actions", "future-plan"]),
     canonicalExamples: [
-      { korean: "같이 갈까요?", french: "On y va ensemble ?", note: "CONTEXTE\nLa destination du trajet est déjà connue." },
+      {
+        korean: "같이 갈까요?",
+        french: "On y va ensemble ?",
+        note: "CONTEXTE\nLa destination du trajet est déjà connue.",
+      },
     ],
     reuseContentRefIds: [
       "vocabulary:basics",
@@ -972,7 +968,8 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     number: 41,
     chapterId: "a1-validation",
     title: "Révision générale A1",
-    communicativeGoal: "Revoir les principales structures dans des phrases courtes.",
+    communicativeGoal:
+      "Revoir les principales structures dans des phrases courtes.",
     conceptIds: A1_PRODUCTIVE_CONCEPT_IDS,
     receptiveConceptIds: ["honorific-si"],
     prerequisites: recommendedStages(GRAMMAR_STAGE_IDS.slice(0, 40)),
@@ -1111,9 +1108,7 @@ export function getGrammarStage(stageId: GrammarStageId): GrammarStage {
   return GRAMMAR_STAGE_BY_ID[stageId];
 }
 
-export function getGrammarChapter(
-  chapterId: GrammarChapterId,
-): GrammarChapter {
+export function getGrammarChapter(chapterId: GrammarChapterId): GrammarChapter {
   return GRAMMAR_CHAPTER_BY_ID[chapterId];
 }
 

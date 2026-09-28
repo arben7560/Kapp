@@ -1205,22 +1205,22 @@ export const GRAMMAR_LESSON_GUIDES = {
   "limit-request": {
     stageId: "limit-request",
     introduction: "Cette leçon entraîne la forme affirmative 만 있어요 pour annoncer qu’un seul élément est disponible. Contrairement à 도, 만 n’ajoute pas : il restreint l’information à l’élément indiqué.",
-    mainRule: "Attache 만 directement au groupe disponible, puis termine par 있어요 : 카드만 있어요, « je n’ai que ma carte ». Comme 도, 만 remplace généralement la particule précédente.",
-    formula: { pattern: "élément disponible + 만 + 있어요", explanation: "Place 만 après le groupe complet : 물만 있어요, 카드만 있어요. Ici, on garde la phrase affirmative de la leçon." },
+    mainRule: "Attache 만 directement au groupe disponible, puis termine par 있어요 : 물만 있어요, « il n’y a que de l’eau ». Cette forme sert à annoncer ce qui est disponible. Comme 도, 만 remplace généralement la particule précédente.",
+    formula: { pattern: "élément disponible + 만 + 있어요", explanation: "Place 만 après le groupe complet : 물만 있어요, 커피만 있어요. Ici, on garde la phrase affirmative de la leçon." },
     steps: [
-      { title: "Repère l’élément disponible", explanation: "Identifie l’unique élément que tu veux annoncer : de l’eau, une carte ou une boisson." },
-      { title: "Place 만 après ce groupe", explanation: "Colle 만 au groupe complet : 물만, 카드만. Le classificateur reste avant 만." },
+      { title: "Repère l’élément disponible", explanation: "Identifie l’unique élément que tu veux annoncer : de l’eau, du café ou une autre boisson." },
+      { title: "Place 만 après ce groupe", explanation: "Colle 만 au groupe complet : 물만, 커피만. Le classificateur reste avant 만." },
       { title: "Garde 있어요", explanation: "La leçon demande une phrase affirmative : élément + 만 + 있어요. Ne remplace pas cette forme par une négation." },
     ],
     examples: [
       { korean: "물만 있어요.", french: "Il n’y a que de l’eau.", parts: [{ korean: "물만", french: "seulement de l’eau", role: "élément disponible" }, { korean: "있어요", french: "il y a", role: "existence affirmative" }] },
-      { korean: "카드만 있어요.", french: "Je n’ai que ma carte.", parts: [{ korean: "카드만", french: "seulement une carte", role: "élément disponible" }, { korean: "있어요", french: "j’ai / il y a", role: "existence affirmative" }] },
+      { korean: "커피만 있어요.", french: "Il n’y a que du café.", parts: [{ korean: "커피만", french: "seulement du café", role: "élément disponible" }, { korean: "있어요", french: "il y a", role: "existence affirmative" }] },
     ],
     commonMistakes: [
       { mistake: "Utiliser 도 pour dire « seulement ».", correction: "La restriction se marque avec 만 : 물만." },
-      { mistake: "Remplacer 만 있어요 par 밖에 없어요.", correction: "밖에 + 없어요 exprime aussi une exclusion, mais avec une construction négative. Cette leçon entraîne uniquement la forme affirmative 만 있어요." },
+      { mistake: "Remplacer 만 있어요 par 밖에 없어요.", correction: "밖에 + 없어요 exprime aussi une exclusion, mais avec une construction négative. Cette leçon entraîne uniquement la forme affirmative 만 있어요 ; pour parler de ce que l’on possède, 밖에 없어요 peut toutefois sonner plus naturel." },
     ],
-    memoryTip: "Annonce d’abord l’élément, colle 만, puis garde 있어요 : 카드만 있어요. La forme négative 밖에 없어요 appartient à une autre construction.",
+    memoryTip: "Annonce d’abord l’élément disponible, colle 만, puis garde 있어요 : 물만 있어요. La forme négative 밖에 없어요 appartient à une autre construction.",
   },
   "range-and-limit": {
     stageId: "range-and-limit",

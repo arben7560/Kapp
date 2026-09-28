@@ -146,6 +146,7 @@ function buildDrillQuestion(
     ...(drill.ruleAspect ? { ruleAspect: drill.ruleAspect } : {}),
     ...(drill.contrastFamily ? { contrastFamily: drill.contrastFamily } : {}),
     ...(drill.exerciseGroup ? { exerciseGroup: drill.exerciseGroup } : {}),
+    ...(drill.vocabulary ? { vocabulary: drill.vocabulary } : {}),
   };
 }
 

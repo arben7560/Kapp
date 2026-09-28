@@ -487,7 +487,7 @@ test("limit-request drills stay on affirmative 만 있어요", () => {
 
   assert.equal(questions.length, 5);
   assert.deepEqual(new Set(questions.map(({ kind }) => kind)), new Set(["gap", "choice", "order"]));
-  assert.equal(questions.find(({ id }) => id.includes("sentence-card-only"))?.answer, "카드만 있어요.");
+  assert.equal(questions.find(({ id }) => id.includes("sentence-seat-only"))?.answer, "자리 하나만 있어요.");
   assert.equal(questions.find(({ id }) => id.includes("meaning-bread-only"))?.answer, "Il n’y a que du pain.");
   assert.deepEqual(
     questions.find(({ id }) => id.includes("one-only-order"))?.answer,
