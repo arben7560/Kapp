@@ -1,6 +1,5 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { AppBackButton } from "../../../components/ui/app-back-button";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -13,6 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AnimatedAppText, AppText } from "../../../components/app-text";
+import { AppBackButton } from "../../../components/ui/app-back-button";
 import {
   ABSOLUTE_FILL,
   RESPONSIVE_AUDIO_COPY_MIN_WIDTH,
@@ -265,13 +265,7 @@ const SCENES: Scene[] = [
         context: "Pour appeler un serveur ou attirer l'attention.",
         audio: POLITESSE_AUDIO.jeogiyo,
       },
-      {
-        word: "여기 있습니다",
-        rom: "Yeogi itseumnida",
-        mean: "Voici",
-        context: "Quand on donne quelque chose poliment.",
-        audio: POLITESSE_AUDIO.voici,
-      },
+
       {
         word: "괜찮습니다",
         rom: "Gwaenchansseumnida",
@@ -447,11 +441,7 @@ export default function FirstStepsImmersion() {
         resizeMode="cover"
       >
         <LinearGradient
-          colors={[
-            "rgba(2,3,6,0.34)",
-            "rgba(2,3,6,0.64)",
-            "rgba(2,3,6,0.93)",
-          ]}
+          colors={["rgba(2,3,6,0.34)", "rgba(2,3,6,0.64)", "rgba(2,3,6,0.93)"]}
           locations={[0, 0.48, 1]}
           style={styles.overlay}
           pointerEvents="none"
@@ -514,7 +504,11 @@ export default function FirstStepsImmersion() {
           >
             <BlurView intensity={30} tint="dark" style={styles.mainCard}>
               <LinearGradient
-                colors={[`${activeScene.accent}28`, "rgba(4,8,18,0.18)", "transparent"]}
+                colors={[
+                  `${activeScene.accent}28`,
+                  "rgba(4,8,18,0.18)",
+                  "transparent",
+                ]}
                 style={ABSOLUTE_FILL}
               />
 

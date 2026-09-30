@@ -1,6 +1,5 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { AppBackButton } from "../../../components/ui/app-back-button";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -15,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AnimatedAppText, AppText } from "../../../components/app-text";
+import { AppBackButton } from "../../../components/ui/app-back-button";
 import {
   ABSOLUTE_FILL,
   RESPONSIVE_AUDIO_COPY_MIN_WIDTH,
@@ -134,10 +134,12 @@ const SCENES = [
         audio: ROMANCE_AUDIO.toolbox2,
       },
       {
-        word: "심쿵",
-        rom: "Simkung",
-        mean: "Coup de foudre / Cœur qui bat",
-        context: "Argot drama. Littéralement : coup au cœur.",
+        word: "반하다",
+
+        rom: "Banhada",
+        mean: "Tomber sous le charme / Craquer pour",
+        context:
+          "Exprime le fait d’être séduit ou attiré par quelqu’un ou quelque chose.",
         audio: ROMANCE_AUDIO.toolbox3,
       },
       {
@@ -492,11 +494,7 @@ export default function KDramaCulture() {
           </Animated.View>
         ) : null}
         <LinearGradient
-          colors={[
-            "rgba(2,3,6,0.34)",
-            "rgba(2,3,6,0.64)",
-            "rgba(2,3,6,0.93)",
-          ]}
+          colors={["rgba(2,3,6,0.34)", "rgba(2,3,6,0.64)", "rgba(2,3,6,0.93)"]}
           locations={[0, 0.48, 1]}
           style={styles.overlay}
           pointerEvents="none"
@@ -560,7 +558,11 @@ export default function KDramaCulture() {
           >
             <BlurView intensity={40} tint="dark" style={styles.glassCard}>
               <LinearGradient
-                colors={[`${activeScene.accent}28`, "rgba(4,8,18,0.18)", "transparent"]}
+                colors={[
+                  `${activeScene.accent}28`,
+                  "rgba(4,8,18,0.18)",
+                  "transparent",
+                ]}
                 style={ABSOLUTE_FILL}
               />
 
