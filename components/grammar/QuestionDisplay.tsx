@@ -63,6 +63,12 @@ function buildGlossedParts(content: string, vocabulary: readonly GrammarVocabula
   return parts;
 }
 
+function clampGlossLeft(wordX: number, wordWidth: number, phraseWidth: number) {
+  const centered = wordX + wordWidth / 2 - GLOSS_WIDTH / 2;
+  const maxLeft = Math.max(0, phraseWidth - GLOSS_WIDTH);
+  return Math.min(Math.max(0, centered), maxLeft);
+}
+
 function GlossedPhrase({
   content,
   vocabulary,
@@ -75,10 +81,16 @@ function GlossedPhrase({
     [content, vocabulary],
   );
   const [layouts, setLayouts] = React.useState<Record<string, TokenLayout>>({});
+  const [phraseWidth, setPhraseWidth] = React.useState(0);
 
   React.useEffect(() => {
     setLayouts({});
   }, [content]);
+
+  const onPhraseLayout = React.useCallback((event: LayoutChangeEvent) => {
+    const nextWidth = event.nativeEvent.layout.width;
+    setPhraseWidth((current) => (current === nextWidth ? current : nextWidth));
+  }, []);
 
   const onTokenLayout = React.useCallback((key: string, event: LayoutChangeEvent) => {
     const next = event.nativeEvent.layout;
@@ -98,7 +110,7 @@ function GlossedPhrase({
   }, []);
 
   return (
-    <View style={styles.vocabularyPhrase}>
+    <View style={styles.vocabularyPhrase} onLayout={onPhraseLayout}>
       {parts.map((part) => (
         <View
           key={part.key}
@@ -125,7 +137,7 @@ function GlossedPhrase({
               styles.vocabularyTranslation,
               {
                 top: layout.y + layout.height + GLOSS_LINE_GAP,
-                left: layout.x + layout.width / 2 - GLOSS_WIDTH / 2,
+                left: clampGlossLeft(layout.x, layout.width, phraseWidth),
                 width: GLOSS_WIDTH,
               },
             ]}
@@ -188,6 +200,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     rowGap: 18,
     paddingBottom: 18,
+    overflow: "visible",
   },
   vocabularyTextUnit: {
     flexGrow: 0,
