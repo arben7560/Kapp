@@ -1,21 +1,16 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 
 import { ABSOLUTE_FILL } from "../../constants/layout";
-import {
-  HubModuleAccents,
-  SeoulMidnightGlass,
-} from "../../constants/theme";
+import { HubModuleAccents } from "../../constants/theme";
 import type { GrammarLessonGuide as GrammarLessonGuideData } from "../../data/grammar/lessonGuides";
 import { AppText } from "../app-text";
 import { useGrammarModalLayout } from "./useGrammarModalLayout";
+import { grammarLessonGuideStyles as styles } from "./GrammarLessonGuide.styles";
 
-const COLORS = SeoulMidnightGlass.colors;
 const GRAMMAR_ACCENT = HubModuleAccents.grammar;
-const SUCCESS = "#86EFAC";
-const ERROR = "#FDA4AF";
 
 type GrammarLessonGuideProps = {
   guide: GrammarLessonGuideData;
@@ -81,6 +76,19 @@ export function GrammarLessonGuide({
             <AppText variant={layout.isCompactWidth ? "bodyStrong" : "subtitle"}>
               {guide.introduction}
             </AppText>
+            {guide.stageId === "mark-contrast" ? (
+              <View style={styles.registerNote}>
+                <AppText variant="sectionLabel" style={styles.accentText}>
+                  REGISTRE
+                </AppText>
+                <AppText variant="bodySecondary" tone="muted">
+                  -지만 est le « mais » net, un peu plus posé : écrit, ou oral quand
+                  l’opposition est volontaire. À l’oral quotidien, le voisin
+                  -(으)ㅄ/는데 pose souvent le contexte avant la suite ; il sera
+                  traité plus tard. Ici, on produit seulement -지만.
+                </AppText>
+              </View>
+            ) : null}
           </View>
 
           <View
@@ -377,332 +385,3 @@ export function GrammarLessonGuide({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  guideStack: { gap: 26 },
-  guideStackCompact: { gap: 22 },
-  sectionStack: { gap: 14 },
-  accentText: { color: GRAMMAR_ACCENT.base },
-  successText: { color: SUCCESS },
-  errorText: { color: ERROR },
-  sectionHeading: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    flexShrink: 1,
-  },
-  sectionIndex: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: GRAMMAR_ACCENT.iconBorder,
-    backgroundColor: GRAMMAR_ACCENT.surface,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  sectionHeadingCopy: { flexShrink: 1, gap: 1 },
-  editorialCard: {
-    borderRadius: 28,
-    borderWidth: 1,
-    borderColor: GRAMMAR_ACCENT.iconBorder,
-    backgroundColor: COLORS.glassSurface,
-    padding: 20,
-    overflow: "hidden",
-  },
-  editorialGlow: {
-    position: "absolute",
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    top: -98,
-    right: -55,
-    borderWidth: 1,
-    borderColor: GRAMMAR_ACCENT.cardBorder,
-    backgroundColor: GRAMMAR_ACCENT.decorative,
-  },
-  editorialLayout: { gap: 20 },
-  editorialLayoutTablet: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    gap: 24,
-  },
-  essentialBlock: { flex: 1.2, minWidth: 0, gap: 13 },
-  ruleBlock: { flex: 1, minWidth: 0, justifyContent: "center", gap: 10 },
-  editorialDivider: {
-    height: 1,
-    width: "100%",
-    backgroundColor: COLORS.line,
-  },
-  editorialDividerTablet: { width: 1, height: "auto" },
-  ruleMetaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  keyPill: {
-    minHeight: 26,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: GRAMMAR_ACCENT.selectedShadow,
-    backgroundColor: GRAMMAR_ACCENT.iconSurface,
-    paddingHorizontal: 9,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  keyPillDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: GRAMMAR_ACCENT.base,
-  },
-  formulaCard: {
-    borderRadius: 26,
-    borderWidth: 1,
-    borderColor: COLORS.line,
-    backgroundColor: COLORS.glassSurface,
-    padding: 18,
-    gap: 13,
-    overflow: "hidden",
-  },
-  formulaHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  structurePill: {
-    minHeight: 28,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: COLORS.line,
-    backgroundColor: COLORS.surface,
-    paddingHorizontal: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  formulaPattern: {
-    minHeight: 76,
-    borderRadius: 19,
-    borderWidth: 1,
-    borderColor: GRAMMAR_ACCENT.cardBorder,
-    backgroundColor: GRAMMAR_ACCENT.rain,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  formulaRail: {
-    position: "absolute",
-    left: 0,
-    top: 15,
-    bottom: 15,
-    width: 3,
-    borderTopRightRadius: 3,
-    borderBottomRightRadius: 3,
-    backgroundColor: GRAMMAR_ACCENT.base,
-  },
-  stepsTrack: { gap: 10 },
-  stepsTrackTablet: { flexDirection: "row", alignItems: "stretch" },
-  stepCard: {
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: COLORS.lineSoft,
-    backgroundColor: "rgba(255,255,255,0.035)",
-    padding: 15,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-  },
-  stepCardTablet: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: "column",
-    gap: 13,
-  },
-  stepTopRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  stepNumber: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: GRAMMAR_ACCENT.iconBorder,
-    backgroundColor: GRAMMAR_ACCENT.surface,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stepLine: {
-    width: 24,
-    height: 1,
-    backgroundColor: GRAMMAR_ACCENT.selectedShadow,
-  },
-  stepCopy: { flex: 1, minWidth: 0, gap: 4 },
-  sectionTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  countPill: {
-    minHeight: 30,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: GRAMMAR_ACCENT.cardBorder,
-    backgroundColor: GRAMMAR_ACCENT.iconSurface,
-    paddingHorizontal: 11,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  examplesGrid: { gap: 12 },
-  examplesGridTablet: { flexDirection: "row", alignItems: "stretch" },
-  exampleCard: {
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    backgroundColor: COLORS.glassSurface,
-    padding: 18,
-    gap: 14,
-    overflow: "hidden",
-  },
-  exampleCardTablet: { flex: 1, minWidth: 0 },
-  exampleHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  decompositionMark: { flexDirection: "row", gap: 4 },
-  decompositionDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: GRAMMAR_ACCENT.selectedBorder,
-  },
-  examplePhrase: { gap: 3 },
-  exampleDivider: { height: 1, backgroundColor: COLORS.lineSoft },
-  exampleParts: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  examplePart: {
-    minWidth: 118,
-    flexGrow: 1,
-    flexBasis: 0,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: GRAMMAR_ACCENT.cardBorder,
-    backgroundColor: GRAMMAR_ACCENT.decorative,
-    padding: 11,
-    gap: 3,
-  },
-  examplePartCompact: { minWidth: "100%" },
-  partTopRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 8,
-  },
-  rolePill: {
-    alignSelf: "flex-start",
-    marginTop: 3,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.045)",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  comparisonGrid: { gap: 10 },
-  comparisonGridTablet: { flexDirection: "row", alignItems: "stretch" },
-  comparisonCard: {
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: COLORS.line,
-    backgroundColor: "rgba(255,255,255,0.025)",
-    padding: 10,
-    gap: 2,
-  },
-  comparisonCardTablet: { flex: 1, minWidth: 0 },
-  mistakePanel: {
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: "rgba(253,164,175,0.16)",
-    backgroundColor: "rgba(253,164,175,0.045)",
-    padding: 13,
-    gap: 8,
-  },
-  correctionPanel: {
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: "rgba(134,239,172,0.17)",
-    backgroundColor: "rgba(134,239,172,0.045)",
-    padding: 13,
-    gap: 8,
-  },
-  comparisonLabelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  comparisonGlyph: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  errorGlyph: { backgroundColor: "rgba(253,164,175,0.1)" },
-  successGlyph: { backgroundColor: "rgba(134,239,172,0.1)" },
-  comparisonTransition: {
-    height: 26,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    paddingHorizontal: 12,
-  },
-  transitionLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: COLORS.lineSoft,
-  },
-  transitionArrow: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 1,
-    borderColor: GRAMMAR_ACCENT.cardBorder,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  memoryCard: {
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: GRAMMAR_ACCENT.cardBorder,
-    backgroundColor: COLORS.glassSurface,
-    padding: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 15,
-    overflow: "hidden",
-  },
-  memoryGlyphOuter: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    borderWidth: 1,
-    borderColor: GRAMMAR_ACCENT.cardBorder,
-    backgroundColor: GRAMMAR_ACCENT.iconSurface,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  memoryGlyphInner: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: GRAMMAR_ACCENT.surface,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  memoryCopy: { flex: 1, minWidth: 0, gap: 5 },
-});
