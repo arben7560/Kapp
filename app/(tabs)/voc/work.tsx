@@ -1,6 +1,5 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { AppBackButton } from "../../../components/ui/app-back-button";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -15,7 +14,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AnimatedAppText, AppText } from "../../../components/app-text";
-import { ABSOLUTE_FILL, RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../../constants/layout";
+import { AppBackButton } from "../../../components/ui/app-back-button";
+import {
+  ABSOLUTE_FILL,
+  RESPONSIVE_AUDIO_COPY_MIN_WIDTH,
+} from "../../../constants/layout";
 import { useVocAudio } from "../../../hooks/useVocAudio";
 import { VOC_DIALOGUE_COPY } from "../../../hooks/useVocDialogue";
 
@@ -88,28 +91,28 @@ const SCENES = [
     image: require("../../../assets/images/businessmeeting.jpg"),
     dialogue: [
       {
-        char: "Moi",
+        char: "Manager",
         kr: "회의 시작할까요?",
         fr: "On commence la réunion ?",
         side: "me",
         audio: REUNION_AUDIO.message1,
       },
       {
-        char: "Manager",
+        char: "Moi",
         kr: "네, 시작하겠습니다. 먼저 보고드리겠습니다.",
         fr: "Oui, nous allons commencer. Je vais d'abord vous faire le rapport.",
         side: "server",
         audio: REUNION_AUDIO.message2,
       },
       {
-        char: "Moi",
+        char: "Manager",
         kr: "제 의견은 조금 다릅니다. 다시 설명해 주시겠어요?",
         fr: "Mon avis est un peu différent. Pouvez-vous réexpliquer ?",
         side: "me",
         audio: REUNION_AUDIO.message3,
       },
       {
-        char: "Manager",
+        char: "Moi",
         kr: "네, 좋은 질문입니다. 자료를 보면서 설명드리겠습니다.",
         fr: "Oui, bonne question. Je vais expliquer avec les documents.",
         side: "server",
@@ -573,11 +576,7 @@ export default function BusinessImmersion() {
           </Animated.View>
         ) : null}
         <LinearGradient
-          colors={[
-            "rgba(2,3,6,0.34)",
-            "rgba(2,3,6,0.64)",
-            "rgba(2,3,6,0.93)",
-          ]}
+          colors={["rgba(2,3,6,0.34)", "rgba(2,3,6,0.64)", "rgba(2,3,6,0.93)"]}
           locations={[0, 0.48, 1]}
           style={styles.overlay}
           pointerEvents="none"
@@ -590,7 +589,9 @@ export default function BusinessImmersion() {
           <View style={styles.topNav}>
             <AppBackButton />
             <View style={styles.navTitleWrap}>
-              <AppText variant="cardTitle" style={styles.navTitle}>Vie professionnelle</AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>
+                Vie professionnelle
+              </AppText>
             </View>
           </View>
 
@@ -607,7 +608,9 @@ export default function BusinessImmersion() {
                   },
                 ]}
               >
-                <AppText variant="label" lineContract="singleLine"
+                <AppText
+                  variant="label"
+                  lineContract="singleLine"
                   style={[
                     styles.tabText,
                     activeScene.id === scene.id && {
@@ -636,18 +639,35 @@ export default function BusinessImmersion() {
           >
             <BlurView intensity={40} tint="dark" style={styles.glassCard}>
               <LinearGradient
-                colors={[`${activeScene.accent}28`, "rgba(4,8,18,0.18)", "transparent"]}
+                colors={[
+                  `${activeScene.accent}28`,
+                  "rgba(4,8,18,0.18)",
+                  "transparent",
+                ]}
                 style={ABSOLUTE_FILL}
               />
 
               <View style={styles.cardHeader}>
-                <AppText variant="koreanSecondary" script="korean" lineContract="singleLine" style={[styles.krLabel, { color: activeScene.accent }]}>
+                <AppText
+                  variant="koreanSecondary"
+                  script="korean"
+                  lineContract="singleLine"
+                  style={[styles.krLabel, { color: activeScene.accent }]}
+                >
                   {activeScene.koreanTitle}
                 </AppText>
-                <AppText accessibilityRole="header" variant="sceneTitle" style={styles.sceneMainTitle}>{activeScene.title}</AppText>
+                <AppText
+                  accessibilityRole="header"
+                  variant="sceneTitle"
+                  style={styles.sceneMainTitle}
+                >
+                  {activeScene.title}
+                </AppText>
               </View>
 
-              <AppText variant="body" style={styles.sceneDesc}>{activeScene.description}</AppText>
+              <AppText variant="body" style={styles.sceneDesc}>
+                {activeScene.description}
+              </AppText>
 
               <Pressable onPress={advanceDialogue} style={styles.dialogueList}>
                 {activeScene.dialogue
@@ -670,7 +690,8 @@ export default function BusinessImmersion() {
                           isActive && { borderColor: activeScene.accent },
                         ]}
                       >
-                        <AppText variant="label"
+                        <AppText
+                          variant="label"
                           style={[
                             styles.bubbleChar,
                             { color: activeScene.accent },
@@ -678,8 +699,20 @@ export default function BusinessImmersion() {
                         >
                           {chat.char}
                         </AppText>
-                        <AppText variant="koreanSecondary" script="korean" style={styles.bubbleKr}>{chat.kr}</AppText>
-                        <AppText variant="bodySecondary" tone="muted" style={styles.bubbleFr}>{chat.fr}</AppText>
+                        <AppText
+                          variant="koreanSecondary"
+                          script="korean"
+                          style={styles.bubbleKr}
+                        >
+                          {chat.kr}
+                        </AppText>
+                        <AppText
+                          variant="bodySecondary"
+                          tone="muted"
+                          style={styles.bubbleFr}
+                        >
+                          {chat.fr}
+                        </AppText>
                       </Pressable>
                     );
                   })}
@@ -692,7 +725,8 @@ export default function BusinessImmersion() {
                       styles.typingBubble,
                     ]}
                   >
-                    <AppText variant="label"
+                    <AppText
+                      variant="label"
                       style={[styles.bubbleChar, { color: activeScene.accent }]}
                     >
                       {activeScene.dialogue[visibleMessages]?.char}
@@ -744,11 +778,11 @@ export default function BusinessImmersion() {
                     },
                   ]}
                 >
-                    {visibleMessages >= activeScene.dialogue.length
-                      ? VOC_DIALOGUE_COPY.restart
-                      : isTyping
-                        ? VOC_DIALOGUE_COPY.typing
-                        : VOC_DIALOGUE_COPY.continue}
+                  {visibleMessages >= activeScene.dialogue.length
+                    ? VOC_DIALOGUE_COPY.restart
+                    : isTyping
+                      ? VOC_DIALOGUE_COPY.typing
+                      : VOC_DIALOGUE_COPY.continue}
                 </AnimatedAppText>
               </Pressable>
             </BlurView>
@@ -756,7 +790,9 @@ export default function BusinessImmersion() {
 
           <View style={styles.toolbox}>
             <View style={styles.toolboxTitleRow}>
-              <AppText variant="sectionTitle" style={styles.toolboxTitle}>Expressions clés</AppText>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>
+                Expressions clés
+              </AppText>
               <View
                 style={[
                   styles.toolboxLine,
@@ -801,9 +837,21 @@ export default function BusinessImmersion() {
 
                       <View style={styles.vocabContent}>
                         <View style={styles.vocabTopRow}>
-                          <View style={{ flex: 1, minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH }}>
-                            <AppText variant="koreanPrimary" script="korean" style={styles.vocabKr}>{exp.word}</AppText>
-                            <AppText variant="caption"
+                          <View
+                            style={{
+                              flex: 1,
+                              minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH,
+                            }}
+                          >
+                            <AppText
+                              variant="koreanPrimary"
+                              script="korean"
+                              style={styles.vocabKr}
+                            >
+                              {exp.word}
+                            </AppText>
+                            <AppText
+                              variant="caption"
                               style={[
                                 styles.vocabRom,
                                 { color: activeScene.accent },
@@ -822,7 +870,9 @@ export default function BusinessImmersion() {
                               },
                             ]}
                           >
-                            <AppText variant="caption" lineContract="singleLine"
+                            <AppText
+                              variant="caption"
+                              lineContract="singleLine"
                               style={[
                                 styles.listenIcon,
                                 { color: activeScene.accent },
@@ -830,12 +880,26 @@ export default function BusinessImmersion() {
                             >
                               {isActive ? "●" : "▶"}
                             </AppText>
-                            <AppText variant="label" lineContract="singleLine" style={styles.listenText}>ÉCOUTER</AppText>
+                            <AppText
+                              variant="label"
+                              lineContract="singleLine"
+                              style={styles.listenText}
+                            >
+                              ÉCOUTER
+                            </AppText>
                           </View>
                         </View>
 
-                        <AppText variant="bodyStrong" style={styles.vocabMean}>{exp.mean}</AppText>
-                        <AppText variant="bodySecondary" tone="muted" style={styles.vocabCtx}>{exp.context}</AppText>
+                        <AppText variant="bodyStrong" style={styles.vocabMean}>
+                          {exp.mean}
+                        </AppText>
+                        <AppText
+                          variant="bodySecondary"
+                          tone="muted"
+                          style={styles.vocabCtx}
+                        >
+                          {exp.context}
+                        </AppText>
                       </View>
                     </BlurView>
                   </Pressable>
@@ -881,8 +945,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.15)",
   },
   backArrow: { color: "#fff", marginTop: -2 },
-  navEyebrow: {
-  },
+  navEyebrow: {},
   navTitleWrap: {
     flex: 1,
     alignItems: "center",
@@ -1064,8 +1127,7 @@ const styles = StyleSheet.create({
     color: COLORS.txt,
     marginBottom: 2,
   },
-  vocabRom: {
-  },
+  vocabRom: {},
   vocabMean: {
     color: COLORS.txt,
     marginBottom: 4,
@@ -1082,8 +1144,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     paddingVertical: 7,
   },
-  listenIcon: {
-  },
+  listenIcon: {},
   listenText: {
     color: "rgba(255,255,255,0.84)",
   },

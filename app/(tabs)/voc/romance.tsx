@@ -1,7 +1,6 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { AppBackButton } from "../../../components/ui/app-back-button";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -15,9 +14,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AnimatedAppText, AppText } from "../../../components/app-text";
+import { AppBackButton } from "../../../components/ui/app-back-button";
+import {
+  ABSOLUTE_FILL,
+  RESPONSIVE_AUDIO_COPY_MIN_WIDTH,
+} from "../../../constants/layout";
 import { useVocAudio } from "../../../hooks/useVocAudio";
 import { VOC_DIALOGUE_COPY } from "../../../hooks/useVocDialogue";
-import { ABSOLUTE_FILL, RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../../constants/layout";
 
 // ──────────────────────────────────────────────
 // DESIGN SYSTEM — ROMANCE EDITION
@@ -245,28 +248,28 @@ const SCENES = [
     image: require("../../../assets/images/tower.jpg"),
     dialogue: [
       {
-        char: "Tae-yang",
+        char: "Eun-ji",
         kr: "나랑 사귈래?",
         fr: "Tu veux sortir avec moi ?",
         side: "server",
         audio: COUPLE_AUDIO.message1,
       },
       {
-        char: "Eun-ji",
+        char: "Tae-yang",
         kr: "응... 나도 같은 마음이야.",
         fr: "Oui... je ressens la même chose.",
         side: "me",
         audio: COUPLE_AUDIO.message2,
       },
       {
-        char: "Tae-yang",
+        char: "Eun-ji",
         kr: "평생 지켜줄게.",
         fr: "Je te protégerai toute ma vie.",
         side: "server",
         audio: COUPLE_AUDIO.message3,
       },
       {
-        char: "Eun-ji",
+        char: "Tae-yang",
         kr: "우리 절대 헤어지지 말자.",
         fr: "Ne nous séparons jamais.",
         side: "me",
@@ -480,11 +483,7 @@ export default function RomanceDating() {
           </Animated.View>
         ) : null}
         <LinearGradient
-          colors={[
-            "rgba(2,3,6,0.34)",
-            "rgba(2,3,6,0.64)",
-            "rgba(2,3,6,0.93)",
-          ]}
+          colors={["rgba(2,3,6,0.34)", "rgba(2,3,6,0.64)", "rgba(2,3,6,0.93)"]}
           locations={[0, 0.48, 1]}
           style={styles.overlay}
           pointerEvents="none"
@@ -498,7 +497,9 @@ export default function RomanceDating() {
           <View style={styles.topNav}>
             <AppBackButton />
             <View style={styles.navTitleWrap}>
-              <AppText variant="cardTitle" style={styles.navTitle}>Rencontres</AppText>
+              <AppText variant="cardTitle" style={styles.navTitle}>
+                Rencontres
+              </AppText>
             </View>
           </View>
 
@@ -516,7 +517,9 @@ export default function RomanceDating() {
                   },
                 ]}
               >
-                <AppText variant="label" lineContract="singleLine"
+                <AppText
+                  variant="label"
+                  lineContract="singleLine"
                   style={[
                     styles.tabText,
                     activeScene.id === scene.id && { color: scene.accent },
@@ -544,16 +547,31 @@ export default function RomanceDating() {
           >
             <BlurView intensity={50} tint="dark" style={styles.mainCard}>
               <LinearGradient
-                colors={[`${activeScene.accent}28`, "rgba(4,8,18,0.18)", "transparent"]}
+                colors={[
+                  `${activeScene.accent}28`,
+                  "rgba(4,8,18,0.18)",
+                  "transparent",
+                ]}
                 style={ABSOLUTE_FILL}
               />
-              <AppText variant="koreanSecondary" script="korean" lineContract="singleLine"
+              <AppText
+                variant="koreanSecondary"
+                script="korean"
+                lineContract="singleLine"
                 style={[styles.sceneCategory, { color: activeScene.accent }]}
               >
                 {activeScene.koreanTitle}
               </AppText>
-              <AppText accessibilityRole="header" variant="sceneTitle" style={styles.sceneTitle}>{activeScene.title}</AppText>
-              <AppText variant="body" style={styles.sceneDesc}>{activeScene.description}</AppText>
+              <AppText
+                accessibilityRole="header"
+                variant="sceneTitle"
+                style={styles.sceneTitle}
+              >
+                {activeScene.title}
+              </AppText>
+              <AppText variant="body" style={styles.sceneDesc}>
+                {activeScene.description}
+              </AppText>
 
               <Pressable onPress={advanceDialogue} style={styles.chatContainer}>
                 {activeScene.dialogue
@@ -576,7 +594,8 @@ export default function RomanceDating() {
                           isActive && { borderColor: activeScene.accent },
                         ]}
                       >
-                        <AppText variant="label"
+                        <AppText
+                          variant="label"
                           style={[
                             styles.charLabel,
                             { color: activeScene.accent },
@@ -584,8 +603,20 @@ export default function RomanceDating() {
                         >
                           {chat.char}
                         </AppText>
-                        <AppText variant="koreanSecondary" script="korean" style={styles.krText}>{chat.kr}</AppText>
-                        <AppText variant="bodySecondary" tone="muted" style={styles.frText}>{chat.fr}</AppText>
+                        <AppText
+                          variant="koreanSecondary"
+                          script="korean"
+                          style={styles.krText}
+                        >
+                          {chat.kr}
+                        </AppText>
+                        <AppText
+                          variant="bodySecondary"
+                          tone="muted"
+                          style={styles.frText}
+                        >
+                          {chat.fr}
+                        </AppText>
                       </Pressable>
                     );
                   })}
@@ -598,7 +629,8 @@ export default function RomanceDating() {
                       styles.typingBubble,
                     ]}
                   >
-                    <AppText variant="label"
+                    <AppText
+                      variant="label"
                       style={[styles.charLabel, { color: activeScene.accent }]}
                     >
                       {activeScene.dialogue[visibleMessages]?.char}
@@ -650,11 +682,11 @@ export default function RomanceDating() {
                     },
                   ]}
                 >
-                    {visibleMessages >= activeScene.dialogue.length
-                      ? VOC_DIALOGUE_COPY.restart
-                      : isTyping
-                        ? VOC_DIALOGUE_COPY.typing
-                        : VOC_DIALOGUE_COPY.continue}
+                  {visibleMessages >= activeScene.dialogue.length
+                    ? VOC_DIALOGUE_COPY.restart
+                    : isTyping
+                      ? VOC_DIALOGUE_COPY.typing
+                      : VOC_DIALOGUE_COPY.continue}
                 </AnimatedAppText>
               </Pressable>
             </BlurView>
@@ -663,7 +695,9 @@ export default function RomanceDating() {
           {/* ROMANCE TOOLBOX */}
           <View style={styles.toolbox}>
             <View style={styles.toolboxTitleRow}>
-              <AppText variant="sectionTitle" style={styles.toolboxTitle}>Expressions clés</AppText>
+              <AppText variant="sectionTitle" style={styles.toolboxTitle}>
+                Expressions clés
+              </AppText>
               <View
                 style={[
                   styles.toolboxLine,
@@ -707,9 +741,21 @@ export default function RomanceDating() {
                       />
                       <View style={styles.vocabContent}>
                         <View style={styles.vocabTopRow}>
-                          <View style={{ flex: 1, minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH }}>
-                            <AppText variant="koreanPrimary" script="korean" style={styles.vocabKr}>{exp.word}</AppText>
-                            <AppText variant="caption"
+                          <View
+                            style={{
+                              flex: 1,
+                              minWidth: RESPONSIVE_AUDIO_COPY_MIN_WIDTH,
+                            }}
+                          >
+                            <AppText
+                              variant="koreanPrimary"
+                              script="korean"
+                              style={styles.vocabKr}
+                            >
+                              {exp.word}
+                            </AppText>
+                            <AppText
+                              variant="caption"
                               style={[
                                 styles.vocabRom,
                                 { color: activeScene.accent },
@@ -728,7 +774,9 @@ export default function RomanceDating() {
                               },
                             ]}
                           >
-                            <AppText variant="caption" lineContract="singleLine"
+                            <AppText
+                              variant="caption"
+                              lineContract="singleLine"
                               style={[
                                 styles.listenIcon,
                                 { color: activeScene.accent },
@@ -736,12 +784,26 @@ export default function RomanceDating() {
                             >
                               {isActive ? "●" : "▶"}
                             </AppText>
-                            <AppText variant="label" lineContract="singleLine" style={styles.listenText}>ÉCOUTER</AppText>
+                            <AppText
+                              variant="label"
+                              lineContract="singleLine"
+                              style={styles.listenText}
+                            >
+                              ÉCOUTER
+                            </AppText>
                           </View>
                         </View>
 
-                        <AppText variant="bodyStrong" style={styles.vocabMean}>{exp.mean}</AppText>
-                        <AppText variant="bodySecondary" tone="muted" style={styles.vocabCtx}>{exp.context}</AppText>
+                        <AppText variant="bodyStrong" style={styles.vocabMean}>
+                          {exp.mean}
+                        </AppText>
+                        <AppText
+                          variant="bodySecondary"
+                          tone="muted"
+                          style={styles.vocabCtx}
+                        >
+                          {exp.context}
+                        </AppText>
                       </View>
                     </BlurView>
                   </Pressable>
@@ -787,8 +849,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.15)",
   },
   backArrow: { color: "#fff", marginTop: -2 },
-  navEyebrow: {
-  },
+  navEyebrow: {},
   navTitleWrap: {
     flex: 1,
     alignItems: "center",
@@ -873,7 +934,7 @@ const styles = StyleSheet.create({
     color: COLORS.txt,
     marginBottom: 4,
   },
-  frText: { color: COLORS.muted},
+  frText: { color: COLORS.muted },
 
   typingBubble: {
     minWidth: 92,
@@ -950,13 +1011,12 @@ const styles = StyleSheet.create({
     color: COLORS.txt,
     marginBottom: 2,
   },
-  vocabRom: {
-  },
+  vocabRom: {},
   vocabMean: {
     color: COLORS.txt,
     marginBottom: 4,
   },
-  vocabCtx: { color: COLORS.muted},
+  vocabCtx: { color: COLORS.muted },
   listenPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -966,8 +1026,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     paddingVertical: 7,
   },
-  listenIcon: {
-  },
+  listenIcon: {},
   listenText: {
     color: "rgba(255,255,255,0.84)",
   },
