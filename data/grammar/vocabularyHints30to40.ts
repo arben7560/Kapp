@@ -2,6 +2,25 @@ export const GRAMMAR_VOCABULARY_HINTS_30_TO_40: Record<
   string,
   readonly { korean: string; french: string }[]
 > = {
+  "hours-range-start": [
+    { korean: "아홉 시", french: "neuf heures" },
+    { korean: "다섯 시", french: "cinq heures" },
+  ],
+  "hours-range-end": [
+    { korean: "아홉 시", french: "neuf heures" },
+    { korean: "다섯 시", french: "cinq heures" },
+  ],
+  "days-range-start": [
+    { korean: "월요일", french: "lundi" },
+    { korean: "금요일", french: "vendredi" },
+  ],
+  "days-range-end": [
+    { korean: "월요일", french: "lundi" },
+    { korean: "금요일", french: "vendredi" },
+  ],
+  "destination-limit": [
+    { korean: "서울역", french: "gare de Séoul" },
+  ],
   "eat-past": [
     { korean: "먹다", french: "manger" },
   ],
