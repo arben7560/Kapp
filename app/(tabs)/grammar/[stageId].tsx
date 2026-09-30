@@ -1,7 +1,6 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
-import { AppBackButton } from "../../../components/ui/app-back-button";
 import React from "react";
 import {
   ImageBackground,
@@ -12,6 +11,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { QuestionDisplay } from "../../../components/grammar/QuestionDisplay";
+import { AppBackButton } from "../../../components/ui/app-back-button";
 
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
@@ -19,10 +20,7 @@ import { GrammarLessonGuideModal } from "../../../components/grammar/GrammarLess
 import { useGrammarModalLayout } from "../../../components/grammar/useGrammarModalLayout";
 import { StatusBadge } from "../../../components/ui/status-badge";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
-import {
-  HubModuleAccents,
-  SeoulMidnightGlass,
-} from "../../../constants/theme";
+import { HubModuleAccents, SeoulMidnightGlass } from "../../../constants/theme";
 import {
   CONTENT_REFS,
   GRAMMAR_CONCEPTS,
@@ -74,120 +72,67 @@ function scoreLabel(score: number) {
   return `${score} réponse${plural} correcte${plural}`;
 }
 
-function getCorrectFeedbackLead(
-  question: GrammarPracticeQuestion,
-) {
+function getCorrectFeedbackLead(question: GrammarPracticeQuestion) {
   if (question.ruleAspect === "short-negation") {
     return "Oui, c’est bien la négation courte avec 안.";
   }
 
   switch (question.skill) {
-    case "particles": return "Oui, bonne particule ici.";
-    case "conjugation": return "Oui, la conjugaison est juste.";
-    case "modality": return "Oui, tu as choisi la bonne nuance.";
-    case "connectors": return "Oui, le lien entre les deux idées est bon.";
-    case "syntax": return "Oui, la construction est correcte ici.";
-    case "register": return "Oui, le registre convient bien ici.";
-    case "forms": return "Oui, c’est la bonne forme.";
-    default: return "Oui, c’est ça.";
+    case "particles":
+      return "Oui, bonne particule ici.";
+    case "conjugation":
+      return "Oui, la conjugaison est juste.";
+    case "modality":
+      return "Oui, tu as choisi la bonne nuance.";
+    case "connectors":
+      return "Oui, le lien entre les deux idées est bon.";
+    case "syntax":
+      return "Oui, la construction est correcte ici.";
+    case "register":
+      return "Oui, le registre convient bien ici.";
+    case "forms":
+      return "Oui, c’est la bonne forme.";
+    default:
+      return "Oui, c’est ça.";
   }
 }
 
-function getRemainingTokens(options: readonly string[], draft: readonly string[]) {
+function getRemainingTokens(
+  options: readonly string[],
+  draft: readonly string[],
+) {
   const used = new Set<number>();
   for (const token of draft) {
-    const matchIndex = options.findIndex((option, index) => option === token && !used.has(index));
+    const matchIndex = options.findIndex(
+      (option, index) => option === token && !used.has(index),
+    );
     if (matchIndex >= 0) used.add(matchIndex);
   }
-  return options.map((token, index) => ({ token, index })).filter(({ index }) => !used.has(index));
+  return options
+    .map((token, index) => ({ token, index }))
+    .filter(({ index }) => !used.has(index));
 }
 
-function EditorialNote({ note, boxed = false }: { note: string; boxed?: boolean }) {
+function EditorialNote({
+  note,
+  boxed = false,
+}: {
+  note: string;
+  boxed?: boolean;
+}) {
   const [label, ...contentParts] = note.split("\n");
   const content = contentParts.join("\n");
 
   return (
     <View style={boxed ? styles.memoBox : styles.editorialNote}>
-      <AppText variant="sectionLabel" style={styles.accentText}>{label}</AppText>
-      {content ? <AppText variant="caption" tone="muted">{content}</AppText> : null}
-    </View>
-  );
-}
-
-function QuestionDisplay({
-  value,
-  vocabulary,
-}: {
-  value: string;
-  vocabulary?: readonly { korean: string; french: string }[];
-}) {
-  const sections = value.split("\n\n");
-
-  return (
-    <View style={styles.questionSections}>
-      {sections.map((section, index) => {
-        const [label, ...contentParts] = section.split("\n");
-        const content = contentParts.join("\n");
-        const isKorean = /[가-힣]/u.test(content);
-        const contentVariant = label === "CONTEXTE" ? "bodyStrong" : isKorean
-          ? "koreanPrimary"
-          : "featureTitle";
-        return (
-          <View key={`${label}-${index}`} style={styles.questionSection}>
-            <AppText variant="sectionLabel" tone="soft">{label}</AppText>
-            {content ? (
-              vocabulary && isKorean ? (
-                <View style={styles.vocabularyPhrase}>
-                  {(() => {
-                    const hints = vocabulary
-                      .map((hint) => ({ ...hint, index: content.indexOf(hint.korean) }))
-                      .filter((hint) => hint.index >= 0)
-                      .sort((left, right) => left.index - right.index);
-                    const parts: React.ReactNode[] = [];
-                    let cursor = 0;
-                    hints.forEach((hint, hintIndex) => {
-                      if (hint.index > cursor) {
-                        parts.push(
-                          <View key={`text-${hintIndex}`} style={styles.vocabularyTextUnit}>
-                            <AppText variant="koreanPrimary" script="korean">
-                              {content.slice(cursor, hint.index)}
-                            </AppText>
-                          </View>,
-                        );
-                      }
-                      parts.push(
-                        <View key={`hint-${hint.korean}`} style={styles.vocabularyUnit}>
-                          <AppText variant="koreanPrimary" script="korean" align="center">
-                            {hint.korean}
-                          </AppText>
-                          <AppText variant="caption" tone="muted" align="center" style={styles.vocabularyTranslation}>
-                            {hint.french}
-                          </AppText>
-                        </View>,
-                      );
-                      cursor = hint.index + hint.korean.length;
-                    });
-                    if (cursor < content.length) {
-                      parts.push(
-                        <View key="text-tail" style={styles.vocabularyTextUnit}>
-                          <AppText variant="koreanPrimary" script="korean">
-                            {content.slice(cursor)}
-                          </AppText>
-                        </View>,
-                      );
-                    }
-                    return parts;
-                  })()}
-                </View>
-              ) : (
-                <AppText variant={contentVariant} script={isKorean ? "korean" : "latin"}>
-                  {content}
-                </AppText>
-              )
-            ) : null}
-          </View>
-        );
-      })}
+      <AppText variant="sectionLabel" style={styles.accentText}>
+        {label}
+      </AppText>
+      {content ? (
+        <AppText variant="caption" tone="muted">
+          {content}
+        </AppText>
+      ) : null}
     </View>
   );
 }
@@ -197,22 +142,19 @@ export default function GrammarLessonScreen() {
     stageId?: string | string[];
     theory?: string | string[];
   }>();
-  const rawStageId = Array.isArray(params.stageId) ? params.stageId[0] : params.stageId;
-  const rawTheory = Array.isArray(params.theory) ? params.theory[0] : params.theory;
+  const rawStageId = Array.isArray(params.stageId)
+    ? params.stageId[0]
+    : params.stageId;
+  const rawTheory = Array.isArray(params.theory)
+    ? params.theory[0]
+    : params.theory;
   const validStageId = isGrammarStageId(rawStageId) ? rawStageId : undefined;
   const stageId = validStageId ?? GRAMMAR_STAGE_IDS[0];
   const theoryEntryRequested = rawTheory === "open";
-  const {
-    progress,
-    updateGrammarProgress,
-    complete,
-    setTrack,
-    isHydrated,
-  } = useStore();
-  const {
-    hasPremiumAccess: isPremium,
-    isLoading: isPaywallLoading,
-  } = usePaywall();
+  const { progress, updateGrammarProgress, complete, setTrack, isHydrated } =
+    useStore();
+  const { hasPremiumAccess: isPremium, isLoading: isPaywallLoading } =
+    usePaywall();
   const { completeDailyActivity } = useDailyStreak();
   const responsive = useResponsiveLayout({ maxWidth: 900 });
   const completionInFlight = React.useRef(new Set<string>());
@@ -229,13 +171,23 @@ export default function GrammarLessonScreen() {
   const premiumLocked = !canAccessGrammarStage(stage, isPremium);
   const completedContentRefs = new Set(
     CONTENT_REFS.filter((contentRef) => {
-      const normalizedId = contentRef.id.replace(/[^a-zA-Z0-9]+/gu, "_").toLowerCase();
-      return progress.completed[contentRef.id] || progress.completed[normalizedId];
+      const normalizedId = contentRef.id
+        .replace(/[^a-zA-Z0-9]+/gu, "_")
+        .toLowerCase();
+      return (
+        progress.completed[contentRef.id] || progress.completed[normalizedId]
+      );
     }).map((contentRef) => contentRef.id),
   );
-  const access = getGrammarStageAccess(progress.grammarProgress, stageId, completedContentRefs);
-  const completionRecorded = !!session && stageProgress?.completedSessionIds.includes(session.id);
-  const streakRecorded = !!session && stageProgress?.streakSessionIds.includes(session.id);
+  const access = getGrammarStageAccess(
+    progress.grammarProgress,
+    stageId,
+    completedContentRefs,
+  );
+  const completionRecorded =
+    !!session && stageProgress?.completedSessionIds.includes(session.id);
+  const streakRecorded =
+    !!session && stageProgress?.streakSessionIds.includes(session.id);
   const theoryModalVisible =
     isHydrated &&
     !premiumLocked &&
@@ -246,12 +198,12 @@ export default function GrammarLessonScreen() {
   const contentState = premiumLocked
     ? "premium-locked"
     : !access.canOpen
-    ? "locked"
-    : session?.completedAt
-      ? "result"
-      : session
-        ? "practice"
-        : "lesson";
+      ? "locked"
+      : session?.completedAt
+        ? "result"
+        : session
+          ? "practice"
+          : "lesson";
 
   React.useEffect(() => {
     if (isPaywallLoading || !premiumLocked) return;
@@ -275,7 +227,10 @@ export default function GrammarLessonScreen() {
     }
 
     completionInFlight.current.add(session.id);
-    const ratio = session.questions.length > 0 ? session.score / session.questions.length : 0;
+    const ratio =
+      session.questions.length > 0
+        ? session.score / session.questions.length
+        : 0;
     Promise.all([
       ratio >= GRAMMAR_PRACTICE_PASS_RATIO
         ? complete(buildProgressId("grammar", stageId))
@@ -305,9 +260,14 @@ export default function GrammarLessonScreen() {
     updateGrammarProgress,
   ]);
 
-  const replaceSession = React.useCallback((nextSession: GrammarPracticeSession) => {
-    updateGrammarProgress((current) => setGrammarActiveSession(current, nextSession));
-  }, [updateGrammarProgress]);
+  const replaceSession = React.useCallback(
+    (nextSession: GrammarPracticeSession) => {
+      updateGrammarProgress((current) =>
+        setGrammarActiveSession(current, nextSession),
+      );
+    },
+    [updateGrammarProgress],
+  );
 
   const startPractice = React.useCallback(() => {
     if (!isHydrated) return;
@@ -318,7 +278,9 @@ export default function GrammarLessonScreen() {
     const attemptNumber = (stageProgress?.attempts ?? 0) + 1;
     const nextSession = createGrammarPracticeSession(stageId, attemptNumber);
     setTrack("grammar");
-    updateGrammarProgress((current) => setGrammarActiveSession(current, nextSession));
+    updateGrammarProgress((current) =>
+      setGrammarActiveSession(current, nextSession),
+    );
   }, [
     isPremium,
     isHydrated,
@@ -338,37 +300,48 @@ export default function GrammarLessonScreen() {
     if (!session) startPractice();
   }, [session, stageId, startPractice, theoryEntryRequested]);
 
-  const openStage = React.useCallback((nextStageId: GrammarStageId) => {
-    const nextStage = GRAMMAR_STAGE_BY_ID[nextStageId];
-    if (!canAccessGrammarStage(nextStage, isPremium)) {
-      router.push("/premium");
-      return;
-    }
-    router.replace({
-      pathname: "/grammar/[stageId]",
-      params: { stageId: nextStageId },
-    } as never);
-  }, [isPremium]);
+  const openStage = React.useCallback(
+    (nextStageId: GrammarStageId) => {
+      const nextStage = GRAMMAR_STAGE_BY_ID[nextStageId];
+      if (!canAccessGrammarStage(nextStage, isPremium)) {
+        router.push("/premium");
+        return;
+      }
+      router.replace({
+        pathname: "/grammar/[stageId]",
+        params: { stageId: nextStageId },
+      } as never);
+    },
+    [isPremium],
+  );
 
-  const chooseAnswer = React.useCallback((answer: GrammarPracticeAnswer) => {
-    if (!isHydrated || !session) return;
-    const next = answerGrammarPracticeQuestion(session, answer);
-    if (next === session) return;
-    Vibration.vibrate(next.score > session.score ? 12 : [0, 45]);
-    replaceSession(next);
-  }, [isHydrated, replaceSession, session]);
+  const chooseAnswer = React.useCallback(
+    (answer: GrammarPracticeAnswer) => {
+      if (!isHydrated || !session) return;
+      const next = answerGrammarPracticeQuestion(session, answer);
+      if (next === session) return;
+      Vibration.vibrate(next.score > session.score ? 12 : [0, 45]);
+      replaceSession(next);
+    },
+    [isHydrated, replaceSession, session],
+  );
 
-  const updateDraft = React.useCallback((answer: GrammarPracticeAnswer) => {
-    if (!isHydrated || !session) return;
-    replaceSession(setGrammarPracticeDraft(session, answer));
-  }, [isHydrated, replaceSession, session]);
+  const updateDraft = React.useCallback(
+    (answer: GrammarPracticeAnswer) => {
+      if (!isHydrated || !session) return;
+      replaceSession(setGrammarPracticeDraft(session, answer));
+    },
+    [isHydrated, replaceSession, session],
+  );
 
   const continuePractice = React.useCallback(() => {
     if (!isHydrated || !session) return;
     const next = advanceGrammarPracticeSession(session);
     if (next === session) return;
     if (next.completedAt) {
-      updateGrammarProgress((current) => recordGrammarSessionCompletion(current, next));
+      updateGrammarProgress((current) =>
+        recordGrammarSessionCompletion(current, next),
+      );
     } else {
       replaceSession(next);
     }
@@ -415,7 +388,10 @@ export default function GrammarLessonScreen() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.centeredState}>
           <AppText variant="sectionTitle">Cette leçon n’existe pas.</AppText>
-          <PrimaryButton label="RETOUR AU PARCOURS" onPress={() => router.replace("/grammar" as never)} />
+          <PrimaryButton
+            label="RETOUR AU PARCOURS"
+            onPress={() => router.replace("/grammar" as never)}
+          />
         </View>
       </SafeAreaView>
     );
@@ -423,26 +399,46 @@ export default function GrammarLessonScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground source={BACKGROUND_SOURCE} style={styles.background} resizeMode="cover">
+      <ImageBackground
+        source={BACKGROUND_SOURCE}
+        style={styles.background}
+        resizeMode="cover"
+      >
         <BlurView intensity={84} tint="dark" style={styles.backgroundBlur} />
-        <LinearGradient colors={["rgba(2,3,6,0.55)", "rgba(2,3,6,0.94)", "#020306"]} style={ABSOLUTE_FILL} />
+        <LinearGradient
+          colors={["rgba(2,3,6,0.55)", "rgba(2,3,6,0.94)", "#020306"]}
+          style={ABSOLUTE_FILL}
+        />
         <ScrollView
           ref={scrollRef}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.scroll, { paddingHorizontal: responsive.horizontalPadding }]}
+          contentContainerStyle={[
+            styles.scroll,
+            { paddingHorizontal: responsive.horizontalPadding },
+          ]}
         >
           <View style={[styles.frame, { maxWidth: responsive.maxWidth }]}>
             <View style={styles.navRow}>
               <View style={styles.backButton}>
                 <AppBackButton accessibilityLabel="Retour au parcours Grammaire" />
               </View>
-              <AppText variant="caption" tone="soft">{stage.number} / {GRAMMAR_STAGE_IDS.length}</AppText>
+              <AppText variant="caption" tone="soft">
+                {stage.number} / {GRAMMAR_STAGE_IDS.length}
+              </AppText>
             </View>
 
             <View style={styles.lessonHeader}>
               <View style={styles.lessonMetaRow}>
-                <AppText variant="sectionLabel" style={stage.access === "premium" ? styles.premiumText : styles.accentText}>
-                  {stage.status === "pre-a1" ? "NIVEAU A0" : "NIVEAU A1"} · ÉTAPE {stage.number}
+                <AppText
+                  variant="sectionLabel"
+                  style={
+                    stage.access === "premium"
+                      ? styles.premiumText
+                      : styles.accentText
+                  }
+                >
+                  {stage.status === "pre-a1" ? "NIVEAU A0" : "NIVEAU A1"} ·
+                  ÉTAPE {stage.number}
                 </AppText>
                 <StatusBadge
                   label={stage.access === "premium" ? "PREMIUM" : "GRATUIT"}
@@ -452,12 +448,24 @@ export default function GrammarLessonScreen() {
                   accentColor={GRAMMAR_ACCENT.base}
                 />
               </View>
-              <AppText accessibilityRole="header" variant={responsive.isCompact ? "featureTitle" : "screenTitle"}>
+              <AppText
+                accessibilityRole="header"
+                variant={responsive.isCompact ? "featureTitle" : "screenTitle"}
+              >
                 {stage.title}
               </AppText>
-              <AppText variant="subtitle" tone="muted">{stage.communicativeGoal}</AppText>
+              <AppText variant="subtitle" tone="muted">
+                {stage.communicativeGoal}
+              </AppText>
               <View style={styles.headerProgressTrack}>
-                <View style={[styles.headerProgressFill, { width: `${(stage.number / GRAMMAR_STAGE_IDS.length) * 100}%` }]} />
+                <View
+                  style={[
+                    styles.headerProgressFill,
+                    {
+                      width: `${(stage.number / GRAMMAR_STAGE_IDS.length) * 100}%`,
+                    },
+                  ]}
+                />
               </View>
             </View>
 
@@ -498,10 +506,14 @@ function GrammarLessonTheory({
   const modalLayout = useGrammarModalLayout();
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
   const concepts = stage.conceptIds
-    .map((conceptId) => GRAMMAR_CONCEPTS.find((concept) => concept.id === conceptId))
+    .map((conceptId) =>
+      GRAMMAR_CONCEPTS.find((concept) => concept.id === conceptId),
+    )
     .filter((concept): concept is GrammarConcept => !!concept);
   const receptiveConcepts = (stage.receptiveConceptIds ?? [])
-    .map((conceptId) => GRAMMAR_CONCEPTS.find((concept) => concept.id === conceptId))
+    .map((conceptId) =>
+      GRAMMAR_CONCEPTS.find((concept) => concept.id === conceptId),
+    )
     .filter((concept): concept is GrammarConcept => !!concept);
   const lessonExamples = getGrammarLessonExamples(stageId);
   const detailExamples = lessonExamples.slice(stage.canonicalExamples.length);
@@ -513,75 +525,155 @@ function GrammarLessonTheory({
 
   return (
     <View style={styles.contentStack}>
-      <View style={[styles.explanationGrid, modalLayout.useWideLayout && styles.explanationGridTablet]}>
-        <View style={[styles.explanationColumn, modalLayout.useWideLayout && styles.explanationColumnTablet]}>
+      <View
+        style={[
+          styles.explanationGrid,
+          modalLayout.useWideLayout && styles.explanationGridTablet,
+        ]}
+      >
+        <View
+          style={[
+            styles.explanationColumn,
+            modalLayout.useWideLayout && styles.explanationColumnTablet,
+          ]}
+        >
           <AppText variant="sectionLabel" tone="soft">
             {isGeneralReview ? "REPÈRES DE RÉVISION" : "LA RÈGLE"}
           </AppText>
           {isGeneralReview ? (
             <BlurView intensity={50} tint="dark" style={styles.ruleCard}>
-              <LinearGradient colors={[GRAMMAR_ACCENT.surfaceStrong, "rgba(255,255,255,0.02)"]} style={ABSOLUTE_FILL} />
-              <AppText variant="sectionTitle">Observe, choisis, puis construis</AppText>
+              <LinearGradient
+                colors={[
+                  GRAMMAR_ACCENT.surfaceStrong,
+                  "rgba(255,255,255,0.02)",
+                ]}
+                style={ABSOLUTE_FILL}
+              />
+              <AppText variant="sectionTitle">
+                Observe, choisis, puis construis
+              </AppText>
               <AppText variant="bodySecondary" tone="muted">
-                Repère la particule ou la terminaison utile, vérifie sa place, puis lis la phrase entière avant de répondre.
+                Repère la particule ou la terminaison utile, vérifie sa place,
+                puis lis la phrase entière avant de répondre.
               </AppText>
             </BlurView>
-          ) : concepts.map((concept) => (
-            <BlurView key={concept.id} intensity={50} tint="dark" style={styles.ruleCard}>
-              <LinearGradient colors={[GRAMMAR_ACCENT.surfaceStrong, "rgba(255,255,255,0.02)"]} style={ABSOLUTE_FILL} />
-              <AppText variant="koreanPrimary" script="korean" style={styles.accentText}>{concept.form}</AppText>
-              <AppText variant="bodySecondary">{concept.rule}</AppText>
-              {concept.ruleParts?.length ? (
-                <View style={styles.ruleParts}>
-                  {concept.ruleParts.map((part) => (
-                    <View key={part.form} style={styles.rulePart}>
-                      <AppText variant="bodyStrong">{part.form}</AppText>
-                      <AppText variant="bodySecondary" tone="muted">{part.explanation}</AppText>
-                    </View>
-                  ))}
-                </View>
-              ) : null}
-              <AppText variant="caption" tone="soft">
-                {concept.a1Usage === "productive" ? "À comprendre et à utiliser" : "À reconnaître"}
-              </AppText>
-            </BlurView>
-          ))}
+          ) : (
+            concepts.map((concept) => (
+              <BlurView
+                key={concept.id}
+                intensity={50}
+                tint="dark"
+                style={styles.ruleCard}
+              >
+                <LinearGradient
+                  colors={[
+                    GRAMMAR_ACCENT.surfaceStrong,
+                    "rgba(255,255,255,0.02)",
+                  ]}
+                  style={ABSOLUTE_FILL}
+                />
+                <AppText
+                  variant="koreanPrimary"
+                  script="korean"
+                  style={styles.accentText}
+                >
+                  {concept.form}
+                </AppText>
+                <AppText variant="bodySecondary">{concept.rule}</AppText>
+                {concept.ruleParts?.length ? (
+                  <View style={styles.ruleParts}>
+                    {concept.ruleParts.map((part) => (
+                      <View key={part.form} style={styles.rulePart}>
+                        <AppText variant="bodyStrong">{part.form}</AppText>
+                        <AppText variant="bodySecondary" tone="muted">
+                          {part.explanation}
+                        </AppText>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+                <AppText variant="caption" tone="soft">
+                  {concept.a1Usage === "productive"
+                    ? "À comprendre et à utiliser"
+                    : "À reconnaître"}
+                </AppText>
+              </BlurView>
+            ))
+          )}
         </View>
 
-        <View style={[styles.explanationColumn, modalLayout.useWideLayout && styles.explanationColumnTablet]}>
-          <AppText variant="sectionLabel" tone="soft">EXEMPLES</AppText>
+        <View
+          style={[
+            styles.explanationColumn,
+            modalLayout.useWideLayout && styles.explanationColumnTablet,
+          ]}
+        >
+          <AppText variant="sectionLabel" tone="soft">
+            EXEMPLES
+          </AppText>
           {stage.canonicalExamples.map((example, index) => (
-            <BlurView key={`${example.korean}-${index}`} intensity={46} tint="dark" style={styles.exampleCard}>
-              <AppText variant={example.format === "dialogue" ? "koreanSecondary" : "koreanPrimary"} script="korean">
+            <BlurView
+              key={`${example.korean}-${index}`}
+              intensity={46}
+              tint="dark"
+              style={styles.exampleCard}
+            >
+              <AppText
+                variant={
+                  example.format === "dialogue"
+                    ? "koreanSecondary"
+                    : "koreanPrimary"
+                }
+                script="korean"
+              >
                 {example.korean}
               </AppText>
-              <AppText variant="bodySecondary" tone="muted">{example.french}</AppText>
-              {example.note ? <EditorialNote note={example.note} boxed /> : null}
+              <AppText variant="bodySecondary" tone="muted">
+                {example.french}
+              </AppText>
+              {example.note ? (
+                <EditorialNote note={example.note} boxed />
+              ) : null}
             </BlurView>
           ))}
-          {!isGeneralReview ? detailExamples.map((example, index) => (
-            <View key={`${example.korean}-detail-${index}`} style={styles.exampleLine}>
-              <AppText variant="koreanSecondary" script="korean">{example.korean}</AppText>
-              <AppText variant="bodySecondary" tone="muted">{example.french}</AppText>
-              {example.note ? <EditorialNote note={example.note} /> : null}
-            </View>
-          )) : null}
+          {!isGeneralReview
+            ? detailExamples.map((example, index) => (
+                <View
+                  key={`${example.korean}-detail-${index}`}
+                  style={styles.exampleLine}
+                >
+                  <AppText variant="koreanSecondary" script="korean">
+                    {example.korean}
+                  </AppText>
+                  <AppText variant="bodySecondary" tone="muted">
+                    {example.french}
+                  </AppText>
+                  {example.note ? <EditorialNote note={example.note} /> : null}
+                </View>
+              ))
+            : null}
         </View>
       </View>
 
       {receptiveConcepts.length > 0 || visibleAdvancedForms.length > 0 ? (
         <View style={styles.receptiveBox}>
-          <AppText variant="sectionLabel" style={styles.pinkText}>À RECONNAÎTRE</AppText>
+          <AppText variant="sectionLabel" style={styles.pinkText}>
+            À RECONNAÎTRE
+          </AppText>
           {receptiveConcepts.map((concept) => (
             <View key={concept.id} style={styles.receptiveRow}>
               <AppText variant="bodyStrong">{concept.form}</AppText>
-              <AppText variant="bodySecondary" tone="muted">{concept.shortFunction}</AppText>
+              <AppText variant="bodySecondary" tone="muted">
+                {concept.shortFunction}
+              </AppText>
             </View>
           ))}
           {visibleAdvancedForms.map((form) => (
             <View key={form.form} style={styles.receptiveRow}>
               <AppText variant="bodyStrong">{form.form}</AppText>
-              <AppText variant="bodySecondary" tone="muted">{form.shortFunction}</AppText>
+              <AppText variant="bodySecondary" tone="muted">
+                {form.shortFunction}
+              </AppText>
             </View>
           ))}
         </View>
@@ -605,15 +697,18 @@ function GrammarLessonTheory({
             size="compact"
           />
           <View style={styles.advancedLockedCopy}>
-            <AppText variant="bodyStrong">Repères avancés à reconnaître</AppText>
+            <AppText variant="bodyStrong">
+              Repères avancés à reconnaître
+            </AppText>
             <AppText variant="bodySecondary" tone="muted">
               Débloque les nuances A2 réceptives et leurs exemples.
             </AppText>
           </View>
-          <AppText aria-hidden variant="symbol" style={styles.premiumText}>⌁</AppText>
+          <AppText aria-hidden variant="symbol" style={styles.premiumText}>
+            ⌁
+          </AppText>
         </Pressable>
       ) : null}
-
     </View>
   );
 }
@@ -640,7 +735,8 @@ function LessonOverview({
           : "Relis les repères de cette leçon"}
       </AppText>
       <AppText variant="bodySecondary" tone="muted">
-        L’explication s’ouvre dans une mini-leçon dédiée. Tu pourras la consulter à nouveau pendant les exercices sans perdre ta progression.
+        L’explication s’ouvre dans une mini-leçon dédiée. Tu pourras la
+        consulter à nouveau pendant les exercices sans perdre ta progression.
       </AppText>
       <PrimaryButton label="OUVRIR L’EXPLICATION" onPress={onOpenExplanation} />
     </BlurView>
@@ -663,9 +759,14 @@ function PracticePanel({
   onReviewExplanation: () => void;
 }) {
   const question = session.questions[session.questionIndex];
-  const response = session.responses.find((item) => item.questionId === question.id);
+  const response = session.responses.find(
+    (item) => item.questionId === question.id,
+  );
   const draft = Array.isArray(session.draftAnswer) ? session.draftAnswer : [];
-  const remainingTokens = question.kind === "order" ? getRemainingTokens(question.options, draft) : [];
+  const remainingTokens =
+    question.kind === "order"
+      ? getRemainingTokens(question.options, draft)
+      : [];
   const isLast = session.questionIndex === session.questions.length - 1;
 
   return (
@@ -675,7 +776,9 @@ function PracticePanel({
           EXERCICE {session.questionIndex + 1} / {session.questions.length}
         </AppText>
         <View style={styles.practiceMetaActions}>
-          <AppText variant="caption" tone="soft">{scoreLabel(session.score)}</AppText>
+          <AppText variant="caption" tone="soft">
+            {scoreLabel(session.score)}
+          </AppText>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Revoir l’explication sans quitter les exercices"
@@ -692,7 +795,14 @@ function PracticePanel({
         </View>
       </View>
       <View style={styles.exerciseProgressTrack}>
-        <View style={[styles.exerciseProgressFill, { width: `${((session.questionIndex + (response ? 1 : 0)) / session.questions.length) * 100}%` }]} />
+        <View
+          style={[
+            styles.exerciseProgressFill,
+            {
+              width: `${((session.questionIndex + (response ? 1 : 0)) / session.questions.length) * 100}%`,
+            },
+          ]}
+        />
       </View>
 
       <BlurView intensity={58} tint="dark" style={styles.questionCard}>
@@ -701,9 +811,16 @@ function PracticePanel({
             {exerciseGroupLabel(question.exerciseGroup)}
           </AppText>
         ) : null}
-        <AppText variant="sectionLabel" tone="soft">{exerciseKindLabel(question)}</AppText>
+        <AppText variant="sectionLabel" tone="soft">
+          {exerciseKindLabel(question)}
+        </AppText>
         <AppText variant="sectionTitle">{question.prompt}</AppText>
-        {question.display ? <QuestionDisplay value={question.display} vocabulary={question.vocabulary} /> : null}
+        {question.display ? (
+          <QuestionDisplay
+            value={question.display}
+            vocabulary={question.vocabulary}
+          />
+        ) : null}
       </BlurView>
 
       {question.kind === "order" ? (
@@ -713,7 +830,9 @@ function PracticePanel({
           answered={!!response}
           onDraft={onDraft}
           onValidate={() => onAnswer(draft)}
-          expectedLength={Array.isArray(question.answer) ? question.answer.length : 0}
+          expectedLength={
+            Array.isArray(question.answer) ? question.answer.length : 0
+          }
         />
       ) : (
         <View style={[styles.optionGrid, isTablet && styles.optionGridTablet]}>
@@ -724,19 +843,27 @@ function PracticePanel({
               <Pressable
                 key={option}
                 accessibilityRole="button"
-                accessibilityState={{ disabled: !!response, selected: isSelected }}
+                accessibilityState={{
+                  disabled: !!response,
+                  selected: isSelected,
+                }}
                 disabled={!!response}
                 onPress={() => onAnswer(option)}
                 style={({ pressed }) => [
                   styles.optionButton,
                   isTablet && styles.optionButtonTablet,
-                  isSelected && (response.correct ? styles.optionCorrect : styles.optionWrong),
+                  isSelected &&
+                    (response.correct
+                      ? styles.optionCorrect
+                      : styles.optionWrong),
                   isCorrectOption && styles.optionCorrect,
                   pressed && styles.pressed,
                 ]}
               >
                 <AppText
-                  variant={option.match(/[가-힣]/u) ? "koreanSecondary" : "bodyStrong"}
+                  variant={
+                    option.match(/[가-힣]/u) ? "koreanSecondary" : "bodyStrong"
+                  }
                   script={option.match(/[가-힣]/u) ? "korean" : "latin"}
                   align="center"
                 >
@@ -749,7 +876,12 @@ function PracticePanel({
       )}
 
       {response ? (
-        <FeedbackCard question={question} response={response} onContinue={onContinue} isLast={isLast} />
+        <FeedbackCard
+          question={question}
+          response={response}
+          onContinue={onContinue}
+          isLast={isLast}
+        />
       ) : null}
     </View>
   );
@@ -774,22 +906,46 @@ function OrderAnswer({
     <View style={styles.orderStack}>
       <View style={styles.orderAnswerZone}>
         {draft.length === 0 ? (
-          <AppText variant="bodySecondary" tone="soft">Touche les éléments dans le bon ordre.</AppText>
-        ) : draft.map((token, index) => (
-          <Pressable key={`${token}-draft-${index}`} disabled={answered} onPress={() => onDraft(draft.filter((_, draftIndex) => draftIndex !== index))} style={styles.tokenSelected}>
-            <AppText variant="koreanSecondary" script="korean">{token}</AppText>
-          </Pressable>
-        ))}
+          <AppText variant="bodySecondary" tone="soft">
+            Touche les éléments dans le bon ordre.
+          </AppText>
+        ) : (
+          draft.map((token, index) => (
+            <Pressable
+              key={`${token}-draft-${index}`}
+              disabled={answered}
+              onPress={() =>
+                onDraft(draft.filter((_, draftIndex) => draftIndex !== index))
+              }
+              style={styles.tokenSelected}
+            >
+              <AppText variant="koreanSecondary" script="korean">
+                {token}
+              </AppText>
+            </Pressable>
+          ))
+        )}
       </View>
       <View style={styles.tokenBank}>
         {remainingTokens.map(({ token, index }) => (
-          <Pressable key={`${token}-${index}`} disabled={answered} onPress={() => onDraft([...draft, token])} style={styles.tokenButton}>
-            <AppText variant="koreanSecondary" script="korean">{token}</AppText>
+          <Pressable
+            key={`${token}-${index}`}
+            disabled={answered}
+            onPress={() => onDraft([...draft, token])}
+            style={styles.tokenButton}
+          >
+            <AppText variant="koreanSecondary" script="korean">
+              {token}
+            </AppText>
           </Pressable>
         ))}
       </View>
       {!answered ? (
-        <PrimaryButton label="VALIDER LA PHRASE" disabled={draft.length !== expectedLength} onPress={onValidate} />
+        <PrimaryButton
+          label="VALIDER LA PHRASE"
+          disabled={draft.length !== expectedLength}
+          onPress={onValidate}
+        />
       ) : null}
     </View>
   );
@@ -811,22 +967,39 @@ function FeedbackCard({
     : getGrammarIncorrectFeedback(question, response.answer);
 
   return (
-    <BlurView intensity={58} tint="dark" style={[styles.feedbackCard, response.correct ? styles.feedbackCorrect : styles.feedbackWrong]}>
-      <AppText variant="sectionLabel" style={response.correct ? styles.successText : styles.errorText}>
+    <BlurView
+      intensity={58}
+      tint="dark"
+      style={[
+        styles.feedbackCard,
+        response.correct ? styles.feedbackCorrect : styles.feedbackWrong,
+      ]}
+    >
+      <AppText
+        variant="sectionLabel"
+        style={response.correct ? styles.successText : styles.errorText}
+      >
         {response.correct ? "BONNE RÉPONSE" : "À AJUSTER ICI"}
       </AppText>
       <AppText variant="bodyStrong">{teacherLead}</AppText>
       {!response.correct ? (
         <View style={styles.correctAnswerBox}>
-          <AppText variant="caption" tone="soft">ICI, ON ATTENDAIT</AppText>
+          <AppText variant="caption" tone="soft">
+            ICI, ON ATTENDAIT
+          </AppText>
           <AppText variant="bodyStrong">{answerLabel(question.answer)}</AppText>
         </View>
       ) : null}
       {response.correct ? (
-        <AppText variant="bodySecondary" tone="muted">{question.explanation}</AppText>
+        <AppText variant="bodySecondary" tone="muted">
+          {question.explanation}
+        </AppText>
       ) : null}
       {question.memo ? <EditorialNote note={question.memo} /> : null}
-      <PrimaryButton label={isLast ? "VOIR MON BILAN" : "CONTINUER"} onPress={onContinue} />
+      <PrimaryButton
+        label={isLast ? "VOIR MON BILAN" : "CONTINUER"}
+        onPress={onContinue}
+      />
     </BlurView>
   );
 }
@@ -843,20 +1016,40 @@ function LessonResult({
   const stage = GRAMMAR_STAGE_BY_ID[session.stageId];
   const stageIndex = GRAMMAR_STAGE_IDS.indexOf(session.stageId);
   const nextStageId = GRAMMAR_STAGE_IDS[stageIndex + 1];
-  const ratio = session.questions.length > 0 ? session.score / session.questions.length : 0;
+  const ratio =
+    session.questions.length > 0 ? session.score / session.questions.length : 0;
   const passed = ratio >= GRAMMAR_PRACTICE_PASS_RATIO;
-  const wrongResponses = session.responses.filter((response) => !response.correct);
+  const wrongResponses = session.responses.filter(
+    (response) => !response.correct,
+  );
   const isGeneralReview = stage.mode === "review";
 
   return (
     <View style={styles.resultStack}>
-      <BlurView intensity={62} tint="dark" style={[styles.resultCard, passed ? styles.resultPassed : styles.resultRetry]}>
-        <AppText variant="sectionLabel" style={passed ? styles.successText : styles.pinkText}>
+      <BlurView
+        intensity={62}
+        tint="dark"
+        style={[
+          styles.resultCard,
+          passed ? styles.resultPassed : styles.resultRetry,
+        ]}
+      >
+        <AppText
+          variant="sectionLabel"
+          style={passed ? styles.successText : styles.pinkText}
+        >
           {passed
-            ? isGeneralReview ? "RÉVISION TERMINÉE" : "ÉTAPE TERMINÉE"
-            : isGeneralReview ? "RÉVISION À REPRENDRE" : "ÉTAPE À REPRENDRE"}
+            ? isGeneralReview
+              ? "RÉVISION TERMINÉE"
+              : "ÉTAPE TERMINÉE"
+            : isGeneralReview
+              ? "RÉVISION À REPRENDRE"
+              : "ÉTAPE À REPRENDRE"}
         </AppText>
-        <AppText variant="numericValue" style={passed ? styles.successText : styles.pinkText}>
+        <AppText
+          variant="numericValue"
+          style={passed ? styles.successText : styles.pinkText}
+        >
           {session.score}/{session.questions.length}
         </AppText>
         <AppText variant="sectionTitle">
@@ -878,13 +1071,19 @@ function LessonResult({
 
       {wrongResponses.length > 0 ? (
         <View style={styles.reviewBox}>
-          <AppText variant="sectionLabel" tone="soft">TES POINTS À REVOIR</AppText>
+          <AppText variant="sectionLabel" tone="soft">
+            TES POINTS À REVOIR
+          </AppText>
           {wrongResponses.map((response) => {
-            const question = session.questions.find((item) => item.id === response.questionId);
+            const question = session.questions.find(
+              (item) => item.id === response.questionId,
+            );
             if (!question) return null;
             return (
               <View key={response.questionId} style={styles.reviewRow}>
-                <AppText variant="bodyStrong">{answerLabel(question.answer)}</AppText>
+                <AppText variant="bodyStrong">
+                  {answerLabel(question.answer)}
+                </AppText>
                 <AppText variant="bodySecondary" tone="muted">
                   {getGrammarIncorrectFeedback(question, response.answer)}
                 </AppText>
@@ -905,8 +1104,13 @@ function LessonResult({
             onPress={() => onOpenStage(nextStageId)}
           />
         ) : null}
-        <Pressable onPress={() => router.replace("/grammar" as never)} style={styles.textButton}>
-          <AppText variant="button" tone="muted">RETOUR AU PARCOURS</AppText>
+        <Pressable
+          onPress={() => router.replace("/grammar" as never)}
+          style={styles.textButton}
+        >
+          <AppText variant="button" tone="muted">
+            RETOUR AU PARCOURS
+          </AppText>
         </Pressable>
       </View>
     </View>
@@ -917,12 +1121,19 @@ function LockedLesson({ stageId }: { stageId: GrammarStageId }) {
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
   return (
     <BlurView intensity={58} tint="dark" style={styles.lockedCard}>
-      <AppText variant="sectionLabel" tone="soft">ÉTAPE VERROUILLÉE</AppText>
-      <AppText variant="sectionTitle">Cette étape n’est pas encore accessible.</AppText>
+      <AppText variant="sectionLabel" tone="soft">
+        ÉTAPE VERROUILLÉE
+      </AppText>
+      <AppText variant="sectionTitle">
+        Cette étape n’est pas encore accessible.
+      </AppText>
       <AppText variant="bodySecondary" tone="muted">
         Termine d’abord les étapes requises pour ouvrir « {stage.title} ».
       </AppText>
-      <PrimaryButton label="VOIR LE PARCOURS" onPress={() => router.replace("/grammar" as never)} />
+      <PrimaryButton
+        label="VOIR LE PARCOURS"
+        onPress={() => router.replace("/grammar" as never)}
+      />
     </BlurView>
   );
 }
@@ -930,7 +1141,11 @@ function LockedLesson({ stageId }: { stageId: GrammarStageId }) {
 function PremiumLockedLesson({ stageId }: { stageId: GrammarStageId }) {
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
   return (
-    <BlurView intensity={58} tint="dark" style={[styles.lockedCard, styles.premiumLockedCard]}>
+    <BlurView
+      intensity={58}
+      tint="dark"
+      style={[styles.lockedCard, styles.premiumLockedCard]}
+    >
       <StatusBadge
         label="PREMIUM"
         tone="premium"
@@ -939,7 +1154,8 @@ function PremiumLockedLesson({ stageId }: { stageId: GrammarStageId }) {
       />
       <AppText variant="sectionTitle">{stage.title}</AppText>
       <AppText variant="bodySecondary" tone="muted">
-        Cette leçon {stage.status === "a1" ? "A1" : "avancée"} et ses exercices approfondis sont inclus dans K-App Premium.
+        Cette leçon {stage.status === "a1" ? "A1" : "avancée"} et ses exercices
+        approfondis sont inclus dans K-App Premium.
       </AppText>
       <PrimaryButton
         label="DÉCOUVRIR PREMIUM"
@@ -953,8 +1169,12 @@ function PremiumLockedLesson({ stageId }: { stageId: GrammarStageId }) {
 function Metric({ value, label }: { value: string; label: string }) {
   return (
     <View style={styles.metric}>
-      <AppText variant="sectionTitle" align="center">{value}</AppText>
-      <AppText variant="caption" tone="soft" align="center">{label}</AppText>
+      <AppText variant="sectionTitle" align="center">
+        {value}
+      </AppText>
+      <AppText variant="caption" tone="soft" align="center">
+        {label}
+      </AppText>
     </View>
   );
 }
@@ -996,25 +1216,47 @@ function PrimaryButton({
   );
 }
 
-function SecondaryButton({ label, onPress }: { label: string; onPress: () => void }) {
+function SecondaryButton({
+  label,
+  onPress,
+}: {
+  label: string;
+  onPress: () => void;
+}) {
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}>
-      <AppText variant="button" style={styles.accentText}>{label}</AppText>
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.secondaryButton,
+        pressed && styles.pressed,
+      ]}
+    >
+      <AppText variant="button" style={styles.accentText}>
+        {label}
+      </AppText>
     </Pressable>
   );
 }
 
 function exerciseKindLabel(question: GrammarPracticeQuestion) {
   switch (question.kind) {
-    case "order": return "CONSTRUCTION";
-    case "matching": return "COMPRÉHENSION";
-    case "transformation": return "FORME";
-    case "scene": return "MISE EN SITUATION";
-    default: return "CHOIX GUIDÉ";
+    case "order":
+      return "CONSTRUCTION";
+    case "matching":
+      return "COMPRÉHENSION";
+    case "transformation":
+      return "FORME";
+    case "scene":
+      return "MISE EN SITUATION";
+    default:
+      return "CHOIX GUIDÉ";
   }
 }
 
-function exerciseGroupLabel(group: NonNullable<GrammarPracticeQuestion["exerciseGroup"]>) {
+function exerciseGroupLabel(
+  group: NonNullable<GrammarPracticeQuestion["exerciseGroup"]>,
+) {
   return group === "capacity"
     ? "CAPACITÉ PERSONNELLE"
     : "FAISABILITÉ DANS CETTE SITUATION";
@@ -1026,79 +1268,291 @@ const styles = StyleSheet.create({
   backgroundBlur: { ...ABSOLUTE_FILL },
   scroll: { paddingTop: 12, paddingBottom: 100 },
   frame: { width: "100%", alignSelf: "center" },
-  centeredState: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, gap: 18 },
-  navRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 24 },
+  centeredState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    gap: 18,
+  },
+  navRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 24,
+  },
   backButton: { flexDirection: "row", alignItems: "center", gap: 8 },
   lessonHeader: { gap: 7, marginBottom: 26 },
-  lessonMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 },
+  lessonMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 8,
+  },
   accentText: { color: GRAMMAR_ACCENT.base },
   premiumText: { color: COLORS.premiumGold },
   successText: { color: SUCCESS },
   errorText: { color: ERROR },
   pinkText: { color: "#F9A8D4" },
-  headerProgressTrack: { height: 3, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 999, marginTop: 8, overflow: "hidden" },
-  headerProgressFill: { height: "100%", backgroundColor: GRAMMAR_ACCENT.base, borderRadius: 999 },
+  headerProgressTrack: {
+    height: 3,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 999,
+    marginTop: 8,
+    overflow: "hidden",
+  },
+  headerProgressFill: {
+    height: "100%",
+    backgroundColor: GRAMMAR_ACCENT.base,
+    borderRadius: 999,
+  },
   contentStack: { gap: 22 },
   explanationGrid: { gap: 22 },
   explanationGridTablet: { flexDirection: "row", alignItems: "flex-start" },
   explanationColumn: { gap: 10 },
   explanationColumnTablet: { flex: 1 },
-  ruleCard: { borderRadius: 22, borderWidth: 1, borderColor: GRAMMAR_ACCENT.featuredShadow, padding: 18, gap: 7, overflow: "hidden" },
+  ruleCard: {
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: GRAMMAR_ACCENT.featuredShadow,
+    padding: 18,
+    gap: 7,
+    overflow: "hidden",
+  },
   ruleParts: { gap: 10 },
   rulePart: { gap: 3, paddingTop: 2 },
-  exampleCard: { borderRadius: 22, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", padding: 18, gap: 7, overflow: "hidden" },
-  exampleLine: { borderLeftWidth: 2, borderLeftColor: GRAMMAR_ACCENT.iconBorder, paddingLeft: 14, gap: 3 },
+  exampleCard: {
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    padding: 18,
+    gap: 7,
+    overflow: "hidden",
+  },
+  exampleLine: {
+    borderLeftWidth: 2,
+    borderLeftColor: GRAMMAR_ACCENT.iconBorder,
+    paddingLeft: 14,
+    gap: 3,
+  },
   editorialNote: { marginTop: 4, gap: 2 },
-  memoBox: { marginTop: 4, borderRadius: 10, padding: 10, backgroundColor: GRAMMAR_ACCENT.surface },
-  receptiveBox: { borderRadius: 20, borderWidth: 1, borderColor: "rgba(244,114,182,0.2)", backgroundColor: "rgba(244,114,182,0.06)", padding: 18, gap: 12 },
+  memoBox: {
+    marginTop: 4,
+    borderRadius: 10,
+    padding: 10,
+    backgroundColor: GRAMMAR_ACCENT.surface,
+  },
+  receptiveBox: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(244,114,182,0.2)",
+    backgroundColor: "rgba(244,114,182,0.06)",
+    padding: 18,
+    gap: 12,
+  },
   receptiveRow: { gap: 2 },
-  advancedLockedCard: { minHeight: 84, borderRadius: 20, borderWidth: 1, borderColor: COLORS.premiumBorder, backgroundColor: COLORS.premiumSurface, padding: 16, flexDirection: "row", alignItems: "center", gap: 12 },
+  advancedLockedCard: {
+    minHeight: 84,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.premiumBorder,
+    backgroundColor: COLORS.premiumSurface,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
   advancedLockedCopy: { flex: 1, minWidth: 0, gap: 3 },
-  practiceLaunchCard: { borderRadius: 24, borderWidth: 1, borderColor: GRAMMAR_ACCENT.cardBorder, padding: 20, gap: 10, overflow: "hidden" },
+  practiceLaunchCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: GRAMMAR_ACCENT.cardBorder,
+    padding: 20,
+    gap: 10,
+    overflow: "hidden",
+  },
   practiceStack: { gap: 16 },
-  practiceMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 },
-  practiceMetaActions: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end", gap: 8 },
-  reviewTheoryButton: { minHeight: 36, borderRadius: 999, borderWidth: 1, borderColor: GRAMMAR_ACCENT.iconBorder, backgroundColor: GRAMMAR_ACCENT.iconSurface, alignItems: "center", justifyContent: "center", paddingHorizontal: 12, paddingVertical: 8 },
-  exerciseProgressTrack: { height: 5, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.09)", overflow: "hidden" },
-  exerciseProgressFill: { height: "100%", borderRadius: 999, backgroundColor: GRAMMAR_ACCENT.base },
-  questionCard: { minHeight: 190, borderRadius: 26, borderWidth: 1, borderColor: GRAMMAR_ACCENT.selectedShadow, padding: 22, justifyContent: "center", gap: 12, overflow: "hidden" },
-  questionSections: { marginTop: 5, gap: 14 },
-  questionSection: { gap: 4 },
-  vocabularyPhrase: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-end", rowGap: 4 },
-  vocabularyTextUnit: { flexShrink: 0, alignSelf: "flex-end" },
-  vocabularyUnit: { alignItems: "center", maxWidth: "45%", marginHorizontal: 2 },
-  vocabularyTranslation: { fontSize: 11, lineHeight: 14, marginTop: -1 },
+  practiceMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  practiceMetaActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+    gap: 8,
+  },
+  reviewTheoryButton: {
+    minHeight: 36,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: GRAMMAR_ACCENT.iconBorder,
+    backgroundColor: GRAMMAR_ACCENT.iconSurface,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  exerciseProgressTrack: {
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.09)",
+    overflow: "hidden",
+  },
+  exerciseProgressFill: {
+    height: "100%",
+    borderRadius: 999,
+    backgroundColor: GRAMMAR_ACCENT.base,
+  },
+  questionCard: {
+    minHeight: 190,
+    borderRadius: 26,
+    borderWidth: 1,
+    borderColor: GRAMMAR_ACCENT.selectedShadow,
+    padding: 22,
+    justifyContent: "center",
+    gap: 12,
+    overflow: "hidden",
+  },
+
   optionGrid: { gap: 10 },
   optionGridTablet: { flexDirection: "row", flexWrap: "wrap" },
-  optionButton: { minHeight: 62, borderRadius: 18, borderWidth: 1, borderColor: "rgba(255,255,255,0.13)", backgroundColor: "rgba(255,255,255,0.045)", alignItems: "center", justifyContent: "center", padding: 14 },
+  optionButton: {
+    minHeight: 62,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.13)",
+    backgroundColor: "rgba(255,255,255,0.045)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 14,
+  },
   optionButtonTablet: { width: "49%", flexGrow: 1 },
-  optionCorrect: { borderColor: "rgba(134,239,172,0.7)", backgroundColor: "rgba(134,239,172,0.12)" },
-  optionWrong: { borderColor: "rgba(253,164,175,0.7)", backgroundColor: "rgba(253,164,175,0.1)" },
+  optionCorrect: {
+    borderColor: "rgba(134,239,172,0.7)",
+    backgroundColor: "rgba(134,239,172,0.12)",
+  },
+  optionWrong: {
+    borderColor: "rgba(253,164,175,0.7)",
+    backgroundColor: "rgba(253,164,175,0.1)",
+  },
   orderStack: { gap: 12 },
-  orderAnswerZone: { minHeight: 92, borderRadius: 18, borderWidth: 1, borderColor: GRAMMAR_ACCENT.featuredShadow, backgroundColor: GRAMMAR_ACCENT.decorative, padding: 12, flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 },
+  orderAnswerZone: {
+    minHeight: 92,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: GRAMMAR_ACCENT.featuredShadow,
+    backgroundColor: GRAMMAR_ACCENT.decorative,
+    padding: 12,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 8,
+  },
   tokenBank: { minHeight: 54, flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  tokenButton: { borderRadius: 13, borderWidth: 1, borderColor: "rgba(255,255,255,0.16)", backgroundColor: "rgba(255,255,255,0.06)", paddingVertical: 9, paddingHorizontal: 13 },
-  tokenSelected: { borderRadius: 13, borderWidth: 1, borderColor: GRAMMAR_ACCENT.featuredBorder, backgroundColor: GRAMMAR_ACCENT.surface, paddingVertical: 9, paddingHorizontal: 13 },
-  feedbackCard: { borderRadius: 24, borderWidth: 1, padding: 20, gap: 10, overflow: "hidden" },
+  tokenButton: {
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    paddingVertical: 9,
+    paddingHorizontal: 13,
+  },
+  tokenSelected: {
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: GRAMMAR_ACCENT.featuredBorder,
+    backgroundColor: GRAMMAR_ACCENT.surface,
+    paddingVertical: 9,
+    paddingHorizontal: 13,
+  },
+  feedbackCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 20,
+    gap: 10,
+    overflow: "hidden",
+  },
   feedbackCorrect: { borderColor: "rgba(134,239,172,0.36)" },
   feedbackWrong: { borderColor: "rgba(253,164,175,0.36)" },
-  correctAnswerBox: { borderRadius: 13, backgroundColor: "rgba(255,255,255,0.055)", padding: 12, gap: 3 },
+  correctAnswerBox: {
+    borderRadius: 13,
+    backgroundColor: "rgba(255,255,255,0.055)",
+    padding: 12,
+    gap: 3,
+  },
   resultStack: { gap: 18 },
-  resultCard: { borderRadius: 28, borderWidth: 1, padding: 24, gap: 10, overflow: "hidden" },
+  resultCard: {
+    borderRadius: 28,
+    borderWidth: 1,
+    padding: 24,
+    gap: 10,
+    overflow: "hidden",
+  },
   resultPassed: { borderColor: "rgba(134,239,172,0.38)" },
   resultRetry: { borderColor: "rgba(244,114,182,0.34)" },
   resultMetrics: { flexDirection: "row", gap: 8, marginTop: 8 },
-  metric: { flex: 1, borderRadius: 16, backgroundColor: "rgba(255,255,255,0.045)", padding: 12, gap: 2 },
-  reviewBox: { borderRadius: 22, borderWidth: 1, borderColor: "rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.035)", padding: 18, gap: 14 },
-  reviewRow: { gap: 3, borderLeftWidth: 2, borderLeftColor: "rgba(253,164,175,0.42)", paddingLeft: 12 },
+  metric: {
+    flex: 1,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.045)",
+    padding: 12,
+    gap: 2,
+  },
+  reviewBox: {
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+    backgroundColor: "rgba(255,255,255,0.035)",
+    padding: 18,
+    gap: 14,
+  },
+  reviewRow: {
+    gap: 3,
+    borderLeftWidth: 2,
+    borderLeftColor: "rgba(253,164,175,0.42)",
+    paddingLeft: 12,
+  },
   resultActions: { gap: 10 },
-  lockedCard: { borderRadius: 26, borderWidth: 1, borderColor: "rgba(255,255,255,0.14)", padding: 22, gap: 12, overflow: "hidden" },
-  premiumLockedCard: { borderColor: COLORS.premiumBorder, backgroundColor: COLORS.premiumSurface },
-  primaryButton: { minHeight: 52, borderRadius: 16, backgroundColor: GRAMMAR_ACCENT.base, alignItems: "center", justifyContent: "center", paddingHorizontal: 18, marginTop: 6 },
+  lockedCard: {
+    borderRadius: 26,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.14)",
+    padding: 22,
+    gap: 12,
+    overflow: "hidden",
+  },
+  premiumLockedCard: {
+    borderColor: COLORS.premiumBorder,
+    backgroundColor: COLORS.premiumSurface,
+  },
+  primaryButton: {
+    minHeight: 52,
+    borderRadius: 16,
+    backgroundColor: GRAMMAR_ACCENT.base,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 18,
+    marginTop: 6,
+  },
   primaryButtonText: { color: COLORS.bgDeep },
   primaryButtonPremium: { backgroundColor: COLORS.premiumGold },
   primaryButtonPremiumText: { color: COLORS.premiumInk },
-  secondaryButton: { minHeight: 52, borderRadius: 16, borderWidth: 1, borderColor: GRAMMAR_ACCENT.featuredBorder, alignItems: "center", justifyContent: "center", paddingHorizontal: 18 },
+  secondaryButton: {
+    minHeight: 52,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: GRAMMAR_ACCENT.featuredBorder,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 18,
+  },
   textButton: { alignItems: "center", justifyContent: "center", padding: 14 },
   buttonDisabled: { opacity: 0.35 },
   pressed: { opacity: 0.86, transform: [{ scale: 0.995 }] },
