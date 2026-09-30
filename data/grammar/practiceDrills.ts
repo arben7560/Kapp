@@ -9,6 +9,157 @@ import type {
 type DrillOptions = readonly [string, string, string];
 
 const GRAMMAR_VOCABULARY_HINTS: Record<string, readonly { korean: string; french: string }[]> = {
+  "speak-request": [
+    { korean: "말하다", french: "parler" },
+  ],
+  "show-request": [
+    { korean: "보여 주다", french: "montrer" },
+  ],
+  "wait-request": [
+    { korean: "기다리다", french: "attendre" },
+  ],
+  "open-request": [
+    { korean: "열다", french: "ouvrir" },
+  ],
+  "item-vs-action": [
+    { korean: "문", french: "porte" },
+  ],
+  "sit-invitation": [
+    { korean: "앉다", french: "s’asseoir" },
+  ],
+  "go-instruction": [
+    { korean: "가다", french: "aller" },
+  ],
+  "read-instruction": [
+    { korean: "읽다", french: "lire" },
+  ],
+  "come-invitation": [
+    { korean: "오다", french: "venir" },
+  ],
+  "instruction-vs-request": [
+    { korean: "책", french: "livre" },
+  ],
+  "bus-rieul": [
+    { korean: "버스", french: "bus" },
+  ],
+  "subway-batchim": [
+    { korean: "지하철", french: "métro" },
+  ],
+  "car-batchim": [
+    { korean: "자동차", french: "voiture" },
+  ],
+  "right-batchim": [
+    { korean: "오른쪽", french: "droite" },
+  ],
+  "card-vowel": [
+    { korean: "카드", french: "carte" },
+  ],
+  "eat-desire": [
+    { korean: "먹다", french: "manger" },
+  ],
+  "go-desire": [
+    { korean: "가다", french: "aller" },
+  ],
+  "buy-desire": [
+    { korean: "사다", french: "acheter" },
+  ],
+  "learn-desire": [
+    { korean: "배우다", french: "apprendre" },
+  ],
+  "desire-vs-plan": [
+    { korean: "한국", french: "Corée" },
+  ],
+  "read-ability": [
+    { korean: "읽다", french: "lire" },
+  ],
+  "speak-ability": [
+    { korean: "한국어", french: "coréen" },
+    { korean: "말하다", french: "parler" },
+  ],
+  "drive-ability": [
+    { korean: "운전하다", french: "conduire" },
+  ],
+  "go-ability": [
+    { korean: "가다", french: "aller" },
+  ],
+  "pay-ability": [
+    { korean: "여기서", french: "ici" },
+    { korean: "카드", french: "carte" },
+  ],
+  "charge-ability": [
+    { korean: "여기서", french: "ici" },
+  ],
+  "take-transport-ability": [
+    { korean: "버스", french: "bus" },
+  ],
+  "open-permission": [
+    { korean: "열다", french: "ouvrir" },
+  ],
+  "sit-permission": [
+    { korean: "앉다", french: "s’asseoir" },
+  ],
+  "photo-permission": [
+    { korean: "사진을 찍다", french: "prendre une photo" },
+  ],
+  "use-permission": [
+    { korean: "화장실", french: "toilettes" },
+  ],
+  "charge-permission": [
+    { korean: "여기서", french: "ici" },
+    { korean: "휴대폰", french: "téléphone portable" },
+  ],
+  "cannot-go": [
+    { korean: "오늘", french: "aujourd’hui" },
+  ],
+  "cannot-drive": [
+    { korean: "오늘", french: "aujourd’hui" },
+    { korean: "운전", french: "conduite" },
+  ],
+  "cannot-eat": [
+    { korean: "매운 음식", french: "plat épicé" },
+  ],
+  "cannot-hear": [
+    { korean: "귀", french: "oreille" },
+    { korean: "소리", french: "son" },
+  ],
+  "cannot-understand": [
+    { korean: "너무 빨라서", french: "parce que c’est trop rapide" },
+  ],
+  "water-too": [
+    { korean: "물", french: "eau" },
+  ],
+  "me-too": [
+    { korean: "저", french: "moi" },
+  ],
+  "water-only": [
+    { korean: "물", french: "eau" },
+  ],
+  "meaning-bread-only": [
+    { korean: "빵", french: "pain" },
+  ],
+  "coffee-only": [
+    { korean: "커피", french: "café" },
+  ],
+  "coffee-vowel": [
+    { korean: "커피", french: "café" },
+    { korean: "차", french: "thé" },
+  ],
+  "bread-batchim": [
+    { korean: "빵", french: "pain" },
+    { korean: "케이크", french: "gâteau" },
+  ],
+  "bus-vowel": [
+    { korean: "버스", french: "bus" },
+    { korean: "지하철", french: "métro" },
+  ],
+  "water-batchim": [
+    { korean: "물", french: "eau" },
+    { korean: "차", french: "thé" },
+  ],
+  "clause-alternative": [
+    { korean: "지금", french: "maintenant" },
+    { korean: "집", french: "maison" },
+  ],
   "hours-range-start": [
     { korean: "\uC544\uD649 \uC2DC", french: "neuf heures" },
     { korean: "\uB2E4\uC12F \uC2DC", french: "cinq heures" },
@@ -96,6 +247,7 @@ function transform(
     explanation,
     ...(ruleAspect ? { ruleAspect } : {}),
     ...(exerciseGroup ? { exerciseGroup } : {}),
+    ...(GRAMMAR_VOCABULARY_HINTS[id] ? { vocabulary: GRAMMAR_VOCABULARY_HINTS[id] } : {}),
   };
 }
 
@@ -124,6 +276,7 @@ function choose(
     explanation,
     ...(ruleAspect ? { ruleAspect } : {}),
     ...(exerciseGroup ? { exerciseGroup } : {}),
+    ...(GRAMMAR_VOCABULARY_HINTS[id] ? { vocabulary: GRAMMAR_VOCABULARY_HINTS[id] } : {}),
   };
 }
 
@@ -147,6 +300,7 @@ function order(
     answer,
     explanation,
     ...(ruleAspect ? { ruleAspect } : {}),
+    ...(GRAMMAR_VOCABULARY_HINTS[id] ? { vocabulary: GRAMMAR_VOCABULARY_HINTS[id] } : {}),
   };
 }
 

@@ -28,51 +28,37 @@ type TokenLayout = {
 
 const GLOSS_WIDTH = 84;
 const GLOSS_LINE_GAP = 2;
-const PARTICLE_SPLIT = /(부터|까지|에서|으로|에게|한테|동안|__)/u;
-
-function attachHint(token: string, vocabulary: readonly GrammarVocabularyHint[]) {
-  return vocabulary.find((hint) => token === hint.korean || token.startsWith(hint.korean));
-}
 
 function buildGlossedParts(content: string, vocabulary: readonly GrammarVocabularyHint[]): GlossPart[] {
-  const chunks = content.split(PARTICLE_SPLIT).filter((chunk) => chunk.length > 0);
-  const usedHints = new Set<string>();
+  const hints = vocabulary
+    .map((hint) => ({ ...hint, index: content.indexOf(hint.korean) }))
+    .filter((hint) => hint.index >= 0)
+    .sort((left, right) => left.index - right.index);
   const parts: GlossPart[] = [];
+  let cursor = 0;
 
-  chunks.forEach((chunk, index) => {
-    const hint = attachHint(chunk, vocabulary);
-    if (hint && !usedHints.has(hint.korean) && chunk.startsWith(hint.korean) && chunk !== hint.korean) {
-      usedHints.add(hint.korean);
+  hints.forEach((hint, hintIndex) => {
+    if (hint.index < cursor) return;
+    if (hint.index > cursor) {
       parts.push({
-        key: `hint-${hint.korean}-${index}`,
-        korean: hint.korean,
-        french: hint.french,
+        key: `text-${hintIndex}`,
+        korean: content.slice(cursor, hint.index),
       });
-      const rest = chunk.slice(hint.korean.length);
-      if (rest) {
-        parts.push({
-          key: `rest-${index}`,
-          korean: rest,
-        });
-      }
-      return;
     }
-
-    if (hint && !usedHints.has(hint.korean)) {
-      usedHints.add(hint.korean);
-      parts.push({
-        key: `hint-${hint.korean}-${index}`,
-        korean: chunk,
-        french: hint.french,
-      });
-      return;
-    }
-
     parts.push({
-      key: `text-${index}`,
-      korean: chunk,
+      key: `hint-${hint.korean}-${hintIndex}`,
+      korean: hint.korean,
+      french: hint.french,
     });
+    cursor = hint.index + hint.korean.length;
   });
+
+  if (cursor < content.length) {
+    parts.push({
+      key: "text-tail",
+      korean: content.slice(cursor),
+    });
+  }
 
   return parts;
 }
