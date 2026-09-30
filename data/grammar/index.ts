@@ -7,3 +7,4 @@ export * from "./practiceDrills.ts";
 export * from "./registryValidation.ts";
 export * from "./stages.ts";
 export * from "./types.ts";
+export * from "./vocabularyHints10to19.ts";
