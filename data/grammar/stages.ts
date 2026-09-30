@@ -744,8 +744,8 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     id: "range-and-limit",
     number: 30,
     chapterId: "express-needs",
-    title: "Donner une période",
-    communicativeGoal: "Donner une période ou une limite",
+    title: "De… à… : 부터 ~ 까지",
+    communicativeGoal: "Exprimer une période de temps ou une limite",
     conceptIds: ["range-buteo-kkaji"],
     prerequisites: recommendedStages([
       "destination-and-time",

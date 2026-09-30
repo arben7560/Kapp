@@ -1,14 +1,13 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
 import { View } from "react-native";
 
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import { HubModuleAccents } from "../../constants/theme";
 import type { GrammarLessonGuide as GrammarLessonGuideData } from "../../data/grammar/lessonGuides";
 import { AppText } from "../app-text";
-import { useGrammarModalLayout } from "./useGrammarModalLayout";
 import { grammarLessonGuideStyles as styles } from "./GrammarLessonGuide.styles";
+import { useGrammarModalLayout } from "./useGrammarModalLayout";
 
 const GRAMMAR_ACCENT = HubModuleAccents.grammar;
 
@@ -44,13 +43,16 @@ function SectionHeading({ index, label, detail }: SectionHeadingProps) {
   );
 }
 
-export function GrammarLessonGuide({
-  guide,
-}: GrammarLessonGuideProps) {
+export function GrammarLessonGuide({ guide }: GrammarLessonGuideProps) {
   const layout = useGrammarModalLayout();
 
   return (
-    <View style={[styles.guideStack, layout.isCompactWidth && styles.guideStackCompact]}>
+    <View
+      style={[
+        styles.guideStack,
+        layout.isCompactWidth && styles.guideStackCompact,
+      ]}
+    >
       <BlurView intensity={62} tint="dark" style={styles.editorialCard}>
         <LinearGradient
           pointerEvents="none"
@@ -73,7 +75,9 @@ export function GrammarLessonGuide({
         >
           <View style={styles.essentialBlock}>
             <SectionHeading index="01" label="L’IDÉE ESSENTIELLE" />
-            <AppText variant={layout.isCompactWidth ? "bodyStrong" : "subtitle"}>
+            <AppText
+              variant={layout.isCompactWidth ? "bodyStrong" : "subtitle"}
+            >
               {guide.introduction}
             </AppText>
             {guide.stageId === "mark-contrast" ? (
@@ -82,10 +86,13 @@ export function GrammarLessonGuide({
                   REGISTRE
                 </AppText>
                 <AppText variant="bodySecondary" tone="muted">
-                  -지만 est le « mais » net, un peu plus posé : écrit, ou oral quand
-                  l’opposition est volontaire. À l’oral quotidien, le voisin
-                  은데/는데 pose souvent le contexte avant la suite ; il sera
-                  traité plus tard. Ici, on produit seulement -지만.
+                  -지만 correspond à un « mais » assez net et posé. On l’emploie
+                  à l’écrit, mais aussi à l’oral lorsque l’on veut marquer
+                  clairement une opposition. Dans la conversation quotidienne,
+                  -은데/는데 est souvent plus naturel : il est plus souple et
+                  plus conversationnel. Il sert fréquemment à poser un contexte
+                  avant d’introduire la suite. -은데/는데 sera étudié plus tard.
+                  Dans cette leçon, on se concentre uniquement sur -지만.
                 </AppText>
               </View>
             ) : null}
@@ -151,12 +158,18 @@ export function GrammarLessonGuide({
           detail="Une construction en trois mouvements"
         />
         <View
-          style={[styles.stepsTrack, layout.useWideLayout && styles.stepsTrackTablet]}
+          style={[
+            styles.stepsTrack,
+            layout.useWideLayout && styles.stepsTrackTablet,
+          ]}
         >
           {guide.steps.map((step, index) => (
             <View
               key={step.title}
-              style={[styles.stepCard, layout.useWideLayout && styles.stepCardTablet]}
+              style={[
+                styles.stepCard,
+                layout.useWideLayout && styles.stepCardTablet,
+              ]}
             >
               <View style={styles.stepTopRow}>
                 <View style={styles.stepNumber}>
@@ -196,21 +209,24 @@ export function GrammarLessonGuide({
         </View>
 
         <View
-          style={[styles.examplesGrid, layout.useWideLayout && styles.examplesGridTablet]}
+          style={[
+            styles.examplesGrid,
+            layout.useWideLayout && styles.examplesGridTablet,
+          ]}
         >
           {guide.examples.map((example, exampleIndex) => (
             <BlurView
               key={example.korean}
               intensity={52}
               tint="dark"
-              style={[styles.exampleCard, layout.useWideLayout && styles.exampleCardTablet]}
+              style={[
+                styles.exampleCard,
+                layout.useWideLayout && styles.exampleCardTablet,
+              ]}
             >
               <LinearGradient
                 pointerEvents="none"
-                colors={[
-                  GRAMMAR_ACCENT.surface,
-                  "rgba(255,255,255,0.018)",
-                ]}
+                colors={[GRAMMAR_ACCENT.surface, "rgba(255,255,255,0.018)"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0.7, y: 1 }}
                 style={ABSOLUTE_FILL}
@@ -346,9 +362,7 @@ export function GrammarLessonGuide({
                     FORME JUSTE
                   </AppText>
                 </View>
-                <AppText variant="bodySecondary">
-                  {item.correction}
-                </AppText>
+                <AppText variant="bodySecondary">{item.correction}</AppText>
               </View>
             </View>
           ))}
