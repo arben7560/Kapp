@@ -1,7 +1,10 @@
+import { GRAMMAR_VOCABULARY_HINTS_1_TO_9 } from "./vocabularyHints1to9.ts";
+
 export const GRAMMAR_VOCABULARY_HINTS_10_TO_19: Record<
   string,
   readonly { korean: string; french: string }[]
 > = {
+  ...GRAMMAR_VOCABULARY_HINTS_1_TO_9,
   "book-batchim": [
     { korean: "책", french: "livre" },
   ],
