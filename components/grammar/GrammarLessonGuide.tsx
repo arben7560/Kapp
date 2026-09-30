@@ -84,7 +84,7 @@ export function GrammarLessonGuide({
                 <AppText variant="bodySecondary" tone="muted">
                   -지만 est le « mais » net, un peu plus posé : écrit, ou oral quand
                   l’opposition est volontaire. À l’oral quotidien, le voisin
-                  -(으)니/는데 pose souvent le contexte avant la suite ; il sera
+                  은데/는데 pose souvent le contexte avant la suite ; il sera
                   traité plus tard. Ici, on produit seulement -지만.
                 </AppText>
               </View>
