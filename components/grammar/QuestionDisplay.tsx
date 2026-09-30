@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
 
 import { AppText } from "../app-text";
 
@@ -13,13 +13,29 @@ type QuestionDisplayProps = {
   vocabulary?: readonly GrammarVocabularyHint[];
 };
 
-function buildGlossedParts(content: string, vocabulary: readonly GrammarVocabularyHint[]) {
+type GlossPart = {
+  key: string;
+  korean: string;
+  french?: string;
+};
+
+type TokenLayout = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+const GLOSS_WIDTH = 84;
+const GLOSS_LINE_GAP = 2;
+
+function buildGlossedParts(content: string, vocabulary: readonly GrammarVocabularyHint[]): GlossPart[] {
   const hints = vocabulary
     .map((hint) => ({ ...hint, index: content.indexOf(hint.korean) }))
     .filter((hint) => hint.index >= 0)
     .sort((left, right) => left.index - right.index);
 
-  const parts: { key: string; korean: string; french?: string }[] = [];
+  const parts: GlossPart[] = [];
   let cursor = 0;
 
   hints.forEach((hint, hintIndex) => {
@@ -47,6 +63,81 @@ function buildGlossedParts(content: string, vocabulary: readonly GrammarVocabula
   return parts;
 }
 
+function GlossedPhrase({
+  content,
+  vocabulary,
+}: {
+  content: string;
+  vocabulary: readonly GrammarVocabularyHint[];
+}) {
+  const parts = React.useMemo(
+    () => buildGlossedParts(content, vocabulary),
+    [content, vocabulary],
+  );
+  const [layouts, setLayouts] = React.useState<Record<string, TokenLayout>>({});
+
+  React.useEffect(() => {
+    setLayouts({});
+  }, [content]);
+
+  const onTokenLayout = React.useCallback((key: string, event: LayoutChangeEvent) => {
+    const next = event.nativeEvent.layout;
+    setLayouts((current) => {
+      const previous = current[key];
+      if (
+        previous &&
+        previous.x === next.x &&
+        previous.y === next.y &&
+        previous.width === next.width &&
+        previous.height === next.height
+      ) {
+        return current;
+      }
+      return { ...current, [key]: next };
+    });
+  }, []);
+
+  return (
+    <View style={styles.vocabularyPhrase}>
+      {parts.map((part) => (
+        <View
+          key={part.key}
+          style={styles.vocabularyTextUnit}
+          onLayout={(event) => onTokenLayout(part.key, event)}
+        >
+          <AppText variant="koreanPrimary" script="korean">
+            {part.korean}
+          </AppText>
+        </View>
+      ))}
+      {parts.map((part) => {
+        if (!part.french) return null;
+        const layout = layouts[part.key];
+        if (!layout) return null;
+        return (
+          <AppText
+            key={`${part.key}-gloss`}
+            variant="caption"
+            tone="muted"
+            align="center"
+            numberOfLines={2}
+            style={[
+              styles.vocabularyTranslation,
+              {
+                top: layout.y + layout.height + GLOSS_LINE_GAP,
+                left: layout.x + layout.width / 2 - GLOSS_WIDTH / 2,
+                width: GLOSS_WIDTH,
+              },
+            ]}
+          >
+            {part.french}
+          </AppText>
+        );
+      })}
+    </View>
+  );
+}
+
 export function QuestionDisplay({
   value,
   vocabulary,
@@ -68,29 +159,7 @@ export function QuestionDisplay({
             <AppText variant="sectionLabel" tone="soft">{label}</AppText>
             {content ? (
               vocabulary && isKorean ? (
-                <View style={styles.vocabularyPhrase}>
-                  {buildGlossedParts(content, vocabulary).map((part) => (
-                    <View
-                      key={part.key}
-                      style={part.french ? styles.vocabularyUnit : styles.vocabularyTextUnit}
-                    >
-                      <AppText variant="koreanPrimary" script="korean">
-                        {part.korean}
-                      </AppText>
-                      {part.french ? (
-                        <AppText
-                          variant="caption"
-                          tone="muted"
-                          align="center"
-                          numberOfLines={2}
-                          style={styles.vocabularyTranslation}
-                        >
-                          {part.french}
-                        </AppText>
-                      ) : null}
-                    </View>
-                  ))}
-                </View>
+                <GlossedPhrase content={content} vocabulary={vocabulary} />
               ) : (
                 <AppText variant={contentVariant} script={isKorean ? "korean" : "latin"}>
                   {content}
@@ -113,29 +182,22 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   vocabularyPhrase: {
+    position: "relative",
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "flex-end",
-    paddingBottom: 16,
+    rowGap: 18,
+    paddingBottom: 18,
   },
   vocabularyTextUnit: {
     flexGrow: 0,
     flexShrink: 0,
     justifyContent: "flex-end",
   },
-  vocabularyUnit: {
-    flexGrow: 0,
-    flexShrink: 0,
-    alignItems: "center",
-    position: "relative",
-  },
   vocabularyTranslation: {
     position: "absolute",
-    top: "100%",
-    left: -36,
-    right: -36,
     fontSize: 10,
     lineHeight: 13,
-    marginTop: 1,
+    zIndex: 1,
   },
 });
