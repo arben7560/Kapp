@@ -9,6 +9,7 @@ import type { GrammarLessonGuide as GrammarLessonGuideData } from "../../data/gr
 import { AppText } from "../app-text";
 import { useGrammarModalLayout } from "./useGrammarModalLayout";
 import { grammarLessonGuideStyles as styles } from "./GrammarLessonGuide.styles";
+import { GRAMMAR_REGISTER_NOTES } from "./grammarRegisterNotes";
 
 const GRAMMAR_ACCENT = HubModuleAccents.grammar;
 
@@ -76,16 +77,13 @@ export function GrammarLessonGuide({
             <AppText variant={layout.isCompactWidth ? "bodyStrong" : "subtitle"}>
               {guide.introduction}
             </AppText>
-            {guide.stageId === "mark-contrast" ? (
+            {GRAMMAR_REGISTER_NOTES[guide.stageId] ? (
               <View style={styles.registerNote}>
                 <AppText variant="sectionLabel" style={styles.accentText}>
                   REGISTRE
                 </AppText>
                 <AppText variant="bodySecondary" tone="muted">
-                  -지만 est le « mais » net, un peu plus posé : écrit, ou oral quand
-                  l’opposition est volontaire. À l’oral quotidien, le voisin
-                  은데/는데 pose souvent le contexte avant la suite ; il sera
-                  traité plus tard. Ici, on produit seulement -지만.
+                  {GRAMMAR_REGISTER_NOTES[guide.stageId]}
                 </AppText>
               </View>
             ) : null}
