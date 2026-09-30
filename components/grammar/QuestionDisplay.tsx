@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { AppText } from "../app-text";
 
@@ -18,16 +18,6 @@ type GlossPart = {
   korean: string;
   french?: string;
 };
-
-type TokenLayout = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-
-const GLOSS_WIDTH = 84;
-const GLOSS_LINE_GAP = 2;
 
 function buildGlossedParts(content: string, vocabulary: readonly GrammarVocabularyHint[]): GlossPart[] {
   const hints = vocabulary
@@ -63,12 +53,6 @@ function buildGlossedParts(content: string, vocabulary: readonly GrammarVocabula
   return parts;
 }
 
-function clampGlossLeft(wordX: number, wordWidth: number, phraseWidth: number) {
-  const centered = wordX + wordWidth / 2 - GLOSS_WIDTH / 2;
-  const maxLeft = Math.max(0, phraseWidth - GLOSS_WIDTH);
-  return Math.min(Math.max(0, centered), maxLeft);
-}
-
 function GlossedPhrase({
   content,
   vocabulary,
@@ -80,72 +64,30 @@ function GlossedPhrase({
     () => buildGlossedParts(content, vocabulary),
     [content, vocabulary],
   );
-  const [layouts, setLayouts] = React.useState<Record<string, TokenLayout>>({});
-  const [phraseWidth, setPhraseWidth] = React.useState(0);
-
-  React.useEffect(() => {
-    setLayouts({});
-  }, [content]);
-
-  const onPhraseLayout = React.useCallback((event: LayoutChangeEvent) => {
-    const nextWidth = event.nativeEvent.layout.width;
-    setPhraseWidth((current) => (current === nextWidth ? current : nextWidth));
-  }, []);
-
-  const onTokenLayout = React.useCallback((key: string, event: LayoutChangeEvent) => {
-    const next = event.nativeEvent.layout;
-    setLayouts((current) => {
-      const previous = current[key];
-      if (
-        previous &&
-        previous.x === next.x &&
-        previous.y === next.y &&
-        previous.width === next.width &&
-        previous.height === next.height
-      ) {
-        return current;
-      }
-      return { ...current, [key]: next };
-    });
-  }, []);
 
   return (
-    <View style={styles.vocabularyPhrase} onLayout={onPhraseLayout}>
+    <View style={styles.vocabularyPhrase}>
       {parts.map((part) => (
         <View
           key={part.key}
-          style={styles.vocabularyTextUnit}
-          onLayout={(event) => onTokenLayout(part.key, event)}
+          style={part.french ? styles.vocabularyUnit : styles.vocabularyTextUnit}
         >
           <AppText variant="koreanPrimary" script="korean">
             {part.korean}
           </AppText>
+          {part.french ? (
+            <AppText
+              variant="caption"
+              tone="muted"
+              align="center"
+              numberOfLines={2}
+              style={styles.vocabularyTranslation}
+            >
+              {part.french}
+            </AppText>
+          ) : null}
         </View>
       ))}
-      {parts.map((part) => {
-        if (!part.french) return null;
-        const layout = layouts[part.key];
-        if (!layout) return null;
-        return (
-          <AppText
-            key={`${part.key}-gloss`}
-            variant="caption"
-            tone="muted"
-            align="center"
-            numberOfLines={2}
-            style={[
-              styles.vocabularyTranslation,
-              {
-                top: layout.y + layout.height + GLOSS_LINE_GAP,
-                left: clampGlossLeft(layout.x, layout.width, phraseWidth),
-                width: GLOSS_WIDTH,
-              },
-            ]}
-          >
-            {part.french}
-          </AppText>
-        );
-      })}
     </View>
   );
 }
@@ -194,12 +136,11 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   vocabularyPhrase: {
-    position: "relative",
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "flex-end",
-    rowGap: 18,
-    paddingBottom: 18,
+    rowGap: 22,
+    paddingBottom: 22,
     overflow: "visible",
   },
   vocabularyTextUnit: {
@@ -207,10 +148,20 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     justifyContent: "flex-end",
   },
+  vocabularyUnit: {
+    position: "relative",
+    flexGrow: 0,
+    flexShrink: 0,
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
   vocabularyTranslation: {
     position: "absolute",
+    top: "100%",
+    width: 72,
+    marginTop: 1,
     fontSize: 10,
-    lineHeight: 13,
+    lineHeight: 12,
     zIndex: 1,
   },
 });
