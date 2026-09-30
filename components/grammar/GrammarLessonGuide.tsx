@@ -7,6 +7,7 @@ import { HubModuleAccents } from "../../constants/theme";
 import type { GrammarLessonGuide as GrammarLessonGuideData } from "../../data/grammar/lessonGuides";
 import { AppText } from "../app-text";
 import { grammarLessonGuideStyles as styles } from "./GrammarLessonGuide.styles";
+import { GRAMMAR_REGISTER_NOTES } from "./grammarRegisterNotes";
 import { useGrammarModalLayout } from "./useGrammarModalLayout";
 
 const GRAMMAR_ACCENT = HubModuleAccents.grammar;
@@ -80,7 +81,7 @@ export function GrammarLessonGuide({ guide }: GrammarLessonGuideProps) {
             >
               {guide.introduction}
             </AppText>
-            {guide.stageId === "mark-contrast" ? (
+            {GRAMMAR_REGISTER_NOTES[guide.stageId] ? (
               <View style={styles.registerNote}>
                 <AppText variant="sectionLabel" style={styles.accentText}>
                   REGISTRE

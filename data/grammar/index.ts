@@ -9,3 +9,4 @@ export * from "./stages.ts";
 export * from "./types.ts";
 export * from "./vocabularyHints1to9.ts";
 export * from "./vocabularyHints10to19.ts";
+export * from "./vocabularyHints30to40.ts";
