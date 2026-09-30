@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
 
 import { AppText } from "../app-text";
 
@@ -53,6 +53,38 @@ function buildGlossedParts(content: string, vocabulary: readonly GrammarVocabula
   return parts;
 }
 
+function GlossToken({
+  part,
+}: {
+  part: GlossPart;
+}) {
+  const [wordHeight, setWordHeight] = React.useState(0);
+
+  const onWordLayout = React.useCallback((event: LayoutChangeEvent) => {
+    const nextHeight = event.nativeEvent.layout.height;
+    setWordHeight((current) => (current === nextHeight ? current : nextHeight));
+  }, []);
+
+  return (
+    <View style={part.french ? styles.vocabularyUnit : styles.vocabularyTextUnit}>
+      <AppText variant="koreanPrimary" script="korean" onLayout={onWordLayout}>
+        {part.korean}
+      </AppText>
+      {part.french && wordHeight > 0 ? (
+        <AppText
+          variant="caption"
+          tone="muted"
+          align="center"
+          numberOfLines={2}
+          style={[styles.vocabularyTranslation, { top: wordHeight + 1 }]}
+        >
+          {part.french}
+        </AppText>
+      ) : null}
+    </View>
+  );
+}
+
 function GlossedPhrase({
   content,
   vocabulary,
@@ -68,25 +100,7 @@ function GlossedPhrase({
   return (
     <View style={styles.vocabularyPhrase}>
       {parts.map((part) => (
-        <View
-          key={part.key}
-          style={part.french ? styles.vocabularyUnit : styles.vocabularyTextUnit}
-        >
-          <AppText variant="koreanPrimary" script="korean">
-            {part.korean}
-          </AppText>
-          {part.french ? (
-            <AppText
-              variant="caption"
-              tone="muted"
-              align="center"
-              numberOfLines={2}
-              style={styles.vocabularyTranslation}
-            >
-              {part.french}
-            </AppText>
-          ) : null}
-        </View>
+        <GlossToken key={part.key} part={part} />
       ))}
     </View>
   );
@@ -157,9 +171,7 @@ const styles = StyleSheet.create({
   },
   vocabularyTranslation: {
     position: "absolute",
-    top: "100%",
     width: 72,
-    marginTop: 1,
     fontSize: 10,
     lineHeight: 12,
     zIndex: 1,
