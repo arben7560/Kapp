@@ -259,9 +259,16 @@ function HeroEntryScreen() {
   const isTallPhone = width >= 375 && height >= 720;
   const isCompactScreen = isHdPlusNarrow || height <= 700;
   const isLargeText = fontScale > 1.15;
-  const titleVariant = isHdPlusNarrow || isLargeText ? "featureTitle" : "display";
-  const cardTitleVariant =
-    isHdPlusNarrow || isLargeText ? "sectionTitle" : "sceneTitle";
+  const titleVariant = isHdPlusNarrow
+    ? "onboardingTitleCompact"
+    : isLargeText
+      ? "featureTitle"
+      : "display";
+  const cardTitleVariant = isHdPlusNarrow
+    ? "onboardingCardTitleCompact"
+    : isLargeText
+      ? "sectionTitle"
+      : "sceneTitle";
 
   useEffect(() => {
     if (__DEV__) {
@@ -362,10 +369,7 @@ function HeroEntryScreen() {
       <HeroBackground />
 
       <SafeAreaView
-        style={[
-          styles.heroSafe,
-          isCompactScreen && styles.heroSafeCompact,
-        ]}
+        style={[styles.heroSafe, isCompactScreen && styles.heroSafeCompact]}
         edges={["top", "bottom"]}
       >
         <AnimatedView
@@ -407,9 +411,12 @@ function HeroEntryScreen() {
               ]}
             >
               <AppText
-                variant="koreanPrimary"
+                variant={isHdPlusNarrow ? "koreanSecondary" : "koreanPrimary"}
                 script="korean"
-                style={styles.heroKoreanLine}
+                style={[
+                  styles.heroKoreanLine,
+                  isHdPlusNarrow && { marginBottom: 7 },
+                ]}
               >
                 어서 오세요
               </AppText>
@@ -417,13 +424,13 @@ function HeroEntryScreen() {
                 accessibilityRole="header"
                 variant={titleVariant}
                 align="center"
-                lineContract="twoLines"
+                lineContract="fluid"
                 style={styles.heroBigTitle}
               >
                 Bienvenue à Séoul
               </AppText>
               <AppText
-                variant="subtitle"
+                variant={isHdPlusNarrow ? "bodySecondary" : "subtitle"}
                 align="center"
                 style={[
                   styles.heroSubtitle,
@@ -475,18 +482,27 @@ function HeroEntryScreen() {
 
                   <AppText
                     variant="sectionLabel"
-                    style={styles.heroEyebrow}
+                    style={[
+                      styles.heroEyebrow,
+                      isHdPlusNarrow && { marginBottom: 6 },
+                    ]}
                   >
                     IMMERSION
                   </AppText>
                   <AppText
                     variant={cardTitleVariant}
-                    lineContract="twoLines"
+                    lineContract="fluid"
                     style={styles.heroTitle}
                   >
                     La ville s’ouvre devant toi
                   </AppText>
-                  <AppText variant="body" style={styles.heroText}>
+                  <AppText
+                    variant={isHdPlusNarrow ? "bodySecondary" : "body"}
+                    style={[
+                      styles.heroText,
+                      isHdPlusNarrow && { marginTop: 8 },
+                    ]}
+                  >
                     Choisis une scène recommandée pour commencer, ou prépare-toi
                     d’abord avec les bases essentielles.
                   </AppText>
@@ -497,6 +513,7 @@ function HeroEntryScreen() {
             <View
               style={[
                 styles.heroBottomCtaArea,
+                isHdPlusNarrow && { paddingBottom: 12 },
                 isTallPhone && styles.heroBottomCtaAreaTall,
               ]}
             >
@@ -520,10 +537,7 @@ function HeroEntryScreen() {
                   ]}
                 >
                   <ExpoLinearGradient
-                    colors={[
-                      "rgba(244,114,182,0.45)",
-                      "rgba(34,211,238,0.30)",
-                    ]}
+                    colors={["rgba(244,114,182,0.45)", "rgba(34,211,238,0.30)"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={StyleSheet.absoluteFill}
@@ -1017,7 +1031,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   heroCardWrapCompact: {
-    marginTop: 20,
+    marginTop: 16,
   },
   heroCardWrapTall: {
     marginTop: 44,
@@ -1031,7 +1045,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.02)",
   },
   heroCardCompact: {
-    padding: 18,
+    padding: 14,
     borderRadius: 20,
   },
   heroCardTall: {
@@ -1082,8 +1096,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   heroPrimaryButtonCompact: {
-    minHeight: 52,
-    paddingVertical: 12,
+    minHeight: 50,
+    paddingVertical: 10,
   },
   heroPrimaryText: {
     color: "#FFFFFF",
