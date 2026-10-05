@@ -192,6 +192,23 @@ export const AppTypography = {
     letterSpacing: -0.6,
     textTransform: 'none',
   },
+  // Onboarding-only compact metrics; standard screens retain their tokens.
+  onboardingTitleCompact: {
+    fontRole: 'bold', script: 'latin', fontSize: 24, lineHeight: 28,
+    letterSpacing: -0.35, textTransform: 'none',
+  },
+  onboardingCardTitleCompact: {
+    fontRole: 'bold', script: 'latin', fontSize: 18, lineHeight: 22,
+    letterSpacing: -0.2, textTransform: 'none',
+  },
+  onboardingSceneTitleCompact: {
+    fontRole: 'black', script: 'latin', fontSize: 28, lineHeight: 32,
+    letterSpacing: -0.6, textTransform: 'none',
+  },
+  onboardingKoreanCompact: {
+    fontRole: 'regular', script: 'korean', fontSize: 16, lineHeight: 23,
+    letterSpacing: 0, textTransform: 'none',
+  },
   featureTitle: {
     fontRole: 'bold',
     script: 'latin',
