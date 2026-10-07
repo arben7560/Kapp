@@ -143,10 +143,12 @@ function SceneBackground({ dimmed = false }: { dimmed?: boolean }) {
 }
 
 function FeaturedScene({
+  compact = false,
   scene,
   height,
   onStart,
 }: {
+  compact?: boolean;
   scene: SceneOption;
   height: number;
   onStart: () => void;
@@ -157,7 +159,11 @@ function FeaturedScene({
       accessibilityLabel={`${scene.title}. ${scene.subtitle} ${scene.guidance}.`}
       style={[
         styles.featuredCard,
-        { height, borderColor: `${scene.accent}72`, shadowColor: scene.accent },
+        {
+          ...(compact ? { minHeight: height } : { height }),
+          borderColor: `${scene.accent}72`,
+          shadowColor: scene.accent,
+        },
       ]}
     >
       <Image
@@ -189,9 +195,15 @@ function FeaturedScene({
         style={StyleSheet.absoluteFill}
       />
 
-      <View style={styles.featuredTopRow}>
+      <View
+        style={[styles.featuredTopRow, compact && styles.featuredTopRowCompact]}
+      >
         <View
-          style={[styles.recommendedPill, { borderColor: `${scene.accent}88` }]}
+          style={[
+            styles.recommendedPill,
+            compact && styles.recommendedPillCompact,
+            { borderColor: `${scene.accent}88` },
+          ]}
         >
           <View
             style={[styles.recommendedDot, { backgroundColor: scene.accent }]}
@@ -205,22 +217,35 @@ function FeaturedScene({
         </AppText>
       </View>
 
-      <View style={styles.featuredCopy}>
+      <View
+        style={[styles.featuredCopy, compact && styles.featuredCopyCompact]}
+      >
         <AppText
           accessibilityLanguage="ko-KR"
-          variant="koreanSecondary"
+          variant={compact ? "onboardingKoreanCompact" : "koreanSecondary"}
           script="korean"
           style={[styles.featuredPhrase, { color: scene.accent }]}
         >
           {scene.phrase}
         </AppText>
-        <AppText variant="sceneTitle" style={styles.featuredTitle}>
+        <AppText
+          variant={compact ? "onboardingSceneTitleCompact" : "sceneTitle"}
+          style={styles.featuredTitle}
+        >
           {scene.title}
         </AppText>
-        <AppText variant="bodyStrong" style={styles.featuredSubtitle}>
+        <AppText
+          variant={compact ? "bodySecondary" : "bodyStrong"}
+          style={[
+            styles.featuredSubtitle,
+            compact && styles.featuredSubtitleCompact,
+          ]}
+        >
           {scene.subtitle}
         </AppText>
-        <View style={styles.beginnerRow}>
+        <View
+          style={[styles.beginnerRow, compact && styles.beginnerRowCompact]}
+        >
           <View style={styles.beginnerMeta}>
             <View
               style={[
@@ -241,6 +266,7 @@ function FeaturedScene({
             hitSlop={4}
             style={({ pressed }) => [
               styles.featuredCta,
+              compact && styles.featuredCtaCompact,
               pressed && styles.pressed,
             ]}
           >
@@ -258,11 +284,13 @@ function FeaturedScene({
 }
 
 function AlternativeScene({
+  compact = false,
   scene,
   height,
   width,
   onPress,
 }: {
+  compact?: boolean;
   scene: SceneOption;
   height: number;
   width: number;
@@ -275,7 +303,7 @@ function AlternativeScene({
       onPress={onPress}
       style={({ pressed }) => [
         styles.alternativeCard,
-        { height, width },
+        { ...(compact ? { minHeight: height } : { height }), width },
         pressed && styles.pressed,
       ]}
     >
@@ -295,19 +323,32 @@ function AlternativeScene({
         end={{ x: 0.72, y: 0.12 }}
         style={StyleSheet.absoluteFill}
       />
-      <View style={styles.alternativeCopy}>
+      <View
+        style={[
+          styles.alternativeCopy,
+          compact && styles.alternativeCopyCompact,
+        ]}
+      >
         <AppText
           variant="sectionLabel"
           style={[styles.alternativeEyebrow, { color: scene.accent }]}
         >
           {scene.eyebrow}
         </AppText>
-        <AppText variant="cardTitle" style={styles.alternativeTitle}>
+        <AppText
+          variant={compact ? "bodyStrong" : "cardTitle"}
+          style={styles.alternativeTitle}
+        >
           {scene.title}
         </AppText>
       </View>
-      <View style={styles.alternativeArrow}>
-        <MoveRight size={19} color={WHITE} strokeWidth={2} />
+      <View
+        style={[
+          styles.alternativeArrow,
+          compact && styles.alternativeArrowCompact,
+        ]}
+      >
+        <MoveRight size={compact ? 14 : 19} color={WHITE} strokeWidth={2} />
       </View>
     </Pressable>
   );
@@ -372,15 +413,29 @@ export default function OnboardingScreen() {
     () => ({
       contentTop: isTallPhone ? 8 : Math.round(lerp(8, 24, compactness)),
       contentBottom: isTallPhone ? 8 : Math.round(lerp(8, 12, compactness)),
-      introBottom: isTallPhone ? 22 : Math.round(lerp(12, 24, compactness)),
-      eyebrowBottom: isTallPhone ? 10 : Math.round(lerp(7, 12, compactness)),
-      subtitleTop: isTallPhone ? 12 : Math.round(lerp(7, 12, compactness)),
-      alternativeTop: isTallPhone ? 14 : Math.round(lerp(10, 22, compactness)),
-      heroHeight: isTablet
-        ? 378
+      introBottom: isHdPlusNarrow
+        ? 10
         : isTallPhone
-          ? Math.round(lerp(208, 228, compactness))
-          : Math.round(lerp(200, 280, compactness)),
+          ? 22
+          : Math.round(lerp(12, 24, compactness)),
+      eyebrowBottom: isHdPlusNarrow
+        ? 6
+        : isTallPhone
+          ? 10
+          : Math.round(lerp(7, 12, compactness)),
+      subtitleTop: isHdPlusNarrow
+        ? 6
+        : isTallPhone
+          ? 12
+          : Math.round(lerp(7, 12, compactness)),
+      alternativeTop: isTallPhone ? 14 : Math.round(lerp(10, 22, compactness)),
+      heroHeight: isHdPlusNarrow
+        ? Math.round(lerp(190, 208, compactness))
+        : isTablet
+          ? 378
+          : isTallPhone
+            ? Math.round(lerp(208, 228, compactness))
+            : Math.round(lerp(200, 280, compactness)),
       alternativeHeaderBottom: Math.round(lerp(7, 12, compactness)),
       alternativeHeight: isTablet
         ? 142
@@ -392,7 +447,7 @@ export default function OnboardingScreen() {
       primaryHeight: Math.round(lerp(52, 62, compactness)),
       hubHeight: Math.round(lerp(52, 58, compactness)),
     }),
-    [compactness, isTablet, isTallPhone],
+    [compactness, isTablet, isTallPhone, isHdPlusNarrow],
   );
 
   const selectedSceneData = useMemo(
@@ -405,7 +460,9 @@ export default function OnboardingScreen() {
   );
   const alternativeWidth = isTablet
     ? 244
-    : Math.min(190, Math.max(154, width * 0.43));
+    : isHdPlusNarrow
+      ? clamp(width * 0.41, 132, 150)
+      : Math.min(190, Math.max(154, width * 0.43));
 
   const selectScene = async (scene: SceneKey) => {
     await lightTap();
@@ -449,20 +506,33 @@ export default function OnboardingScreen() {
           >
             <ScrollView
               style={styles.modeScroll}
-              contentContainerStyle={styles.modeContent}
+              contentContainerStyle={[
+                styles.modeContent,
+                isHdPlusNarrow && styles.modeContentCompact,
+              ]}
               showsVerticalScrollIndicator={false}
             >
               <AppText variant="sectionLabel" style={styles.modeEyebrow}>
                 SCÈNE CHOISIE
               </AppText>
-              <AppText variant="screenTitle" style={styles.modeTitle}>
+              <AppText
+                variant={
+                  isHdPlusNarrow ? "onboardingTitleCompact" : "screenTitle"
+                }
+                style={styles.modeTitle}
+              >
                 {selectedSceneData.title}
               </AppText>
               <AppText variant="body" style={styles.modeSubtitle}>
                 Choisis ton approche.
               </AppText>
 
-              <View style={styles.modeHero}>
+              <View
+                style={[
+                  styles.modeHero,
+                  isHdPlusNarrow && styles.modeHeroCompact,
+                ]}
+              >
                 <Image
                   source={selectedSceneData.image}
                   style={StyleSheet.absoluteFill}
@@ -485,7 +555,12 @@ export default function OnboardingScreen() {
                 </View>
               </View>
 
-              <View style={styles.modeChoices}>
+              <View
+                style={[
+                  styles.modeChoices,
+                  isHdPlusNarrow && styles.modeChoicesCompact,
+                ]}
+              >
                 <Pressable
                   accessibilityRole="radio"
                   accessibilityState={{ checked: selectedMode === "guided" }}
@@ -495,11 +570,15 @@ export default function OnboardingScreen() {
                   }}
                   style={[
                     styles.modeChoice,
+                    isHdPlusNarrow && styles.modeChoiceCompact,
                     selectedMode === "guided" && styles.modeChoiceActive,
                   ]}
                 >
                   <View style={styles.modeChoiceCopy}>
-                    <AppText variant="cardTitle" style={styles.modeChoiceTitle}>
+                    <AppText
+                      variant={isHdPlusNarrow ? "bodyStrong" : "cardTitle"}
+                      style={styles.modeChoiceTitle}
+                    >
                       Entre dans la scène
                     </AppText>
                     <AppText
@@ -526,11 +605,15 @@ export default function OnboardingScreen() {
                   }}
                   style={[
                     styles.modeChoice,
+                    isHdPlusNarrow && styles.modeChoiceCompact,
                     selectedMode === "text" && styles.modeChoiceActive,
                   ]}
                 >
                   <View style={styles.modeChoiceCopy}>
-                    <AppText variant="cardTitle" style={styles.modeChoiceTitle}>
+                    <AppText
+                      variant={isHdPlusNarrow ? "bodyStrong" : "cardTitle"}
+                      style={styles.modeChoiceTitle}
+                    >
                       Expressions utiles
                     </AppText>
                     <AppText
@@ -554,6 +637,7 @@ export default function OnboardingScreen() {
                 onPress={finish}
                 style={({ pressed }) => [
                   styles.modePrimary,
+                  isHdPlusNarrow && styles.modePrimaryCompact,
                   pressed && styles.pressed,
                 ]}
               >
@@ -628,11 +712,13 @@ export default function OnboardingScreen() {
               <AppText
                 accessibilityRole="header"
                 variant={
-                  isHdPlusNarrow || largeText || viewportHeight < 680
-                    ? "featureTitle"
-                    : "screenTitle"
+                  isHdPlusNarrow
+                    ? "onboardingTitleCompact"
+                    : largeText || viewportHeight < 680
+                      ? "featureTitle"
+                      : "screenTitle"
                 }
-                lineContract="threeLines"
+                lineContract="fluid"
                 style={styles.introTitle}
               >
                 Choisis ta première expérience
@@ -649,6 +735,7 @@ export default function OnboardingScreen() {
             </View>
 
             <FeaturedScene
+              compact={isHdPlusNarrow}
               scene={selectedSceneData}
               height={sceneLayout.heroHeight}
               onStart={openMode}
@@ -692,6 +779,7 @@ export default function OnboardingScreen() {
               >
                 {alternativeScenes.map((scene) => (
                   <AlternativeScene
+                    compact={isHdPlusNarrow}
                     key={scene.key}
                     scene={scene}
                     height={sceneLayout.alternativeHeight}
@@ -709,6 +797,7 @@ export default function OnboardingScreen() {
               onPress={openHub}
               style={({ pressed }) => [
                 styles.hubCard,
+                isHdPlusNarrow && styles.hubCardCompact,
                 { marginTop: sceneLayout.actionsTop },
                 pressed && styles.pressed,
               ]}
@@ -751,6 +840,56 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
+  featuredTopRowCompact: {
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    gap: 6,
+    flexWrap: "wrap",
+  },
+  recommendedPillCompact: {
+    minHeight: 26,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    gap: 6,
+  },
+  featuredCopyCompact: {
+    paddingHorizontal: 14,
+    paddingBottom: 12,
+    paddingTop: 10,
+  },
+  featuredSubtitleCompact: { marginTop: 4 },
+  beginnerRowCompact: { marginTop: 8, gap: 6, flexWrap: "wrap" },
+  featuredCtaCompact: {
+    minHeight: 48,
+    paddingLeft: 8,
+    paddingRight: 6,
+    gap: 5,
+  },
+  alternativeCopyCompact: {
+    paddingLeft: 10,
+    paddingRight: 38,
+    paddingBottom: 10,
+    paddingTop: 12,
+  },
+  // A smaller arrow leaves room for Restaurant without changing the layout.
+  alternativeArrowCompact: { width: 24, height: 24, right: 8, bottom: 10 },
+  hubCardCompact: {
+    minHeight: 80,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  modeContentCompact: { paddingTop: 12, paddingBottom: 12 },
+  modeHeroCompact: { height: 140, marginTop: 14 },
+  modeChoicesCompact: { gap: 8, marginTop: 12 },
+  modeChoiceCompact: {
+    minHeight: 76,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 10,
+  },
+  modePrimaryCompact: { minHeight: 50, marginTop: 14 },
+
   screen: { flex: 1, backgroundColor: "#02030A" },
   safe: { flex: 1 },
   scenePage: { flex: 1, width: "100%", maxWidth: 920, alignSelf: "center" },
