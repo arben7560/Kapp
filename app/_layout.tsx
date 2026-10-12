@@ -22,7 +22,8 @@ import {
   usePathname,
 } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { usePreventScreenCapture } from "expo-screen-capture";
+import * as ScreenCapture from "expo-screen-capture";
+import { Platform } from "react-native";
 import React from "react";
 import { StoreProvider } from "../_store";
 import { AppTextProvider } from "../components/app-text";
@@ -174,8 +175,16 @@ export default function RootLayout() {
     NotoSansKR_700Bold,
   });
 
-  // Protect all Android app screens against system screenshots and recordings.
-  usePreventScreenCapture();
+  // Keep FLAG_SECURE active across all screens on Android only.
+  React.useEffect(() => {
+    if (Platform.OS !== "android") return;
+    void ScreenCapture.preventScreenCaptureAsync("kapp-global").catch((error) => {
+      console.warn("Unable to prevent screen capture.", error);
+    });
+    return () => {
+      void ScreenCapture.allowScreenCaptureAsync("kapp-global").catch(() => {});
+    };
+  }, []);
   useMediaSessionLifecycle();
 
   const customFontsAvailable = fontsLoaded && !fontError && !forceFontFallback;
