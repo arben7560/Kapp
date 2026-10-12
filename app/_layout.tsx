@@ -37,6 +37,8 @@ import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard"
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const ONBOARDING_KEY = "kapp_onboarding_completed";
+// Serialize native setup/teardown when React remounts effects in development.
+let screenPrivacyOperations: Promise<void> = Promise.resolve();
 const AUTH_ONBOARDING_BYPASS_ACTIONS = new Set([
   "recovery",
   "protect",
@@ -175,20 +177,37 @@ export default function RootLayout() {
     NotoSansKR_700Bold,
   });
 
-  // Keep FLAG_SECURE active across all screens on Android only.
-  React.useEffect(() => {
-    if (Platform.OS !== "android") return;
-    void ScreenCapture.preventScreenCaptureAsync("kapp-global").catch((error) => {
-      console.warn("Unable to prevent screen capture.", error);
-    });
-    return () => {
-      void ScreenCapture.allowScreenCaptureAsync("kapp-global").catch(() => {});
-    };
-  }, []);
-  useMediaSessionLifecycle();
-
   const customFontsAvailable = fontsLoaded && !fontError && !forceFontFallback;
   const appReady = fontsLoaded || Boolean(fontError) || forceFontFallback;
+
+  // Install once the app has rendered a native window. Keep protection across
+  // navigation and backgrounding; releasing it on blur would expose snapshots.
+  React.useEffect(() => {
+    if (!appReady || (Platform.OS !== "android" && Platform.OS !== "ios")) return;
+
+    screenPrivacyOperations = screenPrivacyOperations.then(async () => {
+      await ScreenCapture.preventScreenCaptureAsync("kapp-global").catch((error) => {
+        console.warn("Unable to prevent screen capture.", error);
+      });
+      // iOS needs a separate native privacy overlay for the app switcher.
+      // Android's FLAG_SECURE already blanks the recent-apps preview.
+      if (Platform.OS === "ios") {
+        await ScreenCapture.enableAppSwitcherProtectionAsync(1).catch((error) => {
+          console.warn("Unable to protect the app switcher preview.", error);
+        });
+      }
+    });
+
+    return () => {
+      screenPrivacyOperations = screenPrivacyOperations.then(async () => {
+        await ScreenCapture.allowScreenCaptureAsync("kapp-global").catch(() => {});
+        if (Platform.OS === "ios") {
+          await ScreenCapture.disableAppSwitcherProtectionAsync().catch(() => {});
+        }
+      });
+    };
+  }, [appReady]);
+  useMediaSessionLifecycle();
 
   React.useEffect(() => {
     if (!fontError && !forceFontFallback) {
