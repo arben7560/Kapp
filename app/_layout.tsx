@@ -22,6 +22,7 @@ import {
   usePathname,
 } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { usePreventScreenCapture } from "expo-screen-capture";
 import React from "react";
 import { StoreProvider } from "../_store";
 import { AppTextProvider } from "../components/app-text";
@@ -173,6 +174,8 @@ export default function RootLayout() {
     NotoSansKR_700Bold,
   });
 
+  // Protect all Android app screens against system screenshots and recordings.
+  usePreventScreenCapture();
   useMediaSessionLifecycle();
 
   const customFontsAvailable = fontsLoaded && !fontError && !forceFontFallback;
