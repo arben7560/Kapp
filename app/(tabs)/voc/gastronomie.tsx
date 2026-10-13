@@ -99,15 +99,14 @@ const CULTURE_CAFE_AUDIO = {
   message3: require("../../../assets/audio/voc/CultureCafe/culture-cafe-bulle-3.mp3"),
   message4: require("../../../assets/audio/voc/CultureCafe/culture-cafe-bulle-4.mp3"),
 
-  ahAh: require("../../../assets/audio/voc/CultureCafe/toolbox/culturecafe-toolbox-1.mp3"),
-  iceAmericano: require("../../../assets/audio/voc/CultureCafe/toolbox/culturecafe-toolbox-2.mp3"),
-  unVerreSvp: require("../../../assets/audio/voc/CultureCafe/toolbox/culturecafe-toolbox-3.mp3"),
-  surPlace: require("../../../assets/audio/voc/CultureCafe/toolbox/culturecafe-toolbox-4.mp3"),
-  takeout: require("../../../assets/audio/voc/CultureCafe/toolbox/culturecafe-toolbox-5.mp3"),
-  jindongbel: require("../../../assets/audio/voc/CultureCafe/toolbox/culturecafe-toolbox-6.mp3"),
-  ambiance: require("../../../assets/audio/voc/CultureCafe/toolbox/culturecafe-toolbox-7.mp3"),
-  photo: require("../../../assets/audio/voc/CultureCafe/toolbox/culturecafe-toolbox-8.mp3"),
-  placeCalme: require("../../../assets/audio/voc/CultureCafe/toolbox/culturecafe-toolbox-9.mp3"),
+  iceAmericano: require("../../../assets/audio/voc/CultureCafe/toolbox/culturecafe-toolbox-1.mp3"),
+  unVerreSvp: require("../../../assets/audio/voc/CultureCafe/toolbox/culturecafe-toolbox-2.mp3"),
+  surPlace: require("../../../assets/audio/voc/CultureCafe/toolbox/culturecafe-toolbox-3.mp3"),
+  takeout: require("../../../assets/audio/voc/CultureCafe/toolbox/culturecafe-toolbox-4.mp3"),
+  jindongbel: require("../../../assets/audio/voc/CultureCafe/toolbox/culturecafe-toolbox-5.mp3"),
+  ambiance: require("../../../assets/audio/voc/CultureCafe/toolbox/culturecafe-toolbox-6.mp3"),
+  photo: require("../../../assets/audio/voc/CultureCafe/toolbox/culturecafe-toolbox-7.mp3"),
+  placeCalme: require("../../../assets/audio/voc/CultureCafe/toolbox/culturecafe-toolbox-8.mp3"),
 };
 const SCENES: Scene[] = [
   {
