@@ -303,7 +303,7 @@ export default function GrammarLessonScreen() {
 
   const closeTheory = React.useCallback(() => {
     dismissTheory();
-    // Sur les cinq premières étapes, fermer ne lance pas une session.
+    // Sur les dix premières étapes, fermer ne lance pas une session.
     // Les étapes suivantes conservent leur comportement actuel.
     if (!isQuickGuide && !session) startPractice();
   }, [dismissTheory, isQuickGuide, session, startPractice]);
