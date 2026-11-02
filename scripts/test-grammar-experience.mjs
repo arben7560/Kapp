@@ -888,6 +888,131 @@ test("stage 06 uses compact display and answer-specific success and failure mess
   assert.match(exercises, /stageId === "nominal-questions"/u);
 });
 
+test("stage 07 covers both subject particles and existence with selected-answer feedback", () => {
+  const cases = new Map([
+    ["subject-i-ga:rain-vowel", {
+      answer: "가", sentence: "비가 와요", choices: ["이", "는", "를"], kind: "gap",
+    }],
+    ["subject-i-ga:time-batchim", {
+      answer: "이", sentence: "시간이 없어요", choices: ["가", "은", "을"], kind: "gap",
+    }],
+    ["subject-i-ga:bus-vowel", {
+      answer: "가", sentence: "버스가 와요", choices: ["이", "는", "를"], kind: "gap",
+    }],
+    ["subject-i-ga:book-batchim", {
+      answer: "이", sentence: "책이 있어요", choices: ["가", "은", "을"], kind: "gap",
+    }],
+    ["subject-i-ga:friend-vowel", {
+      answer: "가", sentence: "친구가 한국어를 공부해요", choices: ["이", "는", "를"], kind: "gap",
+    }],
+    ["existence-isseoyo-eopseoyo:menu-available", {
+      answer: "있어요", sentence: "채식 메뉴가 있어요?",
+      choices: ["없어요", "아니에요", "해요"], kind: "scene",
+    }],
+    ["existence-isseoyo-eopseoyo:menu-unavailable", {
+      answer: "없어요", sentence: "채식 메뉴가 없어요",
+      choices: ["있어요", "아니에요", "안 해요"], kind: "scene",
+    }],
+    ["existence-isseoyo-eopseoyo:time-have", {
+      answer: "있어요", sentence: "시간이 있어요",
+      choices: ["없어요", "아니에요", "해요"], kind: "scene",
+    }],
+    ["existence-isseoyo-eopseoyo:time-none", {
+      answer: "없어요", sentence: "시간이 없어요",
+      choices: ["있어요", "아니에요", "안 해요"], kind: "scene",
+    }],
+    ["existence-isseoyo-eopseoyo:identity-vs-existence", {
+      answer: "가 아니에요", sentence: "이건 커피가 아니에요",
+      choices: ["가 없어요", "가 있어요", "를 안 해요"], kind: "scene",
+    }],
+  ]);
+
+  const seen = new Set();
+  const checked = new Set();
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("existence", attempt, () => 0.42);
+    assert.equal(questions.length, 5);
+    assert.ok(questions.some(({ conceptIds }) => conceptIds.includes("subject-i-ga")));
+    assert.ok(questions.some(({ conceptIds }) => conceptIds.includes("existence-isseoyo-eopseoyo")));
+
+    const shuffledA = buildGrammarPracticeQuestions("existence", attempt, () => 0);
+    const shuffledB = buildGrammarPracticeQuestions("existence", attempt, () => 0.99);
+    let variations = 0;
+
+    for (const question of questions) {
+      const key = [...cases.keys()].find((candidate) =>
+        question.id.includes(":drill-" + candidate.replace(":", "-") + "-")
+      );
+      assert.ok(key, question.id);
+      seen.add(key);
+      const spec = cases.get(key);
+      assert.equal(question.kind, spec.kind, question.id);
+      assert.equal(question.answer, spec.answer, question.id);
+      assert.deepEqual(
+        new Set(question.options),
+        new Set([spec.answer, ...spec.choices]),
+        question.id,
+      );
+      assert.equal(question.options.length, 4, question.id);
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
+      assert.match(
+        question.display,
+        spec.kind === "gap"
+          ? /PHRASE À COMPLÉTER\n/u
+          : question.display.includes("? »")
+            ? /QUESTION À COMPLÉTER\n/u
+            : /PHRASE À COMPLÉTER\n/u,
+        question.id,
+      );
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.doesNotMatch(question.display, /«\s*«/u, question.id);
+
+      const feedbacks = spec.choices.map((selected) => {
+        checked.add(key + ":" + selected);
+        const feedback = getGrammarIncorrectFeedback(question, selected);
+        assert.ok(feedback.includes("Tu as choisi « " + selected + " »"), question.id);
+        assert.ok(feedback.includes(spec.sentence), question.id);
+        assert.notEqual(feedback, question.explanation, question.id);
+        assert.ok(feedback.length <= 260, question.id);
+        return feedback;
+      });
+      assert.equal(new Set(feedbacks).size, 3, question.id);
+
+      const optionA = shuffledA.find(({ id }) => id === question.id);
+      const optionB = shuffledB.find(({ id }) => id === question.id);
+      assert.ok(optionA && optionB, question.id);
+      assert.deepEqual(new Set(optionA.options), new Set(optionB.options), question.id);
+      if (optionA.options.join("|") !== optionB.options.join("|")) variations += 1;
+    }
+    assert.ok(variations > 0, "options should change order between random sources");
+  }
+  assert.equal(seen.size, 10, "both concepts must cover all ten drills across attempts");
+  assert.equal(checked.size, 30, "each of the thirty wrong choices must be explained");
+
+  const questions = Array.from({ length: 5 }, (_, i) =>
+    buildGrammarPracticeQuestions("existence", i + 1, () => 0.42)
+  ).flat();
+  const drill = (name) => questions.find(({ id }) => id.includes(name));
+  assert.match(getGrammarIncorrectFeedback(drill("rain-vowel"), "는"), /grammatical.*contraste/u);
+  assert.match(getGrammarIncorrectFeedback(drill("book-batchim"), "은"), /grammatical.*livre nouveau/u);
+  assert.match(getGrammarIncorrectFeedback(drill("menu-available"), "없어요"), /question possible.*disponible/u);
+  assert.match(getGrammarIncorrectFeedback(drill("menu-unavailable"), "아니에요"), /identité.*existence/u);
+  assert.match(getGrammarIncorrectFeedback(drill("identity-vs-existence"), "가 있어요"), /présence de café.*identité/u);
+});
+
+test("stage 07 presents concise question cards and targeted success messages", () => {
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
+  assert.match(screen, /question\.stageId === "existence" && styles\.questionCardStageSeven/u);
+  assert.match(screen, /if \(question\.stageId === "existence"\)/u);
+  assert.match(screen, /question\.id\.includes\("rain-vowel"\)/u);
+  assert.match(screen, /question\.id\.includes\("menu-unavailable"\)/u);
+  assert.match(screen, /question\.id\.includes\("identity-vs-existence"\)/u);
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(exercises, /stageId === "existence"/u);
+  assert.match(exercises, /drill\.stimulus\.trim\(\)\.endsWith\("\?"\)/u);
+});
+
 test("high-confusion grammar distractors receive answer-specific explanations", () => {
   const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
   assert.match(getGrammarIncorrectFeedback(dailyRegister, "좋습니다"), /registre formel/u);
