@@ -425,6 +425,80 @@ test("incorrect grammar feedback starts with the exact rule instead of a generic
   }
 });
 
+test("stage 01 explains each selected distractor and all word-order permutations", () => {
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    // A shuffle with Math.random near 1 would otherwise leave the first
+    // word-order exercise already solved.
+    const questions = buildGrammarPracticeQuestions("sentence-structure", attempt, () => 0.999);
+    assert.equal(questions.length, 5);
+
+    for (const question of questions) {
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.doesNotMatch(question.display ?? "", /«\s*«/u, question.id);
+
+      if (Array.isArray(question.answer)) {
+        assert.notDeepEqual(question.options, question.answer, question.id);
+        const [a, b, c] = question.answer;
+        const permutations = [
+          [a, b, c],
+          [a, c, b],
+          [b, a, c],
+          [b, c, a],
+          [c, a, b],
+          [c, b, a],
+        ].filter((sequence) =>
+          sequence.some((part, index) => part !== question.answer[index])
+        );
+        assert.equal(permutations.length, 5);
+        const feedbacks = permutations.map((sequence) =>
+          getGrammarIncorrectFeedback(question, sequence)
+        );
+        assert.equal(new Set(feedbacks).size, 5, question.id);
+        for (const feedback of feedbacks) {
+          assert.match(feedback, /verbe|thème|objet|ordre neutre/u, question.id);
+          assert.notEqual(feedback, question.explanation, question.id);
+          assert.ok(feedback.length <= 260, question.id);
+        }
+      } else {
+        const distractors = question.options.filter(
+          (option) => option !== question.answer
+        );
+        assert.equal(distractors.length, 3, question.id);
+        const feedbacks = distractors.map((option) =>
+          getGrammarIncorrectFeedback(question, option)
+        );
+        assert.equal(new Set(feedbacks).size, 3, question.id);
+        for (const [index, feedback] of feedbacks.entries()) {
+          assert.ok(feedback.includes(distractors[index]), question.id);
+          assert.notEqual(feedback, question.explanation, question.id);
+          assert.ok(feedback.length <= 260, question.id);
+        }
+      }
+    }
+    const subjectOmission = questions.find(({ ruleAspect }) =>
+      ruleAspect === "subject-omission"
+    );
+    assert.ok(subjectOmission);
+    assert.match(subjectOmission.display, /Où allez-vous/u);
+    assert.match(
+      getGrammarIncorrectFeedback(subjectOmission, "저는 학교에 가요."),
+      /grammaticale.*sujet répété/u,
+    );
+  }
+});
+
+test("stage 01 exercise UI keeps concise directions and feedback tied to the choice", () => {
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  const display = readFileSync(join(projectRoot, "components/grammar/QuestionDisplay.tsx"), "utf8");
+  const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
+  assert.match(screen, /styles\.questionCardStageOne/u);
+  assert.match(screen, /compactFrench=\{question\.stageId === "sentence-structure"\}/u);
+  assert.match(screen, /stripTokenPunctuation=\{question\.stageId === "sentence-structure"\}/u);
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(display, /compactFrench \? "sectionTitle" : "featureTitle"/u);
+  assert.match(exercises, /shuffleDrillOrderTokens\(stageId, drill\.answer, random\)/u);
+});
+
 test("high-confusion grammar distractors receive answer-specific explanations", () => {
   const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
   assert.match(getGrammarIncorrectFeedback(dailyRegister, "좋습니다"), /registre formel/u);
