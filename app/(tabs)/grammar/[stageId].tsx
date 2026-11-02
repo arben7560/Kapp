@@ -75,6 +75,23 @@ function scoreLabel(score: number) {
 }
 
 function getCorrectFeedbackLead(question: GrammarPracticeQuestion) {
+  if (question.stageId === "introduce-topic") {
+    if (question.id.includes("je-vowel")) {
+      return "Oui, 저 se termine par une voyelle : 저는 annonce naturellement « quant à moi ».";
+    }
+    if (question.id.includes("today-batchim")) {
+      return "Oui, 오늘 se termine par ㄹ : 오늘은 souligne le contraste avec les autres jours.";
+    }
+    if (question.id.includes("coffee-vowel")) {
+      return "Oui, 커피는 met le café en contraste avec les autres boissons.";
+    }
+    if (question.id.includes("book-batchim")) {
+      return "Oui, 책은 reprend le livre déjà évoqué comme thème, sans le présenter comme une découverte.";
+    }
+    if (question.id.includes("friend-vowel")) {
+      return "Oui, 친구는 reprend ton ami comme thème déjà connu dans la conversation.";
+    }
+  }
   if (question.stageId === "polite-register") {
     if (question.id.includes("good-daily")) {
       return "Oui, 좋아요 exprime bien ton avis au présent poli courant.";
@@ -896,6 +913,7 @@ function PracticePanel({
           question.stageId === "sentence-structure" && styles.questionCardStageOne,
           question.stageId === "identify-with-copula" && styles.questionCardStageTwo,
           question.stageId === "polite-register" && styles.questionCardStageThree,
+          question.stageId === "introduce-topic" && styles.questionCardStageFour,
         ]}
       >
         {question.exerciseGroup ? (
@@ -914,7 +932,8 @@ function PracticePanel({
             compactFrench={
               question.stageId === "sentence-structure" ||
               question.stageId === "identify-with-copula" ||
-              question.stageId === "polite-register"
+              question.stageId === "polite-register" ||
+              question.stageId === "introduce-topic"
             }
           />
         ) : null}
@@ -1086,7 +1105,8 @@ function FeedbackCard({
           ? "BONNE RÉPONSE"
           : question.stageId === "sentence-structure" ||
               question.stageId === "identify-with-copula" ||
-              question.stageId === "polite-register"
+              question.stageId === "polite-register" ||
+              question.stageId === "introduce-topic"
             ? "TON CHOIX EXPLIQUÉ"
             : "À AJUSTER ICI"}
       </AppText>
@@ -1096,7 +1116,8 @@ function FeedbackCard({
           <AppText variant="caption" tone="soft">
             {question.stageId === "sentence-structure" ||
             question.stageId === "identify-with-copula" ||
-            question.stageId === "polite-register"
+            question.stageId === "polite-register" ||
+            question.stageId === "introduce-topic"
               ? "POUR CET EXERCICE"
               : "ICI, ON ATTENDAIT"}
           </AppText>
@@ -1534,6 +1555,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   questionCardStageThree: {
+    minHeight: 156,
+    padding: 16,
+    gap: 10,
+  },
+  questionCardStageFour: {
     minHeight: 156,
     padding: 16,
     gap: 10,

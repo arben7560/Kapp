@@ -621,6 +621,86 @@ test("stage 03 keeps responsive layout and correct-answer feedback specific", ()
   assert.match(exercises, /"PHRASE À EXPRIMER"/u);
 });
 
+test("stage 04 explains all topic-particle choices using the actual context", () => {
+  const cases = new Map([
+    ["je-vowel", {
+      answer: "는", sentence: "저는 학생이에요",
+      choices: ["은", "를", "가"],
+    }],
+    ["today-batchim", {
+      answer: "은", sentence: "오늘은 쉬어요",
+      choices: ["는", "을", "이"],
+    }],
+    ["coffee-vowel", {
+      answer: "는", sentence: "커피는 안 마셔요",
+      choices: ["은", "를", "가"],
+    }],
+    ["book-batchim", {
+      answer: "은", sentence: "책은 여기 있어요",
+      choices: ["는", "을", "이"],
+    }],
+    ["friend-vowel", {
+      answer: "는", sentence: "친구는 한국 사람이에요",
+      choices: ["은", "를", "가"],
+    }],
+  ]);
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("introduce-topic", attempt, () => 0.42);
+    assert.equal(questions.length, 5);
+    for (const question of questions) {
+      const key = [...cases.keys()].find((name) =>
+        question.id.includes(":drill-topic-eun-neun-" + name + "-")
+      );
+      assert.ok(key, question.id);
+      const spec = cases.get(key);
+
+      assert.equal(question.kind, "gap", question.id);
+      assert.equal(question.answer, spec.answer, question.id);
+      assert.deepEqual(
+        new Set(question.options),
+        new Set([spec.answer, ...spec.choices]),
+        question.id,
+      );
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
+      assert.match(question.display, /PHRASE À COMPLÉTER\n/u, question.id);
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+
+      const feedbacks = spec.choices.map((selected) => {
+        const feedback = getGrammarIncorrectFeedback(question, selected);
+        assert.ok(feedback.includes("Tu as choisi « " + selected + " »"), question.id);
+        assert.ok(feedback.includes(spec.sentence), question.id);
+        assert.notEqual(feedback, question.explanation, question.id);
+        assert.ok(feedback.length <= 260, question.id);
+        return feedback;
+      });
+      assert.equal(new Set(feedbacks).size, 3, question.id);
+    }
+  }
+
+  const questions = buildGrammarPracticeQuestions("introduce-topic", 1, () => 0.42);
+  const drill = (name) => questions.find(({ id }) =>
+    id.includes(":drill-topic-eun-neun-" + name + "-")
+  );
+  assert.match(getGrammarIncorrectFeedback(drill("je-vowel"), "가"), /저.*제가.*thème/u);
+  assert.match(getGrammarIncorrectFeedback(drill("today-batchim"), "이"), /sujet.*jour lui-même/u);
+  assert.match(getGrammarIncorrectFeedback(drill("coffee-vowel"), "를"), /particule d’objet.*phrase correcte.*contraste demandé/u);
+  assert.match(getGrammarIncorrectFeedback(drill("book-batchim"), "이"), /grammatical.*thème/u);
+  assert.match(getGrammarIncorrectFeedback(drill("friend-vowel"), "가"), /grammatical.*thème/u);
+});
+
+test("stage 04 retains concise responsive layout and its targeted feedback labels", () => {
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
+
+  assert.match(screen, /question\.stageId === "introduce-topic" && styles\.questionCardStageFour/u);
+  assert.match(screen, /if \(question\.stageId === "introduce-topic"\)/u);
+  assert.match(screen, /question\.id\.includes\("coffee-vowel"\)/u);
+  assert.match(screen, /question\.id\.includes\("friend-vowel"\)/u);
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(exercises, /stageId === "introduce-topic"/u);
+});
+
 test("high-confusion grammar distractors receive answer-specific explanations", () => {
   const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
   assert.match(getGrammarIncorrectFeedback(dailyRegister, "좋습니다"), /registre formel/u);
