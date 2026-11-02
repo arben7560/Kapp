@@ -38,13 +38,18 @@ export type GrammarLessonGuide = {
   memoryTip: string;
 };
 
-/** Les cinq premières leçons proposent une lecture courte avant les détails. */
+/** Les dix premières leçons proposent une lecture courte avant les détails. */
 export const GRAMMAR_QUICK_GUIDE_STAGE_IDS: readonly GrammarStageId[] = [
   "sentence-structure",
   "identify-with-copula",
   "polite-register",
   "introduce-topic",
   "demonstratives",
+  "nominal-questions",
+  "existence",
+  "locate-thing",
+  "present-actions",
+  "object-actions",
 ];
 
 export function isGrammarQuickGuideStage(stageId: GrammarStageId): boolean {
