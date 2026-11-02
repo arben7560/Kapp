@@ -73,7 +73,7 @@ export function GrammarLessonGuide({ guide }: GrammarLessonGuideProps) {
             />
             <View style={styles.quickGuideSection}>
               <AppText variant="caption" style={styles.accentText}>
-                L’OBJECTIF EN DEUX PHRASES
+                À QUOI ÇA SERT
               </AppText>
               <AppText variant="bodySecondary" tone="muted">
                 {guide.introduction}
