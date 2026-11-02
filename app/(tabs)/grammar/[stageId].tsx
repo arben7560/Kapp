@@ -74,6 +74,15 @@ function scoreLabel(score: number) {
 }
 
 function getCorrectFeedbackLead(question: GrammarPracticeQuestion) {
+  if (question.stageId === "sentence-structure") {
+    if (question.ruleAspect === "neutral-order") {
+      return "Oui, tu as placé le thème, l’objet et le verbe dans l’ordre neutre demandé.";
+    }
+    if (question.ruleAspect === "subject-omission") {
+      return "Oui, ta réponse va directement au lieu puis au verbe, sans répéter « moi ».";
+    }
+    return "Oui, tu as gardé le verbe à la fin, comme demandé dans cette phrase neutre.";
+  }
   if (question.ruleAspect === "short-negation") {
     return "Oui, c’est bien la négation courte avec 안.";
   }
@@ -844,7 +853,14 @@ function PracticePanel({
         />
       </View>
 
-      <BlurView intensity={58} tint="dark" style={styles.questionCard}>
+      <BlurView
+        intensity={58}
+        tint="dark"
+        style={[
+          styles.questionCard,
+          question.stageId === "sentence-structure" && styles.questionCardStageOne,
+        ]}
+      >
         {question.exerciseGroup ? (
           <AppText variant="sectionLabel" style={styles.accentText}>
             {exerciseGroupLabel(question.exerciseGroup)}
@@ -858,6 +874,7 @@ function PracticePanel({
           <QuestionDisplay
             value={question.display}
             vocabulary={question.vocabulary}
+            compactFrench={question.stageId === "sentence-structure"}
           />
         ) : null}
       </BlurView>
@@ -872,6 +889,7 @@ function PracticePanel({
           expectedLength={
             Array.isArray(question.answer) ? question.answer.length : 0
           }
+          stripTokenPunctuation={question.stageId === "sentence-structure"}
         />
       ) : (
         <View style={[styles.optionGrid, isTablet && styles.optionGridTablet]}>
@@ -931,6 +949,7 @@ function OrderAnswer({
   remainingTokens,
   answered,
   expectedLength,
+  stripTokenPunctuation,
   onDraft,
   onValidate,
 }: {
@@ -938,9 +957,13 @@ function OrderAnswer({
   remainingTokens: readonly { token: string; index: number }[];
   answered: boolean;
   expectedLength: number;
+  stripTokenPunctuation: boolean;
   onDraft: (answer: GrammarPracticeAnswer) => void;
   onValidate: () => void;
 }) {
+  const displayToken = (token: string) =>
+    stripTokenPunctuation ? token.replace(/[.!?]+$/u, "") : token;
+
   return (
     <View style={styles.orderStack}>
       <View style={styles.orderAnswerZone}>
@@ -959,7 +982,7 @@ function OrderAnswer({
               style={styles.tokenSelected}
             >
               <AppText variant="koreanSecondary" script="korean">
-                {token}
+                {displayToken(token)}
               </AppText>
             </Pressable>
           ))
@@ -974,7 +997,7 @@ function OrderAnswer({
             style={styles.tokenButton}
           >
             <AppText variant="koreanSecondary" script="korean">
-              {token}
+              {displayToken(token)}
             </AppText>
           </Pressable>
         ))}
@@ -1018,13 +1041,19 @@ function FeedbackCard({
         variant="sectionLabel"
         style={response.correct ? styles.successText : styles.errorText}
       >
-        {response.correct ? "BONNE RÉPONSE" : "À AJUSTER ICI"}
+        {response.correct
+          ? "BONNE RÉPONSE"
+          : question.stageId === "sentence-structure"
+            ? "TON CHOIX EXPLIQUÉ"
+            : "À AJUSTER ICI"}
       </AppText>
       <AppText variant="bodyStrong">{teacherLead}</AppText>
       {!response.correct ? (
         <View style={styles.correctAnswerBox}>
           <AppText variant="caption" tone="soft">
-            ICI, ON ATTENDAIT
+            {question.stageId === "sentence-structure"
+              ? "POUR CET EXERCICE"
+              : "ICI, ON ATTENDAIT"}
           </AppText>
           <AppText variant="bodyStrong">{answerLabel(question.answer)}</AppText>
         </View>
@@ -1448,6 +1477,11 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: 999,
     backgroundColor: GRAMMAR_ACCENT.base,
+  },
+  questionCardStageOne: {
+    minHeight: 156,
+    padding: 16,
+    gap: 10,
   },
   questionCard: {
     minHeight: 190,
