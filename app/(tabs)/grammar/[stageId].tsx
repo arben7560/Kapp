@@ -74,6 +74,23 @@ function scoreLabel(score: number) {
 }
 
 function getCorrectFeedbackLead(question: GrammarPracticeQuestion) {
+  if (question.stageId === "demonstratives") {
+    if (question.id.includes("this-bag")) {
+      return "Oui, 이 가방 désigne le sac tout près de toi : 이 est le déterminant adapté.";
+    }
+    if (question.id.includes("that-shoes")) {
+      return "Oui, 그 신발 désigne les chaussures proches de la vendeuse.";
+    }
+    if (question.id.includes("far-building")) {
+      return "Oui, 저 건물 montre le bâtiment éloigné de vous deux.";
+    }
+    if (question.id.includes("this-object-pronoun")) {
+      return "Oui, 이거 pointe directement l'objet que tu tiens, sans ajouter de nom.";
+    }
+    if (question.id.includes("far-object-pronoun")) {
+      return "Oui, 저거 désigne directement l'objet loin de vous deux, et non le lieu.";
+    }
+  }
   if (question.stageId === "introduce-topic") {
     if (question.id.includes("je-vowel")) {
       return "Oui, 저 se termine par une voyelle : 저는 annonce naturellement « quant à moi ».";
@@ -913,6 +930,7 @@ function PracticePanel({
           question.stageId === "identify-with-copula" && styles.questionCardStageTwo,
           question.stageId === "polite-register" && styles.questionCardStageThree,
           question.stageId === "introduce-topic" && styles.questionCardStageFour,
+          question.stageId === "demonstratives" && styles.questionCardStageFive,
         ]}
       >
         {question.exerciseGroup ? (
@@ -932,7 +950,8 @@ function PracticePanel({
               question.stageId === "sentence-structure" ||
               question.stageId === "identify-with-copula" ||
               question.stageId === "polite-register" ||
-              question.stageId === "introduce-topic"
+              question.stageId === "introduce-topic" ||
+              question.stageId === "demonstratives"
             }
           />
         ) : null}
@@ -1105,7 +1124,8 @@ function FeedbackCard({
           : question.stageId === "sentence-structure" ||
               question.stageId === "identify-with-copula" ||
               question.stageId === "polite-register" ||
-              question.stageId === "introduce-topic"
+              question.stageId === "introduce-topic" ||
+              question.stageId === "demonstratives"
             ? "TON CHOIX EXPLIQUÉ"
             : "À AJUSTER ICI"}
       </AppText>
@@ -1116,7 +1136,8 @@ function FeedbackCard({
             {question.stageId === "sentence-structure" ||
             question.stageId === "identify-with-copula" ||
             question.stageId === "polite-register" ||
-            question.stageId === "introduce-topic"
+            question.stageId === "introduce-topic" ||
+            question.stageId === "demonstratives"
               ? "POUR CET EXERCICE"
               : "ICI, ON ATTENDAIT"}
           </AppText>
@@ -1559,6 +1580,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   questionCardStageFour: {
+    minHeight: 156,
+    padding: 16,
+    gap: 10,
+  },
+  questionCardStageFive: {
     minHeight: 156,
     padding: 16,
     gap: 10,
