@@ -156,11 +156,19 @@ function buildDrillQuestion(
     kind: drill.kind,
     criterion:
       drill.kind === "scene" ? "P" : drill.kind === "choice" ? "R" : "M",
-    prompt: stageId === "sentence-structure" || stageId === "identify-with-copula"
+    prompt: stageId === "sentence-structure" ||
+      stageId === "identify-with-copula" ||
+      stageId === "polite-register"
       ? drill.prompt
       : `${drill.prompt}\nObjectif : ${concept.shortFunction}`,
     display: drill.context
-      ? formatScenario(drill.context, drill.displayLabel, drill.stimulus)
+      ? formatScenario(
+          drill.context,
+          stageId === "polite-register" && drill.kind === "scene"
+            ? "PHRASE À EXPRIMER"
+            : drill.displayLabel,
+          drill.stimulus,
+        )
       : formatPromptBlock(undefined, drill.displayLabel, drill.stimulus),
     options,
     answer: drill.answer,

@@ -75,6 +75,23 @@ function scoreLabel(score: number) {
 }
 
 function getCorrectFeedbackLead(question: GrammarPracticeQuestion) {
+  if (question.stageId === "polite-register") {
+    if (question.id.includes("good-daily")) {
+      return "Oui, 좋아요 exprime bien ton avis au présent poli courant.";
+    }
+    if (question.id.includes("fine-daily")) {
+      return "Oui, 괜찮아요 répond poliment à la question « ça va ? » au présent.";
+    }
+    if (question.id.includes("eat-daily")) {
+      return "Oui, 먹어요 est le présent poli courant de 먹다.";
+    }
+    if (question.id.includes("go-daily")) {
+      return "Oui, 가요 est le présent poli courant de 가다, sans registre formel.";
+    }
+    if (question.id.includes("daily-vs-formal")) {
+      return "Oui, 학생이에요 te présente poliment au présent, sans passer au style formel.";
+    }
+  }
   if (question.stageId === "identify-with-copula") {
     if (question.id.includes("student-batchim")) {
       return "Oui, 학생 finit par un 받침 (ㅇ), donc 이에요 convient.";
@@ -878,6 +895,7 @@ function PracticePanel({
           styles.questionCard,
           question.stageId === "sentence-structure" && styles.questionCardStageOne,
           question.stageId === "identify-with-copula" && styles.questionCardStageTwo,
+          question.stageId === "polite-register" && styles.questionCardStageThree,
         ]}
       >
         {question.exerciseGroup ? (
@@ -895,7 +913,8 @@ function PracticePanel({
             vocabulary={question.vocabulary}
             compactFrench={
               question.stageId === "sentence-structure" ||
-              question.stageId === "identify-with-copula"
+              question.stageId === "identify-with-copula" ||
+              question.stageId === "polite-register"
             }
           />
         ) : null}
@@ -1066,7 +1085,8 @@ function FeedbackCard({
         {response.correct
           ? "BONNE RÉPONSE"
           : question.stageId === "sentence-structure" ||
-              question.stageId === "identify-with-copula"
+              question.stageId === "identify-with-copula" ||
+              question.stageId === "polite-register"
             ? "TON CHOIX EXPLIQUÉ"
             : "À AJUSTER ICI"}
       </AppText>
@@ -1075,7 +1095,8 @@ function FeedbackCard({
         <View style={styles.correctAnswerBox}>
           <AppText variant="caption" tone="soft">
             {question.stageId === "sentence-structure" ||
-            question.stageId === "identify-with-copula"
+            question.stageId === "identify-with-copula" ||
+            question.stageId === "polite-register"
               ? "POUR CET EXERCICE"
               : "ICI, ON ATTENDAIT"}
           </AppText>
@@ -1508,6 +1529,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   questionCardStageTwo: {
+    minHeight: 156,
+    padding: 16,
+    gap: 10,
+  },
+  questionCardStageThree: {
     minHeight: 156,
     padding: 16,
     gap: 10,

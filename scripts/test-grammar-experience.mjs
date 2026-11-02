@@ -556,6 +556,71 @@ test("stage 02 exercise visuals and good-answer messages are stage-specific", ()
   assert.match(exercises, /stageId === "identify-with-copula"/u);
 });
 
+test("stage 03 analyzes all selected register and tense distractors", () => {
+  const expected = new Map([
+    ["good-daily", { answer: "좋아요", errors: ["좋습니다", "좋아", "좋았어요"] }],
+    ["fine-daily", { answer: "괜찮아요", errors: ["괜찮습니다", "괜찮아", "괜찮았어요"] }],
+    ["eat-daily", { answer: "먹어요", errors: ["먹습니다", "먹어", "먹었어요"] }],
+    ["go-daily", { answer: "가요", errors: ["갑니다", "가", "갔어요"] }],
+    ["daily-vs-formal", {
+      answer: "학생이에요.", errors: ["학생입니다.", "학생이야.", "학생이었어요."],
+    }],
+  ]);
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("polite-register", attempt, () => 0.42);
+    assert.equal(questions.length, 5);
+    for (const question of questions) {
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.doesNotMatch(question.display ?? "", /«\s*«/u, question.id);
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
+      const drillId = [...expected.keys()].find((id) =>
+        question.id.includes(":drill-polite-style-yo-" + id + "-")
+      );
+      assert.ok(drillId, question.id);
+      const spec = expected.get(drillId);
+      assert.equal(question.answer, spec.answer, question.id);
+      assert.deepEqual(
+        new Set(question.options),
+        new Set([spec.answer, ...spec.errors]),
+        question.id,
+      );
+      const messages = spec.errors.map((choice) => {
+        const message = getGrammarIncorrectFeedback(question, choice);
+        assert.ok(message.includes("Tu as choisi « " + choice + " »"), question.id);
+        assert.ok(message.includes(spec.answer.replace(/\.$/u, "")), question.id);
+        assert.notEqual(message, question.explanation, question.id);
+        assert.ok(message.length <= 260, question.id);
+        return message;
+      });
+      assert.equal(new Set(messages).size, 3, question.id);
+      assert.match(messages[0], /registre formel/u, question.id);
+      assert.match(messages[1], /registre familier/u, question.id);
+      assert.match(messages[2], /passé/u, question.id);
+      if (drillId === "daily-vs-formal") {
+        assert.equal(question.kind, "scene");
+        assert.match(question.display, /PHRASE À EXPRIMER\n/u);
+        assert.match(question.display, /Je suis étudiant/u);
+      } else {
+        assert.equal(question.kind, "transformation");
+        assert.match(question.display, /FORME À TRANSFORMER\n/u);
+        assert.match(question.prompt, /présent poli courant/u);
+      }
+    }
+  }
+});
+
+test("stage 03 keeps responsive layout and correct-answer feedback specific", () => {
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
+  assert.match(screen, /question\.stageId === "polite-register" && styles\.questionCardStageThree/u);
+  assert.match(screen, /question\.id\.includes\("good-daily"\)/u);
+  assert.match(screen, /question\.id\.includes\("daily-vs-formal"\)/u);
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(exercises, /stageId === "polite-register"/u);
+  assert.match(exercises, /"PHRASE À EXPRIMER"/u);
+});
+
 test("high-confusion grammar distractors receive answer-specific explanations", () => {
   const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
   assert.match(getGrammarIncorrectFeedback(dailyRegister, "좋습니다"), /registre formel/u);

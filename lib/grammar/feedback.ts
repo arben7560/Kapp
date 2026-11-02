@@ -205,6 +205,56 @@ function getCopulaStageTwoFeedback(
   return undefined;
 }
 
+/** Étape 03 : corrections ciblées par exercice et par réponse choisie. */
+const POLITE_REGISTER_STAGE_THREE_DISTRACTORS: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "good-daily": {
+    "좋습니다": "좋습니다 signifie « c'est bien » au présent, mais au registre formel. Ici, avec le serveur, on demande le poli courant 좋아요.",
+    "좋아": "좋아 dit bien « c'est bien », mais au registre familier. Pour répondre poliment au serveur, on dit 좋아요.",
+    "좋았어요": "좋았어요 est poli, mais au passé : « c'était bien ». Ici, tu parles de la proposition actuelle : 좋아요.",
+  },
+  "fine-daily": {
+    "괜찮습니다": "괜찮습니다 est au présent, mais au registre formel. Avec cette connaissance, utilise le poli courant 괜찮아요.",
+    "괜찮아": "괜찮아 veut dire « ça va », mais au registre familier. Ici, dans une conversation polie, choisis 괜찮아요.",
+    "괜찮았어요": "괜찮았어요 signifie « ça allait » au passé. On te demande comment tu vas maintenant : 괜찮아요.",
+  },
+  "eat-daily": {
+    "먹습니다": "먹습니다 parle de manger au présent, mais au registre formel. Pour cette conversation ordinaire entre collègues, dis 먹어요.",
+    "먹어": "먹어 est le présent au registre familier de 먹다. Ici, la consigne demande le poli courant 먹어요.",
+    "먹었어요": "먹었어요 veut dire « j'ai mangé » au passé. Ici, tu décris ce que tu manges maintenant : 먹어요.",
+  },
+  "go-daily": {
+    "갑니다": "갑니다 est grammatical au présent, mais dans le registre formel. Pour cette conversation polie courante, dis 가요.",
+    "가": "가 est une forme au registre familier de 가다. Pour répondre poliment à cette connaissance au présent, choisis 가요.",
+    "갔어요": "갔어요 veut dire « je suis allé(e) » au passé. Ici, tu parles d'où tu vas maintenant : 가요.",
+  },
+  "daily-vs-formal": {
+    "학생입니다.": "학생입니다 est grammatical et poli, mais dans le registre formel. Ici, tu te présentes en poli courant : 학생이에요.",
+    "학생이야.": "학생이야 signifie « je suis étudiant », mais au registre familier. Ici, tu te présentes poliment : 학생이에요.",
+    "학생이었어요.": "학생이었어요 est poli, mais au passé : « j'étais étudiant ». Ici, tu es étudiant maintenant : 학생이에요.",
+  },
+};
+
+function getPoliteRegisterStageThreeFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (
+    question.stageId !== "polite-register" ||
+    !question.conceptIds.includes("polite-style-yo") ||
+    typeof answer !== "string"
+  ) return undefined;
+
+  for (const [drillId, choices] of Object.entries(POLITE_REGISTER_STAGE_THREE_DISTRACTORS)) {
+    if (question.id.includes(":drill-polite-style-yo-" + drillId + "-")) {
+      const reason = choices[answer];
+      if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+    }
+  }
+  return undefined;
+}
+
 function selectedSpecificFallback(
   question: GrammarPracticeQuestion,
   selected: string,
@@ -609,6 +659,9 @@ export function getGrammarIncorrectFeedback(
 
   const copulaFeedback = getCopulaStageTwoFeedback(question, answer);
   if (copulaFeedback) return copulaFeedback;
+
+  const stageThreeFeedback = getPoliteRegisterStageThreeFeedback(question, answer);
+  if (stageThreeFeedback) return stageThreeFeedback;
 
   if (conceptId === "topic-eun-neun") {
     if (
