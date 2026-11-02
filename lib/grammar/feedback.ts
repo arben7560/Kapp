@@ -140,7 +140,7 @@ function getSentenceOrderStageOneFeedback(
   for (const [drillId, choices] of Object.entries(
     SENTENCE_ORDER_STAGE_ONE_DISTRACTORS,
   )) {
-    if (question.id.includes("-drill-sentence-order-" + drillId + "-")) {
+    if (question.id.includes(":drill-sentence-order-" + drillId + "-")) {
       const reason = choices[answer];
       if (reason) return "Tu as choisi " + quoted(answer) + ". " + reason;
     }
