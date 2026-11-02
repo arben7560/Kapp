@@ -69,6 +69,8 @@ test("the grammar modal keeps controls fixed around one scroll region", () => {
   assert.match(modal, /<Animated\.ScrollView/u);
   assert.match(modal, /bodyScrollRef\.current\?\.scrollTo/u);
   assert.match(modal, /styles\.exerciseFooter/u);
+  assert.match(modal, /const expandedHeroHeight = isQuickGuide/u);
+  assert.match(modal, /isQuickGuide && styles\.exerciseFooterQuick/u);
   assert.match(modal, /const compactHeroHeight = 60/u);
   assert.match(modal, /const headerCollapseDistance = expandedHeroHeight - compactHeroHeight/u);
   assert.match(modal, /lineContract="singleLine"/u);

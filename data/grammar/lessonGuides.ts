@@ -38,17 +38,30 @@ export type GrammarLessonGuide = {
   memoryTip: string;
 };
 
+/** Les cinq premières leçons proposent une lecture courte avant les détails. */
+export const GRAMMAR_QUICK_GUIDE_STAGE_IDS: readonly GrammarStageId[] = [
+  "sentence-structure",
+  "identify-with-copula",
+  "polite-register",
+  "introduce-topic",
+  "demonstratives",
+];
+
+export function isGrammarQuickGuideStage(stageId: GrammarStageId): boolean {
+  return GRAMMAR_QUICK_GUIDE_STAGE_IDS.includes(stageId);
+}
+
 export const GRAMMAR_LESSON_GUIDES = {
   "sentence-structure": {
     stageId: "sentence-structure",
     introduction:
-      "En coréen, l'information principale arrive à la fin. Le sujet peut disparaître lorsqu'il est évident, mais le prédicat — ce que l'on dit ou fait — ferme toujours la phrase.",
+      "En coréen, tu annonces souvent de qui ou de quoi tu parles, puis ce qui se passe. Dans une phrase simple, l'action vient à la fin.",
     mainRule:
-      "Le prédicat se place à la fin de la phrase. Le sujet et les compléments viennent avant lui et peuvent être omis lorsqu’ils sont déjà compris dans le contexte.",
+      "Pour construire la phrase neutre demandée dans les exercices, place d'abord le thème, puis l'objet, le lieu ou le moment, et termine par le verbe. Tu peux omettre le sujet s'il est déjà compris.",
     formula: {
-      pattern: "(sujet / thème) + (compléments) + prédicat",
+      pattern: "(thème, si nécessaire) + (objet / lieu / moment) + verbe",
       explanation:
-        "Les blocs placés avant le prédicat peuvent varier. Le repère le plus fiable est donc de chercher le verbe ou l'expression finale.",
+        "Dans 저는 커피를 마셔요, 저는 présente la personne, 커피를 indique ce qu'elle boit et 마셔요 exprime l'action. Dans 집에 가요, le sujet n'est pas écrit.",
     },
     steps: [
       {
@@ -59,12 +72,12 @@ export const GRAMMAR_LESSON_GUIDES = {
       {
         title: "Ajoute les précisions",
         explanation:
-          "Place ensuite l'objet, le lieu ou le moment. Les particules indiquent le rôle de chaque bloc et rendent l'ordre plus souple.",
+          "Place ensuite les précisions utiles : un objet, un lieu ou un moment. Les petits mots attachés aux noms indiquent leur rôle dans la phrase.",
       },
       {
         title: "Termine par l'action",
         explanation:
-          "Garde le verbe, l'adjectif descriptif ou la copule pour la fin. C'est ce dernier bloc qui donne son sens complet à la phrase.",
+          "Dans ces exercices, termine par le verbe : 마셔요 (boire), 가요 (aller), 읽어요 (lire) ou 만나요 (rencontrer).",
       },
     ],
     examples: [
@@ -102,13 +115,13 @@ export const GRAMMAR_LESSON_GUIDES = {
   "identify-with-copula": {
     stageId: "identify-with-copula",
     introduction:
-      "이에요 et 예요 permettent d'identifier une personne ou une chose dans le registre poli courant. Le choix dépend uniquement du dernier son du nom.",
+      "Pour dire « je suis… » ou « c'est… » dans une conversation polie, tu peux ajouter 이에요 ou 예요 après un nom.",
     mainRule:
-      "Ajoute 이에요 après un nom terminé par une consonne et 예요 après un nom terminé par une voyelle, sans insérer d’espace.",
+      "Après une consonne finale (받침), attache 이에요 ; après une voyelle, attache 예요. N'ajoute jamais d'espace entre le nom et cette terminaison.",
     formula: {
       pattern: "nom + 이에요 (après consonne) / nom + 예요 (après voyelle)",
       explanation:
-        "La copule s'attache directement au nom. Elle correspond souvent à « être », mais sert ici à dire ce qu'est quelque chose.",
+        "Applique ce choix au nom coréen, et non à sa traduction : 학생이에요, 의사예요, 책이에요 et 친구예요. Ce sont les mêmes formes que tu dois reconnaître dans les exercices.",
     },
     steps: [
       {
@@ -161,13 +174,13 @@ export const GRAMMAR_LESSON_GUIDES = {
   "polite-register": {
     stageId: "polite-register",
     introduction:
-      "Dans la plupart des échanges du quotidien avec une personne que l'on connaît peu, la terminaison en -요 est le choix sûr : elle reste naturelle tout en marquant le respect.",
+      "Avec un serveur, un collègue ou une connaissance, le style poli courant est naturel. Tu le reconnais souvent à la terminaison en -요.",
     mainRule:
-      "Dans le registre poli courant, le prédicat conjugué se termine par 요. La conjugaison vient avant cette marque de politesse.",
+      "Dans les exercices, choisis la forme au présent poli courant : 좋아요, 괜찮아요, 먹어요 ou 가요. Ne colle pas simplement 요 à la forme du dictionnaire.",
     formula: {
       pattern: "base conjuguée + 요",
       explanation:
-        "Le -요 se trouve à la fin du prédicat poli. La forme qui le précède change selon le verbe ou l'adjectif : on apprend donc la terminaison complète, pas un 요 isolé.",
+        "Regarde la transformation complète : 먹다 devient 먹어요 et 괜찮다 devient 괜찮아요. Le style formel, comme 좋습니다 ou 학생입니다, est différent du style poli courant demandé ici.",
     },
     steps: [
       {
@@ -183,7 +196,7 @@ export const GRAMMAR_LESSON_GUIDES = {
       {
         title: "Vérifie la fin",
         explanation:
-          "Le 요 final est ton signal audible de politesse. Il ne change pas le contenu, mais règle la relation avec l'interlocuteur.",
+          "Vérifie aussi le registre : 좋아요 est poli courant, 좋습니다 est formel et 좋아 est familier. Les exercices te demandent le premier.",
       },
     ],
     examples: [
@@ -220,13 +233,13 @@ export const GRAMMAR_LESSON_GUIDES = {
   "introduce-topic": {
     stageId: "introduce-topic",
     introduction:
-      "은 et 는 annoncent le thème : la personne, la chose ou le moment à propos duquel la suite apporte une information. En français, on peut souvent sentir « quant à… ».",
+      "Pour parler de toi, d'aujourd'hui ou d'un objet déjà évoqué, le coréen peut commencer par indiquer le thème : « quant à… ».",
     mainRule:
-      "Attache 은 après une consonne finale et 는 après une voyelle au nom que tu veux présenter comme thème de la phrase.",
+      "Utilise 은 après une consonne finale (오늘은, 책은) et 는 après une voyelle (저는, 커피는). Dans ces exercices, le mot est le thème de la discussion ou sert à marquer un contraste.",
     formula: {
       pattern: "nom + 은 (après consonne) / 는 (après voyelle) + commentaire",
       explanation:
-        "La particule s'attache au thème. Le reste de la phrase constitue le commentaire fait à son sujet.",
+        "Le groupe avec 은/는 indique de quoi tu parles ; la suite apporte l'information. Dans 오늘은 쉬어요, tu peux aussi opposer aujourd'hui aux autres jours.",
     },
     steps: [
       {
@@ -235,7 +248,7 @@ export const GRAMMAR_LESSON_GUIDES = {
           "Décide ce que tu places au premier plan : moi, aujourd'hui, ce café ou un autre élément déjà connu.",
       },
       {
-        title: "Écoute le dernier son",
+        title: "Regarde la dernière syllabe",
         explanation:
           "Après une consonne finale, ajoute 은. Après une voyelle, ajoute 는.",
       },
@@ -256,11 +269,11 @@ export const GRAMMAR_LESSON_GUIDES = {
         ],
       },
       {
-        korean: "오늘은 월요일이에요.",
-        french: "Aujourd'hui, c'est lundi.",
+        korean: "오늘은 쉬어요.",
+        french: "Aujourd'hui, je me repose.",
         parts: [
           { korean: "오늘은", french: "quant à aujourd'hui", role: "thème après consonne" },
-          { korean: "월요일이에요", french: "c'est lundi", role: "commentaire" },
+          { korean: "쉬어요", french: "je me repose", role: "information sur le thème" },
         ],
       },
     ],
@@ -280,19 +293,19 @@ export const GRAMMAR_LESSON_GUIDES = {
   demonstratives: {
     stageId: "demonstratives",
     introduction:
-      "Le coréen organise l'espace en trois zones : près de moi, près de toi ou déjà mentionné, et loin de nous deux. Cette distinction guide 이, 그 et 저.",
+      "Au magasin, tu peux montrer un objet dans ta main, près de la vendeuse ou loin de vous deux. Le mot choisi dépend de cette position.",
     mainRule:
-      "Utilise 이 pour ce qui est près de moi, le locuteur, 그 pour ce qui est près de l’interlocuteur ou déjà évoqué, et 저 pour ce qui est loin des deux.",
+      "Du point de vue de celui qui parle, utilise 이 pour l'objet près de toi, 그 pour l'objet près de l'autre personne et 저 pour celui qui est loin de vous deux.",
     formula: {
       pattern: "이 / 그 / 저 + nom  ·  이거 / 그거 / 저거 (sans nom)",
       explanation:
-        "Devant un nom, utilise la forme courte. Pour dire simplement « cette chose », emploie la forme autonome en -거.",
+        "Place 이, 그 ou 저 devant un nom : 이 가방, 그 신발, 저 건물. Sans nom, choisis 이거, 그거 ou 저거 ; 저기 désigne un lieu, pas un objet.",
     },
     steps: [
       {
         title: "Situe la chose",
         explanation:
-          "Choisis 이 près de toi, 그 près de l'interlocuteur ou pour une chose déjà évoquée, et 저 pour ce qui est loin des deux.",
+          "Quand tu parles, prends ton propre point de vue : 이 pour ce que tu tiens, 그 pour ce qui est près de la personne en face et 저 pour ce qui est éloigné des deux.",
       },
       {
         title: "Regarde si le nom est dit",
