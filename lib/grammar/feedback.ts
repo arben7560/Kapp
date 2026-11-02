@@ -255,6 +255,60 @@ function getPoliteRegisterStageThreeFeedback(
   return undefined;
 }
 
+/**
+ * Étape 04 : chaque distracteur est expliqué dans la phrase et le contexte.
+ * 이/가 ou 을/를 peuvent être corrects ailleurs ; la consigne porte ici sur
+ * le thème connu ou explicitement contrasté avec 은/는.
+ */
+const TOPIC_STAGE_FOUR_DISTRACTORS: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "je-vowel": {
+    "은": "저 finit par la voyelle ㅓ : 은 suit une consonne finale, donc « 저은 » ne convient pas. Pour dire « quant à moi », écris 저는 학생이에요.",
+    "를": "를 est une particule d’objet, mais 학생이에요 identifie la personne sans action sur elle. « 저를 학생이에요 » ne convient pas : dis 저는 학생이에요.",
+    "가": "가 marque le sujet ; avec 저, on forme 제가 (et non « 저가 »). Ici, tu te présentes en posant « moi » comme thème, donc 저는 학생이에요.",
+  },
+  "today-batchim": {
+    "는": "오늘 finit par la consonne ㄹ (받침). 는 suit une voyelle : « 오늘는 » ne convient pas. Pour opposer aujourd’hui aux autres jours, dis 오늘은 쉬어요.",
+    "을": "을 marque normalement l’objet d’une action. Ici, tu ne fais pas quelque chose à « aujourd’hui » : tu le mets en contraste avec les autres jours. Dis 오늘은 쉬어요.",
+    "이": "이 marque le sujet. Avec « 오늘이 쉬어요 », tu attribuerais l’action de se reposer au jour lui-même. Ici, c’est toi qui te reposes aujourd’hui : 오늘은 쉬어요.",
+  },
+  "coffee-vowel": {
+    "은": "커피 finit par la voyelle ㅣ : 은 suit une consonne finale. Pour marquer le contraste entre le café et les autres boissons, dis 커피는 안 마셔요.",
+    "를": "를 est une particule d’objet : « 커피를 안 마셔요 » est une phrase correcte, mais elle ne marque pas le contraste demandé avec les autres boissons. Ici : 커피는 안 마셔요.",
+    "가": "가 marque le sujet : « 커피가 안 마셔요 » ferait du café celui qui ne boit pas. Ici, tu parles du café que toi, tu ne bois pas, en contraste : 커피는 안 마셔요.",
+  },
+  "book-batchim": {
+    "는": "책 finit par ㄱ (받침) : la particule de thème est 은 et non 는. Pour reprendre le livre déjà mentionné : 책은 여기 있어요.",
+    "을": "을 marque un objet direct, mais 있어요 indique ici où le livre se trouve. « 책을 여기 있어요 » ne convient pas ; le livre déjà connu est le thème : 책은 여기 있어요.",
+    "이": "« 책이 여기 있어요 » est grammatical : 이 présente le livre comme information nouvelle ou mise en avant. Ici, vous parliez déjà de ce livre ; reprends-le comme thème : 책은 여기 있어요.",
+  },
+  "friend-vowel": {
+    "은": "친구 finit par la voyelle ㅜ. 은 s’utilise après une consonne finale ; pour reprendre ton ami comme thème, dis 친구는 한국 사람이에요.",
+    "를": "를 marquerait un objet direct, alors que 한국 사람이에요 décrit l’identité de ton ami, sans action exercée sur lui. Ici, dis 친구는 한국 사람이에요.",
+    "가": "« 친구가 한국 사람이에요 » est grammatical si tu soulignes « qui est coréen ? ». Ici, vous parlez déjà de ton ami : pour ajouter une information à ce thème, dis 친구는 한국 사람이에요.",
+  },
+};
+
+function getTopicStageFourFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (
+    question.stageId !== "introduce-topic" ||
+    !question.conceptIds.includes("topic-eun-neun") ||
+    typeof answer !== "string"
+  ) return undefined;
+
+  for (const [drillId, choices] of Object.entries(TOPIC_STAGE_FOUR_DISTRACTORS)) {
+    if (question.id.includes(":drill-topic-eun-neun-" + drillId + "-")) {
+      const reason = choices[answer];
+      if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+    }
+  }
+  return undefined;
+}
+
 function selectedSpecificFallback(
   question: GrammarPracticeQuestion,
   selected: string,
@@ -662,6 +716,9 @@ export function getGrammarIncorrectFeedback(
 
   const stageThreeFeedback = getPoliteRegisterStageThreeFeedback(question, answer);
   if (stageThreeFeedback) return stageThreeFeedback;
+
+  const topicFeedback = getTopicStageFourFeedback(question, answer);
+  if (topicFeedback) return topicFeedback;
 
   if (conceptId === "topic-eun-neun") {
     if (
