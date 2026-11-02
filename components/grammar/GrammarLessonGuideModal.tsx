@@ -14,7 +14,10 @@ import {
   HubModuleAccents,
   SeoulMidnightGlass,
 } from "../../constants/theme";
-import type { GrammarLessonGuide } from "../../data/grammar/lessonGuides";
+import {
+  isGrammarQuickGuideStage,
+  type GrammarLessonGuide,
+} from "../../data/grammar/lessonGuides";
 import { AppText } from "../app-text";
 import { ActionButton } from "../ui/action-button";
 import { AppDialog, DialogActions } from "../ui/app-dialog";
@@ -48,6 +51,7 @@ export function GrammarLessonGuideModal({
   const bodyScrollRef = React.useRef<ScrollView>(null);
 
   const layout = useGrammarModalLayout();
+  const isQuickGuide = !!guide && isGrammarQuickGuideStage(guide.stageId);
 
   React.useEffect(() => {
     let active = true;
@@ -105,15 +109,25 @@ export function GrammarLessonGuideModal({
     return () => cancelAnimationFrame(frame);
   }, [headerScrollY, title, visible]);
 
-  const expandedHeroHeight = layout.isVeryShortHeight
-    ? 150
-    : layout.isShortHeight
-      ? 190
-      : layout.useWideLayout
-        ? 268
-        : layout.isCompactWidth
-          ? 232
-          : 250;
+  const expandedHeroHeight = isQuickGuide
+    ? layout.isVeryShortHeight
+      ? 150
+      : layout.isShortHeight
+        ? 174
+        : layout.useWideLayout
+          ? 210
+          : layout.isCompactWidth
+            ? 196
+            : 212
+    : layout.isVeryShortHeight
+      ? 150
+      : layout.isShortHeight
+        ? 190
+        : layout.useWideLayout
+          ? 268
+          : layout.isCompactWidth
+            ? 232
+            : 250;
 
   const compactHeroHeight = 60;
   const headerCollapseDistance = expandedHeroHeight - compactHeroHeight;
@@ -431,7 +445,12 @@ export function GrammarLessonGuideModal({
               layout.isShortHeight && styles.bodyShort,
             ]}
           >
-            {guide ? <GrammarLessonGuideContent guide={guide} /> : children}
+            {guide ? (
+              <GrammarLessonGuideContent
+                key={`${guide.stageId}:${visible ? "open" : "closed"}`}
+                guide={guide}
+              />
+            ) : children}
           </View>
         </Animated.ScrollView>
 
@@ -440,6 +459,7 @@ export function GrammarLessonGuideModal({
             styles.exerciseFooter,
             layout.useHorizontalFooter && styles.exerciseFooterHorizontal,
             layout.isVeryShortHeight && styles.exerciseFooterVeryShort,
+            isQuickGuide && styles.exerciseFooterQuick,
           ]}
         >
           <LinearGradient
@@ -450,6 +470,7 @@ export function GrammarLessonGuideModal({
             style={ABSOLUTE_FILL}
           />
 
+          {!isQuickGuide ? (
           <View
             style={[
               styles.exerciseCalloutTop,
@@ -480,6 +501,7 @@ export function GrammarLessonGuideModal({
               </AppText>
             </View>
           </View>
+          ) : null}
 
           <DialogActions
             style={[
@@ -712,6 +734,11 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
 
+  exerciseFooterQuick: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 0,
+  },
   exerciseFooterHorizontal: {
     flexDirection: "row",
     alignItems: "center",
