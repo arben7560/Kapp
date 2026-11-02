@@ -159,7 +159,8 @@ function buildDrillQuestion(
     prompt: stageId === "sentence-structure" ||
       stageId === "identify-with-copula" ||
       stageId === "polite-register" ||
-      stageId === "introduce-topic"
+      stageId === "introduce-topic" ||
+      stageId === "demonstratives"
       ? drill.prompt
       : `${drill.prompt}\nObjectif : ${concept.shortFunction}`,
     display: drill.context
@@ -167,7 +168,9 @@ function buildDrillQuestion(
           drill.context,
           stageId === "polite-register" && drill.kind === "scene"
             ? "PHRASE À EXPRIMER"
-            : drill.displayLabel,
+            : stageId === "demonstratives" && drill.kind === "scene"
+              ? "QUESTION À COMPLÉTER"
+              : drill.displayLabel,
           drill.stimulus,
         )
       : formatPromptBlock(undefined, drill.displayLabel, drill.stimulus),

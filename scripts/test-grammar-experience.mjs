@@ -701,6 +701,100 @@ test("stage 04 retains concise responsive layout and its targeted feedback label
   assert.match(exercises, /stageId === "introduce-topic"/u);
 });
 
+test("stage 05 explains all demonstrative distractors without confusing objects and places", () => {
+  const cases = new Map([
+    ["this-bag", {
+      answer: "이", sentence: "이 가방이에요",
+      choices: ["그", "저", "거기"], kind: "gap",
+    }],
+    ["that-shoes", {
+      answer: "그", sentence: "그 신발이에요",
+      choices: ["이", "저", "거기"], kind: "gap",
+    }],
+    ["far-building", {
+      answer: "저", sentence: "저 건물이에요",
+      choices: ["이", "그", "저기"], kind: "gap",
+    }],
+    ["this-object-pronoun", {
+      answer: "이거", sentence: "이거 뭐예요?",
+      choices: ["그거", "저거", "거기"], kind: "scene",
+    }],
+    ["far-object-pronoun", {
+      answer: "저거", sentence: "저거 뭐예요?",
+      choices: ["이거", "그거", "저기"], kind: "scene",
+    }],
+  ]);
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("demonstratives", attempt, () => 0.42);
+    assert.equal(questions.length, 5);
+    for (const question of questions) {
+      const id = [...cases.keys()].find((key) =>
+        question.id.includes(":drill-demonstratives-i-geu-jeo-" + key + "-")
+      );
+      assert.ok(id, question.id);
+      const item = cases.get(id);
+      assert.equal(question.kind, item.kind, question.id);
+      assert.equal(question.answer, item.answer, question.id);
+      assert.deepEqual(
+        new Set(question.options),
+        new Set([item.answer, ...item.choices]),
+        question.id,
+      );
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
+      assert.match(
+        question.display,
+        item.kind === "scene" ? /QUESTION À COMPLÉTER\n/u : /PHRASE À COMPLÉTER\n/u,
+        question.id,
+      );
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.doesNotMatch(question.display, /«\s*«/u, question.id);
+
+      const messages = item.choices.map((selected) => {
+        const feedback = getGrammarIncorrectFeedback(question, selected);
+        assert.ok(feedback.includes("Tu as choisi « " + selected + " »"), question.id);
+        assert.ok(feedback.includes(item.sentence), question.id);
+        assert.notEqual(feedback, question.explanation, question.id);
+        assert.ok(feedback.length <= 260, question.id);
+        return feedback;
+      });
+      assert.equal(new Set(messages).size, 3, question.id);
+
+      // Le mélange change la position des réponses, pas les choix ni leur sens.
+      const variantA = buildGrammarPracticeQuestions("demonstratives", attempt, () => 0);
+      const variantB = buildGrammarPracticeQuestions("demonstratives", attempt, () => 0.99);
+      const optionA = variantA.find(({ id: questionId }) => questionId === question.id);
+      const optionB = variantB.find(({ id: questionId }) => questionId === question.id);
+      assert.ok(optionA && optionB, question.id);
+      assert.notDeepEqual(optionA.options, optionB.options, question.id);
+      assert.deepEqual(new Set(optionA.options), new Set(optionB.options), question.id);
+    }
+  }
+
+  const questions = buildGrammarPracticeQuestions("demonstratives", 1, () => 0.42);
+  const drill = (name) => questions.find(({ id }) =>
+    id.includes(":drill-demonstratives-i-geu-jeo-" + name + "-")
+  );
+
+  assert.match(getGrammarIncorrectFeedback(drill("this-bag"), "그"), /déjà mentionné.*dans ta main/u);
+  assert.match(getGrammarIncorrectFeedback(drill("that-shoes"), "이"), /près de toi.*vendeuse/u);
+  assert.match(getGrammarIncorrectFeedback(drill("far-building"), "저기"), /lieu.*déterminant/u);
+  assert.match(getGrammarIncorrectFeedback(drill("this-object-pronoun"), "거기"), /lieu.*objet dans ta main/u);
+  assert.match(getGrammarIncorrectFeedback(drill("far-object-pronoun"), "저기"), /naturel.*objet précis/u);
+});
+
+test("stage 05 uses responsive question cards and contextual success messages", () => {
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
+  assert.match(screen, /question\.stageId === "demonstratives" && styles\.questionCardStageFive/u);
+  assert.match(screen, /if \(question\.stageId === "demonstratives"\)/u);
+  assert.match(screen, /question\.id\.includes\("this-bag"\)/u);
+  assert.match(screen, /question\.id\.includes\("far-object-pronoun"\)/u);
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(exercises, /stageId === "demonstratives"/u);
+  assert.match(exercises, /"QUESTION À COMPLÉTER"/u);
+});
+
 test("high-confusion grammar distractors receive answer-specific explanations", () => {
   const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
   assert.match(getGrammarIncorrectFeedback(dailyRegister, "좋습니다"), /registre formel/u);

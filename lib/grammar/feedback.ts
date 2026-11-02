@@ -309,6 +309,60 @@ function getTopicStageFourFeedback(
   return undefined;
 }
 
+/**
+ * Étape 05 : un commentaire par distracteur, selon la distance, le type de
+ * démonstratif (déterminant ou pronom) et le contexte de l'exercice.
+ * Une autre forme peut être grammaticale tout en visant un autre référent.
+ */
+const DEMONSTRATIVES_STAGE_FIVE_DISTRACTORS: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "this-bag": {
+    "그": "그 가방 désignerait plutôt un sac près de ton interlocuteur ou déjà mentionné. Tu montres ici le sac dans ta main, pour la première fois : 이 가방이에요.",
+    "저": "저 가방 viserait un sac loin de vous deux. Mais celui-ci est dans ta main : pour le nom 가방, choisis 이 가방이에요.",
+    "거기": "거기 désigne un endroit proche de ton interlocuteur, pas un déterminant devant 가방. Pour le sac que tu tiens, dis 이 가방이에요.",
+  },
+  "that-shoes": {
+    "이": "이 신발 désignerait des chaussures près de toi. Ici, elles sont près de la vendeuse, ton interlocutrice : 그 신발이에요.",
+    "저": "저 신발 viserait des chaussures loin de vous deux. Celles de la question sont à côté de la vendeuse : 그 신발이에요.",
+    "거기": "거기 signifie « là, près de l'autre » pour un lieu ; il ne se place pas comme déterminant devant 신발. Ici : 그 신발이에요.",
+  },
+  "far-building": {
+    "이": "이 건물 désignerait un bâtiment près de toi. Celui dont vous parlez est au loin, loin de vous deux : 저 건물이에요.",
+    "그": "그 건물 pourrait désigner un bâtiment déjà évoqué ou proche de l'autre personne. Ici, il est loin de vous deux et nouveau : 저 건물이에요.",
+    "저기": "저기 signifie « là-bas » et désigne un lieu. Devant le nom 건물, il faut le déterminant 저 : 저 건물이에요.",
+  },
+  "this-object-pronoun": {
+    "그거": "그거 pourrait désigner un objet près de l'autre personne ou déjà évoqué. Tu tiens cet objet nouveau dans ta main : 이거 뭐예요?",
+    "저거": "저거 désigne un objet loin de vous deux. Mais l'objet est dans ta main, tout près : 이거 뭐예요?",
+    "거기": "거기 désigne un lieu près de l'autre personne. « 거기 뭐예요? » interrogerait plutôt ce qui se trouve là ; ici, tu demandes ce qu'est l'objet dans ta main : 이거 뭐예요?",
+  },
+  "far-object-pronoun": {
+    "이거": "이거 désigne un objet tout près de toi. Or celui-ci est loin de vous deux, derrière la vitrine : 저거 뭐예요?",
+    "그거": "그거 désignerait plutôt un objet près de l'autre personne ou déjà évoqué. Celui-ci est nouveau et loin de vous deux : 저거 뭐예요?",
+    "저기": "저기 signifie « là-bas », pour un endroit. « 저기 뭐예요? » peut être naturel pour demander ce qu'il y a là-bas ; ici, tu désignes cet objet précis : 저거 뭐예요?",
+  },
+};
+
+function getDemonstrativesStageFiveFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (
+    question.stageId !== "demonstratives" ||
+    !question.conceptIds.includes("demonstratives-i-geu-jeo") ||
+    typeof answer !== "string"
+  ) return undefined;
+
+  for (const [drillId, choices] of Object.entries(DEMONSTRATIVES_STAGE_FIVE_DISTRACTORS)) {
+    if (question.id.includes(":drill-demonstratives-i-geu-jeo-" + drillId + "-")) {
+      const reason = choices[answer];
+      if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+    }
+  }
+  return undefined;
+}
+
 function selectedSpecificFallback(
   question: GrammarPracticeQuestion,
   selected: string,
@@ -719,6 +773,9 @@ export function getGrammarIncorrectFeedback(
 
   const topicFeedback = getTopicStageFourFeedback(question, answer);
   if (topicFeedback) return topicFeedback;
+
+  const demonstrativesFeedback = getDemonstrativesStageFiveFeedback(question, answer);
+  if (demonstrativesFeedback) return demonstrativesFeedback;
 
   if (conceptId === "topic-eun-neun") {
     if (
