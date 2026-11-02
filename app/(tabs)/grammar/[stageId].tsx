@@ -17,6 +17,7 @@ import { AppBackButton } from "../../../components/ui/app-back-button";
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
 import { GrammarLessonGuideModal } from "../../../components/grammar/GrammarLessonGuideModal";
+import { isGrammarQuickGuideStage } from "../../../data/grammar/lessonGuides";
 import { useGrammarModalLayout } from "../../../components/grammar/useGrammarModalLayout";
 import { StatusBadge } from "../../../components/ui/status-badge";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
@@ -168,6 +169,7 @@ export default function GrammarLessonScreen() {
   const stageProgress = progress.grammarProgress.stages[stageId];
   const session = stageProgress?.activeSession;
   const lessonGuide = getGrammarLessonGuide(stageId);
+  const isQuickGuide = isGrammarQuickGuideStage(stageId);
   const premiumLocked = !canAccessGrammarStage(stage, isPremium);
   const completedContentRefs = new Set(
     CONTENT_REFS.filter((contentRef) => {
@@ -291,14 +293,26 @@ export default function GrammarLessonScreen() {
     updateGrammarProgress,
   ]);
 
-  const closeTheory = React.useCallback(() => {
+  const dismissTheory = React.useCallback(() => {
     setDismissedTheoryStageId(stageId);
     setRequestedTheoryStageId(undefined);
     if (theoryEntryRequested) {
       router.setParams({ theory: "closed" } as never);
     }
+  }, [stageId, theoryEntryRequested]);
+
+  const closeTheory = React.useCallback(() => {
+    dismissTheory();
+    // Sur les cinq premières étapes, fermer ne lance pas une session.
+    // Les étapes suivantes conservent leur comportement actuel.
+    if (!isQuickGuide && !session) startPractice();
+  }, [dismissTheory, isQuickGuide, session, startPractice]);
+
+  const accessExercises = React.useCallback(() => {
+    dismissTheory();
+    // Une session existante doit être reprise, jamais remplacée.
     if (!session) startPractice();
-  }, [session, stageId, startPractice, theoryEntryRequested]);
+  }, [dismissTheory, session, startPractice]);
 
   const openStage = React.useCallback(
     (nextStageId: GrammarStageId) => {
@@ -379,6 +393,7 @@ export default function GrammarLessonScreen() {
       <LessonOverview
         hasDetailedGuide={!!lessonGuide}
         onOpenExplanation={() => setRequestedTheoryStageId(stageId)}
+        onStartExercises={isQuickGuide ? startPractice : undefined}
       />
     );
   };
@@ -480,7 +495,7 @@ export default function GrammarLessonScreen() {
         communicativeGoal={stage.communicativeGoal}
         guide={lessonGuide}
         onRequestClose={closeTheory}
-        onAccessExercises={closeTheory}
+        onAccessExercises={accessExercises}
       >
         {!lessonGuide ? (
           <GrammarLessonTheory
@@ -716,9 +731,11 @@ function GrammarLessonTheory({
 function LessonOverview({
   hasDetailedGuide,
   onOpenExplanation,
+  onStartExercises,
 }: {
   hasDetailedGuide: boolean;
   onOpenExplanation: () => void;
+  onStartExercises?: () => void;
 }) {
   return (
     <BlurView intensity={55} tint="dark" style={styles.practiceLaunchCard}>
@@ -738,7 +755,29 @@ function LessonOverview({
         L’explication s’ouvre dans une mini-leçon dédiée. Tu pourras la
         consulter à nouveau pendant les exercices sans perdre ta progression.
       </AppText>
-      <PrimaryButton label="OUVRIR L’EXPLICATION" onPress={onOpenExplanation} />
+      {onStartExercises ? (
+        <>
+          <PrimaryButton
+            label="COMMENCER LES EXERCICES"
+            onPress={onStartExercises}
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Revoir l’explication avant de commencer"
+            onPress={onOpenExplanation}
+            style={({ pressed }) => [
+              styles.reviewTheoryButton,
+              pressed && styles.pressed,
+            ]}
+          >
+            <AppText variant="bodyStrong" style={styles.accentText}>
+              Revoir l’explication
+            </AppText>
+          </Pressable>
+        </>
+      ) : (
+        <PrimaryButton label="OUVRIR L’EXPLICATION" onPress={onOpenExplanation} />
+      )}
     </BlurView>
   );
 }
