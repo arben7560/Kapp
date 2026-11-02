@@ -1013,6 +1013,103 @@ test("stage 07 presents concise question cards and targeted success messages", (
   assert.match(exercises, /drill\.stimulus\.trim\(\)\.endsWith\("\?"\)/u);
 });
 
+test("stage 08 checks all static-location distractors and their specific explanations", () => {
+  const expected = new Map([
+    ["cafe-existence", {
+      answer: "에", sentence: "친구가 카페에 있어요",
+      choices: ["에서", "로", "를"],
+    }],
+    ["school-existence", {
+      answer: "에", sentence: "선생님이 학교에 있어요",
+      choices: ["에서", "로", "가"],
+    }],
+    ["bag-existence", {
+      answer: "에", sentence: "카드가 가방에 있어요",
+      choices: ["에서", "으로", "를"],
+    }],
+    ["floor-existence", {
+      answer: "에", sentence: "화장실은 2층에 있어요",
+      choices: ["에서", "으로", "을"],
+    }],
+    ["home-existence", {
+      answer: "에", sentence: "민수는 집에 있어요",
+      choices: ["에서", "으로", "를"],
+    }],
+  ]);
+
+  const checked = new Set();
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("locate-thing", attempt, () => 0.42);
+    assert.equal(questions.length, 5);
+    const firstOrder = buildGrammarPracticeQuestions("locate-thing", attempt, () => 0);
+    const secondOrder = buildGrammarPracticeQuestions("locate-thing", attempt, () => 0.99);
+    let shuffledCount = 0;
+
+    for (const question of questions) {
+      const drillId = [...expected.keys()].find((id) =>
+        question.id.includes(":drill-location-e-" + id + "-")
+      );
+      assert.ok(drillId, question.id);
+      const spec = expected.get(drillId);
+
+      assert.equal(question.kind, "gap", question.id);
+      assert.equal(question.answer, spec.answer, question.id);
+      assert.deepEqual(
+        new Set(question.options),
+        new Set([spec.answer, ...spec.choices]),
+        question.id,
+      );
+      assert.equal(question.options.length, 4, question.id);
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
+      assert.match(question.display, /PHRASE À COMPLÉTER\n/u, question.id);
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.doesNotMatch(question.display, /«\s*«/u, question.id);
+      assert.match(question.display, /있어요/u, question.id);
+
+      const messages = spec.choices.map((selected) => {
+        checked.add(drillId + ":" + selected);
+        const feedback = getGrammarIncorrectFeedback(question, selected);
+        assert.ok(feedback.includes("Tu as choisi « " + selected + " »"), question.id);
+        assert.ok(feedback.includes(spec.sentence), question.id);
+        assert.notEqual(feedback, question.explanation, question.id);
+        assert.ok(feedback.length <= 260, question.id);
+        return feedback;
+      });
+      assert.equal(new Set(messages).size, 3, question.id);
+
+      const a = firstOrder.find(({ id }) => id === question.id);
+      const b = secondOrder.find(({ id }) => id === question.id);
+      assert.ok(a && b, question.id);
+      assert.deepEqual(new Set(a.options), new Set(b.options), question.id);
+      if (a.options.join("|") !== b.options.join("|")) shuffledCount += 1;
+    }
+    assert.ok(shuffledCount > 0, "choice order should depend on random source");
+  }
+  assert.equal(checked.size, 15, "all 15 choices should have distinct target feedback");
+
+  const questions = buildGrammarPracticeQuestions("locate-thing", 1, () => 0.42);
+  const drill = (name) => questions.find(({ id }) =>
+    id.includes(":drill-location-e-" + name + "-")
+  );
+  assert.match(getGrammarIncorrectFeedback(drill("cafe-existence"), "에서"), /action.*statique/u);
+  assert.match(getGrammarIncorrectFeedback(drill("school-existence"), "가"), /sujet.*lieu/u);
+  assert.match(getGrammarIncorrectFeedback(drill("bag-existence"), "으로"), /direction.*déjà/u);
+  assert.match(getGrammarIncorrectFeedback(drill("floor-existence"), "으로"), /vers.*emplacement/u);
+  assert.match(getGrammarIncorrectFeedback(drill("home-existence"), "에서"), /action.*où se trouve/u);
+});
+
+test("stage 08 keeps compact lesson display and custom successful-answer feedback", () => {
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
+
+  assert.match(screen, /question\.stageId === "locate-thing" && styles\.questionCardStageEight/u);
+  assert.match(screen, /if \(question\.stageId === "locate-thing"\)/u);
+  assert.match(screen, /question\.id\.includes\("cafe-existence"\)/u);
+  assert.match(screen, /question\.id\.includes\("home-existence"\)/u);
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(exercises, /stageId === "locate-thing"/u);
+});
+
 test("high-confusion grammar distractors receive answer-specific explanations", () => {
   const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
   assert.match(getGrammarIncorrectFeedback(dailyRegister, "좋습니다"), /registre formel/u);
