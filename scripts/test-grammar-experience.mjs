@@ -1110,6 +1110,97 @@ test("stage 08 keeps compact lesson display and custom successful-answer feedbac
   assert.match(exercises, /stageId === "locate-thing"/u);
 });
 
+test("stage 09 explains each chosen present-tense distractor and preserves shuffled options", () => {
+  const cases = new Map([
+    ["eat-present", {
+      answer: "먹어요", choices: ["먹아요", "먹었어요", "먹을 거예요"], base: "먹다",
+    }],
+    ["go-present", {
+      answer: "가요", choices: ["가어요", "갔어요", "갈 거예요"], base: "가다",
+    }],
+    ["drink-present", {
+      answer: "마셔요", choices: ["마시요", "마셨어요", "마실 거예요"], base: "마시다",
+    }],
+    ["study-present", {
+      answer: "공부해요", choices: ["공부하요", "공부했어요", "공부할 거예요"], base: "공부하다",
+    }],
+    ["read-present", {
+      answer: "읽어요", choices: ["읽아요", "읽었어요", "읽을 거예요"], base: "읽다",
+    }],
+  ]);
+
+  const feedbackChecked = new Set();
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("present-actions", attempt, () => 0.42);
+    const shuffledA = buildGrammarPracticeQuestions("present-actions", attempt, () => 0);
+    const shuffledB = buildGrammarPracticeQuestions("present-actions", attempt, () => 0.99);
+    assert.equal(questions.length, 5);
+    let differentOrders = 0;
+
+    for (const question of questions) {
+      const key = [...cases.keys()].find((id) =>
+        question.id.includes(":drill-present-a-eoyo-" + id + "-")
+      );
+      assert.ok(key, question.id);
+      const spec = cases.get(key);
+      assert.equal(question.kind, "transformation", question.id);
+      assert.equal(question.answer, spec.answer, question.id);
+      assert.deepEqual(new Set(question.options), new Set([spec.answer, ...spec.choices]), question.id);
+      assert.equal(question.options.length, 4, question.id);
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
+      assert.match(question.display, /FORME À TRANSFORMER\n/u, question.id);
+      assert.ok(question.display.includes(spec.base + " → ?"), question.id);
+      assert.match(question.prompt, /présent poli courant/u, question.id);
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.doesNotMatch(question.display, /«\s*«/u, question.id);
+
+      const messages = spec.choices.map((selected, index) => {
+        feedbackChecked.add(key + ":" + selected);
+        const feedback = getGrammarIncorrectFeedback(question, selected);
+        assert.ok(feedback.includes("Tu as choisi « " + selected + " »"), question.id);
+        assert.ok(feedback.includes(spec.answer), question.id);
+        assert.notEqual(feedback, question.explanation, question.id);
+        assert.ok(feedback.length <= 260, question.id);
+        assert.match(feedback, index === 1 ? /passé/u : index === 2 ? /futur/u : /forme|radical|conjugaison|contract|terminaison/u, question.id);
+        return feedback;
+      });
+      assert.equal(new Set(messages).size, 3, question.id);
+
+      const a = shuffledA.find(({ id }) => id === question.id);
+      const b = shuffledB.find(({ id }) => id === question.id);
+      assert.ok(a && b, question.id);
+      assert.deepEqual(new Set(a.options), new Set(b.options), question.id);
+      if (a.options.join("|") !== b.options.join("|")) differentOrders += 1;
+    }
+    assert.ok(differentOrders > 0, "the option order should vary with the random source");
+  }
+  assert.equal(feedbackChecked.size, 15);
+
+  const questions = buildGrammarPracticeQuestions("present-actions", 1, () => 0.42);
+  const find = (id) => questions.find(({ id: questionId }) =>
+    questionId.includes(":drill-present-a-eoyo-" + id + "-")
+  );
+  assert.match(getGrammarIncorrectFeedback(find("eat-present"), "먹아요"), /ㅓ.*-어요/u);
+  assert.match(getGrammarIncorrectFeedback(find("go-present"), "가어요"), /ㅏ.*-아요.*가요/u);
+  assert.match(getGrammarIncorrectFeedback(find("drink-present"), "마시요"), /ㅣ \+ ㅓ.*ㅕ/u);
+  assert.match(getGrammarIncorrectFeedback(find("study-present"), "공부하요"), /하다.*해요/u);
+  assert.match(getGrammarIncorrectFeedback(find("read-present"), "읽아요"), /ㅣ.*받침/u);
+  assert.match(find("study-present").display, /tous les jours/u);
+  assert.match(find("drink-present").display, /habituellement/u);
+});
+
+test("stage 09 retains compact question cards and success messages for all five verbs", () => {
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
+  assert.match(screen, /question\.stageId === "present-actions" && styles\.questionCardStageNine/u);
+  assert.match(screen, /if \(question\.stageId === "present-actions"\)/u);
+  for (const id of ["eat-present", "go-present", "drink-present", "study-present", "read-present"]) {
+    assert.ok(screen.includes('question.id.includes("' + id + '")'), id);
+  }
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(exercises, /stageId === "present-actions"/u);
+});
+
 test("high-confusion grammar distractors receive answer-specific explanations", () => {
   const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
   assert.match(getGrammarIncorrectFeedback(dailyRegister, "좋습니다"), /registre formel/u);

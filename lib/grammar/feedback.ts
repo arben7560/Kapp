@@ -558,6 +558,59 @@ function getLocationStageEightFeedback(
   return undefined;
 }
 
+/**
+ * Étape 09 : un commentaire précis pour chacun des 15 mauvais choix.
+ * Distingue mauvaise voyelle / contraction, passé grammatical et futur grammatical.
+ */
+const PRESENT_ACTIONS_STAGE_NINE_DISTRACTORS: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "eat-present": {
+    "먹아요": "먹아요 ne convient pas : le radical 먹- contient la voyelle ㅓ et prend -어요, pas -아요. Pour dire « je mange » maintenant : 먹어요.",
+    "먹었어요": "먹었어요 est correct, mais au passé : « j’ai mangé ». Ici, tu parles de ce que tu manges maintenant au présent poli courant : 먹어요.",
+    "먹을 거예요": "먹을 거예요 est correct au futur : « je vais manger ». L’action se passe maintenant, donc utilise le présent : 먹어요.",
+  },
+  "go-present": {
+    "가어요": "가어요 n’est pas la conjugaison standard : 가- contient ㅏ, prend -아요 et se contracte en 가요. Ici, choisis 가요.",
+    "갔어요": "갔어요 est le passé poli de 가다 : « je suis allé(e) ». Tu annonces où tu vas maintenant, donc choisis 가요.",
+    "갈 거예요": "갈 거예요 annonce un déplacement futur : « je vais aller / j’irai ». Ici, tu parles de ton déplacement actuel : 가요.",
+  },
+  "drink-present": {
+    "마시요": "마시요 n’est pas la forme standard : 마시- prend -어요, puis ㅣ + ㅓ se contracte en ㅕ. On obtient 마셔요.",
+    "마셨어요": "마셨어요 est correct au passé : « j’ai bu ». Ici, tu décris ce que tu bois habituellement, au présent : 마셔요.",
+    "마실 거예요": "마실 거예요 est correct au futur : « je boirai ». L’exercice porte sur ton habitude actuelle : 마셔요.",
+  },
+  "study-present": {
+    "공부하요": "공부하요 n’est pas la forme standard : les verbes en 하다 prennent 해요 au présent poli courant. On dit 공부해요.",
+    "공부했어요": "공부했어요 est le passé poli : « j’ai étudié ». Pour dire que tu étudies tous les jours au présent : 공부해요.",
+    "공부할 거예요": "공부할 거예요 annonce des études futures : « je vais étudier ». Ici, tu décris ton habitude au présent : 공부해요.",
+  },
+  "read-present": {
+    "읽아요": "읽아요 ne convient pas : la dernière voyelle de 읽- est ㅣ, donc on utilise -어요, même si le radical finit par un 받침. La forme est 읽어요.",
+    "읽었어요": "읽었어요 est correct, mais au passé : « j’ai lu ». Pour dire que tu lis en ce moment au présent poli courant : 읽어요.",
+    "읽을 거예요": "읽을 거예요 exprime le futur : « je vais lire ». Tu décris ce que tu fais en ce moment ; utilise 읽어요.",
+  },
+};
+
+function getPresentActionsStageNineFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (
+    question.stageId !== "present-actions" ||
+    !question.conceptIds.includes("present-a-eoyo") ||
+    typeof answer !== "string"
+  ) return undefined;
+
+  for (const [drillId, choices] of Object.entries(PRESENT_ACTIONS_STAGE_NINE_DISTRACTORS)) {
+    if (question.id.includes(":drill-present-a-eoyo-" + drillId + "-")) {
+      const reason = choices[answer];
+      if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+    }
+  }
+  return undefined;
+}
+
 function selectedSpecificFallback(
   question: GrammarPracticeQuestion,
   selected: string,
@@ -980,6 +1033,9 @@ export function getGrammarIncorrectFeedback(
 
   const locationStageEightFeedback = getLocationStageEightFeedback(question, answer);
   if (locationStageEightFeedback) return locationStageEightFeedback;
+
+  const presentActionsFeedback = getPresentActionsStageNineFeedback(question, answer);
+  if (presentActionsFeedback) return presentActionsFeedback;
 
   if (conceptId === "topic-eun-neun") {
     if (
