@@ -11,6 +11,7 @@ export type GrammarVocabularyHint = {
 type QuestionDisplayProps = {
   value: string;
   vocabulary?: readonly GrammarVocabularyHint[];
+  compactFrench?: boolean;
 };
 
 type GlossPart = {
@@ -109,6 +110,7 @@ function GlossedPhrase({
 export function QuestionDisplay({
   value,
   vocabulary,
+  compactFrench = false,
 }: QuestionDisplayProps) {
   const sections = value.split("\n\n");
 
@@ -120,7 +122,7 @@ export function QuestionDisplay({
         const isKorean = /[가-힣]/u.test(content);
         const contentVariant = label === "CONTEXTE" ? "bodyStrong" : isKorean
           ? "koreanPrimary"
-          : "featureTitle";
+          : compactFrench ? "sectionTitle" : "featureTitle";
 
         return (
           <View key={`${label}-${index}`} style={styles.questionSection}>
