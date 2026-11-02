@@ -478,7 +478,7 @@ export const GRAMMAR_LESSON_GUIDES = {
     introduction:
       "Tu veux indiquer où se trouve une personne ou un objet : au café, à l'école, à la maison ou dans un sac.",
     mainRule:
-      "Pour localiser quelqu'un ou quelque chose, attache 에 au lieu puis termine par 있어요 : 가방에 있어요 (dans le sac).",
+      "Pour localiser quelqu'un ou quelque chose, attache 에 au lieu puis termine par 있어요 : 가방에 있어요 (se trouve dans le sac).",
     formula: {
       pattern: "élément + 은/는 ou 이/가 + lieu + 에 + 있어요",
       explanation:
