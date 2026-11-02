@@ -363,6 +363,59 @@ function getDemonstrativesStageFiveFeedback(
   return undefined;
 }
 
+/**
+ * Étape 06 : le message dépend du mot interrogatif réellement choisi et
+ * explique le décalage entre personne, objet, lieu, quantité et prix.
+ */
+const NOMINAL_QUESTIONS_STAGE_SIX_DISTRACTORS: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "what-object": {
+    "누구": "누구 demande l’identité d’une personne : avec une photo de quelqu’un, la question pourrait avoir un sens. Ici, tu regardes un objet inconnu : 이거 뭐예요?",
+    "몇": "몇 sert à demander un nombre, souvent devant un compteur comme 개. « 이거 몇예요? » ne demande pas naturellement la nature de l’objet : 이거 뭐예요?",
+    "어디": "어디 sert à demander un lieu. « 이거 어디예요? » pourrait viser l’endroit montré sur une image ; ici, tu veux savoir ce qu’est cet objet : 이거 뭐예요?",
+  },
+  "who-person": {
+    "뭐": "뭐 interroge sur une chose ou une catégorie. À propos d’une personne, il pourrait demander son métier, avec une autre formulation ; ici, tu veux son identité : 저 사람은 누구예요?",
+    "몇": "몇 demande un nombre. Pour l’âge, on pourrait dire 몇 살이에요?, mais pas pour identifier cette personne : 저 사람은 누구예요?",
+    "어디": "어디 demande un lieu. Pour demander où se trouve cette personne, on dirait 어디에 있어요? Ici, tu veux savoir qui elle est : 저 사람은 누구예요?",
+  },
+  "how-many-people": {
+    "뭐": "뭐 veut dire « quoi », pas « combien ». Devant le compteur de personnes 명, il faut 몇 pour demander la taille du groupe : 몇 명이에요?",
+    "누구": "누구 demande qui est une personne, pas combien de personnes viennent. Pour compter le groupe avec 명, utilise 몇 : 몇 명이에요?",
+    "얼마": "얼마 sert notamment à demander un prix ou un montant ; « 얼마 명 » ne se dit pas pour compter un groupe. Ici : 몇 명이에요?",
+  },
+  "how-many-tickets": {
+    "뭐": "뭐 demanderait « quoi », pas le nombre de billets. Comme 장 compte les billets, mets 몇 devant : 표 몇 장이에요?",
+    "누구": "누구 demande « qui », par exemple à qui appartient quelque chose. Ici, tu vérifies la quantité avec le compteur 장 : 표 몇 장이에요?",
+    "얼마": "얼마 convient pour demander un prix : 표 얼마예요? Mais « 얼마 장 » ne compte pas les billets. Ici, on demande le nombre : 표 몇 장이에요?",
+  },
+  "what-food": {
+    "누구": "누구 demande « qui » ; pour demander qui mange, on dirait 누가 먹어요? Tu veux identifier l’aliment, pas la personne : 뭐 먹어요?",
+    "몇": "몇 demande un nombre, mais il faudrait un compteur, par exemple 몇 개 먹어요? Ici, tu demandes quel aliment ton ami mange : 뭐 먹어요?",
+    "어디": "어디 demande « où ». Pour demander le lieu du repas, on dirait 어디에서 먹어요? Ici, tu demandes ce qu’il mange : 뭐 먹어요?",
+  },
+};
+
+function getNominalQuestionsStageSixFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (
+    question.stageId !== "nominal-questions" ||
+    !question.conceptIds.includes("question-mwo-nugu-myeot") ||
+    typeof answer !== "string"
+  ) return undefined;
+
+  for (const [drillId, choices] of Object.entries(NOMINAL_QUESTIONS_STAGE_SIX_DISTRACTORS)) {
+    if (question.id.includes(":drill-question-mwo-nugu-myeot-" + drillId + "-")) {
+      const reason = choices[answer];
+      if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+    }
+  }
+  return undefined;
+}
+
 function selectedSpecificFallback(
   question: GrammarPracticeQuestion,
   selected: string,
@@ -776,6 +829,9 @@ export function getGrammarIncorrectFeedback(
 
   const demonstrativesFeedback = getDemonstrativesStageFiveFeedback(question, answer);
   if (demonstrativesFeedback) return demonstrativesFeedback;
+
+  const nominalQuestionsFeedback = getNominalQuestionsStageSixFeedback(question, answer);
+  if (nominalQuestionsFeedback) return nominalQuestionsFeedback;
 
   if (conceptId === "topic-eun-neun") {
     if (
