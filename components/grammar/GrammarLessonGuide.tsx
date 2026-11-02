@@ -1,10 +1,14 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { View } from "react-native";
+import React from "react";
+import { Pressable, View } from "react-native";
 
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import { HubModuleAccents } from "../../constants/theme";
-import type { GrammarLessonGuide as GrammarLessonGuideData } from "../../data/grammar/lessonGuides";
+import {
+  isGrammarQuickGuideStage,
+  type GrammarLessonGuide as GrammarLessonGuideData,
+} from "../../data/grammar/lessonGuides";
 import { AppText } from "../app-text";
 import { grammarLessonGuideStyles as styles } from "./GrammarLessonGuide.styles";
 import { GRAMMAR_REGISTER_NOTES } from "./grammarRegisterNotes";
@@ -46,6 +50,9 @@ function SectionHeading({ index, label, detail }: SectionHeadingProps) {
 
 export function GrammarLessonGuide({ guide }: GrammarLessonGuideProps) {
   const layout = useGrammarModalLayout();
+  const isQuickGuide = isGrammarQuickGuideStage(guide.stageId);
+  const [showDetails, setShowDetails] = React.useState(false);
+  const firstExample = guide.examples[0];
 
   return (
     <View
@@ -54,6 +61,76 @@ export function GrammarLessonGuide({ guide }: GrammarLessonGuideProps) {
         layout.isCompactWidth && styles.guideStackCompact,
       ]}
     >
+      {isQuickGuide ? (
+        <>
+          <BlurView intensity={58} tint="dark" style={styles.quickGuideCard}>
+            <LinearGradient
+              pointerEvents="none"
+              colors={[GRAMMAR_ACCENT.surfaceStrong, GRAMMAR_ACCENT.decorative]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={ABSOLUTE_FILL}
+            />
+            <View style={styles.quickGuideSection}>
+              <AppText variant="caption" style={styles.accentText}>
+                L’OBJECTIF EN DEUX PHRASES
+              </AppText>
+              <AppText variant="bodySecondary" tone="muted">
+                {guide.introduction}
+              </AppText>
+            </View>
+            <View style={styles.quickGuideRule}>
+              <AppText variant="caption" style={styles.accentText}>
+                LA RÈGLE POUR LES EXERCICES
+              </AppText>
+              <AppText variant="bodyStrong">{guide.mainRule}</AppText>
+            </View>
+            {firstExample ? (
+              <View style={styles.quickGuideExample}>
+                <AppText variant="caption" tone="soft">
+                  UN EXEMPLE
+                </AppText>
+                <AppText variant="koreanPrimary" script="korean">
+                  {firstExample.korean}
+                </AppText>
+                <AppText variant="bodySecondary" tone="muted">
+                  {firstExample.french}
+                </AppText>
+              </View>
+            ) : null}
+          </BlurView>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ expanded: showDetails }}
+            accessibilityLabel={
+              showDetails
+                ? "Masquer les explications détaillées"
+                : "Afficher les explications détaillées"
+            }
+            onPress={() => setShowDetails((current) => !current)}
+            style={({ pressed }) => [
+              styles.quickDetailsButton,
+              pressed && styles.quickDetailsButtonPressed,
+            ]}
+          >
+            <View style={styles.quickDetailsCopy}>
+              <AppText variant="bodyStrong" style={styles.accentText}>
+                {showDetails
+                  ? "Masquer les explications détaillées"
+                  : "Voir les explications détaillées"}
+              </AppText>
+              <AppText variant="bodySecondary" tone="muted">
+                Formule, décomposition, erreurs fréquentes et astuce mémoire
+              </AppText>
+            </View>
+            <AppText variant="sectionTitle" style={styles.accentText}>
+              {showDetails ? "−" : "+"}
+            </AppText>
+          </Pressable>
+        </>
+      ) : null}
+
+      {!isQuickGuide ? (
       <BlurView intensity={62} tint="dark" style={styles.editorialCard}>
         <LinearGradient
           pointerEvents="none"
@@ -122,7 +199,10 @@ export function GrammarLessonGuide({ guide }: GrammarLessonGuideProps) {
           </View>
         </View>
       </BlurView>
+      ) : null}
 
+      {(!isQuickGuide || showDetails) ? (
+        <>
       <BlurView intensity={58} tint="dark" style={styles.formulaCard}>
         <LinearGradient
           pointerEvents="none"
@@ -130,7 +210,7 @@ export function GrammarLessonGuide({ guide }: GrammarLessonGuideProps) {
           style={ABSOLUTE_FILL}
         />
         <View style={styles.formulaHeader}>
-          <SectionHeading index="02" label="LA FORMULE" />
+          <SectionHeading index={isQuickGuide ? "01" : "02"} label="LA FORMULE" />
           <View style={styles.structurePill}>
             <AppText variant="caption" tone="soft">
               STRUCTURE
@@ -154,7 +234,7 @@ export function GrammarLessonGuide({ guide }: GrammarLessonGuideProps) {
 
       <View style={styles.sectionStack}>
         <SectionHeading
-          index="03"
+          index={isQuickGuide ? "02" : "03"}
           label="ÉTAPE PAR ÉTAPE"
           detail="Une construction en trois mouvements"
         />
@@ -198,7 +278,7 @@ export function GrammarLessonGuide({ guide }: GrammarLessonGuideProps) {
       <View style={styles.sectionStack}>
         <View style={styles.sectionTitleRow}>
           <SectionHeading
-            index="04"
+            index={isQuickGuide ? "03" : "04"}
             label="EXEMPLES DÉCOMPOSÉS"
             detail="Lis la phrase comme une architecture"
           />
@@ -292,7 +372,7 @@ export function GrammarLessonGuide({ guide }: GrammarLessonGuideProps) {
 
       <View style={styles.sectionStack}>
         <SectionHeading
-          index="05"
+          index={isQuickGuide ? "04" : "05"}
           label="ERREURS FRÉQUENTES"
           detail="Compare le réflexe et la forme juste"
         />
@@ -397,6 +477,8 @@ export function GrammarLessonGuide({ guide }: GrammarLessonGuideProps) {
           <AppText variant="bodyStrong">{guide.memoryTip}</AppText>
         </View>
       </BlurView>
+        </>
+      ) : null}
     </View>
   );
 }
