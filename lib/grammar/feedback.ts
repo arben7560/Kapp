@@ -69,6 +69,86 @@ const particleRoles: Readonly<Record<string, string>> = {
   "랑": "relie des noms avec le sens « et / avec » après une voyelle",
 };
 
+/**
+ * Étape 01 : chaque distracteur et permutation possède son explication.
+ * Certains ordres restent possibles à l'oral, sans correspondre à l'ordre
+ * neutre explicitement demandé dans ces cinq exercices.
+ */
+const SENTENCE_ORDER_STAGE_ONE_DISTRACTORS: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "home-order": {
+    "가요 저는 집에.": "가요 arrive avant le thème 저는 et la destination 집에. Pour l'ordre neutre demandé, le verbe doit terminer la phrase.",
+    "저는 가요 집에.": "집에, la destination, est placé après 가요. Dans cette phrase neutre, il doit précéder le verbe.",
+    "집에 가요 저는.": "저는 est ajouté après le verbe : c'est une reprise possible à l'oral, mais pas l'ordre neutre thème → destination → verbe.",
+  },
+  "book-order": {
+    "도서관에서 읽어요 책을.": "책을, le livre lu, se retrouve après 읽어요. Dans l'ordre neutre, l'objet vient avant le verbe.",
+    "읽어요 도서관에서 책을.": "읽어요 ouvre la phrase, avant le lieu 도서관에서 et l'objet 책을. Ici, le verbe doit être le dernier bloc.",
+    "책을 읽어요 도서관에서.": "도서관에서, le lieu où tu lis, vient après 읽어요. Dans la phrase neutre, lieu et objet précèdent l'action.",
+  },
+  "friend-order": {
+    "내일 만나요 친구를.": "친구를, la personne rencontrée, suit 만나요. Dans cette phrase neutre, l'objet doit précéder le verbe.",
+    "만나요 내일 친구를.": "만나요 est en premier, avant le moment 내일 et l'objet 친구를. Pour cette consigne, le verbe vient en dernier.",
+    "친구를 만나요 내일.": "내일 (demain) arrive après 만나요. Ici, le repère de temps précède le verbe final.",
+  },
+  "subject-omission": {
+    "저는 학교에 가요.": "Cette phrase est grammaticale, mais 저는 répète « moi » alors que la question indique déjà qui répond. On demandait une réponse sans sujet répété.",
+    "학교에 가요 저는.": "저는 après 가요 forme une reprise marquée et inutile ici. La consigne demandait une réponse brève, sans répéter le sujet.",
+    "가요 학교에.": "학교에, la destination, arrive après le verbe 가요. Dans l'ordre neutre demandé, elle doit le précéder.",
+  },
+};
+
+function getSentenceOrderStageOneFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (
+    question.stageId !== "sentence-structure" ||
+    !question.conceptIds.includes("sentence-order")
+  ) {
+    return undefined;
+  }
+
+  if (typeof answer !== "string") {
+    if (typeof question.answer === "string") return undefined;
+    const words = answer.map((token) => token.replace(/[.!?]+$/u, ""));
+    const expectedWords = question.answer.map((token) =>
+      token.replace(/[.!?]+$/u, ""),
+    );
+    const verb = expectedWords[expectedWords.length - 1];
+    const verbIndex = words.indexOf(verb);
+    const chosenPhrase = quoted(words.join(" ") + ".");
+    if (verbIndex === 0) {
+      return "Tu as construit " + chosenPhrase + " : le verbe " + verb +
+        " ouvre la phrase. Dans l'ordre neutre demandé, le thème et l'objet viennent avant lui.";
+    }
+    if (verbIndex > 0 && verbIndex < words.length - 1) {
+      return "Dans " + chosenPhrase + ", tu places " +
+        words.slice(verbIndex + 1).join(" ") + " après le verbe " + verb +
+        ". Il faut ici terminer la phrase par l'action.";
+    }
+    if (verbIndex === words.length - 1 && words[0] !== expectedWords[0]) {
+      return "Avec " + chosenPhrase + ", le verbe est bien final, mais tu inverses le thème " +
+        expectedWords[0] + " et l'objet " + expectedWords[1] +
+        ". Cet ordre peut marquer un contraste ; ici on demande l'ordre neutre.";
+    }
+    return "Dans " + chosenPhrase +
+      ", l'ordre ne correspond pas aux trois blocs demandés : thème, objet, puis verbe.";
+  }
+
+  for (const [drillId, choices] of Object.entries(
+    SENTENCE_ORDER_STAGE_ONE_DISTRACTORS,
+  )) {
+    if (question.id.includes(":drill-sentence-order-" + drillId + "-")) {
+      const reason = choices[answer];
+      if (reason) return "Tu as choisi " + quoted(answer) + ". " + reason;
+    }
+  }
+
+  return undefined;
+}
+
 function selectedSpecificFallback(
   question: GrammarPracticeQuestion,
   selected: string,
@@ -467,6 +547,9 @@ export function getGrammarIncorrectFeedback(
   const expected = answerLabel(question.answer);
   const expectedBare = expected.replace(/[.?!]+$/u, "");
   const conceptId = question.conceptIds[0];
+
+  const sentenceOrderFeedback = getSentenceOrderStageOneFeedback(question, answer);
+  if (sentenceOrderFeedback) return sentenceOrderFeedback;
 
   if (conceptId === "topic-eun-neun") {
     if (

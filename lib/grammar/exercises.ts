@@ -48,6 +48,26 @@ function buildOptions(
   return shuffleArray(unique([answer, ...distractors]), random);
 }
 
+/**
+ * Dans le premier exercice d'ordre, la banque de mots ne doit pas déjà
+ * afficher la solution. Le tirage reste aléatoire pour les autres leçons.
+ */
+function shuffleDrillOrderTokens(
+  stageId: GrammarStageId,
+  answer: readonly string[],
+  random: RandomSource,
+): string[] {
+  const shuffled = shuffleArray(answer, random);
+  if (
+    stageId === "sentence-structure" &&
+    shuffled.length > 1 &&
+    shuffled.every((token, index) => token === answer[index])
+  ) {
+    return rotate(shuffled, 1);
+  }
+  return shuffled;
+}
+
 function getConcepts(stageId: GrammarStageId): GrammarConcept[] {
   return GRAMMAR_STAGE_BY_ID[stageId].conceptIds.map((conceptId) => {
     const concept = GRAMMAR_CONCEPTS.find((item) => item.id === conceptId);
@@ -126,7 +146,7 @@ function buildDrillQuestion(
   const seed = `${stageId}:${attemptNumber}:drill-${concept.id}-${drill.id}`;
   const options =
     drill.kind === "order"
-      ? shuffleArray(drill.answer, random)
+      ? shuffleDrillOrderTokens(stageId, drill.answer, random)
       : buildOptions(drill.answer, drill.distractors, seed, random);
   return {
     id: `${seed}-${index + 1}`,
@@ -136,7 +156,9 @@ function buildDrillQuestion(
     kind: drill.kind,
     criterion:
       drill.kind === "scene" ? "P" : drill.kind === "choice" ? "R" : "M",
-    prompt: `${drill.prompt}\nObjectif : ${concept.shortFunction}`,
+    prompt: stageId === "sentence-structure"
+      ? drill.prompt
+      : `${drill.prompt}\nObjectif : ${concept.shortFunction}`,
     display: drill.context
       ? formatScenario(drill.context, drill.displayLabel, drill.stimulus)
       : formatPromptBlock(undefined, drill.displayLabel, drill.stimulus),
