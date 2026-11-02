@@ -12,6 +12,10 @@ import {
   getGrammarLessonGuide,
 } from "../data/grammar/index.ts";
 import {
+  GRAMMAR_QUICK_GUIDE_STAGE_IDS,
+  isGrammarQuickGuideStage,
+} from "../data/grammar/lessonGuides.ts";
+import {
   advanceGrammarPracticeSession,
   answerGrammarPracticeQuestion,
   buildGrammarPracticeQuestions,
@@ -96,12 +100,19 @@ test("grammar theory opens in a reusable modal and resumes without replacing its
   assert.match(lesson, /!session && dismissedTheoryStageId !== stageId/u);
   assert.match(lesson, /onReviewExplanation=\{\(\) => setRequestedTheoryStageId\(stageId\)\}/u);
   assert.match(lesson, /onRequestClose=\{closeTheory\}/u);
-  assert.match(lesson, /onAccessExercises=\{closeTheory\}/u);
+  assert.match(lesson, /onAccessExercises=\{accessExercises\}/u);
+  assert.match(lesson, /const dismissTheory = React\.useCallback/u);
+  assert.match(lesson, /if \(!isQuickGuide && !session\) startPractice\(\)/u);
+  assert.match(lesson, /const accessExercises = React\.useCallback/u);
   assert.match(lesson, /if \(!session\) startPractice\(\)/u);
+  assert.match(lesson, /onStartExercises=\{isQuickGuide \? startPractice : undefined\}/u);
   assert.match(lesson, /Revoir l’explication/u);
   assert.match(modal, /export function GrammarLessonGuideModal/u);
   assert.match(modal, /label="Accéder aux exercices"/u);
   assert.match(modal, /onPress=\{onAccessExercises\}/u);
+  assert.match(modal, /isQuickGuide && styles\.exerciseFooterQuick/u);
+  assert.match(guideContent, /setShowDetails\(\(current\) => !current\)/u);
+  assert.match(guideContent, /\{\(!isQuickGuide \|\| showDetails\) \? \(/u);
   assert.match(
     readFileSync(join(projectRoot, "app/(tabs)/grammar/index.tsx"), "utf8"),
     /onPress=\{\(\) => openStage\(stageId, true\)\}/u,
@@ -116,6 +127,26 @@ test("grammar theory opens in a reusable modal and resumes without replacing its
   ]) {
     assert.match(guideContent, new RegExp(section, "u"), section);
   }
+});
+
+test("the concise grammar guide is limited to stages 01–05 and aligns with their examples", () => {
+  assert.deepEqual(GRAMMAR_QUICK_GUIDE_STAGE_IDS, GRAMMAR_STAGE_IDS.slice(0, 5));
+  const expectedExamples = [
+    ["sentence-structure", "저는 커피를 마셔요."],
+    ["identify-with-copula", "학생이에요."],
+    ["polite-register", "괜찮아요."],
+    ["introduce-topic", "저는 프랑스 사람이에요."],
+    ["demonstratives", "이거 뭐예요?"],
+  ];
+  for (const [stageId, example] of expectedExamples) {
+    const guide = getGrammarLessonGuide(stageId);
+    assert.ok(isGrammarQuickGuideStage(stageId), stageId);
+    assert.equal(guide.examples[0].korean, example, stageId);
+  }
+  assert.equal(isGrammarQuickGuideStage("nominal-questions"), false);
+  assert.ok(getGrammarLessonGuide("introduce-topic").examples.some(
+    ({ korean }) => korean === "오늘은 쉬어요.",
+  ));
 });
 
 test("the freemium boundary keeps A0 free and reserves A1 to Premium", () => {
