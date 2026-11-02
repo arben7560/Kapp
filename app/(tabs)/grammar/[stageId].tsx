@@ -75,6 +75,23 @@ function scoreLabel(score: number) {
 }
 
 function getCorrectFeedbackLead(question: GrammarPracticeQuestion) {
+  if (question.stageId === "locate-thing") {
+    if (question.id.includes("cafe-existence")) {
+      return "Oui, 카페에 있어요 situe ton ami au café, sans décrire une action.";
+    }
+    if (question.id.includes("school-existence")) {
+      return "Oui, 학교에 있어요 indique où se trouve le professeur.";
+    }
+    if (question.id.includes("bag-existence")) {
+      return "Oui, 가방에 있어요 indique que la carte est dans le sac.";
+    }
+    if (question.id.includes("floor-existence")) {
+      return "Oui, 2층에 있어요 situe les toilettes au deuxième étage.";
+    }
+    if (question.id.includes("home-existence")) {
+      return "Oui, 집에 있어요 indique où est Minsu, pas où il va.";
+    }
+  }
   if (question.stageId === "existence") {
     if (question.id.includes("rain-vowel")) {
       return "Oui, 비 finit par une voyelle : 비가 와요 annonce simplement qu’il pleut.";
@@ -983,6 +1000,7 @@ function PracticePanel({
           question.stageId === "demonstratives" && styles.questionCardStageFive,
           question.stageId === "nominal-questions" && styles.questionCardStageSix,
           question.stageId === "existence" && styles.questionCardStageSeven,
+          question.stageId === "locate-thing" && styles.questionCardStageEight,
         ]}
       >
         {question.exerciseGroup ? (
@@ -1005,7 +1023,8 @@ function PracticePanel({
               question.stageId === "introduce-topic" ||
               question.stageId === "demonstratives" ||
               question.stageId === "nominal-questions" ||
-              question.stageId === "existence"
+              question.stageId === "existence" ||
+              question.stageId === "locate-thing"
             }
           />
         ) : null}
@@ -1181,7 +1200,8 @@ function FeedbackCard({
               question.stageId === "introduce-topic" ||
               question.stageId === "demonstratives" ||
               question.stageId === "nominal-questions" ||
-              question.stageId === "existence"
+              question.stageId === "existence" ||
+              question.stageId === "locate-thing"
             ? "TON CHOIX EXPLIQUÉ"
             : "À AJUSTER ICI"}
       </AppText>
@@ -1195,7 +1215,8 @@ function FeedbackCard({
             question.stageId === "introduce-topic" ||
             question.stageId === "demonstratives" ||
             question.stageId === "nominal-questions" ||
-            question.stageId === "existence"
+            question.stageId === "existence" ||
+            question.stageId === "locate-thing"
               ? "POUR CET EXERCICE"
               : "ICI, ON ATTENDAIT"}
           </AppText>
@@ -1653,6 +1674,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   questionCardStageSeven: {
+    minHeight: 156,
+    padding: 16,
+    gap: 10,
+  },
+  questionCardStageEight: {
     minHeight: 156,
     padding: 16,
     gap: 10,

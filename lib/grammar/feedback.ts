@@ -505,6 +505,59 @@ function getExistenceStageSevenFeedback(
   return undefined;
 }
 
+/**
+ * Étape 08 : correction précise de la particule réellement choisie,
+ * selon le lieu, le verbe de position 있어요 et les autres emplois possibles.
+ */
+const LOCATION_STAGE_EIGHT_DISTRACTORS: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "cafe-existence": {
+    "에서": "에서 indique le lieu d’une action au café. Ici, tu signales uniquement la position statique de ton ami : 친구가 카페에 있어요.",
+    "로": "카페로 indique une direction vers le café, par exemple avec 가요. Ton ami y est déjà, donc situe-le avec 에 : 친구가 카페에 있어요.",
+    "를": "를 marque l’objet direct d’une action ; « 카페를 있어요 » ne situe pas quelqu’un. Avec 있어요, le lieu de l’ami est 카페에 : 친구가 카페에 있어요.",
+  },
+  "school-existence": {
+    "에서": "학교에서 marque le lieu d’une action, comme 학교에서 공부해요. Ici, tu précises seulement où se trouve le professeur : 선생님이 학교에 있어요.",
+    "로": "학교로 signifie « vers l’école » avec un déplacement. Le professeur est déjà à l’école ; pour sa position, dis 선생님이 학교에 있어요.",
+    "가": "가 ferait de 학교 un sujet, et non le lieu du professeur. Le sujet est déjà 선생님이 ; pour localiser cette personne : 선생님이 학교에 있어요.",
+  },
+  "bag-existence": {
+    "에서": "가방에서 pourrait marquer le lieu d’une action ou l’origine d’un objet sorti du sac. Ici, la carte est simplement dedans : 카드가 가방에 있어요.",
+    "으로": "가방으로 indique une direction vers le sac, par exemple pour y déplacer la carte. Mais elle s’y trouve déjà : 카드가 가방에 있어요.",
+    "를": "를 marque un objet direct, par exemple 가방을 들다 (porter un sac) avec 을 après 가방. Ici, le sac est un lieu : 카드가 가방에 있어요.",
+  },
+  "floor-existence": {
+    "에서": "2층에서 situe une action au deuxième étage. Ici, les toilettes s’y trouvent : on marque cette position avec 에, donc 화장실은 2층에 있어요.",
+    "으로": "2층으로 signifie « vers le deuxième étage », notamment avec 가요. Tu donnes leur emplacement, pas une direction : 화장실은 2층에 있어요.",
+    "을": "을 marque un objet direct, pas l’étage où se trouvent les toilettes. Pour indiquer leur position : 화장실은 2층에 있어요.",
+  },
+  "home-existence": {
+    "에서": "집에서 peut situer une action faite à la maison, comme 집에서 공부해요. Ici, tu dis seulement où se trouve Minsu : 민수는 집에 있어요.",
+    "으로": "집으로 indique une direction « vers la maison », avec un verbe de mouvement. Minsu est déjà chez lui : 민수는 집에 있어요.",
+    "를": "집을 pourrait marquer l’objet d’une action, comme 집을 청소해요. Ici, la maison est le lieu où est Minsu : 민수는 집에 있어요.",
+  },
+};
+
+function getLocationStageEightFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (
+    question.stageId !== "locate-thing" ||
+    !question.conceptIds.includes("location-e") ||
+    typeof answer !== "string"
+  ) return undefined;
+
+  for (const [drillId, choices] of Object.entries(LOCATION_STAGE_EIGHT_DISTRACTORS)) {
+    if (question.id.includes(":drill-location-e-" + drillId + "-")) {
+      const reason = choices[answer];
+      if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+    }
+  }
+  return undefined;
+}
+
 function selectedSpecificFallback(
   question: GrammarPracticeQuestion,
   selected: string,
@@ -924,6 +977,9 @@ export function getGrammarIncorrectFeedback(
 
   const existenceStageSevenFeedback = getExistenceStageSevenFeedback(question, answer);
   if (existenceStageSevenFeedback) return existenceStageSevenFeedback;
+
+  const locationStageEightFeedback = getLocationStageEightFeedback(question, answer);
+  if (locationStageEightFeedback) return locationStageEightFeedback;
 
   if (conceptId === "topic-eun-neun") {
     if (
