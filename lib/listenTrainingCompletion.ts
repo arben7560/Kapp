@@ -2,7 +2,7 @@ import {
   EXERCISES_BY_KIND,
   TRAINING_ORDER,
   type ExerciseKind,
-} from "../data/listen/activeExercises";
+} from "../data/listen/activeExercises.ts";
 
 export type ListenTrainingSummary = Readonly<{
   title: string;
