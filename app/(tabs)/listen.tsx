@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
-import { OrthographyCompletionModal } from "../../components/listen/OrthographyCompletionModal";
+import { ListenTrainingCompletionModal } from "../../components/listen/ListenTrainingCompletionModal";
 import { AppBackButton } from "../../components/ui/app-back-button";
 import { HubModuleAccents } from "../../constants/theme";
 import {
@@ -30,6 +30,7 @@ import {
 import { saveHomeResumeContext } from "../../lib/homeResume";
 import { shuffleListenChoices } from "../../lib/listenExerciseChoices";
 import { canValidateListenAnswer } from "../../lib/listenValidation";
+import { recordListenTrainingSuccess } from "../../lib/listenTrainingCompletion";
 import { buildProgressId } from "../../lib/progressIds";
 
 const BG_URL =
@@ -159,10 +160,10 @@ export default function ListenScreen() {
   const [scrollY] = useState(() => new Animated.Value(0));
   const validationLockRef = useRef(false);
   const listenSessionRef = useRef(0);
-  const orthographyCompletedIdsRef = useRef<Set<string>>(new Set());
-  const [orthographyCorrectCount, setOrthographyCorrectCount] = useState(0);
-  const [isOrthographySummaryOpen, setIsOrthographySummaryOpen] = useState(false);
-  const [orthographyStreakOutcome, setOrthographyStreakOutcome] = useState<
+  const trainingCompletedIdsRef = useRef<Set<string>>(new Set());
+  const [trainingCorrectCount, setTrainingCorrectCount] = useState(0);
+  const [isTrainingSummaryOpen, setIsTrainingSummaryOpen] = useState(false);
+  const [trainingStreakOutcome, setTrainingStreakOutcome] = useState<
     Exclude<DailyStreakCompletionResult, "already_completed"> | null
   >(null);
   const resumeRequestKeyRef = useRef(
@@ -204,9 +205,7 @@ export default function ListenScreen() {
   const hasCompletedCurrentAudio = !!completedAudioIds[item.id];
   const isPlayingCurrentAudio = playingAudioId === item.id;
   const isLastExercise = exerciseIndex === exercises.length - 1;
-  const isOrthographyComplete =
-    trainingKind === "dictation" &&
-    orthographyCorrectCount === EXERCISES_BY_KIND.dictation.length;
+  const isTrainingComplete = trainingCorrectCount === exercises.length;
   const landscapeHeaderStyle = useMemo(() => {
     if (!isLandscape) return undefined;
 
@@ -248,10 +247,10 @@ export default function ListenScreen() {
     resumeRequestKeyRef.current = requestKey;
     validationLockRef.current = false;
     listenSessionRef.current += 1;
-    orthographyCompletedIdsRef.current.clear();
-    setOrthographyCorrectCount(0);
-    setOrthographyStreakOutcome(null);
-    setIsOrthographySummaryOpen(false);
+    trainingCompletedIdsRef.current.clear();
+    setTrainingCorrectCount(0);
+    setTrainingStreakOutcome(null);
+    setIsTrainingSummaryOpen(false);
     clearAudioError();
     setTrainingIndex(nextPosition.trainingIndex);
     setExerciseIndex(nextPosition.exerciseIndex);
@@ -338,16 +337,17 @@ export default function ListenScreen() {
     resetAnswer();
   };
 
-  const resetOrthographySession = () => {
+  const resetTrainingSession = () => {
     listenSessionRef.current += 1;
-    orthographyCompletedIdsRef.current.clear();
-    setOrthographyCorrectCount(0);
-    setOrthographyStreakOutcome(null);
-    setIsOrthographySummaryOpen(false);
+    trainingCompletedIdsRef.current.clear();
+    setTrainingCorrectCount(0);
+    setTrainingStreakOutcome(null);
+    setIsTrainingSummaryOpen(false);
+    setDailyMessage(null);
   };
 
   const restartTraining = () => {
-    resetOrthographySession();
+    resetTrainingSession();
     clearAudioError();
     setExerciseIndex(0);
     resetAnswer();
@@ -358,7 +358,7 @@ export default function ListenScreen() {
       (trainingIndex + direction + TRAINING_ORDER.length) %
       TRAINING_ORDER.length;
 
-    resetOrthographySession();
+    resetTrainingSession();
     clearAudioError();
     setTrainingIndex(nextTrainingIndex);
     setExerciseIndex(0);
@@ -408,9 +408,7 @@ export default function ListenScreen() {
 
           const outcome = state.lastCompletionResult;
           if (outcome && outcome !== "already_completed") {
-            if (trainingKind === "dictation") {
-              setOrthographyStreakOutcome((previous) => previous ?? outcome);
-            }
+            setTrainingStreakOutcome((previous) => previous ?? outcome);
             setDailyMessage(
               outcome === "completed_with_freeze"
                 ? "Protection de série utilisée. Série conservée."
@@ -425,19 +423,18 @@ export default function ListenScreen() {
             setTimeout(() => setDailyMessage(null), 2200);
           }
 
-          // Le bilan Orthographe apparaît après 5 réussites distinctes,
+          // Le bilan apparaît après cinq réussites distinctes par entraînement,
           // même si les questions ont été consultées dans le désordre.
-          if (
-            trainingKind === "dictation" &&
-            !orthographyCompletedIdsRef.current.has(item.id)
-          ) {
-            orthographyCompletedIdsRef.current.add(item.id);
-            const completedCount = orthographyCompletedIdsRef.current.size;
-            setOrthographyCorrectCount(completedCount);
-            if (completedCount === EXERCISES_BY_KIND.dictation.length) {
-              setDailyMessage(null);
-              setIsOrthographySummaryOpen(true);
-            }
+          const progress = recordListenTrainingSuccess(
+            trainingKind,
+            trainingCompletedIdsRef.current,
+            item.id,
+          );
+          trainingCompletedIdsRef.current = progress.ids;
+          setTrainingCorrectCount(progress.completedCount);
+          if (progress.justCompletedTraining) {
+            setDailyMessage(null);
+            setIsTrainingSummaryOpen(true);
           }
         })
         .catch((error) => {
@@ -1010,47 +1007,26 @@ export default function ListenScreen() {
                   accessibilityLabel={
                     !isCorrect
                       ? "Question suivante indisponible tant que la réponse est incorrecte"
-                      : isLastExercise && trainingKind === "dictation"
-                        ? isOrthographyComplete
-                          ? "Ouvrir le bilan d'orthographe"
+                      : isLastExercise
+                        ? isTrainingComplete
+                          ? "Ouvrir le bilan de l'entraînement"
                           : "Valider les cinq questions pour ouvrir le bilan"
-                        : isLastExercise
-                          ? "Passer à l’exercice suivant"
-                          : "Passer à la question suivante"
+                        : "Passer à la question suivante"
                   }
                   accessibilityState={{
-                    disabled:
-                      !isCorrect ||
-                      (isLastExercise &&
-                        trainingKind === "dictation" &&
-                        !isOrthographyComplete),
+                    disabled: !isCorrect || (isLastExercise && !isTrainingComplete),
                   }}
-                  aria-disabled={
-                    !isCorrect ||
-                    (isLastExercise &&
-                      trainingKind === "dictation" &&
-                      !isOrthographyComplete)
-                  }
+                  aria-disabled={!isCorrect || (isLastExercise && !isTrainingComplete)}
                   hitSlop={6}
-                  disabled={
-                    !isCorrect ||
-                    (isLastExercise &&
-                      trainingKind === "dictation" &&
-                      !isOrthographyComplete)
-                  }
+                  disabled={!isCorrect || (isLastExercise && !isTrainingComplete)}
                   onPress={
-                    isLastExercise && trainingKind === "dictation"
-                      ? () => setIsOrthographySummaryOpen(true)
-                      : isLastExercise
-                        ? goToNextExercise
-                        : goNext
+                    isLastExercise
+                      ? () => setIsTrainingSummaryOpen(true)
+                      : goNext
                   }
                   style={[
                     styles.actionButton,
-                    (!isCorrect ||
-                      (isLastExercise &&
-                        trainingKind === "dictation" &&
-                        !isOrthographyComplete)) &&
+                    (!isCorrect || (isLastExercise && !isTrainingComplete)) &&
                       styles.disabledButton,
                   ]}
                 >
@@ -1059,11 +1035,7 @@ export default function ListenScreen() {
                     tone="strong"
                     style={styles.actionText}
                   >
-                    {isLastExercise && trainingKind === "dictation"
-                      ? "Voir le bilan"
-                      : isLastExercise
-                        ? "Exercice suivant"
-                        : "Suivant"}
+                    {isLastExercise ? "Voir le bilan" : "Suivant"}
                   </AppText>
                 </Pressable>
               )}
@@ -1109,10 +1081,11 @@ export default function ListenScreen() {
           </View>
         </Animated.ScrollView>
       </SafeAreaView>
-      <OrthographyCompletionModal
-        visible={isOrthographySummaryOpen}
-        streakOutcome={orthographyStreakOutcome}
-        onClose={() => setIsOrthographySummaryOpen(false)}
+      <ListenTrainingCompletionModal
+        trainingKind={trainingKind}
+        visible={isTrainingSummaryOpen}
+        streakOutcome={trainingStreakOutcome}
+        onClose={() => setIsTrainingSummaryOpen(false)}
         onRestart={restartTraining}
         onNext={goToNextExercise}
       />
