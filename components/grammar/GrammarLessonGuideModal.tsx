@@ -1,3 +1,4 @@
+import type { ScrollViewInstance } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
@@ -45,7 +46,7 @@ export function GrammarLessonGuideModal({
   const [entrance] = React.useState(() => new Animated.Value(0));
   const [headerScrollY] = React.useState(() => new Animated.Value(0));
 
-  const bodyScrollRef = React.useRef<ScrollView>(null);
+  const bodyScrollRef = React.useRef<ScrollViewInstance>(null);
 
   const layout = useGrammarModalLayout();
 

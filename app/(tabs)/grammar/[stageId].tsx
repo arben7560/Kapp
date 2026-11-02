@@ -1,3 +1,4 @@
+import type { ScrollViewInstance } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
@@ -158,7 +159,7 @@ export default function GrammarLessonScreen() {
   const { completeDailyActivity } = useDailyStreak();
   const responsive = useResponsiveLayout({ maxWidth: 900 });
   const completionInFlight = React.useRef(new Set<string>());
-  const scrollRef = React.useRef<ScrollView>(null);
+  const scrollRef = React.useRef<ScrollViewInstance>(null);
   const [dismissedTheoryStageId, setDismissedTheoryStageId] =
     React.useState<GrammarStageId>();
   const [requestedTheoryStageId, setRequestedTheoryStageId] =

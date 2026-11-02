@@ -125,8 +125,6 @@ export default function HealthCyber() {
     <View style={styles.container}>
       <StatusBar
         barStyle="light-content"
-        translucent
-        backgroundColor="transparent"
       />
       <ImageBackground
         source={BACKGROUND_SOURCE}

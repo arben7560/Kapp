@@ -1,3 +1,4 @@
+import type { ScrollViewInstance } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
@@ -205,7 +206,7 @@ export default function CafeIaScreen() {
   const canEnterMission =
     currentMission?.access !== "premium" || hasPremiumAccess;
 
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const mountedRef = useRef(true);
   const iaAutoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const choiceTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(

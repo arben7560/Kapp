@@ -1,3 +1,4 @@
+import type { ScrollViewInstance } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -151,7 +152,7 @@ export default function ListenScreen() {
   const isLandscape = width > height;
   const isShortLandscape = isLandscape && height <= 430;
   const { complete, isHydrated, setTrack } = useStore();
-  const scrollRef = useRef<ScrollView | null>(null);
+  const scrollRef = useRef<ScrollViewInstance | null>(null);
   const [scrollY] = useState(() => new Animated.Value(0));
   const validationLockRef = useRef(false);
   const dailyActivityPromiseRef = useRef<ReturnType<

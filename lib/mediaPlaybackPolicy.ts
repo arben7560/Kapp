@@ -6,7 +6,7 @@ export function shouldStartVideoPlayback({
   resumeRequired,
   shouldPlay,
 }: {
-  appState: string;
+  appState: string | null | undefined;
   hasSource: boolean;
   isFocused: boolean;
   nativeReady?: boolean;

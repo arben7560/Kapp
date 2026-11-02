@@ -496,8 +496,6 @@ export default function OnboardingScreen() {
       <View style={styles.screen}>
         <StatusBar
           barStyle="light-content"
-          translucent
-          backgroundColor="transparent"
         />
         <SceneBackground dimmed />
         <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
@@ -676,8 +674,6 @@ export default function OnboardingScreen() {
     <View style={styles.screen}>
       <StatusBar
         barStyle="light-content"
-        translucent
-        backgroundColor="transparent"
       />
       <SceneBackground />
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>

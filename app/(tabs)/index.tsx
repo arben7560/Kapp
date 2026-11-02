@@ -1,4 +1,4 @@
-import MaskedView from "@react-native-masked-view/masked-view";
+import NativeMaskedView from "@react-native-masked-view/masked-view";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
@@ -25,7 +25,9 @@ import {
   View,
   type StyleProp,
   type ViewStyle,
+  type ViewProps,
 } from "react-native";
+
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -71,6 +73,14 @@ import {
 } from "../../lib/homeResume";
 import { subscribeToProgressHydration } from "../../lib/progressSyncEvents";
 import { buildProgressId } from "../../lib/progressIds";
+
+// masked-view 0.3.2 still types its native ref with the removed NativeMethods API.
+const MaskedView = NativeMaskedView as unknown as React.ComponentType<
+  ViewProps & {
+    maskElement: React.ReactElement;
+    androidRenderingMode?: "software" | "hardware";
+  }
+>;
 
 const BACKGROUND_SOURCE = require("../../assets/images/seoulhub.jpg");
 

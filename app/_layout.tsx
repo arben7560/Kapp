@@ -36,6 +36,8 @@ import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard"
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
+export const unstable_settings = { anchor: "index" };
+
 const ONBOARDING_KEY = "kapp_onboarding_completed";
 // Serialize native setup/teardown when React remounts effects in development.
 let screenPrivacyOperations: Promise<void> = Promise.resolve();
@@ -247,7 +249,6 @@ export default function RootLayout() {
                       <InitialOnboardingRoute />
 
                       <Stack
-                        initialRouteName="index"
                         screenOptions={{
                           headerShown: false,
                           contentStyle: {

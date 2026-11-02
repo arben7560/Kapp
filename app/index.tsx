@@ -363,8 +363,6 @@ function HeroEntryScreen() {
       <StatusBar
         hidden={false}
         barStyle="light-content"
-        translucent
-        backgroundColor="transparent"
       />
       <HeroBackground />
 

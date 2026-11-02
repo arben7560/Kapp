@@ -5,6 +5,7 @@ import { ChevronRight, Sparkles, X } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
+  type FlatListInstance,
   Easing,
   ImageBackground,
   ImageSourcePropType,
@@ -327,7 +328,7 @@ function Scenes({
   onSelectTheme: (theme: ThemeKey) => void;
 }) {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const listRef = useRef<Animated.FlatList<ThemeKey>>(null);
+  const listRef = useRef<FlatListInstance>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const [viewportWidth, setViewportWidth] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
