@@ -443,6 +443,7 @@ export function GrammarLessonGuideModal({
               layout.isCompactWidth && styles.bodyCompact,
               layout.useWideLayout && styles.bodyWide,
               layout.isShortHeight && styles.bodyShort,
+              isQuickGuide && styles.bodyQuick,
             ]}
           >
             {guide ? (
@@ -512,7 +513,7 @@ export function GrammarLessonGuideModal({
             <ActionButton
               label="Accéder aux exercices"
               accessibilityHint="Ferme l’explication et ouvre les exercices de cette leçon"
-              size={layout.isVeryShortHeight ? "regular" : "large"}
+              size={layout.isVeryShortHeight || (isQuickGuide && layout.isShortHeight) ? "regular" : "large"}
               accentColor={GRAMMAR_ACCENT.base}
               onPress={onAccessExercises}
               style={styles.exerciseButton}
@@ -722,6 +723,10 @@ const styles = StyleSheet.create({
 
   bodyShort: {
     paddingVertical: 16,
+  },
+  bodyQuick: {
+    paddingVertical: 14,
+    gap: 16,
   },
 
   exerciseFooter: {
