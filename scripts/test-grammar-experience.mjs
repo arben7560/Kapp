@@ -795,6 +795,99 @@ test("stage 05 uses responsive question cards and contextual success messages", 
   assert.match(exercises, /"QUESTION À COMPLÉTER"/u);
 });
 
+test("stage 06 distinguishes all chosen interrogatives and keeps the intended nuance", () => {
+  const expected = new Map([
+    ["what-object", {
+      answer: "뭐", sentence: "이거 뭐예요?",
+      choices: ["누구", "몇", "어디"],
+    }],
+    ["who-person", {
+      answer: "누구", sentence: "저 사람은 누구예요?",
+      choices: ["뭐", "몇", "어디"],
+    }],
+    ["how-many-people", {
+      answer: "몇", sentence: "몇 명이에요?",
+      choices: ["뭐", "누구", "얼마"],
+    }],
+    ["how-many-tickets", {
+      answer: "몇", sentence: "표 몇 장이에요?",
+      choices: ["뭐", "누구", "얼마"],
+    }],
+    ["what-food", {
+      answer: "뭐", sentence: "뭐 먹어요?",
+      choices: ["누구", "몇", "어디"],
+    }],
+  ]);
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("nominal-questions", attempt, () => 0.42);
+    assert.equal(questions.length, 5);
+
+    const shuffledA = buildGrammarPracticeQuestions("nominal-questions", attempt, () => 0);
+    const shuffledB = buildGrammarPracticeQuestions("nominal-questions", attempt, () => 0.99);
+    let mixedOrderCount = 0;
+
+    for (const question of questions) {
+      const drillId = [...expected.keys()].find((name) =>
+        question.id.includes(":drill-question-mwo-nugu-myeot-" + name + "-")
+      );
+      assert.ok(drillId, question.id);
+      const spec = expected.get(drillId);
+
+      assert.equal(question.kind, "gap", question.id);
+      assert.equal(question.answer, spec.answer, question.id);
+      assert.deepEqual(new Set(question.options), new Set([spec.answer, ...spec.choices]), question.id);
+      assert.equal(question.options.length, 4, question.id);
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
+      assert.match(question.display, /PHRASE À COMPLÉTER\n/u, question.id);
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.doesNotMatch(question.display, /«\s*«/u, question.id);
+
+      const messages = spec.choices.map((selected) => {
+        const feedback = getGrammarIncorrectFeedback(question, selected);
+        assert.ok(feedback.includes("Tu as choisi « " + selected + " »"), question.id);
+        assert.ok(feedback.includes(spec.sentence), question.id);
+        assert.notEqual(feedback, question.explanation, question.id);
+        assert.ok(feedback.length <= 260, question.id);
+        return feedback;
+      });
+      assert.equal(new Set(messages).size, 3, question.id);
+
+      const optionA = shuffledA.find(({ id }) => id === question.id);
+      const optionB = shuffledB.find(({ id }) => id === question.id);
+      assert.ok(optionA && optionB, question.id);
+      assert.deepEqual(new Set(optionA.options), new Set(optionB.options), question.id);
+      if (optionA.options.join("|") !== optionB.options.join("|")) mixedOrderCount += 1;
+    }
+    assert.ok(mixedOrderCount > 0, "some choice orders should differ after shuffling");
+  }
+
+  const questions = buildGrammarPracticeQuestions("nominal-questions", 1, () => 0.42);
+  const byDrill = (key) => questions.find(({ id }) =>
+    id.includes(":drill-question-mwo-nugu-myeot-" + key + "-")
+  );
+  assert.match(getGrammarIncorrectFeedback(byDrill("what-object"), "누구"), /photo.*objet inconnu/u);
+  assert.match(getGrammarIncorrectFeedback(byDrill("who-person"), "몇"), /nombre.*âge.*identif/u);
+  assert.match(getGrammarIncorrectFeedback(byDrill("how-many-people"), "얼마"), /prix.*얼마 명.*몇 명이에요/u);
+  assert.match(getGrammarIncorrectFeedback(byDrill("how-many-tickets"), "얼마"), /prix.*표 얼마예요.*nombre/u);
+  assert.match(getGrammarIncorrectFeedback(byDrill("what-food"), "누구"), /누가 먹어요.*aliment/u);
+  assert.match(getGrammarIncorrectFeedback(byDrill("what-food"), "어디"), /어디에서 먹어요.*ce qu’il mange/u);
+  assert.match(byDrill("how-many-people").display, /sortie avec une connaissance/u);
+});
+
+test("stage 06 uses compact display and answer-specific success and failure messages", () => {
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
+
+  assert.match(screen, /question\.stageId === "nominal-questions" && styles\.questionCardStageSix/u);
+  assert.match(screen, /if \(question\.stageId === "nominal-questions"\)/u);
+  assert.match(screen, /question\.id\.includes\("what-object"\)/u);
+  assert.match(screen, /question\.id\.includes\("how-many-people"\)/u);
+  assert.match(screen, /question\.id\.includes\("what-food"\)/u);
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(exercises, /stageId === "nominal-questions"/u);
+});
+
 test("high-confusion grammar distractors receive answer-specific explanations", () => {
   const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
   assert.match(getGrammarIncorrectFeedback(dailyRegister, "좋습니다"), /registre formel/u);
