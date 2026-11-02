@@ -129,24 +129,58 @@ test("grammar theory opens in a reusable modal and resumes without replacing its
   }
 });
 
-test("the concise grammar guide is limited to stages 01–05 and aligns with their examples", () => {
-  assert.deepEqual(GRAMMAR_QUICK_GUIDE_STAGE_IDS, GRAMMAR_STAGE_IDS.slice(0, 5));
+test("the concise grammar guide covers exactly lessons 01–10", () => {
+  assert.deepEqual(GRAMMAR_QUICK_GUIDE_STAGE_IDS, GRAMMAR_STAGE_IDS.slice(0, 10));
   const expectedExamples = [
     ["sentence-structure", "저는 커피를 마셔요."],
     ["identify-with-copula", "학생이에요."],
     ["polite-register", "괜찮아요."],
     ["introduce-topic", "저는 프랑스 사람이에요."],
     ["demonstratives", "이거 뭐예요?"],
+    ["nominal-questions", "누구예요?"],
+    ["existence", "채식 메뉴가 있어요?"],
+    ["locate-thing", "화장실은 2층에 있어요."],
+    ["present-actions", "매일 공부해요."],
+    ["object-actions", "커피를 마셔요."],
   ];
   for (const [stageId, example] of expectedExamples) {
     const guide = getGrammarLessonGuide(stageId);
     assert.ok(isGrammarQuickGuideStage(stageId), stageId);
     assert.equal(guide.examples[0].korean, example, stageId);
+    assert.ok(guide.introduction.length > 40, stageId);
+    assert.ok(guide.mainRule.length > 40, stageId);
   }
-  assert.equal(isGrammarQuickGuideStage("nominal-questions"), false);
+  assert.equal(isGrammarQuickGuideStage("action-location"), false);
   assert.ok(getGrammarLessonGuide("introduce-topic").examples.some(
     ({ korean }) => korean === "오늘은 쉬어요.",
   ));
+});
+
+test("lessons 06–10 introduce the distinctions used in their exercises", () => {
+  const guide6 = getGrammarLessonGuide("nominal-questions");
+  const guide7 = getGrammarLessonGuide("existence");
+  const guide8 = getGrammarLessonGuide("locate-thing");
+  const guide9 = getGrammarLessonGuide("present-actions");
+  const guide10 = getGrammarLessonGuide("object-actions");
+
+  assert.match(guide6.mainRule, /뭐.*누구.*몇.*명.*장/u);
+  assert.match(guide7.mainRule, /이.*가.*있어요.*없어요/u);
+  assert.match(guide7.formula.explanation, /버스가 와요.*아니에요/u);
+  assert.match(guide8.mainRule, /에.*있어요/u);
+  assert.match(guide8.formula.explanation, /에서/u);
+  assert.match(guide9.mainRule, /아요.*어요.*해요/u);
+  assert.match(guide10.mainRule, /을.*를/u);
+  assert.match(guide10.formula.explanation, /은\/는/u);
+  assert.ok(guide10.examples.some(({ korean }) => korean === "책을 읽어요."));
+
+  const drill = (conceptId, drillId) =>
+    GRAMMAR_CONCEPTS.find(({ id }) => id === conceptId)?.practice.drills
+      .find(({ id }) => id === drillId);
+  assert.equal(drill("question-mwo-nugu-myeot", "how-many-people")?.answer, "몇");
+  assert.equal(drill("existence-isseoyo-eopseoyo", "menu-available")?.answer, "있어요");
+  assert.equal(drill("location-e", "floor-existence")?.answer, "에");
+  assert.equal(drill("present-a-eoyo", "study-present")?.answer, "공부해요");
+  assert.equal(drill("object-eul-reul", "book-batchim")?.answer, "을");
 });
 
 test("the freemium boundary keeps A0 free and reserves A1 to Premium", () => {
