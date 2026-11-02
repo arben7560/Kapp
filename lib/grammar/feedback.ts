@@ -221,12 +221,12 @@ const POLITE_REGISTER_STAGE_THREE_DISTRACTORS: Readonly<
   },
   "eat-daily": {
     "먹습니다": "먹습니다 parle de manger au présent, mais au registre formel. Pour cette conversation ordinaire entre collègues, dis 먹어요.",
-    "먹어": "먹어 est le présent familier de 먹다. Ici, la consigne demande le poli courant 먹어요.",
+    "먹어": "먹어 est le présent au registre familier de 먹다. Ici, la consigne demande le poli courant 먹어요.",
     "먹었어요": "먹었어요 veut dire « j'ai mangé » au passé. Ici, tu décris ce que tu manges maintenant : 먹어요.",
   },
   "go-daily": {
     "갑니다": "갑니다 est grammatical au présent, mais dans le registre formel. Pour cette conversation polie courante, dis 가요.",
-    "가": "가 est une forme familière de 가다. Pour répondre poliment à cette connaissance au présent, choisis 가요.",
+    "가": "가 est une forme au registre familier de 가다. Pour répondre poliment à cette connaissance au présent, choisis 가요.",
     "갔어요": "갔어요 veut dire « je suis allé(e) » au passé. Ici, tu parles d'où tu vas maintenant : 가요.",
   },
   "daily-vs-formal": {
