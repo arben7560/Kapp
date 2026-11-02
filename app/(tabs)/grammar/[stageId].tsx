@@ -74,6 +74,23 @@ function scoreLabel(score: number) {
 }
 
 function getCorrectFeedbackLead(question: GrammarPracticeQuestion) {
+  if (question.stageId === "object-actions") {
+    if (question.id.includes("book-batchim")) {
+      return "Oui, 책 finit par ㄱ : 책을 읽어요 marque bien le livre comme objet.";
+    }
+    if (question.id.includes("coffee-vowel")) {
+      return "Oui, 커피 finit par ㅣ : 커피를 마셔요 marque ce que tu bois.";
+    }
+    if (question.id.includes("meal-batchim")) {
+      return "Oui, 밥 finit par ㅂ : 밥을 먹어요 désigne ce que tu manges.";
+    }
+    if (question.id.includes("korean-vowel")) {
+      return "Oui, 한국어를 공부해요 marque le coréen comme langue étudiée.";
+    }
+    if (question.id.includes("film-vowel")) {
+      return "Oui, 영화를 봐요 marque le film comme objet de l’action.";
+    }
+  }
   if (question.stageId === "present-actions") {
     if (question.id.includes("eat-present")) {
       return "Oui, 먹어요 prend -어요 après le radical 먹-, dont la voyelle est ㅓ.";
@@ -1018,6 +1035,7 @@ function PracticePanel({
           question.stageId === "existence" && styles.questionCardStageSeven,
           question.stageId === "locate-thing" && styles.questionCardStageEight,
           question.stageId === "present-actions" && styles.questionCardStageNine,
+          question.stageId === "object-actions" && styles.questionCardStageTen,
         ]}
       >
         {question.exerciseGroup ? (
@@ -1042,7 +1060,8 @@ function PracticePanel({
               question.stageId === "nominal-questions" ||
               question.stageId === "existence" ||
               question.stageId === "locate-thing" ||
-              question.stageId === "present-actions"
+              question.stageId === "present-actions" ||
+              question.stageId === "object-actions"
             }
           />
         ) : null}
@@ -1220,7 +1239,8 @@ function FeedbackCard({
               question.stageId === "nominal-questions" ||
               question.stageId === "existence" ||
               question.stageId === "locate-thing" ||
-              question.stageId === "present-actions"
+              question.stageId === "present-actions" ||
+              question.stageId === "object-actions"
             ? "TON CHOIX EXPLIQUÉ"
             : "À AJUSTER ICI"}
       </AppText>
@@ -1236,7 +1256,8 @@ function FeedbackCard({
             question.stageId === "nominal-questions" ||
             question.stageId === "existence" ||
             question.stageId === "locate-thing" ||
-            question.stageId === "present-actions"
+            question.stageId === "present-actions" ||
+            question.stageId === "object-actions"
               ? "POUR CET EXERCICE"
               : "ICI, ON ATTENDAIT"}
           </AppText>
@@ -1704,6 +1725,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   questionCardStageNine: {
+    minHeight: 156,
+    padding: 16,
+    gap: 10,
+  },
+  questionCardStageTen: {
     minHeight: 156,
     padding: 16,
     gap: 10,
