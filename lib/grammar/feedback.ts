@@ -611,6 +611,60 @@ function getPresentActionsStageNineFeedback(
   return undefined;
 }
 
+/**
+ * Étape 10 : chacun des 15 choix de réponse reçoit son explication propre.
+ * Les thèmes en 은/는 peuvent être corrects ailleurs mais ne sont pas l'objet
+ * neutre demandé ; 이/가 déplacerait ici le rôle d'acteur de l'action.
+ */
+const OBJECT_ACTIONS_STAGE_TEN_DISTRACTORS: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "book-batchim": {
+    "를": "책 finit par le 받침 ㄱ : 를 suit une voyelle. Pour dire que tu lis un livre, l’objet prend 을 : 책을 읽어요.",
+    "은": "책은 읽어요 est grammatical si tu mets le livre en thème ou en contraste, par exemple « les livres, j’en lis ». Ici, tu réponds sans contraste à « Que lis-tu ? » : 책을 읽어요.",
+    "이": "이 marquerait 책 comme sujet, comme si le livre effectuait lui-même l’action de lire. Tu lis le livre : il est l’objet, donc 책을 읽어요.",
+  },
+  "coffee-vowel": {
+    "을": "커피 se termine par la voyelle ㅣ : 을 suit une consonne finale. Pour marquer l’objet que tu bois, utilise 를 : 커피를 마셔요.",
+    "는": "커피는 마셔요 peut être correct pour mettre le café en contraste avec d’autres boissons. Mais tu réponds simplement à « Que bois-tu ? » : 커피를 마셔요.",
+    "가": "가 ferait du café le sujet qui accomplit l’action de boire. Ici, c’est toi qui bois le café : 커피 est l’objet et prend 를, donc 커피를 마셔요.",
+  },
+  "meal-batchim": {
+    "를": "밥 finit par le 받침 ㅂ : la particule d’objet après consonne est 을, pas 를. Pour dire que tu manges ton repas : 밥을 먹어요.",
+    "은": "밥은 먹어요 est grammatical si tu mets le repas en thème ou en contraste (« au moins, je mange »). Ici, tu indiques seulement ce que tu manges : 밥을 먹어요.",
+    "이": "이 ferait de 밥 le sujet de 먹어요, comme si le repas mangeait lui-même. Tu manges le repas, donc 밥 est l’objet : 밥을 먹어요.",
+  },
+  "korean-vowel": {
+    "을": "한국어 se termine par la voyelle ㅓ : on utilise 를 après une voyelle. Pour indiquer la langue que tu étudies : 한국어를 공부해요.",
+    "는": "한국어는 공부해요 est possible si le coréen est ton thème ou si tu le compares à d’autres langues. Ici, tu réponds simplement à « Qu’étudies-tu ? » : 한국어를 공부해요.",
+    "가": "가 présenterait 한국어 comme sujet qui étudie, et non comme la langue étudiée. Dans cette réponse, le coréen est l’objet : 한국어를 공부해요.",
+  },
+  "film-vowel": {
+    "을": "영화 finit par la voyelle ㅏ : 을 suit une consonne finale. Ici, 영화 est l’objet du verbe 봐요 et prend 를 : 영화를 봐요.",
+    "는": "영화는 봐요 est possible pour mettre les films en thème ou en contraste avec d’autres contenus. Ici, tu dis simplement ce que tu regardes : 영화를 봐요.",
+    "가": "가 ferait du film le sujet qui regarde, au lieu de l’objet que tu regardes. Ici, choisis la particule d’objet 를 : 영화를 봐요.",
+  },
+};
+
+function getObjectActionsStageTenFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (
+    question.stageId !== "object-actions" ||
+    !question.conceptIds.includes("object-eul-reul") ||
+    typeof answer !== "string"
+  ) return undefined;
+
+  for (const [drillId, choices] of Object.entries(OBJECT_ACTIONS_STAGE_TEN_DISTRACTORS)) {
+    if (question.id.includes(":drill-object-eul-reul-" + drillId + "-")) {
+      const reason = choices[answer];
+      if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+    }
+  }
+  return undefined;
+}
+
 function selectedSpecificFallback(
   question: GrammarPracticeQuestion,
   selected: string,
@@ -1036,6 +1090,9 @@ export function getGrammarIncorrectFeedback(
 
   const presentActionsFeedback = getPresentActionsStageNineFeedback(question, answer);
   if (presentActionsFeedback) return presentActionsFeedback;
+
+  const objectActionsFeedback = getObjectActionsStageTenFeedback(question, answer);
+  if (objectActionsFeedback) return objectActionsFeedback;
 
   if (conceptId === "topic-eun-neun") {
     if (
