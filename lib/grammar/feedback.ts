@@ -416,6 +416,95 @@ function getNominalQuestionsStageSixFeedback(
   return undefined;
 }
 
+/**
+ * Étape 07 : le choix réel détermine la correction. Elle distingue
+ * 받침, thème contrastif, sujet, présence/absence et identité.
+ * Certaines phrases sont valables, mais expriment une autre nuance.
+ */
+const SUBJECT_STAGE_SEVEN_DISTRACTORS: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "rain-vowel": {
+    "이": "비 finit par la voyelle ㅣ : « 비이 와요 » n’est pas la bonne forme. Pour annoncer simplement la pluie, choisis 비가 와요.",
+    "는": "비는 와요 est grammatical, mais souligne un thème ou un contraste (par exemple, la pluie plutôt que la neige). Ici, tu annonces simplement la pluie : 비가 와요.",
+    "를": "를 marque un objet direct, alors que 비 est le sujet de 와요 (« tomber, venir »). « 비를 와요 » ne convient pas : 비가 와요.",
+  },
+  "time-batchim": {
+    "가": "시간 se termine par le 받침 ㄴ : « 시간가 없어요 » ne convient pas. Avec un sujet après consonne, dis 시간이 없어요.",
+    "은": "시간은 없어요 est grammatical avec un thème ou un contraste (« du temps, je n’en ai pas »). Ici, tu réponds simplement que tu n’as pas le temps : 시간이 없어요.",
+    "을": "을 marque normalement un objet direct. Avec 없어요, 시간 est ce qui manque, pas l’objet d’une action : 시간이 없어요.",
+  },
+  "bus-vowel": {
+    "이": "버스 finit par la voyelle ㅡ, donc « 버스이 와요 » ne convient pas. Pour identifier ce qui arrive, dis 버스가 와요.",
+    "는": "버스는 와요 est possible si le bus est déjà le thème ou si tu le compares à un autre véhicule. Ici, « qu’est-ce qui arrive ? » appelle 버스가 와요.",
+    "를": "를 marque un objet, mais 와요 décrit l’arrivée du bus lui-même. « 버스를 와요 » ne convient pas : 버스가 와요.",
+  },
+  "book-batchim": {
+    "가": "책 finit par la consonne ㄱ : « 책가 있어요 » est incorrect. Pour annoncer la présence du livre, dis 책이 있어요.",
+    "은": "책은 있어요 est grammatical si tu opposes le livre à d’autres objets (« le livre, au moins, est là »). Ici, tu annonces un livre nouveau : 책이 있어요.",
+    "을": "을 marque un objet direct, mais 있어요 annonce ici la présence du livre. « 책을 있어요 » ne convient pas : 책이 있어요.",
+  },
+  "friend-vowel": {
+    "이": "친구 se termine par la voyelle ㅜ : « 친구이 » ne convient pas. Pour répondre à « qui étudie ? », dis 친구가 한국어를 공부해요.",
+    "는": "친구는 한국어를 공부해요 est grammatical si ton ami est déjà le thème. Ici, la question porte sur « qui étudie ? » : 친구가 한국어를 공부해요.",
+    "를": "를 ferait de 친구 un objet, alors que ton ami est celui qui étudie. 한국어를 est déjà l’objet du verbe : 친구가 한국어를 공부해요.",
+  },
+};
+
+const EXISTENCE_STAGE_SEVEN_DISTRACTORS: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "menu-available": {
+    "없어요": "채식 메뉴가 없어요? est une question possible, mais elle suppose plutôt que le menu manque. Ici, tu demandes neutrement s’il est disponible : 채식 메뉴가 있어요?",
+    "아니에요": "채식 메뉴가 아니에요? remettrait en question l’identité d’un menu, pas sa disponibilité. Ici, tu veux savoir s’il y en a : 채식 메뉴가 있어요?",
+    "해요": "해요 signifie « faire » ; le menu n’est pas celui qui réalise une action. Pour demander si un menu végétarien est proposé : 채식 메뉴가 있어요?",
+  },
+  "menu-unavailable": {
+    "있어요": "채식 메뉴가 있어요 dit qu’un menu végétarien est disponible. Le serveur annonce exactement le contraire : 채식 메뉴가 없어요.",
+    "아니에요": "채식 메뉴가 아니에요 nie l’identité d’un élément (« ce n’est pas un menu végétarien »), pas son existence. Ici : 채식 메뉴가 없어요.",
+    "안 해요": "안 해요 nie l’action de faire, mais le sujet 채식 메뉴가 ne décrit pas un serveur qui cuisine. Pour signaler l’absence de menu : 채식 메뉴가 없어요.",
+  },
+  "time-have": {
+    "없어요": "시간이 없어요 veut dire « je n’ai pas le temps ». Or tu confirmes que tu es disponible : 시간이 있어요.",
+    "아니에요": "시간이 아니에요 signifierait plutôt « ce n’est pas le moment », pas « j’ai du temps ». Pour confirmer ta disponibilité : 시간이 있어요.",
+    "해요": "해요 signifie « faire » et ne dit pas que tu as du temps. Avec 시간이, la disponibilité se formule 시간이 있어요.",
+  },
+  "time-none": {
+    "있어요": "시간이 있어요 signifie que tu as du temps, mais la réunion t’en empêche. Pour dire « je n’ai pas le temps » : 시간이 없어요.",
+    "아니에요": "시간이 아니에요 ne signifie pas « je n’ai pas le temps » ; cela peut plutôt évoquer « ce n’est pas le moment ». Ici : 시간이 없어요.",
+    "안 해요": "안 해요 signifie « ne pas faire », sans exprimer le manque de temps. Avec 시간이, il faut 없어요 : 시간이 없어요.",
+  },
+  "identity-vs-existence": {
+    "가 없어요": "이건 커피가 없어요 parlerait plutôt d’absence de café, pas de la nature de la boisson servie. Tu dis « ce n’est pas du café » : 이건 커피가 아니에요.",
+    "가 있어요": "이건 커피가 있어요 pourrait évoquer la présence de café dans quelque chose, pas nier l’identité du verre servi. Ici : 이건 커피가 아니에요.",
+    "를 안 해요": "커피를 안 해요 nie une action liée au café, sans dire ce qu’est cette boisson. Pour nier son identité, utilise 이건 커피가 아니에요.",
+  },
+};
+
+function getExistenceStageSevenFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (question.stageId !== "existence" || typeof answer !== "string") {
+    return undefined;
+  }
+
+  const families = [
+    ["subject-i-ga", SUBJECT_STAGE_SEVEN_DISTRACTORS],
+    ["existence-isseoyo-eopseoyo", EXISTENCE_STAGE_SEVEN_DISTRACTORS],
+  ] as const;
+
+  for (const [conceptId, distractors] of families) {
+    if (!question.conceptIds.includes(conceptId)) continue;
+    for (const [drillId, choices] of Object.entries(distractors)) {
+      if (!question.id.includes(":drill-" + conceptId + "-" + drillId + "-")) continue;
+      const reason = choices[answer];
+      if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+    }
+  }
+  return undefined;
+}
+
 function selectedSpecificFallback(
   question: GrammarPracticeQuestion,
   selected: string,
@@ -832,6 +921,9 @@ export function getGrammarIncorrectFeedback(
 
   const nominalQuestionsFeedback = getNominalQuestionsStageSixFeedback(question, answer);
   if (nominalQuestionsFeedback) return nominalQuestionsFeedback;
+
+  const existenceStageSevenFeedback = getExistenceStageSevenFeedback(question, answer);
+  if (existenceStageSevenFeedback) return existenceStageSevenFeedback;
 
   if (conceptId === "topic-eun-neun") {
     if (

@@ -161,7 +161,8 @@ function buildDrillQuestion(
       stageId === "polite-register" ||
       stageId === "introduce-topic" ||
       stageId === "demonstratives" ||
-      stageId === "nominal-questions"
+      stageId === "nominal-questions" ||
+      stageId === "existence"
       ? drill.prompt
       : `${drill.prompt}\nObjectif : ${concept.shortFunction}`,
     display: drill.context
@@ -171,7 +172,11 @@ function buildDrillQuestion(
             ? "PHRASE À EXPRIMER"
             : stageId === "demonstratives" && drill.kind === "scene"
               ? "QUESTION À COMPLÉTER"
-              : drill.displayLabel,
+              : stageId === "existence" && drill.kind === "scene"
+                ? drill.stimulus.trim().endsWith("?")
+                  ? "QUESTION À COMPLÉTER"
+                  : "PHRASE À COMPLÉTER"
+                : drill.displayLabel,
           drill.stimulus,
         )
       : formatPromptBlock(undefined, drill.displayLabel, drill.stimulus),
