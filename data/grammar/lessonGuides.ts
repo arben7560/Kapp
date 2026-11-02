@@ -38,13 +38,18 @@ export type GrammarLessonGuide = {
   memoryTip: string;
 };
 
-/** Les cinq premières leçons proposent une lecture courte avant les détails. */
+/** Les dix premières leçons proposent une lecture courte avant les détails. */
 export const GRAMMAR_QUICK_GUIDE_STAGE_IDS: readonly GrammarStageId[] = [
   "sentence-structure",
   "identify-with-copula",
   "polite-register",
   "introduce-topic",
   "demonstratives",
+  "nominal-questions",
+  "existence",
+  "locate-thing",
+  "present-actions",
+  "object-actions",
 ];
 
 export function isGrammarQuickGuideStage(stageId: GrammarStageId): boolean {
@@ -352,13 +357,13 @@ export const GRAMMAR_LESSON_GUIDES = {
   "nominal-questions": {
     stageId: "nominal-questions",
     introduction:
-      "Les mots interrogatifs coréens restent à la place de l'information inconnue. 뭐 demande une chose, 누구 une personne et 몇 une quantité devant un classificateur.",
+      "Au restaurant ou dans un magasin, tu peux demander ce qu'est un objet, qui est une personne ou combien il en faut.",
     mainRule:
-      "Remplace l’élément inconnu par 뭐, 누구 ou 몇 sans bouleverser l’ordre normal de la phrase coréenne.",
+      "Choisis 뭐 pour « quoi », 누구 pour « qui » et 몇 pour « combien ». Pour compter, mets 몇 devant le mot adapté : 몇 명 (personnes) ou 몇 장 (billets, feuilles).",
     formula: {
-      pattern: "mot interrogatif + structure ordinaire + terminaison polie ?",
+      pattern: "quoi : 뭐 · qui : 누구 · combien : 몇 + 명/장",
       explanation:
-        "On ne déplace pas nécessairement le mot interrogatif au début. Remplace simplement l'élément inconnu dans une phrase normale.",
+        "Le mot interrogatif garde la place de l'information cherchée : 이거 뭐예요? ; 저 사람은 누구예요? ; 몇 명이에요? La terminaison reste polie.",
     },
     steps: [
       {
@@ -402,8 +407,8 @@ export const GRAMMAR_LESSON_GUIDES = {
         correction: "Place-le dans le bloc que la réponse viendrait remplacer.",
       },
       {
-        mistake: "Employer 몇 seul pour compter des personnes.",
-        correction: "Ajoute le classificateur adapté : 몇 명 pour « combien de personnes ».",
+        mistake: "Employer 몇 seul pour compter des personnes ou des billets.",
+        correction: "Ajoute le classificateur adapté : 몇 명 pour les personnes, 몇 장 pour les billets.",
       },
     ],
     memoryTip:
@@ -412,13 +417,13 @@ export const GRAMMAR_LESSON_GUIDES = {
   existence: {
     stageId: "existence",
     introduction:
-      "있어요 indique qu'une personne ou une chose existe, est présente ou est disponible ; 없어요 exprime l'absence. Cette structure sert aussi souvent à rendre le français « avoir ».",
+      "Pour dire qu'un menu est disponible ou que tu n'as pas le temps, utilise 있어요 ou 없어요. Tu vas aussi apprendre à marquer ce qui existe ou arrive.",
     mainRule:
-      "Marque avec 이/가 la chose présente ou absente, puis termine par 있어요 pour la présence ou 없어요 pour l’absence.",
+      "Attache 이 après une consonne finale (시간이, 책이) et 가 après une voyelle (메뉴가, 버스가). Utilise 있어요 si quelque chose est présent, 없어요 s'il manque.",
     formula: {
       pattern: "nom + 이/가 + 있어요 / 없어요",
       explanation:
-        "Le nom présent ou absent reçoit généralement 이/가 : 이 après une consonne finale, 가 après une voyelle.",
+        "이/가 marque aussi ce qui arrive : 버스가 와요 (le bus arrive). Pour nier une identité, emploie 아니에요, pas 없어요.",
     },
     steps: [
       {
@@ -439,10 +444,10 @@ export const GRAMMAR_LESSON_GUIDES = {
     ],
     examples: [
       {
-        korean: "추천 메뉴가 있어요?",
-        french: "Avez-vous un plat à recommander ?",
+        korean: "채식 메뉴가 있어요?",
+        french: "Y a-t-il un menu végétarien ?",
         parts: [
-          { korean: "추천 메뉴가", french: "un menu recommandé", role: "élément recherché" },
+          { korean: "채식 메뉴가", french: "un menu végétarien", role: "élément recherché" },
           { korean: "있어요?", french: "y en a-t-il ?", role: "existence" },
         ],
       },
@@ -461,8 +466,8 @@ export const GRAMMAR_LESSON_GUIDES = {
         correction: "Pense plutôt : « du temps existe / n'existe pas » dans la situation.",
       },
       {
-        mistake: "Confondre 이에요/예요 et 있어요.",
-        correction: "La copule identifie ce qu'est une chose ; 있어요 signale qu'elle existe ou se trouve là.",
+        mistake: "Employer 없어요 pour nier une identité, alors que la chose est bien présente.",
+        correction: "Pour dire « ce n'est pas du café », emploie 아니에요 ; 없어요 signifie « il n'y en a pas ».",
       },
     ],
     memoryTip:
@@ -471,13 +476,13 @@ export const GRAMMAR_LESSON_GUIDES = {
   "locate-thing": {
     stageId: "locate-thing",
     introduction:
-      "Pour situer une personne ou un objet, le lieu reçoit 에 et la phrase se termine par 있어요. La structure décrit une position stable, pas l'endroit où se déroule une action.",
+      "Tu veux indiquer où se trouve une personne ou un objet : au café, à l'école, à la maison ou dans un sac.",
     mainRule:
-      "Pour une position statique, attache 에 au lieu et place 있어요 à la fin de la phrase.",
+      "Pour localiser quelqu'un ou quelque chose, attache 에 au lieu puis termine par 있어요 : 가방에 있어요 (se trouve dans le sac).",
     formula: {
       pattern: "élément + 은/는 ou 이/가 + lieu + 에 + 있어요",
       explanation:
-        "Le lieu vient avant 있어요. 에 agit comme un point d'ancrage : c'est à cet endroit que l'élément se trouve.",
+        "Dans 화장실은 2층에 있어요, 2층 est le deuxième étage et 에 marque le lieu. Les exercices opposent 에 à 에서, qui sert notamment quand une action se déroule sur place.",
     },
     steps: [
       {
@@ -493,7 +498,7 @@ export const GRAMMAR_LESSON_GUIDES = {
       {
         title: "Ferme avec 있어요",
         explanation:
-          "Place 있어요 à la fin pour dire « se trouve ». Emploie 없어요 si l'élément n'est pas à cet endroit.",
+          "Termine par 있어요 pour indiquer une présence : 친구가 카페에 있어요. Ici, le lieu n'est pas celui d'une action.",
       },
     ],
     examples: [
@@ -532,13 +537,13 @@ export const GRAMMAR_LESSON_GUIDES = {
   "present-actions": {
     stageId: "present-actions",
     introduction:
-      "Le présent coréen sert à décrire ce qui se passe maintenant, mais aussi une habitude. La terminaison polie -아/어요 est donc le réflexe de base pour parler d’une action dans la vie quotidienne.",
+      "Tu peux parler d'une action en cours ou d'une habitude avec le présent poli courant : manger, aller quelque part, boire, lire ou étudier.",
     mainRule:
-      "Retire 다 de la forme du dictionnaire, observe la dernière voyelle du radical, puis ajoute 아요 après ㅏ ou ㅗ et 어요 dans les autres cas. Les verbes en 하다 deviennent 해요.",
+      "Pour les verbes réguliers de cette leçon, enlève 다 ; si la dernière voyelle du radical est ㅏ ou ㅗ, utilise 아요, sinon 어요. Les verbes en 하다 deviennent 해요.",
     formula: {
       pattern: "radical + 아요 / 어요  ·  하다 → 해요",
       explanation:
-        "Le radical porte le sens de l’action et la terminaison indique ici le présent poli courant. Certaines voyelles se contractent à l’écrit : 가다 devient 가요 et 보다 devient 봐요.",
+        "Le radical est ce qui reste après avoir retiré 다. Certaines formes se contractent : 가다 → 가요, 마시다 → 마셔요. Le présent se distingue du passé (먹었어요) et du futur (먹을 거예요).",
     },
     steps: [
       {
@@ -577,8 +582,8 @@ export const GRAMMAR_LESSON_GUIDES = {
     ],
     commonMistakes: [
       {
-        mistake: "Garder la forme du dictionnaire, comme 공부다 ou 먹다, dans une phrase polie.",
-        correction: "Retire 다 et conjugue le radical : 공부해요, 먹어요.",
+        mistake: "Garder la forme du dictionnaire (먹다, 공부하다) au lieu du présent poli demandé.",
+        correction: "Pour répondre au présent poli, écris 먹어요 ou 공부해요.",
       },
       {
         mistake: "Ajouter mécaniquement 아요 à tous les verbes.",
@@ -591,13 +596,13 @@ export const GRAMMAR_LESSON_GUIDES = {
   "object-actions": {
     stageId: "object-actions",
     introduction:
-      "을 et 를 indiquent l’objet directement concerné par l’action. Ils permettent de voir clairement ce que l’on boit, lit, apprend ou achète avant le verbe final.",
+      "Pour dire ce que tu bois, lis, manges, regardes ou étudies, le coréen ajoute une particule au nom qui reçoit directement l'action.",
     mainRule:
-      "Attache 을 au nom qui se termine par une consonne et 를 au nom qui se termine par une voyelle, puis place le verbe conjugué à la fin.",
+      "Dans ces phrases sans contraste, choisis 을 après une consonne finale (책을, 밥을) et 를 après une voyelle (커피를, 한국어를), puis mets le verbe à la fin.",
     formula: {
       pattern: "(sujet / thème) + objet + 을/를 + verbe",
       explanation:
-        "La particule suit directement le groupe nominal objet. Elle ne se traduit pas toujours en français, mais elle marque le rôle de ce groupe dans la phrase.",
+        "La particule suit l'objet, sans espace. Dans 책을 읽어요, 책 est ce que l'on lit. Les exercices distinguent cet objet neutre d'un thème marqué par 은/는.",
     },
     steps: [
       {
@@ -626,18 +631,18 @@ export const GRAMMAR_LESSON_GUIDES = {
         ],
       },
       {
-        korean: "한국어를 공부해요.",
-        french: "J’étudie le coréen.",
+        korean: "책을 읽어요.",
+        french: "Je lis un livre.",
         parts: [
-          { korean: "한국어를", french: "le coréen", role: "objet" },
-          { korean: "공부해요", french: "j’étudie", role: "action" },
+          { korean: "책을", french: "un livre", role: "objet après consonne" },
+          { korean: "읽어요", french: "je lis", role: "action" },
         ],
       },
     ],
     commonMistakes: [
       {
-        mistake: "Choisir 이/가 parce que le nom est important dans la phrase.",
-        correction: "Si le nom reçoit directement l’action, marque-le avec 을/를 : 책을 읽어요.",
+        mistake: "Employer 이/가 ou 은/는 pour répondre à « Que lis-tu ? » sans contraste.",
+        correction: "Dans les exercices, l'objet direct neutre reçoit 을/를 : 책을 읽어요, 커피를 마셔요.",
       },
       {
         mistake: "Placer la particule après le verbe ou oublier qu’elle dépend du dernier son.",
