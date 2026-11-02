@@ -186,6 +186,49 @@ test("the shared Listen exercise header collapses only in landscape", () => {
   assert.match(listenScreen, /useNativeDriver: false/u);
 });
 
+test("Orthographe has five questions and exposes its completion modal with both actions", () => {
+  assert.equal(EXERCISES_BY_KIND.dictation.length, 5);
+
+  const listenScreen = readFileSync(
+    resolve(projectRoot, "app/(tabs)/listen.tsx"),
+    "utf8",
+  );
+  const modal = readFileSync(
+    resolve(projectRoot, "components/listen/OrthographyCompletionModal.tsx"),
+    "utf8",
+  );
+
+  assert.match(listenScreen, /<OrthographyCompletionModal/u);
+  assert.match(listenScreen, /orthographyCompletedIdsRef\.current\.has\(item\.id\)/u);
+  assert.match(listenScreen, /completedCount === EXERCISES_BY_KIND\.dictation\.length/u);
+  assert.match(listenScreen, /onRestart=\{restartTraining\}/u);
+  assert.match(listenScreen, /onNext=\{goToNextExercise\}/u);
+  assert.match(modal, /Entraînement terminé/u);
+  assert.match(modal, /Passer à Situation/u);
+  assert.match(modal, /Recommencer Orthographe/u);
+});
+
+test("Listen does not validate the daily streak on an incorrect answer", () => {
+  const listenScreen = readFileSync(
+    resolve(projectRoot, "app/(tabs)/listen.tsx"),
+    "utf8",
+  );
+  const validateStart = listenScreen.indexOf("const handleValidate = () => {");
+  const validateEnd = listenScreen.indexOf("const playAudio = () => {", validateStart);
+  const validateHandler = listenScreen.slice(validateStart, validateEnd);
+
+  assert.ok(validateStart >= 0 && validateEnd > validateStart);
+  assert.match(
+    validateHandler,
+    /if \(correct\) \{[\s\S]*completeDailyActivity\("listen_exercise"\)/u,
+  );
+  assert.equal(
+    (validateHandler.match(/completeDailyActivity\("listen_exercise"\)/gu) ?? []).length,
+    1,
+  );
+  assert.doesNotMatch(validateHandler, /dailyActivityPromiseRef/u);
+});
+
 test("every situation and reaction has a non-empty Korean source text", () => {
   const contextualExercises = [
     ...EXERCISES_BY_KIND.situation,
