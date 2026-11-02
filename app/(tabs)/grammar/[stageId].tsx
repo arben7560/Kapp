@@ -74,6 +74,38 @@ function scoreLabel(score: number) {
 }
 
 function getCorrectFeedbackLead(question: GrammarPracticeQuestion) {
+  if (question.stageId === "existence") {
+    if (question.id.includes("rain-vowel")) {
+      return "Oui, 비 finit par une voyelle : 비가 와요 annonce simplement qu’il pleut.";
+    }
+    if (question.id.includes("time-batchim")) {
+      return "Oui, 시간이 없어요 annonce le manque de temps avec 이 après ㄴ.";
+    }
+    if (question.id.includes("bus-vowel")) {
+      return "Oui, 버스가 와요 identifie le bus comme nouvelle information.";
+    }
+    if (question.id.includes("book-batchim")) {
+      return "Oui, 책이 있어요 annonce la présence d’un livre sans le mettre en contraste.";
+    }
+    if (question.id.includes("friend-vowel")) {
+      return "Oui, 친구가 répond directement à « qui étudie le coréen ? ».";
+    }
+    if (question.id.includes("menu-available")) {
+      return "Oui, 채식 메뉴가 있어요? demande neutrement si le menu existe.";
+    }
+    if (question.id.includes("menu-unavailable")) {
+      return "Oui, 채식 메뉴가 없어요 annonce que le menu manque.";
+    }
+    if (question.id.includes("time-have")) {
+      return "Oui, 시간이 있어요 confirme que tu as du temps disponible.";
+    }
+    if (question.id.includes("time-none")) {
+      return "Oui, 시간이 없어요 indique que tu n’as pas le temps.";
+    }
+    if (question.id.includes("identity-vs-existence")) {
+      return "Oui, 이건 커피가 아니에요 nie l’identité de la boisson, pas son existence.";
+    }
+  }
   if (question.stageId === "nominal-questions") {
     if (question.id.includes("what-object")) {
       return "Oui, 뭐 demande la nature de l’objet dans 이거 뭐예요?.";
@@ -949,6 +981,7 @@ function PracticePanel({
           question.stageId === "introduce-topic" && styles.questionCardStageFour,
           question.stageId === "demonstratives" && styles.questionCardStageFive,
           question.stageId === "nominal-questions" && styles.questionCardStageSix,
+          question.stageId === "existence" && styles.questionCardStageSeven,
         ]}
       >
         {question.exerciseGroup ? (
@@ -970,7 +1003,8 @@ function PracticePanel({
               question.stageId === "polite-register" ||
               question.stageId === "introduce-topic" ||
               question.stageId === "demonstratives" ||
-              question.stageId === "nominal-questions"
+              question.stageId === "nominal-questions" ||
+              question.stageId === "existence"
             }
           />
         ) : null}
@@ -1145,7 +1179,8 @@ function FeedbackCard({
               question.stageId === "polite-register" ||
               question.stageId === "introduce-topic" ||
               question.stageId === "demonstratives" ||
-              question.stageId === "nominal-questions"
+              question.stageId === "nominal-questions" ||
+              question.stageId === "existence"
             ? "TON CHOIX EXPLIQUÉ"
             : "À AJUSTER ICI"}
       </AppText>
@@ -1158,7 +1193,8 @@ function FeedbackCard({
             question.stageId === "polite-register" ||
             question.stageId === "introduce-topic" ||
             question.stageId === "demonstratives" ||
-            question.stageId === "nominal-questions"
+            question.stageId === "nominal-questions" ||
+            question.stageId === "existence"
               ? "POUR CET EXERCICE"
               : "ICI, ON ATTENDAIT"}
           </AppText>
@@ -1611,6 +1647,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   questionCardStageSix: {
+    minHeight: 156,
+    padding: 16,
+    gap: 10,
+  },
+  questionCardStageSeven: {
     minHeight: 156,
     padding: 16,
     gap: 10,
