@@ -249,7 +249,7 @@ function getPoliteRegisterStageThreeFeedback(
   for (const [drillId, choices] of Object.entries(POLITE_REGISTER_STAGE_THREE_DISTRACTORS)) {
     if (question.id.includes(":drill-polite-style-yo-" + drillId + "-")) {
       const reason = choices[answer];
-      if (reason) return "Tu as choisi " + quoted(answer) + ". " + reason;
+      if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
     }
   }
   return undefined;
