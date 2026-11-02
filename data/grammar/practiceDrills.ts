@@ -663,7 +663,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       "비__ 와요.",
       "가",
       ["이", "는", "를"],
-      "비 finit par une voyelle, donc la particule de sujet est 가 : 비가 와요. 비는 와요 est possible avec un contraste, mais ici tu annonces simplement la pluie."
+      "비 finit par une voyelle, donc la particule de sujet est 가 : 비가 와요. 비는 와요 est possible avec un contraste, mais ici tu annonces simplement la pluie.",
       "no-batchim",
       "En regardant dehors, tu annonces simplement qu’il pleut maintenant, sans opposer la pluie à une autre météo.",
       "Complète cette annonce neutre avec la particule de sujet.",
@@ -674,7 +674,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       "시간__ 없어요.",
       "이",
       ["가", "은", "을"],
-      "시간 se termine par le 받침 ㄴ : 시간 s’emploie avec 이 pour former 시간이 없어요. 시간은 없어요 est aussi grammatical, mais mettrait le temps en contraste."
+      "시간 se termine par le 받침 ㄴ : 시간 s’emploie avec 이 pour former 시간이 없어요. 시간은 없어요 est aussi grammatical, mais mettrait le temps en contraste.",
       "batchim",
       "On te demande si tu as le temps. Tu réponds simplement que non, sans opposer le temps à d’autres choses.",
       "Complète pour dire « je n’ai pas le temps » sans contraste.",
@@ -685,7 +685,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       "버스__ 와요.",
       "가",
       ["이", "는", "를"],
-      "버스 finit par une voyelle : 버스가 와요 répond naturellement à « qu’est-ce qui arrive ? ». 버스는 와요 ferait du bus un thème ou marquerait un contraste."
+      "버스 finit par une voyelle : 버스가 와요 répond naturellement à « qu’est-ce qui arrive ? ». 버스는 와요 ferait du bus un thème ou marquerait un contraste.",
       "no-batchim",
       "Quelqu’un demande « Qu’est-ce qui arrive ? ». Tu identifies le bus comme réponse nouvelle, sans le comparer à un autre véhicule.",
       "Présente le bus comme nouvelle information avec la particule de sujet.",
@@ -696,7 +696,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       "책__ 있어요.",
       "이",
       ["가", "은", "을"],
-      "책 se termine par le 받침 ㄱ : 책이 있어요 annonce la présence d’un livre. 책은 있어요 pourrait signifier « quant au livre, il y en a », avec contraste."
+      "책 se termine par le 받침 ㄱ : 책이 있어요 annonce la présence d’un livre. 책은 있어요 pourrait signifier « quant au livre, il y en a », avec contraste.",
       "batchim",
       "Quelqu’un demande ce qui est disponible. Tu annonces pour la première fois qu’un livre est présent, sans opposer ce livre à d’autres objets.",
       "Présente le livre comme information nouvelle, sans contraste.",
@@ -707,7 +707,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       "친구__ 한국어를 공부해요.",
       "가",
       ["이", "는", "를"],
-      "친구 se termine par une voyelle : 친구가 한국어를 공부해요 répond directement à « qui étudie ? ». 친구는 serait grammatical si ton ami était le thème déjà connu."
+      "친구 se termine par une voyelle : 친구가 한국어를 공부해요 répond directement à « qui étudie ? ». 친구는 serait grammatical si ton ami était le thème déjà connu.",
       "no-batchim",
       "On te demande précisément « Qui étudie le coréen ? ». Tu identifies ton ami comme réponse nouvelle, et non comme thème déjà connu.",
       "Complète pour répondre directement à « qui étudie le coréen ? ».",
