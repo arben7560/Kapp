@@ -1201,6 +1201,98 @@ test("stage 09 retains compact question cards and success messages for all five 
   assert.match(exercises, /stageId === "present-actions"/u);
 });
 
+test("stage 10 distinguishes all object particles and explains the selected distractor", () => {
+  const cases = new Map([
+    ["book-batchim", {
+      answer: "을", sentence: "책을 읽어요", choices: ["를", "은", "이"],
+    }],
+    ["coffee-vowel", {
+      answer: "를", sentence: "커피를 마셔요", choices: ["을", "는", "가"],
+    }],
+    ["meal-batchim", {
+      answer: "을", sentence: "밥을 먹어요", choices: ["를", "은", "이"],
+    }],
+    ["korean-vowel", {
+      answer: "를", sentence: "한국어를 공부해요", choices: ["을", "는", "가"],
+    }],
+    ["film-vowel", {
+      answer: "를", sentence: "영화를 봐요", choices: ["을", "는", "가"],
+    }],
+  ]);
+
+  const covered = new Set();
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("object-actions", attempt, () => 0.42);
+    const shuffledA = buildGrammarPracticeQuestions("object-actions", attempt, () => 0);
+    const shuffledB = buildGrammarPracticeQuestions("object-actions", attempt, () => 0.99);
+    assert.equal(questions.length, 5);
+    let mixedOrders = 0;
+
+    for (const question of questions) {
+      const drillId = [...cases.keys()].find((id) =>
+        question.id.includes(":drill-object-eul-reul-" + id + "-")
+      );
+      assert.ok(drillId, question.id);
+      const spec = cases.get(drillId);
+      assert.equal(question.kind, "gap", question.id);
+      assert.equal(question.answer, spec.answer, question.id);
+      assert.deepEqual(
+        new Set(question.options),
+        new Set([spec.answer, ...spec.choices]),
+        question.id,
+      );
+      assert.equal(question.options.length, 4, question.id);
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
+      assert.match(question.display, /PHRASE À COMPLÉTER\n/u, question.id);
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.doesNotMatch(question.display, /«\s*«/u, question.id);
+      assert.match(question.prompt, /particule|objet/u, question.id);
+
+      const feedbacks = spec.choices.map((selected) => {
+        covered.add(drillId + ":" + selected);
+        const feedback = getGrammarIncorrectFeedback(question, selected);
+        assert.ok(feedback.includes("Tu as choisi « " + selected + " »"), question.id);
+        assert.ok(feedback.includes(spec.sentence), question.id);
+        assert.notEqual(feedback, question.explanation, question.id);
+        assert.ok(feedback.length <= 260, question.id);
+        return feedback;
+      });
+      assert.equal(new Set(feedbacks).size, 3, question.id);
+
+      const first = shuffledA.find(({ id }) => id === question.id);
+      const second = shuffledB.find(({ id }) => id === question.id);
+      assert.ok(first && second, question.id);
+      assert.deepEqual(new Set(first.options), new Set(second.options), question.id);
+      if (first.options.join("|") !== second.options.join("|")) mixedOrders += 1;
+    }
+    assert.ok(mixedOrders > 0, "some shuffled option orders should differ");
+  }
+  assert.equal(covered.size, 15, "every choice should have specific feedback");
+
+  const questions = buildGrammarPracticeQuestions("object-actions", 1, () => 0.42);
+  const drill = (id) => questions.find(({ id: questionId }) =>
+    questionId.includes(":drill-object-eul-reul-" + id + "-")
+  );
+  assert.match(getGrammarIncorrectFeedback(drill("book-batchim"), "은"), /grammatical.*contraste/u);
+  assert.match(getGrammarIncorrectFeedback(drill("coffee-vowel"), "을"), /voyelle.*을.*를/u);
+  assert.match(getGrammarIncorrectFeedback(drill("meal-batchim"), "이"), /sujet.*repas.*objet/u);
+  assert.match(getGrammarIncorrectFeedback(drill("korean-vowel"), "가"), /sujet.*langue.*objet/u);
+  assert.match(getGrammarIncorrectFeedback(drill("film-vowel"), "는"), /thème.*contraste.*영화를 봐요/u);
+});
+
+test("stage 10 keeps compact exercise cards and tailored positive responses", () => {
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
+  assert.match(screen, /question\.stageId === "object-actions" && styles\.questionCardStageTen/u);
+  assert.match(screen, /if \(question\.stageId === "object-actions"\)/u);
+  for (const id of ["book-batchim", "coffee-vowel", "meal-batchim", "korean-vowel", "film-vowel"]) {
+    assert.ok(screen.includes('question.id.includes("' + id + '")'), id);
+  }
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(screen, /POUR CET EXERCICE/u);
+  assert.match(exercises, /stageId === "object-actions"/u);
+});
+
 test("high-confusion grammar distractors receive answer-specific explanations", () => {
   const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
   assert.match(getGrammarIncorrectFeedback(dailyRegister, "좋습니다"), /registre formel/u);
