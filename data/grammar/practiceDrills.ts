@@ -325,7 +325,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       "Dans cette phrase neutre, 저는 présente la personne, 집에 indique la destination et 가요 vient à la fin : 저는 집에 가요.",
       "predicate-final",
       undefined,
-      "Choisis la phrase dont le verbe est correctement placé à la fin.",
+      "Choisis la phrase dans l’ordre neutre : thème, destination, puis verbe.",
     ),
     choose(
       "syntax",
@@ -340,7 +340,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       "Dans la phrase neutre, 도서관에서 indique le lieu de l’action, 책을 l’objet lu, puis le verbe termine la phrase : 도서관에서 책을 읽어요.",
       "predicate-final",
       undefined,
-      "Choisis la phrase dont le verbe est correctement placé à la fin.",
+      "Choisis l’ordre neutre : lieu et objet avant le verbe.",
     ),
     choose(
       "syntax",
@@ -351,7 +351,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       "Dans l’ordre neutre, 내일 (demain) et 친구를 (un ami) précèdent le verbe 만나요 : 내일 친구를 만나요.",
       "predicate-final",
       undefined,
-      "Choisis la phrase dont le verbe est correctement placé à la fin.",
+      "Choisis l’ordre neutre : moment et objet avant le verbe.",
     ),
     choose(
       "syntax",
