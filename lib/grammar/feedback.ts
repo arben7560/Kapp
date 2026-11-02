@@ -149,6 +149,62 @@ function getSentenceOrderStageOneFeedback(
   return undefined;
 }
 
+/**
+ * Étape 02 : on explique le suffixe réellement choisi, à partir du nom
+ * affiché. Les variantes formelles correctes ne sont pas présentées
+ * comme des fautes de grammaire.
+ */
+const COPULA_STAGE_TWO_DISTRACTORS: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "student-batchim": {
+    "예요": "학생 finit par le 받침 ㅇ, pas par une voyelle. « 학생예요 » ne convient pas : après cette consonne finale, écris 학생이에요.",
+    "이예요": "« 학생이예요 » ne correspond pas à la graphie standard. Après le 받침 ㅇ de 학생, la terminaison est 이에요 : 학생이에요.",
+    "입니다": "« 학생입니다 » est grammatical et poli, mais plus formel. Dans cette présentation quotidienne, on emploie le poli courant : 학생이에요.",
+  },
+  "doctor-vowel": {
+    "이에요": "의사 se termine par ㅏ, une voyelle. « 의사이에요 » ajoute un 이 inutile : au style poli courant, on dit 의사예요.",
+    "이예요": "« 의사이예요 » n'est pas la forme standard. 의사 finit par la voyelle ㅏ : attache directement 예요, donc 의사예요.",
+    "입니다": "« 의사입니다 » est une présentation grammaticalement correcte, mais formelle. Ici, dans une conversation courante, on dit 의사예요.",
+  },
+  "book-batchim": {
+    "예요": "책 se termine par ㄱ (받침). « 책예요 » omet le 이 nécessaire après une consonne finale : dis 책이에요.",
+    "이예요": "« 책이예요 » n'est pas la bonne graphie. Après la consonne finale ㄱ de 책, utilise 이에요 : 책이에요.",
+    "아니에요": "« 책아니에요 » ne forme pas correctement la négation ; on dirait 책이 아니에요. Mais tu confirmes ici que c'est un livre : 책이에요.",
+  },
+  "friend-vowel": {
+    "이에요": "친구 se termine par la voyelle ㅜ. « 친구이에요 » ajoute un 이 inutile ; pour confirmer que c'est ton ami, dis 친구예요.",
+    "이예요": "« 친구이예요 » n'est pas la graphie standard. Après la voyelle finale ㅜ de 친구, on utilise 예요 : 친구예요.",
+    "아니에요": "« 친구아니에요 » n'est pas une négation complète : on dirait 친구가 아니에요. Or, ici, tu confirmes que c'est ton ami : 친구예요.",
+  },
+  "name-batchim": {
+    "예요": "수진 finit par ㄴ (받침) : « 수진예요 » ne convient pas. La terminaison du poli courant est 이에요 : 이름은 수진이에요.",
+    "이예요": "Dans « 이름은 수진__ », on complète directement le prénom 수진. Après le ㄴ final, c'est 이에요, non 이예요 : 이름은 수진이에요.",
+    "입니다": "« 이름은 수진입니다 » est grammatical, mais relève du style formel. La consigne demande le style poli courant : 이름은 수진이에요.",
+  },
+};
+
+function getCopulaStageTwoFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (
+    question.stageId !== "identify-with-copula" ||
+    !question.conceptIds.includes("copula-ieyo-yeyo") ||
+    typeof answer !== "string"
+  ) {
+    return undefined;
+  }
+
+  for (const [drillId, choices] of Object.entries(COPULA_STAGE_TWO_DISTRACTORS)) {
+    if (question.id.includes(":drill-copula-ieyo-yeyo-" + drillId + "-")) {
+      const reason = choices[answer];
+      if (reason) return "Tu as choisi " + quoted(answer) + ". " + reason;
+    }
+  }
+  return undefined;
+}
+
 function selectedSpecificFallback(
   question: GrammarPracticeQuestion,
   selected: string,
@@ -550,6 +606,9 @@ export function getGrammarIncorrectFeedback(
 
   const sentenceOrderFeedback = getSentenceOrderStageOneFeedback(question, answer);
   if (sentenceOrderFeedback) return sentenceOrderFeedback;
+
+  const copulaFeedback = getCopulaStageTwoFeedback(question, answer);
+  if (copulaFeedback) return copulaFeedback;
 
   if (conceptId === "topic-eun-neun") {
     if (

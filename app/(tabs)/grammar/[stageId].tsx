@@ -75,6 +75,23 @@ function scoreLabel(score: number) {
 }
 
 function getCorrectFeedbackLead(question: GrammarPracticeQuestion) {
+  if (question.stageId === "identify-with-copula") {
+    if (question.id.includes("student-batchim")) {
+      return "Oui, 학생 finit par un 받침 (ㅇ), donc 이에요 convient.";
+    }
+    if (question.id.includes("doctor-vowel")) {
+      return "Oui, 의사 se termine par une voyelle (ㅏ), donc on choisit 예요.";
+    }
+    if (question.id.includes("book-batchim")) {
+      return "Oui, 책 finit par le 받침 ㄱ : tu as bien choisi 이에요.";
+    }
+    if (question.id.includes("friend-vowel")) {
+      return "Oui, 친구 finit par une voyelle (ㅜ) : 예요 est la bonne forme.";
+    }
+    if (question.id.includes("name-batchim")) {
+      return "Oui, 수진 finit par ㄴ et tu as choisi le poli courant, pas le style formel.";
+    }
+  }
   if (question.stageId === "sentence-structure") {
     if (question.ruleAspect === "neutral-order") {
       return "Oui, tu as placé le thème, l’objet et le verbe dans l’ordre neutre demandé.";
@@ -860,6 +877,7 @@ function PracticePanel({
         style={[
           styles.questionCard,
           question.stageId === "sentence-structure" && styles.questionCardStageOne,
+          question.stageId === "identify-with-copula" && styles.questionCardStageTwo,
         ]}
       >
         {question.exerciseGroup ? (
@@ -875,7 +893,10 @@ function PracticePanel({
           <QuestionDisplay
             value={question.display}
             vocabulary={question.vocabulary}
-            compactFrench={question.stageId === "sentence-structure"}
+            compactFrench={
+              question.stageId === "sentence-structure" ||
+              question.stageId === "identify-with-copula"
+            }
           />
         ) : null}
       </BlurView>
@@ -1044,7 +1065,8 @@ function FeedbackCard({
       >
         {response.correct
           ? "BONNE RÉPONSE"
-          : question.stageId === "sentence-structure"
+          : question.stageId === "sentence-structure" ||
+              question.stageId === "identify-with-copula"
             ? "TON CHOIX EXPLIQUÉ"
             : "À AJUSTER ICI"}
       </AppText>
@@ -1052,7 +1074,8 @@ function FeedbackCard({
       {!response.correct ? (
         <View style={styles.correctAnswerBox}>
           <AppText variant="caption" tone="soft">
-            {question.stageId === "sentence-structure"
+            {question.stageId === "sentence-structure" ||
+            question.stageId === "identify-with-copula"
               ? "POUR CET EXERCICE"
               : "ICI, ON ATTENDAIT"}
           </AppText>
@@ -1480,6 +1503,11 @@ const styles = StyleSheet.create({
     backgroundColor: GRAMMAR_ACCENT.base,
   },
   questionCardStageOne: {
+    minHeight: 156,
+    padding: 16,
+    gap: 10,
+  },
+  questionCardStageTwo: {
     minHeight: 156,
     padding: 16,
     gap: 10,

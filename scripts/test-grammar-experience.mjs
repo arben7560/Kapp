@@ -492,11 +492,68 @@ test("stage 01 exercise UI keeps concise directions and feedback tied to the cho
   const display = readFileSync(join(projectRoot, "components/grammar/QuestionDisplay.tsx"), "utf8");
   const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
   assert.match(screen, /styles\.questionCardStageOne/u);
-  assert.match(screen, /compactFrench=\{question\.stageId === "sentence-structure"\}/u);
+  assert.match(screen, /compactFrench=\{[\s\S]*question\.stageId === "sentence-structure" \|\|[\s\S]*question\.stageId === "identify-with-copula"[\s\S]*\}/u);
   assert.match(screen, /stripTokenPunctuation=\{question\.stageId === "sentence-structure"\}/u);
   assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
   assert.match(display, /compactFrench \? "sectionTitle" : "featureTitle"/u);
   assert.match(exercises, /shuffleDrillOrderTokens\(stageId, drill\.answer, random\)/u);
+});
+
+test("stage 02 explains every copula distractor using the selected suffix and noun", () => {
+  const expectedSentences = new Map([
+    ["student-batchim", "학생이에요"],
+    ["doctor-vowel", "의사예요"],
+    ["book-batchim", "책이에요"],
+    ["friend-vowel", "친구예요"],
+    ["name-batchim", "이름은 수진이에요"],
+  ]);
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("identify-with-copula", attempt, () => 0.42);
+    assert.equal(questions.length, 5);
+    for (const question of questions) {
+      assert.equal(question.kind, "gap");
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
+      assert.match(question.display, /PHRASE À COMPLÉTER\n/u, question.id);
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.ok(question.options.includes(question.answer), question.id);
+
+      const drill = [...expectedSentences.keys()].find((id) =>
+        question.id.includes("drill-copula-ieyo-yeyo-" + id + "-")
+      );
+      assert.ok(drill, question.id);
+
+      const distractors = question.options.filter((option) => option !== question.answer);
+      assert.equal(distractors.length, 3, question.id);
+      const responses = distractors.map((choice) => {
+        const feedback = getGrammarIncorrectFeedback(question, choice);
+        assert.ok(feedback.includes("Tu as choisi « " + choice + " »"), question.id);
+        assert.ok(feedback.includes(expectedSentences.get(drill)), question.id);
+        assert.notEqual(feedback, question.explanation, question.id);
+        assert.ok(feedback.length <= 260, question.id);
+        return feedback;
+      });
+      assert.equal(new Set(responses).size, 3, question.id);
+    }
+  }
+
+  const questions = buildGrammarPracticeQuestions("identify-with-copula", 1, () => 0.42);
+  const byDrill = (name) => questions.find(({ id }) => id.includes(name));
+  assert.match(getGrammarIncorrectFeedback(byDrill("student-batchim"), "입니다"), /grammatical.*formel/u);
+  assert.match(getGrammarIncorrectFeedback(byDrill("doctor-vowel"), "이에요"), /voyelle.*의사예요/u);
+  assert.match(getGrammarIncorrectFeedback(byDrill("book-batchim"), "아니에요"), /책이 아니에요.*책이에요/u);
+  assert.match(getGrammarIncorrectFeedback(byDrill("friend-vowel"), "아니에요"), /친구가 아니에요.*친구예요/u);
+  assert.match(getGrammarIncorrectFeedback(byDrill("name-batchim"), "입니다"), /grammatical.*formel/u);
+});
+
+test("stage 02 exercise visuals and good-answer messages are stage-specific", () => {
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
+  assert.match(screen, /question\.stageId === "identify-with-copula" && styles\.questionCardStageTwo/u);
+  assert.match(screen, /question\.stageId === "identify-with-copula"/u);
+  assert.match(screen, /student-batchim/u);
+  assert.match(screen, /name-batchim/u);
+  assert.match(exercises, /stageId === "identify-with-copula"/u);
 });
 
 test("high-confusion grammar distractors receive answer-specific explanations", () => {

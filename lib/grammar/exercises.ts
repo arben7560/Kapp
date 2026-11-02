@@ -156,7 +156,7 @@ function buildDrillQuestion(
     kind: drill.kind,
     criterion:
       drill.kind === "scene" ? "P" : drill.kind === "choice" ? "R" : "M",
-    prompt: stageId === "sentence-structure"
+    prompt: stageId === "sentence-structure" || stageId === "identify-with-copula"
       ? drill.prompt
       : `${drill.prompt}\nObjectif : ${concept.shortFunction}`,
     display: drill.context
