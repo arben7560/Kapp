@@ -3,12 +3,18 @@ import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
+import { EXERCISES_BY_KIND, type ExerciseKind } from "../../data/listen/activeExercises";
 import type { DailyStreakCompletionResult } from "../../lib/dailyStreak";
+import {
+  getListenTrainingNextAction,
+  LISTEN_TRAINING_SUMMARIES,
+} from "../../lib/listenTrainingCompletion";
 import { AppText } from "../app-text";
 
 type NewDailyStreakResult = Exclude<DailyStreakCompletionResult, "already_completed">;
 
 type Props = Readonly<{
+  trainingKind: ExerciseKind;
   visible: boolean;
   streakOutcome: NewDailyStreakResult | null;
   onClose: () => void;
@@ -19,15 +25,17 @@ type Props = Readonly<{
 const ACCENT = "#A855F7";
 const TEXT = "#FFFFFF";
 const MUTED = "rgba(255,255,255,0.70)";
-const TOTAL_QUESTIONS = 5;
-
-export function OrthographyCompletionModal({
+export function ListenTrainingCompletionModal({
+  trainingKind,
   visible,
   streakOutcome,
   onClose,
   onRestart,
   onNext,
 }: Props) {
+  const summary = LISTEN_TRAINING_SUMMARIES[trainingKind];
+  const totalQuestions = EXERCISES_BY_KIND[trainingKind].length;
+  const nextAction = getListenTrainingNextAction(trainingKind);
   const streakTitle =
     streakOutcome === "completed_with_freeze"
       ? "Série protégée"
@@ -52,7 +60,7 @@ export function OrthographyCompletionModal({
           <View style={styles.header}>
             <View style={styles.headerText}>
               <AppText variant="caption" tone="premium" style={styles.eyebrow}>
-                ÉCOUTE · ORTHOGRAPHE
+                {`ÉCOUTE · ${summary.title.toUpperCase()}`}
               </AppText>
               <AppText variant="sectionTitle" tone="strong">
                 Entraînement terminé
@@ -60,7 +68,7 @@ export function OrthographyCompletionModal({
             </View>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Fermer le bilan d'orthographe"
+              accessibilityLabel={`Fermer le bilan ${summary.title}`}
               hitSlop={8}
               onPress={onClose}
               style={styles.closeButton}
@@ -86,7 +94,7 @@ export function OrthographyCompletionModal({
                 align="center"
                 style={styles.heroDescription}
               >
-                Tu as reconnu les cinq phrases coréennes de cet entraînement.
+                {summary.achievement}
               </AppText>
             </View>
 
@@ -96,11 +104,15 @@ export function OrthographyCompletionModal({
                   Ta progression
                 </AppText>
                 <AppText variant="bodyStrong" style={styles.accentText}>
-                  5 / 5
+                  {totalQuestions} / {totalQuestions}
                 </AppText>
               </View>
-              <View style={styles.progressSegments} accessible accessibilityLabel="5 questions validées sur 5">
-                {Array.from({ length: TOTAL_QUESTIONS }, (_, index) => (
+              <View
+                style={styles.progressSegments}
+                accessible
+                accessibilityLabel={`${totalQuestions} questions validées sur ${totalQuestions}`}
+              >
+                {Array.from({ length: totalQuestions }, (_, index) => (
                   <View key={index} style={styles.progressSegment} />
                 ))}
               </View>
@@ -120,8 +132,7 @@ export function OrthographyCompletionModal({
                 </AppText>
               </View>
               <AppText variant="bodySecondary" tone="muted">
-                Identifier des phrases courantes à l'oreille, distinguer des
-                expressions proches et reconnaître leur écriture en hangul.
+                {summary.learning}
               </AppText>
             </View>
 
@@ -145,18 +156,18 @@ export function OrthographyCompletionModal({
           <View style={styles.actions}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Passer à l'entraînement Situation"
+              accessibilityLabel={nextAction.label}
               onPress={onNext}
               style={({ pressed }) => [styles.primaryAction, pressed && styles.pressed]}
             >
               <AppText variant="button" style={styles.primaryActionText}>
-                Passer à Situation
+                {nextAction.label}
               </AppText>
               <Ionicons name="arrow-forward" size={19} color="#050508" />
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Recommencer l'entraînement Orthographe"
+              accessibilityLabel={`Recommencer l'entraînement ${summary.title}`}
               onPress={onRestart}
               style={({ pressed }) => [
                 styles.secondaryAction,
@@ -165,7 +176,7 @@ export function OrthographyCompletionModal({
             >
               <Ionicons name="refresh" size={18} color={TEXT} />
               <AppText variant="button" tone="strong">
-                Recommencer Orthographe
+                Recommencer {summary.title}
               </AppText>
             </Pressable>
           </View>

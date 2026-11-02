@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import {
   ACTIVE_LISTEN_EXERCISES,
   EXERCISES_BY_KIND,
+  TRAINING_ORDER,
 } from "../data/listen/activeExercises.ts";
 import { releaseAudioResources } from "../lib/audioPlayerLifecycle.ts";
 import {
@@ -16,6 +17,11 @@ import {
 } from "../lib/cafeListenProgress.ts";
 import { shuffleListenChoices } from "../lib/listenExerciseChoices.ts";
 import { canValidateListenAnswer } from "../lib/listenValidation.ts";
+import {
+  getListenTrainingNextAction,
+  LISTEN_TRAINING_SUMMARIES,
+  recordListenTrainingSuccess,
+} from "../lib/listenTrainingCompletion.ts";
 import {
   COMPLETION_XP,
   reserveCompletion,
@@ -186,26 +192,80 @@ test("the shared Listen exercise header collapses only in landscape", () => {
   assert.match(listenScreen, /useNativeDriver: false/u);
 });
 
-test("Orthographe has five questions and exposes its completion modal with both actions", () => {
-  assert.equal(EXERCISES_BY_KIND.dictation.length, 5);
+test("every Listen training completes after five distinct correct answers", () => {
+  const order = [2, 0, 4, 1, 3];
+
+  for (const kind of TRAINING_ORDER) {
+    const exercises = EXERCISES_BY_KIND[kind];
+    assert.equal(exercises.length, 5, kind);
+    let completedIds = new Set();
+
+    for (const [index, questionIndex] of order.entries()) {
+      const result = recordListenTrainingSuccess(
+        kind,
+        completedIds,
+        exercises[questionIndex].id,
+      );
+      completedIds = result.ids;
+      assert.equal(result.completedCount, index + 1, kind);
+      assert.equal(result.justCompletedTraining, index === 4, kind);
+    }
+
+    const duplicate = recordListenTrainingSuccess(
+      kind,
+      completedIds,
+      exercises[0].id,
+    );
+    assert.equal(duplicate.completedCount, 5, kind);
+    assert.equal(duplicate.justCompletedTraining, false, kind);
+
+    const foreign = recordListenTrainingSuccess(
+      kind,
+      completedIds,
+      "unknown-question-id",
+    );
+    assert.equal(foreign.completedCount, 5, kind);
+    assert.equal(foreign.justCompletedTraining, false, kind);
+
+    assert.ok(LISTEN_TRAINING_SUMMARIES[kind].achievement.trim());
+    assert.ok(LISTEN_TRAINING_SUMMARIES[kind].learning.trim());
+  }
+});
+
+test("Listen completion modal preserves immersive style and correct next actions", () => {
+  const expected = [
+    ["dictation", "situation", "Passer à Situation"],
+    ["situation", "gap", "Passer à Mot manquant"],
+    ["gap", "order", "Passer à Ordre"],
+    ["order", "reaction", "Passer à Réaction"],
+    ["reaction", "dictation", "Revenir à Orthographe"],
+  ];
+
+  for (const [kind, nextKind, label] of expected) {
+    assert.deepEqual(getListenTrainingNextAction(kind), { nextKind, label });
+  }
 
   const listenScreen = readFileSync(
     resolve(projectRoot, "app/(tabs)/listen.tsx"),
     "utf8",
   );
   const modal = readFileSync(
-    resolve(projectRoot, "components/listen/OrthographyCompletionModal.tsx"),
+    resolve(projectRoot, "components/listen/ListenTrainingCompletionModal.tsx"),
     "utf8",
   );
 
-  assert.match(listenScreen, /<OrthographyCompletionModal/u);
-  assert.match(listenScreen, /orthographyCompletedIdsRef\.current\.has\(item\.id\)/u);
-  assert.match(listenScreen, /completedCount === EXERCISES_BY_KIND\.dictation\.length/u);
+  assert.match(listenScreen, /<ListenTrainingCompletionModal/u);
+  assert.match(listenScreen, /recordListenTrainingSuccess\(/u);
+  assert.match(listenScreen, /progress\.justCompletedTraining/u);
   assert.match(listenScreen, /onRestart=\{restartTraining\}/u);
   assert.match(listenScreen, /onNext=\{goToNextExercise\}/u);
+  assert.match(listenScreen, /const isTrainingComplete = trainingCorrectCount === exercises\.length/u);
+  assert.match(listenScreen, /onPress=\{\s*isLastExercise\s*\? \(\) => setIsTrainingSummaryOpen\(true\)/u);
   assert.match(modal, /Entraînement terminé/u);
-  assert.match(modal, /Passer à Situation/u);
-  assert.match(modal, /Recommencer Orthographe/u);
+  assert.match(modal, /\{summary\.achievement\}/u);
+  assert.match(modal, /\{summary\.learning\}/u);
+  assert.match(modal, /\{nextAction\.label\}/u);
+  assert.match(modal, /Recommencer \{summary\.title\}/u);
 });
 
 test("Listen does not validate the daily streak on an incorrect answer", () => {
