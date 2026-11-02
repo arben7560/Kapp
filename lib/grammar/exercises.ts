@@ -160,7 +160,8 @@ function buildDrillQuestion(
       stageId === "identify-with-copula" ||
       stageId === "polite-register" ||
       stageId === "introduce-topic" ||
-      stageId === "demonstratives"
+      stageId === "demonstratives" ||
+      stageId === "nominal-questions"
       ? drill.prompt
       : `${drill.prompt}\nObjectif : ${concept.shortFunction}`,
     display: drill.context

@@ -75,6 +75,23 @@ function scoreLabel(score: number) {
 }
 
 function getCorrectFeedbackLead(question: GrammarPracticeQuestion) {
+  if (question.stageId === "nominal-questions") {
+    if (question.id.includes("what-object")) {
+      return "Oui, 뭐 demande la nature de l’objet dans 이거 뭐예요?.";
+    }
+    if (question.id.includes("who-person")) {
+      return "Oui, 누구 demande l’identité de la personne, et non son emplacement.";
+    }
+    if (question.id.includes("how-many-people")) {
+      return "Oui, 몇 vient devant le compteur 명 pour demander un nombre de personnes.";
+    }
+    if (question.id.includes("how-many-tickets")) {
+      return "Oui, 몇 précède 장 pour compter les billets, et non demander leur prix.";
+    }
+    if (question.id.includes("what-food")) {
+      return "Oui, 뭐 demande quel aliment ton ami mange, pas où ni combien.";
+    }
+  }
   if (question.stageId === "demonstratives") {
     if (question.id.includes("this-bag")) {
       return "Oui, 이 가방 désigne le sac tout près de toi : 이 est le déterminant adapté.";
@@ -932,6 +949,7 @@ function PracticePanel({
           question.stageId === "polite-register" && styles.questionCardStageThree,
           question.stageId === "introduce-topic" && styles.questionCardStageFour,
           question.stageId === "demonstratives" && styles.questionCardStageFive,
+          question.stageId === "nominal-questions" && styles.questionCardStageSix,
         ]}
       >
         {question.exerciseGroup ? (
@@ -952,7 +970,8 @@ function PracticePanel({
               question.stageId === "identify-with-copula" ||
               question.stageId === "polite-register" ||
               question.stageId === "introduce-topic" ||
-              question.stageId === "demonstratives"
+              question.stageId === "demonstratives" ||
+              question.stageId === "nominal-questions"
             }
           />
         ) : null}
@@ -1126,7 +1145,8 @@ function FeedbackCard({
               question.stageId === "identify-with-copula" ||
               question.stageId === "polite-register" ||
               question.stageId === "introduce-topic" ||
-              question.stageId === "demonstratives"
+              question.stageId === "demonstratives" ||
+              question.stageId === "nominal-questions"
             ? "TON CHOIX EXPLIQUÉ"
             : "À AJUSTER ICI"}
       </AppText>
@@ -1138,7 +1158,8 @@ function FeedbackCard({
             question.stageId === "identify-with-copula" ||
             question.stageId === "polite-register" ||
             question.stageId === "introduce-topic" ||
-            question.stageId === "demonstratives"
+            question.stageId === "demonstratives" ||
+            question.stageId === "nominal-questions"
               ? "POUR CET EXERCICE"
               : "ICI, ON ATTENDAIT"}
           </AppText>
@@ -1586,6 +1607,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   questionCardStageFive: {
+    minHeight: 156,
+    padding: 16,
+    gap: 10,
+  },
+  questionCardStageSix: {
     minHeight: 156,
     padding: 16,
     gap: 10,
