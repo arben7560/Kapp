@@ -1975,6 +1975,52 @@ test("stage 18 checks every number choice and explanation across rotating attemp
   assert.ok(shuffled >= 5, "the answer order should change with the random source");
 });
 
+test("stage 18 teaches price values, ten minutes, metro lines, calendar and phone digits precisely", () => {
+  const questions = buildGrammarPracticeQuestions("sino-number-contexts", 1, () => 0.42);
+  const find = (id) => questions.find((question) => question.id.includes("-" + id + "-"));
+  const price = find("price-five-thousand");
+  const minutes = find("duration-ten-minutes");
+  const metro = find("line-two-route");
+  const march = find("month-march");
+  const phone = find("phone-prefix-010");
+  assert.ok(price && minutes && metro && march && phone);
+
+  assert.match(price.display, /caisse.*prix affiché/u);
+  assert.match(getGrammarIncorrectFeedback(price, "오백 원"), /500 wons.*5 000원.*오천 원/u);
+  assert.match(getGrammarIncorrectFeedback(price, "오만 원"), /50 000 wons.*오천 원/u);
+  assert.match(getGrammarIncorrectFeedback(price, "다섯 천 원"), /natif.*sino-coréen.*오천 원/u);
+
+  assert.match(minutes.display, /dix minutes exactement/u);
+  assert.match(minutes.display, /분 후에 출발해요/u);
+  assert.match(getGrammarIncorrectFeedback(minutes, "열"), /nombres natifs.*분.*minutes.*십/u);
+  assert.match(getGrammarIncorrectFeedback(minutes, "구"), /neuf.*dix minutes.*십 분/u);
+  assert.match(getGrammarIncorrectFeedback(minutes, "십일"), /onze.*십 분/u);
+  assert.ok(minutes.vocabulary?.some(({ korean }) => korean === "후에"));
+
+  assert.match(metro.display, /métro de Séoul.*ligne 2.*sortie 2/u);
+  assert.match(getGrammarIncorrectFeedback(metro, "두 호선"), /natif.*sino-coréen.*2호선/u);
+  assert.match(getGrammarIncorrectFeedback(metro, "2번 출구"), /sortie 2.*ligne 2.*2호선/u);
+  assert.match(getGrammarIncorrectFeedback(metro, "2번 버스"), /bus.*métro.*2호선/u);
+  assert.match(getGrammarIncorrectFeedback(march, "삼 개월"), /durée de trois mois.*mars.*3월/u);
+  assert.match(getGrammarIncorrectFeedback(march, "3일"), /jour du mois.*mois de l’année.*3월/u);
+
+  assert.match(phone.display, /0-1-0.*séparément.*공/u);
+  assert.equal(phone.options.includes("영일영"), false, "a valid alternate zero reading is not a distractor");
+  assert.match(getGrammarIncorrectFeedback(phone, "공이공"), /zéro-deux-zéro.*010.*공일공/u);
+  assert.match(getGrammarIncorrectFeedback(phone, "공십공"), /chiffre.*공일공/u);
+  assert.match(getGrammarIncorrectFeedback(phone, "공하나공"), /하나.*일.*공일공/u);
+
+  const guide = getGrammarLessonGuide("sino-number-contexts");
+  assert.match(guide.introduction, /prix.*minutes.*mois.*lignes.*téléphone/u);
+  assert.match(guide.mainRule, /오천 원.*십 분.*3월.*2호선.*공일공/u);
+  assert.match(guide.formula.explanation, /영 est aussi possible/u);
+  assert.match(guide.commonMistakes.map(({ correction }) => correction).join(" "), /삼 개월.*durée.*2번 출구.*sortie/u);
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  assert.match(screen, /getGrammarIncorrectFeedback\(question, response\.answer\)/u);
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(screen, /POUR CET EXERCICE/u);
+});
+
 test("stages 15 to 40 keep concise exercise prompts and their own display context", () => {
   const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
   const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
