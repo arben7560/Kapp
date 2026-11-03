@@ -721,7 +721,7 @@ export const GRAMMAR_LESSON_GUIDES = {
     introduction:
       "에 peut marquer un point vers lequel on se déplace ou un moment précis. Le verbe qui suit permet de savoir si 에 signifie « à destination de » ou « à telle heure ».",
     mainRule:
-      "에 indique la destination avec 가요/와요 (서울에 가요, 학교에 와요) ou le moment précis (두 시에 만나요, 월요일에 출발해요). Distingue-le de 에서 (origine), 부터 (début) et 까지 (limite).",
+      "에 indique la destination avec 가요/와요 (서울에 가요, 학교에 와요) ou l’heure et le jour précis (두 시에 만나요, 월요일에 출발해요). Distingue-le de 에서 (origine), 부터 (début) et 까지 (limite).",
     formula: {
       pattern: "destination + 에 + 가요/와요  ·  heure ou jour + 에 + action",
       explanation:
@@ -741,7 +741,7 @@ export const GRAMMAR_LESSON_GUIDES = {
       {
         title: "Garde l’action à la fin",
         explanation:
-          "부터 marque un début (두 시부터) et 까지 une limite : 학교까지 와요 signifie « venir jusqu’à l’école », 여덟 시까지 « au plus tard à huit heures ». Ces expressions peuvent être grammaticales mais ne donnent pas simplement une destination ou une heure exacte.",
+          "부터 marque un début (두 시부터) et 까지 une limite : 학교까지 와요 signifie « venir jusqu’à l’école », 여덟 시까지 « au plus tard à huit heures ». Ces expressions peuvent être grammaticales mais ne donnent pas simplement une destination ou une heure exacte. 을/를 marque un objet, pas l’heure ou la destination visée ici.",
       },
     ],
     examples: [
@@ -829,8 +829,8 @@ export const GRAMMAR_LESSON_GUIDES = {
         correction: "제 signifie « mon » poli, 내 « mon » familier. 저 / 제가 désignent « moi » ; 저 devant un nom peut aussi signifier « ce… là-bas », pas la possession.",
       },
       {
-        mistake: "Inverser les noms comme en français : 가방의 친구.",
-        correction: "Commence par le possesseur : 친구의 가방, « le sac de l’ami ».",
+        mistake: "Confondre la possession avec le sujet (친구가 가방이에요) ou inverser les noms (가방의 친구).",
+        correction: "Pour dire « le sac de l’ami », relie 친구 au sac par 의 : 친구의 가방. 친구가 marque le sujet et ne remplace pas « de ».",
       },
     ],
     memoryTip:
