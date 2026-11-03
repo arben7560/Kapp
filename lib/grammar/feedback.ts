@@ -1056,7 +1056,7 @@ function getStageFifteenSelectedFeedback(
   question: GrammarPracticeQuestion,
   answer: GrammarPracticeAnswer,
 ): string | undefined {
-  if (question.stageId !== "simple-negation" || typeof answer !== "string") {
+  if (!question.conceptIds.some((id) => id === "negation-an" || id === "copula-negation-anieyo") || typeof answer !== "string") {
     return undefined;
   }
   for (const [drillId, reasons] of Object.entries(STAGE_FIFTEEN_DISTRACTOR_FEEDBACK)) {
@@ -1933,19 +1933,19 @@ export function getGrammarIncorrectFeedback(
     question.ruleAspect === "additive-vs-restrictive" &&
     (selected === "만" || /만 주세요\.?$/u.test(selected))
   ) {
-    return "만 signifie « seulement » et limiterait la commande au pain. Ici, tu ajoutes le pain à ce qui est déjà commandé, donc il faut 도.";
+    return "Tu as choisi « 빵만 주세요. » : 만 signifie « seulement » et limiterait la commande au pain. Ici, tu ajoutes le pain à ce qui est déjà commandé, donc il faut 도.";
   }
   if (
     question.ruleAspect === "additive-vs-restrictive" &&
     selected === "빵을 주세요."
   ) {
-    return "빵을 주세요 est une demande neutre : elle ne dit pas que le pain s’ajoute au lait déjà commandé. Pour dire « du pain aussi », il faut 빵도 주세요.";
+    return "Tu as choisi « 빵을 주세요. » : c’est une demande neutre qui ne dit pas que le pain s’ajoute au lait déjà commandé. Pour dire « du pain aussi », il faut 빵도 주세요.";
   }
   if (
     question.ruleAspect === "additive-vs-restrictive" &&
     selected === "빵은 주세요."
   ) {
-    return "빵은 주세요 met le pain en thème ou en contraste, mais n’exprime pas explicitement « aussi ». Ici, il faut 빵도 주세요.";
+    return "Tu as choisi « 빵은 주세요. » : le pain devient un thème ou un contraste, sans exprimer « aussi ». Ici, il faut 빵도 주세요.";
   }
   if (conceptId === "additive-do" && ["은", "는"].includes(selected)) {
     return `${quoted(selected)} peut marquer un thème ou un contraste. Ici, tu veux dire « aussi », donc il faut 도.`;
@@ -2005,7 +2005,7 @@ export function getGrammarIncorrectFeedback(
     if (/야 해요\.?$/u.test(selected)) {
       return `${quoted(selected)} dit qu’il faut faire l’action. Ici, tu vérifies ${possibilityMeaning}.`;
     }
-    if (/^못 /u.test(selected)) {
+    if (/(?:^|\s)못 /u.test(selected)) {
       return `${quoted(selected)} dit que l’action est impossible. Ici, tu veux au contraire dire que ${possibilityMeaning} est possible.`;
     }
   }
