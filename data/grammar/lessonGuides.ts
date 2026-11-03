@@ -969,6 +969,8 @@ export const GRAMMAR_LESSON_GUIDES = {
     commonMistakes: [
       { mistake: "Dire seulement 주세요 en oubliant l’objet.", correction: "Nomme d’abord la chose : 물 주세요, 영수증 주세요." },
       { mistake: "Utiliser nom + 주세요 pour demander une action.", correction: "Pour une action, conjugue le verbe : 문을 열어 주세요." },
+      { mistake: "Confondre « en avez-vous ? » avec une commande directe.", correction: "봉투 있어요? vérifie la disponibilité du sac ; 봉투 주세요. demande qu’on te le donne. Les deux peuvent être naturels, mais ne remplissent pas exactement la même intention." },
+      { mistake: "Croire que 좀 est obligatoire.", correction: "커피 주세요. et 커피 좀 주세요. sont tous les deux corrects ; 좀 adoucit la demande sans changer l’objet demandé." },
     ],
     memoryTip: "Montre la chose avec les mots avant 주세요 : nom d’abord, demande ensuite.",
   },
