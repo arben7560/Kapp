@@ -1748,10 +1748,10 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       "cannot-hear",
       "귀가 아파서 소리를 __.",
       "잘 못 들어요",
-      ["잘 안 들려요", "소리를 듣지 않아요", "아니에요"],
-      "Ici, une douleur à l’oreille t’empêche réellement d’entendre : 잘 못 들어요. 잘 안 들려요 convient plutôt quand le son est trop faible ou peu audible.",
+      ["듣고 싶지 않아요", "들을 수 있어요", "아니에요"],
+      "Tu essaies d’écouter, mais ta douleur t’en empêche : 잘 못 들어요 exprime cette incapacité. 듣고 싶지 않아요 signifierait que tu ne veux pas écouter.",
       "inability-vs-choice",
-      "Tu as mal à l’oreille et tu n’arrives pas à bien entendre.",
+      "Tu as mal à l’oreille. Tu essaies réellement d’écouter les paroles, mais tu n’y arrives pas.",
     ),
     choose(
       "modality",
