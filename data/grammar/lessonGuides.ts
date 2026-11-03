@@ -721,27 +721,27 @@ export const GRAMMAR_LESSON_GUIDES = {
     introduction:
       "에 peut marquer un point vers lequel on se déplace ou un moment précis. Le verbe qui suit permet de savoir si 에 signifie « à destination de » ou « à telle heure ».",
     mainRule:
-      "Ajoute 에 après la destination avec un verbe de déplacement et après l’heure ou le moment précis d’une action.",
+      "에 indique la destination avec 가요/와요 (서울에 가요, 학교에 와요) ou le moment précis (두 시에 만나요, 월요일에 출발해요). Distingue-le de 에서 (origine), 부터 (début) et 까지 (limite).",
     formula: {
-      pattern: "destination + 에 + déplacement  ·  moment + 에 + action",
+      pattern: "destination + 에 + 가요/와요  ·  heure ou jour + 에 + action",
       explanation:
-        "Une même particule relie la phrase à un point spatial ou temporel : 서울역에 가요, « je vais à la gare de Séoul », et 세 시에 만나요, « je retrouve [quelqu’un] à trois heures ».",
+        "서울에 가요 signifie « je vais à Séoul » ; 서울에서 가요 peut signifier « je pars de Séoul ». 두 시에 친구를 만나요 fixe un rendez-vous à deux heures ; 두 시부터 signifie « à partir de deux heures ».",
     },
     steps: [
       {
         title: "Repère le déplacement",
         explanation:
-          "Avec 가다, 오다 ou un autre verbe de déplacement, le lieu visé reçoit 에 : 집에 가요, je rentre à la maison.",
+          "Avec 가요 et 와요, marque le point d’arrivée par 에 : 서울에 가요, 학교에 와요. Pour parler de l’endroit d’où l’on vient, 에서 peut changer complètement le sens : 학교에서 와요.",
       },
       {
         title: "Repère le moment précis",
         explanation:
-          "Une heure ou une date ponctuelle reçoit aussi 에 : 세 시에, à trois heures. Les heures se comptent généralement avec les nombres natifs à ce niveau.",
+          "Pour une heure ou un jour précis : 두 시에 친구를 만나요, 월요일에 출발해요, 아침 여덟 시에 일어나요. À ce niveau, retiens 두 시 et 여덟 시 avec les nombres natifs.",
       },
       {
         title: "Garde l’action à la fin",
         explanation:
-          "Tu peux placer le moment avant la destination, mais le verbe conjugué reste le dernier bloc : 세 시에 서울역에 가요.",
+          "부터 marque un début (두 시부터) et 까지 une limite : 학교까지 와요 signifie « venir jusqu’à l’école », 여덟 시까지 « au plus tard à huit heures ». Ces expressions peuvent être grammaticales mais ne donnent pas simplement une destination ou une heure exacte.",
       },
     ],
     examples: [
@@ -770,12 +770,12 @@ export const GRAMMAR_LESSON_GUIDES = {
         correction: "Le lieu visé prend 에 : 서울역에 가요. 에서 indiquerait plutôt le lieu de départ ou d’une action.",
       },
       {
-        mistake: "Oublier 에 après l’heure ou le traiter comme une partie du nombre.",
-        correction: "Sépare le groupe temporel : 세 시에, 두 시에.",
+        mistake: "Confondre l’heure précise et le début ou la limite d’une période.",
+        correction: "Deux heures exactement → 두 시에 ; à partir de deux heures → 두 시부터 ; au plus tard à huit heures → 여덟 시까지. Le sens change selon la particule.",
       },
     ],
     memoryTip:
-      "에 plante une punaise sur une carte ou une horloge : destination et moment précis sont deux points d’arrivée.",
+      "에 pointe vers un lieu d’arrivée ou vers une heure exacte. 에서 / 부터 partent d’un point ; 까지 indique une limite.",
   },
   possession: {
     stageId: "possession",
