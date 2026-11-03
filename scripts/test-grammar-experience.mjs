@@ -333,7 +333,7 @@ test("lesson guides 11–15 keep accurate Korean example decomposition and instr
     assert.deepEqual(guide.steps.map(({ title }) => title), expectedHeadings, stageId);
     for (const example of guide.examples) {
       const withoutSpacingOrPunctuation = (korean) =>
-        korean.replace(/[\\s.?!]/gu, "");
+        korean.replace(/[\s.?!]/gu, "");
       const reconstructed = example.parts.map(({ korean }) => korean).join("");
       assert.equal(
         withoutSpacingOrPunctuation(reconstructed),
