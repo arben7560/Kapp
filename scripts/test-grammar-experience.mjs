@@ -1964,7 +1964,7 @@ test("register and request distractors are disambiguated by explicit situations"
     .find(({ options }) => options.includes("좋습니다"));
   assert.ok(dailyPolite);
   assert.match(dailyPolite.prompt, /(?:style|présent) poli courant/u);
-  assert.match(dailyPolite.display, /conversation quotidienne/u);
+  assert.match(dailyPolite.display, /poliment et au présent/u);
 
   const politeMy = buildGrammarPracticeQuestions("possession", 1, () => 0.42)
     .filter(({ answer }) => answer === "제");
