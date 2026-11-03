@@ -841,27 +841,27 @@ export const GRAMMAR_LESSON_GUIDES = {
     introduction:
       "Les mots interrogatifs remplacent directement l’information inconnue dans une phrase coréenne. Ils restent donc à la place naturelle du lieu, du moment, de la raison ou de la quantité demandée.",
     mainRule:
-      "Choisis le mot interrogatif adapté — 어디, 언제, 왜, 어떻게, 얼마, 얼마나 ou 무슨 — et garde la structure de la phrase, avec le prédicat à la fin.",
+      "Choisis l’information recherchée : 어디 (où), 언제 (quand), 왜 (pourquoi), 어떻게 (comment) ou 얼마 (prix). Conserve la phrase coréenne : 기차가 언제 와요?, 왜 택시를 타요?, 서울에 어떻게 가요?.",
     formula: {
-      pattern: "élément inconnu + particule éventuelle + prédicat ?",
+      pattern: "sujet ou contexte + question + verbe ?  ·  pourquoi : 왜 + phrase ?",
       explanation:
-        "어디 remplace un lieu, 언제 un moment, 왜 une raison, 어떻게 une manière et 얼마 un prix ou une quantité. 무슨 précède un nom : 무슨 영화, quel film.",
+        "화장실이 어디예요? demande un lieu ; 기차가 언제 와요? l’heure ; 왜 택시를 타요? la raison ; 서울에 어떻게 가요? le moyen ; 이거 얼마예요? le prix. 무슨 signifie « quel » devant un nom (무슨 물건).",
     },
     steps: [
       {
         title: "Définis l’information recherchée",
         explanation:
-          "Lieu → 어디, moment → 언제, raison → 왜, manière → 어떻게. Pour un prix ou une quantité, pense à 얼마 ; pour le degré, à 얼마나.",
+          "Pour les toilettes : où ? → 어디. Pour le train : quand ? → 언제. Pour le taxi : pourquoi ? → 왜. Pour aller à Séoul : comment ? → 어떻게. Pour le prix d’un article : combien ? → 얼마. 얼마나 interroge plutôt le degré ou l’intensité.",
       },
       {
         title: "Remplace le bon bloc",
         explanation:
-          "Garde la place où se trouverait la réponse : 화장실이 어디예요? suit la structure « les toilettes sont [où] ? ».",
+          "Ne place pas systématiquement le mot au début : 화장실이 어디예요?, 기차가 언제 와요?, 서울에 어떻게 가요?. 왜 peut se placer naturellement avant l’action : 왜 택시를 타요?.",
       },
       {
         title: "Conserve les particules utiles",
         explanation:
-          "Le mot interrogatif peut recevoir une particule ou être suivi d’un nom : 어디에 가요? « où allez-vous ? », 무슨 일을 해요? « quel travail faites-vous ? ».",
+          "Une autre question peut être correcte mais chercher autre chose : 기차가 왜 와요? (pourquoi ?) ne donne pas l’heure ; 서울에 언제 가요? (quand ?) ne demande pas le moyen. 어디 peut recevoir 에 ou 에서 ; 무슨 précède un nom : 무슨 일.",
       },
     ],
     examples: [
@@ -869,8 +869,8 @@ export const GRAMMAR_LESSON_GUIDES = {
         korean: "화장실이 어디예요?",
         french: "Où sont les toilettes ?",
         parts: [
-          { korean: "화장실이", french: "les toilettes", role: "sujet recherché" },
-          { korean: "어디예요?", french: "sont où ?", role: "lieu inconnu" },
+          { korean: "화장실이", french: "les toilettes", role: "sujet de la question" },
+          { korean: "어디예요?", french: "sont où ?", role: "emplacement recherché" },
         ],
       },
       {
@@ -888,12 +888,12 @@ export const GRAMMAR_LESSON_GUIDES = {
         correction: "Remplace seulement l’information inconnue à sa place coréenne : 기차가 언제 와요? « Quand arrive le train ? ».",
       },
       {
-        mistake: "Utiliser 얼마 pour demander le degré d’un adjectif, ou oublier le nom après 무슨.",
-        correction: "Prix/quantité → 얼마, degré → 얼마나 ; 무슨 doit précéder un nom : 무슨 음식.",
+        mistake: "Choisir une question grammaticale qui ne répond pas à la consigne, ou employer 무슨 sans nom.",
+        correction: "서울에 언제 가요? signifie « quand ? », et 서울에 어떻게 가요? « comment ? ». Pour demander un prix : 이거 얼마예요? ; 무슨 exige un nom derrière, comme 무슨 물건.",
       },
     ],
     memoryTip:
-      "Construis la réponse dans ta tête, puis retire uniquement le morceau inconnu : le mot interrogatif prend exactement sa place.",
+      "Pose-toi d’abord « où, quand, pourquoi, comment ou combien ? ». Une autre réponse peut former une vraie question, mais ne pas demander la même information.",
   },
   "simple-negation": {
     stageId: "simple-negation",
