@@ -2094,6 +2094,52 @@ test("stage 19 explains every selected connector answer across rotating attempts
   assert.ok(shuffleChanges >= 5, "option order must change with the shuffle seed");
 });
 
+test("stage 19 preserves valid alternatives and explains et, ou, seulement and with", () => {
+  const questions = buildGrammarPracticeQuestions("coordinate-items", 1, () => 0.42);
+  const find = (id) => questions.find((q) => q.id.includes("-" + id + "-"));
+  const coffee = find("coffee-and-cake-direct");
+  const bread = find("bread-milk-order");
+  const friend = find("friend-with-context");
+  const student = find("student-with-context");
+  const rice = find("rice-soup-order");
+  assert.ok(coffee && bread && friend && student && rice);
+
+  assert.match(coffee.display, /café et un gâteau.*deux produits/u);
+  assert.match(bread.display, /pain et du lait.*les deux produits/u);
+  assert.match(friend.display, /avec un ami.*t’accompagne/u);
+  assert.match(student.display, /avec un étudiant.*accompagné/u);
+  assert.match(rice.display, /riz et de la soupe.*deux accompagnements/u);
+
+  assert.match(getGrammarIncorrectFeedback(coffee, "커피나 케이크 주세요."), /나 signifie « ou ».*pas nécessairement les deux/u);
+  assert.match(getGrammarIncorrectFeedback(coffee, "케이크만 주세요."), /gâteau.*café disparaît/u);
+  assert.match(getGrammarIncorrectFeedback(bread, "빵이나 우유 주세요."), /이나.*« ou ».*deux/u);
+  assert.match(getGrammarIncorrectFeedback(bread, "우유만 주세요."), /seulement du lait.*pain est exclu/u);
+
+  assert.match(getGrammarIncorrectFeedback(friend, "이랑"), /voyelle.*랑 sans 이/u);
+  assert.match(getGrammarIncorrectFeedback(friend, "가"), /친구가 가요.*sujet.*친구랑 가요/u);
+  assert.match(getGrammarIncorrectFeedback(friend, "만"), /Seul l’ami y va.*t’accompagne/u);
+  assert.match(getGrammarIncorrectFeedback(student, "랑"), /받침.*이랑/u);
+  assert.match(getGrammarIncorrectFeedback(student, "이"), /학생이 가요.*L’étudiant y va.*학생이랑 가요/u);
+  assert.match(getGrammarIncorrectFeedback(student, "만"), /Seul l’étudiant y va.*accompagné/u);
+
+  assert.match(getGrammarIncorrectFeedback(rice, "밥이나 국 주세요."), /« ou ».*deux.*밥이랑 국 주세요/u);
+  assert.match(getGrammarIncorrectFeedback(rice, "국만 주세요."), /seulement de la soupe.*manque le riz/u);
+
+  assert.ok(!coffee.options.includes("커피랑 케이크 주세요."), "valid 랑 coordination must not be graded wrong");
+  assert.ok(!rice.options.includes("밥하고 국 주세요."), "valid 하고 coordination must not be graded wrong");
+  assert.ok(!friend.options.includes("하고"), "valid accompaniment with 하고 must not be graded wrong");
+  assert.ok(!student.options.includes("하고"), "valid accompaniment with 하고 must not be graded wrong");
+  const guide = getGrammarLessonGuide("coordinate-items");
+  assert.match(guide.mainRule, /하고.*이랑.*랑.*« avec ».*« ou ».*« seulement »/u);
+  assert.match(guide.formula.explanation, /커피하고 케이크 주세요.*밥이랑 국 주세요.*친구랑 가요/u);
+  assert.match(guide.commonMistakes.map(({ correction }) => correction).join(" "), /커피랑 케이크 주세요.*친구하고 가요/u);
+
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  assert.match(screen, /getGrammarIncorrectFeedback\(question, response\.answer\)/u);
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(screen, /POUR CET EXERCICE/u);
+});
+
 test("stages 15 to 40 keep concise exercise prompts and their own display context", () => {
   const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
   const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
