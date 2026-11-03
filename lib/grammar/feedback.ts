@@ -1095,7 +1095,7 @@ const STAGE_SIXTEEN_DISTRACTOR_FEEDBACK: Readonly<
     "봉투 보여 주세요.": "Cette phrase correcte demande à la caissière de te montrer un sac, sans lui demander de te le remettre : 봉투 주세요.",
     "봉투 필요해요.": "Tu exprimes « J’ai besoin d’un sac », ce qui peut faire comprendre ton besoin. Pour formuler la demande directe attendue : 봉투 주세요.",
   },
-  "item-request-in-context": {
+  "item-request-softened": {
     "커피 있어요?": "Tu demandes « Avez-vous du café ? ». Cette question est naturelle, mais ne passe pas directement commande. Pour recevoir le café : 커피 좀 주세요.",
     "커피 마셔요.": "Cette phrase décrit le fait de boire du café ; elle ne sollicite aucune boisson auprès du serveur. Pour commander : 커피 좀 주세요.",
     "커피를 마셔 주세요.": "Tu demandes à quelqu’un de boire du café. Avec 마시다, 주세요 demande une action ; pour recevoir le café lui-même : 커피 좀 주세요.",
