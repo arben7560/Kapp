@@ -1845,13 +1845,15 @@ test("inability module keeps 못 as the only correct negation", () => {
   assert.ok(questions.every(({ answer }) => answer.includes("못")));
   assert.ok(hearing);
   assert.equal(hearing.answer, "잘 못 들어요");
-  assert.ok(hearing.options.includes("잘 안 들려요"));
+  assert.ok(hearing.options.includes("듣고 싶지 않아요"));
+  assert.ok(hearing.options.includes("들을 수 있어요"));
   assert.match(hearing.display, /귀가 아파서/u);
-  assert.match(getGrammarIncorrectFeedback(hearing, "잘 안 들려요"), /son est trop faible/u);
+  assert.match(getGrammarIncorrectFeedback(hearing, "듣고 싶지 않아요"), /ne veux pas écouter/u);
+  assert.match(getGrammarIncorrectFeedback(hearing, "들을 수 있어요"), /écoute est possible/u);
   assert.match(guide.introduction, /uniquement 못/u);
   assert.match(
     guide.commonMistakes.map(({ correction }) => correction).join(" "),
-    /잘 안 들려요/u,
+    /잘 안 들려요.*ce n’est pas une erreur/u,
   );
 });
 
