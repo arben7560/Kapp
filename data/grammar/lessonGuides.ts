@@ -1076,23 +1076,83 @@ export const GRAMMAR_LESSON_GUIDES = {
   "coordinate-items": {
     stageId: "coordinate-items",
     introduction:
-      "하고 et (이)랑 relient des noms dans la conversation. Ils peuvent signifier « et » dans une liste ou « avec » lorsqu’ils relient une personne au déplacement ou à l’action.",
-    mainRule: "Place 하고 ou (이)랑 entre les noms. Avec une consonne finale, choisis 이랑 ; après une voyelle, 랑. 와/과 est plus écrit ou formel.",
-    formula: { pattern: "nom + 하고 / (이)랑 + nom", explanation: "커피하고 케이크 relie deux éléments commandés. 친구랑 가요 signifie « je vais avec un ami »." },
+      "Pour commander plusieurs produits, on les relie avec 하고 ou (이)랑 : ces deux formes peuvent signifier « et ». Devant une action, elles permettent aussi d’indiquer une personne avec qui l’on fait quelque chose.",
+    mainRule:
+      "하고 se place après un nom sans changer de forme. Avec (이)랑, ajoute 이랑 après une consonne finale (밥이랑, 학생이랑) et 랑 après une voyelle (친구랑). Ces deux connecteurs peuvent relier des éléments ou exprimer « avec ». Ne les confonds pas avec (이)나 (« ou ») ou 만 (« seulement »).",
+    formula: {
+      pattern: "nom + 하고 / (이)랑 + nom + 주세요 ; personne + (이)랑 + verbe",
+      explanation:
+        "커피하고 케이크 주세요. réunit deux produits. 밥이랑 국 주세요. fait de même avec (이)랑. 친구랑 가요. signifie « J’y vais avec un ami ».",
+    },
     steps: [
-      { title: "Repère le lien", explanation: "Pour une liste, pense « et ». Pour un compagnon, pense « avec »." },
-      { title: "Choisis la forme orale", explanation: "하고 fonctionne entre deux noms. Avec 이랑/랑 : consonne finale → 이랑, voyelle finale → 랑." },
-      { title: "Termine normalement", explanation: "Après le groupe relié, ajoute 주세요 ou le verbe final : 커피하고 케이크 주세요." },
+      {
+        title: "Détermine l’intention",
+        explanation:
+          "Pour obtenir les deux produits, utilise un connecteur signifiant « et ». Pour dire avec qui tu vas quelque part, le même (이)랑 peut exprimer l’accompagnement.",
+      },
+      {
+        title: "Choisis la forme après le nom",
+        explanation:
+          "하고 fonctionne après tout nom. Avec (이)랑, observe la syllabe finale : 친구랑 (voyelle) ; 학생이랑 ou 밥이랑 (consonne finale).",
+      },
+      {
+        title: "Vérifie le sens de la phrase",
+        explanation:
+          "커피하고 케이크 주세요. demande les deux. 커피나 케이크 주세요. propose « café ou gâteau » et 커피만 주세요. limite la demande au café.",
+      },
     ],
     examples: [
-      { korean: "커피하고 케이크 주세요.", french: "Un café et un gâteau, s’il vous plaît.", parts: [{ korean: "커피하고 케이크", french: "un café et un gâteau", role: "éléments reliés" }, { korean: "주세요", french: "s’il vous plaît", role: "demande" }] },
-      { korean: "친구랑 가요.", french: "J’y vais avec un ami.", parts: [{ korean: "친구랑", french: "avec un ami", role: "compagnon" }, { korean: "가요", french: "je vais", role: "action" }] },
+      {
+        korean: "커피하고 케이크 주세요.",
+        french: "Un café et un gâteau, s’il vous plaît.",
+        parts: [
+          { korean: "커피하고", french: "café et", role: "premier produit + liaison" },
+          { korean: "케이크", french: "gâteau", role: "second produit" },
+          { korean: "주세요", french: "s’il vous plaît", role: "commande" },
+        ],
+      },
+      {
+        korean: "밥이랑 국 주세요.",
+        french: "Du riz et de la soupe, s’il vous plaît.",
+        parts: [
+          { korean: "밥이랑", french: "riz et", role: "liaison après consonne finale" },
+          { korean: "국", french: "soupe", role: "second produit" },
+          { korean: "주세요", french: "s’il vous plaît", role: "commande" },
+        ],
+      },
+      {
+        korean: "친구랑 가요.",
+        french: "J’y vais avec un ami.",
+        parts: [
+          { korean: "친구랑", french: "avec un ami", role: "accompagnement après voyelle" },
+          { korean: "가요", french: "je vais", role: "action" },
+        ],
+      },
     ],
     commonMistakes: [
-      { mistake: "Utiliser 하고 pour dire « ou ».", correction: "하고 signifie « et / avec ». Pour une alternative, utilise (이)나 ou 아니면." },
-      { mistake: "Choisir 이랑 après une voyelle.", correction: "Après une voyelle, utilise 랑 : 나랑." },
+      {
+        mistake: "Croire que 하고 et (이)랑 expriment deux sens incompatibles.",
+        correction:
+          "커피하고 케이크 주세요. et 커피랑 케이크 주세요. sont deux façons naturelles de commander les deux produits. 친구랑 가요. et 친구하고 가요. peuvent tous deux exprimer « avec un ami ».",
+      },
+      {
+        mistake: "Choisir 랑 ou 이랑 sans regarder le nom.",
+        correction:
+          "Après une voyelle, utilise 랑 : 친구랑. Après une consonne finale, utilise 이랑 : 학생이랑, 밥이랑.",
+      },
+      {
+        mistake: "Confondre addition, alternative et restriction.",
+        correction:
+          "커피하고 케이크 주세요. commande les deux. 커피나 케이크 주세요. présente une alternative ; 커피만 주세요. signifie « seulement du café ».",
+      },
+      {
+        mistake: "Confondre l’accompagnateur et le sujet de l’action.",
+        correction:
+          "친구랑 가요. signifie « J’y vais avec un ami » dans le contexte. 친구가 가요. dit que l’ami y va ; 친구만 가요. dit que seul l’ami y va.",
+      },
     ],
-    memoryTip: "하고 relie ; 이랑/랑 accompagne. Si les éléments vont ensemble, pense « et » ou « avec », jamais « ou »."
+    memoryTip:
+      "Pour commander les deux, pense « et » : 하고 ou (이)랑. Pour « avec », pense aussi (이)랑. Consonne → 이랑 ; voyelle → 랑. (이)나 signifie « ou » et 만 « seulement ».",
   },
   "choose-alternative": {
     stageId: "choose-alternative",
