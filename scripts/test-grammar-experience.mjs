@@ -1494,6 +1494,107 @@ test("stage 12 has compact presentation and five contextual correct-answer messa
   assert.match(exercises, /stageId === "destination-and-time"/u);
 });
 
+test("stage 13 explains all selected possessive distractors across five attempts", () => {
+  const cases = new Map([
+    ["my-ticket-employee", {
+      answer: "제", sentence: "이건 제 표예요",
+      choices: ["내", "저", "제가"], aspect: "polite-my",
+    }],
+    ["my-name-professor", {
+      answer: "제", sentence: "제 이름은 마크예요",
+      choices: ["내", "저", "제가"], aspect: "polite-my",
+    }],
+    ["my-passport-agent", {
+      answer: "제", sentence: "제 여권이에요",
+      choices: ["내", "저", "제가"], aspect: "polite-my",
+    }],
+    ["my-bag-close-friend", {
+      answer: "내", sentence: "이건 내 가방이야",
+      choices: ["제", "나", "제가"], aspect: "casual-my",
+    }],
+    ["friends-bag", {
+      answer: "의", sentence: "친구의 가방이에요",
+      choices: ["제", "내", "가"], aspect: "possession-ui",
+    }],
+  ]);
+  const covered = new Set();
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("possession", attempt, () => 0.42);
+    const orderA = buildGrammarPracticeQuestions("possession", attempt, () => 0);
+    const orderB = buildGrammarPracticeQuestions("possession", attempt, () => 0.99);
+    assert.equal(questions.length, 5);
+    let changedOrders = 0;
+
+    for (const question of questions) {
+      const drillId = [...cases.keys()].find((key) =>
+        question.id.includes(":drill-possession-ui-je-nae-" + key + "-")
+      );
+      assert.ok(drillId, question.id);
+      const spec = cases.get(drillId);
+      assert.equal(question.kind, "gap", question.id);
+      assert.equal(question.answer, spec.answer, question.id);
+      assert.equal(question.ruleAspect, spec.aspect, question.id);
+      assert.deepEqual(
+        new Set(question.options),
+        new Set([spec.answer, ...spec.choices]),
+        question.id,
+      );
+      assert.equal(question.options.length, 4, question.id);
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
+      assert.match(question.display, /PHRASE À COMPLÉTER\n/u, question.id);
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.doesNotMatch(question.display, /«\s*«/u, question.id);
+
+      const messages = spec.choices.map((selected) => {
+        covered.add(drillId + ":" + selected);
+        const feedback = getGrammarIncorrectFeedback(question, selected);
+        assert.ok(feedback.includes("Tu as choisi « " + selected + " »"), question.id);
+        assert.ok(feedback.includes(spec.sentence), question.id);
+        assert.ok(feedback.length <= 260, question.id);
+        assert.notEqual(feedback, question.explanation, question.id);
+        return feedback;
+      });
+      assert.equal(new Set(messages).size, 3, question.id);
+
+      const first = orderA.find(({ id }) => id === question.id);
+      const second = orderB.find(({ id }) => id === question.id);
+      assert.ok(first && second, question.id);
+      assert.deepEqual(new Set(first.options), new Set(second.options), question.id);
+      if (first.options.join("|") !== second.options.join("|")) changedOrders += 1;
+    }
+    assert.ok(changedOrders > 0, "option shuffling must preserve the choices but vary their order");
+  }
+  assert.equal(covered.size, 15, "every one of the fifteen distractors has targeted feedback");
+
+  const questions = buildGrammarPracticeQuestions("possession", 1, () => 0.42);
+  const drill = (name) => questions.find(({ id }) =>
+    id.includes(":drill-possession-ui-je-nae-" + name + "-")
+  );
+  assert.match(getGrammarIncorrectFeedback(drill("my-ticket-employee"), "저"), /ce billet là-bas.*mon billet/u);
+  assert.match(getGrammarIncorrectFeedback(drill("my-name-professor"), "내"), /grammatical.*familier.*제 이름은 마크예요/u);
+  assert.match(getGrammarIncorrectFeedback(drill("my-passport-agent"), "제가"), /sujet.*possessif/u);
+  assert.match(getGrammarIncorrectFeedback(drill("my-bag-close-friend"), "제"), /grammaticalement correct.*style familier/u);
+  assert.match(getGrammarIncorrectFeedback(drill("friends-bag"), "가"), /sujet.*ami est un sac.*친구의 가방이에요/u);
+  assert.match(drill("friends-bag").display, /particule possessive 의/u);
+});
+
+test("stage 13 has compact exercise display and five individual success messages", () => {
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
+  assert.match(screen, /question\.stageId === "possession" && styles\.questionCardStageThirteen/u);
+  assert.match(screen, /if \(question\.stageId === "possession"\)/u);
+  for (const id of [
+    "my-ticket-employee", "my-name-professor", "my-passport-agent",
+    "my-bag-close-friend", "friends-bag",
+  ]) {
+    assert.ok(screen.includes('question.id.includes("' + id + '")'), id);
+  }
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(screen, /POUR CET EXERCICE/u);
+  assert.match(exercises, /stageId === "possession"/u);
+});
+
 test("high-confusion grammar distractors receive answer-specific explanations", () => {
   const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
   assert.match(getGrammarIncorrectFeedback(dailyRegister, "좋습니다"), /registre formel/u);
