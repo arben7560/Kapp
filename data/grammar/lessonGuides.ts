@@ -981,25 +981,34 @@ export const GRAMMAR_LESSON_GUIDES = {
   "request-quantity": {
     stageId: "request-quantity",
     introduction:
-      "Pour commander une quantité, indique ce que tu veux, combien et dans quelle unité : une tasse, un billet, un objet ou une portion. Les nombres natifs se raccourcissent devant la plupart des classificateurs de cette leçon, mais 인분 utilise les nombres sino-coréens.",
-    mainRule: "Pour 잔, 개, 명 et 장, utilise notamment 한, 두, 세, 네 devant le classificateur (formes courtes de 하나, 둘, 셋, 넷). Pour une portion, utilise 인분 avec un nombre sino-coréen : 2인분 se lit 이 인분.",
-    formula: { pattern: "nom + nombre adapté + classificateur + 주세요", explanation: "Le nombre précède le classificateur : 한 잔 = une tasse ; 두 장 = deux billets ; 세 개 = trois objets. Exception importante : 2인분 = deux portions, avec le nombre sino-coréen 이." },
+      "Pour demander une quantité, indique le nom, le nombre et son classificateur : 한 잔 (une tasse), 두 명 (deux personnes), 세 개 (trois objets), 네 장 (quatre billets). Pour les portions de repas, 2인분 se lit 이 인분.",
+    mainRule: "Avec 잔, 개, 명 et 장, les nombres natifs 하나·둘·셋·넷 deviennent 한·두·세·네. Sans classificateur, garde la forme autonome (셋 = trois). 첫 signifie « premier », pas « un ». Pour les portions : 2인분 = 이 인분.",
+    formula: { pattern: "nom + nombre adapté + classificateur + 주세요", explanation: "La quantité se place avant son unité : 커피 한 잔, 표 두 장, 사과 세 개. 2인분 utilise le nombre sino-coréen 이. Pour compter seul « un, deux, trois », on dit 하나, 둘, 셋 sans formes raccourcies." },
     steps: [
-      { title: "Identifie ce que tu comptes", explanation: "Objet ou fruit → 개, personne → 명, boisson en tasse → 잔, billet ou feuille → 장, portion de repas → 인분." },
-      { title: "Choisis le nombre", explanation: "Avec 잔, 개, 명, 장, les petites quantités prennent 한, 두, 세, 네. Avec 인분, emploie le sino-coréen : 2인분 (이 인분)." },
-      { title: "Ajoute la demande", explanation: "Place le groupe complet avant 주세요 : 아메리카노 한 잔 주세요." },
+      { title: "Choisis l’unité", explanation: "Boisson servie en tasse ou en verre → 잔 ; personne → 명 ; pomme ou objet → 개 ; billet plat → 장 ; portion de repas → 인분. 개 peut compter un produit, mais 잔/장 sont plus précis ici." },
+      { title: "Choisis la forme du nombre", explanation: "Devant 잔, 개, 명, 장 : 한, 두, 세, 네. Pour compter à voix haute sans unité : 하나, 둘, 셋, 넷. 첫 잔 signifie « première tasse », pas simplement « une tasse ». Pour 2인분, prononce 이 인분." },
+      { title: "Place le groupe avant 주세요", explanation: "Dans une commande, nom + nombre + classificateur + 주세요 : 아메리카노 한 잔 주세요, 표 두 장 주세요, 삼겹살 2인분 주세요. Pour un groupe de personnes : 두 명이에요." },
     ],
     examples: [
-      { korean: "아메리카노 한 잔 주세요.", french: "Un americano, s’il vous plaît.", parts: [{ korean: "아메리카노", french: "un americano", role: "élément compté" }, { korean: "한 잔", french: "un verre", role: "nombre + classificateur" }, { korean: "주세요", french: "s’il vous plaît", role: "demande" }] },
+      { korean: "아메리카노 한 잔 주세요.", french: "Un americano, s’il vous plaît.", parts: [{ korean: "아메리카노", french: "un americano", role: "élément compté" }, { korean: "한 잔", french: "une tasse", role: "nombre + classificateur" }, { korean: "주세요", french: "s’il vous plaît", role: "demande" }] },
       { korean: "표 두 장 주세요.", french: "Deux billets, s’il vous plaît.", parts: [{ korean: "표", french: "billet(s)", role: "élément compté" }, { korean: "두 장", french: "deux billets", role: "nombre + classificateur" }, { korean: "주세요", french: "s’il vous plaît", role: "demande" }] },
+      {
+        korean: "삼겹살 2인분 주세요.",
+        french: "Deux portions de samgyeopsal, s’il vous plaît.",
+        parts: [
+          { korean: "삼겹살", french: "samgyeopsal", role: "plat commandé" },
+          { korean: "2인분", french: "deux portions", role: "nombre sino-coréen + portion" },
+          { korean: "주세요", french: "s’il vous plaît", role: "demande" },
+        ],
+      },
     ],
     commonMistakes: [
-      { mistake: "Dire 아메리카노 한 ou placer le nombre après le classificateur.", correction: "Le classificateur est obligatoire et suit le nombre : 아메리카노 한 잔." },
+      { mistake: "Employer 하나 / 둘 / 셋 / 넷 devant 잔, 명, 개 ou 장.", correction: "Ces formes servent au comptage autonome. Devant le classificateur, prends 한 / 두 / 세 / 네 : 커피 한 잔, 두 명, 사과 세 개, 표 네 장." },
       { mistake: "Employer le mauvais classificateur.", correction: "Choisis l’unité adaptée : 잔 pour une tasse, 장 pour un billet, 명 pour une personne, 개 pour un fruit et 인분 pour une portion." },
       { mistake: "Généraliser les nombres natifs à tous les classificateurs.", correction: "한 잔 et 두 명 utilisent les nombres natifs ; pour une portion de repas, 2인분 se lit 이 인분 avec un nombre sino-coréen." },
-      { mistake: "Prendre 첫 잔 pour une quantité neutre.", correction: "첫 잔 est grammatical, mais signifie « la première tasse » d’une série ; pour commander seulement une tasse, dis 한 잔." },
+      { mistake: "Confondre une quantité et un rang, ou la forme autonome et la forme courte.", correction: "첫 잔 désigne la première tasse d’une série ; 한 잔 demande une tasse. Sans classificateur, garde 셋 (« trois ») ; devant 개, dis 세 개." },
     ],
-    memoryTip: "Pense nom → nombre → unité → 주세요. Avec 잔, 명, 개, 장, les petits nombres se raccourcissent ; avec 인분, pense au nombre sino-coréen.",
+    memoryTip: "Avec un classificateur natif : 한·두·세·네 + 잔/명/개/장. Sans unité : 하나·둘·셋·넷. Pour une portion : 2인분, prononcé 이 인분. 첫 veut dire « premier ».",
   },
   "sino-number-contexts": {
     stageId: "sino-number-contexts",
