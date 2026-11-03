@@ -2104,11 +2104,11 @@ test("stage 19 preserves valid alternatives and explains et, ou, seulement and w
   const rice = find("rice-soup-order");
   assert.ok(coffee && bread && friend && student && rice);
 
-  assert.match(coffee.display, /café et un gâteau.*deux produits/u);
-  assert.match(bread.display, /pain et du lait.*les deux produits/u);
+  assert.match(coffee.display, /deux produits.*café et un gâteau/u);
+  assert.match(bread.display, /les deux produits.*pain et du lait/u);
   assert.match(friend.display, /avec un ami.*t’accompagne/u);
   assert.match(student.display, /avec un étudiant.*accompagné/u);
-  assert.match(rice.display, /riz et de la soupe.*deux accompagnements/u);
+  assert.match(rice.display, /deux accompagnements.*riz et de la soupe/u);
 
   assert.match(getGrammarIncorrectFeedback(coffee, "커피나 케이크 주세요."), /나 signifie « ou ».*pas nécessairement les deux/u);
   assert.match(getGrammarIncorrectFeedback(coffee, "케이크만 주세요."), /gâteau.*café disparaît/u);
