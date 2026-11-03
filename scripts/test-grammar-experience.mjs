@@ -1729,6 +1729,54 @@ test("stage 15 distinguishes every chosen wrong answer across both negation fami
   assert.match(getGrammarIncorrectFeedback(find("not-spicy-short"), "맵지 않아요"), /correct.*longue/u);
 });
 
+test("stage 16 checks every answer and explains all fifteen selected distractors", () => {
+  const expected = new Map([
+    ["water-item", { answer: "주세요", kind: "gap", wrong: ["마셔 주세요", "마시세요", "있어요"] }],
+    ["receipt-item", { answer: "주세요", kind: "gap", wrong: ["보여 주세요", "보세요", "있어요"] }],
+    ["iced-americano-meaning", { answer: "Un americano glacé, s’il vous plaît.", kind: "scene", wrong: ["Avez-vous un americano glacé ?", "Je bois un americano glacé.", "Buvez un americano glacé, s’il vous plaît."] }],
+    ["bag-direct", { answer: "봉투 주세요.", kind: "scene", wrong: ["봉투 있어요?", "봉투 보여 주세요.", "봉투 필요해요."] }],
+    ["item-request-in-context", { answer: "커피 좀 주세요.", kind: "scene", wrong: ["커피 있어요?", "커피 마셔요.", "커피를 마셔 주세요."] }],
+  ]);
+  const seen = new Set();
+  const checked = new Set();
+  let mixedOrders = 0;
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("request-item", attempt, () => 0.42);
+    const shuffledA = buildGrammarPracticeQuestions("request-item", attempt, () => 0);
+    const shuffledB = buildGrammarPracticeQuestions("request-item", attempt, () => 0.99);
+    assert.equal(questions.length, 5);
+    for (const [index, question] of questions.entries()) {
+      const drillId = [...expected.keys()].find((id) => question.id.includes("-" + id + "-"));
+      assert.ok(drillId, question.id);
+      seen.add(drillId);
+      const spec = expected.get(drillId);
+      assert.equal(question.kind, spec.kind, question.id);
+      assert.equal(question.answer, spec.answer, question.id);
+      assert.deepEqual(new Set(question.options), new Set([spec.answer, ...spec.wrong]), question.id);
+      assert.equal(question.options.length, 4, question.id);
+      assert.match(question.display, /CONTEXTE\\n/u, question.id);
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.ok(question.explanation.includes(spec.answer.replace(/[.!?]+$/u, "")), question.id);
+      if (shuffledA[index].options.join("|") !== shuffledB[index].options.join("|")) mixedOrders += 1;
+
+      const feedbacks = spec.wrong.map((selected) => {
+        checked.add(drillId + ":" + selected);
+        const feedback = getGrammarIncorrectFeedback(question, selected);
+        assert.ok(feedback.startsWith("Tu as choisi « " + selected + " » : "), question.id);
+        assert.ok(feedback.includes(spec.answer.replace(/[.!?]+$/u, "")), question.id);
+        assert.notEqual(feedback, question.explanation, question.id);
+        assert.ok(feedback.length > 90 && feedback.length < 350, question.id);
+        return feedback;
+      });
+      assert.equal(new Set(feedbacks).size, 3, question.id);
+    }
+  }
+  assert.equal(seen.size, 5);
+  assert.equal(checked.size, 15);
+  assert.ok(mixedOrders >= 3, "the answer order must change between random sources");
+});
+
 test("stages 15 to 40 keep concise exercise prompts and their own display context", () => {
   const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
   const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
