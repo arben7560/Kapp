@@ -122,6 +122,11 @@ export const GRAMMAR_VOCABULARY_HINTS_10_TO_19: Record<
   "ticket-item": [
     { korean: "표", french: "ticket" },
   ],
+  "duration-ten-minutes": [
+    { korean: "분", french: "minute(s)" },
+    { korean: "후에", french: "dans / après" },
+    { korean: "출발해요", french: "on part" },
+  ],
   "one-cup": [
     { korean: "커피", french: "café" },
   ],
