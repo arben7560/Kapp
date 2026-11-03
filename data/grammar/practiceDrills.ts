@@ -2109,8 +2109,8 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
     ),
     choose(
       "forms",
-      "standalone-three",
-      "Compte sans classificateur : 하나, 둘, __.",
+      "standalone-three-context",
+      "하나, 둘, __.",
       "셋",
       ["세", "삼", "세 번째"],
       "Dans une suite de comptage sans nom ni classificateur, 셋 signifie « trois » ; 세 s’emploie devant un compteur, 삼 est sino-coréen et 세 번째 signifie « troisième ».",
@@ -2136,7 +2136,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
     ),
     choose(
       "forms",
-      "people-count",
+      "people-count-phrase",
       "Nous sommes deux personnes.",
       "두 명이에요.",
       ["두 개예요.", "두 잔이에요.", "두 장이에요."],
