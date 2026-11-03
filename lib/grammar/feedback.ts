@@ -1292,6 +1292,54 @@ function getStageNineteenSelectedFeedback(
   return undefined;
 }
 
+/**
+ * Étape 20 : chaque correction reprend la réponse effectivement choisie.
+ * La différence porte selon les cas sur la finale du nom, le sens de « et »,
+ * la restriction avec 만 ou le lien entre deux propositions complètes.
+ */
+const STAGE_TWENTY_DISTRACTOR_FEEDBACK: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "coffee-or-tea-vowel": {
+    "커피이나 차 있어요?": "커피 finit par une voyelle. 이나 s’attache à un nom avec consonne finale ; après 커피, il faut 나 : 커피나 차 있어요?",
+    "커피하고 차 있어요?": "Cette question demande si le café ET le thé sont disponibles : 하고 réunit les deux. Pour demander si l’un ou l’autre est disponible, dis 커피나 차 있어요?",
+    "커피만 있어요?": "만 signifie « seulement ». Cette question porte sur la disponibilité du café seul et écarte le thé. Pour proposer les deux possibilités, dis 커피나 차 있어요?",
+  },
+  "bread-or-cake-batchim": {
+    "빵나 케이크를 먹어요.": "빵 se termine par le 받침 ㅇ : 나 tout seul ne convient pas ici. Avec une consonne finale, l’alternative devient 이나 : 빵이나 케이크를 먹어요.",
+    "빵하고 케이크를 먹어요.": "Cette phrase signifie que tu manges du pain ET du gâteau : 하고 réunit les deux aliments. Pour dire que tu manges l’un ou l’autre, utilise 빵이나 케이크를 먹어요.",
+    "빵만 먹어요.": "만 restreint ton choix au pain : le gâteau n’est plus une possibilité. Pour exprimer « du pain ou du gâteau », dis 빵이나 케이크를 먹어요.",
+  },
+  "bus-or-subway-choice": {
+    "버스로만 가요.": "만 signifie ici que tu y vas uniquement en bus. Mais le métro est aussi une possibilité dans la consigne : 버스나 지하철로 가요.",
+    "지하철로만 가요.": "Cette phrase exclut le bus et impose seulement le métro. Pour conserver les deux moyens de transport comme options, dis 버스나 지하철로 가요.",
+    "버스하고 지하철을 타요.": "하고 relie le bus ET le métro : cela suggère que tu utilises les deux. Tu veux garder un choix entre deux moyens, donc 버스나 지하철로 가요.",
+  },
+  "water-or-tea-choice": {
+    "물하고 차를 마셔요.": "하고 signifie « et » : cette phrase dit que tu bois de l’eau et du thé. Le contexte demande une alternative, donc 물이나 차를 마셔요.",
+    "물만 마셔요.": "물만 veut dire « seulement de l’eau » : le thé n’est plus une option. Pour garder le choix entre eau et thé, dis 물이나 차를 마셔요.",
+    "차만 마셔요.": "차만 signifie « seulement du thé » et exclut l’eau. Ici, l’une ou l’autre boisson est possible : 물이나 차를 마셔요.",
+  },
+  "two-complete-questions": {
+    "이나": "이나 s’attache à un nom avec consonne finale, comme 빵이나 케이크. Ici, tu relies deux questions complètes ; entre elles, utilise 아니면.",
+    "하고": "하고 relie des noms et peut signifier « et / avec ». Il ne sert pas à choisir entre ces deux questions complètes : ici, il faut 아니면.",
+    "그리고": "그리고 veut dire « et / puis » et ajoute une deuxième question. Ici, tu demandes de choisir entre partir maintenant et rester à la maison : utilise 아니면.",
+  },
+};
+
+function getStageTwentySelectedFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (question.stageId !== "choose-alternative" || typeof answer !== "string") return undefined;
+  for (const [drillId, reasons] of Object.entries(STAGE_TWENTY_DISTRACTOR_FEEDBACK)) {
+    if (!question.id.includes("-" + drillId + "-")) continue;
+    const reason = reasons[answer];
+    if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+  }
+  return undefined;
+}
+
 /** Nuances de choix qui restent ambiguës avec une règle générale. */
 function getAdvancedSelectedFeedback(
   question: GrammarPracticeQuestion,
@@ -1890,6 +1938,9 @@ export function getGrammarIncorrectFeedback(
 
   const stageNineteenFeedback = getStageNineteenSelectedFeedback(question, answer);
   if (stageNineteenFeedback) return stageNineteenFeedback;
+
+  const stageTwentyFeedback = getStageTwentySelectedFeedback(question, answer);
+  if (stageTwentyFeedback) return stageTwentyFeedback;
 
   const advancedFeedback = getAdvancedSelectedFeedback(question, selected, expected);
   if (advancedFeedback) return advancedFeedback;
