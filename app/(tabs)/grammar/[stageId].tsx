@@ -75,6 +75,23 @@ function scoreLabel(score: number) {
 }
 
 function getCorrectFeedbackLead(question: GrammarPracticeQuestion) {
+  if (question.stageId === "action-location") {
+    if (question.id.includes("cafe-action")) {
+      return "Oui, 카페에서 situe l’activité d’étudier au café, et non un déplacement.";
+    }
+    if (question.id.includes("school-static")) {
+      return "Oui, 학교에 있어요 situe une personne déjà à l’école, sans décrire une activité.";
+    }
+    if (question.id.includes("home-action")) {
+      return "Oui, 집에서 밥을 먹어요 situe le repas chez toi, là où tu manges.";
+    }
+    if (question.id.includes("library-static")) {
+      return "Oui, 도서관에 있어요 indique où se trouve le livre, sans action.";
+    }
+    if (question.id.includes("restaurant-action")) {
+      return "Oui, 식당에서 친구를 만나요 indique où se déroule la rencontre.";
+    }
+  }
   if (question.stageId === "object-actions") {
     if (question.id.includes("book-batchim")) {
       return "Oui, 책 finit par ㄱ : 책을 읽어요 marque bien le livre comme objet.";
@@ -1037,6 +1054,7 @@ function PracticePanel({
           question.stageId === "locate-thing" && styles.questionCardStageEight,
           question.stageId === "present-actions" && styles.questionCardStageNine,
           question.stageId === "object-actions" && styles.questionCardStageTen,
+          question.stageId === "action-location" && styles.questionCardStageEleven,
         ]}
       >
         {question.exerciseGroup ? (
@@ -1062,7 +1080,8 @@ function PracticePanel({
               question.stageId === "existence" ||
               question.stageId === "locate-thing" ||
               question.stageId === "present-actions" ||
-              question.stageId === "object-actions"
+              question.stageId === "object-actions" ||
+              question.stageId === "action-location"
             }
           />
         ) : null}
@@ -1241,7 +1260,8 @@ function FeedbackCard({
               question.stageId === "existence" ||
               question.stageId === "locate-thing" ||
               question.stageId === "present-actions" ||
-              question.stageId === "object-actions"
+              question.stageId === "object-actions" ||
+              question.stageId === "action-location"
             ? "TON CHOIX EXPLIQUÉ"
             : "À AJUSTER ICI"}
       </AppText>
@@ -1258,7 +1278,8 @@ function FeedbackCard({
             question.stageId === "existence" ||
             question.stageId === "locate-thing" ||
             question.stageId === "present-actions" ||
-            question.stageId === "object-actions"
+            question.stageId === "object-actions" ||
+            question.stageId === "action-location"
               ? "POUR CET EXERCICE"
               : "ICI, ON ATTENDAIT"}
           </AppText>
@@ -1731,6 +1752,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   questionCardStageTen: {
+    minHeight: 156,
+    padding: 16,
+    gap: 10,
+  },
+  questionCardStageEleven: {
     minHeight: 156,
     padding: 16,
     gap: 10,
