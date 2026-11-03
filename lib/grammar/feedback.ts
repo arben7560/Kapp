@@ -1141,7 +1141,7 @@ const STAGE_SEVENTEEN_NUMBER_FEEDBACK: Readonly<Record<string, Readonly<Record<s
     "사": "사 est le « quatre » sino-coréen. Pour compter quatre billets avec 장, emploie le natif 네 장.",
     "넷째": "넷째 signifie « quatrième » et indique un rang. Tu veux quatre billets, pas le quatrième billet : 네 장.",
   },
-  "standalone-three": {
+  "standalone-three-context": {
     "세": "세 est la forme courte de « trois » devant un classificateur, comme 세 개. Dans la suite 하나, 둘, ... sans nom, dis 셋.",
     "삼": "삼 exprime « trois » dans la numération sino-coréenne. Ici, tu récites les nombres natifs 하나, 둘, 셋.",
     "세 번째": "세 번째 signifie « le troisième », c’est un rang. Pour dire simplement « trois » dans une suite de comptage, utilise 셋.",
@@ -1155,7 +1155,7 @@ const STAGE_SEVENTEEN_CLASSIFIER_FEEDBACK: Readonly<Record<string, Readonly<Reco
     "명": "명 compte des personnes. Une tasse de café n’est pas une personne : pour une boisson servie, utilise 잔.",
     "장": "장 compte des objets plats, comme des billets ou des feuilles. Tu commandes une tasse de café : il faut 잔.",
   },
-  "people-count": {
+  "people-count-phrase": {
     "두 개예요.": "Cette phrase dirait « Il y en a deux », en comptant des objets ou unités avec 개. Le serveur demande le nombre de personnes de ton groupe : 두 명이에요.",
     "두 잔이에요.": "잔 compte des verres ou des tasses : « deux boissons ». Tu indiques au serveur que vous êtes deux personnes, donc 두 명이에요.",
     "두 장이에요.": "장 compte des billets ou des feuilles : « deux objets plats ». Ici, tu comptes deux personnes, donc 두 명이에요.",
