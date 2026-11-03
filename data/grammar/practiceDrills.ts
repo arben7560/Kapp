@@ -2357,7 +2357,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
         "Le pain est délicieux.",
         "Y a-t-il du pain ou du riz ?",
       ],
-      "만 limite l’information au pain ; 있어요 indique que le pain est disponible. La phrase ne signifie ni « aussi », ni une question de choix.",
+      "Il n’y a que du pain. 만 limite la disponibilité au pain ; 있어요 indique que le pain est disponible. La phrase n’exprime ni « aussi », ni une question de choix.",
       "restrictive",
       undefined,
       "Choisis le sens exact de la phrase.",
