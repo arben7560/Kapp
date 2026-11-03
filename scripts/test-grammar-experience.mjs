@@ -129,8 +129,8 @@ test("grammar theory opens in a reusable modal and resumes without replacing its
   }
 });
 
-test("the concise grammar guide covers exactly lessons 01–15", () => {
-  assert.deepEqual(GRAMMAR_QUICK_GUIDE_STAGE_IDS, GRAMMAR_STAGE_IDS.slice(0, 15));
+test("the concise grammar guide covers exactly lessons 01–20", () => {
+  assert.deepEqual(GRAMMAR_QUICK_GUIDE_STAGE_IDS, GRAMMAR_STAGE_IDS.slice(0, 20));
   const expectedExamples = [
     ["sentence-structure", "저는 커피를 마셔요."],
     ["identify-with-copula", "학생이에요."],
@@ -147,6 +147,11 @@ test("the concise grammar guide covers exactly lessons 01–15", () => {
     ["possession", "제 이름은 마크예요."],
     ["information-questions", "화장실이 어디예요?"],
     ["simple-negation", "안 매워요."],
+    ["request-item", "물 주세요."],
+    ["request-quantity", "아메리카노 한 잔 주세요."],
+    ["sino-number-contexts", "이거 만 원이에요."],
+    ["coordinate-items", "커피하고 케이크 주세요."],
+    ["choose-alternative", "커피나 차 있어요?"],
   ];
   for (const [stageId, example] of expectedExamples) {
     const guide = getGrammarLessonGuide(stageId);
@@ -157,7 +162,9 @@ test("the concise grammar guide covers exactly lessons 01–15", () => {
   }
   assert.equal(isGrammarQuickGuideStage("action-location"), true);
   assert.equal(isGrammarQuickGuideStage("simple-negation"), true);
-  assert.equal(isGrammarQuickGuideStage("request-item"), false);
+  assert.equal(isGrammarQuickGuideStage("request-item"), true);
+  assert.equal(isGrammarQuickGuideStage("choose-alternative"), true);
+  assert.equal(isGrammarQuickGuideStage("request-action"), false);
   assert.ok(getGrammarLessonGuide("introduce-topic").examples.some(
     ({ korean }) => korean === "오늘은 쉬어요.",
   ));
@@ -225,8 +232,108 @@ test("lessons 11–15 share the identical short modal layout and retain complete
   assert.match(lesson, /onStartExercises=\{isQuickGuide \? startPractice : undefined\}/u);
   assert.match(lesson, /const accessExercises = React\.useCallback/u);
 
-  // Les leçons A1 conservent le format détaillé et leur navigation existante.
-  assert.equal(isGrammarQuickGuideStage("request-item"), false);
+  // À partir de l’étape 21, le format détaillé et la navigation restent inchangés.
+  assert.equal(isGrammarQuickGuideStage("request-action"), false);
+});
+
+test("lessons 16–20 retain the compact modal with pedagogical volume proportional to their drills", () => {
+  const ids = GRAMMAR_STAGE_IDS.slice(15, 20);
+  assert.deepEqual(ids, [
+    "request-item", "request-quantity", "sino-number-contexts",
+    "coordinate-items", "choose-alternative",
+  ]);
+  const volumes = [[2, 4], [3, 4], [3, 3], [3, 4], [3, 4]];
+  for (const [index, stageId] of ids.entries()) {
+    const guide = getGrammarLessonGuide(stageId);
+    assert.ok(isGrammarQuickGuideStage(stageId), stageId);
+    assert.ok(guide.introduction.length >= 70 && guide.introduction.length <= 270, stageId);
+    assert.ok(guide.mainRule.length >= 80 && guide.mainRule.length <= 270, stageId);
+    assert.equal(guide.steps.length, 3, stageId);
+    assert.equal(guide.examples.length, volumes[index][0], stageId);
+    assert.equal(guide.commonMistakes.length, volumes[index][1], stageId);
+    assert.ok(guide.formula.pattern.length > 10, stageId);
+    assert.ok(guide.memoryTip.length > 40, stageId);
+    for (const example of guide.examples) {
+      const clean = (korean) => korean.replace(/[\s.?!]/gu, "");
+      const pieces = example.parts.map(({ korean }) => korean).join("");
+      assert.equal(clean(pieces), clean(example.korean), stageId + ": decomposition");
+      assert.ok(example.french.length > 8, stageId + ": translation");
+      assert.ok(example.parts.length >= 2, stageId + ": decomposed parts");
+      assert.ok(example.parts.every(({ french, role }) => french && role), stageId);
+    }
+  }
+  const modal = readFileSync(join(projectRoot, "components/grammar/GrammarLessonGuideModal.tsx"), "utf8");
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  const content = readFileSync(join(projectRoot, "components/grammar/GrammarLessonGuide.tsx"), "utf8");
+  assert.match(content, /Voir les explications détaillées/u);
+  assert.match(content, /\{\(!isQuickGuide \|\| showDetails\) \? \(/u);
+  assert.match(modal, /isQuickGuide && styles\.exerciseFooterQuick/u);
+  assert.match(modal, /onPress=\{onAccessExercises\}/u);
+  assert.match(screen, /if \(!isQuickGuide && !session\) startPractice\(\)/u);
+  assert.match(screen, /onStartExercises=\{isQuickGuide \? startPractice : undefined\}/u);
+  assert.equal(isGrammarQuickGuideStage("request-action"), false);
+});
+
+test("lessons 16–20 cover all 30 exercises and their grammatical distractor contrasts", () => {
+  const checks = [
+    {
+      id: "request-item", concepts: ["request-n-juseyo"], count: 5,
+      patterns: ["물 주세요", "영수증 주세요", "커피 좀 주세요", "있어요?", "필요해요", "마셔 주세요", "보여 주세요"],
+    },
+    {
+      id: "request-quantity", concepts: ["native-numbers", "classifiers-basic"], count: 10,
+      patterns: ["한 잔", "두 명", "세 개", "네 장", "셋", "첫", "2인분", "이 인분"],
+    },
+    {
+      id: "sino-number-contexts", concepts: ["sino-korean-numbers"], count: 5,
+      patterns: ["오천 원", "오백 원", "오만 원", "십 분", "열 분", "2호선", "2번 출구", "3월", "삼 개월", "3일", "공일공", "영"],
+    },
+    {
+      id: "coordinate-items", concepts: ["noun-link-hago-irang"], count: 5,
+      patterns: ["커피하고 케이크", "밥이랑 국", "학생이랑", "친구랑", "친구가", "커피나", "커피만"],
+    },
+    {
+      id: "choose-alternative", concepts: ["alternative-ina-animyeon"], count: 5,
+      patterns: ["커피나 차", "빵이나 케이크", "버스나 지하철", "물이나 차", "아니면", "그리고", "하고", "만"],
+    },
+  ];
+  let count = 0;
+  for (const check of checks) {
+    const guide = getGrammarLessonGuide(check.id);
+    assert.deepEqual(GRAMMAR_STAGE_BY_ID[check.id].conceptIds, check.concepts, check.id);
+    const explanation = [
+      guide.introduction, guide.mainRule, guide.formula.pattern, guide.formula.explanation,
+      ...guide.steps.flatMap(({ title, explanation }) => [title, explanation]),
+      ...guide.examples.flatMap(({ korean, french, parts }) =>
+        [korean, french, ...parts.flatMap(({ korean, french, role }) => [korean, french, role])]),
+      ...guide.commonMistakes.flatMap(({ mistake, correction }) => [mistake, correction]),
+      guide.memoryTip,
+    ].join(" ");
+    for (const phrase of check.patterns) {
+      assert.ok(explanation.includes(phrase), check.id + ": missing " + phrase);
+    }
+    const drills = check.concepts.flatMap((id) =>
+      GRAMMAR_CONCEPTS.find((concept) => concept.id === id)?.practice.drills ?? [],
+    );
+    assert.equal(drills.length, check.count, check.id);
+    for (const drill of drills) {
+      assert.equal(drill.distractors.length, 3, check.id + ":" + drill.id);
+      assert.ok(drill.explanation.length > 20, check.id + ":" + drill.id);
+      assert.equal(new Set([drill.answer, ...drill.distractors]).size, 4, check.id + ":" + drill.id);
+      count += 1;
+    }
+  }
+  assert.equal(count, 30);
+
+  const quantities = getGrammarLessonGuide("request-quantity");
+  assert.equal(quantities.examples[0].parts[1].french, "une tasse");
+  assert.equal(quantities.examples[2].korean, "삼겹살 2인분 주세요.");
+  assert.match(quantities.mainRule, /하나.*둘.*셋.*넷.*한.*두.*세.*네.*셋.*첫.*2인분/u);
+  const calendar = getGrammarLessonGuide("sino-number-contexts");
+  assert.match(calendar.steps[2].explanation, /3일.*trois jours.*contexte/u);
+  assert.match(calendar.commonMistakes[2].correction, /영.*공/u);
+  const choices = getGrammarLessonGuide("choose-alternative");
+  assert.match(choices.mainRule, /나.*이나.*아니면.*그리고.*하고.*만/u);
 });
 
 test("stage 11–15 guides prepare the actual grammar concepts and wrong-answer contrasts", () => {
