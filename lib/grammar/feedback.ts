@@ -991,6 +991,142 @@ function getInformationQuestionsStageFourteenFeedback(
   return undefined;
 }
 
+
+/**
+ * Étape 15 : la correction suit la réponse réellement choisie.
+ * Les formes longues peuvent être grammaticalement correctes ; dans ce cas
+ * on explique la consigne plutôt que de les déclarer fausses.
+ */
+const STAGE_FIFTEEN_DISTRACTOR_FEEDBACK: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "not-go-choice": {
+    "못 가요": "못 가요 exprime un empêchement. Ici, tu peux sortir mais tu décides de ne pas y aller : 안 가요.",
+    "가지 않아요": "가지 않아요 est une négation correcte, mais longue. L’exercice demande précisément la forme courte 안 가요.",
+    "아니에요": "아니에요 nie l’identité d’un nom. Pour nier l’action d’aller, utilise 안 devant 가요.",
+  },
+  "not-drink-choice": {
+    "못 마셔요": "못 마셔요 signifie que tu ne peux pas boire. Ici, tu peux boire du café, mais tu préfères ne pas en boire : 안 마셔요.",
+    "마시지 않아요": "마시지 않아요 est correct en négation longue. Pour la forme courte demandée, dis 안 마셔요.",
+    "아니에요": "아니에요 signifie « ce n’est pas ». Tu nies ici l’action de boire : 안 마셔요.",
+  },
+  "not-spicy-short": {
+    "못 매워요": "못 exprime en principe une incapacité à faire une action. 맵다 décrit une qualité du plat : dis 안 매워요.",
+    "맵지 않아요": "맵지 않아요 est correct, mais c’est la négation longue. La forme courte demandée est 안 매워요.",
+    "아니에요": "아니에요 nie l’identité d’une chose, pas directement sa saveur. Pour « ce n’est pas épicé », utilise 안 매워요.",
+  },
+  "not-buy-choice": {
+    "못 사요": "못 사요 suggère que tu ne peux pas acheter le pain. Tu as l’argent, mais choisis de ne pas l’acheter : 안 사요.",
+    "사지 않아요": "사지 않아요 est grammaticalement correct, mais c’est la forme longue. Ici, on travaille la négation courte 안 사요.",
+    "아니에요": "아니에요 nie un nom, pas le verbe acheter. Dans cette phrase, dis 안 사요.",
+  },
+  "not-study-choice": {
+    "못 공부해요": "못 공부해요 évoque un empêchement. Ici, tu as le temps mais décides de ne pas étudier : 안 공부해요.",
+    "공부하지 않아요": "공부하지 않아요 est correct, mais sous la forme longue. L’exercice attend 안 공부해요.",
+    "아니에요": "아니에요 nie une identité. Pour nier l’action d’étudier, place 안 devant 공부해요.",
+  },
+  "not-student": {
+    "가 아니에요": "가 marque la négation de la copule après une voyelle. 학생 se termine par le 받침 ㅇ : 학생이 아니에요.",
+    "안 이에요": "안 ne se place pas devant 이에요 pour nier une identité. On utilise nom + 이/가 아니에요 : 학생이 아니에요.",
+    "이 없어요": "없어요 exprime l’absence ou la non-possession, pas « ne pas être étudiant ». Ici, dis 학생이 아니에요.",
+  },
+  "not-doctor": {
+    "이 아니에요": "이 convient après un 받침. 의사 se termine par la voyelle ㅏ : 의사가 아니에요.",
+    "안 예요": "안 예요 n’est pas une négation correcte de la copule. On dit 의사가 아니에요.",
+    "가 없어요": "없어요 dirait qu’il n’y a pas de médecin. Tu nies ici la profession d’une personne : 의사가 아니에요.",
+  },
+  "not-coffee": {
+    "이 아니에요": "이 convient après un 받침. 커피 se termine par une voyelle : 커피가 아니에요.",
+    "안 이에요": "안 이에요 ne sert pas à nier une identification. Pour dire que cette boisson n’est pas du café : 커피가 아니에요.",
+    "가 없어요": "커피가 없어요 signifie qu’il n’y a pas de café. Ici, la boisson est présente mais ce n’est pas du café : 커피가 아니에요.",
+  },
+  "not-book": {
+    "가 아니에요": "가 s’emploie après une voyelle. 책 finit par le 받침 ㄱ : 책이 아니에요.",
+    "안 예요": "안 예요 n’est pas la négation de la copule. Après 책, on utilise 이 아니에요.",
+    "이 없어요": "책이 없어요 indique l’absence de livre. Tu corriges ici l’identité de l’objet : 책이 아니에요.",
+  },
+  "absence-vs-identity": {
+    "제 가방이 없어요.": "제 가방이 없어요 signifie « je n’ai pas mon sac ». Mais ici, tu dis qu’il ne s’agit pas de ton sac : 제 가방이 아니에요.",
+    "제 가방을 안 해요.": "안 해요 nie l’action de faire, pas l’identité d’un sac. Pour dire « ce n’est pas mon sac » : 제 가방이 아니에요.",
+    "제 가방이 못 해요.": "못 해요 exprime l’incapacité à faire quelque chose ; un sac ne fait pas l’action ici. Il faut 제 가방이 아니에요.",
+  },
+};
+
+function getStageFifteenSelectedFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (question.stageId !== "simple-negation" || typeof answer !== "string") {
+    return undefined;
+  }
+  for (const [drillId, reasons] of Object.entries(STAGE_FIFTEEN_DISTRACTOR_FEEDBACK)) {
+    if (!question.id.includes("-" + drillId + "-")) continue;
+    const reason = reasons[answer];
+    if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+  }
+  return undefined;
+}
+
+/** Nuances de choix qui restent ambiguës avec une règle générale. */
+function getAdvancedSelectedFeedback(
+  question: GrammarPracticeQuestion,
+  selected: string,
+  expected: string,
+): string | undefined {
+  if (question.conceptIds.includes("restrictive-man")) {
+    if (question.id.includes("sentence-seat-only")) {
+      const reasons: Readonly<Record<string, string>> = {
+        "자리가 하나 있어요.": "Cette phrase annonce simplement une place disponible, sans insister sur le fait qu’il n’en reste qu’une seule.",
+        "자리도 하나 있어요.": "도 signifie « aussi » : tu ajoutes une place à d’autres éléments, au lieu d’exprimer la seule place restante.",
+        "자리 두 개만 있어요.": "두 개 signifie deux unités. Or le serveur annonce une seule place : 하나만.",
+      };
+      if (reasons[selected]) return "Tu as choisi " + quoted(selected) + " : " + reasons[selected] + " Ici, " + expected;
+    }
+    if (question.id.includes("meaning-bread-only")) {
+      const reasons: Readonly<Record<string, string>> = {
+        "Il y a aussi du pain.": "« aussi » correspondrait à 도, tandis que 빵만 limite la disponibilité au pain.",
+        "Le pain est délicieux.": "맛있어요 décrirait le goût. Ici, 있어요 indique la disponibilité et 만 signifie « seulement ».",
+        "Y a-t-il du pain ou du riz ?": "Il faudrait une question avec « ou » ; 빵만 있어요 est une affirmation qui signifie « il n’y a que du pain ».",
+      };
+      if (reasons[selected]) return "Tu as choisi " + quoted(selected) + " : " + reasons[selected];
+    }
+    if (question.id.includes("one-only-order") && Array.isArray(question.answer)) {
+      const tokens = selected.split(" ");
+      const expectedTokens = question.answer;
+      if (tokens.at(-1) !== expectedTokens.at(-1)) {
+        return "Tu as placé " + quoted(selected) + ". Le verbe 있어요 doit terminer cette affirmation ; garde 한 잔만 avant lui : " + expected + ".";
+      }
+      return "Tu as placé " + quoted(selected) + ". Pour une phrase neutre, 지금 introduit le moment, puis 한 잔만 limite la quantité, avant le verbe 있어요 : " + expected + ".";
+    }
+  }
+
+  if (question.conceptIds.includes("past-ass-eosseoyo") && selected === "보았을 거예요") {
+    return "Tu as choisi " + quoted(selected) + " : cette forme exprime une supposition sur une action passée, plutôt qu’un simple passé constaté. Pour « j’ai vu », dis " + expected + ".";
+  }
+
+  if (question.conceptIds.includes("classifiers-basic")) {
+    const counterMeanings: Readonly<Record<string, string>> = {
+      "개": "compte des objets génériques",
+      "명": "compte des personnes",
+      "잔": "compte des verres ou tasses",
+      "장": "compte les objets plats, comme les billets",
+      "인분": "compte les portions de nourriture",
+    };
+    const expectedMeanings: Readonly<Record<string, string>> = {
+      "개": "des pommes comme unités",
+      "명": "des personnes",
+      "잔": "une boisson servie en tasse ou verre",
+      "장": "des billets",
+      "인분": "des portions de repas",
+    };
+    if (counterMeanings[selected] && expectedMeanings[expected]) {
+      return "Tu as choisi " + quoted(selected) + " : ce compteur " + counterMeanings[selected] + ". Ici, tu comptes " + expectedMeanings[expected] + ", donc il faut " + expected + ".";
+    }
+  }
+
+  return undefined;
+}
+
 function selectedSpecificFallback(
   question: GrammarPracticeQuestion,
   selected: string,
@@ -1515,6 +1651,9 @@ export function getGrammarIncorrectFeedback(
   const informationFeedback = getInformationQuestionsStageFourteenFeedback(question, answer);
   if (informationFeedback) return informationFeedback;
 
+  const stageFifteenFeedback = getStageFifteenSelectedFeedback(question, answer);
+  if (stageFifteenFeedback) return stageFifteenFeedback;
+
   if (conceptId === "topic-eun-neun") {
     if (
       question.id.includes("drill-topic-eun-neun-je-vowel") &&
@@ -2025,6 +2164,7 @@ export function getGrammarIncorrectFeedback(
   }
 
   return (
+    getAdvancedSelectedFeedback(question, selected, expected) ??
     selectedSpecificFallback(question, selected, expected) ??
     question.explanation
   );
