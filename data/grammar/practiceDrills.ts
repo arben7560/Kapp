@@ -2129,7 +2129,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       "커피 한 __ 주세요.",
       "잔",
       ["개", "명", "장"],
-      "커피 한 잔 주세요. demande une tasse de café. 한 개 peut aussi compter un produit, mais ici tu comptes la boisson servie en tasse : 잔 est le classificateur précis."
+      "커피 한 잔 주세요. demande une tasse de café. 한 개 peut aussi compter un produit, mais ici tu comptes la boisson servie en tasse : 잔 est le classificateur précis.",
       "drink-classifier",
       "Le café est servi dans une tasse et tu veux compter cette tasse, pas une unité de produit générique.",
       "Choisis le classificateur propre aux boissons servies en tasse ou en verre.",
@@ -2153,7 +2153,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       "표 두 __ 주세요.",
       "장",
       ["개", "명", "잔"],
-      "표 두 장 주세요. demande deux billets. 표 두 개 est possible pour deux unités de produit ; mais des billets considérés comme objets plats prennent plus précisément 장."
+      "표 두 장 주세요. demande deux billets. 표 두 개 est possible pour deux unités de produit ; mais des billets considérés comme objets plats prennent plus précisément 장.",
       "flat-classifier",
       "Tu comptes les billets comme des objets plats, et non comme de simples unités génériques.",
       "Choisis le classificateur spécifique aux billets et autres objets plats.",
