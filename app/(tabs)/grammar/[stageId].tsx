@@ -557,8 +557,8 @@ export default function GrammarLessonScreen() {
 
   const closeTheory = React.useCallback(() => {
     dismissTheory();
-    // Pour les quinze étapes A0, fermer la fiche ne lance pas les exercices.
-    // Les leçons suivantes conservent leur comportement de navigation.
+    // Pour les vingt premières étapes, fermer la fiche ne lance pas les exercices.
+    // Les étapes suivantes conservent leur comportement de navigation.
     if (!isQuickGuide && !session) startPractice();
   }, [dismissTheory, isQuickGuide, session, startPractice]);
 
