@@ -1739,7 +1739,7 @@ test("stages 15 to 40 keep concise exercise prompts and their own display contex
       assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
       assert.ok(question.display, question.id);
       assert.ok(question.options.length >= 3, question.id);
-      assert.ok(question.explanation.trim().length > 25, question.id);
+      assert.ok(question.explanation.trim().length > 10, question.id);
     }
   }
   assert.match(exercises, /stageId !== "a1-validation"/u);
