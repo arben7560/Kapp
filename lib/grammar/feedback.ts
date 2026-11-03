@@ -1244,6 +1244,54 @@ function getStageEighteenSelectedFeedback(
   return undefined;
 }
 
+/**
+ * Étape 19 : correction contextualisée de chaque réponse sélectionnée.
+ * « Et » et « avec » peuvent se traduire tant par 하고 que par (이)랑 ;
+ * ne jamais traiter ces deux structures comme mutuellement exclusives.
+ */
+const STAGE_NINETEEN_DISTRACTOR_FEEDBACK: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "coffee-and-cake-direct": {
+    "커피나 케이크 주세요.": "나 signifie « ou » après 커피 : tu proposes le café ou le gâteau, pas nécessairement les deux. Pour les commander ensemble, dis 커피하고 케이크 주세요.",
+    "커피만 주세요.": "만 limite la commande au café : le gâteau disparaît. Tu veux recevoir les deux produits, donc 커피하고 케이크 주세요.",
+    "케이크만 주세요.": "만 limite la commande au gâteau : le café disparaît. Pour obtenir le café et le gâteau ensemble, dis 커피하고 케이크 주세요.",
+  },
+  "bread-milk-order": {
+    "빵이나 우유 주세요.": "이나, après le nom 빵 qui finit par une consonne, veut dire « ou » : le pain ou le lait. Ici, tu demandes les deux, donc 빵하고 우유 주세요.",
+    "빵만 주세요.": "만 signifie « seulement » : cette phrase demande du pain sans lait. Pour commander le pain et le lait ensemble, dis 빵하고 우유 주세요.",
+    "우유만 주세요.": "우유만 signifie « seulement du lait » : le pain est exclu. Pour recevoir les deux produits, dis 빵하고 우유 주세요.",
+  },
+  "friend-with-context": {
+    "이랑": "친구 se termine par une voyelle, donc on emploie 랑 sans 이. 친구이랑 n’est pas la forme correcte : pour « avec un ami », dis 친구랑 가요.",
+    "가": "친구가 가요. signifie « L’ami y va » : 가 désigne le sujet de l’action. Mais tu y vas toi-même avec cet ami, donc 친구랑 가요.",
+    "만": "친구만 가요. signifie « Seul l’ami y va », avec une restriction sur qui part. Ici, l’ami t’accompagne : 친구랑 가요.",
+  },
+  "student-with-context": {
+    "랑": "학생 finit par le 받침 ㅇ : il faut ajouter 이랑, pas 랑 tout seul. Pour « avec un étudiant », dis 학생이랑 가요.",
+    "이": "학생이 가요. est une phrase correcte signifiant « L’étudiant y va » ; 이 marque le sujet. Mais tu y vas avec lui : 학생이랑 가요.",
+    "만": "학생만 가요. signifie « Seul l’étudiant y va », et non que tu es accompagné de lui. Pour exprimer l’accompagnement, dis 학생이랑 가요.",
+  },
+  "rice-soup-order": {
+    "밥이나 국 주세요.": "이나 signifie « ou » après 밥 : tu demandes du riz ou de la soupe, sans commander explicitement les deux. Ici, tu veux les deux : 밥이랑 국 주세요.",
+    "밥만 주세요.": "만 signifie « seulement » : tu commandes du riz sans la soupe. Pour demander le riz et la soupe, dis 밥이랑 국 주세요.",
+    "국만 주세요.": "국만 signifie « seulement de la soupe » : il manque le riz. Pour obtenir les deux aliments, dis 밥이랑 국 주세요.",
+  },
+};
+
+function getStageNineteenSelectedFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (question.stageId !== "coordinate-items" || typeof answer !== "string") return undefined;
+  for (const [drillId, reasons] of Object.entries(STAGE_NINETEEN_DISTRACTOR_FEEDBACK)) {
+    if (!question.id.includes("-" + drillId + "-")) continue;
+    const reason = reasons[answer];
+    if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+  }
+  return undefined;
+}
+
 /** Nuances de choix qui restent ambiguës avec une règle générale. */
 function getAdvancedSelectedFeedback(
   question: GrammarPracticeQuestion,
@@ -1839,6 +1887,9 @@ export function getGrammarIncorrectFeedback(
 
   const stageEighteenFeedback = getStageEighteenSelectedFeedback(question, answer);
   if (stageEighteenFeedback) return stageEighteenFeedback;
+
+  const stageNineteenFeedback = getStageNineteenSelectedFeedback(question, answer);
+  if (stageNineteenFeedback) return stageNineteenFeedback;
 
   const advancedFeedback = getAdvancedSelectedFeedback(question, selected, expected);
   if (advancedFeedback) return advancedFeedback;
