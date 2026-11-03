@@ -12,6 +12,42 @@ function source(relativePath) {
   return readFileSync(new URL(`../${relativePath}`, import.meta.url), "utf8");
 }
 
+function assertRenderedGridGap(screen, styleName, gapPattern, path) {
+  // Check every rendered grid, not an unrelated gap in a calculation or style.
+  const grids = [...screen.matchAll(/style=\{\[([^\]]*)\]\}/gu)]
+    .map((match) => match[1])
+    .filter((style) => new RegExp(`\\bstyles\\.${styleName}\\b`, "u").test(style));
+  assert.ok(grids.length > 0, `${path}: grille rendue introuvable`);
+  for (const style of grids) assert.match(style, gapPattern, path);
+}
+
+function assertHubGridGap(screen, path) {
+  // The initializer may depend on orientation. The contract is a shared value
+  // for column selection, both item-width branches and every rendered grid.
+  assert.match(screen, /const effectiveGap\s*=/u, path);
+  assert.match(screen, /getColumns\(\{[^}]*\bgap:\s*effectiveGap\s*,?\s*\}/u, path);
+  assert.match(
+    screen,
+    /const gridItemWidth\s*=\s*(?:isLandscape\s*&&\s*gridColumns > 1\s*\?\s*\(safeContentWidth - effectiveGap \* \(gridColumns - 1\)\) \/ gridColumns\s*:\s*)?responsive\.getGridItemWidth\(\s*gridColumns,\s*effectiveGap\s*,?\s*\)/u,
+    path,
+  );
+  assertRenderedGridGap(screen, "grid", /\{\s*gap:\s*effectiveGap\s*,?\s*\}/u, path);
+  assert.match(screen, /width:\s*gridItemWidth\b/u, path);
+}
+
+function assertMissionGridGap(screen, scaffold, path) {
+  // Mission hubs delegate their calculations to the shared scaffold.
+  assert.match(screen, /<GuidedMissionsScaffold\s+responsive=\{responsive\}/u, path);
+  assert.match(screen, /renderMissions=\{\(\{ columns, gap, isLandscape, itemStyle \}\)/u, path);
+  assert.match(scaffold, /const columns\s*=\s*missionContentWidth >= minCardWidth \* 2 \+ gap \? 2 : 1/u, path);
+  assert.match(scaffold, /\(missionContentWidth - gap \* \(columns - 1\)\) \/ columns/u, path);
+  assert.match(scaffold, /\{ width: calculatedItemWidth \}/u, path);
+  assert.match(scaffold, /const gridLayout[^=]*=\s*\{\s*columns,\s*gap,\s*isLandscape,\s*itemStyle,\s*\}/u, path);
+  assert.equal([...scaffold.matchAll(/renderMissions\(gridLayout\)/gu)].length, 2, path);
+  assertRenderedGridGap(screen, "missionStack", /\{\s*gap\s*,?\s*\}/u, path);
+  assert.match(screen, /style=\{itemStyle\}/u, path);
+}
+
 function getOutgoingStepIds(scene, step, stepIndex) {
   if (step.type === "choice") {
     return step.options.map((option) => option.goTo);
@@ -167,20 +203,38 @@ test("les huit hubs utilisent le même gap pour le calcul et le rendu des grille
     "app/lesson/aeroportMissions.tsx",
   ]) {
     const screen = source(path);
-    assert.match(
-      screen,
-      /const effectiveGap = Math\.max\((?:15|16), responsive\.gridGap\)/u,
-      path,
-    );
-    assert.match(screen, /getColumns\(\{[\s\S]*?gap: effectiveGap,/u, path);
-    assert.match(
-      screen,
-      /getGridItemWidth\([\s\S]*?effectiveGap,[\s\S]*?\)/u,
-      path,
-    );
-    assert.match(screen, /\{ gap: effectiveGap \}|gap: effectiveGap,/u, path);
-    assert.doesNotMatch(screen, /gap: Math\.max\((?:15|16), responsive\.gridGap\)/u, path);
+    if (path.startsWith("app/lesson/")) {
+      assertMissionGridGap(screen, source("components/immersion/GuidedMissionsScaffold.tsx"), path);
+    } else {
+      assertHubGridGap(screen, path);
+    }
   }
+});
+
+test("le contrôle des grilles refuse un gap différent dans les calculs ou le rendu", () => {
+  const path = "app/(tabs)/hangul/index.tsx";
+  const screen = source(path);
+  for (const [before, after, fromEnd = false] of [
+    ["gap: effectiveGap,", "gap: responsive.gridGap,"],
+    ["getGridItemWidth(gridColumns, effectiveGap)", "getGridItemWidth(gridColumns, responsive.gridGap)"],
+    ["safeContentWidth - effectiveGap *", "safeContentWidth - responsive.gridGap *"],
+    ["gap: effectiveGap,", "gap: 99,", true],
+  ]) {
+    // Mutate calculations and rendering separately, entirely in memory.
+    const index = fromEnd ? screen.lastIndexOf(before) : screen.indexOf(before);
+    assert.ok(index >= 0, before);
+    const mutated = screen.slice(0, index) + after + screen.slice(index + before.length);
+    assert.throws(() => assertHubGridGap(mutated, path), assert.AssertionError);
+  }
+  const missionPath = "app/lesson/metroMissions.tsx";
+  const mission = source(missionPath);
+  const scaffold = source("components/immersion/GuidedMissionsScaffold.tsx");
+  assert.throws(() => assertMissionGridGap(
+    mission.replace("{ gap },", "{ gap: 99 },"), scaffold, missionPath,
+  ), assert.AssertionError);
+  assert.throws(() => assertMissionGridGap(
+    mission, scaffold.replace("missionContentWidth - gap *", "missionContentWidth - 99 *"), missionPath,
+  ), assert.AssertionError);
 });
 
 test("Aéroport réinitialise toute la session quand la mission change", () => {
