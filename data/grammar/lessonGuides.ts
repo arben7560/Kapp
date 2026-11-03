@@ -1170,29 +1170,29 @@ export const GRAMMAR_LESSON_GUIDES = {
   "choose-alternative": {
     stageId: "choose-alternative",
     introduction:
-      "Quand tu ne choisis pas encore entre deux possibilités, le coréen utilise « ou ». Pour deux noms, tu peux employer (이)나 ; pour opposer deux questions ou propositions complètes, 아니면 est très naturel. Le sens doit rester différent de « et » ou de « seulement ».",
+      "Pour laisser le choix entre deux possibilités, utilise « ou » : 커피나 차 (café ou thé), 빵이나 케이크 (pain ou gâteau). Entre deux questions complètes, 아니면 signifie « ou alors ».",
     mainRule:
-      "Attache 나 après un nom terminé par une voyelle (커피나 차, 버스나 지하철) et 이나 après un nom terminé par une consonne finale (빵이나 케이크, 물이나 차). Entre deux propositions, utilise 아니면. 아니면 peut aussi présenter deux noms comme alternatives à l’oral.",
+      "Après une voyelle, ajoute 나 : 커피나 차, 버스나 지하철. Après un 받침, ajoute 이나 : 빵이나 케이크, 물이나 차. Entre deux questions complètes, choisis 아니면 ; 그리고 signifie plutôt « et puis ». 하고 = « et », 만 = « seulement ».",
     formula: {
       pattern: "nom + (이)나 + nom ; question + 아니면 + question",
       explanation:
-        "커피나 차 : café ou thé ; 빵이나 케이크 : pain ou gâteau. 지금 가요? 아니면 집에 있어요? : « Tu pars maintenant ? Ou tu restes chez toi ? ».",
+        "커피나 차 laisse le choix entre deux boissons ; 빵이나 케이크 entre deux aliments ; 버스나 지하철로 가요 entre deux moyens. 지금 가요? 아니면 집에 있어요? oppose deux questions complètes. 아니면 peut aussi relier deux noms à l’oral.",
     },
     steps: [
       {
         title: "Vérifie le sens voulu",
         explanation:
-          "« Ou » laisse deux possibilités. Avec 하고, tu réunis les deux (« et ») ; avec 만, tu limites la phrase à un seul élément (« seulement »).",
+          "Une alternative propose au moins deux options : 물이나 차를 마셔요. 하고 relie les deux (« et »), 만 restreint à une seule (« seulement »). Ne remplace pas automatiquement « ou » par ces connecteurs.",
       },
       {
         title: "Pour deux noms, regarde leur finale",
         explanation:
-          "커피 se termine par une voyelle : 커피나 차. 빵 se termine par ㅇ : 빵이나 케이크. Évite 커피이나 et 빵나.",
+          "커피 et 버스 finissent par une voyelle : 커피나, 버스나. 빵 et 물 finissent par une consonne finale : 빵이나, 물이나. 커피이나 et 빵나 ne conviennent pas à ces noms.",
       },
       {
         title: "Pour deux questions, propose l’autre option",
         explanation:
-          "지금 가요? 아니면 집에 있어요? demande de choisir entre partir maintenant et rester à la maison. 그리고 ajouterait une question au lieu de poser le même choix.",
+          "지금 가요? 아니면 집에 있어요? propose « tu pars ou tu restes ? ». Ici, 아니면 relie deux questions, tandis que (이)나 et 하고 s’attachent à un nom. 그리고 ajoute plutôt une information qu’une alternative.",
       },
     ],
     examples: [
@@ -1242,11 +1242,11 @@ export const GRAMMAR_LESSON_GUIDES = {
       {
         mistake: "Croire que 아니면 ne s’utilise qu’entre deux phrases.",
         correction:
-          "아니면 relie naturellement deux questions complètes, mais peut aussi relier des noms dans une alternative orale, par exemple 카드 아니면 현금.",
+          "Pour opposer deux questions complètes, utilise 아니면 : 지금 가요? 아니면 집에 있어요? À l’oral, 아니면 peut aussi opposer deux noms : 카드 아니면 현금.",
       },
     ],
     memoryTip:
-      "Pour deux noms : voyelle → 나, consonne → 이나. Pour deux questions : 아니면 (« ou alors »). 하고 = « et » ; 만 = « seulement ».",
+      "Deux noms : voyelle → 나, 받침 → 이나. Deux questions complètes : 아니면 (« ou alors »). 하고 relie (« et »), 만 restreint (« seulement »), 그리고 ajoute (« et puis »).",
   },
   "request-action": {
     stageId: "request-action",
