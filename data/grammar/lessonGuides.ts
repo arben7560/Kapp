@@ -898,29 +898,29 @@ export const GRAMMAR_LESSON_GUIDES = {
   "simple-negation": {
     stageId: "simple-negation",
     introduction:
-      "Le coréen distingue deux situations souvent confondues en français : 안 nie une action ou un état, tandis que 아니에요 nie une identité ou une catégorie nominale.",
+      "Ces exercices opposent deux cas : 안 nie une action ou une qualité (안 가요, 안 매워요), tandis que nom + 이/가 아니에요 nie une identité (« je ne suis pas… », « ce n’est pas… »).",
     mainRule:
-      "Place 안 juste avant le verbe ou l’adjectif pour dire « ne pas ». Pour dire qu’une personne ou une chose n’est pas un nom, utilise nom + 이/가 아니에요.",
+      "Pour une action ou une qualité, choisis la négation courte 안 devant le prédicat : 안 가요, 안 마셔요, 안 공부해요, 안 매워요. Pour une identité, utilise nom + 이/가 아니에요 : 학생이 아니에요, 의사가 아니에요.",
     formula: {
-      pattern: "(objet) + 안 + prédicat  ·  nom + 이/가 아니에요",
+      pattern: "action / adjectif : 안 + prédicat  ·  identité : nom + 이/가 아니에요",
       explanation:
-        "안 매워요 signifie « ce n’est pas épicé » et 커피를 안 마셔요 « je ne bois pas de café ». Pour une identité, 학생이 아니에요 signifie « je ne suis pas étudiant ».",
+        "안 가요 (« je n’y vais pas »), 커피를 안 마셔요 (« je ne bois pas de café ») et 안 매워요 (« ce n’est pas épicé ») utilisent la forme courte. 가지 않아요 est aussi correct mais constitue une forme longue, non demandée ici. 학생이 아니에요 nie une identité.",
     },
     steps: [
       {
         title: "Décide ce que tu nies",
         explanation:
-          "Une action ou une qualité appelle 안. Une identité, une profession ou une catégorie appelle 아니에요.",
+          "Ne pas aller, boire, acheter, étudier, ou ne pas être épicé → 안. Ne pas être étudiant, médecin, un livre ou ton sac → nom + 이/가 아니에요. 없어요 signifie plutôt « ne pas avoir / ne pas se trouver ».",
       },
       {
         title: "Place la négation",
         explanation:
-          "Mets 안 devant le prédicat : 안 가요, 안 매워요, 안 해요. Ne le place pas devant un nom pour produire une identité négative.",
+          "Mets 안 devant le verbe ou l’adjectif conjugué : 안 가요, 안 사요, 안 공부해요, 안 매워요. 가지 않아요 / 마시지 않아요 sont aussi grammaticaux, mais les exercices demandent précisément la négation courte. 못 가요 indique plutôt une impossibilité.",
       },
       {
         title: "Forme la négation nominale",
         explanation:
-          "Ajoute 이 après une consonne et 가 après une voyelle, puis 아니에요 : 학생이 아니에요, 의사가 아니에요.",
+          "Après un 받침, choisis 이 : 학생이 아니에요, 책이 아니에요. Après une voyelle, choisis 가 : 의사가 아니에요, 커피가 아니에요. 제 가방이 아니에요 nie l’identité ; 제 가방이 없어요 indique l’absence du sac.",
       },
     ],
     examples: [
@@ -947,12 +947,12 @@ export const GRAMMAR_LESSON_GUIDES = {
         correction: "Une identité se nie avec 이/가 아니에요 : 학생이 아니에요.",
       },
       {
-        mistake: "Confondre 안 et 못 : utiliser 못 pour dire qu’on choisit simplement de ne pas agir.",
-        correction: "안 exprime la négation ou le choix ; 못 indique une impossibilité ou une incapacité : 안 가요 / 못 가요.",
+        mistake: "Confondre la négation courte avec 못 (« ne pas pouvoir »), la forme longue -지 않아요, ou 없어요 (« ne pas avoir / être absent »).",
+        correction: "안 가요 est la négation courte demandée ; 가지 않아요 est grammatical mais plus long ; 못 가요 insiste sur l’incapacité ou l’empêchement. Pour « ce n’est pas mon sac », utilise 제 가방이 아니에요, pas 제 가방이 없어요.",
       },
     ],
     memoryTip:
-      "안 bloque l’action devant le verbe ; 아니에요 corrige une étiquette après le nom. Demande-toi : « je ne fais pas quoi ? » ou « je ne suis pas quoi ? ».",
+      "« Je ne fais pas » / « ce n’est pas épicé » → 안. « Je ne suis pas étudiant » → 학생이 아니에요. « Je ne peux pas » → 못. « Je ne l’ai pas » → 없어요.",
   },
   "request-item": {
     stageId: "request-item",
