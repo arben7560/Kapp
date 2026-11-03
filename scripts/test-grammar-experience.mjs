@@ -1755,7 +1755,7 @@ test("stage 16 checks every answer and explains all fifteen selected distractors
       assert.equal(question.answer, spec.answer, question.id);
       assert.deepEqual(new Set(question.options), new Set([spec.answer, ...spec.wrong]), question.id);
       assert.equal(question.options.length, 4, question.id);
-      assert.match(question.display, /CONTEXTE\\n/u, question.id);
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
       assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
       assert.ok(question.explanation.includes(spec.answer.replace(/[.!?]+$/u, "")), question.id);
       if (shuffledA[index].options.join("|") !== shuffledB[index].options.join("|")) mixedOrders += 1;
