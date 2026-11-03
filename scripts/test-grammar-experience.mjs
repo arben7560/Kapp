@@ -1772,8 +1772,9 @@ test("later grammar distractors must explain the actual selection", () => {
   const missing = [];
   const duplicates = [];
   const summary = new Map();
-  for (const stageId of GRAMMAR_STAGE_IDS.slice(14, 40)) {
-    const questions = buildGrammarPracticeQuestions(stageId, 1, () => 0.42);
+  for (const stageId of [...GRAMMAR_STAGE_IDS.slice(14, 40), "a1-validation"]) {
+    for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions(stageId, attempt, () => 0.42);
     for (const question of questions) {
       if (Array.isArray(question.answer)) continue;
       const wrong = question.options.filter((choice) => choice !== question.answer);
@@ -1789,10 +1790,11 @@ test("later grammar distractors must explain the actual selection", () => {
         duplicates.push(question.id + " => " + JSON.stringify(feedbacks));
       }
     }
+    }
   }
   assert.deepEqual(missing, [], "each explanation must address the selected answer: " + missing.slice(0, 30).join("; "));
   assert.deepEqual(duplicates, [], "different wrong choices must have different feedback: " + duplicates.slice(0, 15).join("; "));
-  assert.equal(summary.size, 26);
+  assert.equal(summary.size, 27);
 });
 test("high-confusion grammar distractors receive answer-specific explanations", () => {
   const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
