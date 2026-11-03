@@ -1293,6 +1293,106 @@ test("stage 10 keeps compact exercise cards and tailored positive responses", ()
   assert.match(exercises, /stageId === "object-actions"/u);
 });
 
+test("stage 11 explains every chosen location distractor and distinguishes action from presence", () => {
+  const cases = new Map([
+    ["cafe-action", {
+      answer: "에서", sentence: "카페에서 공부해요",
+      choices: ["에", "로", "까지"], aspect: "action-location",
+    }],
+    ["school-static", {
+      answer: "에", sentence: "학교에 있어요",
+      choices: ["에서", "로", "까지"], aspect: "static-location",
+    }],
+    ["home-action", {
+      answer: "에서", sentence: "집에서 밥을 먹어요",
+      choices: ["에", "으로", "까지"], aspect: "action-location",
+    }],
+    ["library-static", {
+      answer: "에", sentence: "도서관에 있어요",
+      choices: ["에서", "으로", "까지"], aspect: "static-location",
+    }],
+    ["restaurant-action", {
+      answer: "에서", sentence: "식당에서 친구를 만나요",
+      choices: ["에", "으로", "까지"], aspect: "action-location",
+    }],
+  ]);
+
+  const checked = new Set();
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("action-location", attempt, () => 0.42);
+    const shuffledA = buildGrammarPracticeQuestions("action-location", attempt, () => 0);
+    const shuffledB = buildGrammarPracticeQuestions("action-location", attempt, () => 0.99);
+    assert.equal(questions.length, 5);
+    let differentOrders = 0;
+
+    for (const question of questions) {
+      const drillId = [...cases.keys()].find((key) =>
+        question.id.includes(":drill-action-location-eseo-" + key + "-")
+      );
+      assert.ok(drillId, question.id);
+      const spec = cases.get(drillId);
+      assert.equal(question.kind, "gap", question.id);
+      assert.equal(question.answer, spec.answer, question.id);
+      assert.equal(question.ruleAspect, spec.aspect, question.id);
+      assert.deepEqual(new Set(question.options), new Set([spec.answer, ...spec.choices]), question.id);
+      assert.equal(question.options.length, 4, question.id);
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
+      assert.match(question.display, /PHRASE À COMPLÉTER\n/u, question.id);
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.doesNotMatch(question.display, /«\s*«/u, question.id);
+      assert.ok(question.contrastFamily?.id === "location-action-vs-state", question.id);
+
+      const explanations = spec.choices.map((selected) => {
+        checked.add(drillId + ":" + selected);
+        const feedback = getGrammarIncorrectFeedback(question, selected);
+        assert.ok(feedback.includes("Tu as choisi « " + selected + " »"), question.id);
+        assert.ok(feedback.includes(spec.sentence), question.id);
+        assert.ok(feedback.length <= 260, question.id);
+        assert.notEqual(feedback, question.explanation, question.id);
+        return feedback;
+      });
+      assert.equal(new Set(explanations).size, 3, question.id);
+
+      const a = shuffledA.find(({ id }) => id === question.id);
+      const b = shuffledB.find(({ id }) => id === question.id);
+      assert.ok(a && b, question.id);
+      assert.deepEqual(new Set(a.options), new Set(b.options), question.id);
+      if (a.options.join("|") !== b.options.join("|")) differentOrders += 1;
+    }
+    assert.ok(differentOrders > 0, "choice positions should vary without changing the meanings");
+  }
+  assert.equal(checked.size, 15);
+
+  const questions = buildGrammarPracticeQuestions("action-location", 1, () => 0.42);
+  const drill = (name) => questions.find(({ id }) =>
+    id.includes(":drill-action-location-eseo-" + name + "-")
+  );
+  assert.match(getGrammarIncorrectFeedback(drill("cafe-action"), "에"), /présence.*activité/u);
+  assert.match(getGrammarIncorrectFeedback(drill("cafe-action"), "로"), /vers le café.*trajet/u);
+  assert.match(getGrammarIncorrectFeedback(drill("school-static"), "에서"), /action.*position|action.*학교에 있어요/u);
+  assert.match(getGrammarIncorrectFeedback(drill("home-action"), "으로"), /direction.*déjà/u);
+  assert.match(getGrammarIncorrectFeedback(drill("library-static"), "에서"), /lecture.*livre se trouve/u);
+  assert.match(getGrammarIncorrectFeedback(drill("restaurant-action"), "까지"), /limite.*rencontres/u);
+  assert.ok(drill("cafe-action").options.includes("로"));
+  assert.ok(drill("school-static").options.includes("로"));
+  assert.equal(drill("cafe-action").options.includes("으로"), false);
+  assert.equal(drill("school-static").options.includes("으로"), false);
+});
+
+test("stage 11 uses compact practice cards and situation-specific correct feedback", () => {
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
+
+  assert.match(screen, /question\.stageId === "action-location" && styles\.questionCardStageEleven/u);
+  assert.match(screen, /if \(question\.stageId === "action-location"\)/u);
+  for (const drillId of ["cafe-action", "school-static", "home-action", "library-static", "restaurant-action"]) {
+    assert.ok(screen.includes('question.id.includes("' + drillId + '")'), drillId);
+  }
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(screen, /POUR CET EXERCICE/u);
+  assert.match(exercises, /stageId === "action-location"/u);
+});
+
 test("high-confusion grammar distractors receive answer-specific explanations", () => {
   const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
   assert.match(getGrammarIncorrectFeedback(dailyRegister, "좋습니다"), /registre formel/u);
