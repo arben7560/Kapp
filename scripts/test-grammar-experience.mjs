@@ -1767,6 +1767,33 @@ test("later lessons distinguish a restricted quantity, an additive meaning and p
   assert.match(getGrammarIncorrectFeedback(seeing, "보았을 거예요"), /supposition.*passé/u);
 });
 
+
+test("later grammar distractors must explain the actual selection", () => {
+  const missing = [];
+  const duplicates = [];
+  const summary = new Map();
+  for (const stageId of GRAMMAR_STAGE_IDS.slice(14, 40)) {
+    const questions = buildGrammarPracticeQuestions(stageId, 1, () => 0.42);
+    for (const question of questions) {
+      if (Array.isArray(question.answer)) continue;
+      const wrong = question.options.filter((choice) => choice !== question.answer);
+      const feedbacks = wrong.map((choice) => {
+        const feedback = getGrammarIncorrectFeedback(question, choice);
+        if (feedback === question.explanation || !feedback.includes(choice)) {
+          missing.push(stageId + " / " + question.id + " / " + choice + " => " + feedback.slice(0, 100));
+        }
+        summary.set(stageId, (summary.get(stageId) ?? 0) + 1);
+        return feedback;
+      });
+      if (new Set(feedbacks).size !== wrong.length) {
+        duplicates.push(question.id + " => " + JSON.stringify(feedbacks));
+      }
+    }
+  }
+  assert.deepEqual(missing, [], "each explanation must address the selected answer: " + missing.slice(0, 30).join("; "));
+  assert.deepEqual(duplicates, [], "different wrong choices must have different feedback: " + duplicates.slice(0, 15).join("; "));
+  assert.equal(summary.size, 26);
+});
 test("high-confusion grammar distractors receive answer-specific explanations", () => {
   const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
   assert.match(getGrammarIncorrectFeedback(dailyRegister, "좋습니다"), /registre formel/u);
