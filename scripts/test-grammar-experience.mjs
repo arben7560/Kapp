@@ -1694,6 +1694,79 @@ test("stage 14 keeps compact question cards and five specific correct-answer lea
   assert.match(exercises, /stageId === "information-questions"/u);
 });
 
+
+test("stage 15 distinguishes every chosen wrong answer across both negation families", () => {
+  const seenDrills = new Set();
+  const checkedChoices = new Set();
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("simple-negation", attempt, () => 0.42);
+    for (const question of questions) {
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.ok(question.id.includes(":drill-"), question.id);
+      assert.equal(typeof question.answer, "string", question.id);
+      const wrongChoices = question.options.filter((option) => option !== question.answer);
+      assert.equal(wrongChoices.length, 3, question.id);
+      const token = question.id.match(/:drill-(?:negation-an|copula-negation-anieyo)-(.+)-\d+$/u);
+      assert.ok(token, question.id);
+      seenDrills.add(token[1]);
+      const feedbacks = wrongChoices.map((selected) => {
+        checkedChoices.add(token[1] + ":" + selected);
+        const feedback = getGrammarIncorrectFeedback(question, selected);
+        assert.ok(feedback.startsWith("Tu as choisi « " + selected + " » : "), question.id);
+        assert.notEqual(feedback, question.explanation, question.id);
+        assert.ok(feedback.length > 85 && feedback.length < 290, question.id);
+        return feedback;
+      });
+      assert.equal(new Set(feedbacks).size, 3, question.id);
+    }
+  }
+  assert.equal(seenDrills.size, 10, "the five short-negation and five identity-negation drills are audited");
+  assert.equal(checkedChoices.size, 30, "all thirty incorrect selections have their own explanation");
+
+  const questions = buildGrammarPracticeQuestions("simple-negation", 1, () => 0.42);
+  const find = (id) => questions.find((question) => question.id.includes(id));
+  assert.match(getGrammarIncorrectFeedback(find("not-go-choice"), "못 가요"), /empêchement.*décides/u);
+  assert.match(getGrammarIncorrectFeedback(find("not-spicy-short"), "맵지 않아요"), /correct.*longue/u);
+});
+
+test("stages 15 to 40 keep concise exercise prompts and their own display context", () => {
+  const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  for (const stageId of GRAMMAR_STAGE_IDS.slice(14, 40)) {
+    const questions = buildGrammarPracticeQuestions(stageId, 1, () => 0.42);
+    assert.ok(questions.length >= 5, stageId);
+    for (const question of questions) {
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.ok(question.display, question.id);
+      assert.ok(question.options.length >= 3, question.id);
+      assert.ok(question.explanation.trim().length > 25, question.id);
+    }
+  }
+  assert.match(exercises, /stageId !== "a1-validation"/u);
+  assert.match(screen, /question\.stageId !== "a1-validation" && styles\.questionCardStageFourteen/u);
+  assert.match(screen, /return "Oui\. " \+ question\.explanation/u);
+});
+
+test("later lessons distinguish a restricted quantity, an additive meaning and past speculation", () => {
+  const restricted = buildGrammarPracticeQuestions("limit-request", 1, () => 0.42);
+  const seats = restricted.find((question) => question.id.includes("sentence-seat-only"));
+  const bread = restricted.find((question) => question.id.includes("meaning-bread-only"));
+  const order = restricted.find((question) => question.id.includes("one-only-order"));
+  assert.ok(seats && bread && order);
+  assert.match(getGrammarIncorrectFeedback(seats, "자리가 하나 있어요."), /sans insister/u);
+  assert.match(getGrammarIncorrectFeedback(seats, "자리도 하나 있어요."), /aussi/u);
+  assert.match(getGrammarIncorrectFeedback(seats, "자리 두 개만 있어요."), /deux unités/u);
+  assert.match(getGrammarIncorrectFeedback(bread, "Il y a aussi du pain."), /도/u);
+  assert.match(getGrammarIncorrectFeedback(bread, "Le pain est délicieux."), /맛있어요/u);
+  assert.match(getGrammarIncorrectFeedback(bread, "Y a-t-il du pain ou du riz ?"), /question/u);
+  assert.match(getGrammarIncorrectFeedback(order, ["한 잔만", "지금", "있어요."]), /지금.*한 잔만/u);
+
+  const past = buildGrammarPracticeQuestions("past-event", 1, () => 0.42);
+  const seeing = past.find((question) => question.id.includes("see-past"));
+  assert.ok(seeing);
+  assert.match(getGrammarIncorrectFeedback(seeing, "보았을 거예요"), /supposition.*passé/u);
+});
+
 test("high-confusion grammar distractors receive answer-specific explanations", () => {
   const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
   assert.match(getGrammarIncorrectFeedback(dailyRegister, "좋습니다"), /registre formel/u);
