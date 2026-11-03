@@ -148,21 +148,21 @@ export const GRAMMAR_VOCABULARY_HINTS_10_TO_19: Record<
   "portion-count": [
     { korean: "삼겹살", french: "samgyeopsal" },
   ],
-  "coffee-and-cake": [
+  "coffee-and-cake-direct": [
     { korean: "커피", french: "café" },
     { korean: "케이크", french: "gâteau" },
   ],
-  "bread-with-milk": [
+  "bread-milk-order": [
     { korean: "빵", french: "pain" },
     { korean: "우유", french: "lait" },
   ],
-  "friend-with": [
+  "friend-with-context": [
     { korean: "친구", french: "ami" },
   ],
-  "student-with": [
+  "student-with-context": [
     { korean: "학생", french: "étudiant" },
   ],
-  "rice-with-soup": [
+  "rice-soup-order": [
     { korean: "밥", french: "riz" },
     { korean: "국", french: "soupe" },
   ],
