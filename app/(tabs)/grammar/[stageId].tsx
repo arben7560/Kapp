@@ -75,6 +75,23 @@ function scoreLabel(score: number) {
 }
 
 function getCorrectFeedbackLead(question: GrammarPracticeQuestion) {
+  if (question.stageId === "destination-and-time") {
+    if (question.id.includes("seoul-destination")) {
+      return "Oui, 서울에 가요 marque Séoul comme destination, pas comme point de départ.";
+    }
+    if (question.id.includes("school-destination")) {
+      return "Oui, 학교에 와요 indique l’école comme point d’arrivée de la personne.";
+    }
+    if (question.id.includes("two-time")) {
+      return "Oui, 두 시에 fixe la rencontre à deux heures précises.";
+    }
+    if (question.id.includes("monday-time")) {
+      return "Oui, 월요일에 fixe le départ au lundi, sans indiquer une période.";
+    }
+    if (question.id.includes("morning-time")) {
+      return "Oui, 아침 여덟 시에 fixe le réveil à huit heures exactes.";
+    }
+  }
   if (question.stageId === "action-location") {
     if (question.id.includes("cafe-action")) {
       return "Oui, 카페에서 situe l’activité d’étudier au café, et non un déplacement.";
@@ -1055,6 +1072,7 @@ function PracticePanel({
           question.stageId === "present-actions" && styles.questionCardStageNine,
           question.stageId === "object-actions" && styles.questionCardStageTen,
           question.stageId === "action-location" && styles.questionCardStageEleven,
+          question.stageId === "destination-and-time" && styles.questionCardStageTwelve,
         ]}
       >
         {question.exerciseGroup ? (
@@ -1081,7 +1099,8 @@ function PracticePanel({
               question.stageId === "locate-thing" ||
               question.stageId === "present-actions" ||
               question.stageId === "object-actions" ||
-              question.stageId === "action-location"
+              question.stageId === "action-location" ||
+              question.stageId === "destination-and-time"
             }
           />
         ) : null}
@@ -1261,7 +1280,8 @@ function FeedbackCard({
               question.stageId === "locate-thing" ||
               question.stageId === "present-actions" ||
               question.stageId === "object-actions" ||
-              question.stageId === "action-location"
+              question.stageId === "action-location" ||
+              question.stageId === "destination-and-time"
             ? "TON CHOIX EXPLIQUÉ"
             : "À AJUSTER ICI"}
       </AppText>
@@ -1279,7 +1299,8 @@ function FeedbackCard({
             question.stageId === "locate-thing" ||
             question.stageId === "present-actions" ||
             question.stageId === "object-actions" ||
-            question.stageId === "action-location"
+            question.stageId === "action-location" ||
+            question.stageId === "destination-and-time"
               ? "POUR CET EXERCICE"
               : "ICI, ON ATTENDAIT"}
           </AppText>
@@ -1757,6 +1778,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   questionCardStageEleven: {
+    minHeight: 156,
+    padding: 16,
+    gap: 10,
+  },
+  questionCardStageTwelve: {
     minHeight: 156,
     padding: 16,
     gap: 10,
