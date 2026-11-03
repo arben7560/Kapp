@@ -1000,23 +1000,78 @@ export const GRAMMAR_LESSON_GUIDES = {
   "sino-number-contexts": {
     stageId: "sino-number-contexts",
     introduction:
-      "Les nombres sino-coréens servent à lire les informations chiffrées de la vie quotidienne : prix, dates, minutes, étages, lignes et numéros. Ils ne remplacent pas tous les nombres natifs.",
-    mainRule: "Utilise 일, 이, 삼… avec 원, 분, 월, 층, 호선 et les numéros. Pour compter des objets ou dire l’heure, les nombres natifs restent souvent la référence étudiée ici.",
-    formula: { pattern: "nombre sino-coréen + unité de contexte", explanation: "L’unité indique le contexte : 만 원 pour un prix, 십 분 pour dix minutes, 2호선 pour la ligne 2." },
+      "Dans la vie quotidienne, les nombres sino-coréens servent notamment à lire les prix, les minutes, les mois, les lignes de métro et les chiffres des numéros de téléphone. Le contexte détermine le bon système de nombres.",
+    mainRule:
+      "Associe le nombre à ce qui suit : 오천 원 = 5 000 wons, 십 분 = dix minutes, 3월 (삼월) = mars et 2호선 (이호선) = ligne 2. Pour un téléphone, lis chaque chiffre séparément : 010 = 공일공.",
+    formula: {
+      pattern: "nombre sino-coréen + unité ; téléphone : chiffres séparés",
+      explanation:
+        "원 exprime un prix, 분 une durée en minutes, 월 un mois et 호선 une ligne de métro. Dans un numéro de téléphone, 0 se prononce couramment 공 ; 영 est aussi possible.",
+    },
     steps: [
-      { title: "Reconnais le contexte", explanation: "Prix, date, minute, étage, ligne ou numéro signalent généralement le système sino-coréen." },
-      { title: "Lis avec l’unité", explanation: "Ne lis pas le chiffre isolément : 만 원 forme un prix et 2호선 une ligne de métro." },
-      { title: "Ne mélange pas les systèmes", explanation: "Pour une commande comptée, 한 잔 et 두 장 sont natifs ; pour un prix ou une ligne, pense sino-coréen." },
+      {
+        title: "Repère l’unité ou le contexte",
+        explanation:
+          "원 indique des wons ; 분, des minutes ; 월, un mois du calendrier ; 호선, une ligne. Un numéro de téléphone se lit chiffre par chiffre.",
+      },
+      {
+        title: "Lis la valeur sans la changer",
+        explanation:
+          "오백 원 vaut 500 wons, 오천 원 5 000 et 오만 원 50 000. 구 분 vaut neuf minutes, 십 분 dix minutes et 십일 분 onze minutes.",
+      },
+      {
+        title: "Distingue numéro, date et durée",
+        explanation:
+          "2호선 désigne une ligne, 2번 출구 une sortie. 3월 est le mois de mars ; 삼 개월 signifie trois mois de durée. 010 se lit 공일공, pas comme un seul nombre.",
+      },
     ],
     examples: [
-      { korean: "이거 만 원이에요.", french: "Cela coûte dix mille wons.", parts: [{ korean: "이거", french: "cet article", role: "élément évalué" }, { korean: "만 원", french: "dix mille wons", role: "prix sino-coréen" }, { korean: "이에요", french: "coûte / est", role: "identification" }] },
-      { korean: "2호선이에요.", french: "C’est la ligne 2.", parts: [{ korean: "2호선", french: "ligne 2", role: "numéro de ligne" }, { korean: "이에요", french: "c’est", role: "identification" }] },
+      {
+        korean: "이거 만 원이에요.",
+        french: "Cet article coûte dix mille wons.",
+        parts: [
+          { korean: "이거", french: "cet article", role: "objet montré" },
+          { korean: "만 원", french: "dix mille wons", role: "prix" },
+          { korean: "이에요", french: "est / coûte", role: "identification" },
+        ],
+      },
+      {
+        korean: "십 분 후에 출발해요.",
+        french: "On part dans dix minutes.",
+        parts: [
+          { korean: "십 분", french: "dix minutes", role: "durée" },
+          { korean: "후에", french: "dans / après", role: "repère temporel" },
+          { korean: "출발해요", french: "on part", role: "action" },
+        ],
+      },
+      {
+        korean: "2호선이에요.",
+        french: "C’est la ligne 2.",
+        parts: [
+          { korean: "2호선", french: "ligne 2", role: "numéro de ligne" },
+          { korean: "이에요", french: "c’est", role: "identification" },
+        ],
+      },
     ],
     commonMistakes: [
-      { mistake: "Utiliser un nombre natif pour un prix ou une ligne.", correction: "Prix et numéros prennent le système sino-coréen : 오천 원, 2호선." },
-      { mistake: "Traiter les deux systèmes comme interchangeables.", correction: "Associe le système à l’unité : objets/heures → souvent natif ; prix/minutes/lignes → sino-coréen." },
+      {
+        mistake: "Mélanger nombres natifs et sino-coréens pour lire un prix ou des minutes.",
+        correction:
+          "Utilise 오천 원 pour 5 000 wons et 십 분 pour dix minutes. 열 분 peut compter dix personnes honorifiquement, mais ce n’est pas la lecture attendue pour dix minutes.",
+      },
+      {
+        mistake: "Confondre des nombres égaux associés à des unités différentes.",
+        correction:
+          "3월 (삼월) indique mars, 삼 개월 une durée de trois mois et 3일 le troisième jour du mois. 2호선 indique une ligne, 2번 출구 une sortie.",
+      },
+      {
+        mistake: "Regrouper les chiffres d’un téléphone comme un nombre entier.",
+        correction:
+          "Lis chaque chiffre séparément : 010 devient 공일공 dans l’usage courant. 영 peut aussi se lire pour zéro ; il ne faut pas traiter 영일영 comme une erreur de sens.",
+      },
     ],
-    memoryTip: "L’unité donne le signal : 원, 분, 월, 층 et 호선 appellent généralement les nombres sino-coréens.",
+    memoryTip:
+      "Regarde l’unité avant de lire : 원 = prix, 분 = minutes, 월 = mois, 호선 = ligne. Pour un téléphone, lis chaque chiffre un par un.",
   },
   "coordinate-items": {
     stageId: "coordinate-items",
