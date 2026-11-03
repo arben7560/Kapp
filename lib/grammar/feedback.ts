@@ -937,6 +937,60 @@ function getPossessionStageThirteenFeedback(
   return undefined;
 }
 
+/**
+ * Étape 14 : la question ne recherche pas la même information selon le
+ * distracteur choisi. Les variantes grammaticales sont distinguées des
+ * constructions qui nécessitent une autre formulation.
+ */
+const INFORMATION_QUESTIONS_STAGE_FOURTEEN_DISTRACTORS: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "where-toilet": {
+    "언제": "언제 demande « quand ». Pour les horaires des toilettes, on demanderait 언제 열어요? Ici, tu veux leur emplacement : 화장실이 어디예요?",
+    "왜": "왜 demande « pourquoi », mais 화장실이 왜예요? n’exprime pas naturellement où elles sont. Pour demander leur emplacement : 화장실이 어디예요?",
+    "어떻게": "어떻게 demande « comment ». Pour demander l’état des toilettes, on dirait plutôt 화장실이 어때요? Ici, tu cherches le lieu : 화장실이 어디예요?",
+  },
+  "when-train": {
+    "어디": "어디 demande « où » : pour préciser le lieu d’arrivée, on pourrait dire 기차가 어디에 와요? Tu connais le quai et demandes l’heure : 기차가 언제 와요?",
+    "왜": "기차가 왜 와요? est grammatical et demande pourquoi le train arrive. Mais tu veux connaître le moment de son arrivée : 기차가 언제 와요?",
+    "어떻게": "기차가 어떻게 와요? peut demander comment le train arrive, pas à quelle heure. Pour demander son moment d’arrivée : 기차가 언제 와요?",
+  },
+  "why-taxi": {
+    "어디": "어디 veut dire « où ». Pour demander où prendre un taxi, on dirait plutôt 어디에서 택시를 타요? Ici, tu demandes la raison du choix : 왜 택시를 타요?",
+    "언제": "언제 택시를 타요? est grammatical et demande à quel moment ton ami prend un taxi. Tu veux savoir pourquoi il a choisi ce moyen : 왜 택시를 타요?",
+    "어떻게": "어떻게 택시를 타요? peut demander comment prendre un taxi. Mais tu veux la raison de ce choix plutôt que sa méthode : 왜 택시를 타요?",
+  },
+  "how-go": {
+    "어디": "어디 demande « où ». Pour demander où exactement à Séoul, on dirait plutôt 서울 어디에 가요? Mais tu connais la destination et demandes le moyen : 서울에 어떻게 가요?",
+    "언제": "서울에 언제 가요? est correct, mais demande « quand vas-tu à Séoul ? ». Ici, tu cherches le moyen de transport : 서울에 어떻게 가요?",
+    "왜": "서울에 왜 가요? est correct, mais demande « pourquoi vas-tu à Séoul ? ». Ici, tu demandes comment s’y rendre : 서울에 어떻게 가요?",
+  },
+  "how-much-item": {
+    "어디": "이거 어디예요? pourrait viser un lieu montré, mais pas le prix de l’article que tu tiens. Pour savoir combien il coûte : 이거 얼마예요?",
+    "언제": "이거 언제예요? pourrait demander quand a lieu un événement désigné par 이거. Ici, tu montres un article et demandes son prix : 이거 얼마예요?",
+    "무슨": "무슨 signifie « quel / quelle sorte de » et se place devant un nom, comme 무슨 물건이에요? Il ne peut pas simplement remplacer le prix : 이거 얼마예요?",
+  },
+};
+
+function getInformationQuestionsStageFourteenFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (
+    question.stageId !== "information-questions" ||
+    !question.conceptIds.includes("interrogatives-basic") ||
+    typeof answer !== "string"
+  ) return undefined;
+
+  for (const [drillId, choices] of Object.entries(INFORMATION_QUESTIONS_STAGE_FOURTEEN_DISTRACTORS)) {
+    if (question.id.includes(":drill-interrogatives-basic-" + drillId + "-")) {
+      const reason = choices[answer];
+      if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+    }
+  }
+  return undefined;
+}
+
 function selectedSpecificFallback(
   question: GrammarPracticeQuestion,
   selected: string,
@@ -1457,6 +1511,9 @@ export function getGrammarIncorrectFeedback(
 
   const possessionFeedback = getPossessionStageThirteenFeedback(question, answer);
   if (possessionFeedback) return possessionFeedback;
+
+  const informationFeedback = getInformationQuestionsStageFourteenFeedback(question, answer);
+  if (informationFeedback) return informationFeedback;
 
   if (conceptId === "topic-eun-neun") {
     if (
