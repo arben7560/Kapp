@@ -2021,6 +2021,79 @@ test("stage 18 teaches price values, ten minutes, metro lines, calendar and phon
   assert.match(screen, /POUR CET EXERCICE/u);
 });
 
+test("stage 19 explains every selected connector answer across rotating attempts", () => {
+  const expected = new Map([
+    ["coffee-and-cake-direct", {
+      kind: "scene", answer: "커피하고 케이크 주세요.",
+      wrong: ["커피나 케이크 주세요.", "커피만 주세요.", "케이크만 주세요."],
+      label: "PHRASE À EXPRIMER",
+    }],
+    ["bread-milk-order", {
+      kind: "scene", answer: "빵하고 우유 주세요.",
+      wrong: ["빵이나 우유 주세요.", "빵만 주세요.", "우유만 주세요."],
+      label: "PHRASE À EXPRIMER",
+    }],
+    ["friend-with-context", {
+      kind: "gap", answer: "랑",
+      wrong: ["이랑", "가", "만"],
+      label: "PHRASE À COMPLÉTER",
+    }],
+    ["student-with-context", {
+      kind: "gap", answer: "이랑",
+      wrong: ["랑", "이", "만"],
+      label: "PHRASE À COMPLÉTER",
+    }],
+    ["rice-soup-order", {
+      kind: "scene", answer: "밥이랑 국 주세요.",
+      wrong: ["밥이나 국 주세요.", "밥만 주세요.", "국만 주세요."],
+      label: "PHRASE À EXPRIMER",
+    }],
+  ]);
+  const seen = new Set();
+  const checked = new Set();
+  let shuffleChanges = 0;
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("coordinate-items", attempt, () => 0.42);
+    const firstOrder = buildGrammarPracticeQuestions("coordinate-items", attempt, () => 0);
+    const secondOrder = buildGrammarPracticeQuestions("coordinate-items", attempt, () => 0.99);
+    assert.equal(questions.length, 5);
+    for (const [index, question] of questions.entries()) {
+      const drillId = [...expected.keys()].find((key) => question.id.includes("-" + key + "-"));
+      assert.ok(drillId, question.id);
+      const spec = expected.get(drillId);
+      seen.add(drillId);
+      assert.equal(question.stageId, "coordinate-items");
+      assert.deepEqual(question.conceptIds, ["noun-link-hago-irang"], question.id);
+      assert.equal(question.kind, spec.kind, question.id);
+      assert.equal(question.answer, spec.answer, question.id);
+      assert.deepEqual(new Set(question.options), new Set([spec.answer, ...spec.wrong]), question.id);
+      assert.equal(question.options.length, 4, question.id);
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
+      assert.ok(question.display.includes(spec.label), question.id);
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.ok(question.explanation.includes(spec.answer), question.id);
+      assert.ok(question.vocabulary?.length > 0, question.id);
+      if (firstOrder[index].options.join("|") !== secondOrder[index].options.join("|")) {
+        shuffleChanges += 1;
+      }
+      const feedbacks = spec.wrong.map((selected) => {
+        checked.add(drillId + ":" + selected);
+        const feedback = getGrammarIncorrectFeedback(question, selected);
+        assert.ok(feedback.startsWith("Tu as choisi « " + selected + " » : "), question.id);
+        assert.notEqual(feedback, question.explanation, question.id);
+        assert.ok(feedback.includes(spec.answer), question.id);
+        assert.ok(feedback.length > 85 && feedback.length < 360, question.id);
+        return feedback;
+      });
+      assert.equal(new Set(feedbacks).size, 3, question.id);
+    }
+  }
+  assert.equal(seen.size, 5);
+  assert.equal(checked.size, 15, "each wrong connector choice needs distinct feedback");
+  assert.ok(shuffleChanges >= 5, "option order must change with the shuffle seed");
+});
+
 test("stages 15 to 40 keep concise exercise prompts and their own display context", () => {
   const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
   const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
