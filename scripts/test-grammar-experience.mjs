@@ -319,6 +319,38 @@ test("stage 11–15 guides prepare the actual grammar concepts and wrong-answer 
   assert.match(negation.commonMistakes[1].correction, /제 가방이 아니에요/u);
 });
 
+test("lesson guides 11–15 keep accurate Korean example decomposition and instructional headings", () => {
+  const stages = [
+    ["action-location", ["Identifie le verbe", "Marque le lieu selon le verbe", "Distingue destination et direction"]],
+    ["destination-and-time", ["Repère le déplacement", "Repère le moment précis", "Distingue origine, limite et objet"]],
+    ["possession", ["Nomme le possesseur", "Relie les deux noms", "Choisis le registre de « mon »"]],
+    ["information-questions", ["Définis l’information recherchée", "Remplace le bon bloc", "Vérifie ce que demande la question"]],
+    ["simple-negation", ["Décide ce que tu nies", "Place la négation", "Forme la négation nominale"]],
+  ];
+
+  for (const [stageId, expectedHeadings] of stages) {
+    const guide = getGrammarLessonGuide(stageId);
+    assert.deepEqual(guide.steps.map(({ title }) => title), expectedHeadings, stageId);
+    for (const example of guide.examples) {
+      const withoutSpacingOrPunctuation = (korean) =>
+        korean.replace(/[\\s.?!]/gu, "");
+      const reconstructed = example.parts.map(({ korean }) => korean).join("");
+      assert.equal(
+        withoutSpacingOrPunctuation(reconstructed),
+        withoutSpacingOrPunctuation(example.korean),
+        `${stageId}: invalid Korean word-by-word decomposition for ${example.korean}`,
+      );
+      assert.ok(example.french.length > 8, `${stageId}: missing translation`);
+      assert.ok(
+        example.parts.every(({ korean, french, role }) =>
+          korean.length > 0 && french.length > 0 && role.length > 0
+        ),
+        `${stageId}: incomplete role labels`,
+      );
+    }
+  }
+});
+
 test("lessons 06–10 introduce the distinctions used in their exercises", () => {
   const guide6 = getGrammarLessonGuide("nominal-questions");
   const guide7 = getGrammarLessonGuide("existence");
