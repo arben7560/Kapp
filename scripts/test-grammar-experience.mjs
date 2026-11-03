@@ -1973,7 +1973,7 @@ test("register and request distractors are disambiguated by explicit situations"
   const casualMy = buildGrammarPracticeQuestions("possession", 1, () => 0.42)
     .find(({ answer }) => answer === "내");
   assert.ok(casualMy);
-  assert.match(casualMy.display, /ami proche/u);
+  assert.match(casualMy.display, /ami très proche.*style familier/u);
 
   const actionRequest = buildGrammarPracticeQuestions("request-action", 1, () => 0.42)
     .find(({ options }) => options.includes("말하세요"));
