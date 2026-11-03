@@ -1085,6 +1085,21 @@ const STAGE_SIXTEEN_DISTRACTOR_FEEDBACK: Readonly<
     "보세요": "영수증 보세요. invite l’autre à regarder le reçu. Après ton paiement, c’est toi qui veux le récupérer : 영수증 주세요.",
     "있어요": "영수증 있어요. dit que le reçu est disponible ou présent ; cela ne demande pas qu’on te le remette : 영수증 주세요.",
   },
+  "iced-americano-meaning": {
+    "Avez-vous un americano glacé ?": "Cette question vérifierait la disponibilité de la boisson : 아이스 아메리카노 있어요? Mais 주세요 indique une commande : « Un americano glacé, s’il vous plaît. ».",
+    "Je bois un americano glacé.": "Cette affirmation décrirait l’action de boire : 아이스 아메리카노 마셔요. Ici, 주세요 demande qu’on te serve la boisson : « Un americano glacé, s’il vous plaît. ».",
+    "Buvez un americano glacé, s’il vous plaît.": "Tu demanderais à quelqu’un de boire : 아이스 아메리카노 마셔 주세요. Mais le client commande pour lui-même : « Un americano glacé, s’il vous plaît. ».",
+  },
+  "bag-direct": {
+    "봉투 있어요?": "Cette question est naturelle pour vérifier si le magasin a des sacs ; elle peut même servir de demande indirecte. Mais ici, tu dois demander directement qu’on t’en donne un : 봉투 주세요.",
+    "봉투 보여 주세요.": "Cette phrase correcte demande à la caissière de te montrer un sac, sans lui demander de te le remettre : 봉투 주세요.",
+    "봉투 필요해요.": "Tu exprimes « J’ai besoin d’un sac », ce qui peut faire comprendre ton besoin. Pour formuler la demande directe attendue : 봉투 주세요.",
+  },
+  "item-request-in-context": {
+    "커피 있어요?": "Tu demandes « Avez-vous du café ? ». Cette question est naturelle, mais ne passe pas directement commande. Pour recevoir le café : 커피 좀 주세요.",
+    "커피 마셔요.": "Cette phrase décrit le fait de boire du café ; elle ne sollicite aucune boisson auprès du serveur. Pour commander : 커피 좀 주세요.",
+    "커피를 마셔 주세요.": "Tu demandes à quelqu’un de boire du café. Avec 마시다, 주세요 demande une action ; pour recevoir le café lui-même : 커피 좀 주세요.",
+  },
 };
 
 function getStageSixteenSelectedFeedback(
