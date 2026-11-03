@@ -1393,6 +1393,107 @@ test("stage 11 uses compact practice cards and situation-specific correct feedba
   assert.match(exercises, /stageId === "action-location"/u);
 });
 
+test("stage 12 gives individual feedback for each destination or time distractor", () => {
+  const cases = new Map([
+    ["seoul-destination", {
+      answer: "에", sentence: "서울에 가요",
+      choices: ["에서", "을", "부터"], aspect: "destination",
+    }],
+    ["school-destination", {
+      answer: "에", sentence: "학교에 와요",
+      choices: ["에서", "를", "까지"], aspect: "destination",
+    }],
+    ["two-time", {
+      answer: "에", sentence: "두 시에 친구를 만나요",
+      choices: ["에서", "부터", "를"], aspect: "time",
+    }],
+    ["monday-time", {
+      answer: "에", sentence: "월요일에 출발해요",
+      choices: ["에서", "부터", "를"], aspect: "time",
+    }],
+    ["morning-time", {
+      answer: "에", sentence: "아침 여덟 시에 일어나요",
+      choices: ["에서", "까지", "를"], aspect: "time",
+    }],
+  ]);
+  const checked = new Set();
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("destination-and-time", attempt, () => 0.42);
+    const shuffledA = buildGrammarPracticeQuestions("destination-and-time", attempt, () => 0);
+    const shuffledB = buildGrammarPracticeQuestions("destination-and-time", attempt, () => 0.99);
+    assert.equal(questions.length, 5);
+    let orderVariations = 0;
+
+    for (const question of questions) {
+      const drillId = [...cases.keys()].find((key) =>
+        question.id.includes(":drill-destination-time-e-" + key + "-")
+      );
+      assert.ok(drillId, question.id);
+      const spec = cases.get(drillId);
+
+      assert.equal(question.kind, "gap", question.id);
+      assert.equal(question.answer, spec.answer, question.id);
+      assert.equal(question.ruleAspect, spec.aspect, question.id);
+      assert.deepEqual(
+        new Set(question.options),
+        new Set([spec.answer, ...spec.choices]),
+        question.id,
+      );
+      assert.equal(question.options.length, 4, question.id);
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
+      assert.match(question.display, /PHRASE À COMPLÉTER\n/u, question.id);
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.doesNotMatch(question.display, /«\s*«/u, question.id);
+
+      const messages = spec.choices.map((selected) => {
+        checked.add(drillId + ":" + selected);
+        const feedback = getGrammarIncorrectFeedback(question, selected);
+        assert.ok(feedback.includes("Tu as choisi « " + selected + " »"), question.id);
+        assert.ok(feedback.includes(spec.sentence), question.id);
+        assert.ok(feedback.length <= 260, question.id);
+        assert.notEqual(feedback, question.explanation, question.id);
+        return feedback;
+      });
+      assert.equal(new Set(messages).size, 3, question.id);
+
+      const a = shuffledA.find(({ id }) => id === question.id);
+      const b = shuffledB.find(({ id }) => id === question.id);
+      assert.ok(a && b, question.id);
+      assert.deepEqual(new Set(a.options), new Set(b.options), question.id);
+      if (a.options.join("|") !== b.options.join("|")) orderVariations += 1;
+    }
+    assert.ok(orderVariations > 0, "choice positions should vary with the random source");
+  }
+  assert.equal(checked.size, 15, "all fifteen distractors must receive targeted feedback");
+
+  const questions = buildGrammarPracticeQuestions("destination-and-time", 1, () => 0.42);
+  const drill = (name) => questions.find(({ id }) =>
+    id.includes(":drill-destination-time-e-" + name + "-")
+  );
+  assert.match(getGrammarIncorrectFeedback(drill("seoul-destination"), "에서"), /phrase grammaticale.*point de départ.*destination/u);
+  assert.match(getGrammarIncorrectFeedback(drill("school-destination"), "까지"), /grammatical.*limite.*destination/u);
+  assert.match(getGrammarIncorrectFeedback(drill("two-time"), "부터"), /début d’une période.*précisément/u);
+  assert.match(getGrammarIncorrectFeedback(drill("monday-time"), "부터"), /début d’une période.*jour précis/u);
+  assert.match(getGrammarIncorrectFeedback(drill("morning-time"), "까지"), /au plus tard.*exactement/u);
+  assert.match(drill("seoul-destination").display, /point de départ n’est pas indiqué/u);
+  assert.match(drill("morning-time").display, /exactement à huit heures/u);
+});
+
+test("stage 12 has compact presentation and five contextual correct-answer messages", () => {
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
+
+  assert.match(screen, /question\.stageId === "destination-and-time" && styles\.questionCardStageTwelve/u);
+  assert.match(screen, /if \(question\.stageId === "destination-and-time"\)/u);
+  for (const id of ["seoul-destination", "school-destination", "two-time", "monday-time", "morning-time"]) {
+    assert.ok(screen.includes('question.id.includes("' + id + '")'), id);
+  }
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(screen, /POUR CET EXERCICE/u);
+  assert.match(exercises, /stageId === "destination-and-time"/u);
+});
+
 test("high-confusion grammar distractors receive answer-specific explanations", () => {
   const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
   assert.match(getGrammarIncorrectFeedback(dailyRegister, "좋습니다"), /registre formel/u);
