@@ -664,7 +664,7 @@ export const GRAMMAR_LESSON_GUIDES = {
     mainRule:
       "Pour une activité sur place (공부해요, 먹어요, 만나요), ajoute 에서 au lieu : 카페에서 공부해요. Pour situer quelqu’un ou quelque chose avec 있어요, choisis 에 : 학교에 있어요.",
     formula: {
-      pattern: "action : lieu + 에서 + verbe  ·  position : lieu + 에 + 있어요",
+      pattern: "action : lieu + 에서 + (objet) + verbe  ·  position : lieu + 에 + 있어요",
       explanation:
         "Compare 카페에서 공부해요 (activité) et 학교에 있어요 (position). Dans 식당에서 친구를 만나요, 식당에서 indique où la rencontre a lieu et 친구를 est la personne rencontrée.",
     },
@@ -675,12 +675,12 @@ export const GRAMMAR_LESSON_GUIDES = {
           "공부해요, 먹어요 et 만나요 sont des activités ; 있어요 indique une présence ou une position. Regarde le verbe avant de choisir la particule.",
       },
       {
-        title: "Marque le lieu avec 에서",
+        title: "Marque le lieu selon le verbe",
         explanation:
           "Pour une action : 카페에서 공부해요, 집에서 밥을 먹어요. Pour une position : 학교에 있어요, 도서관에 있어요. La particule suit immédiatement le lieu.",
       },
       {
-        title: "Ne confonds pas avec 에",
+        title: "Distingue destination et direction",
         explanation:
           "Ne confonds pas avec 로/으로 (« vers », direction) ni 까지 (« jusqu’à », limite). Avec 가요/와요, 에 peut aussi indiquer la destination : 학교에 가요 n’équivaut pas à 학교에서 공부해요.",
       },
@@ -739,7 +739,7 @@ export const GRAMMAR_LESSON_GUIDES = {
           "Pour une heure ou un jour précis : 두 시에 친구를 만나요, 월요일에 출발해요, 아침 여덟 시에 일어나요. À ce niveau, retiens 두 시 et 여덟 시 avec les nombres natifs.",
       },
       {
-        title: "Garde l’action à la fin",
+        title: "Distingue origine, limite et objet",
         explanation:
           "부터 marque un début (두 시부터) et 까지 une limite : 학교까지 와요 signifie « venir jusqu’à l’école », 여덟 시까지 « au plus tard à huit heures ». Ces expressions peuvent être grammaticales mais ne donnent pas simplement une destination ou une heure exacte. 을/를 marque un objet, pas l’heure ou la destination visée ici.",
       },
@@ -859,7 +859,7 @@ export const GRAMMAR_LESSON_GUIDES = {
           "Ne place pas systématiquement le mot au début : 화장실이 어디예요?, 기차가 언제 와요?, 서울에 어떻게 가요?. 왜 peut se placer naturellement avant l’action : 왜 택시를 타요?.",
       },
       {
-        title: "Conserve les particules utiles",
+        title: "Vérifie ce que demande la question",
         explanation:
           "Une autre question peut être correcte mais chercher autre chose : 기차가 왜 와요? (pourquoi ?) ne donne pas l’heure ; 서울에 언제 가요? (quand ?) ne demande pas le moyen. 어디 peut recevoir 에 ou 에서 ; 무슨 précède un nom : 무슨 일.",
       },
@@ -910,7 +910,7 @@ export const GRAMMAR_LESSON_GUIDES = {
       {
         title: "Décide ce que tu nies",
         explanation:
-          "Ne pas aller, boire, acheter, étudier, ou ne pas être épicé → 안. Ne pas être étudiant, médecin, un livre ou ton sac → nom + 이/가 아니에요. 없어요 signifie plutôt « ne pas avoir / ne pas se trouver ».",
+          "Ne pas aller, boire, acheter, étudier, ou ne pas être épicé → 안. Ne pas être étudiant ou médecin, ou dire que ce n’est pas le bon livre ou ton sac → nom + 이/가 아니에요. 없어요 signifie plutôt « ne pas avoir / ne pas se trouver ».",
       },
       {
         title: "Place la négation",
