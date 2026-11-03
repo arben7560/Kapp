@@ -957,26 +957,26 @@ export const GRAMMAR_LESSON_GUIDES = {
   "request-item": {
     stageId: "request-item",
     introduction:
-      "Pour demander simplement un objet, un plat ou une boisson, le coréen place le nom avant 주세요. Cette formule est directe, polie et très fréquente au café, au restaurant ou au magasin.",
+      "Au café, au restaurant ou en magasin, nom + 주세요 demande qu’on te donne un objet, un plat ou une boisson. C’est une commande directe : elle diffère de « en avez-vous ? », « j’en ai besoin » ou « faites cette action ».",
     mainRule:
-      "Utilise nom + 주세요. Tu peux ajouter 좀 pour adoucir la demande, mais nom + 주세요 demande une chose, pas une action.",
-    formula: { pattern: "objet / plat + (좀) 주세요", explanation: "Le nom demandé arrive avant 주세요 : 물 주세요 signifie « de l’eau, s’il vous plaît ». 좀 ajoute une nuance d’adoucissement." },
+      "Pour recevoir une chose, utilise nom + (좀) 주세요 : 물 주세요, 영수증 주세요, 커피 좀 주세요. 좀 adoucit sans être obligatoire. Distingue 있어요? (disponibilité) et verbe + 아/어 주세요 (action demandée).",
+    formula: { pattern: "objet / plat + (좀) 주세요", explanation: "물 주세요 demande de l’eau, 영수증 주세요 un reçu, 커피 좀 주세요 un café avec une nuance plus douce. 봉투 있어요? vérifie si des sacs sont disponibles ; 봉투 보여 주세요 demande d’en montrer un, pas de le donner." },
     steps: [
-      { title: "Nomme ce que tu veux", explanation: "Commence par l’objet, la boisson ou le plat : 물, 영수증, 아이스 아메리카노." },
-      { title: "Ajoute 주세요", explanation: "Place 주세요 après le nom pour demander que l’on te donne cette chose : 물 주세요." },
-      { title: "Adoucis si nécessaire", explanation: "물 좀 주세요 est plus doux ; 좀 n’est pas obligatoire dans une commande polie." },
+      { title: "Nomme la chose à recevoir", explanation: "Commence par l’objet, la boisson ou le plat : 물 (eau), 영수증 (reçu), 봉투 (sac), 아이스 아메리카노 (americano glacé)." },
+      { title: "Choisis une demande directe", explanation: "Nom + 주세요 signifie « donnez-moi… » : 물 주세요, 영수증 주세요. 있어요? vérifie une disponibilité ; 필요해요 exprime « j’en ai besoin », sans commander directement." },
+      { title: "Différencie les actions et nuance le ton", explanation: "커피 좀 주세요 adoucit la commande, mais 좀 n’est pas obligatoire. 마셔 주세요 (« buvez ») et 보여 주세요 (« montrez ») demandent une action : ce n’est pas la même chose que recevoir le café ou le reçu." },
     ],
     examples: [
       { korean: "물 주세요.", french: "De l’eau, s’il vous plaît.", parts: [{ korean: "물", french: "de l’eau", role: "objet demandé" }, { korean: "주세요", french: "s’il vous plaît", role: "demande" }] },
       { korean: "아이스 아메리카노 주세요.", french: "Un americano glacé, s’il vous plaît.", parts: [{ korean: "아이스 아메리카노", french: "un americano glacé", role: "boisson demandée" }, { korean: "주세요", french: "s’il vous plaît", role: "demande" }] },
     ],
     commonMistakes: [
-      { mistake: "Dire seulement 주세요 en oubliant l’objet.", correction: "Nomme d’abord la chose : 물 주세요, 영수증 주세요." },
+      { mistake: "Confondre l’objet à recevoir et l’action de l’autre.", correction: "물 주세요 demande de l’eau ; 물 마셔 주세요 demanderait à quelqu’un de boire de l’eau. 영수증 보여 주세요 demande qu’on te montre le reçu, pas qu’on te le remette." },
       { mistake: "Utiliser nom + 주세요 pour demander une action.", correction: "Pour une action, conjugue le verbe : 문을 열어 주세요." },
       { mistake: "Confondre « en avez-vous ? » avec une commande directe.", correction: "봉투 있어요? vérifie la disponibilité du sac ; 봉투 주세요. demande qu’on te le donne. Les deux peuvent être naturels, mais ne remplissent pas exactement la même intention." },
       { mistake: "Croire que 좀 est obligatoire.", correction: "커피 주세요. et 커피 좀 주세요. sont tous les deux corrects ; 좀 adoucit la demande sans changer l’objet demandé." },
     ],
-    memoryTip: "Montre la chose avec les mots avant 주세요 : nom d’abord, demande ensuite.",
+    memoryTip: "Pour recevoir la chose : nom + (좀) 주세요. Pour vérifier si elle existe : 있어요? Pour demander qu’on fasse quelque chose : verbe + 아/어 주세요.",
   },
   "request-quantity": {
     stageId: "request-quantity",
