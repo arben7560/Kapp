@@ -75,6 +75,23 @@ function scoreLabel(score: number) {
 }
 
 function getCorrectFeedbackLead(question: GrammarPracticeQuestion) {
+  if (question.stageId === "possession") {
+    if (question.id.includes("my-ticket-employee")) {
+      return "Oui, 제 표 désigne ton billet en registre poli devant le contrôleur.";
+    }
+    if (question.id.includes("my-name-professor")) {
+      return "Oui, 제 이름은 마크예요 emploie « mon » au registre poli.";
+    }
+    if (question.id.includes("my-passport-agent")) {
+      return "Oui, 제 여권이에요 désigne poliment ton propre passeport.";
+    }
+    if (question.id.includes("my-bag-close-friend")) {
+      return "Oui, 내 가방 est la forme familière naturelle avec 가방이야.";
+    }
+    if (question.id.includes("friends-bag")) {
+      return "Oui, 친구의 가방 relie l’ami à ce qui lui appartient avec 의.";
+    }
+  }
   if (question.stageId === "destination-and-time") {
     if (question.id.includes("seoul-destination")) {
       return "Oui, 서울에 가요 marque Séoul comme destination, pas comme point de départ.";
@@ -1073,6 +1090,7 @@ function PracticePanel({
           question.stageId === "object-actions" && styles.questionCardStageTen,
           question.stageId === "action-location" && styles.questionCardStageEleven,
           question.stageId === "destination-and-time" && styles.questionCardStageTwelve,
+          question.stageId === "possession" && styles.questionCardStageThirteen,
         ]}
       >
         {question.exerciseGroup ? (
@@ -1100,7 +1118,8 @@ function PracticePanel({
               question.stageId === "present-actions" ||
               question.stageId === "object-actions" ||
               question.stageId === "action-location" ||
-              question.stageId === "destination-and-time"
+              question.stageId === "destination-and-time" ||
+              question.stageId === "possession"
             }
           />
         ) : null}
@@ -1281,7 +1300,8 @@ function FeedbackCard({
               question.stageId === "present-actions" ||
               question.stageId === "object-actions" ||
               question.stageId === "action-location" ||
-              question.stageId === "destination-and-time"
+              question.stageId === "destination-and-time" ||
+              question.stageId === "possession"
             ? "TON CHOIX EXPLIQUÉ"
             : "À AJUSTER ICI"}
       </AppText>
@@ -1300,7 +1320,8 @@ function FeedbackCard({
             question.stageId === "present-actions" ||
             question.stageId === "object-actions" ||
             question.stageId === "action-location" ||
-            question.stageId === "destination-and-time"
+            question.stageId === "destination-and-time" ||
+            question.stageId === "possession"
               ? "POUR CET EXERCICE"
               : "ICI, ON ATTENDAIT"}
           </AppText>
@@ -1783,6 +1804,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   questionCardStageTwelve: {
+    minHeight: 156,
+    padding: 16,
+    gap: 10,
+  },
+  questionCardStageThirteen: {
     minHeight: 156,
     padding: 16,
     gap: 10,
