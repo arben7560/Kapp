@@ -1194,6 +1194,56 @@ function getStageSeventeenSelectedFeedback(
   return undefined;
 }
 
+/**
+ * Étape 18 : chaque distracteur est diagnostiqué dans son contexte.
+ * Les autres unités et numéros peuvent être corrects, mais ne désignent
+ * pas le prix, la durée ou le numéro recherché dans cette question.
+ */
+const STAGE_EIGHTEEN_DISTRACTOR_FEEDBACK: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "price-five-thousand": {
+    "오백 원": "오백 원 signifie 500 wons : 백 vaut cent. Sur l’étiquette il est écrit 5 000원, donc 오천 원 avec 천 (mille).",
+    "오만 원": "오만 원 signifie 50 000 wons : 만 vaut dix mille. Le prix affiché est dix fois moins élevé : 오천 원, 5 000 wons.",
+    "다섯 천 원": "Tu utilises 다섯, le « cinq » natif, devant 천. Pour lire le montant écrit 5 000원, emploie le système sino-coréen : 오천 원.",
+  },
+  "duration-ten-minutes": {
+    "열": "열 est « dix » en nombres natifs ; 열 분 peut aussi compter dix personnes avec 분 honorifique. Ici, 분 signifie « minutes » : le nombre sino-coréen attendu est 십, soit 십 분.",
+    "구": "구 est bien un nombre sino-coréen, mais il vaut neuf : 구 분 signifie neuf minutes. Le départ est annoncé dans dix minutes : 십 분.",
+    "십일": "십일 est un nombre sino-coréen correct, mais il vaut onze. 십일 분 ferait partir dans onze minutes ; l’annonce indique 십 분, dix minutes.",
+  },
+  "line-two-route": {
+    "두 호선": "두 est le « deux » natif utilisé devant certains classificateurs, comme 두 명. Une ligne de métro se numérote en sino-coréen : 2호선, lu 이호선.",
+    "2번 출구": "2번 출구 désigne bien une sortie de métro, la sortie 2. Tu dois trouver la ligne 2 et non une sortie : 2호선.",
+    "2번 버스": "2번 버스 est un bus portant le numéro 2. Le plan recherché est celui de la ligne 2 du métro : 2호선.",
+  },
+  "month-march": {
+    "세 월": "세 est le nombre natif « trois » utilisé devant certains classificateurs. Pour nommer mars, troisième mois du calendrier, on utilise le sino-coréen 삼 : 3월 (삼월).",
+    "삼 개월": "삼 개월 exprime une durée de trois mois ; cette expression n’est pas le nom du mois de mars. Sur le calendrier, mars s’écrit 3월 (삼월).",
+    "3일": "3일 correspond au troisième jour du mois, le 3. Ici, tu cherches le troisième mois de l’année : 3월 (삼월).",
+  },
+  "phone-prefix-010": {
+    "공이공": "공이공 lit les chiffres zéro-deux-zéro (020), pas zéro-un-zéro. Le préfixe affiché est 010 : 공일공.",
+    "공십공": "Tu regroupes le chiffre du milieu en 십 (« dix »). Or un numéro de téléphone se lit chiffre par chiffre : 0-1-0 donne 공일공.",
+    "공하나공": "하나 est le « un » natif utilisé pour compter. Dans ce numéro, le chiffre 1 se lit 일 : 0-1-0 se prononce 공일공.",
+  },
+};
+
+function getStageEighteenSelectedFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (question.stageId !== "sino-number-contexts" || typeof answer !== "string") {
+    return undefined;
+  }
+  for (const [drillId, reasons] of Object.entries(STAGE_EIGHTEEN_DISTRACTOR_FEEDBACK)) {
+    if (!question.id.includes("-" + drillId + "-")) continue;
+    const reason = reasons[answer];
+    if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+  }
+  return undefined;
+}
+
 /** Nuances de choix qui restent ambiguës avec une règle générale. */
 function getAdvancedSelectedFeedback(
   question: GrammarPracticeQuestion,
@@ -1786,6 +1836,9 @@ export function getGrammarIncorrectFeedback(
 
   const stageSeventeenFeedback = getStageSeventeenSelectedFeedback(question, answer);
   if (stageSeventeenFeedback) return stageSeventeenFeedback;
+
+  const stageEighteenFeedback = getStageEighteenSelectedFeedback(question, answer);
+  if (stageEighteenFeedback) return stageEighteenFeedback;
 
   const advancedFeedback = getAdvancedSelectedFeedback(question, selected, expected);
   if (advancedFeedback) return advancedFeedback;
