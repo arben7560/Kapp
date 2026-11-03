@@ -331,7 +331,7 @@ test("lessons 16–20 cover all 30 exercises and their grammatical distractor co
   assert.match(quantities.mainRule, /하나.*둘.*셋.*넷.*한.*두.*세.*네.*셋.*첫.*2인분/u);
   const calendar = getGrammarLessonGuide("sino-number-contexts");
   assert.match(calendar.steps[2].explanation, /3일.*trois jours.*contexte/u);
-  assert.match(calendar.commonMistakes[2].correction, /영.*공/u);
+  assert.match(calendar.commonMistakes[2].correction, /공.*영/u);
   const choices = getGrammarLessonGuide("choose-alternative");
   assert.match(choices.mainRule, /나.*이나.*아니면.*그리고.*하고.*만/u);
 });
