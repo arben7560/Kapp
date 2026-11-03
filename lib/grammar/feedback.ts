@@ -830,6 +830,60 @@ function getActionLocationStageElevenFeedback(
   return undefined;
 }
 
+/**
+ * Étape 12 : explique chacun des choix selon sa fonction exacte :
+ * destination (에), départ/origine (에서/부터), limite (까지),
+ * objet direct (을/를) ou moment ponctuel (에).
+ */
+const DESTINATION_STAGE_TWELVE_DISTRACTORS: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "seoul-destination": {
+    "에서": "서울에서 가요 peut être une phrase grammaticale si Séoul est le point de départ. Ici, Séoul est la destination : 서울에 가요.",
+    "을": "을 marque généralement un objet direct ou certains parcours, pas simplement la ville visée avec 가요. Pour dire que tu vas à Séoul : 서울에 가요.",
+    "부터": "서울부터 indique plutôt un départ depuis Séoul ou le début d’un itinéraire. Ici, Séoul est ton point d’arrivée : 서울에 가요.",
+  },
+  "school-destination": {
+    "에서": "학교에서 와요 pourrait vouloir dire que la personne vient de l’école : 학교 est alors le lieu d’origine. Ici, elle vient à l’école : 학교에 와요.",
+    "를": "를 marque normalement un objet direct, pas le lieu où l’on vient. Dans cette phrase, l’école est le point d’arrivée : 학교에 와요.",
+    "까지": "학교까지 와요 est grammatical et souligne que la personne vient jusqu’à l’école, comme limite du trajet. Ici, tu indiques simplement sa destination : 학교에 와요.",
+  },
+  "two-time": {
+    "에서": "에서 indique notamment le lieu d’une action ou un point de départ. Mais 두 시 est ici l’heure précise du rendez-vous : 두 시에 친구를 만나요.",
+    "부터": "두 시부터 veut dire « à partir de deux heures » : cela marque le début d’une période. Ici, la rencontre est fixée précisément à deux heures : 두 시에 친구를 만나요.",
+    "를": "를 marque l’objet direct : 친구를 est déjà la personne rencontrée. 두 시 indique l’heure du rendez-vous et prend 에 : 두 시에 친구를 만나요.",
+  },
+  "monday-time": {
+    "에서": "에서 sert notamment à situer une action dans un lieu, pas à fixer ce départ à un jour précis. Pour dire « je pars lundi » : 월요일에 출발해요.",
+    "부터": "월요일부터 veut dire « à partir de lundi » et introduit le début d’une période. Ici, le départ a lieu lundi, un jour précis : 월요일에 출발해요.",
+    "를": "를 est une particule d’objet direct ; lundi n’est pas ce qu’on fait partir. C’est le jour fixé pour le départ : 월요일에 출발해요.",
+  },
+  "morning-time": {
+    "에서": "에서 peut indiquer le lieu d’une activité ou un point de départ, pas l’heure exacte du réveil dans cette phrase. Ici : 아침 여덟 시에 일어나요.",
+    "까지": "아침 여덟 시까지 일어나요 peut vouloir dire que tu te lèves au plus tard à huit heures. Mais tu dis que tu te lèves exactement à huit heures : 아침 여덟 시에 일어나요.",
+    "를": "를 marque un objet direct, tandis que 아침 여덟 시 précise le moment du réveil. Pour une heure exacte, utilise 에 : 아침 여덟 시에 일어나요.",
+  },
+};
+
+function getDestinationStageTwelveFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (
+    question.stageId !== "destination-and-time" ||
+    !question.conceptIds.includes("destination-time-e") ||
+    typeof answer !== "string"
+  ) return undefined;
+
+  for (const [drillId, choices] of Object.entries(DESTINATION_STAGE_TWELVE_DISTRACTORS)) {
+    if (question.id.includes(":drill-destination-time-e-" + drillId + "-")) {
+      const reason = choices[answer];
+      if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+    }
+  }
+  return undefined;
+}
+
 function selectedSpecificFallback(
   question: GrammarPracticeQuestion,
   selected: string,
@@ -1344,6 +1398,9 @@ export function getGrammarIncorrectFeedback(
 
   const actionLocationFeedback = getActionLocationStageElevenFeedback(question, answer);
   if (actionLocationFeedback) return actionLocationFeedback;
+
+  const destinationFeedback = getDestinationStageTwelveFeedback(question, answer);
+  if (destinationFeedback) return destinationFeedback;
 
   if (conceptId === "topic-eun-neun") {
     if (
