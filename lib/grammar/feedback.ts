@@ -884,6 +884,59 @@ function getDestinationStageTwelveFeedback(
   return undefined;
 }
 
+/**
+ * Étape 13 : le retour dépend du distracteur réellement choisi :
+ * possessif poli/familier, démonstratif, pronom sujet ou particule 의.
+ */
+const POSSESSION_STAGE_THIRTEEN_DISTRACTORS: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "my-ticket-employee": {
+    "내": "내 표예요 signifie aussi « c’est mon billet », mais dans un registre familier. Tu parles à un contrôleur : préfère la forme polie 이건 제 표예요.",
+    "저": "저 표 signifie « ce billet là-bas » quand 저 précède 표. Tu veux dire « mon billet », pas en montrer un autre : 이건 제 표예요.",
+    "제가": "제가 est « moi » marqué comme sujet, pas « mon ». Devant 표, on utilise le possessif 제 : 이건 제 표예요.",
+  },
+  "my-name-professor": {
+    "내": "내 이름은 마크예요 serait grammatical, mais 내 signifie « mon » en style familier. Pour te présenter poliment à ton professeur : 제 이름은 마크예요.",
+    "저": "저 devant 이름 peut montrer « ce nom-là », mais ce n’est pas le possessif « mon ». Pour donner ton propre nom poliment : 제 이름은 마크예요.",
+    "제가": "제가 signifie « moi » en fonction de sujet, comme 제가 마크예요. Devant le nom 이름, il faut « mon » : 제 이름은 마크예요.",
+  },
+  "my-passport-agent": {
+    "내": "내 여권이에요 signifie bien « c’est mon passeport », mais s’emploie au registre familier. Face à un agent, utilise la forme polie 제 여권이에요.",
+    "저": "저 여권 peut désigner « ce passeport là-bas », et non « mon passeport ». Tu identifies le document comme le tien : 제 여권이에요.",
+    "제가": "제가 signifie « moi » avec la particule de sujet 가. Ce n’est pas un possessif à placer devant 여권 : 제 여권이에요.",
+  },
+  "my-bag-close-friend": {
+    "제": "제 가방 est un possessif poli grammaticalement correct, mais ta phrase finit en -이야 et s’adresse à un proche. Pour garder le style familier : 이건 내 가방이야.",
+    "나": "나 signifie « moi, je » ; pour dire « mon » devant 가방, il faut sa forme possessive 내 : 이건 내 가방이야.",
+    "제가": "제가 signifie « moi » comme sujet poli, pas « mon ». Pour parler de ton sac à un ami proche, utilise 내 : 이건 내 가방이야.",
+  },
+  "friends-bag": {
+    "제": "제 signifie « mon » en style poli, mais ton exercice parle du sac de l’ami. Après 친구, il faut relier les deux noms avec 의 : 친구의 가방이에요.",
+    "내": "내 signifie « mon » en style familier, pas « de l’ami ». Pour exprimer explicitement à qui appartient le sac : 친구의 가방이에요.",
+    "가": "가 marque le sujet : 친구가 가방이에요 signifierait littéralement que l’ami est un sac ! Pour dire « le sac de l’ami », utilise 의 : 친구의 가방이에요.",
+  },
+};
+
+function getPossessionStageThirteenFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (
+    question.stageId !== "possession" ||
+    !question.conceptIds.includes("possession-ui-je-nae") ||
+    typeof answer !== "string"
+  ) return undefined;
+
+  for (const [drillId, choices] of Object.entries(POSSESSION_STAGE_THIRTEEN_DISTRACTORS)) {
+    if (question.id.includes(":drill-possession-ui-je-nae-" + drillId + "-")) {
+      const reason = choices[answer];
+      if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+    }
+  }
+  return undefined;
+}
+
 function selectedSpecificFallback(
   question: GrammarPracticeQuestion,
   selected: string,
@@ -1401,6 +1454,9 @@ export function getGrammarIncorrectFeedback(
 
   const destinationFeedback = getDestinationStageTwelveFeedback(question, answer);
   if (destinationFeedback) return destinationFeedback;
+
+  const possessionFeedback = getPossessionStageThirteenFeedback(question, answer);
+  if (possessionFeedback) return possessionFeedback;
 
   if (conceptId === "topic-eun-neun") {
     if (
