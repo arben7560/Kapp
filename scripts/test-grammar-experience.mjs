@@ -1595,6 +1595,105 @@ test("stage 13 has compact exercise display and five individual success messages
   assert.match(exercises, /stageId === "possession"/u);
 });
 
+test("stage 14 explains all selected interrogatives across five attempts", () => {
+  const cases = new Map([
+    ["where-toilet", {
+      answer: "어디", sentence: "화장실이 어디예요?",
+      choices: ["언제", "왜", "어떻게"], aspect: "where",
+    }],
+    ["when-train", {
+      answer: "언제", sentence: "기차가 언제 와요?",
+      choices: ["어디", "왜", "어떻게"], aspect: "when",
+    }],
+    ["why-taxi", {
+      answer: "왜", sentence: "왜 택시를 타요?",
+      choices: ["어디", "언제", "어떻게"], aspect: "why",
+    }],
+    ["how-go", {
+      answer: "어떻게", sentence: "서울에 어떻게 가요?",
+      choices: ["어디", "언제", "왜"], aspect: "how",
+    }],
+    ["how-much-item", {
+      answer: "얼마", sentence: "이거 얼마예요?",
+      choices: ["어디", "언제", "무슨"], aspect: "how-much",
+    }],
+  ]);
+
+  const checked = new Set();
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("information-questions", attempt, () => 0.42);
+    const shuffledA = buildGrammarPracticeQuestions("information-questions", attempt, () => 0);
+    const shuffledB = buildGrammarPracticeQuestions("information-questions", attempt, () => 0.99);
+    assert.equal(questions.length, 5);
+    let changedOrders = 0;
+
+    for (const question of questions) {
+      const drillId = [...cases.keys()].find((key) =>
+        question.id.includes(":drill-interrogatives-basic-" + key + "-")
+      );
+      assert.ok(drillId, question.id);
+      const spec = cases.get(drillId);
+      assert.equal(question.kind, "gap", question.id);
+      assert.equal(question.answer, spec.answer, question.id);
+      assert.equal(question.ruleAspect, spec.aspect, question.id);
+      assert.deepEqual(
+        new Set(question.options),
+        new Set([spec.answer, ...spec.choices]),
+        question.id,
+      );
+      assert.equal(question.options.length, 4, question.id);
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
+      assert.match(question.display, /PHRASE À COMPLÉTER\n/u, question.id);
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.doesNotMatch(question.display, /«\s*«/u, question.id);
+
+      const explanations = spec.choices.map((selected) => {
+        checked.add(drillId + ":" + selected);
+        const feedback = getGrammarIncorrectFeedback(question, selected);
+        assert.ok(feedback.includes("Tu as choisi « " + selected + " »"), question.id);
+        assert.ok(feedback.includes(spec.sentence), question.id);
+        assert.ok(feedback.length <= 260, question.id);
+        assert.notEqual(feedback, question.explanation, question.id);
+        return feedback;
+      });
+      assert.equal(new Set(explanations).size, 3, question.id);
+
+      const first = shuffledA.find(({ id }) => id === question.id);
+      const second = shuffledB.find(({ id }) => id === question.id);
+      assert.ok(first && second, question.id);
+      assert.deepEqual(new Set(first.options), new Set(second.options), question.id);
+      if (first.options.join("|") !== second.options.join("|")) changedOrders += 1;
+    }
+    assert.ok(changedOrders > 0, "shuffled choices must change order without changing their meaning");
+  }
+  assert.equal(checked.size, 15, "all fifteen chosen-answer explanations are covered");
+
+  const questions = buildGrammarPracticeQuestions("information-questions", 1, () => 0.42);
+  const drill = (name) => questions.find(({ id }) =>
+    id.includes(":drill-interrogatives-basic-" + name + "-")
+  );
+  assert.match(getGrammarIncorrectFeedback(drill("where-toilet"), "언제"), /horaires.*emplacement/u);
+  assert.match(getGrammarIncorrectFeedback(drill("when-train"), "왜"), /grammatical.*pourquoi.*moment/u);
+  assert.match(getGrammarIncorrectFeedback(drill("why-taxi"), "어디"), /où prendre un taxi.*raison/u);
+  assert.match(getGrammarIncorrectFeedback(drill("how-go"), "언제"), /correct.*quand.*moyen de transport/u);
+  assert.match(getGrammarIncorrectFeedback(drill("how-much-item"), "무슨"), /devant un nom.*prix/u);
+  assert.match(drill("when-train").display, /connais déjà le quai/u);
+  assert.match(drill("how-much-item").display, /connaître son prix/u);
+});
+
+test("stage 14 keeps compact question cards and five specific correct-answer leads", () => {
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
+  assert.match(screen, /question\.stageId === "information-questions" && styles\.questionCardStageFourteen/u);
+  assert.match(screen, /if \(question\.stageId === "information-questions"\)/u);
+  for (const id of ["where-toilet", "when-train", "why-taxi", "how-go", "how-much-item"]) {
+    assert.ok(screen.includes('question.id.includes("' + id + '")'), id);
+  }
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(screen, /POUR CET EXERCICE/u);
+  assert.match(exercises, /stageId === "information-questions"/u);
+});
+
 test("high-confusion grammar distractors receive answer-specific explanations", () => {
   const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
   assert.match(getGrammarIncorrectFeedback(dailyRegister, "좋습니다"), /registre formel/u);
