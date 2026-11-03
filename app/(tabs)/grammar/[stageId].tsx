@@ -320,6 +320,14 @@ function getCorrectFeedbackLead(question: GrammarPracticeQuestion) {
     }
     return "Oui, tu as gardé le verbe à la fin, comme demandé dans cette phrase neutre.";
   }
+  // À partir de l’étape 15, chaque validation reprend la règle propre
+  // à l’exercice au lieu d’une formule de félicitation passe-partout.
+  if (
+    question.stageId !== "a1-validation" &&
+    !GRAMMAR_STAGE_IDS.slice(0, 14).includes(question.stageId)
+  ) {
+    return "Oui. " + question.explanation;
+  }
   if (question.ruleAspect === "short-negation") {
     return "Oui, c’est bien la négation courte avec 안.";
   }
@@ -1109,6 +1117,7 @@ function PracticePanel({
           question.stageId === "destination-and-time" && styles.questionCardStageTwelve,
           question.stageId === "possession" && styles.questionCardStageThirteen,
           question.stageId === "information-questions" && styles.questionCardStageFourteen,
+          question.stageId !== "a1-validation" && styles.questionCardStageFourteen,
         ]}
       >
         {question.exerciseGroup ? (
@@ -1138,7 +1147,8 @@ function PracticePanel({
               question.stageId === "action-location" ||
               question.stageId === "destination-and-time" ||
               question.stageId === "possession" ||
-              question.stageId === "information-questions"
+              question.stageId === "information-questions" ||
+              question.stageId !== "a1-validation"
             }
           />
         ) : null}
@@ -1321,7 +1331,8 @@ function FeedbackCard({
               question.stageId === "action-location" ||
               question.stageId === "destination-and-time" ||
               question.stageId === "possession" ||
-              question.stageId === "information-questions"
+              question.stageId === "information-questions" ||
+              question.stageId !== "a1-validation"
             ? "TON CHOIX EXPLIQUÉ"
             : "À AJUSTER ICI"}
       </AppText>
@@ -1342,14 +1353,18 @@ function FeedbackCard({
             question.stageId === "action-location" ||
             question.stageId === "destination-and-time" ||
             question.stageId === "possession" ||
-            question.stageId === "information-questions"
+            question.stageId === "information-questions" ||
+            question.stageId !== "a1-validation"
               ? "POUR CET EXERCICE"
               : "ICI, ON ATTENDAIT"}
           </AppText>
           <AppText variant="bodyStrong">{answerLabel(question.answer)}</AppText>
         </View>
       ) : null}
-      {response.correct ? (
+      {response.correct && (
+        question.stageId === "a1-validation" ||
+        GRAMMAR_STAGE_IDS.slice(0, 14).includes(question.stageId)
+      ) ? (
         <AppText variant="bodySecondary" tone="muted">
           {question.explanation}
         </AppText>
