@@ -229,6 +229,94 @@ test("lessons 11–15 share the identical short modal layout and retain complete
   assert.equal(isGrammarQuickGuideStage("request-item"), false);
 });
 
+test("stage 11–15 guides prepare the actual grammar concepts and wrong-answer contrasts", () => {
+  const scenarios = [
+    {
+      stageId: "action-location",
+      conceptIds: ["action-location-eseo"],
+      drillCount: 5,
+      essential: /에서.*에/u,
+      contrasts: ["카페에서 공부해요", "학교에 있어요", "집에서 밥을 먹어요", "로/으로", "까지"],
+    },
+    {
+      stageId: "destination-and-time",
+      conceptIds: ["destination-time-e"],
+      drillCount: 5,
+      essential: /destination.*heure.*에서.*부터.*까지/u,
+      contrasts: ["서울에 가요", "학교에 와요", "두 시에", "월요일에", "여덟 시에", "을/를"],
+    },
+    {
+      stageId: "possession",
+      conceptIds: ["possession-ui-je-nae"],
+      drillCount: 5,
+      essential: /제.*내.*의/u,
+      contrasts: ["제 표", "제 이름", "제 여권", "내 가방이야", "친구의 가방", "저", "제가", "친구가"],
+    },
+    {
+      stageId: "information-questions",
+      conceptIds: ["interrogatives-basic"],
+      drillCount: 5,
+      essential: /어디.*언제.*왜.*어떻게.*얼마/u,
+      contrasts: ["화장실이 어디예요", "기차가 언제 와요", "왜 택시를 타요", "서울에 어떻게 가요", "이거 얼마예요", "무슨"],
+    },
+    {
+      stageId: "simple-negation",
+      conceptIds: ["negation-an", "copula-negation-anieyo"],
+      drillCount: 10,
+      essential: /안.*이\/가 아니에요/u,
+      contrasts: ["안 가요", "안 마셔요", "안 매워요", "안 공부해요", "학생이 아니에요", "의사가 아니에요", "못 가요", "가지 않아요", "없어요"],
+    },
+  ];
+
+  for (const fixture of scenarios) {
+    const guide = getGrammarLessonGuide(fixture.stageId);
+    const stage = GRAMMAR_STAGE_BY_ID[fixture.stageId];
+    assert.ok(guide, fixture.stageId);
+    assert.deepEqual(stage.conceptIds, fixture.conceptIds, fixture.stageId);
+    assert.match(guide.mainRule, fixture.essential, fixture.stageId);
+
+    const explanation = [
+      guide.introduction,
+      guide.mainRule,
+      guide.formula.pattern,
+      guide.formula.explanation,
+      ...guide.steps.flatMap(({ title, explanation }) => [title, explanation]),
+      ...guide.examples.flatMap(({ korean, french, parts }) => [
+        korean, french, ...parts.flatMap(({ korean, french, role }) => [korean, french, role]),
+      ]),
+      ...guide.commonMistakes.flatMap(({ mistake, correction }) => [mistake, correction]),
+      guide.memoryTip,
+    ].join(" ");
+
+    for (const marker of fixture.contrasts) {
+      assert.ok(explanation.includes(marker), `${fixture.stageId}: theory missing ${marker}`);
+    }
+
+    const drills = fixture.conceptIds.flatMap((conceptId) =>
+      GRAMMAR_CONCEPTS.find(({ id }) => id === conceptId)?.practice.drills ?? [],
+    );
+    assert.equal(drills.length, fixture.drillCount, `${fixture.stageId}: exercises drifted`);
+    assert.ok(
+      drills.every((drill) => drill.explanation.length > 0 && drill.distractors.length === 3),
+      `${fixture.stageId}: exercises have three distractors`,
+    );
+  }
+
+  const place = getGrammarLessonGuide("action-location");
+  assert.equal(place.examples[1].korean, "학교에 있어요.");
+  assert.match(place.examples[1].parts[0].role, /position/u);
+
+  const possession = getGrammarLessonGuide("possession");
+  assert.equal(possession.examples[1].french, "C’est le sac d’un ami.");
+  assert.equal(possession.examples[1].parts[0].french, "d’un ami");
+  assert.doesNotMatch(possession.examples[1].french, /mon ami/u);
+
+  const negation = getGrammarLessonGuide("simple-negation");
+  assert.match(negation.formula.explanation, /가지 않아요.*correct.*plus longue/u);
+  assert.match(negation.steps[2].explanation, /학생이 아니에요.*의사가 아니에요.*제 가방이 아니에요/u);
+  assert.match(negation.commonMistakes[1].correction, /못 가요.*가지 않아요.*제 가방이 아니에요/u);
+});
+
 test("lessons 06–10 introduce the distinctions used in their exercises", () => {
   const guide6 = getGrammarLessonGuide("nominal-questions");
   const guide7 = getGrammarLessonGuide("existence");
