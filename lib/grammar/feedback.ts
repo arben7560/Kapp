@@ -1654,6 +1654,9 @@ export function getGrammarIncorrectFeedback(
   const stageFifteenFeedback = getStageFifteenSelectedFeedback(question, answer);
   if (stageFifteenFeedback) return stageFifteenFeedback;
 
+  const advancedFeedback = getAdvancedSelectedFeedback(question, selected, expected);
+  if (advancedFeedback) return advancedFeedback;
+
   if (conceptId === "topic-eun-neun") {
     if (
       question.id.includes("drill-topic-eun-neun-je-vowel") &&
@@ -2167,7 +2170,6 @@ export function getGrammarIncorrectFeedback(
   }
 
   return (
-    getAdvancedSelectedFeedback(question, selected, expected) ??
     selectedSpecificFallback(question, selected, expected) ??
     question.explanation
   );
