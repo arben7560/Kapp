@@ -1148,6 +1148,52 @@ const STAGE_SEVENTEEN_NUMBER_FEEDBACK: Readonly<Record<string, Readonly<Record<s
   },
 };
 
+/** Étape 17 : chaque unité incorrecte est rapportée à l’objet réel. */
+const STAGE_SEVENTEEN_CLASSIFIER_FEEDBACK: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  "coffee-cup": {
+    "개": "개 peut compter un café comme article vendu : 커피 한 개 peut être naturel dans un autre contexte. Mais ici tu comptes précisément une tasse servie, donc 한 잔.",
+    "명": "명 compte des personnes. Une tasse de café n’est pas une personne : pour une boisson servie, utilise 잔.",
+    "장": "장 compte des objets plats, comme des billets ou des feuilles. Tu commandes une tasse de café : il faut 잔.",
+  },
+  "people-count": {
+    "두 개예요.": "Cette phrase dirait « Il y en a deux », en comptant des objets ou unités avec 개. Le serveur demande le nombre de personnes de ton groupe : 두 명이에요.",
+    "두 잔이에요.": "잔 compte des verres ou des tasses : « deux boissons ». Tu indiques au serveur que vous êtes deux personnes, donc 두 명이에요.",
+    "두 장이에요.": "장 compte des billets ou des feuilles : « deux objets plats ». Ici, tu comptes deux personnes, donc 두 명이에요.",
+  },
+  "ticket-count": {
+    "개": "표 두 개 peut servir à compter deux billets comme unités générales, ce n’est pas forcément incorrect. Pour des billets comptés comme supports plats, la forme précise est 표 두 장.",
+    "명": "명 compte les personnes. 표 désigne ici des billets ; pour deux billets, utilise 두 장.",
+    "잔": "잔 compte les tasses et les verres de boisson, pas des billets. Au guichet, demande 표 두 장.",
+  },
+  "apple-count": {
+    "명": "명 compte des personnes. Tu achètes trois pommes entières ; le classificateur usuel des fruits comme unités est 개 : 세 개.",
+    "잔": "잔 compte des verres ou des tasses. Trois verres de jus ne sont pas trois pommes entières : 사과 세 개 주세요.",
+    "장": "장 compte les objets plats, comme les feuilles ou les billets. Trois pommes se comptent normalement avec 개 : 세 개.",
+  },
+  "portion-count": {
+    "개": "삼겹살 2개 pourrait désigner deux articles ou paquets, non deux portions par personne. Pour deux portions de repas, dis 삼겹살 2인분 주세요.",
+    "잔": "잔 sert à compter des verres ou tasses de boisson. Le samgyeopsal est commandé ici en portions de repas : 2인분.",
+    "장": "장 servirait à compter des pièces plates, par exemple deux tranches. Ici, tu veux deux portions prévues pour deux personnes : 2인분.",
+  },
+};
+
+function getStageSeventeenSelectedFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (question.stageId !== "request-quantity" || typeof answer !== "string") return undefined;
+  const distractors = {
+    ...STAGE_SEVENTEEN_NUMBER_FEEDBACK,
+    ...STAGE_SEVENTEEN_CLASSIFIER_FEEDBACK,
+  };
+  for (const [drillId, reasons] of Object.entries(distractors)) {
+    if (!question.id.includes("-" + drillId + "-")) continue;
+    const reason = reasons[answer];
+    if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+  }
+  return undefined;
+}
+
 /** Nuances de choix qui restent ambiguës avec une règle générale. */
 function getAdvancedSelectedFeedback(
   question: GrammarPracticeQuestion,
@@ -1737,6 +1783,9 @@ export function getGrammarIncorrectFeedback(
 
   const stageSixteenFeedback = getStageSixteenSelectedFeedback(question, answer);
   if (stageSixteenFeedback) return stageSixteenFeedback;
+
+  const stageSeventeenFeedback = getStageSeventeenSelectedFeedback(question, answer);
+  if (stageSeventeenFeedback) return stageSeventeenFeedback;
 
   const advancedFeedback = getAdvancedSelectedFeedback(question, selected, expected);
   if (advancedFeedback) return advancedFeedback;
