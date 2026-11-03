@@ -1910,6 +1910,71 @@ test("stage 17 distinguishes ordinal, generic counter, people and meal portions"
   assert.match(screen, /POUR CET EXERCICE/u);
 });
 
+test("stage 18 checks every number choice and explanation across rotating attempts", () => {
+  const expected = new Map([
+    ["price-five-thousand", {
+      kind: "scene", answer: "오천 원",
+      wrong: ["오백 원", "오만 원", "다섯 천 원"], label: "PRIX À LIRE",
+    }],
+    ["duration-ten-minutes", {
+      kind: "gap", answer: "십",
+      wrong: ["열", "구", "십일"], label: "PHRASE À COMPLÉTER",
+    }],
+    ["line-two-route", {
+      kind: "scene", answer: "2호선",
+      wrong: ["두 호선", "2번 출구", "2번 버스"], label: "LIGNE À IDENTIFIER",
+    }],
+    ["month-march", {
+      kind: "scene", answer: "3월",
+      wrong: ["세 월", "삼 개월", "3일"], label: "MOIS À IDENTIFIER",
+    }],
+    ["phone-prefix-010", {
+      kind: "scene", answer: "공일공",
+      wrong: ["공이공", "공십공", "공하나공"], label: "CHIFFRES À LIRE",
+    }],
+  ]);
+  const seen = new Set();
+  const checked = new Set();
+  let shuffled = 0;
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("sino-number-contexts", attempt, () => 0.42);
+    const orderA = buildGrammarPracticeQuestions("sino-number-contexts", attempt, () => 0);
+    const orderB = buildGrammarPracticeQuestions("sino-number-contexts", attempt, () => 0.99);
+    assert.equal(questions.length, 5);
+    for (const [index, question] of questions.entries()) {
+      const drillId = [...expected.keys()].find((id) => question.id.includes("-" + id + "-"));
+      assert.ok(drillId, question.id);
+      const spec = expected.get(drillId);
+      seen.add(drillId);
+      assert.equal(question.stageId, "sino-number-contexts");
+      assert.equal(question.kind, spec.kind, question.id);
+      assert.equal(question.answer, spec.answer, question.id);
+      assert.deepEqual(new Set(question.options), new Set([spec.answer, ...spec.wrong]), question.id);
+      assert.equal(question.options.length, 4, question.id);
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
+      assert.ok(question.display.includes(spec.label), question.id);
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.ok(question.explanation.includes(spec.answer), question.id);
+      if (orderA[index].options.join("|") !== orderB[index].options.join("|")) shuffled += 1;
+
+      const messages = spec.wrong.map((choice) => {
+        checked.add(drillId + ":" + choice);
+        const feedback = getGrammarIncorrectFeedback(question, choice);
+        assert.ok(feedback.startsWith("Tu as choisi « " + choice + " » : "), question.id);
+        assert.notEqual(feedback, question.explanation, question.id);
+        assert.ok(feedback.includes(spec.answer), question.id);
+        assert.ok(feedback.length > 80 && feedback.length < 460, question.id);
+        return feedback;
+      });
+      assert.equal(new Set(messages).size, 3, question.id);
+    }
+  }
+  assert.equal(seen.size, 5);
+  assert.equal(checked.size, 15, "each of the fifteen distractors must receive its own feedback");
+  assert.ok(shuffled >= 5, "the answer order should change with the random source");
+});
+
 test("stages 15 to 40 keep concise exercise prompts and their own display context", () => {
   const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
   const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
