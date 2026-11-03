@@ -129,8 +129,8 @@ test("grammar theory opens in a reusable modal and resumes without replacing its
   }
 });
 
-test("the concise grammar guide covers exactly lessons 01–10", () => {
-  assert.deepEqual(GRAMMAR_QUICK_GUIDE_STAGE_IDS, GRAMMAR_STAGE_IDS.slice(0, 10));
+test("the concise grammar guide covers exactly lessons 01–15", () => {
+  assert.deepEqual(GRAMMAR_QUICK_GUIDE_STAGE_IDS, GRAMMAR_STAGE_IDS.slice(0, 15));
   const expectedExamples = [
     ["sentence-structure", "저는 커피를 마셔요."],
     ["identify-with-copula", "학생이에요."],
@@ -142,6 +142,11 @@ test("the concise grammar guide covers exactly lessons 01–10", () => {
     ["locate-thing", "화장실은 2층에 있어요."],
     ["present-actions", "매일 공부해요."],
     ["object-actions", "커피를 마셔요."],
+    ["action-location", "카페에서 공부해요."],
+    ["destination-and-time", "세 시에 서울역에 가요."],
+    ["possession", "제 이름은 마크예요."],
+    ["information-questions", "화장실이 어디예요?"],
+    ["simple-negation", "안 매워요."],
   ];
   for (const [stageId, example] of expectedExamples) {
     const guide = getGrammarLessonGuide(stageId);
@@ -150,10 +155,78 @@ test("the concise grammar guide covers exactly lessons 01–10", () => {
     assert.ok(guide.introduction.length > 40, stageId);
     assert.ok(guide.mainRule.length > 40, stageId);
   }
-  assert.equal(isGrammarQuickGuideStage("action-location"), false);
+  assert.equal(isGrammarQuickGuideStage("action-location"), true);
+  assert.equal(isGrammarQuickGuideStage("simple-negation"), true);
+  assert.equal(isGrammarQuickGuideStage("request-item"), false);
   assert.ok(getGrammarLessonGuide("introduce-topic").examples.some(
     ({ korean }) => korean === "오늘은 쉬어요.",
   ));
+});
+
+
+test("lessons 11–15 share the identical short modal layout and retain complete detailed sheets", () => {
+  const stageIds = GRAMMAR_STAGE_IDS.slice(10, 15);
+  assert.deepEqual(stageIds, [
+    "action-location",
+    "destination-and-time",
+    "possession",
+    "information-questions",
+    "simple-negation",
+  ]);
+
+  for (const stageId of stageIds) {
+    const guide = getGrammarLessonGuide(stageId);
+    assert.ok(isGrammarQuickGuideStage(stageId), stageId);
+    assert.ok(guide.introduction.length > 40, `${stageId} : short introduction`);
+    assert.ok(guide.mainRule.length > 40, `${stageId} : essential rule`);
+    assert.ok(guide.examples[0].korean.length > 0, `${stageId} : summary example`);
+    assert.ok(guide.examples[0].french.length > 0, `${stageId} : summary translation`);
+    assert.equal(guide.steps.length, 3, `${stageId} : preserved detailed steps`);
+    assert.equal(guide.examples.length, 2, `${stageId} : preserved detailed examples`);
+    assert.equal(guide.commonMistakes.length, 2, `${stageId} : preserved mistakes`);
+    assert.ok(guide.formula.pattern.length > 10, `${stageId} : preserved formula`);
+    assert.ok(guide.memoryTip.length > 30, `${stageId} : preserved memory tip`);
+  }
+
+  const guide11 = getGrammarLessonGuide("action-location");
+  const guide12 = getGrammarLessonGuide("destination-and-time");
+  const guide13 = getGrammarLessonGuide("possession");
+  const guide14 = getGrammarLessonGuide("information-questions");
+  const guide15 = getGrammarLessonGuide("simple-negation");
+  assert.match(guide11.introduction, /에서.*에/u);
+  assert.match(guide12.mainRule, /destination.*heure/u);
+  assert.match(guide13.mainRule, /제.*내/u);
+  assert.match(guide14.mainRule, /어디.*언제.*왜.*어떻게.*얼마/u);
+  assert.match(guide15.mainRule, /안.*아니에요/u);
+  assert.ok(guide15.examples.some(({ korean }) => korean === "학생이 아니에요."));
+
+  const lesson = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  const guideComponent = readFileSync(
+    join(projectRoot, "components/grammar/GrammarLessonGuide.tsx"),
+    "utf8",
+  );
+  const modal = readFileSync(
+    join(projectRoot, "components/grammar/GrammarLessonGuideModal.tsx"),
+    "utf8",
+  );
+
+  assert.match(guideComponent, /isGrammarQuickGuideStage\(guide.stageId\)/u);
+  assert.match(guideComponent, /À QUOI ÇA SERT/u);
+  assert.match(guideComponent, /LA RÈGLE POUR LES EXERCICES/u);
+  assert.match(guideComponent, /UN EXEMPLE/u);
+  assert.match(guideComponent, /Voir les explications détaillées/u);
+  assert.match(guideComponent, /setShowDetails\(\(current\) => !current\)/u);
+  assert.match(guideComponent, /\{\(!isQuickGuide \|\| showDetails\) \? \(/u);
+  assert.match(modal, /const isQuickGuide = !!guide && isGrammarQuickGuideStage\(guide.stageId\)/u);
+  assert.match(modal, /isQuickGuide && styles\.bodyQuick/u);
+  assert.match(modal, /isQuickGuide && styles\.exerciseFooterQuick/u);
+  assert.match(modal, /label="Accéder aux exercices"/u);
+  assert.match(lesson, /if \(!isQuickGuide && !session\) startPractice\(\)/u);
+  assert.match(lesson, /onStartExercises=\{isQuickGuide \? startPractice : undefined\}/u);
+  assert.match(lesson, /const accessExercises = React\.useCallback/u);
+
+  // Les leçons A1 conservent le format détaillé et leur navigation existante.
+  assert.equal(isGrammarQuickGuideStage("request-item"), false);
 });
 
 test("lessons 06–10 introduce the distinctions used in their exercises", () => {
