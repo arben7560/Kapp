@@ -2140,6 +2140,81 @@ test("stage 19 preserves valid alternatives and explains et, ou, seulement and w
   assert.match(screen, /POUR CET EXERCICE/u);
 });
 
+test("stage 20 audits every selected alternative and shuffles four answers across attempts", () => {
+  const expected = new Map([
+    ["coffee-or-tea-vowel", {
+      kind: "scene", answer: "커피나 차 있어요?",
+      wrong: ["커피이나 차 있어요?", "커피하고 차 있어요?", "커피만 있어요?"],
+      label: "QUESTION À EXPRIMER",
+    }],
+    ["bread-or-cake-batchim", {
+      kind: "scene", answer: "빵이나 케이크를 먹어요.",
+      wrong: ["빵나 케이크를 먹어요.", "빵하고 케이크를 먹어요.", "빵만 먹어요."],
+      label: "PHRASE À EXPRIMER",
+    }],
+    ["bus-or-subway-choice", {
+      kind: "scene", answer: "버스나 지하철로 가요.",
+      wrong: ["버스로만 가요.", "지하철로만 가요.", "버스하고 지하철을 타요."],
+      label: "PHRASE À EXPRIMER",
+    }],
+    ["water-or-tea-choice", {
+      kind: "scene", answer: "물이나 차를 마셔요.",
+      wrong: ["물하고 차를 마셔요.", "물만 마셔요.", "차만 마셔요."],
+      label: "PHRASE À EXPRIMER",
+    }],
+    ["two-complete-questions", {
+      kind: "gap", answer: "아니면",
+      wrong: ["이나", "하고", "그리고"],
+      label: "PHRASE À COMPLÉTER",
+    }],
+  ]);
+  const seen = new Set();
+  const testedSelections = new Set();
+  const attemptOrders = new Set();
+  let changedOrders = 0;
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("choose-alternative", attempt, () => 0.42);
+    const withZero = buildGrammarPracticeQuestions("choose-alternative", attempt, () => 0);
+    const withNines = buildGrammarPracticeQuestions("choose-alternative", attempt, () => 0.99);
+    assert.equal(questions.length, 5);
+    attemptOrders.add(questions.map((q) => q.id.split("-drill-")[1].split("-").slice(1, -1).join("-")).join("|"));
+
+    for (const [index, question] of questions.entries()) {
+      const drillId = [...expected.keys()].find((key) => question.id.includes("-" + key + "-"));
+      assert.ok(drillId, question.id);
+      const spec = expected.get(drillId);
+      seen.add(drillId);
+      assert.equal(question.stageId, "choose-alternative");
+      assert.deepEqual(question.conceptIds, ["alternative-ina-animyeon"]);
+      assert.equal(question.kind, spec.kind, question.id);
+      assert.equal(question.answer, spec.answer, question.id);
+      assert.deepEqual(new Set(question.options), new Set([spec.answer, ...spec.wrong]), question.id);
+      assert.equal(question.options.length, 4, question.id);
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
+      assert.ok(question.display.includes(spec.label), question.id);
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.ok(question.explanation.includes(spec.answer), question.id);
+      assert.ok(question.vocabulary?.length > 0, question.id);
+      if (withZero[index].options.join("|") !== withNines[index].options.join("|")) changedOrders += 1;
+
+      const explanations = spec.wrong.map((selected) => {
+        testedSelections.add(drillId + ":" + selected);
+        const feedback = getGrammarIncorrectFeedback(question, selected);
+        assert.ok(feedback.startsWith("Tu as choisi « " + selected + " » : "), question.id);
+        assert.notEqual(feedback, question.explanation, question.id);
+        assert.ok(feedback.includes(spec.answer), question.id);
+        assert.ok(feedback.length > 85 && feedback.length < 400, question.id);
+        return feedback;
+      });
+      assert.equal(new Set(explanations).size, 3, question.id);
+    }
+  }
+  assert.equal(seen.size, 5, "all five stage 20 exercises must appear");
+  assert.equal(testedSelections.size, 15, "each of the fifteen distractors must have a targeted explanation");
+  assert.ok(changedOrders >= 5, "answer choices should be shuffled");
+});
+
 test("stages 15 to 40 keep concise exercise prompts and their own display context", () => {
   const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
   const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
