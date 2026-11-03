@@ -2023,8 +2023,11 @@ export function getGrammarIncorrectFeedback(
   }
 
   if (question.ruleAspect === "inability-vs-choice") {
-    if (selected === "잘 안 들려요") {
-      return "« 잘 안 들려요 » convient quand le son est trop faible ou difficile à percevoir. Ici, la douleur à l’oreille t’empêche réellement d’entendre : pour exprimer cette incapacité, utilise 잘 못 들어요.";
+    if (selected === "듣고 싶지 않아요") {
+      return "« 듣고 싶지 않아요 » veut dire que tu ne veux pas écouter. Ici, tu essaies d’écouter malgré la douleur, mais tu ne peux pas : 잘 못 들어요.";
+    }
+    if (selected === "들을 수 있어요") {
+      return "« 들을 수 있어요 » indique que l’écoute est possible. Ici, la douleur t’empêche de bien écouter : 잘 못 들어요.";
     }
     if (/^안 /u.test(selected) || /지 않아요\.?$/u.test(selected)) {
       return `${quoted(selected)} laisse entendre qu’on choisit de ne pas faire l’action. Ici, on en est empêché, donc on emploie 못.`;
