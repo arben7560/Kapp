@@ -782,27 +782,27 @@ export const GRAMMAR_LESSON_GUIDES = {
     introduction:
       "La particule 의 relie un possesseur à ce qui lui appartient. Dans la conversation, 저의 devient souvent 제 et 나의 devient 내 : ces formes courtes sont à reconnaître et à employer.",
     mainRule:
-      "Place le possesseur avant 의 et la chose possédée après : ami + 의 + sac. Pour dire « mon », utilise 제 dans le registre poli et 내 dans le registre familier.",
+      "Pour « mon », choisis 제 devant le nom au registre poli (제 표, 제 이름, 제 여권) et 내 avec un ami proche (내 가방이야). Pour le sac de l’ami, relie 친구 et 가방 par 의 : 친구의 가방.",
     formula: {
-      pattern: "possesseur + 의 + objet  ·  제/내 + objet",
+      pattern: "친구 + 의 + 가방  ·  제 + nom (poli)  ·  내 + nom (familier)",
       explanation:
-        "La structure coréenne dit d’abord « de qui », puis nomme la chose. 제 et 내 sont les formes contractées de 저의 et 나의.",
+        "친구의 가방 signifie « le sac de l’ami ». 제 est la forme contractée de 저의 et 내 celle de 나의. 저 ou 제가 sont des pronoms, pas « mon » ; 저 devant 표 peut aussi désigner « ce billet là-bas ».",
     },
     steps: [
       {
         title: "Nomme le possesseur",
         explanation:
-          "Commence par la personne ou le groupe auquel la chose est rattachée : 친구, 저, 나.",
+          "Ton propre billet ou passeport face à un agent → 제 표, 제 여권. Ton sac avec un proche → 내 가방. Un sac appartenant à un ami → 친구의 가방.",
       },
       {
         title: "Relie les deux noms",
         explanation:
-          "Entre deux noms, ajoute 의 : 친구의 가방 signifie « le sac de mon ami ». La particule reste attachée au premier groupe.",
+          "Entre deux noms, 의 relie le possesseur à l’objet : 친구의 가방, « le sac de l’ami ». À l’oral, cette particule peut être omise, mais l’exercice te demande de l’utiliser explicitement.",
       },
       {
         title: "Choisis le registre de « mon »",
         explanation:
-          "Avec une personne peu familière, 제 est le choix poli. 내 appartient au style familier, avec un proche ou entre amis.",
+          "제 convient face à un professeur, un contrôleur ou un agent ; 내, avec un ami proche et une fin de phrase familière (-이야). 저 et 나 signifient « moi », 제가 « moi » sujet : ils ne remplacent pas le possessif.",
       },
     ],
     examples: [
@@ -816,17 +816,17 @@ export const GRAMMAR_LESSON_GUIDES = {
       },
       {
         korean: "친구의 가방이에요.",
-        french: "C’est le sac de mon ami.",
+        french: "C’est le sac d’un ami.",
         parts: [
-          { korean: "친구의", french: "de mon ami", role: "possesseur" },
+          { korean: "친구의", french: "d’un ami", role: "possesseur" },
           { korean: "가방이에요", french: "c’est un sac", role: "chose possédée" },
         ],
       },
     ],
     commonMistakes: [
       {
-        mistake: "Confondre 제 avec 저 ou 제가.",
-        correction: "제 signifie « mon » en style poli ; 저 signifie « moi » et 제가 signifie « moi + sujet ».",
+        mistake: "Employer 저 ou 제가 pour dire « mon », ou choisir 내 dans un échange poli.",
+        correction: "제 signifie « mon » poli, 내 « mon » familier. 저 / 제가 désignent « moi » ; 저 devant un nom peut aussi signifier « ce… là-bas », pas la possession.",
       },
       {
         mistake: "Inverser les noms comme en français : 가방의 친구.",
@@ -834,7 +834,7 @@ export const GRAMMAR_LESSON_GUIDES = {
       },
     ],
     memoryTip:
-      "En coréen, le propriétaire passe devant la chose : « ami de sac » devient 친구의 가방 ; pour « mon », pense à 제 en contexte poli.",
+      "À qui appartient l’objet ? À moi, face à un inconnu → 제 ; à moi, avec un proche → 내 ; à un ami → 친구의 + nom.",
   },
   "information-questions": {
     stageId: "information-questions",
