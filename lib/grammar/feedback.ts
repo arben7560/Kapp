@@ -1322,7 +1322,7 @@ const STAGE_TWENTY_DISTRACTOR_FEEDBACK: Readonly<
   },
   "two-complete-questions": {
     "이나": "이나 s’attache à un nom avec consonne finale, comme 빵이나 케이크. Ici, tu relies deux questions complètes ; entre elles, utilise 아니면.",
-    "하고": "하고 relie des noms et peut signifier « et / avec ». Il ne sert pas à choisir entre ces deux questions complètes : ici, il faut 아니면.",
+    "하고": "하고 relie des noms correctement pour signifier « et » ou « avec ». Il ne construit pas l’alternative « ou » entre ces deux questions complètes : ici, utilise 아니면.",
     "그리고": "그리고 veut dire « et / puis » et ajoute une deuxième question. Ici, tu demandes de choisir entre partir maintenant et rester à la maison : utilise 아니면.",
   },
 };
