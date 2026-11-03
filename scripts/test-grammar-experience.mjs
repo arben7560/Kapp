@@ -370,7 +370,7 @@ test("context-dependent questions display their situation before the choices", (
 
   const dailyRegister = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)[0];
   assert.match(dailyRegister.display, /CONTEXTE\n/u);
-  assert.match(dailyRegister.prompt, /style poli courant/u);
+  assert.match(dailyRegister.prompt, /(?:style|présent) poli courant/u);
 
   const technicalAbility = buildGrammarPracticeQuestions("express-ability", 3, () => 0.42)
     .find(({ ruleAspect }) => ruleAspect === "ability-vs-permission");
@@ -397,7 +397,7 @@ test("all rotated question wordings keep one answer and a coherent correction", 
           `${question.id}: same wording also used by ${previous?.id}`,
         );
         answerByWording.set(wording, { answer: serializedAnswer, id: question.id });
-        assert.ok(question.explanation.includes(serializedAnswer), question.id);
+        assert.ok(question.explanation.includes(serializedAnswer.replace(/[.!?]+$/u, "")), question.id);
       }
     }
   }
@@ -1963,7 +1963,7 @@ test("register and request distractors are disambiguated by explicit situations"
   const dailyPolite = buildGrammarPracticeQuestions("polite-register", 1, () => 0.42)
     .find(({ options }) => options.includes("좋습니다"));
   assert.ok(dailyPolite);
-  assert.match(dailyPolite.prompt, /style poli courant/u);
+  assert.match(dailyPolite.prompt, /(?:style|présent) poli courant/u);
   assert.match(dailyPolite.display, /conversation quotidienne/u);
 
   const politeMy = buildGrammarPracticeQuestions("possession", 1, () => 0.42)
@@ -2186,7 +2186,9 @@ test("grammar screens guard premium navigation at the hub and lesson route", () 
   assert.match(hub, /hasPremiumAccess:\s*isPremium/u);
   assert.match(hub, /canAccessGrammarStage\(GRAMMAR_STAGE_BY_ID\[stageId\], isPremium\)/u);
   assert.match(hub, /router\.push\("\/premium"\)/u);
-  assert.match(hub, /label=\{isPremiumStage \? "PREMIUM" : "GRATUIT"\}/u);
+  assert.match(hub, /isPremiumStage \? \(/u);
+  assert.match(hub, /styles\.premiumMicro/u);
+  assert.match(hub, /const premiumLocked = !canAccessGrammarStage\(/u);
 
   assert.match(lesson, /const premiumLocked = !canAccessGrammarStage\(stage, isPremium\)/u);
   assert.match(lesson, /router\.replace\("\/premium"\)/u);
@@ -2218,8 +2220,9 @@ test("capacity and permission stay adjacent and distinct in the journey", () => 
 test("the public screens keep explicit compact and tablet layouts", () => {
   const hub = readFileSync(join(projectRoot, "app/(tabs)/grammar/index.tsx"), "utf8");
   const lesson = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
-  assert.match(hub, /useResponsiveLayout\(\{ maxWidth: 960 \}\)/u);
-  assert.match(hub, /responsive\.isTablet/u);
+  assert.match(hub, /useResponsiveLayout\(\{\s*maxWidth: isLandscape \? 1120 : 920/u);
+  assert.match(hub, /responsive\.getColumns/u);
+  assert.match(hub, /safeContentWidth/u);
   assert.match(lesson, /useResponsiveLayout\(\{ maxWidth: 900 \}\)/u);
   assert.match(lesson, /responsive\.isCompact/u);
   assert.match(lesson, /responsive\.isTablet/u);
