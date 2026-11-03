@@ -977,12 +977,12 @@ export const GRAMMAR_LESSON_GUIDES = {
   "request-quantity": {
     stageId: "request-quantity",
     introduction:
-      "Pour commander une quantité, le coréen place le nom, puis le nombre et le classificateur adapté. Le classificateur précise ce qui est compté : verres, billets, personnes ou objets.",
-    mainRule: "Construis nom + nombre + classificateur + 주세요. 하나, 둘, 셋 et 넷 deviennent 한, 두, 세 et 네 devant un classificateur.",
-    formula: { pattern: "nom + nombre natif + classificateur + 주세요", explanation: "Le nombre vient avant le classificateur : 한 잔, deux verres ; 두 장, deux billets ; 세 개, trois objets." },
+      "Pour commander une quantité, indique ce que tu veux, combien et dans quelle unité : une tasse, un billet, un objet ou une portion. Les nombres natifs se raccourcissent devant la plupart des classificateurs de cette leçon, mais 인분 utilise les nombres sino-coréens.",
+    mainRule: "Pour 잔, 개, 명 et 장, utilise notamment 한, 두, 세, 네 devant le classificateur (formes courtes de 하나, 둘, 셋, 넷). Pour une portion, utilise 인분 avec un nombre sino-coréen : 2인분 se lit 이 인분.",
+    formula: { pattern: "nom + nombre adapté + classificateur + 주세요", explanation: "Le nombre précède le classificateur : 한 잔 = une tasse ; 두 장 = deux billets ; 세 개 = trois objets. Exception importante : 2인분 = deux portions, avec le nombre sino-coréen 이." },
     steps: [
-      { title: "Identifie ce que tu comptes", explanation: "Objet → 개, personne → 명, boisson → 잔, billet ou feuille → 장." },
-      { title: "Choisis le nombre", explanation: "Pour les premières quantités, utilise les nombres natifs et leurs formes courtes : 한, 두, 세, 네." },
+      { title: "Identifie ce que tu comptes", explanation: "Objet ou fruit → 개, personne → 명, boisson en tasse → 잔, billet ou feuille → 장, portion de repas → 인분." },
+      { title: "Choisis le nombre", explanation: "Avec 잔, 개, 명, 장, les petites quantités prennent 한, 두, 세, 네. Avec 인분, emploie le sino-coréen : 2인분 (이 인분)." },
       { title: "Ajoute la demande", explanation: "Place le groupe complet avant 주세요 : 아메리카노 한 잔 주세요." },
     ],
     examples: [
@@ -991,9 +991,11 @@ export const GRAMMAR_LESSON_GUIDES = {
     ],
     commonMistakes: [
       { mistake: "Dire 아메리카노 한 ou placer le nombre après le classificateur.", correction: "Le classificateur est obligatoire et suit le nombre : 아메리카노 한 잔." },
-      { mistake: "Employer le mauvais classificateur.", correction: "Choisis l’unité adaptée : 잔 pour un verre, 장 pour un billet, 명 pour une personne." },
+      { mistake: "Employer le mauvais classificateur.", correction: "Choisis l’unité adaptée : 잔 pour une tasse, 장 pour un billet, 명 pour une personne, 개 pour un fruit et 인분 pour une portion." },
+      { mistake: "Généraliser les nombres natifs à tous les classificateurs.", correction: "한 잔 et 두 명 utilisent les nombres natifs ; pour une portion de repas, 2인분 se lit 이 인분 avec un nombre sino-coréen." },
+      { mistake: "Prendre 첫 잔 pour une quantité neutre.", correction: "첫 잔 est grammatical, mais signifie « la première tasse » d’une série ; pour commander seulement une tasse, dis 한 잔." },
     ],
-    memoryTip: "Compte en trois temps : la chose, combien, puis dans quelle unité — nom + nombre + classificateur.",
+    memoryTip: "Pense nom → nombre → unité → 주세요. Avec 잔, 명, 개, 장, les petits nombres se raccourcissent ; avec 인분, pense au nombre sino-coréen.",
   },
   "sino-number-contexts": {
     stageId: "sino-number-contexts",
