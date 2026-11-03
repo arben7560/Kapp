@@ -376,7 +376,7 @@ function Scenes({
       onLayout={(event) => setViewportWidth(event.nativeEvent.layout.width)}
     >
       {viewportWidth > 0 ? (
-        <Animated.FlatList
+        <Animated.FlatList<ThemeKey>
           ref={listRef}
           data={PUBLIC_THEME_KEYS}
           keyExtractor={(item) => item}
