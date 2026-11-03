@@ -312,7 +312,7 @@ test("stage 11–15 guides prepare the actual grammar concepts and wrong-answer 
   assert.doesNotMatch(possession.examples[1].french, /mon ami/u);
 
   const negation = getGrammarLessonGuide("simple-negation");
-  assert.match(negation.formula.explanation, /가지 않아요.*correct.*plus longue/u);
+  assert.match(negation.formula.explanation, /가지 않아요.*correct.*forme longue/u);
   assert.match(negation.steps[2].explanation, /학생이 아니에요.*의사가 아니에요.*제 가방이 아니에요/u);
   assert.match(negation.commonMistakes[1].correction, /못 가요.*가지 않아요.*제 가방이 아니에요/u);
 });
