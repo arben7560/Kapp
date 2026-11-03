@@ -662,27 +662,27 @@ export const GRAMMAR_LESSON_GUIDES = {
     introduction:
       "에서 indique le lieu où une action se déroule. Il ne sert pas à dire où une chose se trouve immobile : cette position statique se construit avec 에 + 있어요.",
     mainRule:
-      "Attache 에서 au lieu de l’action, puis place éventuellement l’objet et termine par le verbe conjugué.",
+      "Pour une activité sur place (공부해요, 먹어요, 만나요), ajoute 에서 au lieu : 카페에서 공부해요. Pour situer quelqu’un ou quelque chose avec 있어요, choisis 에 : 학교에 있어요.",
     formula: {
-      pattern: "lieu + 에서 + (objet + 을/를) + verbe",
+      pattern: "action : lieu + 에서 + verbe  ·  position : lieu + 에 + 있어요",
       explanation:
-        "에서 répond à « où l’action a-t-elle lieu ? ». Compare 카페에서 공부해요, « j’étudie au café », et 카페에 있어요, « je suis au café ».",
+        "Compare 카페에서 공부해요 (activité) et 학교에 있어요 (position). Dans 식당에서 친구를 만나요, 식당에서 indique où la rencontre a lieu et 친구를 est la personne rencontrée.",
     },
     steps: [
       {
         title: "Identifie le verbe",
         explanation:
-          "S’il s’agit d’une action comme étudier, manger, travailler ou descendre, tu décris un lieu d’activité.",
+          "공부해요, 먹어요 et 만나요 sont des activités ; 있어요 indique une présence ou une position. Regarde le verbe avant de choisir la particule.",
       },
       {
         title: "Marque le lieu avec 에서",
         explanation:
-          "Ajoute 에서 directement au lieu : 카페에서, 도서관에서. Le lieu vient avant l’action dans la phrase.",
+          "Pour une action : 카페에서 공부해요, 집에서 밥을 먹어요. Pour une position : 학교에 있어요, 도서관에 있어요. La particule suit immédiatement le lieu.",
       },
       {
         title: "Ne confonds pas avec 에",
         explanation:
-          "Avec 있어요/없어요, choisis 에 pour une position ou une présence : 카페에 있어요. Avec un verbe d’action, choisis 에서.",
+          "Ne confonds pas avec 로/으로 (« vers », direction) ni 까지 (« jusqu’à », limite). Avec 가요/와요, 에 peut aussi indiquer la destination : 학교에 가요 n’équivaut pas à 학교에서 공부해요.",
       },
     ],
     examples: [
@@ -695,12 +695,11 @@ export const GRAMMAR_LESSON_GUIDES = {
         ],
       },
       {
-        korean: "도서관에서 책을 읽어요.",
-        french: "Je lis un livre à la bibliothèque.",
+        korean: "학교에 있어요.",
+        french: "Je suis à l’école.",
         parts: [
-          { korean: "도서관에서", french: "à la bibliothèque", role: "lieu de l’action" },
-          { korean: "책을", french: "un livre", role: "objet" },
-          { korean: "읽어요", french: "je lis", role: "action" },
+          { korean: "학교에", french: "à l’école", role: "position avec 에" },
+          { korean: "있어요", french: "je suis / je me trouve", role: "présence" },
         ],
       },
     ],
@@ -710,12 +709,12 @@ export const GRAMMAR_LESSON_GUIDES = {
         correction: "Le café est le lieu de l’action : 카페에서 공부해요. 에 conviendrait avec 카페에 있어요.",
       },
       {
-        mistake: "Employer 에서 pour une personne ou un objet simplement situé.",
-        correction: "Pour une position stable, utilise lieu + 에 + 있어요 : 친구가 카페에 있어요.",
+        mistake: "Employer 에서 pour une position, ou 로/으로 ou 까지 pour situer une activité.",
+        correction: "Pour une position : 학교에 있어요. Pour une activité : 집에서 밥을 먹어요. 로/으로 indique plutôt la direction ; 까지, la limite d’un trajet.",
       },
     ],
     memoryTip:
-      "에서 contient l’idée d’une scène d’activité : si quelque chose s’y passe, pense à 에서 ; si quelque chose y est, pense à 에.",
+      "Action sur place → 에서. Simple présence → 에. Direction ou limite du trajet → 로/으로 ou 까지.",
   },
   "destination-and-time": {
     stageId: "destination-and-time",
