@@ -1806,6 +1806,67 @@ test("stage 16 displays meaningful situations and distinguishes valid indirect r
   assert.match(screen, /POUR CET EXERCICE/u);
 });
 
+test("stage 17 audits every selected numeral and classifier across five attempts", () => {
+  const expected = new Map([
+    ["one-cup", { concept: "native-numbers", answer: "한", wrong: ["하나", "일", "첫"], kind: "gap" }],
+    ["two-people", { concept: "native-numbers", answer: "두", wrong: ["둘", "이", "둘째"], kind: "gap" }],
+    ["three-apples", { concept: "native-numbers", answer: "세", wrong: ["셋", "삼", "셋째"], kind: "gap" }],
+    ["four-tickets", { concept: "native-numbers", answer: "네", wrong: ["넷", "사", "넷째"], kind: "gap" }],
+    ["standalone-three-context", { concept: "native-numbers", answer: "셋", wrong: ["세", "삼", "세 번째"], kind: "scene" }],
+    ["coffee-cup", { concept: "classifiers-basic", answer: "잔", wrong: ["개", "명", "장"], kind: "gap" }],
+    ["people-count-phrase", { concept: "classifiers-basic", answer: "두 명이에요.", wrong: ["두 개예요.", "두 잔이에요.", "두 장이에요."], kind: "scene" }],
+    ["ticket-count", { concept: "classifiers-basic", answer: "장", wrong: ["개", "명", "잔"], kind: "gap" }],
+    ["apple-count", { concept: "classifiers-basic", answer: "개", wrong: ["명", "잔", "장"], kind: "gap" }],
+    ["portion-count", { concept: "classifiers-basic", answer: "인분", wrong: ["개", "잔", "장"], kind: "gap" }],
+  ]);
+  const seen = new Set();
+  const checked = new Set();
+  let shuffled = 0;
+  let nativeCount = 0;
+  let counterCount = 0;
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("request-quantity", attempt, () => 0.42);
+    const orderA = buildGrammarPracticeQuestions("request-quantity", attempt, () => 0);
+    const orderB = buildGrammarPracticeQuestions("request-quantity", attempt, () => 0.99);
+    assert.equal(questions.length, 5, "each attempt must have five questions");
+    for (const [index, question] of questions.entries()) {
+      const id = [...expected.keys()].find((key) => question.id.includes("-" + key + "-"));
+      assert.ok(id, question.id);
+      const spec = expected.get(id);
+      seen.add(id);
+      assert.equal(question.conceptIds[0], spec.concept, question.id);
+      if (spec.concept === "native-numbers") nativeCount += 1;
+      else counterCount += 1;
+      assert.equal(question.kind, spec.kind, question.id);
+      assert.equal(question.answer, spec.answer, question.id);
+      assert.deepEqual(new Set(question.options), new Set([spec.answer, ...spec.wrong]), question.id);
+      assert.equal(question.options.length, 4, question.id);
+      assert.match(question.display, /CONTEXTE\n/u, question.id);
+      assert.doesNotMatch(question.prompt, /Objectif :/u, question.id);
+      assert.ok(question.explanation.includes(spec.answer.replace(/[.!?]+$/u, "")), question.id);
+      if (orderA[index].options.join("|") !== orderB[index].options.join("|")) shuffled += 1;
+
+      const messages = spec.wrong.map((choice) => {
+        checked.add(id + ":" + choice);
+        const explanation = getGrammarIncorrectFeedback(question, choice);
+        assert.ok(explanation.startsWith("Tu as choisi « " + choice + " » : "), question.id);
+        assert.notEqual(explanation, question.explanation, question.id);
+        assert.ok(explanation.includes(spec.answer.replace(/[.!?]+$/u, "")), question.id);
+        assert.ok(explanation.length > 85 && explanation.length < 370, question.id);
+        return explanation;
+      });
+      assert.equal(new Set(messages).size, 3, question.id);
+    }
+  }
+
+  assert.equal(seen.size, 10, "five native-numeral and five classifier exercises covered");
+  assert.equal(checked.size, 30, "all thirty wrong selections have individual feedback");
+  assert.equal(nativeCount, 15);
+  assert.equal(counterCount, 10);
+  assert.ok(shuffled >= 5, "option positions must change with the random source");
+});
+
 test("stages 15 to 40 keep concise exercise prompts and their own display context", () => {
   const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
   const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
