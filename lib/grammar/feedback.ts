@@ -1067,6 +1067,39 @@ function getStageFifteenSelectedFeedback(
   return undefined;
 }
 
+/**
+ * Étape 16 : diagnostic lié à l’option sélectionnée et à l’objet demandé.
+ * Une phrase alternative peut être correcte, mais ne pas correspondre à la
+ * demande directe précisée par le contexte.
+ */
+const STAGE_SIXTEEN_DISTRACTOR_FEEDBACK: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "water-item": {
+    "마셔 주세요": "물 마셔 주세요. demande à ton interlocuteur de boire de l’eau, et non de t’en apporter. Pour recevoir l’eau, dis 물 주세요.",
+    "마시세요": "물 마시세요. est une instruction ou une invitation polie à boire de l’eau. Ici, c’est le serveur qui doit t’en donner : 물 주세요.",
+    "있어요": "물 있어요. constate qu’il y a de l’eau ; cette affirmation ne passe pas commande. Pour la demander, dis 물 주세요.",
+  },
+  "receipt-item": {
+    "보여 주세요": "영수증 보여 주세요. est correct pour dire « Montrez-moi le reçu ». Ici, tu veux que le vendeur te remette le papier : 영수증 주세요.",
+    "보세요": "영수증 보세요. invite l’autre à regarder le reçu. Après ton paiement, c’est toi qui veux le récupérer : 영수증 주세요.",
+    "있어요": "영수증 있어요. dit que le reçu est disponible ou présent ; cela ne demande pas qu’on te le remette : 영수증 주세요.",
+  },
+};
+
+function getStageSixteenSelectedFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (question.stageId !== "request-item" || typeof answer !== "string") return undefined;
+  for (const [drillId, reasons] of Object.entries(STAGE_SIXTEEN_DISTRACTOR_FEEDBACK)) {
+    if (!question.id.includes("-" + drillId + "-")) continue;
+    const reason = reasons[answer];
+    if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+  }
+  return undefined;
+}
+
 /** Nuances de choix qui restent ambiguës avec une règle générale. */
 function getAdvancedSelectedFeedback(
   question: GrammarPracticeQuestion,
@@ -1653,6 +1686,9 @@ export function getGrammarIncorrectFeedback(
 
   const stageFifteenFeedback = getStageFifteenSelectedFeedback(question, answer);
   if (stageFifteenFeedback) return stageFifteenFeedback;
+
+  const stageSixteenFeedback = getStageSixteenSelectedFeedback(question, answer);
+  if (stageSixteenFeedback) return stageSixteenFeedback;
 
   const advancedFeedback = getAdvancedSelectedFeedback(question, selected, expected);
   if (advancedFeedback) return advancedFeedback;
