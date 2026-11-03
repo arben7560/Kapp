@@ -1013,13 +1013,13 @@ export const GRAMMAR_LESSON_GUIDES = {
   "sino-number-contexts": {
     stageId: "sino-number-contexts",
     introduction:
-      "Dans la vie quotidienne, les nombres sino-coréens servent notamment à lire les prix, les minutes, les mois, les lignes de métro et les chiffres des numéros de téléphone. Le contexte détermine le bon système de nombres.",
+      "Les nombres sino-coréens servent à lire les prix, les minutes, les mois, les lignes de métro et les chiffres du téléphone. Pour choisir la bonne lecture, regarde toujours l’unité et le contexte.",
     mainRule:
-      "Associe le nombre à ce qui suit : 오천 원 = 5 000 wons, 십 분 = dix minutes, 3월 (삼월) = mars et 2호선 (이호선) = ligne 2. Pour un téléphone, lis chaque chiffre séparément : 010 = 공일공.",
+      "Lis l’unité avant le nombre : 오천 원 = 5 000 wons, 십 분 = dix minutes, 3월 (삼월) = mars, 2호선 (이호선) = ligne 2. Pour 010, prononce chaque chiffre : 공일공 (0-1-0), pas un nombre entier.",
     formula: {
       pattern: "nombre sino-coréen + unité ; téléphone : chiffres séparés",
       explanation:
-        "원 exprime un prix, 분 une durée en minutes, 월 un mois et 호선 une ligne de métro. Dans un numéro de téléphone, 0 se prononce couramment 공 ; 영 est aussi possible.",
+        "원 indique un prix, 분 une durée en minutes, 월 un mois et 호선 une ligne de métro. Pour 2호선, ne confonds pas avec 2번 출구 (sortie 2) ou 2번 버스 (bus n° 2). Pour 010, 공 se prononce « zéro » ; 영 existe aussi.",
     },
     steps: [
       {
@@ -1035,7 +1035,7 @@ export const GRAMMAR_LESSON_GUIDES = {
       {
         title: "Distingue numéro, date et durée",
         explanation:
-          "2호선 désigne une ligne, 2번 출구 une sortie. 3월 est le mois de mars ; 삼 개월 signifie trois mois de durée. 010 se lit 공일공, pas comme un seul nombre.",
+          "2호선 est une ligne de métro, 2번 출구 une sortie et 2번 버스 une ligne de bus. 3월 désigne mars ; 삼 개월 une durée de trois mois. 3일 peut désigner le 3 du mois dans un calendrier ou une durée de trois jours selon le contexte. 010 se lit 공일공 chiffre par chiffre.",
       },
     ],
     examples: [
@@ -1075,16 +1075,16 @@ export const GRAMMAR_LESSON_GUIDES = {
       {
         mistake: "Confondre des nombres égaux associés à des unités différentes.",
         correction:
-          "3월 (삼월) indique mars, 삼 개월 une durée de trois mois et 3일 le troisième jour du mois. 2호선 indique une ligne, 2번 출구 une sortie.",
+          "3월 (삼월) indique mars, 삼 개월 une durée de trois mois. 3일 peut désigner le 3 du mois dans une date, mais aussi une durée de trois jours : le contexte compte. 2호선 est une ligne de métro, 2번 출구 une sortie.",
       },
       {
         mistake: "Regrouper les chiffres d’un téléphone comme un nombre entier.",
         correction:
-          "Lis chaque chiffre séparément : 010 devient 공일공 dans l’usage courant. 영 peut aussi se lire pour zéro ; il ne faut pas traiter 영일영 comme une erreur de sens.",
+          "Lis les chiffres d’un téléphone dans l’ordre : 010 devient 공일공. Le zéro se dit couramment 공 dans ce contexte ; 영 est également possible, mais le QCM demande explicitement la lecture avec 공.",
       },
     ],
     memoryTip:
-      "Regarde l’unité avant de lire : 원 = prix, 분 = minutes, 월 = mois, 호선 = ligne. Pour un téléphone, lis chaque chiffre un par un.",
+      "Avant de prononcer le nombre, lis ce qui l’accompagne : 원 (prix), 분 (minutes), 월 (mois), 호선 (ligne). Pour 010, dis 공-일-공, chiffre par chiffre.",
   },
   "coordinate-items": {
     stageId: "coordinate-items",
