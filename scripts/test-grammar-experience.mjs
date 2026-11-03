@@ -1796,7 +1796,7 @@ test("stage 16 displays meaningful situations and distinguishes valid indirect r
   assert.match(getGrammarIncorrectFeedback(iced, "Avez-vous un americano glacé ?"), /disponibilité.*commande/u);
   assert.match(getGrammarIncorrectFeedback(bag, "봉투 있어요?"), /naturelle.*indirecte.*demander directement/u);
   assert.match(getGrammarIncorrectFeedback(bag, "봉투 필요해요."), /besoin.*demande directe/u);
-  assert.match(getGrammarIncorrectFeedback(coffee, "커피를 마셔 주세요."), /boire.*demande d’action/u);
+  assert.match(getGrammarIncorrectFeedback(coffee, "커피를 마셔 주세요."), /boire.*demande une action/u);
   const guide = getGrammarLessonGuide("request-item");
   assert.match(guide.formula.pattern, /좀/u);
   assert.match(guide.commonMistakes.map(({ correction }) => correction).join(" "), /disponibilité.*besoin|disponibilité.*intention/u);
