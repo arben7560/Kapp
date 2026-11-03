@@ -9,6 +9,31 @@ import type {
 type DrillOptions = readonly [string, string, string];
 
 const GRAMMAR_VOCABULARY_HINTS: Record<string, readonly { korean: string; french: string }[]> = {
+  "coffee-or-tea-vowel": [
+    { korean: "커피", french: "café" },
+    { korean: "차", french: "thé" },
+  ],
+  "bread-or-cake-batchim": [
+    { korean: "빵", french: "pain" },
+    { korean: "케이크", french: "gâteau" },
+    { korean: "먹어요", french: "je mange" },
+  ],
+  "bus-or-subway-choice": [
+    { korean: "버스", french: "bus" },
+    { korean: "지하철", french: "métro" },
+    { korean: "가요", french: "je vais" },
+  ],
+  "water-or-tea-choice": [
+    { korean: "물", french: "eau" },
+    { korean: "차", french: "thé" },
+    { korean: "마셔요", french: "je bois" },
+  ],
+  "two-complete-questions": [
+    { korean: "지금", french: "maintenant" },
+    { korean: "집", french: "maison / chez soi" },
+    { korean: "가요", french: "on part / tu pars" },
+    { korean: "있어요", french: "on est / tu restes" },
+  ],
   "speak-request": [
     { korean: "말하다", french: "parler" },
   ],
