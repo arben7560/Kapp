@@ -1117,7 +1117,7 @@ function PracticePanel({
           question.stageId === "destination-and-time" && styles.questionCardStageTwelve,
           question.stageId === "possession" && styles.questionCardStageThirteen,
           question.stageId === "information-questions" && styles.questionCardStageFourteen,
-          question.stageId !== "a1-validation" && styles.questionCardStageFourteen,
+          GRAMMAR_STAGE_IDS.slice(14, 40).includes(question.stageId) && styles.questionCardStageFourteen,
         ]}
       >
         {question.exerciseGroup ? (
