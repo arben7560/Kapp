@@ -1192,7 +1192,7 @@ export const GRAMMAR_LESSON_GUIDES = {
     ],
     commonMistakes: [
       { mistake: "Employer 안 pour exprimer une incapacité.", correction: "Dis 못 가요 si tu ne peux réellement pas y aller ; 안 가요 exprime plutôt le choix ou la négation." },
-      { mistake: "Employer 못 quand un son est simplement difficile à percevoir.", correction: "Pour un son trop faible ou peu audible, dis 잘 안 들려요 (« je n’entends pas bien »). 못 est réservé ici à une incapacité réelle : par exemple, 귀가 아파서 잘 못 들어요 (« je n’entends pas bien parce que j’ai mal à l’oreille »)." },
+      { mistake: "Confondre une difficulté de perception et le choix de ne pas écouter.", correction: "잘 안 들려요 (« je n’entends pas bien ») peut aussi être naturel en cas de douleur à l’oreille : ce n’est pas une erreur. 못 들어요 exprime ici un empêchement à écouter ; 듣고 싶지 않아요 signifie plutôt « je ne veux pas écouter »." },
       { mistake: "Placer 못 après le verbe ou conserver 못 하다 dans un verbe composé.", correction: "Place-le avant l’action conjuguée : 못 해요, 운전을 못 해요." },
     ],
     memoryTip: "안 ferme la porte par choix ; 못 dit que la porte ne s’ouvre pas. Pour ce module, cherche toujours la cause qui empêche l’action et place 못 juste devant le verbe.",
