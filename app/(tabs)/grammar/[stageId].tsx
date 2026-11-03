@@ -75,6 +75,23 @@ function scoreLabel(score: number) {
 }
 
 function getCorrectFeedbackLead(question: GrammarPracticeQuestion) {
+  if (question.stageId === "information-questions") {
+    if (question.id.includes("where-toilet")) {
+      return "Oui, 어디 demande où sont les toilettes, sans interroger un horaire.";
+    }
+    if (question.id.includes("when-train")) {
+      return "Oui, 언제 demande le moment où le train arrive.";
+    }
+    if (question.id.includes("why-taxi")) {
+      return "Oui, 왜 demande la raison pour laquelle ton ami prend le taxi.";
+    }
+    if (question.id.includes("how-go")) {
+      return "Oui, 어떻게 demande comment il va à Séoul, notamment par quel moyen.";
+    }
+    if (question.id.includes("how-much-item")) {
+      return "Oui, 얼마예요? demande le prix de l’article que tu montres.";
+    }
+  }
   if (question.stageId === "possession") {
     if (question.id.includes("my-ticket-employee")) {
       return "Oui, 제 표 désigne ton billet en registre poli devant le contrôleur.";
@@ -1091,6 +1108,7 @@ function PracticePanel({
           question.stageId === "action-location" && styles.questionCardStageEleven,
           question.stageId === "destination-and-time" && styles.questionCardStageTwelve,
           question.stageId === "possession" && styles.questionCardStageThirteen,
+          question.stageId === "information-questions" && styles.questionCardStageFourteen,
         ]}
       >
         {question.exerciseGroup ? (
@@ -1119,7 +1137,8 @@ function PracticePanel({
               question.stageId === "object-actions" ||
               question.stageId === "action-location" ||
               question.stageId === "destination-and-time" ||
-              question.stageId === "possession"
+              question.stageId === "possession" ||
+              question.stageId === "information-questions"
             }
           />
         ) : null}
@@ -1301,7 +1320,8 @@ function FeedbackCard({
               question.stageId === "object-actions" ||
               question.stageId === "action-location" ||
               question.stageId === "destination-and-time" ||
-              question.stageId === "possession"
+              question.stageId === "possession" ||
+              question.stageId === "information-questions"
             ? "TON CHOIX EXPLIQUÉ"
             : "À AJUSTER ICI"}
       </AppText>
@@ -1321,7 +1341,8 @@ function FeedbackCard({
             question.stageId === "object-actions" ||
             question.stageId === "action-location" ||
             question.stageId === "destination-and-time" ||
-            question.stageId === "possession"
+            question.stageId === "possession" ||
+            question.stageId === "information-questions"
               ? "POUR CET EXERCICE"
               : "ICI, ON ATTENDAIT"}
           </AppText>
@@ -1809,6 +1830,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   questionCardStageThirteen: {
+    minHeight: 156,
+    padding: 16,
+    gap: 10,
+  },
+  questionCardStageFourteen: {
     minHeight: 156,
     padding: 16,
     gap: 10,
