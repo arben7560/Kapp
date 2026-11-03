@@ -1743,7 +1743,7 @@ test("stages 15 to 40 keep concise exercise prompts and their own display contex
     }
   }
   assert.match(exercises, /stageId !== "a1-validation"/u);
-  assert.match(screen, /question\.stageId !== "a1-validation" && styles\.questionCardStageFourteen/u);
+  assert.match(screen, /GRAMMAR_STAGE_IDS\.slice\(14, 40\)\.includes\(question\.stageId\) && styles\.questionCardStageFourteen/u);
   assert.match(screen, /return "Oui\. " \+ question\.explanation/u);
 });
 
