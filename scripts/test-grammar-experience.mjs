@@ -1890,7 +1890,7 @@ test("stage 17 distinguishes ordinal, generic counter, people and meal portions"
   assert.match(people.display, /PHRASE À EXPRIMER/u);
   assert.match(people.display, /personnes composent ton groupe/u);
   assert.match(getGrammarIncorrectFeedback(people, "두 잔이에요."), /verres.*deux personnes.*두 명이에요/u);
-  assert.match(coffee.display, /récipient de boisson/u);
+  assert.match(coffee.display, /servi dans une tasse.*compter cette tasse/u);
   assert.match(getGrammarIncorrectFeedback(coffee, "개"), /article vendu.*un autre contexte.*une tasse.*한 잔/u);
   assert.match(getGrammarIncorrectFeedback(ticket, "개"), /peut servir.*pas forcément incorrect.*두 장/u);
   assert.match(apples.display, /trois pommes entières/u);
