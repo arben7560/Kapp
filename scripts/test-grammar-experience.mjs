@@ -1867,6 +1867,49 @@ test("stage 17 audits every selected numeral and classifier across five attempts
   assert.ok(shuffled >= 5, "option positions must change with the random source");
 });
 
+test("stage 17 distinguishes ordinal, generic counter, people and meal portions", () => {
+  const questions = Array.from({ length: 5 }, (_, index) =>
+    buildGrammarPracticeQuestions("request-quantity", index + 1, () => 0.42)
+  ).flat();
+  const find = (drillId) => questions.find((question) =>
+    question.id.includes("-" + drillId + "-")
+  );
+  const cup = find("one-cup");
+  const people = find("people-count-phrase");
+  const standalone = find("standalone-three-context");
+  const coffee = find("coffee-cup");
+  const ticket = find("ticket-count");
+  const apples = find("apple-count");
+  const portion = find("portion-count");
+  assert.ok(cup && people && standalone && coffee && ticket && apples && portion);
+  assert.match(cup.display, /première tasse d’une série/u);
+  assert.match(getGrammarIncorrectFeedback(cup, "첫"), /grammatical.*première tasse.*une seule tasse/u);
+  assert.match(standalone.display, /SUITE À COMPLÉTER/u);
+  assert.match(getGrammarIncorrectFeedback(standalone, "세 번째"), /troisième.*rang.*셋/u);
+
+  assert.match(people.display, /PHRASE À EXPRIMER/u);
+  assert.match(people.display, /personnes composent ton groupe/u);
+  assert.match(getGrammarIncorrectFeedback(people, "두 잔이에요."), /verres.*deux personnes.*두 명이에요/u);
+  assert.match(coffee.display, /récipient de boisson/u);
+  assert.match(getGrammarIncorrectFeedback(coffee, "개"), /article vendu.*un autre contexte.*une tasse.*한 잔/u);
+  assert.match(getGrammarIncorrectFeedback(ticket, "개"), /peut servir.*pas forcément incorrect.*두 장/u);
+  assert.match(apples.display, /trois pommes entières/u);
+  assert.match(getGrammarIncorrectFeedback(apples, "잔"), /verres.*pas trois pommes.*사과 세 개/u);
+
+  assert.match(portion.display, /2 se lit 이 devant 인분/u);
+  assert.match(portion.explanation, /2인분.*sino-coréen 이/u);
+  assert.match(getGrammarIncorrectFeedback(portion, "장"), /deux tranches.*deux portions.*2인분/u);
+  const guide = getGrammarLessonGuide("request-quantity");
+  assert.match(guide.mainRule, /잔, 개, 명 et 장.*한, 두, 세, 네.*2인분.*이 인분/u);
+  assert.match(guide.formula.explanation, /한 잔 = une tasse.*2인분 = deux portions/u);
+  assert.match(guide.commonMistakes.map(({ correction }) => correction).join(" "), /첫 잔.*grammatical.*première tasse/u);
+
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  assert.match(screen, /getGrammarIncorrectFeedback\(question, response\.answer\)/u);
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(screen, /POUR CET EXERCICE/u);
+});
+
 test("stages 15 to 40 keep concise exercise prompts and their own display context", () => {
   const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
   const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
