@@ -1115,6 +1115,39 @@ function getStageSixteenSelectedFeedback(
   return undefined;
 }
 
+/**
+ * Étape 17 : les formes courtes et les nombres ordinaux n'ont pas le même
+ * sens. Les corrections expliquent le nombre réellement choisi, plutôt
+ * que de rappeler indistinctement la règle des classificateurs.
+ */
+const STAGE_SEVENTEEN_NUMBER_FEEDBACK: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  "one-cup": {
+    "하나": "하나 est la forme autonome de « un ». Devant 잔, elle se raccourcit en 한 : 커피 한 잔 주세요.",
+    "일": "일 est le nombre sino-coréen « un », utilisé dans d’autres comptages. Pour une tasse de café, emploie le natif 한 잔.",
+    "첫": "첫 잔 est grammatical : il s’agit de la première tasse d’une série. Tu commandes une seule tasse, sans préciser son rang : 한 잔.",
+  },
+  "two-people": {
+    "둘": "둘 signifie « deux » quand le nombre est seul. Devant 명, il devient 두 : 두 명이에요.",
+    "이": "이 est « deux » en sino-coréen. Pour compter deux personnes avec 명 dans cette situation, utilise le natif 두 명.",
+    "둘째": "둘째 indique un rang, « deuxième », pas une quantité de deux personnes. Devant 명, dis 두 : 두 명이에요.",
+  },
+  "three-apples": {
+    "셋": "셋 est « trois » lorsqu’on compte sans classificateur. Devant 개, on utilise sa forme courte 세 : 사과 세 개 주세요.",
+    "삼": "삼 est « trois » en sino-coréen. Pour commander trois pommes avec 개 au marché, utilise le natif 세 개.",
+    "셋째": "셋째 signifie « troisième » dans un ordre. Ici, tu achètes trois pommes, sans désigner la troisième : 세 개.",
+  },
+  "four-tickets": {
+    "넷": "넷 signifie « quatre » sans classificateur. Devant 장, il prend la forme courte 네 : 표 네 장 주세요.",
+    "사": "사 est le « quatre » sino-coréen. Pour compter quatre billets avec 장, emploie le natif 네 장.",
+    "넷째": "넷째 signifie « quatrième » et indique un rang. Tu veux quatre billets, pas le quatrième billet : 네 장.",
+  },
+  "standalone-three": {
+    "세": "세 est la forme courte de « trois » devant un classificateur, comme 세 개. Dans la suite 하나, 둘, ... sans nom, dis 셋.",
+    "삼": "삼 exprime « trois » dans la numération sino-coréenne. Ici, tu récites les nombres natifs 하나, 둘, 셋.",
+    "세 번째": "세 번째 signifie « le troisième », c’est un rang. Pour dire simplement « trois » dans une suite de comptage, utilise 셋.",
+  },
+};
+
 /** Nuances de choix qui restent ambiguës avec une règle générale. */
 function getAdvancedSelectedFeedback(
   question: GrammarPracticeQuestion,
