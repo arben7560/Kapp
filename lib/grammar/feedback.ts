@@ -777,6 +777,59 @@ function getObjectActionsStageTenFeedback(
   return undefined;
 }
 
+/**
+ * Étape 11 : distingue le lieu d'une activité (에서), la position (에),
+ * la direction (로/으로) et la limite atteinte (까지), selon le choix réel.
+ */
+const ACTION_LOCATION_STAGE_ELEVEN_DISTRACTORS: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "cafe-action": {
+    "에": "카페에 있어요 signifie « je suis au café » : 에 situe une présence. Mais 공부해요 décrit l’activité d’étudier ; pour dire où tu étudies, utilise 카페에서 공부해요.",
+    "로": "카페로 signifie « vers le café » avec un verbe comme 가요. Tu es déjà au café et tu y étudies : 카페에서 공부해요 situe l’activité, pas le trajet.",
+    "까지": "카페까지 marque une limite ou un point d’arrivée, « jusqu’au café ». Ici, tu précises où se déroule l’étude : 카페에서 공부해요.",
+  },
+  "school-static": {
+    "에서": "학교에서 공부해요 situe une action à l’école. Ici, 있어요 indique simplement où est ton ami, sans activité précisée : 학교에 있어요.",
+    "로": "학교로 signifie « vers l’école », par exemple 학교로 가요. Ton ami y est déjà : pour sa position, dis 학교에 있어요.",
+    "까지": "학교까지 indique une limite ou destination « jusqu’à l’école ». On te demande où se trouve ton ami, et non jusqu’où il va : 학교에 있어요.",
+  },
+  "home-action": {
+    "에": "집에 있어요 indiquerait que tu es chez toi. Mais la phrase raconte où tu manges : 집에서 밥을 먹어요 marque le lieu du repas.",
+    "으로": "집으로 indique une direction « vers la maison », par exemple 집으로 가요. Tu es déjà chez toi et tu y manges : 집에서 밥을 먹어요.",
+    "까지": "집까지 signifie « jusqu’à la maison » et désigne une limite de trajet. Ici, il ne s’agit pas d’un trajet, mais d’un repas à la maison : 집에서 밥을 먹어요.",
+  },
+  "library-static": {
+    "에서": "도서관에서 책을 읽어요 situe une lecture à la bibliothèque. Mais ici, tu dis seulement où le livre se trouve : 도서관에 있어요.",
+    "으로": "도서관으로 désigne une direction « vers la bibliothèque ». Or le livre s’y trouve déjà : 도서관에 있어요 indique sa position.",
+    "까지": "도서관까지 marque « jusqu’à la bibliothèque », une limite de déplacement ou d’étendue. Tu situes simplement le livre : 도서관에 있어요.",
+  },
+  "restaurant-action": {
+    "에": "식당에 있어요 situerait une présence au restaurant. Mais avec 친구를 만나요, tu indiques où se déroule une rencontre : 식당에서 친구를 만나요.",
+    "으로": "식당으로 signifie « vers le restaurant », avec un déplacement comme 식당으로 가요. Ici, tu situes la rencontre elle-même : 식당에서 친구를 만나요.",
+    "까지": "식당까지 signifie « jusqu’au restaurant », une limite de trajet. Pour dire où tu rencontres ton ami, choisis 식당에서 친구를 만나요.",
+  },
+};
+
+function getActionLocationStageElevenFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  if (
+    question.stageId !== "action-location" ||
+    !question.conceptIds.includes("action-location-eseo") ||
+    typeof answer !== "string"
+  ) return undefined;
+
+  for (const [drillId, choices] of Object.entries(ACTION_LOCATION_STAGE_ELEVEN_DISTRACTORS)) {
+    if (question.id.includes(":drill-action-location-eseo-" + drillId + "-")) {
+      const reason = choices[answer];
+      if (reason) return "Tu as choisi " + quoted(answer) + " : " + reason;
+    }
+  }
+  return undefined;
+}
+
 function selectedSpecificFallback(
   question: GrammarPracticeQuestion,
   selected: string,
@@ -1288,6 +1341,9 @@ export function getGrammarIncorrectFeedback(
     answer,
   );
   if (objectActionsFeedback) return objectActionsFeedback;
+
+  const actionLocationFeedback = getActionLocationStageElevenFeedback(question, answer);
+  if (actionLocationFeedback) return actionLocationFeedback;
 
   if (conceptId === "topic-eun-neun") {
     if (
