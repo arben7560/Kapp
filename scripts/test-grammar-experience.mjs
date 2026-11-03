@@ -1777,6 +1777,35 @@ test("stage 16 checks every answer and explains all fifteen selected distractors
   assert.ok(mixedOrders >= 3, "the answer order must change between random sources");
 });
 
+test("stage 16 displays meaningful situations and distinguishes valid indirect requests", () => {
+  const questions = buildGrammarPracticeQuestions("request-item", 1, () => 0.42);
+  const find = (id) => questions.find((question) => question.id.includes("-" + id + "-"));
+  const water = find("water-item");
+  const receipt = find("receipt-item");
+  const iced = find("iced-americano-meaning");
+  const bag = find("bag-direct");
+  const coffee = find("item-request-in-context");
+  assert.ok(water && receipt && iced && bag && coffee);
+  assert.match(water.display, /serveur.*apporte de l’eau/u);
+  assert.match(receipt.display, /récupérer ton reçu/u);
+  assert.match(iced.display, /PHRASE CORÉENNE/u);
+  assert.match(bag.display, /PHRASE À EXPRIMER/u);
+  assert.match(coffee.prompt, /formule adoucie/u);
+  assert.ok(questions.every((question) => !question.display.includes("두 장")));
+  assert.match(getGrammarIncorrectFeedback(receipt, "보여 주세요"), /Montrez-moi le reçu.*remette/u);
+  assert.match(getGrammarIncorrectFeedback(iced, "Avez-vous un americano glacé ?"), /disponibilité.*commande/u);
+  assert.match(getGrammarIncorrectFeedback(bag, "봉투 있어요?"), /naturelle.*indirecte.*demander directement/u);
+  assert.match(getGrammarIncorrectFeedback(bag, "봉투 필요해요."), /besoin.*demande directe/u);
+  assert.match(getGrammarIncorrectFeedback(coffee, "커피를 마셔 주세요."), /boire.*demande d’action/u);
+  const guide = getGrammarLessonGuide("request-item");
+  assert.match(guide.formula.pattern, /좀/u);
+  assert.match(guide.commonMistakes.map(({ correction }) => correction).join(" "), /disponibilité.*besoin|disponibilité.*intention/u);
+  assert.match(guide.commonMistakes.map(({ correction }) => correction).join(" "), /tous les deux corrects.*adoucit/u);
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(screen, /POUR CET EXERCICE/u);
+});
+
 test("stages 15 to 40 keep concise exercise prompts and their own display context", () => {
   const exercises = readFileSync(join(projectRoot, "lib/grammar/exercises.ts"), "utf8");
   const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
