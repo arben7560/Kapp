@@ -2211,8 +2211,62 @@ test("stage 20 audits every selected alternative and shuffles four answers acros
     }
   }
   assert.equal(seen.size, 5, "all five stage 20 exercises must appear");
+  assert.ok(attemptOrders.size > 1, "the order of drills should rotate between attempts");
   assert.equal(testedSelections.size, 15, "each of the fifteen distractors must have a targeted explanation");
   assert.ok(changedOrders >= 5, "answer choices should be shuffled");
+});
+
+test("stage 20 distinguishes valid alternatives, addition, restriction and complete clauses", () => {
+  const questions = buildGrammarPracticeQuestions("choose-alternative", 1, () => 0.42);
+  const find = (id) => questions.find((q) => q.id.includes("-" + id + "-"));
+  const coffee = find("coffee-or-tea-vowel");
+  const bread = find("bread-or-cake-batchim");
+  const transport = find("bus-or-subway-choice");
+  const drink = find("water-or-tea-choice");
+  const clauses = find("two-complete-questions");
+  assert.ok(coffee && bread && transport && drink && clauses);
+
+  assert.match(coffee.display, /au moins l’une des deux boissons/u);
+  assert.match(bread.display, /goûter.*du pain ou du gâteau/u);
+  assert.match(transport.display, /choisir le bus ou le métro/u);
+  assert.match(drink.display, /eau ou du thé/u);
+  assert.match(clauses.display, /deux questions complètes/u);
+
+  assert.match(getGrammarIncorrectFeedback(coffee, "커피이나 차 있어요?"), /voyelle.*이나.*나.*커피나 차 있어요/u);
+  assert.match(getGrammarIncorrectFeedback(coffee, "커피하고 차 있어요?"), /ET le thé.*l’un ou l’autre.*커피나 차 있어요/u);
+  assert.match(getGrammarIncorrectFeedback(coffee, "커피만 있어요?"), /seulement.*écarte le thé.*커피나 차 있어요/u);
+
+  assert.match(getGrammarIncorrectFeedback(bread, "빵나 케이크를 먹어요."), /받침 ㅇ.*consonne finale.*이나.*빵이나 케이크를 먹어요/u);
+  assert.match(getGrammarIncorrectFeedback(bread, "빵하고 케이크를 먹어요."), /pain ET du gâteau.*하고.*빵이나 케이크를 먹어요/u);
+  assert.match(getGrammarIncorrectFeedback(bread, "빵만 먹어요."), /restreint ton choix au pain.*gâteau.*빵이나 케이크를 먹어요/u);
+
+  assert.match(getGrammarIncorrectFeedback(transport, "버스로만 가요."), /uniquement en bus.*métro.*버스나 지하철로 가요/u);
+  assert.match(getGrammarIncorrectFeedback(transport, "지하철로만 가요."), /exclut le bus.*métro.*버스나 지하철로 가요/u);
+  assert.match(getGrammarIncorrectFeedback(transport, "버스하고 지하철을 타요."), /bus ET le métro.*deux.*버스나 지하철로 가요/u);
+
+  assert.match(getGrammarIncorrectFeedback(drink, "물하고 차를 마셔요."), /« et ».*eau et du thé.*물이나 차를 마셔요/u);
+  assert.match(getGrammarIncorrectFeedback(drink, "물만 마셔요."), /seulement de l’eau.*thé.*물이나 차를 마셔요/u);
+  assert.match(getGrammarIncorrectFeedback(drink, "차만 마셔요."), /seulement du thé.*exclut l’eau.*물이나 차를 마셔요/u);
+
+  assert.match(getGrammarIncorrectFeedback(clauses, "이나"), /nom avec consonne finale.*questions complètes.*아니면/u);
+  assert.match(getGrammarIncorrectFeedback(clauses, "하고"), /relie des noms.*deux questions complètes.*아니면/u);
+  assert.match(getGrammarIncorrectFeedback(clauses, "그리고"), /« et \/ puis ».*deuxième question.*아니면/u);
+
+  assert.equal(coffee.options.includes("커피 아니면 차 있어요?"), false, "valid 아니면 among nominal options must not be a distractor");
+  assert.equal(bread.options.includes("빵 아니면 케이크를 먹어요."), false, "valid nominal alternative must not be marked incorrect");
+  assert.equal(transport.options.includes("버스 아니면 지하철로 가요."), false, "valid nominal alternative must not be marked incorrect");
+  assert.equal(drink.options.includes("물 아니면 차를 마셔요."), false, "valid nominal alternative must not be marked incorrect");
+
+  const guide = getGrammarLessonGuide("choose-alternative");
+  assert.match(guide.mainRule, /커피나 차.*빵이나 케이크.*아니면/u);
+  assert.match(guide.formula.explanation, /커피나 차.*빵이나 케이크.*지금 가요\?/u);
+  assert.match(guide.commonMistakes.map(({ correction }) => correction).join(" "), /카드 아니면 현금/u);
+  assert.match(guide.memoryTip, /voyelle.*나.*consonne.*이나.*아니면.*하고.*만/u);
+
+  const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
+  assert.match(screen, /getGrammarIncorrectFeedback\(question, response\.answer\)/u);
+  assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
+  assert.match(screen, /POUR CET EXERCICE/u);
 });
 
 test("stages 15 to 40 keep concise exercise prompts and their own display context", () => {
