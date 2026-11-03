@@ -1735,7 +1735,7 @@ test("stage 16 checks every answer and explains all fifteen selected distractors
     ["receipt-item", { answer: "주세요", kind: "gap", wrong: ["보여 주세요", "보세요", "있어요"] }],
     ["iced-americano-meaning", { answer: "Un americano glacé, s’il vous plaît.", kind: "scene", wrong: ["Avez-vous un americano glacé ?", "Je bois un americano glacé.", "Buvez un americano glacé, s’il vous plaît."] }],
     ["bag-direct", { answer: "봉투 주세요.", kind: "scene", wrong: ["봉투 있어요?", "봉투 보여 주세요.", "봉투 필요해요."] }],
-    ["item-request-in-context", { answer: "커피 좀 주세요.", kind: "scene", wrong: ["커피 있어요?", "커피 마셔요.", "커피를 마셔 주세요."] }],
+    ["item-request-softened", { answer: "커피 좀 주세요.", kind: "scene", wrong: ["커피 있어요?", "커피 마셔요.", "커피를 마셔 주세요."] }],
   ]);
   const seen = new Set();
   const checked = new Set();
@@ -1784,7 +1784,7 @@ test("stage 16 displays meaningful situations and distinguishes valid indirect r
   const receipt = find("receipt-item");
   const iced = find("iced-americano-meaning");
   const bag = find("bag-direct");
-  const coffee = find("item-request-in-context");
+  const coffee = find("item-request-softened");
   assert.ok(water && receipt && iced && bag && coffee);
   assert.match(water.display, /serveur.*apporte de l’eau/u);
   assert.match(receipt.display, /récupérer ton reçu/u);
