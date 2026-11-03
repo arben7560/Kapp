@@ -171,7 +171,9 @@ function buildDrillQuestion(
       stageId === "possession" ||
       stageId === "information-questions"
       ? drill.prompt
-      : `${drill.prompt}\nObjectif : ${concept.shortFunction}`,
+      : stageId !== "a1-validation"
+        ? drill.prompt
+        : `${drill.prompt}\nObjectif : ${concept.shortFunction}`,
     display: drill.context
       ? formatScenario(
           drill.context,
