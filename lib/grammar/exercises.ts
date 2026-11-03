@@ -167,7 +167,8 @@ function buildDrillQuestion(
       stageId === "present-actions" ||
       stageId === "object-actions" ||
       stageId === "action-location" ||
-      stageId === "destination-and-time"
+      stageId === "destination-and-time" ||
+      stageId === "possession"
       ? drill.prompt
       : `${drill.prompt}\nObjectif : ${concept.shortFunction}`,
     display: drill.context
