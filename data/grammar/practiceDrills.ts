@@ -1348,7 +1348,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
     ),
     choose(
       "modality",
-      "item-request-in-context",
+      "item-request-softened",
       "Un café, s’il vous plaît.",
       "커피 좀 주세요.",
       ["커피 있어요?", "커피 마셔요.", "커피를 마셔 주세요."],
