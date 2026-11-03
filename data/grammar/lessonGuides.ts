@@ -38,7 +38,7 @@ export type GrammarLessonGuide = {
   memoryTip: string;
 };
 
-/** Les dix premières leçons proposent une lecture courte avant les détails. */
+/** Les quinze leçons A0 proposent une lecture courte avant les détails. */
 export const GRAMMAR_QUICK_GUIDE_STAGE_IDS: readonly GrammarStageId[] = [
   "sentence-structure",
   "identify-with-copula",
@@ -50,6 +50,11 @@ export const GRAMMAR_QUICK_GUIDE_STAGE_IDS: readonly GrammarStageId[] = [
   "locate-thing",
   "present-actions",
   "object-actions",
+  "action-location",
+  "destination-and-time",
+  "possession",
+  "information-questions",
+  "simple-negation",
 ];
 
 export function isGrammarQuickGuideStage(stageId: GrammarStageId): boolean {
