@@ -262,6 +262,7 @@ function choose(
   context?: string,
   prompt = "Choisis la forme qui exprime exactement le sens demandé.",
   exerciseGroup?: GrammarPracticeGroup,
+  displayLabel?: string,
 ): GrammarPracticeDrill {
   return {
     id,
@@ -269,7 +270,7 @@ function choose(
     skill,
     prompt,
     stimulus,
-    displayLabel: context ? "RÉPLIQUE À COMPLÉTER" : "INDICE",
+    displayLabel: displayLabel ?? (context ? "RÉPLIQUE À COMPLÉTER" : "INDICE"),
     ...(context ? { context } : {}),
     answer,
     distractors,
