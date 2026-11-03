@@ -2178,7 +2178,7 @@ test("stage 20 audits every selected alternative and shuffles four answers acros
     const withZero = buildGrammarPracticeQuestions("choose-alternative", attempt, () => 0);
     const withNines = buildGrammarPracticeQuestions("choose-alternative", attempt, () => 0.99);
     assert.equal(questions.length, 5);
-    attemptOrders.add(questions.map((q) => q.id.split("-drill-")[1].split("-").slice(1, -1).join("-")).join("|"));
+    attemptOrders.add(questions.map((q) => [...expected.keys()].find((id) => q.id.includes("-" + id + "-"))).join("|"));
 
     for (const [index, question] of questions.entries()) {
       const drillId = [...expected.keys()].find((key) => question.id.includes("-" + key + "-"));
