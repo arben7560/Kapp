@@ -76,7 +76,7 @@ function GlossToken({
           variant="caption"
           tone="muted"
           align="center"
-          numberOfLines={2}
+          lineContract="twoLines"
           style={[styles.vocabularyTranslation, { top: wordHeight + 1 }]}
         >
           {part.french}
