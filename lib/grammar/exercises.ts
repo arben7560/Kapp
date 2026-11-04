@@ -10,7 +10,6 @@ import type {
   GrammarPracticeDrill,
   GrammarPracticeQuestion,
   GrammarPracticeSession,
-  GrammarPracticeSkill,
   GrammarStageId,
 } from "../../data/grammar/types";
 import { GRAMMAR_VOCABULARY_HINTS_10_TO_19 } from "../../data/grammar/vocabularyHints10to19.ts";
