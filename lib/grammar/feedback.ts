@@ -2163,7 +2163,7 @@ function resolveGrammarIncorrectFeedback(
     if (answer.at(-1) !== expectedTokens.at(-1)) {
       return `Dans « ${selected} », le verbe doit se placer à la fin de cette phrase neutre. Construis : « ${expected} ».`;
     }
-    return `Tu as bien gardé le verbe à la fin, mais le thème et l'objet ne sont pas dans l'ordre neutre demandé. Ici : « ${expected} ».`;
+    return `Tu as placé « ${selected} » : la dernière forme verbale est correcte, mais les autres groupes ne suivent pas l’ordre attendu pour cette situation. Recompose : « ${expected} ».`;
   }
 
   const sentenceOrderFeedback = getSentenceOrderStageOneFeedback(
