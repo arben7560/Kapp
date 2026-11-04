@@ -2143,7 +2143,7 @@ function getLaterStageSelectedFeedback(
  * rule being assessed. A few high-confusion contrasts use the selected answer
  * when its grammatical value can be identified without ambiguity.
  */
-export function getGrammarIncorrectFeedback(
+function resolveGrammarIncorrectFeedback(
   question: GrammarPracticeQuestion,
   answer: GrammarPracticeAnswer,
 ) {
@@ -2774,4 +2774,30 @@ export function getGrammarIncorrectFeedback(
     return `Tu as choisi ${quoted(selected)}. Dans cette situation, ${question.explanation} La réponse attendue est ${quoted(expected)}.`;
   }
   return question.explanation;
+}
+
+/** Dans le bilan final, privilégie une correction utile et lisible sur mobile. */
+export function getGrammarIncorrectFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string {
+  const fullFeedback = resolveGrammarIncorrectFeedback(question, answer);
+  if (question.stageId !== "a1-validation" || fullFeedback.length <= 260) {
+    return fullFeedback;
+  }
+
+  const expected = answerLabel(question.answer);
+  const suffix = ` Réponse attendue : ${quoted(expected)}.`;
+  const limit = 260 - suffix.length;
+  const lastSentence = fullFeedback.lastIndexOf(". ", limit - 1);
+  let lead = lastSentence > 85
+    ? fullFeedback.slice(0, lastSentence + 1)
+    : fullFeedback.slice(0, limit - 2).replace(/\\s+\\S*$/u, "").replace(/[,:;]$/u, "") + "…";
+  const selected = answerLabel(answer);
+  if (!lead.includes(selected)) {
+    const prefix = `Tu as choisi ${quoted(selected)}. `;
+    lead = prefix + lead.slice(0, Math.max(20, limit - prefix.length - 2))
+      .replace(/\\s+\\S*$/u, "") + "…";
+  }
+  return lead + suffix;
 }
