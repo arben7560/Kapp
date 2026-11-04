@@ -166,9 +166,7 @@ function buildDrillQuestion(
       stageId === "possession" ||
       stageId === "information-questions"
       ? drill.prompt
-      : stageId !== "a1-validation"
-        ? drill.prompt
-        : `${drill.prompt}\nObjectif : ${concept.shortFunction}`,
+      : drill.prompt,
     display: drill.context
       ? formatScenario(
           drill.context,
@@ -221,65 +219,41 @@ function getInterleavedDrills(
   return result;
 }
 
-const REVIEW_SECTIONS: readonly {
-  skill: GrammarPracticeSkill;
-  count: number;
+/**
+ * Évaluation transversale propre à l'étape 41.
+ * Chaque tentative balaie les 25 compétences ci-dessous ; les binômes
+ * alternent à chaque essai pour réviser les 40 leçons sur plusieurs passages.
+ * Les autres étapes continuent d'utiliser leurs propres exercices, sans changement.
+ */
+const A1_REVIEW_BLUEPRINT: readonly {
+  family: string;
   conceptIds: readonly GrammarConceptId[];
 }[] = [
-  {
-    skill: "particles",
-    count: 3,
-    conceptIds: [
-      "topic-eun-neun",
-      "object-eul-reul",
-      "action-location-eseo",
-      "destination-time-e",
-      "direction-means-ro-euro",
-      "subject-i-ga",
-    ],
-  },
-  {
-    skill: "conjugation",
-    count: 3,
-    conceptIds: ["present-a-eoyo", "past-ass-eosseoyo", "future-eul-geoyeyo"],
-  },
-  {
-    skill: "modality",
-    count: 1,
-    conceptIds: ["request-v-a-eo-juseyo", "polite-instruction-euseyo"],
-  },
-  {
-    skill: "modality",
-    count: 1,
-    conceptIds: [
-      "negation-an",
-      "inability-mot",
-      "ability-eul-su-isseoyo",
-      "permission-a-eodo-dwaeyo",
-      "obligation-a-eoya-haeyo",
-      "suggestion-eulkkayo",
-    ],
-  },
-  {
-    skill: "connectors",
-    count: 2,
-    conceptIds: [
-      "sequence-go",
-      "reason-a-eoseo",
-      "contrast-jiman",
-      "condition-eumyeon",
-    ],
-  },
-  {
-    skill: "register",
-    count: 1,
-    conceptIds: ["polite-style-yo", "possession-ui-je-nae", "honorific-si"],
-  },
-  {
-    skill: "syntax",
-    count: 1,
-    conceptIds: ["comparison-boda-deo-jeil"],
-  },
+  { family: "Fondations", conceptIds: ["sentence-order"] },
+  { family: "Fondations", conceptIds: ["copula-ieyo-yeyo", "copula-negation-anieyo"] },
+  { family: "Fondations", conceptIds: ["present-a-eoyo", "polite-style-yo"] },
+  { family: "Fondations", conceptIds: ["question-mwo-nugu-myeot", "interrogatives-basic"] },
+  { family: "Fondations", conceptIds: ["demonstratives-i-geu-jeo", "possession-ui-je-nae"] },
+  { family: "Construire la phrase", conceptIds: ["topic-eun-neun", "subject-i-ga"] },
+  { family: "Construire la phrase", conceptIds: ["object-eul-reul"] },
+  { family: "Construire la phrase", conceptIds: ["location-e", "action-location-eseo"] },
+  { family: "Construire la phrase", conceptIds: ["destination-time-e", "direction-means-ro-euro"] },
+  { family: "Construire la phrase", conceptIds: ["existence-isseoyo-eopseoyo"] },
+  { family: "Quantités et échanges", conceptIds: ["native-numbers", "classifiers-basic"] },
+  { family: "Quantités et échanges", conceptIds: ["sino-korean-numbers", "range-buteo-kkaji"] },
+  { family: "Quantités et échanges", conceptIds: ["noun-link-hago-irang", "alternative-ina-animyeon"] },
+  { family: "Quantités et échanges", conceptIds: ["request-n-juseyo"] },
+  { family: "Quantités et échanges", conceptIds: ["request-v-a-eo-juseyo", "polite-instruction-euseyo"] },
+  { family: "Choix et intentions", conceptIds: ["desire-go-sipeoyo", "ability-eul-su-isseoyo"] },
+  { family: "Choix et intentions", conceptIds: ["permission-a-eodo-dwaeyo", "obligation-a-eoya-haeyo"] },
+  { family: "Choix et intentions", conceptIds: ["negation-an", "inability-mot"] },
+  { family: "Choix et intentions", conceptIds: ["additive-do", "restrictive-man"] },
+  { family: "Choix et intentions", conceptIds: ["past-ass-eosseoyo", "future-eul-geoyeyo"] },
+  { family: "Temps, liens et nuances", conceptIds: ["intention-eulgeyo", "suggestion-eulkkayo"] },
+  { family: "Temps, liens et nuances", conceptIds: ["sequence-go", "reason-a-eoseo"] },
+  { family: "Temps, liens et nuances", conceptIds: ["contrast-jiman", "condition-eumyeon"] },
+  { family: "Temps, liens et nuances", conceptIds: ["honorific-si"] },
+  { family: "Temps, liens et nuances", conceptIds: ["comparison-boda-deo-jeil"] },
 ] as const;
 
 function buildReviewQuestions(
@@ -287,46 +261,37 @@ function buildReviewQuestions(
   attemptNumber: number,
   random: RandomSource,
 ): readonly GrammarPracticeQuestion[] {
-  const questions: GrammarPracticeQuestion[] = [];
-  let questionIndex = 0;
-
-  for (const [sectionIndex, section] of REVIEW_SECTIONS.entries()) {
-    for (let localIndex = 0; localIndex < section.count; localIndex += 1) {
-      const concept = getConcept(
-        section.conceptIds[
-          (Math.max(0, attemptNumber - 1) + localIndex) %
-            section.conceptIds.length
-        ],
-      );
-      const matchingDrills = concept.practice.drills.filter(
-        ({ skill }) => skill === section.skill,
-      );
-      if (matchingDrills.length === 0) {
-        throw new RangeError(
-          `Missing ${section.skill} review drill for ${concept.id}`,
-        );
-      }
-      const drill =
-        matchingDrills[
-          (Math.max(0, attemptNumber - 1) + localIndex + sectionIndex) %
-            matchingDrills.length
-        ];
-      questions.push(
-        buildDrillQuestion(
-          stageId,
-          attemptNumber,
-          concept,
-          drill,
-          questionIndex,
-          "review",
-          random,
-        ),
-      );
-      questionIndex += 1;
+  const zeroBasedAttempt = Math.max(0, attemptNumber - 1);
+  return A1_REVIEW_BLUEPRINT.map((slot, questionIndex) => {
+    const concept = getConcept(
+      slot.conceptIds[zeroBasedAttempt % slot.conceptIds.length],
+    );
+    // Le premier exercice vérifie réellement la construction de la phrase ;
+    // toutes les autres cases combinent QCM, textes à trous et conjugaisons.
+    const matchingDrills = concept.practice.drills.filter((drill) =>
+      questionIndex === 0 ? drill.kind === "order" : drill.kind !== "order",
+    );
+    if (matchingDrills.length === 0) {
+      throw new RangeError(`No suitable A1 review drill for ${concept.id}`);
     }
-  }
-
-  return questions;
+    const drill = matchingDrills[
+      (Math.floor(zeroBasedAttempt / slot.conceptIds.length) + questionIndex) %
+        matchingDrills.length
+    ];
+    const question = buildDrillQuestion(
+      stageId,
+      attemptNumber,
+      concept,
+      drill,
+      questionIndex,
+      "review",
+      random,
+    );
+    return {
+      ...question,
+      prompt: `BILAN A1 · ${slot.family.toUpperCase()}\n${drill.prompt}`,
+    };
+  });
 }
 
 export function areGrammarAnswersEqual(
