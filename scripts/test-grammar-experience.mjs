@@ -129,8 +129,8 @@ test("grammar theory opens in a reusable modal and resumes without replacing its
   }
 });
 
-test("the concise grammar guide covers exactly lessons 01–20", () => {
-  assert.deepEqual(GRAMMAR_QUICK_GUIDE_STAGE_IDS, GRAMMAR_STAGE_IDS.slice(0, 20));
+test("the concise grammar guide covers lessons 01–40, preserving the final review", () => {
+  assert.deepEqual(GRAMMAR_QUICK_GUIDE_STAGE_IDS, GRAMMAR_STAGE_IDS.slice(0, 40));
   const expectedExamples = [
     ["sentence-structure", "저는 커피를 마셔요."],
     ["identify-with-copula", "학생이에요."],
@@ -164,7 +164,8 @@ test("the concise grammar guide covers exactly lessons 01–20", () => {
   assert.equal(isGrammarQuickGuideStage("simple-negation"), true);
   assert.equal(isGrammarQuickGuideStage("request-item"), true);
   assert.equal(isGrammarQuickGuideStage("choose-alternative"), true);
-  assert.equal(isGrammarQuickGuideStage("request-action"), false);
+  assert.equal(isGrammarQuickGuideStage("request-action"), true);
+  assert.equal(isGrammarQuickGuideStage("a1-validation"), false);
   assert.ok(getGrammarLessonGuide("introduce-topic").examples.some(
     ({ korean }) => korean === "오늘은 쉬어요.",
   ));
@@ -232,8 +233,9 @@ test("lessons 11–15 share the identical short modal layout and retain complete
   assert.match(lesson, /onStartExercises=\{isQuickGuide \? startPractice : undefined\}/u);
   assert.match(lesson, /const accessExercises = React\.useCallback/u);
 
-  // À partir de l’étape 21, le format détaillé et la navigation restent inchangés.
-  assert.equal(isGrammarQuickGuideStage("request-action"), false);
+  // À partir de l’étape 21, les leçons partagent aussi la modale courte ; la révision finale reste distincte.
+  assert.equal(isGrammarQuickGuideStage("request-action"), true);
+  assert.equal(isGrammarQuickGuideStage("a1-validation"), false);
 });
 
 test("lessons 16–20 retain the compact modal with pedagogical volume proportional to their drills", () => {
@@ -271,7 +273,8 @@ test("lessons 16–20 retain the compact modal with pedagogical volume proportio
   assert.match(modal, /onPress=\{onAccessExercises\}/u);
   assert.match(screen, /if \(!isQuickGuide && !session\) startPractice\(\)/u);
   assert.match(screen, /onStartExercises=\{isQuickGuide \? startPractice : undefined\}/u);
-  assert.equal(isGrammarQuickGuideStage("request-action"), false);
+  assert.equal(isGrammarQuickGuideStage("request-action"), true);
+  assert.equal(isGrammarQuickGuideStage("a1-validation"), false);
 });
 
 test("lessons 16–20 cover all 30 exercises and their grammatical distractor contrasts", () => {
