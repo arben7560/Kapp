@@ -268,7 +268,7 @@ function buildReviewQuestions(
         ? {
             ...selected,
             kind: "order",
-            answer: selected.answer.split(/\\s+/u).filter(Boolean),
+            answer: selected.answer.split(/\s+/u).filter(Boolean),
             displayLabel: "PHRASE À FORMER",
             context: selected.context ??
               "Reconstitue une phrase neutre, sans placer de complément après le verbe.",
