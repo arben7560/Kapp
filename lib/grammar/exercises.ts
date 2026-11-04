@@ -267,7 +267,7 @@ const A1_COMPOSED_REVIEW_DRILLS: Readonly<Record<number, readonly GrammarPractic
       context: "Tu indiques ton programme de demain et la destination du trajet.",
       displayLabel: "PHRASE À FORMER",
       answer: ["내일", "서울역에", "가요."],
-      explanation: "내일 indique demain, 서울역에 la destination, et 가요 termine la phrase neutre.",
+      explanation: "내일 indique demain, 서울역에 la destination et 가요 le verbe final : 내일 서울역에 가요.",
     },
     {
       id: "review-transport-order",
@@ -278,7 +278,7 @@ const A1_COMPOSED_REVIEW_DRILLS: Readonly<Record<number, readonly GrammarPractic
       context: "Tu précises comment tu rejoins la gare de Séoul.",
       displayLabel: "PHRASE À FORMER",
       answer: ["지하철로", "서울역에", "가요."],
-      explanation: "지하철로 indique le moyen de transport et 서울역에 la destination, avant le verbe 가요.",
+      explanation: "지하철로 indique le moyen et 서울역에 la destination : 지하철로 서울역에 가요.",
     },
   ],
   13: [
@@ -291,7 +291,7 @@ const A1_COMPOSED_REVIEW_DRILLS: Readonly<Record<number, readonly GrammarPractic
       context: "Au café, tu commandes un verre d’eau.",
       displayLabel: "PHRASE À FORMER",
       answer: ["물", "한 잔", "주세요."],
-      explanation: "물 est l’eau demandée, 한 잔 précise un verre et 주세요 formule la demande polie.",
+      explanation: "물 est l’eau demandée, 한 잔 précise un verre et 주세요 formule la demande : 물 한 잔 주세요.",
     },
     {
       id: "review-coffee-water-order",
@@ -302,7 +302,7 @@ const A1_COMPOSED_REVIEW_DRILLS: Readonly<Record<number, readonly GrammarPractic
       context: "Au café, tu commandes deux cafés et ajoutes de l’eau.",
       displayLabel: "PHRASE À FORMER",
       answer: ["커피 두 잔하고", "물도", "주세요."],
-      explanation: "두 잔 compte les cafés, 하고 relie les éléments, 도 ajoute l’eau et 주세요 conclut la demande.",
+      explanation: "두 잔 compte les cafés, 하고 relie les éléments, 도 ajoute l’eau : 커피 두 잔하고 물도 주세요.",
     },
   ],
   19: [
@@ -315,7 +315,7 @@ const A1_COMPOSED_REVIEW_DRILLS: Readonly<Record<number, readonly GrammarPractic
       context: "Tu racontes ce que tu as fait hier.",
       displayLabel: "PHRASE À FORMER",
       answer: ["어제", "영화를", "봤어요."],
-      explanation: "어제 situe l’événement hier, 영화를 désigne l’objet et 봤어요 exprime le passé.",
+      explanation: "어제 situe l’action hier, 영화를 désigne l’objet et 봤어요 le passé : 어제 영화를 봤어요.",
     },
     {
       id: "review-future-order",
@@ -326,7 +326,7 @@ const A1_COMPOSED_REVIEW_DRILLS: Readonly<Record<number, readonly GrammarPractic
       context: "Tu annonces un projet prévu pour demain.",
       displayLabel: "PHRASE À FORMER",
       answer: ["내일", "영화를", "볼 거예요."],
-      explanation: "내일 annonce demain, 영화를 désigne l’objet et 볼 거예요 exprime le projet futur.",
+      explanation: "내일 annonce demain, 영화를 l’objet et 볼 거예요 le futur prévu : 내일 영화를 볼 거예요.",
     },
   ],
   21: [
@@ -339,7 +339,7 @@ const A1_COMPOSED_REVIEW_DRILLS: Readonly<Record<number, readonly GrammarPractic
       context: "Tu décris simplement deux actions successives.",
       displayLabel: "PHRASE À FORMER",
       answer: ["밥을", "먹고", "커피를", "마셔요."],
-      explanation: "먹고 relie les actions avec -고, puis 마셔요 termine la phrase au présent poli.",
+      explanation: "먹고 relie les actions avec -고, puis 마셔요 ferme la phrase : 밥을 먹고 커피를 마셔요.",
     },
     {
       id: "review-reason-order",
@@ -350,7 +350,7 @@ const A1_COMPOSED_REVIEW_DRILLS: Readonly<Record<number, readonly GrammarPractic
       context: "Tu expliques pourquoi tu prends un taxi.",
       displayLabel: "PHRASE À FORMER",
       answer: ["비가 와서", "택시를", "타요."],
-      explanation: "비가 와서 indique la pluie comme cause, 택시를 l’objet et 타요 l’action qui en résulte.",
+      explanation: "비가 와서 donne la cause, 택시를 l’objet et 타요 l’action : 비가 와서 택시를 타요.",
     },
   ],
 };
