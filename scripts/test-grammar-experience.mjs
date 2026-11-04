@@ -247,6 +247,45 @@ test("lessons 21 and 38 keep context, Korean syntax and selected-answer correcti
   assert.match(getGrammarIncorrectFeedback(nounNeed, "볼 수 있어요"), /capacité de voir au passeport/u);
 });
 
+test("lessons 21–40 keep every Korean example consistent with its decomposition", () => {
+  const normalize = (value) => value.replace(/[\\s.?!]/gu, "");
+  for (const stageId of GRAMMAR_STAGE_IDS.slice(20, 40)) {
+    const guide = getGrammarLessonGuide(stageId);
+    for (const example of guide.examples) {
+      const assembled = example.parts.map(({ korean }) => korean).join("");
+      assert.equal(normalize(assembled), normalize(example.korean), stageId + ": " + example.korean);
+      assert.ok(example.parts.every(({ french, role }) => french && role), stageId);
+    }
+  }
+});
+
+test("lesson 25 rotates through all seven distinct ability drills", () => {
+  const encountered = new Set();
+  for (let attempt = 1; attempt <= 7; attempt += 1) {
+    for (const question of buildGrammarPracticeQuestions("express-ability", attempt, () => 0.42)) {
+      for (const id of [
+        "read-ability", "speak-ability", "drive-ability", "go-ability",
+        "pay-ability", "charge-ability", "take-transport-ability",
+      ]) {
+        if (question.id.includes("-" + id + "-")) encountered.add(id);
+      }
+    }
+  }
+  assert.equal(encountered.size, 7);
+});
+
+test("lesson 28 asks for complete phrases without repeating its scenario", () => {
+  const questions = buildGrammarPracticeQuestions("add-item", 1, () => 0.42);
+  for (const drillId of ["kimchi-too", "coffee-too", "too-vs-only"]) {
+    const question = questions.find(({ id }) => id.includes("-" + drillId + "-"));
+    assert.ok(question);
+    assert.match(question.display, /CONTEXTE\\n/u);
+    assert.match(question.display, /PHRASE À EXPRIMER\\n/u);
+    assert.doesNotMatch(question.display, /RÉPLIQUE À COMPLÉTER/u);
+    assert.ok(question.display.length < 210, drillId);
+  }
+});
+
 test("word banks never start already solved, including lesson 29", () => {
   for (const stageId of ["sentence-structure", "limit-request"]) {
     for (const randomValue of [0, 0.24, 0.42, 0.99]) {
