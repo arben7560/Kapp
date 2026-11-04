@@ -397,8 +397,8 @@ test("lessons 16–20 retain the compact modal with pedagogical volume proportio
   assert.match(content, /\{\(!isQuickGuide \|\| showDetails\) \? \(/u);
   assert.match(modal, /isQuickGuide && styles\.exerciseFooterQuick/u);
   assert.match(modal, /onPress=\{onAccessExercises\}/u);
-  assert.match(screen, /if \(!isQuickGuide && !session\) startPractice\(\)/u);
-  assert.match(screen, /onStartExercises=\{isQuickGuide \? startPractice : undefined\}/u);
+  assert.match(screen, /if \(!isQuickGuide && stageId !== "a1-validation" && !session\) startPractice\(\)/u);
+  assert.match(screen, /onStartExercises=\{isQuickGuide \|\| stageId === "a1-validation" \? startPractice : undefined\}/u);
   assert.equal(isGrammarQuickGuideStage("request-action"), true);
   assert.equal(isGrammarQuickGuideStage("a1-validation"), false);
 });
@@ -704,15 +704,15 @@ function answerRemainingCorrectly(session, completedAt = "2026-07-21T10:10:00.00
   return current;
 }
 
-test("lessons keep their configured exercise count and the general review covers twelve structures", () => {
+test("lessons keep their configured exercise count and the A1 assessment covers 25 questions", () => {
   for (const stageId of GRAMMAR_STAGE_IDS) {
     const questions = buildGrammarPracticeQuestions(stageId);
     const isReview = GRAMMAR_STAGE_BY_ID[stageId].mode === "review";
     const expectedCount = GRAMMAR_STAGE_BY_ID[stageId].practiceQuestionCount ?? 5;
-    assert.equal(questions.length, isReview ? 12 : expectedCount, stageId);
+    assert.equal(questions.length, expectedCount, stageId);
     assert.ok(questions.every(({ skill }) => !!skill), `${stageId}: targeted drills`);
     if (GRAMMAR_STAGE_BY_ID[stageId].mode === "review") {
-      assert.ok(questions.every(({ kind }) => kind !== "order"), stageId);
+      assert.equal(questions.filter(({ kind }) => kind === "order").length, 1, stageId);
     } else {
       assert.ok(
         questions.every(({ skill }) => !!skill) ||
@@ -2713,7 +2713,7 @@ test("stages 15 to 40 keep concise exercise prompts and their own display contex
       assert.ok(question.explanation.trim().length > 10, question.id);
     }
   }
-  assert.match(exercises, /stageId !== "a1-validation"/u);
+  assert.match(exercises, /A1_REVIEW_BLUEPRINT/u);
   assert.match(screen, /GRAMMAR_STAGE_IDS\.slice\(14, 40\)\.includes\(question\.stageId\) && styles\.questionCardStageFourteen/u);
   assert.match(screen, /return "Oui\. " \+ question\.explanation/u);
 });
@@ -3006,35 +3006,82 @@ test("every grammar QCM has unique options and exactly one declared correct answ
   }
 });
 
-test("the A1 review is diverse and reserves questions for every core family", () => {
+test("the 25-question A1 review covers all 43 productive concepts in two attempts", () => {
   const reviewedConcepts = new Set();
-  for (let attempt = 1; attempt <= 6; attempt += 1) {
+  const families = [
+    "FONDATIONS",
+    "CONSTRUIRE LA PHRASE",
+    "QUANTITÉS ET ÉCHANGES",
+    "CHOIX ET INTENTIONS",
+    "TEMPS, LIENS ET NUANCES",
+  ];
+  const guide = getGrammarLessonGuide("a1-validation");
+  assert.equal(guide.examples.length, 4);
+  assert.match(guide.mainRule, /25 questions/u);
+  assert.match(guide.mainRule, /20 bonnes réponses/u);
+  assert.equal(GRAMMAR_STAGE_BY_ID["a1-validation"].practiceQuestionCount, 25);
+  assert.equal(GRAMMAR_STAGE_BY_ID["a1-validation"].canonicalExamples.length, 2);
+
+  for (let attempt = 1; attempt <= 8; attempt += 1) {
     const questions = buildGrammarPracticeQuestions("a1-validation", attempt, () => 0.42);
     const skills = questions.map(({ skill }) => skill);
     questions.flatMap(({ conceptIds }) => conceptIds).forEach((id) => reviewedConcepts.add(id));
-
-    assert.equal(questions.length, 12);
-    assert.ok(new Set(questions.flatMap(({ conceptIds }) => conceptIds)).size >= 10);
-    for (const skill of [
-      "particles",
-      "conjugation",
-      "modality",
-      "connectors",
-      "register",
-      "syntax",
-    ]) {
-      assert.ok(skills.includes(skill), `${attempt}: ${skill}`);
+    assert.equal(questions.length, 25);
+    assert.equal(new Set(questions.map(({ id }) => id)).size, 25);
+    assert.equal(new Set(questions.flatMap(({ conceptIds }) => conceptIds)).size, 25);
+    assert.equal(questions.filter(({ kind }) => kind === "order").length, 1);
+    assert.ok(questions.some(({ kind }) => kind === "transformation"));
+    assert.ok(questions.some(({ kind }) => kind === "gap"));
+    assert.ok(questions.some(({ kind }) => kind === "choice"));
+    assert.ok(questions.every(({ prompt }) => !prompt.includes("Objectif :")));
+    for (const family of families) {
+      assert.equal(questions.filter(({ prompt }) =>
+        prompt.startsWith(`BILAN A1 · ${family}\n`)).length, 5, family + ": " + attempt);
     }
-    assert.ok(
-      questions.some(({ conceptIds }) =>
-        conceptIds.includes("request-v-a-eo-juseyo") ||
-        conceptIds.includes("polite-instruction-euseyo")
-      ),
-      `${attempt}: request or instruction`,
+    for (const skill of ["particles", "conjugation", "modality", "connectors", "register", "syntax", "forms"]) {
+      assert.ok(skills.includes(skill), attempt + ": " + skill);
+    }
+    assert.ok(questions.some(({ conceptIds }) => conceptIds.includes("honorific-si")));
+  }
+  const productive = GRAMMAR_STAGE_BY_ID["a1-validation"].conceptIds;
+  assert.equal(productive.length, 43);
+  for (const conceptId of productive) {
+    assert.ok(reviewedConcepts.has(conceptId), "concept not reviewed: " + conceptId);
+  }
+  for (const example of guide.examples) {
+    const clean = (value) => value.replace(/[\s.!?]/gu, "");
+    assert.equal(
+      clean(example.parts.map(({ korean }) => korean).join("")),
+      clean(example.korean),
+      example.korean,
     );
   }
-  assert.ok(reviewedConcepts.has("honorific-si"), "receptive honorific coverage");
 });
+
+test("A1 review preserves contextual feedback and answer-bank construction", () => {
+  for (let attempt = 1; attempt <= 4; attempt += 1) {
+    const questions = buildGrammarPracticeQuestions("a1-validation", attempt, () => 0.42);
+    for (const question of questions) {
+      assert.ok(question.explanation.length > 24, question.id);
+      assert.ok(question.prompt.includes("BILAN A1"), question.id);
+      if (Array.isArray(question.answer)) {
+        assert.notDeepEqual(question.options, question.answer);
+        assert.deepEqual(new Set(question.options), new Set(question.answer));
+        const misplaced = [...question.answer].reverse();
+        const feedback = getGrammarIncorrectFeedback(question, misplaced);
+        assert.match(feedback, /verbe.*fin|ordre neutre/u);
+      } else {
+        assert.ok(question.options.includes(question.answer), question.id);
+        assert.equal(new Set(question.options).size, question.options.length);
+        for (const choice of question.options.filter((option) => option !== question.answer)) {
+          const feedback = getGrammarIncorrectFeedback(question, choice);
+          assert.ok(feedback.length > 25, question.id + " => " + choice);
+        }
+      }
+    }
+  }
+});
+
 
 test("lessons with two rule aspects evaluate both halves", () => {
   for (const [stageId, expectedAspects] of [
@@ -3135,7 +3182,7 @@ test("the general A1 review never grants mastery to all reviewed concepts", () =
   assert.deepEqual(after.concepts, {});
   assert.equal(after.stages[reviewStageId].attempts, 1);
   assert.equal(getGrammarStageState(after, reviewStageId), "practiced");
-  assert.ok(session.questions.every(({ kind }) => kind !== "order"));
+  assert.equal(session.questions.filter(({ kind }) => kind === "order").length, 1);
   assert.ok(
     session.questions.every(({ answer }) =>
       Array.isArray(answer) ? !answer.join(" ").includes("손님:") : !answer.includes("손님:"),
