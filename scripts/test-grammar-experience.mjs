@@ -248,7 +248,7 @@ test("lessons 21 and 38 keep context, Korean syntax and selected-answer correcti
 });
 
 test("lessons 21–40 keep every Korean example consistent with its decomposition", () => {
-  const normalize = (value) => value.replace(/[\\s.?!]/gu, "");
+  const normalize = (value) => value.replace(/[\s.?!]/gu, "");
   for (const stageId of GRAMMAR_STAGE_IDS.slice(20, 40)) {
     const guide = getGrammarLessonGuide(stageId);
     for (const example of guide.examples) {
@@ -279,8 +279,8 @@ test("lesson 28 asks for complete phrases without repeating its scenario", () =>
   for (const drillId of ["kimchi-too", "coffee-too", "too-vs-only"]) {
     const question = questions.find(({ id }) => id.includes("-" + drillId + "-"));
     assert.ok(question);
-    assert.match(question.display, /CONTEXTE\\n/u);
-    assert.match(question.display, /PHRASE À EXPRIMER\\n/u);
+    assert.match(question.display, /CONTEXTE\n/u);
+    assert.match(question.display, /PHRASE À EXPRIMER\n/u);
     assert.doesNotMatch(question.display, /RÉPLIQUE À COMPLÉTER/u);
     assert.ok(question.display.length < 210, drillId);
   }
