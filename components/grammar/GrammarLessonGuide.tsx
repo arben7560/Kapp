@@ -9,6 +9,7 @@ import {
   isGrammarQuickGuideStage,
   type GrammarLessonGuide as GrammarLessonGuideData,
 } from "../../data/grammar/lessonGuides";
+import { GRAMMAR_STAGE_BY_ID } from "../../data/grammar/stages";
 import { AppText } from "../app-text";
 import { grammarLessonGuideStyles as styles } from "./GrammarLessonGuide.styles";
 import { GRAMMAR_REGISTER_NOTES } from "./grammarRegisterNotes";
@@ -370,9 +371,42 @@ export function GrammarLessonGuide({ guide }: GrammarLessonGuideProps) {
         </View>
       </View>
 
+      {guide.stageId === "a1-validation" ? (
+        <View style={styles.sectionStack}>
+          <SectionHeading
+            index="05"
+            label="MISES EN SITUATION"
+            detail="Repère plusieurs constructions dans un vrai échange"
+          />
+          {GRAMMAR_STAGE_BY_ID["a1-validation"].canonicalExamples.map((dialogue, index) => (
+            <BlurView
+              key={dialogue.korean}
+              intensity={52}
+              tint="dark"
+              style={styles.exampleCard}
+            >
+              <AppText variant="sectionLabel" style={styles.accentText}>
+                DIALOGUE {String(index + 1).padStart(2, "0")}
+              </AppText>
+              <AppText variant="koreanSecondary" script="korean">
+                {dialogue.korean}
+              </AppText>
+              <AppText variant="bodySecondary" tone="muted">
+                {dialogue.french}
+              </AppText>
+              {dialogue.note ? (
+                <AppText variant="caption" tone="soft">
+                  {dialogue.note}
+                </AppText>
+              ) : null}
+            </BlurView>
+          ))}
+        </View>
+      ) : null}
+
       <View style={styles.sectionStack}>
         <SectionHeading
-          index={isQuickGuide ? "04" : "05"}
+          index={guide.stageId === "a1-validation" ? "06" : isQuickGuide ? "04" : "05"}
           label="ERREURS FRÉQUENTES"
           detail="Compare le réflexe et la forme juste"
         />
