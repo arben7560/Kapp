@@ -2258,8 +2258,8 @@ test("stage 17 distinguishes ordinal, generic counter, people and meal portions"
   assert.match(getGrammarIncorrectFeedback(portion, "장"), /deux tranches.*deux portions.*2인분/u);
   const guide = getGrammarLessonGuide("request-quantity");
   assert.match(guide.mainRule, /잔, 개, 명 et 장.*한(?:·|, )두(?:·|, )세(?:·|, )네.*2인분.*이 인분/u);
-  assert.match(guide.formula.explanation, /한 잔 = une tasse.*2인분 = deux portions/u);
-  assert.match(guide.commonMistakes.map(({ correction }) => correction).join(" "), /첫 잔.*grammatical.*première tasse/u);
+  assert.match(guide.formula.explanation, /커피 한 잔.*표 두 장.*2인분.*sino-coréen 이/u);
+  assert.match(guide.commonMistakes.map(({ correction }) => correction).join(" "), /첫 잔.*première tasse/u);
 
   const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
   assert.match(screen, /getGrammarIncorrectFeedback\(question, response\.answer\)/u);
