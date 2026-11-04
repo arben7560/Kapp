@@ -102,10 +102,10 @@ test("grammar theory opens in a reusable modal and resumes without replacing its
   assert.match(lesson, /onRequestClose=\{closeTheory\}/u);
   assert.match(lesson, /onAccessExercises=\{accessExercises\}/u);
   assert.match(lesson, /const dismissTheory = React\.useCallback/u);
-  assert.match(lesson, /if \(!isQuickGuide && !session\) startPractice\(\)/u);
+  assert.match(lesson, /if \(!isQuickGuide && stageId !== "a1-validation" && !session\) startPractice\(\)/u);
   assert.match(lesson, /const accessExercises = React\.useCallback/u);
   assert.match(lesson, /if \(!session\) startPractice\(\)/u);
-  assert.match(lesson, /onStartExercises=\{isQuickGuide \? startPractice : undefined\}/u);
+  assert.match(lesson, /onStartExercises=\{isQuickGuide \|\| stageId === "a1-validation" \? startPractice : undefined\}/u);
   assert.match(lesson, /Revoir l’explication/u);
   assert.match(modal, /export function GrammarLessonGuideModal/u);
   assert.match(modal, /label="Accéder aux exercices"/u);
@@ -355,8 +355,8 @@ test("lessons 11–15 share the identical short modal layout and retain complete
   assert.match(modal, /isQuickGuide && styles\.bodyQuick/u);
   assert.match(modal, /isQuickGuide && styles\.exerciseFooterQuick/u);
   assert.match(modal, /label="Accéder aux exercices"/u);
-  assert.match(lesson, /if \(!isQuickGuide && !session\) startPractice\(\)/u);
-  assert.match(lesson, /onStartExercises=\{isQuickGuide \? startPractice : undefined\}/u);
+  assert.match(lesson, /if \(!isQuickGuide && stageId !== "a1-validation" && !session\) startPractice\(\)/u);
+  assert.match(lesson, /onStartExercises=\{isQuickGuide \|\| stageId === "a1-validation" \? startPractice : undefined\}/u);
   assert.match(lesson, /const accessExercises = React\.useCallback/u);
 
   // À partir de l’étape 21, les leçons partagent aussi la modale courte ; la révision finale reste distincte.
