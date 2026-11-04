@@ -250,18 +250,30 @@ function buildReviewQuestions(
     const concept = getConcept(
       slot.conceptIds[zeroBasedAttempt % slot.conceptIds.length],
     );
-    // Le premier exercice vérifie réellement la construction de la phrase ;
-    // toutes les autres cases combinent QCM, textes à trous et conjugaisons.
-    const matchingDrills = concept.practice.drills.filter((drill) =>
-      questionIndex === 0 ? drill.kind === "order" : drill.kind !== "order",
+    // Le premier exercice fait réellement construire une phrase différente
+    // à chaque tentative (et ne transforme pas les 40 leçons originales).
+    // Les 24 autres mélangent réponses contextualisées, particules et conjugaisons.
+    const candidates = concept.practice.drills.filter((drill) =>
+      questionIndex === 0 || drill.kind !== "order",
     );
-    if (matchingDrills.length === 0) {
+    if (candidates.length === 0) {
       throw new RangeError(`No suitable A1 review drill for ${concept.id}`);
     }
-    const drill = matchingDrills[
+    const selected = candidates[
       (Math.floor(zeroBasedAttempt / slot.conceptIds.length) + questionIndex) %
-        matchingDrills.length
+        candidates.length
     ];
+    const drill: GrammarPracticeDrill =
+      questionIndex === 0 && selected.kind !== "order"
+        ? {
+            ...selected,
+            kind: "order",
+            answer: selected.answer.split(/\\s+/u).filter(Boolean),
+            displayLabel: "PHRASE À FORMER",
+            context: selected.context ??
+              "Reconstitue une phrase neutre, sans placer de complément après le verbe.",
+          }
+        : selected;
     const question = buildDrillQuestion(
       stageId,
       attemptNumber,
