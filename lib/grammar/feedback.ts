@@ -2093,15 +2093,22 @@ function getLaterStageSelectedFeedback(
 
   if (concept === "obligation-a-eoya-haeyo") {
     if (question.ruleAspect === "nominal-need") {
-      if (selected === "보여 줘야 해요") return explain("tu demandes de montrer le passeport",
-        "on indique simplement que le document est nécessaire");
-      if (selected === "있어도 돼요") return explain("cela indique que posséder le document est permis",
-        "on dit qu'il est nécessaire");
-      if (selected === "볼 수 있어요") return explain("cela indique qu'on peut voir le document",
-        "on dit qu'il est nécessaire");
+      if (selected === "있어요") return explain("여권이 있어요 constate seulement la présence du passeport",
+        "il faut dire que le document est indispensable");
+      if (selected === "있어도 돼요") return explain("여권이 있어도 돼요 signifie que la présence du passeport est permise",
+        "il faut exprimer une nécessité, pas une permission");
+      if (selected === "있을 수 있어요") return explain("여권이 있을 수 있어요 laisse seulement entendre que le passeport pourrait être présent",
+        "il est exigé, et non simplement possible");
+      // Anciens distracteurs : des sessions sauvegardées peuvent les contenir.
+      if (selected === "보여 줘야 해요") return explain("avec 여권이, le passeport devient à tort le sujet de « montrer » ; il faudrait 여권을 pour demander de le montrer",
+        "la phrase parle de la nécessité du document lui-même");
+      if (selected === "볼 수 있어요") return explain("여권이 볼 수 있어요 attribuerait la capacité de voir au passeport, faute de la bonne particule",
+        "c'est le passeport qui est nécessaire");
     }
-    if (selected === "필요해요") return explain("필요해요 décrit une chose nécessaire",
-      "l'agent impose ici l'action de montrer le passeport");
+    if (selected === "필요해요") return explain("여권을 필요해요 emploie ici la mauvaise particule : pour un document nécessaire, on dit 여권이 필요해요",
+      "l'agent impose plutôt l'action de montrer le passeport");
+    if (selected === "볼 수 있어요") return explain("여권을 볼 수 있어요 signifie que tu peux voir le passeport, pas que tu dois le montrer",
+      "l'agent exige de présenter le document");
     const meaning = laterStageModalityMeaning(selected);
     if (meaning) return explain(meaning, "l'action doit obligatoirement être accomplie avec -아/어야 해요");
   }
