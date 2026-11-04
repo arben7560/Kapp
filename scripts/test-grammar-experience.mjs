@@ -172,6 +172,58 @@ test("the concise grammar guide covers lessons 01–40, preserving the final rev
 });
 
 
+test("lessons 21–40 keep the same concise guide, detailed explanation and exercise flow", () => {
+  const stageIds = GRAMMAR_STAGE_IDS.slice(20, 40);
+  assert.equal(stageIds.length, 20);
+  for (const stageId of stageIds) {
+    assert.equal(isGrammarQuickGuideStage(stageId), true, stageId);
+    const guide = getGrammarLessonGuide(stageId);
+    assert.ok(guide.introduction.length > 40, stageId);
+    assert.ok(guide.mainRule.length > 40, stageId);
+    assert.equal(guide.steps.length, 3, stageId);
+    assert.ok(guide.examples.length >= 2, stageId);
+    assert.ok(guide.commonMistakes.length >= 2, stageId);
+    assert.ok(guide.memoryTip.length > 30, stageId);
+  }
+  assert.equal(isGrammarQuickGuideStage("a1-validation"), false);
+});
+
+test("every incorrect choice in lessons 21–40 receives feedback for that choice", () => {
+  for (const stageId of GRAMMAR_STAGE_IDS.slice(20, 40)) {
+    const questions = buildGrammarPracticeQuestions(stageId, 1, () => 0.42);
+    assert.ok(questions.length >= 5, stageId);
+
+    for (const question of questions) {
+      const alternatives = Array.isArray(question.answer)
+        ? [[...question.answer].reverse()]
+        : question.options.filter((choice) => choice !== question.answer);
+      assert.ok(alternatives.length > 0, question.id);
+      const explanations = alternatives.map((choice) => {
+        const chosen = Array.isArray(choice) ? choice.join(" ") : choice;
+        const message = getGrammarIncorrectFeedback(question, choice);
+        assert.ok(message.includes("« " + chosen + " »"), question.id + ": " + chosen);
+        assert.notEqual(message, question.explanation, question.id);
+        assert.ok(message.length <= 330, question.id + ": " + message);
+        assert.doesNotMatch(message, /\bundefined\b/u, question.id);
+        return message;
+      });
+      assert.equal(new Set(explanations).size, alternatives.length, question.id);
+    }
+  }
+});
+
+test("word banks never start already solved, including lesson 29", () => {
+  for (const stageId of ["sentence-structure", "limit-request"]) {
+    for (const randomValue of [0, 0.24, 0.42, 0.99]) {
+      const questions = buildGrammarPracticeQuestions(stageId, 1, () => randomValue);
+      for (const question of questions.filter(({ kind }) => kind === "order")) {
+        assert.notDeepEqual(question.options, question.answer, question.id);
+        assert.deepEqual(new Set(question.options), new Set(question.answer), question.id);
+      }
+    }
+  }
+});
+
 test("lessons 11–15 share the identical short modal layout and retain complete detailed sheets", () => {
   const stageIds = GRAMMAR_STAGE_IDS.slice(10, 15);
   assert.deepEqual(stageIds, [
