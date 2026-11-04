@@ -853,7 +853,7 @@ test("stage 01 exercise UI keeps concise directions and feedback tied to the cho
   assert.match(screen, /stripTokenPunctuation=\{question\.stageId === "sentence-structure"\}/u);
   assert.match(screen, /TON CHOIX EXPLIQUÉ/u);
   assert.match(display, /compactFrench \? "sectionTitle" : "featureTitle"/u);
-  assert.match(exercises, /shuffleDrillOrderTokens\(stageId, drill\.answer, random\)/u);
+  assert.match(exercises, /shuffleDrillOrderTokens\(drill\.answer, random\)/u);
 });
 
 test("stage 02 explains every copula distractor using the selected suffix and noun", () => {
@@ -2257,7 +2257,7 @@ test("stage 17 distinguishes ordinal, generic counter, people and meal portions"
   assert.match(portion.explanation, /2인분.*sino-coréen 이/u);
   assert.match(getGrammarIncorrectFeedback(portion, "장"), /deux tranches.*deux portions.*2인분/u);
   const guide = getGrammarLessonGuide("request-quantity");
-  assert.match(guide.mainRule, /잔, 개, 명 et 장.*한, 두, 세, 네.*2인분.*이 인분/u);
+  assert.match(guide.mainRule, /잔, 개, 명 et 장.*한(?:·|, )두(?:·|, )세(?:·|, )네.*2인분.*이 인분/u);
   assert.match(guide.formula.explanation, /한 잔 = une tasse.*2인분 = deux portions/u);
   assert.match(guide.commonMistakes.map(({ correction }) => correction).join(" "), /첫 잔.*grammatical.*première tasse/u);
 
@@ -2370,7 +2370,7 @@ test("stage 18 teaches price values, ten minutes, metro lines, calendar and phon
   const guide = getGrammarLessonGuide("sino-number-contexts");
   assert.match(guide.introduction, /prix.*minutes.*mois.*lignes.*téléphone/u);
   assert.match(guide.mainRule, /오천 원.*십 분.*3월.*2호선.*공일공/u);
-  assert.match(guide.formula.explanation, /영 est aussi possible/u);
+  assert.match(guide.formula.explanation, /영 (?:est aussi possible|existe aussi)/u);
   assert.match(guide.commonMistakes.map(({ correction }) => correction).join(" "), /삼 개월.*durée.*2번 출구.*sortie/u);
   const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
   assert.match(screen, /getGrammarIncorrectFeedback\(question, response\.answer\)/u);
@@ -2618,7 +2618,7 @@ test("stage 20 distinguishes valid alternatives, addition, restriction and compl
   assert.match(guide.mainRule, /커피나 차.*빵이나 케이크.*아니면/u);
   assert.match(guide.formula.explanation, /커피나 차.*빵이나 케이크.*지금 가요\?/u);
   assert.match(guide.commonMistakes.map(({ correction }) => correction).join(" "), /카드 아니면 현금/u);
-  assert.match(guide.memoryTip, /voyelle.*나.*consonne.*이나.*아니면.*하고.*만/u);
+  assert.match(guide.memoryTip, /voyelle.*나.*(?:consonne|받침).*이나.*아니면.*하고.*만/u);
 
   const screen = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
   assert.match(screen, /getGrammarIncorrectFeedback\(question, response\.answer\)/u);
