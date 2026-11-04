@@ -712,7 +712,7 @@ test("lessons keep their configured exercise count and the A1 assessment covers 
     assert.equal(questions.length, expectedCount, stageId);
     assert.ok(questions.every(({ skill }) => !!skill), `${stageId}: targeted drills`);
     if (GRAMMAR_STAGE_BY_ID[stageId].mode === "review") {
-      assert.equal(questions.filter(({ kind }) => kind === "order").length, 1, stageId);
+      assert.equal(questions.filter(({ kind }) => kind === "order").length, 5, stageId);
     } else {
       assert.ok(
         questions.every(({ skill }) => !!skill) ||
@@ -3029,7 +3029,7 @@ test("the 25-question A1 review covers all 43 productive concepts in two attempt
     assert.equal(questions.length, 25);
     assert.equal(new Set(questions.map(({ id }) => id)).size, 25);
     assert.equal(new Set(questions.flatMap(({ conceptIds }) => conceptIds)).size, 25);
-    assert.equal(questions.filter(({ kind }) => kind === "order").length, 1);
+    assert.equal(questions.filter(({ kind }) => kind === "order").length, 5);
     assert.ok(questions.some(({ kind }) => kind === "transformation"));
     assert.ok(questions.some(({ kind }) => kind === "gap"));
     assert.ok(questions.some(({ kind }) => kind === "choice" || kind === "scene"));
@@ -3182,7 +3182,7 @@ test("the general A1 review never grants mastery to all reviewed concepts", () =
   assert.deepEqual(after.concepts, {});
   assert.equal(after.stages[reviewStageId].attempts, 1);
   assert.equal(getGrammarStageState(after, reviewStageId), "practiced");
-  assert.equal(session.questions.filter(({ kind }) => kind === "order").length, 1);
+  assert.equal(session.questions.filter(({ kind }) => kind === "order").length, 5);
   assert.ok(
     session.questions.every(({ answer }) =>
       Array.isArray(answer) ? !answer.join(" ").includes("손님:") : !answer.includes("손님:"),
