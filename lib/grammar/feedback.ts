@@ -2152,6 +2152,20 @@ export function getGrammarIncorrectFeedback(
   const expectedBare = expected.replace(/[.?!]+$/u, "");
   const conceptId = question.conceptIds[0];
 
+  // Seule la révision finale réutilise cette banque de mots comme épreuve mixte.
+  // Un verbe final ne suffit pas : le thème et l'objet doivent aussi être à la bonne place.
+  if (
+    question.stageId === "a1-validation" &&
+    Array.isArray(answer) &&
+    Array.isArray(question.answer)
+  ) {
+    const expectedTokens = question.answer;
+    if (answer.at(-1) !== expectedTokens.at(-1)) {
+      return `Dans « ${selected} », le verbe doit terminer cette phrase neutre. Construis : « ${expected} ».`;
+    }
+    return `Tu as bien gardé le verbe à la fin, mais le thème et l'objet ne sont pas dans l'ordre neutre demandé. Ici : « ${expected} ».`;
+  }
+
   const sentenceOrderFeedback = getSentenceOrderStageOneFeedback(
     question,
     answer,
@@ -2754,8 +2768,10 @@ export function getGrammarIncorrectFeedback(
     return `En coréen, garde le verbe ${finalVerb} à la fin. L’ordre naturel est ${quoted(expected)}.`;
   }
 
-  return (
-    selectedSpecificFallback(question, selected, expected) ??
-    question.explanation
-  );
+  const specific = selectedSpecificFallback(question, selected, expected);
+  if (specific) return specific;
+  if (question.stageId === "a1-validation") {
+    return `Tu as choisi ${quoted(selected)}. Dans cette situation, ${question.explanation} La réponse attendue est ${quoted(expected)}.`;
+  }
+  return question.explanation;
 }
