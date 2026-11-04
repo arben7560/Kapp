@@ -2792,12 +2792,12 @@ export function getGrammarIncorrectFeedback(
   const lastSentence = fullFeedback.lastIndexOf(". ", limit - 1);
   let lead = lastSentence > 85
     ? fullFeedback.slice(0, lastSentence + 1)
-    : fullFeedback.slice(0, limit - 2).replace(/\\s+\\S*$/u, "").replace(/[,:;]$/u, "") + "…";
+    : fullFeedback.slice(0, limit - 2).replace(/\s+\S*$/u, "").replace(/[,:;]$/u, "") + "…";
   const selected = answerLabel(answer);
   if (!lead.includes(selected)) {
     const prefix = `Tu as choisi ${quoted(selected)}. `;
     lead = prefix + lead.slice(0, Math.max(20, limit - prefix.length - 2))
-      .replace(/\\s+\\S*$/u, "") + "…";
+      .replace(/\s+\S*$/u, "") + "…";
   }
   return lead + suffix;
 }
