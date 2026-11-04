@@ -48,18 +48,13 @@ function buildOptions(
   return shuffleArray(unique([answer, ...distractors]), random);
 }
 
-/**
- * Dans le premier exercice d'ordre, la banque de mots ne doit pas déjà
- * afficher la solution. Le tirage reste aléatoire pour les autres leçons.
- */
+/** Une banque de mots doit toujours demander une manipulation, même si le tirage aléatoire tombe sur l’ordre correct. */
 function shuffleDrillOrderTokens(
-  stageId: GrammarStageId,
   answer: readonly string[],
   random: RandomSource,
 ): string[] {
   const shuffled = shuffleArray(answer, random);
   if (
-    stageId === "sentence-structure" &&
     shuffled.length > 1 &&
     shuffled.every((token, index) => token === answer[index])
   ) {
@@ -146,7 +141,7 @@ function buildDrillQuestion(
   const seed = `${stageId}:${attemptNumber}:drill-${concept.id}-${drill.id}`;
   const options =
     drill.kind === "order"
-      ? shuffleDrillOrderTokens(stageId, drill.answer, random)
+      ? shuffleDrillOrderTokens(drill.answer, random)
       : buildOptions(drill.answer, drill.distractors, seed, random);
   return {
     id: `${seed}-${index + 1}`,
