@@ -1334,7 +1334,7 @@ function FeedbackCard({
               question.stageId === "information-questions" ||
               question.stageId !== "a1-validation"
             ? "TON CHOIX EXPLIQUÉ"
-            : "À AJUSTER ICI"}
+            : "TON CHOIX EXPLIQUÉ"}
       </AppText>
       <AppText variant="bodyStrong">{teacherLead}</AppText>
       {!response.correct ? (
@@ -1356,7 +1356,7 @@ function FeedbackCard({
             question.stageId === "information-questions" ||
             question.stageId !== "a1-validation"
               ? "POUR CET EXERCICE"
-              : "ICI, ON ATTENDAIT"}
+              : "RÉPONSE ATTENDUE"}
           </AppText>
           <AppText variant="bodyStrong">{answerLabel(question.answer)}</AppText>
         </View>
@@ -1397,6 +1397,9 @@ function LessonResult({
     (response) => !response.correct,
   );
   const isGeneralReview = stage.mode === "review";
+  const hasFamilyScores = isGeneralReview && session.questions.some((question) =>
+    question.prompt.startsWith("BILAN A1 · "),
+  );
 
   return (
     <View style={styles.resultStack}>
@@ -1443,7 +1446,7 @@ function LessonResult({
         </View>
       </BlurView>
 
-      {isGeneralReview ? (
+      {hasFamilyScores ? (
         <View style={styles.reviewBox}>
           <AppText variant="sectionLabel" tone="soft">
             RÉSULTATS PAR FAMILLE
@@ -1476,6 +1479,13 @@ function LessonResult({
             changent pour approfondir les notions non encore rencontrées.
           </AppText>
         </View>
+      ) : null}
+
+      {isGeneralReview && !hasFamilyScores ? (
+        <AppText variant="bodySecondary" tone="muted">
+          Cette session date de l'ancienne révision A1. Refais le bilan pour
+          retrouver les 25 questions et les résultats par famille.
+        </AppText>
       ) : null}
 
       {wrongResponses.length > 0 ? (
