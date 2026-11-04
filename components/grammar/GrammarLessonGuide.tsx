@@ -210,7 +210,7 @@ export function GrammarLessonGuide({ guide }: GrammarLessonGuideProps) {
           style={ABSOLUTE_FILL}
         />
         <View style={styles.formulaHeader}>
-          <SectionHeading index={isQuickGuide ? "01" : "02"} label="LA FORMULE" />
+          <SectionHeading index={isQuickGuide ? "01" : "02"} label={guide.stageId === "a1-validation" ? "MÉTHODE DE RÉVISION" : "LA FORMULE"} />
           <View style={styles.structurePill}>
             <AppText variant="caption" tone="soft">
               STRUCTURE
