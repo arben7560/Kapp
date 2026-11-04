@@ -11,10 +11,10 @@ export type AuthRedirectAction =
   | "oauth-login-google"
   | "oauth-login-apple";
 
-export function createAuthRedirectUrl(action: AuthRedirectAction) {
+export function createAuthRedirectUrl(action?: AuthRedirectAction) {
   const url = Linking.createURL("/account", {
     ...(Platform.OS === "web" ? {} : { scheme: NATIVE_SCHEME }),
-    queryParams: { action },
+    queryParams: action ? { action } : {},
   });
 
   if (Platform.OS !== "web") {

@@ -7,6 +7,7 @@ import React from "react";
 import {
   assertLinkedUserId,
   authProvidersFromUser,
+  matchesAuthCallbackUrl,
   parseAuthCallbackUrl,
   type KappOAuthProvider,
 } from "./authCallback";
@@ -120,13 +121,22 @@ async function createAnonymousSession() {
   return data.session;
 }
 
-const handledAuthUrls = new Map<string, Promise<void>>();
+// Temporary development diagnostics: only fixed labels and payload-presence
+// flags. Never pass URLs, sessions, provider errors or credentials here.
+function logOAuthStep(
+  step: string,
+  details: Record<string, string | boolean | null> = {},
+) {
+  if (__DEV__) console.info("[auth:oauth]", step, details);
+}
+
+const handledAuthUrls = new Map<string, Promise<Session | null>>();
 
 async function applyAuthUrl(url: string) {
   const client = requireConfiguredAuth();
   const callback = parseAuthCallbackUrl(url);
 
-  if (!callback.hasAuthPayload) return;
+  if (!callback.hasAuthPayload) return null;
   if (callback.errorDescription || callback.errorCode) {
     const callbackError = new Error(
       callback.errorDescription ?? "Authentication provider rejected the request.",
@@ -136,23 +146,30 @@ async function applyAuthUrl(url: string) {
   }
 
   if (callback.code) {
-    const { error } = await client.auth.exchangeCodeForSession(callback.code);
+    logOAuthStep("callback.exchange-code");
+    const { data, error } = await client.auth.exchangeCodeForSession(callback.code);
     if (error) throw error;
-    return;
+    return data.session;
   }
 
   if (callback.accessToken && callback.refreshToken) {
-    const { error } = await client.auth.setSession({
+    logOAuthStep("callback.set-session");
+    const { data, error } = await client.auth.setSession({
       access_token: callback.accessToken,
       refresh_token: callback.refreshToken,
     });
     if (error) throw error;
+    return data.session;
   }
+  return null;
 }
 
 function applyAuthUrlOnce(url: string) {
   const existing = handledAuthUrls.get(url);
-  if (existing) return existing;
+  if (existing) {
+    logOAuthStep("callback.already-handled");
+    return existing;
+  }
 
   const operation = applyAuthUrl(url);
   handledAuthUrls.set(url, operation);
@@ -182,6 +199,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [activeOAuthProvider, setActiveOAuthProvider] =
     React.useState<KappOAuthProvider | null>(null);
   const pendingProtectionRevision = React.useRef(0);
+  const activeOAuthAttempt = React.useRef<{
+    redirectTo: string;
+    callback: Promise<Session | null> | null;
+  } | null>(null);
+  const pendingAuthUrls = React.useRef(0);
 
   const captureError = React.useCallback((caught: unknown) => {
     const mapped = toKappAuthError(caught);
@@ -201,12 +223,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setDidCompleteAccountProtection(false);
   }, []);
 
-  const handleAuthUrl = React.useCallback(async (url: string) => {
+  const handleAuthUrl = React.useCallback(async (
+    url: string,
+    source: "initial" | "linking" | "browser" = "linking",
+  ) => {
+    if (!matchesAuthCallbackUrl(url, createAuthRedirectUrl())) return null;
+    const callback = parseAuthCallbackUrl(url);
+    logOAuthStep("callback.received", {
+      source,
+      hasCode: Boolean(callback.code),
+      hasTokenPair: Boolean(callback.accessToken && callback.refreshToken),
+      hasError: Boolean(callback.errorCode || callback.errorDescription),
+    });
+    // Unrelated deep links never enter the auth loading state.
+    if (!callback.hasAuthPayload) return null;
+    pendingAuthUrls.current += 1;
     setIsHandlingDeepLink(true);
     try {
-      await applyAuthUrlOnce(url);
+      const operation = applyAuthUrlOnce(url);
+      const attempt = activeOAuthAttempt.current;
+      if (attempt && matchesAuthCallbackUrl(url, attempt.redirectTo)) {
+        attempt.callback = operation;
+      }
+      return await operation;
     } finally {
-      setIsHandlingDeepLink(false);
+      pendingAuthUrls.current -= 1;
+      setIsHandlingDeepLink(pendingAuthUrls.current > 0);
     }
   }, []);
 
@@ -222,6 +264,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!mounted) return;
         setSession(nextSession);
         setIsLoading(false);
+        if (activeOAuthAttempt.current) {
+          logOAuthStep("session.event", {
+            event,
+            hasSession: Boolean(nextSession),
+            isAnonymous: isAnonymousUser(nextSession?.user ?? null),
+          });
+        }
 
         if (event === "PASSWORD_RECOVERY") {
           setIsPasswordRecovery(true);
@@ -309,7 +358,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         if (initialUrl) {
           try {
-            await handleAuthUrl(initialUrl);
+            await handleAuthUrl(initialUrl, "initial");
           } catch (caught) {
             if (mounted) captureError(caught);
           }
@@ -496,8 +545,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
       }
 
+      if (activeOAuthAttempt.current) {
+        throw new KappAuthError(
+          "auth-operation-failed",
+          "Une connexion est déjà en cours.",
+        );
+      }
+      const attempt = {
+        redirectTo: createAuthRedirectUrl(`oauth-${intent}-${provider}`),
+        callback: null as Promise<Session | null> | null,
+      };
+      activeOAuthAttempt.current = attempt;
       setError(null);
       setActiveOAuthProvider(provider);
+      logOAuthStep("start", { provider, intent });
       try {
         if (intent === "login") {
           await clearPendingProtectionState();
@@ -507,9 +568,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await synchronizeProgressNow().catch(() => undefined);
         }
 
-        const redirectTo = createAuthRedirectUrl(
-          `oauth-${intent}-${provider}`,
-        );
+        const redirectTo = attempt.redirectTo;
         const credentials = {
           provider,
           options: {
@@ -527,32 +586,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           throw new Error("OAuth provider did not return an authorization URL.");
         }
 
+        logOAuthStep("browser.open", { provider, intent });
         const browserResult = await WebBrowser.openAuthSessionAsync(
           result.data.url,
-          redirectTo,
+          // Expo's Android polyfill uses startsWith(returnUrl). Keep the
+          // matching URL free of query params; retain action in redirectTo
+          // for Expo Router and the onboarding bypass on cold starts.
+          createAuthRedirectUrl(),
         );
-        if (browserResult.type !== "success") return "cancelled";
+        logOAuthStep("browser.result", { type: browserResult.type });
 
-        await handleAuthUrl(browserResult.url);
+        // Linking may already be exchanging the callback when Android reports
+        // that the browser was dismissed on app resume. Await that exchange.
+        let callbackSession: Session | null;
+        if (browserResult.type === "success") {
+          if (!matchesAuthCallbackUrl(browserResult.url, redirectTo)) {
+            throw new Error("OAuth returned an unexpected callback destination.");
+          }
+          callbackSession = await handleAuthUrl(browserResult.url, "browser");
+        } else if (attempt.callback) {
+          callbackSession = await attempt.callback;
+        } else {
+          logOAuthStep("cancelled", { provider, intent });
+          return "cancelled";
+        }
+
+        if (!callbackSession || isAnonymousUser(callbackSession.user)) {
+          throw new Error("OAuth callback did not establish a permanent session.");
+        }
         const { data: userResult, error: userError } =
           await client.auth.getUser();
         if (userError) throw userError;
-        if (!userResult.user) {
-          throw new Error("OAuth callback did not create an authenticated user.");
+        if (
+          !userResult.user ||
+          isAnonymousUser(userResult.user) ||
+          userResult.user.id !== callbackSession.user.id ||
+          !authProvidersFromUser(userResult.user).includes(provider)
+        ) {
+          throw new Error("OAuth callback did not authenticate the requested provider.");
         }
 
         if (expectedUserId) {
           assertLinkedUserId(expectedUserId, userResult.user.id);
-          if (!authProvidersFromUser(userResult.user).includes(provider)) {
-            throw new Error("OAuth identity was not linked to the current user.");
-          }
         }
 
+        setSession({ ...callbackSession, user: userResult.user });
+        logOAuthStep("success", { provider, intent });
         return "success";
       } catch (caught) {
+        logOAuthStep("failed", { provider, intent, error: toKappAuthError(caught).code });
         throw captureError(caught);
       } finally {
+        activeOAuthAttempt.current = null;
         setActiveOAuthProvider(null);
+        logOAuthStep("loading.released", { provider, intent });
       }
     },
     [captureError, clearPendingProtectionState, handleAuthUrl, session],

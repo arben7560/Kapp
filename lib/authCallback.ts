@@ -35,6 +35,25 @@ export function parseAuthCallbackUrl(url: string): ParsedAuthCallback {
   };
 }
 
+// Compare destinations, not query-string order. An explicit different action
+// (for example password recovery) must not complete an active OAuth attempt.
+export function matchesAuthCallbackUrl(url: string, redirectTo: string) {
+  try {
+    const actual = new URL(url);
+    const expected = new URL(redirectTo);
+    const action = actual.searchParams.get("action");
+    const expectedAction = expected.searchParams.get("action");
+    return (
+      actual.protocol === expected.protocol &&
+      actual.host === expected.host &&
+      actual.pathname === expected.pathname &&
+      (!action || !expectedAction || action === expectedAction)
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function authProvidersFromUser(
   user:
     | {

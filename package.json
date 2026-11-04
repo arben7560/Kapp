@@ -31,6 +31,7 @@
     "test:streak": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-daily-streak.mjs",
     "test:auth-sync": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-auth-sync.mjs",
     "test:auth-production": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-auth-production.mjs",
+    "test:oauth": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-oauth-flow.mjs",
     "test:progress-cloud": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-progress-cloud-contract.mjs",
     "validate:ui": "node ./scripts/validate-ui-contracts.mjs",
     "lint": "expo lint"

@@ -63,6 +63,47 @@ After changing auth providers, redirect URLs or native configuration, produce a
 new development/release build and test the complete flow on physical Android and
 iOS devices. Expo Go is not the production callback environment.
 
+## OAuth callback diagnostics and device validation
+
+Supabase still receives `kapp://account?action=oauth-login-google` (or the
+corresponding Apple/link action). The browser session matches `kapp://account`
+without query parameters: Expo's Android polyfill uses a string prefix, and
+Supabase may return `code` before `action`. K-App then validates the destination
+and processes query or fragment auth parameters through the same handler for
+Linking, the initial URL and the browser result. Duplicate delivery shares the
+same exchange. The action remains available to Expo Router's onboarding guard.
+
+OAuth success requires a callback-established, non-anonymous session and a
+server-verified user with the requested provider; linking also checks the UID.
+Android browser dismissal waits for an already received Linking exchange.
+Cancellation without a callback releases loading immediately. There is no new
+authentication timeout; a pending browser or network exchange remains pending
+until the browser or SDK reports its result.
+
+Temporary `[auth:oauth]` logs are enabled only in development (`__DEV__`). They
+record steps, callback source, payload-presence flags and mapped error labels.
+They never log URLs, auth codes, tokens, identities or raw errors. Remove these
+temporary diagnostics after device validation.
+
+Automated checks: `npm run test:oauth`, `npm run test:auth-production`,
+`npm run test:auth-sync`, `npm run test:progress-cloud`, and `npx tsc --noEmit`.
+The OAuth tests use native/browser/Supabase adapters; they do not authenticate
+against a live service. Validate the following on physical devices:
+
+- Android development build: Google sign-in from a guest, both new and existing
+  Google accounts, with the app warm and after a cold start. Confirm the Google
+  account is shown and guest progress survives the existing merge.
+- Close the account picker/custom tab or press Android Back; also deny access.
+  Confirm loading clears and another attempt works.
+- Return to K-App without a recognized auth callback; confirm loading clears
+  when the browser reports dismissal. Check a slow valid authentication can
+  still finish, and test loss of connectivity during the exchange.
+- In development logs, confirm `callback.received`, one `callback.exchange-code`,
+  `success` and `loading.released`; callbacks can arrive through Linking and the
+  browser in either order. On failure, expect `failed` and `loading.released`.
+- Verify email/password login, password-recovery and account-protection links,
+  ordinary app deep links, and Apple linking on iOS (including cancellation).
+
 ## Conflict policy
 
 `user_progress` is the cloud source and the device snapshot is local-first. On

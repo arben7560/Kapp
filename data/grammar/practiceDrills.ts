@@ -8,7 +8,10 @@ import type {
 
 type DrillOptions = readonly [string, string, string];
 
-const GRAMMAR_VOCABULARY_HINTS: Record<string, readonly { korean: string; french: string }[]> = {
+const GRAMMAR_VOCABULARY_HINTS: Record<
+  string,
+  readonly { korean: string; french: string }[]
+> = {
   "coffee-or-tea-vowel": [
     { korean: "커피", french: "café" },
     { korean: "차", french: "thé" },
@@ -34,115 +37,53 @@ const GRAMMAR_VOCABULARY_HINTS: Record<string, readonly { korean: string; french
     { korean: "가요", french: "on part / tu pars" },
     { korean: "있어요", french: "on est / tu restes" },
   ],
-  "speak-request": [
-    { korean: "말하다", french: "parler" },
-  ],
-  "show-request": [
-    { korean: "보여 주다", french: "montrer" },
-  ],
-  "wait-request": [
-    { korean: "기다리다", french: "attendre" },
-  ],
-  "open-request": [
-    { korean: "열다", french: "ouvrir" },
-  ],
-  "item-vs-action": [
-    { korean: "문", french: "porte" },
-  ],
-  "sit-invitation": [
-    { korean: "앉다", french: "s’asseoir" },
-  ],
-  "go-instruction": [
-    { korean: "가다", french: "aller" },
-  ],
-  "read-instruction": [
-    { korean: "읽다", french: "lire" },
-  ],
-  "come-invitation": [
-    { korean: "오다", french: "venir" },
-  ],
-  "instruction-vs-request": [
-    { korean: "책", french: "livre" },
-  ],
-  "bus-rieul": [
-    { korean: "버스", french: "bus" },
-  ],
-  "subway-batchim": [
-    { korean: "지하철", french: "métro" },
-  ],
-  "car-batchim": [
-    { korean: "자동차", french: "voiture" },
-  ],
-  "right-batchim": [
-    { korean: "오른쪽", french: "droite" },
-  ],
-  "card-vowel": [
-    { korean: "카드", french: "carte" },
-  ],
-  "eat-desire": [
-    { korean: "먹다", french: "manger" },
-  ],
-  "go-desire": [
-    { korean: "가다", french: "aller" },
-  ],
-  "buy-desire": [
-    { korean: "사다", french: "acheter" },
-  ],
-  "learn-desire": [
-    { korean: "배우다", french: "apprendre" },
-  ],
-  "desire-vs-plan": [
-    { korean: "한국", french: "Corée" },
-  ],
-  "read-ability": [
-    { korean: "읽다", french: "lire" },
-  ],
+  "speak-request": [{ korean: "말하다", french: "parler" }],
+  "show-request": [{ korean: "보여 주다", french: "montrer" }],
+  "wait-request": [{ korean: "기다리다", french: "attendre" }],
+  "open-request": [{ korean: "열다", french: "ouvrir" }],
+  "item-vs-action": [{ korean: "문", french: "porte" }],
+  "sit-invitation": [{ korean: "앉다", french: "s’asseoir" }],
+  "go-instruction": [{ korean: "가다", french: "aller" }],
+  "read-instruction": [{ korean: "읽다", french: "lire" }],
+  "come-invitation": [{ korean: "오다", french: "venir" }],
+  "instruction-vs-request": [{ korean: "책", french: "livre" }],
+  "bus-rieul": [{ korean: "버스", french: "bus" }],
+  "subway-batchim": [{ korean: "지하철", french: "métro" }],
+  "car-batchim": [{ korean: "자동차", french: "voiture" }],
+  "right-batchim": [{ korean: "오른쪽", french: "droite" }],
+  "card-vowel": [{ korean: "카드", french: "carte" }],
+  "eat-desire": [{ korean: "먹다", french: "manger" }],
+  "go-desire": [{ korean: "가다", french: "aller" }],
+  "buy-desire": [{ korean: "사다", french: "acheter" }],
+  "learn-desire": [{ korean: "배우다", french: "apprendre" }],
+  "desire-vs-plan": [{ korean: "한국", french: "Corée" }],
+  "read-ability": [{ korean: "읽다", french: "lire" }],
   "speak-ability": [
     { korean: "한국어", french: "coréen" },
     { korean: "말하다", french: "parler" },
   ],
-  "drive-ability": [
-    { korean: "운전하다", french: "conduire" },
-  ],
-  "go-ability": [
-    { korean: "가다", french: "aller" },
-  ],
+  "drive-ability": [{ korean: "운전하다", french: "conduire" }],
+  "go-ability": [{ korean: "가다", french: "aller" }],
   "pay-ability": [
     { korean: "여기서", french: "ici" },
     { korean: "카드", french: "carte" },
   ],
-  "charge-ability": [
-    { korean: "여기서", french: "ici" },
-  ],
-  "take-transport-ability": [
-    { korean: "버스", french: "bus" },
-  ],
-  "open-permission": [
-    { korean: "열다", french: "ouvrir" },
-  ],
-  "sit-permission": [
-    { korean: "앉다", french: "s’asseoir" },
-  ],
-  "photo-permission": [
-    { korean: "사진을 찍다", french: "prendre une photo" },
-  ],
-  "use-permission": [
-    { korean: "화장실", french: "toilettes" },
-  ],
+  "charge-ability": [{ korean: "여기서", french: "ici" }],
+  "take-transport-ability": [{ korean: "버스", french: "bus" }],
+  "open-permission": [{ korean: "열다", french: "ouvrir" }],
+  "sit-permission": [{ korean: "앉다", french: "s’asseoir" }],
+  "photo-permission": [{ korean: "사진을 찍다", french: "prendre une photo" }],
+  "use-permission": [{ korean: "화장실", french: "toilettes" }],
   "charge-permission": [
     { korean: "여기서", french: "ici" },
     { korean: "휴대폰", french: "téléphone portable" },
   ],
-  "cannot-go": [
-    { korean: "오늘", french: "aujourd’hui" },
-  ],
+  "cannot-go": [{ korean: "오늘", french: "aujourd’hui" }],
   "cannot-drive": [
     { korean: "오늘", french: "aujourd’hui" },
     { korean: "운전", french: "conduite" },
   ],
-  "cannot-eat": [
-    { korean: "매운 음식", french: "plat épicé" },
-  ],
+  "cannot-eat": [{ korean: "매운 음식", french: "plat épicé" }],
   "cannot-hear": [
     { korean: "귀", french: "oreille" },
     { korean: "소리", french: "son" },
@@ -150,21 +91,11 @@ const GRAMMAR_VOCABULARY_HINTS: Record<string, readonly { korean: string; french
   "cannot-understand": [
     { korean: "너무 빨라서", french: "parce que c’est trop rapide" },
   ],
-  "water-too": [
-    { korean: "물", french: "eau" },
-  ],
-  "me-too": [
-    { korean: "저", french: "moi" },
-  ],
-  "water-only": [
-    { korean: "물", french: "eau" },
-  ],
-  "meaning-bread-only": [
-    { korean: "빵", french: "pain" },
-  ],
-  "coffee-only": [
-    { korean: "커피", french: "café" },
-  ],
+  "water-too": [{ korean: "물", french: "eau" }],
+  "me-too": [{ korean: "저", french: "moi" }],
+  "water-only": [{ korean: "물", french: "eau" }],
+  "meaning-bread-only": [{ korean: "빵", french: "pain" }],
+  "coffee-only": [{ korean: "커피", french: "café" }],
   "coffee-vowel": [
     { korean: "커피", french: "café" },
     { korean: "차", french: "thé" },
@@ -243,7 +174,9 @@ function gap(
     explanation,
     ...(ruleAspect ? { ruleAspect } : {}),
     ...(contrastFamily ? { contrastFamily } : {}),
-    ...(GRAMMAR_VOCABULARY_HINTS[id] ? { vocabulary: GRAMMAR_VOCABULARY_HINTS[id] } : {}),
+    ...(GRAMMAR_VOCABULARY_HINTS[id]
+      ? { vocabulary: GRAMMAR_VOCABULARY_HINTS[id] }
+      : {}),
   };
 }
 
@@ -272,7 +205,9 @@ function transform(
     explanation,
     ...(ruleAspect ? { ruleAspect } : {}),
     ...(exerciseGroup ? { exerciseGroup } : {}),
-    ...(GRAMMAR_VOCABULARY_HINTS[id] ? { vocabulary: GRAMMAR_VOCABULARY_HINTS[id] } : {}),
+    ...(GRAMMAR_VOCABULARY_HINTS[id]
+      ? { vocabulary: GRAMMAR_VOCABULARY_HINTS[id] }
+      : {}),
   };
 }
 
@@ -302,7 +237,9 @@ function choose(
     explanation,
     ...(ruleAspect ? { ruleAspect } : {}),
     ...(exerciseGroup ? { exerciseGroup } : {}),
-    ...(GRAMMAR_VOCABULARY_HINTS[id] ? { vocabulary: GRAMMAR_VOCABULARY_HINTS[id] } : {}),
+    ...(GRAMMAR_VOCABULARY_HINTS[id]
+      ? { vocabulary: GRAMMAR_VOCABULARY_HINTS[id] }
+      : {}),
   };
 }
 
@@ -326,7 +263,9 @@ function order(
     answer,
     explanation,
     ...(ruleAspect ? { ruleAspect } : {}),
-    ...(GRAMMAR_VOCABULARY_HINTS[id] ? { vocabulary: GRAMMAR_VOCABULARY_HINTS[id] } : {}),
+    ...(GRAMMAR_VOCABULARY_HINTS[id]
+      ? { vocabulary: GRAMMAR_VOCABULARY_HINTS[id] }
+      : {}),
   };
 }
 
@@ -633,7 +572,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       ["은", "를", "가"],
       "Dans 저__ 학생이에요, tu te présentes en faisant de 저 le thème. 저 finit par une voyelle : attache 는 pour former 저는 학생이에요.",
       "no-batchim",
-      "Tu te présentes à une nouvelle connaissance : tu commences par parler de toi, sans répondre à la question « qui ? ».",
+      "Tu te présentes à une nouvelle connaissance : 'Quant à moi, je suis étudiant.",
       "Choisis la particule qui annonce « quant à moi » dans cette présentation.",
     ),
     gap(
@@ -2520,7 +2459,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       ["먹어서", "먹지만", "먹으면"],
       "먹고 présente l’action puis la suivante ; 먹어서 exprimerait un lien causal.",
       "sequence-vs-reason",
-      "Tu énumères simplement deux étapes de ton programme.",
+      "Tu énumères une chose puis une autre à la suite. Choisis le bon connecteur.",
     ),
   ],
 
@@ -2759,7 +2698,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       ["제일", "만", "도"],
       "제일 peut être correct dans un superlatif portant sur un groupe. Ici, seuls deux sacs sont comparés : 보다 appelle le comparatif 더.",
       "comparison",
-      "Tu compares uniquement ces deux sacs ; tu ne cherches pas le plus léger d’un groupe.",
+      "Tu compares 2 sacs : celui-ci est plus léger que l’autre.",
       "Complète la comparaison entre deux éléments, sans former de superlatif.",
     ),
     gap(
