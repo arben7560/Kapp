@@ -2161,7 +2161,7 @@ export function getGrammarIncorrectFeedback(
   ) {
     const expectedTokens = question.answer;
     if (answer.at(-1) !== expectedTokens.at(-1)) {
-      return `Dans « ${selected} », le verbe doit terminer cette phrase neutre. Construis : « ${expected} ».`;
+      return `Dans « ${selected} », le verbe doit se placer à la fin de cette phrase neutre. Construis : « ${expected} ».`;
     }
     return `Tu as bien gardé le verbe à la fin, mais le thème et l'objet ne sont pas dans l'ordre neutre demandé. Ici : « ${expected} ».`;
   }
