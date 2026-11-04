@@ -174,7 +174,9 @@ function buildDrillQuestion(
           drill.context,
           stageId === "polite-register" && drill.kind === "scene"
             ? "PHRASE À EXPRIMER"
-            : stageId === "demonstratives" && drill.kind === "scene"
+            : stageId === "add-item" && drill.kind === "scene"
+              ? "PHRASE À EXPRIMER"
+              : stageId === "demonstratives" && drill.kind === "scene"
               ? "QUESTION À COMPLÉTER"
               : stageId === "existence" && drill.kind === "scene"
                 ? drill.stimulus.trim().endsWith("?")
