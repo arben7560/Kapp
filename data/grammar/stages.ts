@@ -969,7 +969,7 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     chapterId: "a1-validation",
     title: "Révision générale A1",
     communicativeGoal:
-      "Vérifier tes acquis A1 dans 25 situations variées : sens, particules, nombres, conjugaisons et construction de phrases.",
+      "Revoir les principales structures dans des phrases courtes.",
     conceptIds: A1_PRODUCTIVE_CONCEPT_IDS,
     receptiveConceptIds: ["honorific-si"],
     prerequisites: recommendedStages(GRAMMAR_STAGE_IDS.slice(0, 40)),
