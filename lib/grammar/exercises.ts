@@ -255,6 +255,106 @@ const A1_REVIEW_BLUEPRINT: readonly {
   { family: "Temps, liens et nuances", conceptIds: ["comparison-boda-deo-jeil"] },
 ] as const;
 
+/** Quatre phrases intégrées supplémentaires, réservées au bilan A1. */
+const A1_COMPOSED_REVIEW_DRILLS: Readonly<Record<number, readonly GrammarPracticeDrill[]>> = {
+  8: [
+    {
+      id: "review-destination-order",
+      kind: "order",
+      skill: "particles",
+      prompt: "Reconstruis la phrase entière : moment, destination, puis verbe.",
+      stimulus: "Demain, je vais à la gare de Séoul.",
+      context: "Tu indiques ton programme de demain et la destination du trajet.",
+      displayLabel: "PHRASE À FORMER",
+      answer: ["내일", "서울역에", "가요."],
+      explanation: "내일 indique demain, 서울역에 la destination, et 가요 termine la phrase neutre.",
+    },
+    {
+      id: "review-transport-order",
+      kind: "order",
+      skill: "particles",
+      prompt: "Reconstruis la phrase entière en indiquant le moyen et la destination.",
+      stimulus: "Je vais à la gare de Séoul en métro.",
+      context: "Tu précises comment tu rejoins la gare de Séoul.",
+      displayLabel: "PHRASE À FORMER",
+      answer: ["지하철로", "서울역에", "가요."],
+      explanation: "지하철로 indique le moyen de transport et 서울역에 la destination, avant le verbe 가요.",
+    },
+  ],
+  13: [
+    {
+      id: "review-water-order",
+      kind: "order",
+      skill: "modality",
+      prompt: "Construis une demande polie en précisant la quantité.",
+      stimulus: "Un verre d’eau, s’il vous plaît.",
+      context: "Au café, tu commandes un verre d’eau.",
+      displayLabel: "PHRASE À FORMER",
+      answer: ["물", "한 잔", "주세요."],
+      explanation: "물 est l’eau demandée, 한 잔 précise un verre et 주세요 formule la demande polie.",
+    },
+    {
+      id: "review-coffee-water-order",
+      kind: "order",
+      skill: "modality",
+      prompt: "Construis une commande avec une quantité et un ajout.",
+      stimulus: "Deux cafés et de l’eau aussi, s’il vous plaît.",
+      context: "Au café, tu commandes deux cafés et ajoutes de l’eau.",
+      displayLabel: "PHRASE À FORMER",
+      answer: ["커피 두 잔하고", "물도", "주세요."],
+      explanation: "두 잔 compte les cafés, 하고 relie les éléments, 도 ajoute l’eau et 주세요 conclut la demande.",
+    },
+  ],
+  19: [
+    {
+      id: "review-past-order",
+      kind: "order",
+      skill: "conjugation",
+      prompt: "Construis une phrase complète au passé.",
+      stimulus: "Hier, j’ai regardé un film.",
+      context: "Tu racontes ce que tu as fait hier.",
+      displayLabel: "PHRASE À FORMER",
+      answer: ["어제", "영화를", "봤어요."],
+      explanation: "어제 situe l’événement hier, 영화를 désigne l’objet et 봤어요 exprime le passé.",
+    },
+    {
+      id: "review-future-order",
+      kind: "order",
+      skill: "conjugation",
+      prompt: "Construis une phrase complète au futur.",
+      stimulus: "Demain, je regarderai un film.",
+      context: "Tu annonces un projet prévu pour demain.",
+      displayLabel: "PHRASE À FORMER",
+      answer: ["내일", "영화를", "볼 거예요."],
+      explanation: "내일 annonce demain, 영화를 désigne l’objet et 볼 거예요 exprime le projet futur.",
+    },
+  ],
+  21: [
+    {
+      id: "review-sequence-order",
+      kind: "order",
+      skill: "connectors",
+      prompt: "Construis une phrase avec deux actions qui s’enchaînent.",
+      stimulus: "Je mange, puis je bois un café.",
+      context: "Tu décris simplement deux actions successives.",
+      displayLabel: "PHRASE À FORMER",
+      answer: ["밥을", "먹고", "커피를", "마셔요."],
+      explanation: "먹고 relie les actions avec -고, puis 마셔요 termine la phrase au présent poli.",
+    },
+    {
+      id: "review-reason-order",
+      kind: "order",
+      skill: "connectors",
+      prompt: "Construis une phrase en reliant une raison et sa conséquence.",
+      stimulus: "Comme il pleut, je prends un taxi.",
+      context: "Tu expliques pourquoi tu prends un taxi.",
+      displayLabel: "PHRASE À FORMER",
+      answer: ["비가 와서", "택시를", "타요."],
+      explanation: "비가 와서 indique la pluie comme cause, 택시를 l’objet et 타요 l’action qui en résulte.",
+    },
+  ],
+};
+
 function buildReviewQuestions(
   stageId: GrammarStageId,
   attemptNumber: number,
@@ -278,8 +378,10 @@ function buildReviewQuestions(
       (Math.floor(zeroBasedAttempt / slot.conceptIds.length) + questionIndex) %
         candidates.length
     ];
-    const drill: GrammarPracticeDrill =
-      questionIndex === 0 && selected.kind !== "order"
+    const composedDrills = A1_COMPOSED_REVIEW_DRILLS[questionIndex];
+    const drill: GrammarPracticeDrill = composedDrills
+      ? composedDrills[zeroBasedAttempt % composedDrills.length]
+      : questionIndex === 0 && selected.kind !== "order"
         ? {
             ...selected,
             kind: "order",
