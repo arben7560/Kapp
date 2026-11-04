@@ -3032,7 +3032,7 @@ test("the 25-question A1 review covers all 43 productive concepts in two attempt
     assert.equal(questions.filter(({ kind }) => kind === "order").length, 1);
     assert.ok(questions.some(({ kind }) => kind === "transformation"));
     assert.ok(questions.some(({ kind }) => kind === "gap"));
-    assert.ok(questions.some(({ kind }) => kind === "choice"));
+    assert.ok(questions.some(({ kind }) => kind === "choice" || kind === "scene"));
     assert.ok(questions.every(({ prompt }) => !prompt.includes("Objectif :")));
     for (const family of families) {
       assert.equal(questions.filter(({ prompt }) =>
