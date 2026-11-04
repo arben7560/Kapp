@@ -212,6 +212,41 @@ test("every incorrect choice in lessons 21–40 receives feedback for that choic
   }
 });
 
+test("lessons 21 and 38 keep context, Korean syntax and selected-answer correction aligned", () => {
+  const request = buildGrammarPracticeQuestions("request-action", 1, () => 0.42)
+    .find(({ id }) => id.includes("speak-request"));
+  assert.ok(request);
+  assert.match(request.display, /sollicites l’avis/u);
+  assert.doesNotMatch(request.display, /parler lentement/u);
+  assert.equal(request.answer, "말해 주세요");
+
+  const questions = buildGrammarPracticeQuestions("necessity-and-obligation", 1, () => 0.42);
+  const nounNeed = questions.find(({ id }) => id.includes("passport-need"));
+  const actionNeed = questions.find(({ id }) => id.includes("show-passport-obligation"));
+  assert.ok(nounNeed && actionNeed);
+  assert.match(nounNeed.display, /여권이 __/u);
+  assert.deepEqual(new Set(nounNeed.options), new Set([
+    "필요해요", "있어요", "있어도 돼요", "있을 수 있어요",
+  ]));
+  const wrongMeanings = [
+    ["있어요", /présence.*indispensable/u],
+    ["있어도 돼요", /permise.*nécessité/u],
+    ["있을 수 있어요", /pourrait.*exigé/u],
+  ];
+  for (const [answer, reason] of wrongMeanings) {
+    const explanation = getGrammarIncorrectFeedback(nounNeed, answer);
+    assert.match(explanation, reason);
+    assert.match(explanation, /« 필요해요 »/u);
+  }
+  assert.match(actionNeed.display, /여권을 __/u);
+  assert.match(getGrammarIncorrectFeedback(actionNeed, "필요해요"), /mauvaise particule.*여권이 필요해요/u);
+  assert.match(getGrammarIncorrectFeedback(actionNeed, "볼 수 있어요"), /voir le passeport.*dois le montrer/u);
+
+  // Les anciennes sessions sauvegardées doivent encore recevoir une correction exacte.
+  assert.match(getGrammarIncorrectFeedback(nounNeed, "보여 줘야 해요"), /여권이.*sujet.*여권을/u);
+  assert.match(getGrammarIncorrectFeedback(nounNeed, "볼 수 있어요"), /capacité de voir au passeport/u);
+});
+
 test("word banks never start already solved, including lesson 29", () => {
   for (const stageId of ["sentence-structure", "limit-request"]) {
     for (const randomValue of [0, 0.24, 0.42, 0.99]) {
