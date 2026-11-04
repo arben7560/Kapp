@@ -2121,10 +2121,15 @@ function getLaterStageSelectedFeedback(
       superlative ? "on cherche « le plus » parmi plusieurs éléments" : "la phrase demande le repère de comparaison après le nom");
     if (selected === "보다") return explain("보다 suit le nom servant de repère, et non la position d'un adverbe",
       "la phrase demande le superlatif 제일");
-    if (selected === "만") return explain("만 veut dire « seulement », pas « plus » ni « le plus »",
-      "la phrase demande la comparaison indiquée");
-    if (selected === "도") return explain("도 veut dire « aussi », pas « plus » ni « le plus »",
-      "la phrase demande la comparaison indiquée");
+    const comparisonGoal = expected === "보다"
+      ? "le nom sert de point de référence, ce qui demande 보다"
+      : expected === "더"
+        ? "tu compares deux éléments avec 더 (« plus »)"
+        : "tu compares plusieurs éléments avec 제일 (« le plus »)";
+    if (selected === "만") return explain("만 exprime « seulement » et restreint l'élément au lieu de le comparer",
+      comparisonGoal);
+    if (selected === "도") return explain("도 exprime « aussi » et ajoute un élément au lieu de le comparer",
+      comparisonGoal);
     if (selected === "에") return explain("에 marque notamment un lieu ou un moment, pas un repère comparatif",
       "le nom de référence doit prendre 보다");
   }
