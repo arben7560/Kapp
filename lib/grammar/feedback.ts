@@ -1865,7 +1865,7 @@ function laterStageModalityMeaning(selected: string): string | undefined {
   if (/고 싶지 않아요[.?]?$/u.test(selected)) return "indique que l'on ne souhaite pas agir";
   if (/고 싶어요[.?]?$/u.test(selected)) return "exprime un souhait personnel";
   if (/수 있어요[.?]?$/u.test(selected)) return "parle d'une capacité ou d'une possibilité, pas d'une autorisation";
-  if (/도 돼요[.?]?$/u.test(selected)) return "exprime une permission, pas une obligation ni une capacité";
+  if (/도 돼요[.?]?$/u.test(selected)) return "indique que l'acte est autorisé, pas forcément réalisable ni obligatoire";
   if (/야 해요[.?]?$/u.test(selected)) return "exprime une obligation";
   if (/거예요[.?]?$/u.test(selected)) return "annonce un projet ou une prévision";
   if (/게요[.?]?$/u.test(selected)) return "annonce une décision ou un engagement auprès de l'interlocuteur";
@@ -1988,7 +1988,7 @@ function getLaterStageSelectedFeedback(
         "la personne ne parvient pas à agir et utilise 못");
     }
     if (selected === "듣고 싶지 않아요") {
-      return explain("cela veut dire qu'on n'a pas envie d'écouter",
+      return explain("cela signifie « je ne veux pas écouter »",
         "l'empêchement est physique : la personne entend mal malgré elle");
     }
     if (selected === "들을 수 있어요") {
@@ -2020,7 +2020,7 @@ function getLaterStageSelectedFeedback(
     }
     if (selected === "을" || /[을를] [가-힣]+요[.]?$/u.test(selected) ||
         /(?:를|을) 주세요[.]?$/u.test(selected)) {
-      return explain("을/를 marque l'objet de façon neutre, sans dire « aussi »",
+      return explain("c'est grammaticalement correct et reste une demande neutre, sans « aussi »",
         "l'élément doit s'ajouter à un autre avec 도");
     }
     if (/만/u.test(selected)) return explain("만 signifie « seulement » et exclut les autres éléments",
@@ -2062,7 +2062,7 @@ function getLaterStageSelectedFeedback(
       "마샀어요": "마시다 forme 마셨어요, pas 마샀어요",
     };
     if (malformed[selected]) return explain(malformed[selected], "on forme le passé poli correctement");
-    if (selected === "보았을 거예요") return explain("cette forme suppose une action passée au lieu de la constater",
+    if (selected === "보았을 거예요") return explain("cette forme exprime une supposition sur une action passée, plutôt qu'un passé constaté",
       "on demande le passé simple de 보다");
     if (/거예요$/u.test(selected)) return explain("cela annonce l'avenir",
       "l'action s'est déjà produite et doit être au passé");
