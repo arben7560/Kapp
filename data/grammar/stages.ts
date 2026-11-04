@@ -969,10 +969,11 @@ const GRAMMAR_STAGE_DEFINITIONS = [
     chapterId: "a1-validation",
     title: "Révision générale A1",
     communicativeGoal:
-      "Revoir les principales structures dans des phrases courtes.",
+      "Vérifier tes acquis A1 dans 25 situations variées : sens, particules, nombres, conjugaisons et construction de phrases.",
     conceptIds: A1_PRODUCTIVE_CONCEPT_IDS,
     receptiveConceptIds: ["honorific-si"],
     prerequisites: recommendedStages(GRAMMAR_STAGE_IDS.slice(0, 40)),
+    practiceQuestionCount: 25,
     canonicalExamples: [
       {
         korean:
@@ -980,7 +981,15 @@ const GRAMMAR_STAGE_DEFINITIONS = [
         french:
           "Client : Bonjour. J’ai réservé.\nEmployé : Très bien. Quel est votre nom ?\nClient : Je m’appelle Marc. Puis-je m’asseoir près de la fenêtre ?\nEmployé : Oui, venez par ici.",
         format: "dialogue",
-        note: "MÉMO\n« 성함 » est la forme honorifique de « 이름 » : reconnais-la sans chercher à la produire.",
+        note: "À REPÉRER\n예약했어요 (passé), 앉아도 돼요? (permission), 이쪽으로 (direction), 오세요 (instruction). « 성함 » est une forme honorifique à reconnaître.",
+      },
+      {
+        korean:
+          "승객: 서울역까지 어떻게 가요?\n직원: 지하철로 가세요. 두 정거장만 가면 돼요.",
+        french:
+          "Voyageur : Comment aller jusqu’à la gare de Séoul ?\nEmployé : Prenez le métro. Il suffit de faire deux arrêts.",
+        format: "dialogue",
+        note: "À REPÉRER\n까지 (limite), 로 (moyen), -(으)세요 (instruction), 만 (restriction), -(으)면 돼요 (condition suffisante).",
       },
     ],
     reuseContentRefIds: [
