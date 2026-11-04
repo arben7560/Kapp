@@ -2824,7 +2824,7 @@ test("valid Korean alternatives are disambiguated by the requested nuance", () =
 
   const lesson = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
   assert.doesNotMatch(lesson, /MAUVAISE RÉPONSE/u);
-  assert.match(lesson, /À AJUSTER ICI/u);
+  assert.match(lesson, /TON CHOIX EXPLIQUÉ/u);
 });
 
 test("받침-sensitive forms evaluate both consonant and vowel variants", () => {
