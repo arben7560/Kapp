@@ -150,22 +150,7 @@ function buildDrillQuestion(
     kind: drill.kind,
     criterion:
       drill.kind === "scene" ? "P" : drill.kind === "choice" ? "R" : "M",
-    prompt: stageId === "sentence-structure" ||
-      stageId === "identify-with-copula" ||
-      stageId === "polite-register" ||
-      stageId === "introduce-topic" ||
-      stageId === "demonstratives" ||
-      stageId === "nominal-questions" ||
-      stageId === "existence" ||
-      stageId === "locate-thing" ||
-      stageId === "present-actions" ||
-      stageId === "object-actions" ||
-      stageId === "action-location" ||
-      stageId === "destination-and-time" ||
-      stageId === "possession" ||
-      stageId === "information-questions"
-      ? drill.prompt
-      : drill.prompt,
+    prompt: drill.prompt,
     display: drill.context
       ? formatScenario(
           drill.context,
