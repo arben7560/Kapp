@@ -2036,61 +2036,88 @@ export const GRAMMAR_LESSON_GUIDES = {
   "a1-validation": {
     stageId: "a1-validation",
     introduction:
-      "Cette dernière étape ne présente pas une nouvelle terminaison : elle entraîne à choisir la bonne structure dans une situation complète. Le bon réflexe est de partir du sens, puis de vérifier la forme coréenne.",
+      "Ce bilan n'introduit aucune nouvelle règle : il vérifie si tu sais réutiliser les notions des 40 leçons, même quand elles sont mélangées. Tu retrouveras des situations du quotidien, des choix de nuance et de vraies phrases à construire.",
     mainRule:
-      "Classe d’abord l’intention — temps, action, relation entre idées ou nuance sociale — puis choisis le marqueur, conjugue le radical et relis toute la phrase jusqu’au prédicat final.",
+      "25 questions variées, réparties en cinq ensembles : fondations, construction de phrases, quantités et échanges, choix et intentions, temps et liens. Il faut 20 bonnes réponses pour valider cette révision grammaticale. À chaque nouvelle tentative, une partie des notions et des exemples change.",
     formula: {
-      pattern: "intention → marqueur → radical conjugué → phrase complète",
+      pattern: "situation → intention → forme juste → phrase complète",
       explanation:
-        "Une même action peut prendre plusieurs formes selon le message : 갈 거예요 décrit un projet, 갈게요 engage le locuteur et 갈까요? propose l’action à deux.",
+        "Commence par identifier le message : présence, demande, permission, capacité, projet, cause ou condition. Puis contrôle les particules, la conjugaison, le niveau de politesse et le prédicat final. Ce bilan évalue la grammaire écrite, pas la compréhension orale ni la prononciation.",
     },
     steps: [
       {
-        title: "Comprends la situation",
+        title: "Observe les indices de la situation",
         explanation:
-          "Repère d’abord les indices : événement terminé, projet, permission, obligation, cause, contraste ou proposition. Ne choisis pas une terminaison uniquement parce qu’elle ressemble au français.",
+          "Qui parle et à qui ? L'action a-t-elle déjà eu lieu ? Est-ce une demande, une obligation ou une simple possibilité ? Le contexte compte davantage qu'un mot isolé.",
       },
       {
-        title: "Choisis le bon bloc",
+        title: "Choisis une construction cohérente",
         explanation:
-          "Associe l’intention à sa construction : -았/었어요 pour le passé, -(으)ㄹ 거예요 pour un projet, -아/어서 pour une raison, -(으)면 pour une condition.",
+          "Distingue 은/는 de 이/가, 에 de 에서, 안 de 못, 도 de 만, -(으)ㄹ 수 있어요 de -아/어도 돼요, et -고 de -아/어서, -지만 ou -(으)면.",
       },
       {
-        title: "Contrôle la phrase entière",
+        title: "Relis toute la réponse",
         explanation:
-          "Vérifie le dernier son du radical, les particules de l’objet ou du lieu, la place du prédicat et le registre poli en -요 avant de valider.",
+          "Vérifie le nombre et son classificateur, le 받침 des terminaisons, le temps, le registre en -요 et la place du verbe. Dans les remises en ordre, construis réellement la phrase avant de valider.",
       },
     ],
     examples: [
       {
-        korean: "비가 와서 택시를 타요.",
-        french: "Comme il pleut, je prends un taxi.",
+        korean: "저는 학생이에요.",
+        french: "Je suis étudiant.",
         parts: [
-          { korean: "비가 와서", french: "comme il pleut", role: "raison" },
-          { korean: "택시를 타요", french: "je prends un taxi", role: "conséquence et prédicat" },
+          { korean: "저는", french: "moi, je", role: "thème de la phrase" },
+          { korean: "학생이에요.", french: "suis étudiant", role: "identification au poli courant" },
         ],
       },
       {
-        korean: "같이 갈까요?",
-        french: "On y va ensemble ?",
+        korean: "커피 두 잔하고 물도 주세요.",
+        french: "Deux cafés et de l'eau aussi, s'il vous plaît.",
         parts: [
-          { korean: "같이", french: "ensemble", role: "action partagée" },
-          { korean: "갈까요?", french: "on y va ?", role: "suggestion polie" },
+          { korean: "커피 두 잔하고", french: "deux tasses de café et", role: "nombre, classificateur et coordination" },
+          { korean: "물도", french: "de l'eau aussi", role: "addition avec 도" },
+          { korean: "주세요.", french: "s'il vous plaît / donnez-moi", role: "demande polie" },
+        ],
+      },
+      {
+        korean: "어제는 비가 와서 지하철로 갔어요.",
+        french: "Hier, comme il pleuvait, j'y suis allé en métro.",
+        parts: [
+          { korean: "어제는", french: "hier", role: "repère temporel" },
+          { korean: "비가 와서", french: "comme il pleuvait", role: "cause avec -아/어서" },
+          { korean: "지하철로", french: "en métro", role: "moyen de transport" },
+          { korean: "갔어요.", french: "je suis allé", role: "verbe au passé" },
+        ],
+      },
+      {
+        korean: "내일 시간이 있으면 같이 갈까요?",
+        french: "Demain, si tu as le temps, on y va ensemble ?",
+        parts: [
+          { korean: "내일", french: "demain", role: "moment" },
+          { korean: "시간이 있으면", french: "si tu as le temps", role: "condition" },
+          { korean: "같이 갈까요?", french: "on y va ensemble ?", role: "proposition polie" },
         ],
       },
     ],
     commonMistakes: [
       {
-        mistake: "Reconnaître le verbe mais choisir la forme sans tenir compte du contexte.",
-        correction: "Compare les nuances avant de répondre : projet 갈 거예요, engagement 갈게요, suggestion 갈까요?.",
+        mistake: "Chercher une terminaison au hasard sans tenir compte de la situation.",
+        correction:
+          "Oppose toujours le sens : 갈 거예요 (projet prévu), 갈게요 (engagement du locuteur), 갈까요? (proposition à deux).",
       },
       {
-        mistake: "Valider une phrase après avoir vérifié uniquement la terminaison.",
-        correction: "Relis aussi les particules et l’ordre : lieu + 에서 pour une action, objet + 을/를, puis prédicat à la fin.",
+        mistake: "Confondre action possible, action autorisée et action obligatoire.",
+        correction:
+          "할 수 있어요 = c'est faisable ; 해도 돼요 = c'est permis ; 해야 해요 = c'est obligatoire.",
+      },
+      {
+        mistake: "Repérer le verbe sans contrôler les autres éléments.",
+        correction:
+          "La bonne terminaison ne suffit pas : vérifie 은/는, 을/를, 에/에서, les classificateurs et l'ordre de la phrase.",
       },
     ],
     memoryTip:
-      "Pour réussir la révision : sens d’abord, forme ensuite, phrase complète à la fin.",
+      "Ce bilan mesure tes acquis à l'écrit sur un échantillon de notions : refaire la révision permet de rencontrer celles qui ne sont pas tombées cette fois. Sens d'abord, construction ensuite, vérification finale.",
   },
 } as const satisfies Partial<Record<GrammarStageId, GrammarLessonGuide>>;
 
