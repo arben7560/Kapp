@@ -1511,6 +1511,8 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       ["으로", "에", "에서"],
       "버스 finit par une voyelle : le moyen prend 로.",
       "means-no-batchim",
+      "Tu expliques que tu effectues le trajet en bus.",
+      "Choisis la particule qui indique le moyen de transport.",
     ),
     gap(
       "particles",
@@ -1520,6 +1522,8 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       ["으로", "에", "에서"],
       "지하철 finit par ㄹ : cette exception prend 로, et non 으로.",
       "means-rieul",
+      "Tu expliques que tu effectues le trajet en métro, sans le désigner comme destination.",
+      "Choisis la particule qui indique le moyen de transport.",
     ),
     gap(
       "particles",
@@ -1529,6 +1533,8 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       ["으로", "에", "에서"],
       "자동차 finit par une voyelle : le moyen prend 로.",
       "means-no-batchim",
+      "Tu expliques que tu te déplaces en voiture.",
+      "Choisis la particule qui indique le moyen de transport.",
     ),
     gap(
       "particles",
@@ -1549,6 +1555,8 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       ["으로", "에", "에서"],
       "카드 finit par une voyelle : le moyen de paiement prend 로.",
       "means-no-batchim",
+      "Tu indiques que tu règles l'achat par carte.",
+      "Choisis la particule qui indique le moyen de paiement.",
     ),
   ],
 
@@ -2740,6 +2748,8 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       ["만", "도", "에"],
       "보다 suit la référence de comparaison, ici le bus.",
       "comparison",
+      "Tu compares la vitesse du métro à celle du bus.",
+      "Choisis la particule qui marque le point de comparaison.",
     ),
     gap(
       "syntax",
@@ -2760,6 +2770,8 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       ["만", "도", "에"],
       "커피 est le point de référence et prend 보다.",
       "comparison",
+      "Tu compares le prix du thé à celui du café.",
+      "Choisis la particule qui marque le point de comparaison.",
     ),
     gap(
       "syntax",
@@ -2770,6 +2782,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       "Sans second terme, 제일 forme le superlatif : « le moins cher ».",
       "superlative",
       "Parmi au moins trois articles, celui-ci est le moins cher.",
+      "Choisis l'adverbe qui exprime « le moins cher ».",
     ),
     gap(
       "syntax",
@@ -2780,6 +2793,7 @@ export const GRAMMAR_PRACTICE_DRILLS: Partial<
       "Parmi plusieurs restaurants, 제일 exprime « le meilleur ».",
       "superlative",
       "Tu compares au moins trois restaurants.",
+      "Choisis l'adverbe qui exprime « le meilleur ».",
     ),
   ],
 
