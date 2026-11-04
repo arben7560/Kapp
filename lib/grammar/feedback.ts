@@ -1843,6 +1843,288 @@ function selectedSpecificFallback(
   return undefined;
 }
 
+
+/**
+ * Étapes 21 à 40 : explique le sens de l'option effectivement sélectionnée,
+ * puis le contraste imposé par la consigne. Une forme correcte dans un autre
+ * contexte n'est jamais présentée comme intrinsèquement incorrecte.
+ */
+const LATER_STAGE_CONCEPTS = new Set([
+  "request-v-a-eo-juseyo", "polite-instruction-euseyo",
+  "direction-means-ro-euro", "desire-go-sipeoyo",
+  "ability-eul-su-isseoyo", "permission-a-eodo-dwaeyo",
+  "inability-mot", "additive-do", "restrictive-man",
+  "range-buteo-kkaji", "past-ass-eosseoyo",
+  "future-eul-geoyeyo", "intention-eulgeyo", "sequence-go",
+  "reason-a-eoseo", "contrast-jiman", "condition-eumyeon",
+  "obligation-a-eoya-haeyo", "comparison-boda-deo-jeil",
+  "suggestion-eulkkayo",
+]);
+
+function laterStageModalityMeaning(selected: string): string | undefined {
+  if (/고 싶지 않아요[.?]?$/u.test(selected)) return "indique que l'on ne souhaite pas agir";
+  if (/고 싶어요[.?]?$/u.test(selected)) return "exprime un souhait personnel";
+  if (/수 있어요[.?]?$/u.test(selected)) return "parle d'une capacité ou d'une possibilité, pas d'une autorisation";
+  if (/도 돼요[.?]?$/u.test(selected)) return "exprime une permission, pas une obligation ni une capacité";
+  if (/야 해요[.?]?$/u.test(selected)) return "exprime une obligation";
+  if (/거예요[.?]?$/u.test(selected)) return "annonce un projet ou une prévision";
+  if (/게요[.?]?$/u.test(selected)) return "annonce une décision ou un engagement auprès de l'interlocuteur";
+  if (/까요[.?]?$/u.test(selected)) return "demande un avis ou propose une action, au lieu de l'affirmer";
+  if (/주세요[.?]?$/u.test(selected)) return "demande à l'autre de rendre un service";
+  if (/세요[.?]?$/u.test(selected)) return "s'adresse directement à l'autre avec une instruction polie";
+  if (/(?:았|었|했|갔|봤|왔|셨|렸)어요[.?]?$/u.test(selected)) return "situe l'action dans le passé";
+  if (/^못 /u.test(selected) || /를 못 /u.test(selected)) return "exprime une impossibilité ou un empêchement";
+  if (/지 않아요[.?]?$/u.test(selected)) return "est une négation longue ; elle ne précise pas à elle seule un empêchement";
+  if (/^안 /u.test(selected)) return "est une négation courte ; elle ne précise pas à elle seule un empêchement";
+  if (selected === "아니에요") return "nie une identité ou une qualification, pas un verbe d'action";
+  if (selected === "필요해요") return "exprime le besoin d'une chose";
+  if (/요[.?]?$/u.test(selected)) return "énonce un fait au présent, sans l'intention demandée";
+  return undefined;
+}
+
+function laterStageConnectorMeaning(selected: string): string | undefined {
+  if (/지만/u.test(selected)) return "marque un contraste (« mais »)";
+  if (/(?:으)?면/u.test(selected)) return "pose une condition (« si »)";
+  if (/니까/u.test(selected)) return "donne une raison (« puisque »)";
+  if (/서/u.test(selected)) return "présente une cause ou une conséquence";
+  if (/고$/u.test(selected)) return "relie simplement deux actions ou faits (« et »)";
+  return undefined;
+}
+
+function getLaterStageSelectedFeedback(
+  question: GrammarPracticeQuestion,
+  answer: GrammarPracticeAnswer,
+): string | undefined {
+  const concept = question.conceptIds[0];
+  if (!LATER_STAGE_CONCEPTS.has(concept)) return undefined;
+
+  const expected = answerLabel(question.answer);
+  const selected = answerLabel(answer);
+  const prefix = "Tu as choisi " + quoted(selected) + " : ";
+  const explain = (reason: string, target: string) =>
+    prefix + reason + ". Ici, " + target + " : " + quoted(expected) + ".";
+
+  if (Array.isArray(answer)) {
+    if (concept !== "restrictive-man" || !Array.isArray(question.answer)) return undefined;
+    const finalToken = question.answer.at(-1);
+    if (answer.at(-1) !== finalToken) {
+      return "Tu as placé " + quoted(selected) + ". Le prédicat " + finalToken +
+        " doit fermer cette phrase ; " + quoted(expected) + " conserve la restriction sur 한 잔.";
+    }
+    return "Tu as placé " + quoted(selected) +
+      ". Le verbe est final, mais 지금 doit introduire le moment, suivi de 한 잔만 (« un seul verre ») : " +
+      quoted(expected) + ".";
+  }
+  if (typeof answer !== "string") return undefined;
+
+  if (concept === "request-v-a-eo-juseyo") {
+    if (selected === "보이세요" || selected === "보여요" || selected === "보일까요") {
+      return explain("cette forme parle de visibilité ou de ce qui sera visible",
+        "tu demandes au personnel de montrer quelque chose");
+    }
+    if (selected === "주세요") {
+      return explain("주세요 seul demande une chose, sans préciser l'action",
+        "l'employé doit ouvrir la porte");
+    }
+    if (selected === "열고 싶어요") {
+      return explain("cela signifie que TOI, tu souhaites ouvrir",
+        "tu demandes au personnel de le faire");
+    }
+    const meaning = laterStageModalityMeaning(selected);
+    if (meaning) return explain(meaning, "l'autre personne doit accomplir une action pour toi");
+  }
+
+  if (concept === "polite-instruction-euseyo") {
+    if (selected === "앉세요" || selected === "읽세요") {
+      return explain("le radical se termine par une consonne et il manque 으 avant 세요",
+        "l'impératif poli prend 으세요");
+    }
+    if (selected === "가으세요" || selected === "오으세요") {
+      return explain("le radical se termine par une voyelle : 으 n'a pas sa place",
+        "l'impératif poli prend directement 세요");
+    }
+    const meaning = laterStageModalityMeaning(selected);
+    if (meaning) return explain(meaning, "tu formules une consigne ou une invitation en -(으)세요");
+  }
+
+  if (concept === "direction-means-ro-euro") {
+    if (selected === "로" || selected === "으로") {
+      const ending = expected === "로"
+        ? question.ruleAspect === "means-rieul"
+          ? "le nom se termine par ㄹ, exception qui impose 로"
+          : "le nom se termine par une voyelle, qui impose 로"
+        : "오른쪽 se termine par ㄱ, qui impose 으로";
+      return explain("tu as choisi la variante qui ne convient pas à la dernière consonne",
+        ending);
+    }
+    if (selected === "에") {
+      return explain("에 marque notamment un lieu d'arrivée ; la phrase peut avoir un autre sens",
+        "on doit marquer la direction ou le moyen, pas la destination");
+    }
+    if (selected === "에서") {
+      return explain("에서 indique le lieu où une action a lieu ou son point de départ",
+        "on précise le moyen ou la direction du mouvement");
+    }
+  }
+
+  if (concept === "desire-go-sipeoyo" || concept === "ability-eul-su-isseoyo" ||
+      concept === "permission-a-eodo-dwaeyo" || concept === "future-eul-geoyeyo" ||
+      concept === "intention-eulgeyo" || concept === "suggestion-eulkkayo") {
+    const goals: Readonly<Record<string, string>> = {
+      "desire-go-sipeoyo": "tu exprimes ce que tu as envie de faire avec -고 싶어요",
+      "ability-eul-su-isseoyo": "tu indiques une capacité ou une faisabilité réelle avec -(으)ㄹ 수 있어요",
+      "permission-a-eodo-dwaeyo": "tu demandes si l'action est autorisée avec -아/어도 돼요",
+      "future-eul-geoyeyo": "tu annonces un projet prévu avec -(으)ㄹ 거예요",
+      "intention-eulgeyo": "tu prends une décision ou t'engages envers l'autre avec -(으)ㄹ게요",
+      "suggestion-eulkkayo": "tu demandes l'avis de l'autre sur une action commune avec -(으)ㄹ까요",
+    };
+    const meaning = laterStageModalityMeaning(selected);
+    if (meaning) return explain(meaning, goals[concept]);
+  }
+
+  if (concept === "inability-mot") {
+    if (selected === "아니에요") {
+      return explain("아니에요 nie une identité (« ce n'est pas »), pas une action",
+        "la personne ne parvient pas à agir et utilise 못");
+    }
+    if (selected === "듣고 싶지 않아요") {
+      return explain("cela veut dire qu'on n'a pas envie d'écouter",
+        "l'empêchement est physique : la personne entend mal malgré elle");
+    }
+    if (selected === "들을 수 있어요") {
+      return explain("cela affirme au contraire que l'écoute est possible",
+        "la personne n'arrive pas à bien entendre");
+    }
+    if (/지 않아요$/u.test(selected)) {
+      return explain("c'est une négation longue qui ne met pas en avant l'incapacité",
+        "une contrainte empêche l'action, d'où 못");
+    }
+    if (/^안 /u.test(selected)) {
+      return explain("안 nie l'action sans indiquer clairement que la personne en est empêchée",
+        "on exprime l'impossibilité avec 못");
+    }
+  }
+
+  if (concept === "additive-do") {
+    if (/^Je suis le seul/u.test(selected)) {
+      return explain("tu traduis « seulement », qui correspondrait à 만",
+        "저도 veut dire « moi aussi »");
+    }
+    if (/^Je pars, moi/u.test(selected)) {
+      return explain("tu traduis un contraste, plutôt qu'une addition",
+        "저도 ajoute le locuteur à quelqu'un qui part déjà");
+    }
+    if (/^Est-ce que/u.test(selected)) {
+      return explain("tu transformes l'affirmation en question",
+        "저도 가요 affirme que moi aussi j'y vais");
+    }
+    if (selected === "을" || /[을를] [가-힣]+요[.]?$/u.test(selected) ||
+        /(?:를|을) 주세요[.]?$/u.test(selected)) {
+      return explain("을/를 marque l'objet de façon neutre, sans dire « aussi »",
+        "l'élément doit s'ajouter à un autre avec 도");
+    }
+    if (/만/u.test(selected)) return explain("만 signifie « seulement » et exclut les autres éléments",
+      "tu ajoutes cet élément à ce qui a déjà été mentionné avec 도");
+    if (/는|은/u.test(selected)) return explain("은/는 marque le thème ou un contraste, pas « aussi »",
+      "l'élément s'ajoute à un autre avec 도");
+  }
+
+  if (concept === "restrictive-man") {
+    // Les réponses longues et le réordonnancement possèdent déjà une analyse dédiée.
+    if (question.id.includes("sentence-seat-only") || question.id.includes("meaning-bread-only")) return undefined;
+    if (selected === "도") return explain("도 signifie « aussi », donc ajoute plutôt que limiter",
+      "la phrase exclut toutes les autres possibilités avec 만");
+    if (selected === "하고") return explain("하고 relie deux noms avec « et »",
+      "la phrase ne garde qu'un élément avec 만");
+    if (selected === "나" || selected === "이나") return explain("(이)나 propose une alternative (« ou »)",
+      "on exprime « seulement » avec 만");
+  }
+
+  if (concept === "range-buteo-kkaji") {
+    const atEnd = question.ruleAspect === "range-end" || question.ruleAspect === "limit-only";
+    if (selected === "에") return explain("에 marque un moment ponctuel, pas une limite de période",
+      atEnd ? "on veut fermer la plage avec 까지" : "on précise son début avec 부터");
+    if (selected === "으로") return explain("으로 exprime une direction ou un moyen, pas une borne temporelle",
+      "il faut le départ explicite de la période avec 부터");
+    if (selected === "동안") return explain("동안 indique une durée, sans fixer à lui seul sa borne",
+      atEnd ? "on marque la fin avec 까지" : "on marque le début avec 부터");
+    if (selected === "에서") return explain("에서 indique notamment le lieu ou le point de départ ; il ne ferme pas ici la plage",
+      "la consigne demande sa borne finale avec 까지");
+    if (selected === "부터") return explain("부터 marque un début, pas la destination ou la fin",
+      "la limite attendue est 까지");
+  }
+
+  if (concept === "past-ass-eosseoyo") {
+    const malformed: Readonly<Record<string, string>> = {
+      "먹았어요": "먹- appelle -었어요, et non -았어요",
+      "가었어요": "가- + -았어요 se contracte en 갔어요",
+      "공부하었어요": "하다 forme 했어요 au passé",
+      "마샀어요": "마시다 forme 마셨어요, pas 마샀어요",
+    };
+    if (malformed[selected]) return explain(malformed[selected], "on forme le passé poli correctement");
+    if (selected === "보았을 거예요") return explain("cette forme suppose une action passée au lieu de la constater",
+      "on demande le passé simple de 보다");
+    if (/거예요$/u.test(selected)) return explain("cela annonce l'avenir",
+      "l'action s'est déjà produite et doit être au passé");
+    return explain("la forme reste au présent poli", "l'action est passée, en -았/었어요");
+  }
+
+  if (concept === "inability-mot") return undefined;
+
+  if (concept === "sequence-go" || concept === "reason-a-eoseo" ||
+      concept === "contrast-jiman" || concept === "condition-eumyeon") {
+    if (concept === "condition-eumyeon" && question.ruleAspect === "sufficiency") {
+      if (selected.includes("면 가요")) return explain("cela veut dire « si ..., on y va », sans « il suffit de »",
+        "la structure -면 돼요 indique une condition suffisante");
+      if (selected.includes("서 돼요")) return explain("-아서/어서 indique une cause, pas une condition suffisante",
+        "il faut -면 돼요");
+      if (selected.includes("지만 돼요")) return explain("-지만 signifie « mais » et ne donne pas « il suffit de »",
+        "il faut -면 돼요");
+    }
+    const goals: Readonly<Record<string, string>> = {
+      "sequence-go": "on enchaîne deux étapes sans cause, opposition ni condition avec -고",
+      "reason-a-eoseo": "la première proposition explique la cause de la seconde avec -아/어서",
+      "contrast-jiman": "la deuxième proposition reste vraie malgré la première avec -지만",
+      "condition-eumyeon": "la suite dépend d'une condition exprimée avec -(으)면",
+    };
+    const meaning = laterStageConnectorMeaning(selected);
+    if (meaning) return explain(meaning, goals[concept]);
+  }
+
+  if (concept === "obligation-a-eoya-haeyo") {
+    if (question.ruleAspect === "nominal-need") {
+      if (selected === "보여 줘야 해요") return explain("tu demandes de montrer le passeport",
+        "on indique simplement que le document est nécessaire");
+      if (selected === "있어도 돼요") return explain("cela indique que posséder le document est permis",
+        "on dit qu'il est nécessaire");
+      if (selected === "볼 수 있어요") return explain("cela indique qu'on peut voir le document",
+        "on dit qu'il est nécessaire");
+    }
+    if (selected === "필요해요") return explain("필요해요 décrit une chose nécessaire",
+      "l'agent impose ici l'action de montrer le passeport");
+    const meaning = laterStageModalityMeaning(selected);
+    if (meaning) return explain(meaning, "l'action doit obligatoirement être accomplie avec -아/어야 해요");
+  }
+
+  if (concept === "comparison-boda-deo-jeil") {
+    const superlative = question.ruleAspect === "superlative";
+    if (selected === "제일") return explain("제일 signifie « le plus » parmi plusieurs",
+      "on ne compare que deux éléments : 더 indique « plus »");
+    if (selected === "더") return explain("더 signifie « plus » dans une comparaison",
+      superlative ? "on cherche « le plus » parmi plusieurs éléments" : "la phrase demande le repère de comparaison après le nom");
+    if (selected === "보다") return explain("보다 suit le nom servant de repère, et non la position d'un adverbe",
+      "la phrase demande le superlatif 제일");
+    if (selected === "만") return explain("만 veut dire « seulement », pas « plus » ni « le plus »",
+      "la phrase demande la comparaison indiquée");
+    if (selected === "도") return explain("도 veut dire « aussi », pas « plus » ni « le plus »",
+      "la phrase demande la comparaison indiquée");
+    if (selected === "에") return explain("에 marque notamment un lieu ou un moment, pas un repère comparatif",
+      "le nom de référence doit prendre 보다");
+  }
+
+  return undefined;
+}
+
 /**
  * Builds the first sentence shown after an incorrect grammar answer.
  * The exercise explanation is the safe fallback because it names the exact
@@ -1941,6 +2223,9 @@ export function getGrammarIncorrectFeedback(
 
   const stageTwentyFeedback = getStageTwentySelectedFeedback(question, answer);
   if (stageTwentyFeedback) return stageTwentyFeedback;
+
+  const laterStageFeedback = getLaterStageSelectedFeedback(question, answer);
+  if (laterStageFeedback) return laterStageFeedback;
 
   const advancedFeedback = getAdvancedSelectedFeedback(question, selected, expected);
   if (advancedFeedback) return advancedFeedback;
