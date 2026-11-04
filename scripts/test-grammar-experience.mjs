@@ -3021,6 +3021,12 @@ test("the 25-question A1 review covers all 43 productive concepts in two attempt
   assert.match(guide.mainRule, /20 bonnes réponses/u);
   assert.equal(GRAMMAR_STAGE_BY_ID["a1-validation"].practiceQuestionCount, 25);
   assert.equal(GRAMMAR_STAGE_BY_ID["a1-validation"].canonicalExamples.length, 2);
+  const modalContent = readFileSync(
+    join(projectRoot, "components/grammar/GrammarLessonGuide.tsx"),
+    "utf8",
+  );
+  assert.match(modalContent, /MISES EN SITUATION/u);
+  assert.match(modalContent, /GRAMMAR_STAGE_BY_ID\["a1-validation"\]\.canonicalExamples/u);
 
   for (let attempt = 1; attempt <= 8; attempt += 1) {
     const questions = buildGrammarPracticeQuestions("a1-validation", attempt, () => 0.42);
