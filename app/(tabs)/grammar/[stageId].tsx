@@ -557,8 +557,8 @@ export default function GrammarLessonScreen() {
 
   const closeTheory = React.useCallback(() => {
     dismissTheory();
-    // Pour les vingt premières étapes, fermer la fiche ne lance pas les exercices.
-    // Les étapes suivantes conservent leur comportement de navigation.
+    // Les 40 leçons suivent le même parcours : la fermeture n'ouvre pas les exercices.
+    // La révision finale conserve son comportement de navigation.
     if (!isQuickGuide && !session) startPractice();
   }, [dismissTheory, isQuickGuide, session, startPractice]);
 
