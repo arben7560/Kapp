@@ -559,8 +559,8 @@ export default function GrammarLessonScreen() {
     dismissTheory();
     // Les 40 leçons suivent le même parcours : la fermeture n'ouvre pas les exercices.
     // La révision finale conserve son comportement de navigation.
-    if (!isQuickGuide && !session) startPractice();
-  }, [dismissTheory, isQuickGuide, session, startPractice]);
+    if (!isQuickGuide && stageId !== "a1-validation" && !session) startPractice();
+  }, [dismissTheory, isQuickGuide, session, stageId, startPractice]);
 
   const accessExercises = React.useCallback(() => {
     dismissTheory();
@@ -647,7 +647,7 @@ export default function GrammarLessonScreen() {
       <LessonOverview
         hasDetailedGuide={!!lessonGuide}
         onOpenExplanation={() => setRequestedTheoryStageId(stageId)}
-        onStartExercises={isQuickGuide ? startPractice : undefined}
+        onStartExercises={isQuickGuide || stageId === "a1-validation" ? startPractice : undefined}
       />
     );
   };
@@ -1414,7 +1414,7 @@ function LessonResult({
         >
           {passed
             ? isGeneralReview
-              ? "RÉVISION TERMINÉE"
+              ? "BILAN A1 VALIDÉ"
               : "ÉTAPE TERMINÉE"
             : isGeneralReview
               ? "RÉVISION À REPRENDRE"
@@ -1432,7 +1432,7 @@ function LessonResult({
         <AppText variant="bodySecondary" tone="muted">
           {passed
             ? isGeneralReview
-              ? `Tu as revu ${session.questions.length} structures clés couvrant tout le niveau A1.`
+              ? `Tu as validé un échantillon de ${session.questions.length} questions de grammaire A1. Une nouvelle tentative proposera d’autres notions : ce bilan ne remplace pas un test de compréhension orale.`
               : "Objectif atteint. Tu peux poursuivre ou refaire la leçon."
             : "Revois les corrections ci-dessous, puis essaie de nouveau."}
         </AppText>
@@ -1442,6 +1442,41 @@ function LessonResult({
           <Metric value={`${session.attemptNumber}`} label="TENTATIVE" />
         </View>
       </BlurView>
+
+      {isGeneralReview ? (
+        <View style={styles.reviewBox}>
+          <AppText variant="sectionLabel" tone="soft">
+            RÉSULTATS PAR FAMILLE
+          </AppText>
+          {[
+            "FONDATIONS",
+            "CONSTRUIRE LA PHRASE",
+            "QUANTITÉS ET ÉCHANGES",
+            "CHOIX ET INTENTIONS",
+            "TEMPS, LIENS ET NUANCES",
+          ].map((family) => {
+            const familyQuestions = session.questions.filter((question) =>
+              question.prompt.startsWith(`BILAN A1 · ${family}\n`),
+            );
+            const correctCount = familyQuestions.filter((question) =>
+              session.responses.some(
+                (response) => response.questionId === question.id && response.correct,
+              ),
+            ).length;
+            return (
+              <View key={family} style={styles.reviewRow}>
+                <AppText variant="bodyStrong">
+                  {family} · {correctCount}/{familyQuestions.length}
+                </AppText>
+              </View>
+            );
+          })}
+          <AppText variant="bodySecondary" tone="muted">
+            Chaque tentative évalue cinq familles de compétences. Les variantes
+            changent pour approfondir les notions non encore rencontrées.
+          </AppText>
+        </View>
+      ) : null}
 
       {wrongResponses.length > 0 ? (
         <View style={styles.reviewBox}>
@@ -1469,7 +1504,7 @@ function LessonResult({
 
       <View style={styles.resultActions}>
         <PrimaryButton
-          label={passed ? "REFAIRE LA LEÇON" : "RÉESSAYER"}
+          label={isGeneralReview ? "REFAIRE UN BILAN VARIÉ" : passed ? "REFAIRE LA LEÇON" : "RÉESSAYER"}
           onPress={onRetry}
         />
         {passed && nextStageId ? (
