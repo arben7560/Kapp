@@ -1,4 +1,4 @@
-import { GRAMMAR_STAGE_IDS, type GrammarStageId } from "./types";
+import { GRAMMAR_STAGE_IDS, type GrammarStageId } from "./types.ts";
 
 export type GrammarLessonGuideFormula = {
   pattern: string;
