@@ -1,4 +1,4 @@
-import type { GrammarStageId } from "./types";
+import { GRAMMAR_STAGE_IDS, type GrammarStageId } from "./types";
 
 export type GrammarLessonGuideFormula = {
   pattern: string;
@@ -38,29 +38,9 @@ export type GrammarLessonGuide = {
   memoryTip: string;
 };
 
-/** Les vingt premières leçons proposent une lecture courte avant les détails. */
-export const GRAMMAR_QUICK_GUIDE_STAGE_IDS: readonly GrammarStageId[] = [
-  "sentence-structure",
-  "identify-with-copula",
-  "polite-register",
-  "introduce-topic",
-  "demonstratives",
-  "nominal-questions",
-  "existence",
-  "locate-thing",
-  "present-actions",
-  "object-actions",
-  "action-location",
-  "destination-and-time",
-  "possession",
-  "information-questions",
-  "simple-negation",
-  "request-item",
-  "request-quantity",
-  "sino-number-contexts",
-  "coordinate-items",
-  "choose-alternative",
-];
+/** Même introduction courte et même accès aux détails pour les 40 leçons ; la révision finale reste distincte. */
+export const GRAMMAR_QUICK_GUIDE_STAGE_IDS: readonly GrammarStageId[] =
+  GRAMMAR_STAGE_IDS.slice(0, 40);
 
 export function isGrammarQuickGuideStage(stageId: GrammarStageId): boolean {
   return GRAMMAR_QUICK_GUIDE_STAGE_IDS.includes(stageId);
