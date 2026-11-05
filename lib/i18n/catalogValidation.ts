@@ -38,7 +38,11 @@ function koreanSegments(value: string) {
 }
 
 /** Direct catalogue inspection: never follows i18next fallbacks. */
-export function validateCataloguePair(french: unknown, japanese: unknown): string[] {
+export function validateCataloguePair(
+  french: unknown,
+  japanese: unknown,
+  options: { koreanSegments?: "exact" | "display-adaptation" } = {},
+): string[] {
   const errors: string[] = [];
   const flat = { fr: new Map<string, string>(), ja: new Map<string, string>() };
   flatten(french, '', errors, flat.fr);
@@ -75,7 +79,13 @@ export function validateCataloguePair(french: unknown, japanese: unknown): strin
     const expectedKorean = koreanSegments(texts[0] ?? '');
     for (const text of texts) {
       if (placeholders(text) !== expectedParams) errors.push(`${family}: inconsistent interpolation parameters`);
-      if (koreanSegments(text) !== expectedKorean) errors.push(`${family}: Korean segments differ`);
+      // The Hangul curriculum has immutable canonical glyphs, answers and audio
+      // outside these display-only catalogues. Japanese teaching explanations
+      // can repeat/expand Korean examples to improve clarity, so those examples
+      // are verified alongside canonical exercise invariants separately.
+      if (options.koreanSegments !== "display-adaptation" && koreanSegments(text) !== expectedKorean) {
+        errors.push(`${family}: Korean segments differ`);
+      }
     }
   }
   return errors;
