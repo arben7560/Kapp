@@ -1,1 +1,167 @@
-{}
+{
+  "hub": {
+    "heroEyebrow": "ハングル学習コース",
+    "brand": "ハングル",
+    "heroSubtitle": "韓国語を読めるようになって、街の言葉を理解しよう。",
+    "level": "レベル {{level}}",
+    "levelCount": "全{{total}}ステップ中{{completed}}ステップ完了",
+    "progress": "ハングルの学習進捗",
+    "start": "はじめる",
+    "review": "復習する",
+    "continue": "続きから",
+    "journeyCompleted": "学習コース完了",
+    "stepProgress": "このステップの進捗",
+    "journeyTitle": "学習ステップ",
+    "journeyCount": "全{{total}}ステップ中{{completed}}ステップ完了",
+    "stepLabel": "ステップ {{number}} · ハングル",
+    "stepDone": "完了",
+    "stepUpcoming": "未開放",
+    "stepActive": "学習中",
+    "stepNew": "未開始",
+    "after": "「{{title}}」のあとで解放",
+    "completedSubtitle": "完了 · {{subtitle}}",
+    "continueA11y": "続きから。{{title}}。{{subtitle}}。",
+    "continueHint": "ハングルのステップを開く",
+    "openHint": "このハングルのステップを開く",
+    "openPrerequisiteHint": "先に「{{title}}」を開く",
+    "finishedSubtitle": "ハングル学習完了 · ガイド付き読解を復習",
+    "resumeSubtitle": "ハングル · {{title}}",
+    "assessmentTitle": "ハングル最終テスト",
+    "assessmentSubtitle": "ローマ字なしで、学習した文字を読み取ろう",
+    "assessmentRequirement": "ハングル最終テスト",
+    "bridgeTitle": "ガイド付き読解",
+    "bridgeSubtitle": "短い文章・語彙・ゆっくりした音声で読む練習"
+  },
+  "lesson": {
+    "gateEyebrow": "順番に学ぼう",
+    "gateTitle": "前のステップを先に完了しよう",
+    "gateDescription": "まず「{{title}}」を終えましょう。この先では学習済みの文字だけを使います。",
+    "gateOpen": "「{{title}}」を開く",
+    "disableRomanization": "ローマ字の補助をオフにする",
+    "enableRomanization": "ローマ字の補助をオンにする",
+    "romanizationOn": "ローマ字補助 · オン",
+    "romanizationOff": "ローマ字補助 · オフ",
+    "heroEyebrow": "ハングル · {{title}}",
+    "stage": "ハングル学習",
+    "scenesMastered": "全{{total}}場面中{{count}}場面を習得",
+    "stepProgress": "このステップの進捗",
+    "start": "はじめる",
+    "sceneLabel": "シーン {{number}}",
+    "statusMastered": "習得済み",
+    "statusReview": "要復習",
+    "statusActive": "学習中",
+    "statusNew": "未開始",
+    "discovery": "文字を覚える",
+    "discoveryHint": "音を聞いてカードを開こう",
+    "tapReveal": "タップして説明を見る",
+    "listenCards": "まず{{count}}枚のカードを聞こう",
+    "resumeQuiz": "問題の続きから",
+    "restartStage": "このステップをやり直す",
+    "reviewStage": "このステップを復習",
+    "startStage": "練習をはじめる",
+    "stageCompleted": "ステップ完了",
+    "allScenesMastered": "すべてのシーンを習得しました。",
+    "openNext": "次は「{{title}}」へ",
+    "quizQuestion": "{{total}}問中{{current}}問目",
+    "listen": "音を聞く",
+    "choose": "これを選ぶ",
+    "correct": "正解！",
+    "incorrect": "不正解",
+    "remember": "正しくは：{{answer}}",
+    "next": "次へ",
+    "finish": "終了",
+    "quizSuccess": "読み取り成功",
+    "resultMasteredAfterCorrections": "間違えた音も練習し直せました。次へ進めます。",
+    "resultMastered": "正しく読めました。次へ進めます。",
+    "resultTryAgain": "間違えた文字を見直して、もう一度挑戦しましょう。"
+  },
+  "assessment": {
+    "eyebrow": "最終チェック",
+    "title": "ローマ字なしで読もう",
+    "description": "全12問の総合テストです。ほとんどが初めて見る問題で、12問中11問正解すると合格です。",
+    "programTitle": "出題範囲",
+    "program": "文字の識別 · 聞き取り · 音節の組み立て · 初見の単語 · パッチム · 連音",
+    "best": "自己ベスト：{{score}}/{{total}} · 挑戦回数 {{attempts}}回",
+    "completePrerequisite": "まず「{{title}}」を完了してください。",
+    "start": "ローマ字なしでスタート",
+    "openPrerequisite": "「{{title}}」を開く",
+    "passed": "合格！",
+    "failed": "復習して再挑戦",
+    "passedDescription": "ガイド付きの文章読解へ進めます。",
+    "failedDescription": "聞き分けに迷った文字を復習してから、もう一度挑戦しましょう。",
+    "openBridge": "ガイド付き読解へ",
+    "restart": "テストをもう一度",
+    "question": "{{total}}問中{{current}}問目",
+    "correct": "正解！",
+    "incorrect": "もう一度確認",
+    "remember": "正解：{{answer}}",
+    "next": "次へ",
+    "finish": "終了"
+  },
+  "bridge": {
+    "eyebrow": "ガイド付き読解",
+    "title": "短い文章を読んでみよう",
+    "description": "まず文章を自分で読んでから、音声を聞きましょう。単語に付く短い要素の意味は、次の文法学習で詳しく扱います。",
+    "firstPhrases": "はじめての文章",
+    "listen": "音声を聞く",
+    "nextTitle": "次の学習へ",
+    "nextDescription": "次は文法がおすすめです。語順や、今見た助詞などの短い要素が文章の中でどんな役割を持つか学べます。",
+    "goGrammar": "文法の学習へ",
+    "goHome": "ホームへ戻る",
+    "lockedTitle": "先に最終テストを終えよう",
+    "lockedDescription": "12問中11問以上の正解で、この読解ステップが解放されます。",
+    "openAssessment": "最終テストを開く",
+    "readings": {
+      "r0": {
+        "guide": "아이 + 가 + 와요 · 主語 + 動詞",
+        "meaning": "子どもが来ます。"
+      },
+      "r1": {
+        "guide": "여우 + 가 + 와요 · 主語 + 動詞",
+        "meaning": "キツネが来ます。"
+      },
+      "r2": {
+        "guide": "아이 + 가 · 집 + 에 · 가요 · 主語 + 場所 + 動詞",
+        "meaning": "子どもが家に行きます。"
+      },
+      "r3": {
+        "guide": "사과 + 와 · 우유 + 를 · 먹어요 · 目的語 + 動詞",
+        "meaning": "リンゴと牛乳をいただきます。"
+      }
+    }
+  },
+  "replay": {
+    "label": "もう一度聞く",
+    "accessibility": "韓国語の音声をもう一度聞く"
+  },
+  "feedback": {
+    "audio-to-character": {
+      "correct": "音を正しく聞き取り、文字を選べました。",
+      "incorrect": "もう一度聞いて、どの文字に対応する音か比べましょう。"
+    },
+    "character-to-sound": {
+      "correct": "この文字に合う音を選べました。",
+      "incorrect": "文字の形に戻って、お手本の音を確かめましょう。"
+    },
+    "assemble": {
+      "correct": "正しい音節ブロックが作れました。",
+      "incorrect": "初声の子音・母音・終声の順番で、もう一度組み立ててみましょう。"
+    },
+    "layout": {
+      "correct": "文字の位置が正しく分かっています。",
+      "incorrect": "まず母音が縦型か横型かを確認してみましょう。"
+    },
+    "read": {
+      "correct": "正しく読めています。",
+      "incorrect": "一つずつ音節ブロックに分けて読み直しましょう。"
+    },
+    "batchim": {
+      "correct": "パッチムの音を正しく見分けました。",
+      "incorrect": "語末の子音に耳を向けてから、音節全体を読み直しましょう。"
+    },
+    "contrast": {
+      "correct": "似た子音の音を聞き分けられました。",
+      "incorrect": "出だしの音、緊張の強さ、息の量をもう一度比べてみましょう。"
+    }
+  }
+}
