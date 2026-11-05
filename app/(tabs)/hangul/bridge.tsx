@@ -1,6 +1,8 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
+import { hangulUiText, type HangulUiKey } from "../../../lib/i18n/hangulDisplay";
 import { AppBackButton } from "../../../components/ui/app-back-button";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 import {
@@ -51,6 +53,9 @@ const READINGS = [
 ];
 
 export default function HangulBridgeScreen() {
+  const { i18n } = useTranslation("hangul");
+  const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
+  const l = (key: HangulUiKey) => hangulUiText(i18n, key);
   const { progress } = useStore();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -117,29 +122,29 @@ export default function HangulBridgeScreen() {
               }
             >
               <View style={[styles.back, useLandscapeLayout && styles.backLandscape]}><AppBackButton /></View>
-              <AppText variant="sectionLabel" style={styles.teal}>LECTURE GUIDÉE</AppText>
-              <AppText variant="screenTitle" style={[styles.title, useLandscapeLayout && styles.titleLandscape]}>Lire des phrases complètes</AppText>
-              <AppText variant="bodySecondary" tone="muted">Lis chaque phrase, puis écoute-la. Observe les petits éléments attachés aux mots ; tu verras leur rôle plus tard.</AppText>
+              <AppText script={uiScript} variant="sectionLabel" style={styles.teal}>{l("bridge.eyebrow")}</AppText>
+              <AppText script={uiScript} variant="screenTitle" style={[styles.title, useLandscapeLayout && styles.titleLandscape]}>{l("bridge.title")}</AppText>
+              <AppText script={uiScript} variant="bodySecondary" tone="muted">{l("bridge.description")}</AppText>
             </View>
 
             <View style={useLandscapeLayout ? styles.readingColumn : undefined}>
               {unlocked ? <>
-              <AppText variant="sectionLabel" style={[styles.teal, styles.packLabel, useLandscapeLayout && styles.packLabelLandscape]}>PREMIÈRES PHRASES</AppText>
+              <AppText script={uiScript} variant="sectionLabel" style={[styles.teal, styles.packLabel, useLandscapeLayout && styles.packLabelLandscape]}>{l("bridge.firstPhrases")}</AppText>
               <View style={[styles.readings, useLandscapeLayout && styles.readingsLandscape]}>
-                {READINGS.map((item) => <Pressable key={item.text} onPress={() => playAudio(item.audio)} style={readingColumns > 1 ? { width: readingCardWidth } : undefined}><BlurView intensity={50} tint="dark" style={[styles.readingCard, useLandscapeLayout && styles.readingCardLandscape]}><View style={styles.readingTop}><AppText variant="koreanPrimary" script="korean" style={styles.korean}>{item.text}</AppText><HangulAudioBadge accent="#2DD4BF" label="ÉCOUTER" /></View><AppText variant="bodyStrong">{item.guide}</AppText><AppText variant="bodySecondary" tone="muted">{item.meaning}</AppText></BlurView></Pressable>)}
+                {READINGS.map((item, index) => <Pressable key={item.text} onPress={() => playAudio(item.audio)} style={readingColumns > 1 ? { width: readingCardWidth } : undefined}><BlurView intensity={50} tint="dark" style={[styles.readingCard, useLandscapeLayout && styles.readingCardLandscape]}><View style={styles.readingTop}><AppText variant="koreanPrimary" script="korean" style={styles.korean}>{item.text}</AppText><HangulAudioBadge accent="#2DD4BF" label={l("bridge.listen")} /></View><AppText script={uiScript} variant="bodyStrong">{l(`bridge.readings.r${index}.guide` as HangulUiKey)}</AppText><AppText script={uiScript} variant="bodySecondary" tone="muted">{l(`bridge.readings.r${index}.meaning` as HangulUiKey)}</AppText></BlurView></Pressable>)}
               </View>
 
               <BlurView intensity={55} tint="dark" style={[styles.transitionCard, useLandscapeLayout && styles.transitionCardLandscape]}>
-              <AppText variant="sceneTitle">Choisis la suite</AppText>
-              <AppText variant="bodySecondary" tone="muted">La grammaire est la prochaine étape recommandée pour comprendre l’ordre des mots et les petits éléments que tu viens d’observer.</AppText>
-              <Pressable onPress={() => router.push("/(tabs)/grammar" as never)} style={styles.primary}><AppText variant="button" style={styles.primaryText}>CONTINUER VERS LA GRAMMAIRE</AppText></Pressable>
-              <Pressable onPress={() => router.push("/(tabs)" as never)} style={styles.secondary}><AppText variant="button" style={styles.teal}>RETOURNER À L’ACCUEIL</AppText></Pressable>
+              <AppText script={uiScript} variant="sceneTitle">{l("bridge.nextTitle")}</AppText>
+              <AppText script={uiScript} variant="bodySecondary" tone="muted">{l("bridge.nextDescription")}</AppText>
+              <Pressable onPress={() => router.push("/(tabs)/grammar" as never)} style={styles.primary}><AppText script={uiScript} variant="button" style={styles.primaryText}>{l("bridge.goGrammar")}</AppText></Pressable>
+              <Pressable onPress={() => router.push("/(tabs)" as never)} style={styles.secondary}><AppText script={uiScript} variant="button" style={styles.teal}>{l("bridge.goHome")}</AppText></Pressable>
               </BlurView>
               </> : (
               <BlurView intensity={55} tint="dark" style={[styles.transitionCard, useLandscapeLayout && styles.transitionCardLandscape]}>
-                <AppText variant="sceneTitle">Termine d’abord l’évaluation</AppText>
-                <AppText variant="bodySecondary" tone="muted">Cette lecture se débloque avec au moins 11 bonnes réponses sur 12.</AppText>
-                <Pressable onPress={() => router.replace("/(tabs)/hangul/assessment" as never)} style={styles.primary}><AppText variant="button" style={styles.primaryText}>OUVRIR L’ÉVALUATION</AppText></Pressable>
+                <AppText script={uiScript} variant="sceneTitle">{l("bridge.lockedTitle")}</AppText>
+                <AppText script={uiScript} variant="bodySecondary" tone="muted">{l("bridge.lockedDescription")}</AppText>
+                <Pressable onPress={() => router.replace("/(tabs)/hangul/assessment" as never)} style={styles.primary}><AppText script={uiScript} variant="button" style={styles.primaryText}>{l("bridge.openAssessment")}</AppText></Pressable>
               </BlurView>
               )}
             </View>
