@@ -1,7 +1,9 @@
 import './i18n-node-loader.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { jsx, jsxs } from 'react/jsx-runtime';
 import test from 'node:test';
+import { setImmediate } from 'node:timers/promises';
 import ts from 'typescript';
 
 const { createAppI18n } = await import('../lib/i18n/instance.ts');
@@ -32,7 +34,6 @@ function fixture(tags, stored = null, onboarding = null, account = 'guest') {
   const controller = createLanguageController({ storage, instance, getDeviceLanguageTags: () => tags });
   const shouldOffer = () => shouldOfferLanguageSelection({
     preference: controller.getSnapshot().preference,
-    onboardingCompleted: entries.get('kapp_onboarding_completed') === 'true',
   });
   return { entries, writes, storage, instance, controller, shouldOffer, failWrites: (value) => { failWrites = value; } };
 }
@@ -54,14 +55,14 @@ for (const [tags, expected] of [[['fr-FR'], 'fr'], [['ja-JP'], 'ja'], [['en-US']
       getDeviceLanguageTags: () => ['en-US'] });
     await restarted.initialize();
     assert.equal(restarted.getSnapshot().locale, expected);
-    assert.equal(shouldOfferLanguageSelection({ preference: restarted.getSnapshot().preference, onboardingCompleted: false }), false);
+    assert.equal(shouldOfferLanguageSelection({ preference: restarted.getSnapshot().preference }), false);
   });
 }
 
-test('existing completed onboarding skips the selector after update without creating a preference', async () => {
+test('existing completed onboarding still requires explicit language confirmation after update', async () => {
   const subject = fixture(['ja-JP'], null, 'true');
   await subject.controller.initialize();
-  assert.equal(subject.shouldOffer(), false);
+  assert.equal(subject.shouldOffer(), true);
   assert.equal(subject.entries.has(LOCALE_STORAGE_KEY), false);
   assert.deepEqual(subject.writes, []);
 });
@@ -116,6 +117,155 @@ function declaration(file, name) {
   assert.ok(result, name);
   return result;
 }
+
+// Execute the real component bodies with hook/native adapters. Animation completion
+// is controlled explicitly, so routing cannot accidentally pass before the logo ends.
+function mountComponent(path, name, dependencies) {
+  const slots = [];
+  const cleanups = [];
+  let cursor = 0;
+  let effects = [];
+  const hooks = {
+    useState(initial) {
+      const index = cursor++;
+      if (!(index in slots)) slots[index] = initial;
+      return [slots[index], (value) => { slots[index] = value; }];
+    },
+    useMemo(factory, deps) {
+      const index = cursor++;
+      const previous = slots[index];
+      if (!previous || deps.some((value, i) => !Object.is(value, previous.deps[i]))) {
+        slots[index] = { value: factory(), deps };
+      }
+      return slots[index].value;
+    },
+    useRef(initial) { return hooks.useMemo(() => ({ current: initial }), []); },
+    useEffect(effect, deps) {
+      hooks.useMemo(() => { effects.push(effect); }, deps);
+    },
+  };
+  const bindings = { ...hooks, styles: {}, ...dependencies };
+  const code = ts.transpileModule(declaration(source(path), name).getText(), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
+  }).outputText;
+  const exports = {};
+  new Function('require', 'exports', ...Object.keys(bindings), code)(
+    (id) => { assert.equal(id, 'react/jsx-runtime'); return { jsx, jsxs }; },
+    exports, ...Object.values(bindings),
+  );
+  const component = exports.default ?? exports[name];
+  return {
+    async render() {
+      cursor = 0;
+      const tree = component();
+      const pending = effects;
+      effects = [];
+      pending.forEach((effect) => {
+        const cleanup = effect();
+        if (cleanup) cleanups.push(cleanup);
+      });
+      await setImmediate();
+      return tree;
+    },
+    unmount() { cleanups.splice(0).reverse().forEach((cleanup) => cleanup()); },
+  };
+}
+
+function mountEntry(subject, reducedMotion = false) {
+  let complete;
+  const animation = () => ({ start(callback) { complete = callback; }, stop() {} });
+  const entry = mountComponent('app/index.tsx', 'SplashScreenPage', {
+    AsyncStorage: subject.storage,
+    useAppLanguage: subject.controller.getSnapshot,
+    useWindowDimensions: () => ({ width: 360, height: 800 }),
+    clamp: (value, min, max) => Math.min(Math.max(value, min), max),
+    AccessibilityInfo: { isReduceMotionEnabled: async () => reducedMotion },
+    Animated: {
+      Value: class { setValue() {} },
+      timing: animation, spring: animation, delay: animation, parallel: animation, sequence: animation,
+    },
+    Easing: { out: (value) => value, inOut: (value) => value },
+    setTimeout(callback, delay) { assert.equal(delay, 900); complete = () => callback(); return 1; },
+    clearTimeout() {},
+    View: 'logo', StatusBar: 'StatusBar', AnimatedView: 'AnimatedView', KSymbol: 'KSymbol', Text: 'Text',
+    LanguageSelectionScreen: 'selector', HeroEntryScreen: 'welcome', Redirect: 'redirect',
+    shouldOfferLanguageSelection,
+  });
+  return { ...entry, finishLogo: (finished = true) => complete({ finished }) };
+}
+
+for (const onboarding of [null, 'true']) {
+  for (const reducedMotion of [false, true]) {
+    test(`startup, onboarding=${onboarding}, reducedMotion=${reducedMotion}: logo, selection, normal destination, relaunch`, async () => {
+      const subject = fixture(['ja-JP'], null, onboarding);
+      const protectedEntries = [...subject.entries];
+      await subject.controller.initialize();
+      const entry = mountEntry(subject, reducedMotion);
+      assert.equal((await entry.render()).type, 'logo');
+      assert.equal((await entry.render()).type, 'logo');
+      if (!reducedMotion) {
+        entry.finishLogo(false);
+        assert.equal((await entry.render()).type, 'logo');
+      }
+      entry.finishLogo();
+      assert.equal((await entry.render()).type, 'selector');
+      assert.equal((await entry.render()).type, 'selector');
+      assert.deepEqual(subject.writes, []);
+
+      await subject.controller.setPreference('ja');
+      const destination = await entry.render();
+      assert.equal(destination.type, onboarding === 'true' ? 'redirect' : 'welcome');
+      if (onboarding === 'true') assert.equal(destination.props.href, '/(tabs)');
+      assert.deepEqual([...subject.entries].filter(([key]) => key !== LOCALE_STORAGE_KEY), protectedEntries);
+      assert.deepEqual(subject.writes, [LOCALE_STORAGE_KEY]);
+      entry.unmount();
+
+      const restarted = createLanguageController({ storage: subject.storage, instance: createAppI18n(),
+        getDeviceLanguageTags: () => ['fr-FR'] });
+      await restarted.initialize();
+      const reopened = mountEntry({ ...subject, controller: restarted }, reducedMotion);
+      assert.equal((await reopened.render()).type, 'logo');
+      reopened.finishLogo();
+      assert.equal((await reopened.render()).type, destination.type);
+      assert.equal(restarted.getSnapshot().locale, 'ja');
+      reopened.unmount();
+    });
+  }
+}
+
+test('closing before confirmation keeps the selector pending on the next launch', async () => {
+  const subject = fixture(['fr-FR'], null, 'true');
+  for (let launch = 0; launch < 2; launch++) {
+    const controller = createLanguageController({ storage: subject.storage, instance: createAppI18n(),
+      getDeviceLanguageTags: () => ['fr-FR'] });
+    await controller.initialize();
+    const entry = mountEntry({ ...subject, controller });
+    await entry.render();
+    entry.finishLogo();
+    assert.equal((await entry.render()).type, 'selector');
+    entry.unmount();
+  }
+  assert.deepEqual(subject.writes, []);
+});
+
+test('account component changes and persists language without changing user data', async () => {
+  const subject = fixture(['fr-FR'], 'fr', 'true', 'connected');
+  await subject.controller.initialize();
+  const protectedEntries = [...subject.entries].filter(([key]) => key !== LOCALE_STORAGE_KEY);
+  const settings = mountComponent('components/application-language-settings.tsx', 'ApplicationLanguageSettings', {
+    useAppLanguage: () => ({ ...subject.controller.getSnapshot(), setPreference: subject.controller.setPreference }),
+    useTranslation: () => ({ t: (key) => key }), View: 'View', AppText: 'AppText', LanguageChoices: 'choices',
+  });
+  for (const locale of ['ja', 'fr']) {
+    const tree = await settings.render();
+    await tree.props.children.find((child) => child?.type === 'choices').props.onSelect(locale);
+    await setImmediate();
+    const updated = await settings.render();
+    assert.equal(updated.props.children.find((child) => child?.type === 'choices').props.value, locale);
+    assert.equal(subject.entries.get(LOCALE_STORAGE_KEY), locale);
+    assert.deepEqual([...subject.entries].filter(([key]) => key !== LOCALE_STORAGE_KEY), protectedEntries);
+  }
+});
 
 test('migrated entry screens contain no uncatalogued UI text except brand and protected Korean', () => {
   const hero = declaration(source('app/index.tsx'), 'HeroEntryScreen');

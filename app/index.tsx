@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -794,9 +794,10 @@ export default function SplashScreenPage() {
 
   if (showHero) {
     if (onboardingCompleted === null) return <View style={styles.screen} />;
-    if (shouldOfferLanguageSelection({ preference, onboardingCompleted })) {
+    if (shouldOfferLanguageSelection({ preference })) {
       return <LanguageSelectionScreen />;
     }
+    if (onboardingCompleted) return <Redirect href="/(tabs)" />;
     return <HeroEntryScreen />;
   }
 
