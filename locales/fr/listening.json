@@ -295,6 +295,13 @@
     "narrative": "Affûte ton oreille au rythme de Séoul.",
     "reviewTitle": "Révision d'écoute",
     "reviewMeta": "Écoute · Parcours terminé · Révision libre",
-    "resumePrefix": "Écoute"
+    "resumePrefix": "Écoute",
+    "openHint": "Ouvre ce parcours",
+    "continue": "À CONTINUER",
+    "progress": "PROGRESSION",
+    "start": "Commencer",
+    "resumeImmersion": "REPRENDRE L'IMMERSION",
+    "resumeA11y": "Reprendre le parcours {{title}}. {{narrative}}",
+    "resumeHint": "Ouvre le parcours actif"
   }
 }
