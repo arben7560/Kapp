@@ -13,6 +13,7 @@ import {
   UserRound,
 } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Animated,
   Easing,
@@ -72,6 +73,7 @@ import {
   type HomeResumeContext,
 } from "../../lib/homeResume";
 import { subscribeToProgressHydration } from "../../lib/progressSyncEvents";
+import { resolveDisplayMessage, type DisplayMessage } from "../../lib/i18n/displayText";
 import { buildProgressId } from "../../lib/progressIds";
 
 // masked-view 0.3.2 still types its native ref with the removed NativeMethods API.
@@ -136,6 +138,7 @@ function textGlow(color: string, radius: number) {
 }
 
 const HANGUL_PROGRESS_TOTAL = HANGUL_PROGRESS_IDS.length;
+type ListeningKey = Extract<DisplayMessage, { namespace: "listening" }>["key"];
 
 // ──────────────────────────────────────────────
 // SEQUENCES
@@ -672,6 +675,9 @@ function SeoulHero({ cityTime, landscape }: SeoulHeroProps) {
 // ──────────────────────────────────────────────
 
 export default function Home() {
+  const { i18n } = useTranslation("listening");
+  const listenText = (key: ListeningKey, values?: Record<string, string | number>) =>
+    resolveDisplayMessage({ namespace: "listening", key, values }, i18n);
   const { progress, setTrack, isHydrated } = useStore();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -759,8 +765,37 @@ export default function Home() {
     baseActiveSeq,
   );
 
-  const activeSeq =
-    storedResumeSequence ?? derivedResumeSequence ?? baseActiveSeq;
+  const rawActiveSeq = storedResumeSequence ?? derivedResumeSequence ?? baseActiveSeq;
+  // Present translated Listen resume labels from stable exercise IDs, without
+  // persisting translations or changing the canonical resume destination.
+  const activeSeq = currentTrack === "listen"
+    ? (() => {
+        const training = TRAINING_ORDER.find((kind) => kind === rawActiveSeq.routeParams?.training);
+        const exerciseIndex = Number.parseInt(String(rawActiveSeq.routeParams?.exercise ?? ""), 10);
+        const exercise = training && Number.isInteger(exerciseIndex)
+          ? EXERCISES_BY_KIND[training][exerciseIndex]
+          : undefined;
+        const hasResume = !!(storedResumeSequence || derivedResumeSequence);
+        const title = exercise
+          ? listenText(`exercises.${exercise.id}.title` as ListeningKey)
+          : listenText(hasResume ? "home.reviewTitle" : "home.title");
+        return {
+          ...rawActiveSeq,
+          title,
+          label: title,
+          place: listenText("home.place"),
+          narrative: listenText("home.narrative"),
+          resumeMeta: exercise && training
+            ? [
+                listenText("home.resumePrefix"),
+                listenText(`kinds.${training}.mini` as ListeningKey),
+                listenText(`exercises.${exercise.id}.theme` as ListeningKey),
+                listenText("ui.exercisePosition", { current: exerciseIndex + 1, total: EXERCISES_BY_KIND[training].length }),
+              ].join(" · ")
+            : hasResume ? listenText("home.reviewMeta") : undefined,
+        };
+      })()
+    : rawActiveSeq;
 
   const activeSeqProgress = getSequenceProgress(activeSeq.trackKey, progress);
 
@@ -775,7 +810,15 @@ export default function Home() {
 
   const immersionSequences = SEQUENCES.filter(
     (sequence) => sequence.type === "immersion",
-  );
+  ).map((sequence) => sequence.trackKey === "listen"
+    ? {
+        ...sequence,
+        title: listenText("home.title"),
+        label: listenText("home.title"),
+        place: listenText("home.place"),
+        narrative: listenText("home.narrative"),
+      }
+    : sequence);
 
   const livePulse = useRef(new Animated.Value(0.35)).current;
 
@@ -1551,6 +1594,11 @@ function MainActionCard({
   landscape,
   onPress,
 }: any) {
+  const { i18n } = useTranslation("listening");
+  const isListening = sequence.trackKey === "listen";
+  const listeningScript = isListening && i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
+  const listenText = (key: ListeningKey, values?: Record<string, string | number>) =>
+    resolveDisplayMessage({ namespace: "listening", key, values }, i18n);
   const displayLabel = sequence.label;
 
   const resumeMeta = sequence.resumeMeta as string | undefined;
@@ -1591,10 +1639,10 @@ function MainActionCard({
   return (
     <Pressable
       accessibilityRole="link"
-      accessibilityLabel={`Reprendre ${
-        isMission ? "la mission" : "le parcours"
-      } ${displayLabel}. ${narrative}`}
-      accessibilityHint="Ouvre le parcours actif"
+      accessibilityLabel={isListening
+        ? listenText("home.resumeA11y", { title: displayLabel, narrative })
+        : `Reprendre ${isMission ? "la mission" : "le parcours"} ${displayLabel}. ${narrative}`}
+      accessibilityHint={isListening ? listenText("home.resumeHint") : "Ouvre le parcours actif"}
       onPress={onPress}
       style={({ pressed }) => [
         styles.mainCardWrap,
@@ -1662,8 +1710,8 @@ function MainActionCard({
               ]}
             />
 
-            <AppText variant="sectionLabel" style={styles.mainCardKicker}>
-              {isMission ? "MISSION EN COURS" : "À CONTINUER"}
+            <AppText script={listeningScript} variant="sectionLabel" style={styles.mainCardKicker}>
+              {isListening ? listenText("home.continue") : isMission ? "MISSION EN COURS" : "À CONTINUER"}
             </AppText>
           </View>
 
@@ -1683,13 +1731,14 @@ function MainActionCard({
         </View>
 
         <View style={styles.mainContent}>
-          <AppText variant="featureTitle" style={styles.mainTitle}>
+          <AppText script={listeningScript} variant="featureTitle" style={styles.mainTitle}>
             {displayLabel}
           </AppText>
 
           <AppText
             variant="bodySecondary"
             tone="muted"
+            script={listeningScript}
             style={styles.mainNarrative}
           >
             {resumeMeta ?? narrative}
@@ -1704,11 +1753,12 @@ function MainActionCard({
             ]}
           >
             <View style={styles.mainProgressMeta}>
-              <AppText variant="caption" style={styles.mainProgressLabel}>
-                PROGRESSION
+              <AppText script={listeningScript} variant="caption" style={styles.mainProgressLabel}>
+                {isListening ? listenText("home.progress") : "PROGRESSION"}
               </AppText>
 
               <AppText
+                script={listeningScript}
                 variant="bodyStrong"
                 style={[
                   styles.mainProgressValue,
@@ -1716,7 +1766,7 @@ function MainActionCard({
                 ]}
               >
                 {displayedProgress === 0
-                  ? "Commencer"
+                  ? (isListening ? listenText("home.start") : "Commencer")
                   : `${displayedProgress}%`}
               </AppText>
             </View>
@@ -1748,8 +1798,8 @@ function MainActionCard({
           </View>
         ) : (
           <View style={styles.mainFooterMeta}>
-            <AppText variant="caption" style={styles.mainFooterLabel}>
-              REPRENDRE L'IMMERSION
+            <AppText script={listeningScript} variant="caption" style={styles.mainFooterLabel}>
+              {isListening ? listenText("home.resumeImmersion") : "REPRENDRE L'IMMERSION"}
             </AppText>
 
             <View
@@ -1962,6 +2012,9 @@ function SequenceIconGlyph({ icon, color }: { icon: string; color: string }) {
 // ──────────────────────────────────────────────
 
 function SequenceCard({ item, isActive, landscape, onPress }: any) {
+  const { i18n } = useTranslation("listening");
+  const isListening = item.trackKey === "listen";
+  const listeningScript = isListening && i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
   const accent = item.hubAccent;
 
   const icon = getSequenceIcon(item.trackKey);
@@ -1973,7 +2026,9 @@ function SequenceCard({ item, isActive, landscape, onPress }: any) {
       accessibilityState={{
         selected: isActive,
       }}
-      accessibilityHint="Ouvre ce parcours"
+      accessibilityHint={isListening
+        ? resolveDisplayMessage({ namespace: "listening", key: "home.openHint" }, i18n)
+        : "Ouvre ce parcours"}
       aria-selected={isActive}
       onPress={onPress}
       style={({ pressed }) => [
@@ -2057,6 +2112,7 @@ function SequenceCard({ item, isActive, landscape, onPress }: any) {
             <AppText
               variant="sectionLabel"
               lineContract="singleLine"
+              script={listeningScript}
               style={styles.sequencePlace}
             >
               {item.place}
@@ -2070,13 +2126,14 @@ function SequenceCard({ item, isActive, landscape, onPress }: any) {
             landscape && styles.sequenceTextBlockLandscape,
           ]}
         >
-          <AppText variant="cardTitle" style={styles.sequenceTitle}>
+          <AppText script={listeningScript} variant="cardTitle" style={styles.sequenceTitle}>
             {item.title}
           </AppText>
 
           <AppText
             variant="bodySecondary"
             tone="muted"
+            script={listeningScript}
             style={styles.sequenceNarrative}
           >
             {item.narrative}

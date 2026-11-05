@@ -1,5 +1,5 @@
 {
-  "phase": 3,
+  "phase": 4,
   "japaneseReleaseReady": false,
   "namespaces": [
     "common",
@@ -25,7 +25,6 @@
     "counting",
     "classifiers",
     "grammar",
-    "listening",
     "missions",
     "speechFeedback",
     "immersion"
@@ -33,6 +32,7 @@
   "japaneseUiNamespaces": [
     "common",
     "onboarding",
-    "account"
+    "account",
+    "listening"
   ]
 }
