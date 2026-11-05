@@ -205,7 +205,7 @@ export default function HangulAssessmentScreen() {
               }
             >
               <View style={[styles.back, useLandscapeLayout && styles.backLandscape]}>
-                <AppBackButton />
+                <AppBackButton label={l("common.back")} labelScript={uiScript} accessibilityLabel={l("common.backA11y")} accessibilityHint={l("common.backHint")} />
               </View>
               <AppText script={uiScript} variant="sectionLabel" style={styles.gold}>{l("assessment.eyebrow")}</AppText>
               <AppText script={uiScript}
