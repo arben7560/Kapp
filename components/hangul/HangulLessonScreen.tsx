@@ -8,6 +8,7 @@ import {
   Sparkles,
 } from "lucide-react-native";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   Animated,
   Easing,
@@ -34,7 +35,9 @@ import {
 } from "../../data/hangul/types";
 import { useHangulAudio } from "../../hooks/useHangulAudio";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
-import { getHangulTeacherFeedback } from "../../lib/hangulFeedback";
+import { hangulUiText, hangulContentText, type HangulUiKey } from "../../lib/i18n/hangulDisplay";
+import { needsHangulOptionTranslation } from "../../data/localized/hangulRegistry";
+import type { HangulQuestionOption, HangulScene, HangulCard } from "../../data/hangul/types";
 import {
   advanceHangulQuiz,
   answerHangulQuizQuestion,
@@ -75,7 +78,18 @@ const normalizeLesson = (
 });
 
 export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
+  const { i18n } = useTranslation("hangul");
+  const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
+  const l = (key: HangulUiKey, values?: Record<string, string | number>) => hangulUiText(i18n, key, values);
   const module = getHangulModule(moduleId);
+  const mc = (field: string, original: string) => hangulContentText(i18n, "module", [module.id], field, original);
+  const sc = (scene: HangulScene, field: string, original: string) =>
+    hangulContentText(i18n, "scene", [module.id, scene.id], field, original);
+  const cc = (card: HangulCard, field: string, original: string) =>
+    hangulContentText(i18n, "card", [module.id, activeScene.id, card.id], field, original);
+  const qc = (questionId: string, field: string, original: string) =>
+    hangulContentText(i18n, "question", [module.id, activeScene.id, questionId], field, original);
+
   const { progress, updateHangulProgress, complete } = useStore();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -148,14 +162,23 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
   const questionIndex = quizSession?.questionIndex ?? 0;
   const answered = quizSession?.answered ?? null;
   const currentQuestion = questions[questionIndex];
-  const correctAnswerLabel =
-    currentQuestion?.options.find(
-      (option) => option.value === currentQuestion.answer,
-    )?.label ?? currentQuestion?.answer;
+  const originalQuestion = activeScene.questions.find(question => question.id === currentQuestion?.id);
+  const displayedOption = (option: HangulQuestionOption): string => {
+    if (!currentQuestion || !needsHangulOptionTranslation(option.label)) return option.label;
+    const originalIndex = originalQuestion?.options.findIndex(item => item.value === option.value) ?? -1;
+    if (originalIndex < 0) throw new Error(`Unknown option for Hangul question ${currentQuestion.id}`);
+    return qc(currentQuestion.id, `option${originalIndex}`, option.label);
+  };
+  const correctAnswerOption = currentQuestion?.options.find(
+    option => option.value === currentQuestion.answer,
+  );
+  const correctAnswerLabel = correctAnswerOption
+    ? displayedOption(correctAnswerOption)
+    : currentQuestion?.answer;
   const isCurrentAnswerCorrect =
     answered !== null && answered === currentQuestion?.answer;
   const teacherFeedback = currentQuestion
-    ? getHangulTeacherFeedback(currentQuestion.type, isCurrentAnswerCorrect)
+    ? l(`feedback.${currentQuestion.type}.${isCurrentAnswerCorrect ? "correct" : "incorrect"}` as HangulUiKey)
     : "";
   const useCompactOptions = (currentQuestion?.options.length ?? 0) > 4;
   const useLandscapeQuizLayout = isLandscape && safeContentWidth >= 680;
@@ -196,13 +219,13 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
       ? discoveredCount / activeScene.cards.length
       : 0;
   const modulePercentage = Math.round(moduleProgress * 100);
-  const sceneStatus = sceneMastered
-    ? "RÉUSSI"
+  const sceneStatus = l(sceneMastered
+    ? "lesson.statusMastered"
     : sceneCompleted
-      ? "À REVOIR"
+      ? "lesson.statusReview"
       : discoveredCount > 0
-        ? "EN COURS"
-        : "À COMMENCER";
+        ? "lesson.statusActive"
+        : "lesson.statusNew");
 
   React.useEffect(() => {
     if (
