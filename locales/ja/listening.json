@@ -44,7 +44,7 @@
     }
   },
   "ui": {
-    "module": "聞き取り",
+    "module": "リスニング",
     "training": "トレーニング",
     "previousTraining": "前のトレーニング",
     "nextTraining": "次のトレーニング",
@@ -55,7 +55,7 @@
     "addWord": "{{word}} を文に追加",
     "listen": "音声を聞く",
     "relisten": "もう一度聞く",
-    "questionAudio": "問題の音声を{{action}}",
+    "questionAudio": "{{action}}（問題の音声）",
     "playing": "再生中",
     "interrupted": "再生が途中で止まりました · もう一度お試しください",
     "unavailable": "音声を利用できません",
@@ -288,5 +288,13 @@
       "instruction": "相手の言葉を聞いて、適切な返答を選ぼう。",
       "explanation": "道を教えてもらったあとです。감사합니다（ありがとうございます）とお礼を言うのが自然です。"
     }
+  },
+  "home": {
+    "title": "リスニング",
+    "place": "2号線 • リスニング",
+    "narrative": "ソウルの日常会話で、聞き取る力を磨こう。",
+    "reviewTitle": "聞き取りの復習",
+    "reviewMeta": "リスニング · 学習済み · 自由に復習",
+    "resumePrefix": "リスニング"
   }
 }
