@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { validateCataloguePair } from "../lib/i18n/catalogValidation.ts";
 import {
   ACTIVE_LISTEN_EXERCISES,
   EXERCISES_BY_KIND,
@@ -261,11 +262,11 @@ test("Listen completion modal preserves immersive style and correct next actions
   assert.match(listenScreen, /onNext=\{goToNextExercise\}/u);
   assert.match(listenScreen, /const isTrainingComplete = trainingCorrectCount === exercises\.length/u);
   assert.match(listenScreen, /onPress=\{\s*isLastExercise\s*\? \(\) => setIsTrainingSummaryOpen\(true\)/u);
-  assert.match(modal, /Entraînement terminé/u);
+  assert.match(modal, /l\("summary.heading"\)/u);
   assert.match(modal, /\{summary\.achievement\}/u);
   assert.match(modal, /\{summary\.learning\}/u);
-  assert.match(modal, /\{nextAction\.label\}/u);
-  assert.match(modal, /Recommencer \{summary\.title\}/u);
+  assert.match(modal, /\{nextActionLabel\}/u);
+  assert.match(modal, /l\("summary.restart"/u);
 });
 
 test("Listen does not validate the daily streak on an incorrect answer", () => {
@@ -350,4 +351,38 @@ test("audio resources are released even when listener removal and pause fail", (
     "player.pause",
     "player.remove",
   ]);
+});
+
+// Phase 4: side-by-side French/Japanese presentation must never rewrite exercises.
+test("all 25 Listen items and feedback are translated with immutable canonical answers", () => {
+  const fr = JSON.parse(readFileSync(resolve(projectRoot, "locales/fr/listening.json"), "utf8"));
+  const ja = JSON.parse(readFileSync(resolve(projectRoot, "locales/ja/listening.json"), "utf8"));
+  assert.deepEqual(validateCataloguePair(fr, ja), []);
+  assert.equal(Object.keys(fr.exercises).length, 25);
+  assert.equal(Object.keys(ja.exercises).length, 25);
+  const fields = ["theme", "title", "instruction", "explanation"];
+  for (const exercise of ACTIVE_LISTEN_EXERCISES) {
+    const original = structuredClone(exercise);
+    for (const field of fields) {
+      assert.equal(fr.exercises[exercise.id][field], exercise[field], `${exercise.id}: original French ${field}`);
+      assert.ok(ja.exercises[exercise.id][field].trim(), `${exercise.id}: missing Japanese ${field}`);
+    }
+    assert.deepEqual(exercise, original, `${exercise.id}: canonical exercise mutated`);
+    assert.ok(exercise.audioAsset.startsWith("assets/audio/listen/"));
+    if ("options" in exercise) assert.ok(exercise.options.every((option) => /[\uac00-\ud7a3]/u.test(option)));
+  }
+  for (const kind of TRAINING_ORDER) {
+    for (const outcome of ["correct", "incorrect"]) {
+      assert.ok(ja.feedback[kind][outcome].trim(), `${kind}: ${outcome} missing`);
+    }
+    assert.ok(ja.summary.trainings[kind].achievement.trim());
+    assert.ok(ja.summary.trainings[kind].learning.trim());
+  }
+  const screen = readFileSync(resolve(projectRoot, "app/(tabs)/listen.tsx"), "utf8");
+  const home = readFileSync(resolve(projectRoot, "app/(tabs)/index.tsx"), "utf8");
+  assert.match(screen, /displayItem\.explanation/u);
+  assert.match(screen, /hasCompletedRequiredMedia: hasCompletedCurrentAudio/u);
+  assert.match(screen, /shuffleListenChoices\(sourceItem\)/u);
+  assert.match(home, /exercises\.\$\{exercise\.id\}\.title/u);
+  assert.match(home, /const activeSeq = currentTrack === "listen"/u);
 });
