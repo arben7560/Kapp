@@ -295,6 +295,13 @@
     "narrative": "ソウルの日常会話で、聞き取る力を磨こう。",
     "reviewTitle": "聞き取りの復習",
     "reviewMeta": "リスニング · 学習済み · 自由に復習",
-    "resumePrefix": "リスニング"
+    "resumePrefix": "リスニング",
+    "openHint": "この学習コースを開く",
+    "continue": "続きから",
+    "progress": "学習の進捗",
+    "start": "はじめる",
+    "resumeImmersion": "学習を再開",
+    "resumeA11y": "「{{title}}」の続きから。{{narrative}}",
+    "resumeHint": "学習中のコースを開く"
   }
 }
