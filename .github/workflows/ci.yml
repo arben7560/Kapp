@@ -34,6 +34,9 @@ jobs:
       - name: Localization foundations
         run: npm run test:i18n
 
+      - name: Hangul learning and localization
+        run: npm run test:hangul
+
       - name: Auth sync
         run: npm run test:auth-sync
 
