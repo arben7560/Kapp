@@ -1710,7 +1710,7 @@ function MainActionCard({
               ]}
             />
 
-            <AppText variant="sectionLabel" style={styles.mainCardKicker}>
+            <AppText script={listeningScript} variant="sectionLabel" style={styles.mainCardKicker}>
               {isListening ? listenText("home.continue") : isMission ? "MISSION EN COURS" : "À CONTINUER"}
             </AppText>
           </View>
@@ -1753,11 +1753,12 @@ function MainActionCard({
             ]}
           >
             <View style={styles.mainProgressMeta}>
-              <AppText variant="caption" style={styles.mainProgressLabel}>
+              <AppText script={listeningScript} variant="caption" style={styles.mainProgressLabel}>
                 {isListening ? listenText("home.progress") : "PROGRESSION"}
               </AppText>
 
               <AppText
+                script={listeningScript}
                 variant="bodyStrong"
                 style={[
                   styles.mainProgressValue,
@@ -1797,7 +1798,7 @@ function MainActionCard({
           </View>
         ) : (
           <View style={styles.mainFooterMeta}>
-            <AppText variant="caption" style={styles.mainFooterLabel}>
+            <AppText script={listeningScript} variant="caption" style={styles.mainFooterLabel}>
               {isListening ? listenText("home.resumeImmersion") : "REPRENDRE L'IMMERSION"}
             </AppText>
 
