@@ -1,1 +1,292 @@
-{}
+{
+  "kinds": {
+    "dictation": {
+      "mini": "聞き取り",
+      "skill": "音声とハングル"
+    },
+    "situation": {
+      "mini": "場面理解",
+      "skill": "内容の理解"
+    },
+    "gap": {
+      "mini": "穴埋め",
+      "skill": "語彙の聞き取り"
+    },
+    "order": {
+      "mini": "語順",
+      "skill": "文の組み立て"
+    },
+    "reaction": {
+      "mini": "応答",
+      "skill": "会話"
+    }
+  },
+  "feedback": {
+    "dictation": {
+      "correct": "そのとおり。聞こえた文を正しく選べました。",
+      "incorrect": "もう一度、選択肢を見ずに聞いてみましょう。聞き取れた音を手がかりに比べてみてください。"
+    },
+    "situation": {
+      "correct": "いいですね。場面の内容をしっかり理解できています。",
+      "incorrect": "この返答は、聞こえた言葉とは少し合いません。質問やアナウンスの内容をもう一度確認しましょう。"
+    },
+    "gap": {
+      "correct": "正解です。抜けていた語を聞き取れましたね。",
+      "incorrect": "空欄に入る語が違います。特にその部分に注意して、もう一度聞いてみましょう。"
+    },
+    "order": {
+      "correct": "正解です。音声どおりの語順になっています。",
+      "incorrect": "語はそろっていますが、順番が違います。文のリズムを聞き直してから並べてみましょう。"
+    },
+    "reaction": {
+      "correct": "いいですね。相手の言葉に自然につながる返答です。",
+      "incorrect": "別の場面なら使える返答ですが、ここでは合いません。まず相手が何を求めているか聞き取りましょう。"
+    }
+  },
+  "ui": {
+    "module": "聞き取り",
+    "training": "トレーニング",
+    "previousTraining": "前のトレーニング",
+    "nextTraining": "次のトレーニング",
+    "questionPosition": "{{total}}問中{{current}}問目",
+    "exercisePosition": "{{total}}問中{{current}}問目",
+    "constructSentence": "ここに語を並べよう",
+    "removeWord": "{{word}} を文から外す",
+    "addWord": "{{word}} を文に追加",
+    "listen": "音声を聞く",
+    "relisten": "もう一度聞く",
+    "questionAudio": "問題の音声を{{action}}",
+    "playing": "再生中",
+    "interrupted": "再生が途中で止まりました · もう一度お試しください",
+    "unavailable": "音声を利用できません",
+    "audioError": "音声を再生できません。音量を確認して、もう一度お試しください。",
+    "retryAudioLabel": "音声をもう一度再生する",
+    "retry": "再試行",
+    "good": "正解！",
+    "review": "もう一度確認",
+    "heardPhrase": "聞こえたフレーズ",
+    "remember": "覚えておこう",
+    "restartTraining": "最初からやり直す",
+    "retryQuestion": "この問題をやり直す",
+    "validateLabel": "回答を確定する",
+    "validate": "答え合わせ",
+    "blockedNext": "正解するまで次の問題には進めません",
+    "openSummary": "トレーニング結果を見る",
+    "requireFive": "5問すべてに正解すると結果を確認できます",
+    "nextQuestion": "次の問題に進む",
+    "summary": "結果を見る",
+    "next": "次へ",
+    "sync": "学習記録を読み込んでいます。音声は先に聞けます。",
+    "objective": "この練習のポイント",
+    "objectiveDescription": "まず耳で理解してから文字を確認しましょう。意味の説明は正解後に表示されます。",
+    "accessibilityCorrect": "正解です。{{feedback}} {{explanation}}",
+    "accessibilityIncorrect": "もう一度確認しましょう。{{feedback}}",
+    "accessibilityCorrectDetail": "正解です。{{feedback}} {{source}}覚えておこう：{{answer}}。{{explanation}}",
+    "accessibilitySource": "聞こえたフレーズ：{{phrase}}。 ",
+    "choiceCorrect": "正解",
+    "choiceWrong": "選んだ回答は不正解",
+    "choiceSelected": "選択中",
+    "choiceUnselected": "未選択",
+    "streakFreeze": "連続学習の保護を使いました。記録は継続しています。",
+    "streakRestart": "新しい連続学習記録が始まりました。",
+    "streakDone": "今日の学習を達成しました。連続記録を継続しています。"
+  },
+  "summary": {
+    "header": "聞き取り · {{title}}",
+    "heading": "トレーニング完了",
+    "close": "{{title}}の結果を閉じる",
+    "congratulations": "よくできました！",
+    "progress": "学習の進み具合",
+    "progressA11y": "全{{total}}問中{{total}}問に正解",
+    "allValidated": "すべての問題に正解しました。",
+    "learned": "今回身につけたこと",
+    "freezeTitle": "連続記録を保護しました",
+    "restartTitle": "連続学習を再スタート",
+    "doneTitle": "今日の学習を達成",
+    "freezeDescription": "保護機能により連続学習の記録が守られました。",
+    "doneDescription": "今日の学習が記録されました。",
+    "next": "次は「{{title}}」へ",
+    "back": "「{{title}}」に戻る",
+    "restartA11y": "「{{title}}」のトレーニングをやり直す",
+    "restart": "「{{title}}」をもう一度",
+    "trainings": {
+      "dictation": {
+        "title": "聞き取り",
+        "achievement": "韓国語の5つのフレーズを聞き分けられました。",
+        "learning": "よく使う表現を音から理解し、似た表現を区別して、ハングルの表記と結びつける練習をしました。"
+      },
+      "situation": {
+        "title": "場面理解",
+        "achievement": "5つの場面を理解し、適切な返答を選べました。",
+        "learning": "日常会話の内容や相手の意図を聞き取り、場面に合う返答を選ぶ練習をしました。"
+      },
+      "gap": {
+        "title": "穴埋め",
+        "achievement": "音声から5つの空欄の語を聞き取れました。",
+        "learning": "文の中の特定の語に耳を向け、使える語彙を覚えながら、文を完成させる練習をしました。"
+      },
+      "order": {
+        "title": "語順",
+        "achievement": "韓国語の5つの文を正しい語順に並べられました。",
+        "learning": "音声から語のまとまりを捉え、韓国語の自然な語順を再現する練習をしました。"
+      },
+      "reaction": {
+        "title": "応答",
+        "achievement": "5つの発話に合う自然な返答を選べました。",
+        "learning": "相手の意図を理解し、日常会話で自然に返す練習をしました。"
+      }
+    }
+  },
+  "exercises": {
+    "cafe-dictation-01": {
+      "theme": "カフェ",
+      "title": "質問を聞き取ろう",
+      "instruction": "音声を聞いて、話された文を選ぼう。",
+      "explanation": "몇 분이세요? は「何名様ですか？」という意味。ここでの 몇 분 は、人数を尋ねる表現です。"
+    },
+    "cafe-dictation-02": {
+      "theme": "カフェ",
+      "title": "注文を聞き取ろう",
+      "instruction": "音声を聞いて、話された文を選ぼう。",
+      "explanation": "聞こえたのは 아이스 아메리카노 주세요。「アイスアメリカーノをください」という注文です。"
+    },
+    "metro-dictation-03": {
+      "theme": "地下鉄",
+      "title": "方向を聞き取ろう",
+      "instruction": "音声を聞いて、話された文を選ぼう。",
+      "explanation": "이쪽으로 가세요 は「こちらへ進んでください」。ポイントは「こちら側」を表す 이쪽 です。"
+    },
+    "shop-dictation-04": {
+      "theme": "ショップ",
+      "title": "値段の質問を聞き取ろう",
+      "instruction": "音声を聞いて、話された文を選ぼう。",
+      "explanation": "얼마예요? は「いくらですか？」。値段を尋ねるときによく使う表現です。"
+    },
+    "hotel-dictation-05": {
+      "theme": "ホテル",
+      "title": "予約の表現を聞き取ろう",
+      "instruction": "音声を聞いて、話された文を選ぼう。",
+      "explanation": "예약했어요 は「予約しました」。-했어요 という形から、すでに予約したことが分かります。"
+    },
+    "bbq-situation-01": {
+      "theme": "韓国焼肉",
+      "title": "場面を理解しよう",
+      "instruction": "店員の言葉を聞いて、自然な返答を選ぼう。",
+      "explanation": "몇 분이세요? は人数の確認です。두 명이에요（2人です）なら、質問にそのまま答えられます。"
+    },
+    "cafe-situation-02": {
+      "theme": "カフェ",
+      "title": "バリスタに答えよう",
+      "instruction": "店員の質問を聞いて、自然な返答を選ぼう。",
+      "explanation": "店員は注文を尋ねています。따뜻한 라떼 주세요 と答えれば、温かいラテを注文できます。"
+    },
+    "metro-situation-03": {
+      "theme": "地下鉄",
+      "title": "停車駅を確認しよう",
+      "instruction": "車内アナウンスを聞いて、内容に合う反応を選ぼう。",
+      "explanation": "이번 역은 홍대입구역입니다 は「今回の停車駅は弘大入口駅です」。次の駅や乗り換えの案内ではないので、今の駅を確認する返答が適切です。"
+    },
+    "shop-situation-04": {
+      "theme": "ショップ",
+      "title": "支払いの質問を理解しよう",
+      "instruction": "質問を聞いて、適切な返答を選ぼう。",
+      "explanation": "カードか現金か、支払い方法を尋ねられています。카드로 할게요 は「カードで払います」という返答です。"
+    },
+    "street-situation-05": {
+      "theme": "道案内",
+      "title": "道を教えてもらったら",
+      "instruction": "相手の言葉を聞いて、自然な返答を選ぼう。",
+      "explanation": "道順を教えてもらったところです。네, 감사합니다 とお礼を伝えるのが自然です。"
+    },
+    "restaurant-gap-01": {
+      "theme": "レストラン",
+      "title": "人数分の表現を完成させよう",
+      "instruction": "音声を聞いて、文の空欄を埋めよう。",
+      "explanation": "聞こえたのは 2인분。「2人前」という意味で、料理の注文に使います。"
+    },
+    "cafe-gap-02": {
+      "theme": "カフェ",
+      "title": "注文の空欄を埋めよう",
+      "instruction": "音声を聞いて、抜けている語を選ぼう。",
+      "explanation": "聞こえた語は 라떼。아이스 라떼 주세요 で「アイスラテをください」という注文になります。"
+    },
+    "shop-gap-03": {
+      "theme": "ショップ",
+      "title": "支払いの表現を完成させよう",
+      "instruction": "音声を聞いて、文の空欄を埋めよう。",
+      "explanation": "聞こえたのは 카드로（カードで）。카드로 계산할게요 で「カードで支払います」という意味です。"
+    },
+    "metro-gap-04": {
+      "theme": "地下鉄",
+      "title": "駅名を聞き取ろう",
+      "instruction": "音声を聞いて、抜けている語を選ぼう。",
+      "explanation": "聞こえた駅名は 홍대입구（弘大入口）。홍대입구에서 내려요 は「弘大入口で降ります」です。"
+    },
+    "hotel-gap-05": {
+      "theme": "ホテル",
+      "title": "予約の文を完成させよう",
+      "instruction": "音声を聞いて、文の空欄を埋めよう。",
+      "explanation": "聞こえたのは 예약（予約）。예약했어요 で「予約しました」という意味になります。"
+    },
+    "metro-order-01": {
+      "theme": "地下鉄",
+      "title": "語順を並べ替えよう",
+      "instruction": "音声を聞いて、語を正しい順に並べよう。",
+      "explanation": "聞こえた文は 이쪽으로 쭉 가세요。「こちらをまっすぐ進んでください」という意味です。音声と同じ語順で並べましょう。"
+    },
+    "cafe-order-02": {
+      "theme": "カフェ",
+      "title": "注文の文を組み立てよう",
+      "instruction": "音声を聞いて、語を正しい順に並べよう。",
+      "explanation": "아이스 아메리카노 주세요 という注文です。飲み物の名前を先に言い、最後に 주세요 を付けます。"
+    },
+    "shop-order-03": {
+      "theme": "ショップ",
+      "title": "語を並べ替えよう",
+      "instruction": "音声を聞いて、語を正しい順に並べよう。",
+      "explanation": "聞こえた質問は 이거 얼마예요?。「これはいくらですか？」という意味です。"
+    },
+    "restaurant-order-04": {
+      "theme": "レストラン",
+      "title": "お願いの文を作ろう",
+      "instruction": "音声を聞いて、語を正しい順に並べよう。",
+      "explanation": "물 좀 주세요 は「お水をください」という自然な頼み方です。좀 を添えると、お願いがやわらかく聞こえます。"
+    },
+    "street-order-05": {
+      "theme": "道案内",
+      "title": "質問の文を組み立てよう",
+      "instruction": "音声を聞いて、語を正しい順に並べよう。",
+      "explanation": "화장실이 어디예요? は「トイレはどこですか？」。場所を尋ねる基本の質問です。"
+    },
+    "cafe-reaction-01": {
+      "theme": "カフェ",
+      "title": "適切な注文を選ぼう",
+      "instruction": "店員の言葉を聞いて、注文として自然な返答を選ぼう。",
+      "explanation": "뭐 드릴까요? は「何になさいますか？」という注文の確認です。飲み物を頼む返答が適切です。"
+    },
+    "restaurant-reaction-02": {
+      "theme": "レストラン",
+      "title": "店員の問いかけに答えよう",
+      "instruction": "店員の言葉を聞いて、自然な返答を選ぼう。",
+      "explanation": "ほかに必要なものがあるか尋ねられています。네, 물 좀 주세요 と答えれば、お水をお願いできます。"
+    },
+    "shop-reaction-03": {
+      "theme": "ショップ",
+      "title": "店員に答えよう",
+      "instruction": "店員の言葉を聞いて、自然な返答を選ぼう。",
+      "explanation": "店員が何か探しているか尋ねています。괜찮아요, 그냥 볼게요 は「大丈夫です。ちょっと見ているだけです」という自然な返答です。"
+    },
+    "hotel-reaction-04": {
+      "theme": "ホテル",
+      "title": "フロントで答えよう",
+      "instruction": "質問を聞いて、適切な返答を選ぼう。",
+      "explanation": "예약하셨어요? は「ご予約はされていますか？」。予約済みなら 예약했어요（予約しました）と答えます。"
+    },
+    "street-reaction-05": {
+      "theme": "道案内",
+      "title": "道案内への返答を選ぼう",
+      "instruction": "相手の言葉を聞いて、適切な返答を選ぼう。",
+      "explanation": "道を教えてもらったあとです。감사합니다（ありがとうございます）とお礼を言うのが自然です。"
+    }
+  }
+}
