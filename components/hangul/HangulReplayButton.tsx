@@ -1,5 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, View } from "react-native";
+import { useTranslation } from "react-i18next";
+import { hangulUiText } from "../../lib/i18n/hangulDisplay";
 
 import { AppText } from "../app-text";
 
@@ -10,9 +12,11 @@ export function HangulReplayButton({
   accent: string;
   onPress: () => void;
 }) {
+  const { i18n } = useTranslation("hangul");
+  const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
   return (
     <Pressable
-      accessibilityLabel="Réécouter le son coréen"
+      accessibilityLabel={hangulUiText(i18n, "replay.accessibility")}
       accessibilityRole="button"
       hitSlop={6}
       onPress={onPress}
@@ -37,8 +41,8 @@ export function HangulReplayButton({
       >
         <Ionicons name="volume-high" size={17} color={accent} />
       </View>
-      <AppText variant="caption" style={styles.label}>
-        RÉÉCOUTER
+      <AppText script={uiScript} variant="caption" style={styles.label}>
+        {hangulUiText(i18n, "replay.label")}
       </AppText>
     </Pressable>
   );

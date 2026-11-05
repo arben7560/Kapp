@@ -7,6 +7,8 @@ import {
   LockKeyhole
 } from "lucide-react-native";
 import React, { useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import type { i18n } from "i18next";
 import {
   Animated,
   Easing,
@@ -31,6 +33,7 @@ import { ABSOLUTE_FILL } from "../../../constants/layout";
 import { HubModuleAccents, SeoulMidnightGlass } from "../../../constants/theme";
 import { HANGUL_MODULES as HANGUL_CURRICULUM_MODULES } from "../../../data/hangul/curriculum";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
+import { hangulUiText, hangulContentText, type HangulUiKey } from "../../../lib/i18n/hangulDisplay";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
 
@@ -156,7 +159,7 @@ function getModuleProgress(
   return Math.min(1, completedScenes / curriculumModule.scenes.length);
 }
 
-function getCurrentSceneTitle(module: HangulHubModule, progress: any) {
+function getCurrentSceneTitle(module: HangulHubModule, progress: any, instance: i18n) {
   if (module.kind !== "lesson") {
     return null;
   }
@@ -179,7 +182,7 @@ function getCurrentSceneTitle(module: HangulHubModule, progress: any) {
     );
 
     if (currentScene) {
-      return currentScene.title;
+      return hangulContentText(instance, "scene", [module.id, currentScene.id], "title", currentScene.title);
     }
   }
 
@@ -187,7 +190,7 @@ function getCurrentSceneTitle(module: HangulHubModule, progress: any) {
     (scene) => !lesson?.completedScenes?.[scene.id],
   );
 
-  return nextScene?.title ?? null;
+  return nextScene ? hangulContentText(instance, "scene", [module.id, nextScene.id], "title", nextScene.title) : null;
 }
 
 // ──────────────────────────────────────────────
@@ -195,6 +198,10 @@ function getCurrentSceneTitle(module: HangulHubModule, progress: any) {
 // ──────────────────────────────────────────────
 
 export default function HangulHub() {
+  const { i18n } = useTranslation("hangul");
+  const l = (key: HangulUiKey, values?: Record<string, string | number>) => hangulUiText(i18n, key, values);
+  const moduleTitle = (id: string, original: string, field: string = "title") =>
+    hangulContentText(i18n, "module", [id], field, original);
   const { progress } = useStore();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -251,7 +258,7 @@ export default function HangulHub() {
       return progress.completed?.[previous.id]
         ? undefined
         : {
-            title: previous.title,
+            title: moduleTitle(previous.id, previous.title),
             route: previous.route,
           };
     }
@@ -264,7 +271,7 @@ export default function HangulHub() {
 
       return missing
         ? {
-            title: missing.title,
+            title: moduleTitle(missing.id, missing.title),
             route: missing.route,
           }
         : undefined;
@@ -274,13 +281,21 @@ export default function HangulHub() {
     return assessmentPassed
       ? undefined
       : {
-          title: "l’évaluation Hangul",
+          title: l("hub.assessmentRequirement"),
           route: "/(tabs)/hangul/assessment",
         };
   };
 
   const moduleStates = HANGUL_MODULES.map((module, index) => ({
-    module,
+    module: {
+      ...module,
+      title: module.kind === "lesson"
+        ? moduleTitle(module.id, module.title)
+        : l(module.kind === "assessment" ? "hub.assessmentTitle" : "hub.bridgeTitle"),
+      sub: module.kind === "lesson"
+        ? moduleTitle(module.id, module.sub, "subtitle")
+        : l(module.kind === "assessment" ? "hub.assessmentSubtitle" : "hub.bridgeSubtitle"),
+    },
     requirement: requiredBefore(index),
     completed: getModuleCompletion(module, progress, assessmentPassed),
     progress: getModuleProgress(module, progress, assessmentPassed),
@@ -305,16 +320,16 @@ export default function HangulHub() {
 
   const continueModule = continueState.module;
 
-  const currentSceneTitle = getCurrentSceneTitle(continueModule, progress);
+  const currentSceneTitle = getCurrentSceneTitle(continueModule, progress, i18n);
 
   const continueTitle = journeyCompleted
     ? continueModule.title
     : (currentSceneTitle ?? continueModule.title);
 
   const continueSubtitle = journeyCompleted
-    ? "Parcours Hangul terminé · Revoir la lecture guidée"
+    ? l("hub.finishedSubtitle")
     : currentSceneTitle
-      ? `Hangul · ${continueModule.title}`
+      ? l("hub.resumeSubtitle", { title: continueModule.title })
       : continueModule.sub;
 
   const continueProgress = journeyCompleted ? 1 : continueState.progress;
@@ -461,9 +476,12 @@ export default function HangulHub() {
 // ──────────────────────────────────────────────
 
 function UnifiedNavHeader({ landscape }: { landscape: boolean }) {
+  const { i18n } = useTranslation("hangul");
+  const l = (key: HangulUiKey) => hangulUiText(i18n, key);
+  const script = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
   return (
     <View style={[styles.navHeader, landscape && styles.navHeaderLandscape]}>
-      <AppBackButton />
+      <AppBackButton label={l("common.back")} labelScript={script} accessibilityLabel={l("common.backA11y")} accessibilityHint={l("common.backHint")} />
     </View>
   );
 }
@@ -487,6 +505,9 @@ function HangulHero({
   completedCount: number;
   totalCount: number;
 }) {
+  const { i18n } = useTranslation("hangul");
+  const l = (key: HangulUiKey, values?: Record<string, string | number>) => hangulUiText(i18n, key, values);
+  const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
   const percentage = Math.round(progress * 100);
 
   return (
@@ -499,8 +520,8 @@ function HangulHero({
       >
         <View style={styles.heroDot} />
 
-        <AppText variant="sectionLabel" style={styles.heroEyebrow}>
-          PARCOURS · HANGUL
+        <AppText script={uiScript} variant="sectionLabel" style={styles.heroEyebrow}>
+          {l("hub.heroEyebrow")}
         </AppText>
       </View>
 
@@ -517,12 +538,12 @@ function HangulHero({
         한글
       </AppText>
 
-      <AppText variant="featureTitle" style={styles.heroTitle}>
-        Hangul
+      <AppText script={uiScript} variant="featureTitle" style={styles.heroTitle}>
+        {l("hub.brand")}
       </AppText>
 
-      <AppText variant="bodySecondary" style={styles.heroSubtitle}>
-        Lis le coréen. Décode la ville.
+      <AppText script={uiScript} variant="bodySecondary" style={styles.heroSubtitle}>
+        {l("hub.heroSubtitle")}
       </AppText>
 
       <View
@@ -534,17 +555,17 @@ function HangulHero({
         <View style={styles.levelPill}>
           <View style={styles.levelDot} />
 
-          <AppText
+          <AppText script={uiScript}
             variant="sectionLabel"
             lineContract="singleLine"
             style={styles.levelText}
           >
-            NIVEAU {level}
+            {l("hub.level", { level })}
           </AppText>
         </View>
 
-        <AppText variant="caption" style={styles.heroCompletion}>
-          {completedCount} / {totalCount} étapes
+        <AppText script={uiScript} variant="caption" style={styles.heroCompletion}>
+          {l("hub.levelCount", { completed: completedCount, total: totalCount })}
         </AppText>
       </View>
 
@@ -555,11 +576,11 @@ function HangulHero({
         ]}
       >
         <View style={styles.heroProgressMeta}>
-          <AppText variant="caption" style={styles.heroProgressLabel}>
-            PROGRESSION HANGUL
+          <AppText script={uiScript} variant="caption" style={styles.heroProgressLabel}>
+            {l("hub.progress")}
           </AppText>
 
-          <AppText
+          <AppText script={uiScript}
             variant="bodyStrong"
             style={[
               styles.heroProgressValue,
@@ -567,7 +588,7 @@ function HangulHero({
               percentage === 0 && styles.heroProgressStart,
             ]}
           >
-            {percentage === 0 ? "Commencer" : `${percentage}%`}
+            {percentage === 0 ? l("hub.start") : `${percentage}%`}
           </AppText>
         </View>
 
@@ -596,19 +617,22 @@ function ContinueCard({
   landscape: boolean;
   onPress: () => void;
 }) {
+  const { i18n } = useTranslation("hangul");
+  const l = (key: HangulUiKey, values?: Record<string, string | number>) => hangulUiText(i18n, key, values);
+  const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
   const percentage = Math.round(progress * 100);
 
   const valueLabel = completed
-    ? "Revoir"
+    ? l("hub.review")
     : percentage === 0
-      ? "Commencer"
+      ? l("hub.start")
       : `${percentage}%`;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`À continuer. ${title}. ${subtitle}.`}
-      accessibilityHint="Ouvre l'étape Hangul"
+      accessibilityLabel={l("hub.continueA11y", { title, subtitle })}
+      accessibilityHint={l("hub.continueHint")}
       onPress={onPress}
       style={({ pressed }) => [
         styles.continueWrap,
@@ -655,8 +679,8 @@ function ContinueCard({
           <View style={styles.continueKicker}>
             <View style={styles.continueKickerDot} />
 
-            <AppText variant="sectionLabel" style={styles.continueKickerText}>
-              {completed ? "PARCOURS TERMINÉ" : "À CONTINUER"}
+            <AppText script={uiScript} variant="sectionLabel" style={styles.continueKickerText}>
+              {l(completed ? "hub.journeyCompleted" : "hub.continue")}
             </AppText>
           </View>
 
@@ -666,11 +690,11 @@ function ContinueCard({
         </View>
 
         <View style={styles.continueContent}>
-          <AppText variant="featureTitle" style={styles.continueTitle}>
+          <AppText script={uiScript} variant="featureTitle" style={styles.continueTitle}>
             {title}
           </AppText>
 
-          <AppText
+          <AppText script={uiScript}
             variant="bodySecondary"
             tone="muted"
             style={styles.continueSubtitle}
@@ -686,11 +710,11 @@ function ContinueCard({
           ]}
         >
           <View style={styles.continueProgressMeta}>
-            <AppText variant="caption" style={styles.continueProgressLabel}>
-              PROGRESSION DE L'ÉTAPE
+            <AppText script={uiScript} variant="caption" style={styles.continueProgressLabel}>
+              {l("hub.stepProgress")}
             </AppText>
 
-            <AppText
+            <AppText script={uiScript}
               variant="bodyStrong"
               style={[
                 styles.continueProgressValue,
@@ -725,6 +749,9 @@ function JourneySectionHeader({
   totalCount: number;
   landscape: boolean;
 }) {
+  const { i18n } = useTranslation("hangul");
+  const l = (key: HangulUiKey, values?: Record<string, string | number>) => hangulUiText(i18n, key, values);
+  const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
   return (
     <View
       style={[
@@ -733,12 +760,12 @@ function JourneySectionHeader({
       ]}
     >
       <View>
-        <AppText variant="sectionLabel" style={styles.sectionTitle}>
-          TON PARCOURS
+        <AppText script={uiScript} variant="sectionLabel" style={styles.sectionTitle}>
+          {l("hub.journeyTitle")}
         </AppText>
 
-        <AppText variant="caption" style={styles.sectionSubtitle}>
-          {completedCount} sur {totalCount} étapes terminées
+        <AppText script={uiScript} variant="caption" style={styles.sectionSubtitle}>
+          {l("hub.journeyCount", { completed: completedCount, total: totalCount })}
         </AppText>
       </View>
 
@@ -785,6 +812,9 @@ function HangulPathCard({
   landscape: boolean;
   onPress: () => void;
 }) {
+  const { i18n } = useTranslation("hangul");
+  const l = (key: HangulUiKey, values?: Record<string, string | number>) => hangulUiText(i18n, key, values);
+  const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
   const isFuture = !!requirement;
 
   const percentage = Math.round(progress * 100);
@@ -798,18 +828,18 @@ function HangulPathCard({
         : FUTURE_ACCENT;
 
   const subtitle = requirement
-    ? `Après « ${requirement.title} »`
+    ? l("hub.after", { title: requirement.title })
     : completed
-      ? `Terminé · ${module.sub}`
+      ? l("hub.completedSubtitle", { subtitle: module.sub })
       : module.sub;
 
-  const statusLabel = completed
-    ? "TERMINÉ"
+  const statusLabel = l(completed
+    ? "hub.stepDone"
     : isFuture
-      ? "À VENIR"
+      ? "hub.stepUpcoming"
       : percentage > 0
-        ? "EN COURS"
-        : "À COMMENCER";
+        ? "hub.stepActive"
+        : "hub.stepNew");
 
   return (
     <Pressable
@@ -817,8 +847,8 @@ function HangulPathCard({
       accessibilityLabel={`${module.title}. ${subtitle}. ${statusLabel}.`}
       accessibilityHint={
         isFuture
-          ? `Ouvre d'abord ${requirement?.title}`
-          : "Ouvre cette étape Hangul"
+          ? l("hub.openPrerequisiteHint", { title: requirement?.title ?? "" })
+          : l("hub.openHint")
       }
       onPress={onPress}
       style={({ pressed }) => [
@@ -936,7 +966,7 @@ function HangulPathCard({
           </View>
 
           <View style={styles.pathTopMeta}>
-            <AppText
+            <AppText script={uiScript}
               variant="sectionLabel"
               lineContract="singleLine"
               style={[
@@ -945,7 +975,7 @@ function HangulPathCard({
                 isFuture && styles.pathStepLabelFuture,
               ]}
             >
-              ÉTAPE {index + 1} · HANGUL
+              {l("hub.stepLabel", { number: index + 1 })}
             </AppText>
 
             <View style={styles.pathStatusRow}>
@@ -965,7 +995,7 @@ function HangulPathCard({
                 />
               )}
 
-              <AppText
+              <AppText script={uiScript}
                 variant="caption"
                 lineContract="singleLine"
                 style={[
@@ -988,14 +1018,14 @@ function HangulPathCard({
             landscape && styles.pathTextBlockLandscape,
           ]}
         >
-          <AppText
+          <AppText script={uiScript}
             variant="cardTitle"
             style={[styles.pathTitle, isFuture && styles.pathTitleFuture]}
           >
             {module.title}
           </AppText>
 
-          <AppText
+          <AppText script={uiScript}
             variant="bodySecondary"
             tone="muted"
             style={[styles.pathSubtitle, isFuture && styles.pathSubtitleFuture]}

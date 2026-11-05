@@ -1,4 +1,4 @@
-import { HANGUL_MODULES } from "./curriculum";
+import { HANGUL_MODULES } from "./curriculum.ts";
 
 type SceneCopy = {
   description?: string;

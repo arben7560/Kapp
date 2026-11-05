@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { AppText } from "../app-text";
 
@@ -10,6 +11,8 @@ export function HangulAudioBadge({
   accent: string;
   label?: string;
 }) {
+  const { i18n } = useTranslation("hangul");
+  const script = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
   return (
     <View
       accessibilityElementsHidden
@@ -37,7 +40,7 @@ export function HangulAudioBadge({
         <Ionicons name="volume-medium-outline" size={17} color={accent} />
       </View>
       {label ? (
-        <AppText variant="caption" style={{ color: accent }}>
+        <AppText script={script} variant="caption" style={{ color: accent }}>
           {label}
         </AppText>
       ) : null}

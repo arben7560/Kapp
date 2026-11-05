@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { AppBackButton } from "../../../components/ui/app-back-button";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   ImageBackground,
   Pressable,
@@ -28,7 +29,8 @@ import {
 } from "../../../data/hangul/curriculum";
 import { useHangulAudio } from "../../../hooks/useHangulAudio";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
-import { getHangulTeacherFeedback } from "../../../lib/hangulFeedback";
+import { hangulUiText, hangulContentText, type HangulUiKey } from "../../../lib/i18n/hangulDisplay";
+import { needsHangulOptionTranslation, originalHangulOptionIndex } from "../../../data/localized/hangulRegistry";
 import { shuffleHangulQuestions } from "../../../lib/hangulQuiz";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
@@ -36,6 +38,11 @@ const createAssessmentQuestions = () =>
   shuffleHangulQuestions(HANGUL_ASSESSMENT_QUESTIONS);
 
 export default function HangulAssessmentScreen() {
+  const { i18n } = useTranslation("hangul");
+  const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
+  const l = (key: HangulUiKey, values?: Record<string, string | number>) => hangulUiText(i18n, key, values);
+  const q = (id: string, field: string, original: string) => hangulContentText(i18n, "question", ["assessment", id], field, original);
+  const moduleTitle = (id: string, original: string) => hangulContentText(i18n, "module", [id], "title", original);
   const { progress, updateHangulProgress, complete, isHydrated } = useStore();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -76,7 +83,7 @@ export default function HangulAssessmentScreen() {
   )?.label ?? current?.answer;
   const isCurrentAnswerCorrect = answered !== null && answered === current?.answer;
   const teacherFeedback = current
-    ? getHangulTeacherFeedback(current.type, isCurrentAnswerCorrect)
+    ? l(`feedback.${current.type}.${isCurrentAnswerCorrect ? "correct" : "incorrect"}` as HangulUiKey)
     : "";
   const saved = progress.hangulProgress.assessment;
   const missingModule = HANGUL_MODULES.find((module) => !progress.completed[module.id]);
@@ -198,17 +205,17 @@ export default function HangulAssessmentScreen() {
               }
             >
               <View style={[styles.back, useLandscapeLayout && styles.backLandscape]}>
-                <AppBackButton />
+                <AppBackButton label={l("common.back")} labelScript={uiScript} accessibilityLabel={l("common.backA11y")} accessibilityHint={l("common.backHint")} />
               </View>
-              <AppText variant="sectionLabel" style={styles.gold}>VALIDATION FINALE</AppText>
-              <AppText
+              <AppText script={uiScript} variant="sectionLabel" style={styles.gold}>{l("assessment.eyebrow")}</AppText>
+              <AppText script={uiScript}
                 variant="screenTitle"
                 style={[styles.title, useLandscapeLayout && styles.titleLandscape]}
               >
-                Lire sans romanisation
+                {l("assessment.title")}
               </AppText>
-              <AppText variant="bodySecondary" tone="muted">
-                12 défis, majoritairement inédits. Il faut 11 bonnes réponses pour réussir.
+              <AppText script={uiScript} variant="bodySecondary" tone="muted">
+                {l("assessment.description")}
               </AppText>
             </View>
 
@@ -219,11 +226,11 @@ export default function HangulAssessmentScreen() {
                 tint="dark"
                 style={[styles.card, useLandscapeLayout && styles.cardLandscape]}
               >
-                <AppText variant="sceneTitle">Au programme</AppText>
-                <AppText variant="body">Reconnaissance visuelle · écoute · assemblage · lecture inédite · batchim · liaison</AppText>
-                {saved ? <AppText variant="bodySecondary" tone="muted">Meilleur résultat : {saved.bestScore}/{saved.total} · {saved.attempts} tentative(s)</AppText> : null}
-                {!curriculumReady && missingModule ? <AppText variant="bodySecondary" style={styles.warning}>Termine d’abord « {missingModule.title} ».</AppText> : null}
-                <Pressable onPress={start} style={styles.button}><AppText variant="button" style={styles.buttonText}>{curriculumReady ? "Commencer sans aide latine" : `Ouvrir ${missingModule?.title}`}</AppText></Pressable>
+                <AppText script={uiScript} variant="sceneTitle">{l("assessment.programTitle")}</AppText>
+                <AppText script={uiScript} variant="body">{l("assessment.program")}</AppText>
+                {saved ? <AppText script={uiScript} variant="bodySecondary" tone="muted">{l("assessment.best", { score: saved.bestScore, total: saved.total, attempts: saved.attempts })}</AppText> : null}
+                {!curriculumReady && missingModule ? <AppText script={uiScript} variant="bodySecondary" style={styles.warning}>{l("assessment.completePrerequisite", { title: moduleTitle(missingModule.id, missingModule.title) })}</AppText> : null}
+                <Pressable onPress={start} style={styles.button}><AppText script={uiScript} variant="button" style={styles.buttonText}>{curriculumReady ? l("assessment.start") : l("assessment.openPrerequisite", { title: missingModule ? moduleTitle(missingModule.id, missingModule.title) : "" })}</AppText></Pressable>
               </BlurView>
               ) : finished ? (
               <BlurView
@@ -231,10 +238,10 @@ export default function HangulAssessmentScreen() {
                 tint="dark"
                 style={[styles.card, useLandscapeLayout && styles.cardLandscape]}
               >
-                <AppText variant="sectionLabel" style={{ color: score >= HANGUL_ASSESSMENT_PASS_SCORE ? "#4ADE80" : "#FDE047" }}>{score >= HANGUL_ASSESSMENT_PASS_SCORE ? "LECTURE RÉUSSIE" : "SONS À REVOIR"}</AppText>
-                <AppText variant="numericValue">{score}/{HANGUL_ASSESSMENT_QUESTIONS.length}</AppText>
-                <AppText variant="bodySecondary" tone="muted" align="center">{score >= HANGUL_ASSESSMENT_PASS_SCORE ? "Tu peux maintenant lire des phrases guidées." : "Revois les sons concernés avant une nouvelle tentative."}</AppText>
-                <Pressable onPress={() => score >= HANGUL_ASSESSMENT_PASS_SCORE ? router.push("/(tabs)/hangul/bridge" as never) : start()} style={styles.button}><AppText variant="button" style={styles.buttonText}>{score >= HANGUL_ASSESSMENT_PASS_SCORE ? "OUVRIR LA LECTURE GUIDÉE" : "RECOMMENCER L’ÉVALUATION"}</AppText></Pressable>
+                <AppText script={uiScript} variant="sectionLabel" style={{ color: score >= HANGUL_ASSESSMENT_PASS_SCORE ? "#4ADE80" : "#FDE047" }}>{score >= HANGUL_ASSESSMENT_PASS_SCORE ? l("assessment.passed") : l("assessment.failed")}</AppText>
+                <AppText script={uiScript} variant="numericValue">{score}/{HANGUL_ASSESSMENT_QUESTIONS.length}</AppText>
+                <AppText script={uiScript} variant="bodySecondary" tone="muted" align="center">{score >= HANGUL_ASSESSMENT_PASS_SCORE ? l("assessment.passedDescription") : l("assessment.failedDescription")}</AppText>
+                <Pressable onPress={() => score >= HANGUL_ASSESSMENT_PASS_SCORE ? router.push("/(tabs)/hangul/bridge" as never) : start()} style={styles.button}><AppText script={uiScript} variant="button" style={styles.buttonText}>{score >= HANGUL_ASSESSMENT_PASS_SCORE ? l("assessment.openBridge") : l("assessment.restart")}</AppText></Pressable>
               </BlurView>
               ) : (
               <BlurView
@@ -243,11 +250,11 @@ export default function HangulAssessmentScreen() {
                 style={[styles.card, useLandscapeLayout && styles.cardLandscape]}
               >
                 <View style={styles.questionHeader}>
-                  <AppText variant="sectionLabel" style={styles.gold}>QUESTION {index + 1}/12</AppText>
+                  <AppText script={uiScript} variant="sectionLabel" style={styles.gold}>{l("assessment.question", { current: index + 1, total: HANGUL_ASSESSMENT_QUESTIONS.length })}</AppText>
                   {current.audio ? <HangulReplayButton accent="#FDE047" onPress={() => playAudio(current.audio!)} /> : null}
                 </View>
                 {current.display ? <AppText variant="koreanHero" script="korean" align="center" style={styles.display}>{current.display}</AppText> : null}
-                <AppText variant="sceneTitle" align="center">{current.prompt}</AppText>
+                <AppText script={uiScript} variant="sceneTitle" align="center">{q(current.id, "prompt", current.prompt)}</AppText>
                 <View
                   style={[
                     styles.options,
@@ -257,20 +264,20 @@ export default function HangulAssessmentScreen() {
                   {current.options.map((option) => {
                     const correct = answered !== null && option.value === current.answer;
                     const wrong = answered === option.value && option.value !== current.answer;
-                    return <Pressable key={option.value} onPress={() => answer(option.value)} style={[styles.option, useLandscapeOptionGrid && { width: landscapeOptionWidth }, correct && styles.correct, wrong && styles.wrong]}><AppText variant="bodyStrong" align="center">{option.label}</AppText></Pressable>;
+                    return <Pressable key={option.value} onPress={() => answer(option.value)} style={[styles.option, useLandscapeOptionGrid && { width: landscapeOptionWidth }, correct && styles.correct, wrong && styles.wrong]}><AppText script={uiScript} variant="bodyStrong" align="center">{needsHangulOptionTranslation(option.label) ? q(current.id, `option${originalHangulOptionIndex(HANGUL_ASSESSMENT_QUESTIONS.find(item => item.id === current.id)!, option.value)}`, option.label) : option.label}</AppText></Pressable>;
                   })}
                 </View>
                 {answered !== null ? (
                   <View style={styles.feedback}>
-                    <AppText variant="bodyStrong" style={{ color: isCurrentAnswerCorrect ? "#4ADE80" : "#F87171" }}>
-                      {isCurrentAnswerCorrect ? "Bien vu" : "À revoir"}
+                    <AppText script={uiScript} variant="bodyStrong" style={{ color: isCurrentAnswerCorrect ? "#4ADE80" : "#F87171" }}>
+                      {isCurrentAnswerCorrect ? l("assessment.correct") : l("assessment.incorrect")}
                     </AppText>
-                    <AppText variant="bodyStrong">{teacherFeedback}</AppText>
+                    <AppText script={uiScript} variant="bodyStrong">{teacherFeedback}</AppText>
                     {!isCurrentAnswerCorrect ? (
-                      <AppText variant="bodySecondary">À retenir : {correctAnswerLabel}</AppText>
+                      <AppText script={uiScript} variant="bodySecondary">{l("assessment.remember", { answer: correctAnswerLabel })}</AppText>
                     ) : null}
-                    <AppText variant="bodySecondary">{current.explanation}</AppText>
-                    <Pressable onPress={next} style={styles.button}><AppText variant="button" style={styles.buttonText}>{index + 1 < HANGUL_ASSESSMENT_QUESTIONS.length ? "SUIVANT" : "TERMINER"}</AppText></Pressable>
+                    <AppText script={uiScript} variant="bodySecondary">{q(current.id, "explanation", current.explanation)}</AppText>
+                    <Pressable onPress={next} style={styles.button}><AppText script={uiScript} variant="button" style={styles.buttonText}>{index + 1 < HANGUL_ASSESSMENT_QUESTIONS.length ? l("assessment.next") : l("assessment.finish")}</AppText></Pressable>
                   </View>
                 ) : null}
               </BlurView>

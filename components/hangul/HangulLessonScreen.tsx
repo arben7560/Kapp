@@ -8,6 +8,7 @@ import {
   Sparkles,
 } from "lucide-react-native";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   Animated,
   Easing,
@@ -34,7 +35,9 @@ import {
 } from "../../data/hangul/types";
 import { useHangulAudio } from "../../hooks/useHangulAudio";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
-import { getHangulTeacherFeedback } from "../../lib/hangulFeedback";
+import { hangulUiText, hangulContentText, type HangulUiKey } from "../../lib/i18n/hangulDisplay";
+import { needsHangulOptionTranslation } from "../../data/localized/hangulRegistry";
+import type { HangulQuestionOption, HangulScene, HangulCard } from "../../data/hangul/types";
 import {
   advanceHangulQuiz,
   answerHangulQuizQuestion,
@@ -75,7 +78,18 @@ const normalizeLesson = (
 });
 
 export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
+  const { i18n } = useTranslation("hangul");
+  const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
+  const l = (key: HangulUiKey, values?: Record<string, string | number>) => hangulUiText(i18n, key, values);
   const module = getHangulModule(moduleId);
+  const mc = (field: string, original: string) => hangulContentText(i18n, "module", [module.id], field, original);
+  const sc = (scene: HangulScene, field: string, original: string) =>
+    hangulContentText(i18n, "scene", [module.id, scene.id], field, original);
+  const cc = (card: HangulCard, field: string, original: string) =>
+    hangulContentText(i18n, "card", [module.id, activeScene.id, card.id], field, original);
+  const qc = (questionId: string, field: string, original: string) =>
+    hangulContentText(i18n, "question", [module.id, activeScene.id, questionId], field, original);
+
   const { progress, updateHangulProgress, complete } = useStore();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -148,14 +162,23 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
   const questionIndex = quizSession?.questionIndex ?? 0;
   const answered = quizSession?.answered ?? null;
   const currentQuestion = questions[questionIndex];
-  const correctAnswerLabel =
-    currentQuestion?.options.find(
-      (option) => option.value === currentQuestion.answer,
-    )?.label ?? currentQuestion?.answer;
+  const originalQuestion = activeScene.questions.find(question => question.id === currentQuestion?.id);
+  const displayedOption = (option: HangulQuestionOption): string => {
+    if (!currentQuestion || !needsHangulOptionTranslation(option.label)) return option.label;
+    const originalIndex = originalQuestion?.options.findIndex(item => item.value === option.value) ?? -1;
+    if (originalIndex < 0) throw new Error(`Unknown option for Hangul question ${currentQuestion.id}`);
+    return qc(currentQuestion.id, `option${originalIndex}`, option.label);
+  };
+  const correctAnswerOption = currentQuestion?.options.find(
+    option => option.value === currentQuestion.answer,
+  );
+  const correctAnswerLabel = correctAnswerOption
+    ? displayedOption(correctAnswerOption)
+    : currentQuestion?.answer;
   const isCurrentAnswerCorrect =
     answered !== null && answered === currentQuestion?.answer;
   const teacherFeedback = currentQuestion
-    ? getHangulTeacherFeedback(currentQuestion.type, isCurrentAnswerCorrect)
+    ? l(`feedback.${currentQuestion.type}.${isCurrentAnswerCorrect ? "correct" : "incorrect"}` as HangulUiKey)
     : "";
   const useCompactOptions = (currentQuestion?.options.length ?? 0) > 4;
   const useLandscapeQuizLayout = isLandscape && safeContentWidth >= 680;
@@ -196,13 +219,13 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
       ? discoveredCount / activeScene.cards.length
       : 0;
   const modulePercentage = Math.round(moduleProgress * 100);
-  const sceneStatus = sceneMastered
-    ? "RÉUSSI"
+  const sceneStatus = l(sceneMastered
+    ? "lesson.statusMastered"
     : sceneCompleted
-      ? "À REVOIR"
+      ? "lesson.statusReview"
       : discoveredCount > 0
-        ? "EN COURS"
-        : "À COMMENCER";
+        ? "lesson.statusActive"
+        : "lesson.statusNew");
 
   React.useEffect(() => {
     if (
@@ -466,19 +489,18 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               <View style={styles.gateIcon}>
                 <LockKeyhole size={26} color={HANGUL_ACCENT} strokeWidth={2} />
               </View>
-              <AppText variant="sectionLabel" style={styles.gateEyebrow}>
-                PROGRESSION GUIDÉE
+              <AppText script={uiScript} variant="sectionLabel" style={styles.gateEyebrow}>
+                {l("lesson.gateEyebrow")}
               </AppText>
-              <AppText variant="screenTitle" style={styles.gateTitle}>
-                Une étape avant celle-ci
+              <AppText script={uiScript} variant="screenTitle" style={styles.gateTitle}>
+                {l("lesson.gateTitle")}
               </AppText>
-              <AppText
+              <AppText script={uiScript}
                 variant="bodySecondary"
                 tone="muted"
                 style={styles.gateText}
               >
-                Termine d’abord « {prerequisite.title} ». Les exemples
-                n’utilisent que les caractères déjà étudiés.
+                {l("lesson.gateDescription", { title: hangulContentText(i18n, "module", [prerequisite.id], "title", prerequisite.title) })}
               </AppText>
               <Pressable
                 onPress={() => router.replace(prerequisite.route as never)}
@@ -496,8 +518,8 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                     isLandscape && styles.primaryGradientLandscape,
                   ]}
                 >
-                  <AppText variant="button" style={styles.primaryText}>
-                    OUVRIR {prerequisite.title.toUpperCase()}
+                  <AppText script={uiScript} variant="button" style={styles.primaryText}>
+                    {l("lesson.gateOpen", { title: hangulContentText(i18n, "module", [prerequisite.id], "title", uiScript === "latin" ? prerequisite.title.toUpperCase() : prerequisite.title) })}
                   </AppText>
                   <ChevronRight size={18} strokeWidth={2.3} color="#020306" />
                 </LinearGradient>
@@ -536,12 +558,12 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
 
               {isLandscape ? (
                 <View style={styles.headerCenter} pointerEvents="none">
-                  <AppText
+                  <AppText script={uiScript}
                     variant="screenTitle"
                     lineContract="singleLine"
                     style={styles.headerLandscapeTitle}
                   >
-                    {module.title}
+                    {mc("title", module.title)}
                   </AppText>
                 </View>
               ) : null}
@@ -551,8 +573,8 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                   accessibilityRole="button"
                   accessibilityLabel={
                     showRomanization
-                      ? "Désactiver l'aide latine"
-                      : "Activer l'aide latine"
+                      ? l("lesson.disableRomanization")
+                      : l("lesson.enableRomanization")
                   }
                   onPress={() => setShowRomanization((current) => !current)}
                   style={({ pressed }) => [
@@ -568,7 +590,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                       showRomanization && styles.helpDotActive,
                     ]}
                   />
-                  <AppText
+                  <AppText script={uiScript}
                     variant="caption"
                     lineContract="singleLine"
                     style={[
@@ -577,8 +599,8 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                     ]}
                   >
                     {showRomanization
-                      ? "Aide latine · activée"
-                      : "Aide latine · désactivée"}
+                      ? l("lesson.romanizationOn")
+                      : l("lesson.romanizationOff")}
                   </AppText>
                 </Pressable>
               </View>
@@ -592,16 +614,16 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                 ]}
               >
                 <View style={styles.heroDot} />
-                <AppText variant="sectionLabel" style={styles.heroEyebrow}>
-                  HANGUL · {module.eyebrow}
+                <AppText script={uiScript} variant="sectionLabel" style={styles.heroEyebrow}>
+                  {l("lesson.heroEyebrow", { title: mc("eyebrow", module.eyebrow) })}
                 </AppText>
               </View>
               {!isLandscape ? (
-                <AppText variant="screenTitle" style={styles.heroTitle}>
-                  {module.title}
+                <AppText script={uiScript} variant="screenTitle" style={styles.heroTitle}>
+                  {mc("title", module.title)}
                 </AppText>
               ) : null}
-              <AppText
+              <AppText script={uiScript}
                 variant="bodySecondary"
                 tone="muted"
                 style={[
@@ -609,7 +631,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                   isLandscape && styles.heroSubtitleLandscape,
                 ]}
               >
-                {module.subtitle}
+                {mc("subtitle", module.subtitle)}
               </AppText>
               <View
                 style={[
@@ -619,17 +641,16 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               >
                 <View style={styles.heroLevelPill}>
                   <Sparkles size={15} strokeWidth={2} color={HANGUL_ACCENT} />
-                  <AppText
+                  <AppText script={uiScript}
                     variant="sectionLabel"
                     lineContract="singleLine"
                     style={styles.heroLevelText}
                   >
-                    ÉTAPE HANGUL
+                    {l("lesson.stage")}
                   </AppText>
                 </View>
-                <AppText variant="caption" style={styles.heroSceneCount}>
-                  {masteredSceneCount} / {module.scenes.length} scènes
-                  maîtrisées
+                <AppText script={uiScript} variant="caption" style={styles.heroSceneCount}>
+                  {l("lesson.scenesMastered", { count: masteredSceneCount, total: module.scenes.length })}
                 </AppText>
               </View>
               <View
@@ -639,10 +660,10 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                 ]}
               >
                 <View style={styles.heroProgressMeta}>
-                  <AppText variant="caption" style={styles.heroProgressLabel}>
-                    PROGRESSION DE L'ÉTAPE
+                  <AppText script={uiScript} variant="caption" style={styles.heroProgressLabel}>
+                    {l("lesson.stepProgress")}
                   </AppText>
-                  <AppText
+                  <AppText script={uiScript}
                     variant="bodyStrong"
                     style={[
                       styles.heroProgressValue,
@@ -650,7 +671,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                     ]}
                   >
                     {modulePercentage === 0
-                      ? "Commencer"
+                      ? l("lesson.start")
                       : `${modulePercentage}%`}
                   </AppText>
                 </View>
@@ -700,7 +721,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                       ) : !unlocked ? (
                         <LockKeyhole size={12} strokeWidth={2} color={FUTURE} />
                       ) : (
-                        <AppText
+                        <AppText script={uiScript}
                           variant="caption"
                           style={[
                             styles.tabNumber,
@@ -711,7 +732,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                         </AppText>
                       )}
                     </View>
-                    <AppText
+                    <AppText script={uiScript}
                       variant="caption"
                       lineContract="singleLine"
                       style={[
@@ -720,7 +741,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                         !unlocked && styles.tabTextLocked,
                       ]}
                     >
-                      {scene.title}
+                      {sc(scene, "title", scene.title)}
                     </AppText>
                     {completed && !mastered ? (
                       <View style={styles.tabReviewDot} />
@@ -759,11 +780,11 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               >
                 <View style={styles.sceneKicker}>
                   <View style={styles.sceneKickerDot} />
-                  <AppText
+                  <AppText script={uiScript}
                     variant="sectionLabel"
                     style={styles.sceneKickerText}
                   >
-                    SCÈNE {activeSceneIndex + 1}
+                    {l("lesson.sceneLabel", { number: activeSceneIndex + 1 })}
                   </AppText>
                 </View>
                 <View
@@ -779,7 +800,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                   {sceneMastered ? (
                     <Check size={12} strokeWidth={2.4} color={SUCCESS} />
                   ) : null}
-                  <AppText
+                  <AppText script={uiScript}
                     variant="caption"
                     lineContract="singleLine"
                     style={[
@@ -796,8 +817,8 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                 </View>
               </View>
               <View style={styles.sceneTitleBlock}>
-                <AppText variant="sceneTitle" style={styles.sceneTitle}>
-                  {activeScene.title}
+                <AppText script={uiScript} variant="sceneTitle" style={styles.sceneTitle}>
+                  {sc(activeScene, "title", activeScene.title)}
                 </AppText>
                 <AppText
                   variant="koreanSecondary"
@@ -807,14 +828,14 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                   {activeScene.koreanTitle}
                 </AppText>
               </View>
-              <AppText
+              <AppText script={uiScript}
                 variant="body"
                 style={[
                   styles.sceneDescription,
                   isLandscape && styles.sceneDescriptionLandscape,
                 ]}
               >
-                {activeScene.description}
+                {sc(activeScene, "description", activeScene.description)}
               </AppText>
               <View
                 style={[
@@ -823,14 +844,14 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                 ]}
               >
                 <View style={styles.instructionAccent} />
-                <AppText
+                <AppText script={uiScript}
                   variant="bodySecondary"
                   style={[
                     styles.instructionText,
                     isLandscape && styles.instructionTextLandscape,
                   ]}
                 >
-                  {activeScene.instruction}
+                  {sc(activeScene, "instruction", activeScene.instruction)}
                 </AppText>
               </View>
               <View
@@ -840,10 +861,10 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                 ]}
               >
                 <View style={styles.sceneProgressMeta}>
-                  <AppText variant="caption" style={styles.sceneProgressLabel}>
-                    DÉCOUVERTE
+                  <AppText script={uiScript} variant="caption" style={styles.sceneProgressLabel}>
+                    {l("lesson.discovery")}
                   </AppText>
-                  <AppText
+                  <AppText script={uiScript}
                     variant="bodyStrong"
                     style={styles.sceneProgressValue}
                   >
@@ -861,11 +882,11 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               ]}
             >
               <View>
-                <AppText variant="sectionLabel" style={styles.sectionEyebrow}>
-                  DÉCOUVERTE
+                <AppText script={uiScript} variant="sectionLabel" style={styles.sectionEyebrow}>
+                  {l("lesson.discovery")}
                 </AppText>
-                <AppText variant="caption" style={styles.sectionSubtitle}>
-                  Écoute et révèle chaque carte
+                <AppText script={uiScript} variant="caption" style={styles.sectionSubtitle}>
+                  {l("lesson.discoveryHint")}
                 </AppText>
               </View>
               <View style={styles.sectionLineWrap}>
@@ -877,7 +898,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                   style={styles.sectionLineGlow}
                 />
               </View>
-              <AppText variant="bodyStrong" style={styles.sectionCount}>
+              <AppText script={uiScript} variant="bodyStrong" style={styles.sectionCount}>
                 {discoveredCount}/{activeScene.cards.length}
               </AppText>
             </View>
@@ -955,7 +976,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                             {item.glyph}
                           </AppText>
                           {showRomanization && item.romanization ? (
-                            <AppText
+                            <AppText script={uiScript}
                               variant="caption"
                               align={isLandscape ? "center" : undefined}
                               style={styles.romanization}
@@ -974,29 +995,29 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                           isLandscape && styles.cardCopyLandscape,
                         ]}
                       >
-                        <AppText
+                        <AppText script={uiScript}
                           variant="bodyStrong"
                           align={isLandscape ? "center" : undefined}
                           style={styles.cardLabel}
                         >
-                          {item.label}
+                          {cc(item, "label", item.label)}
                         </AppText>
                         {discovered ? (
-                          <AppText
+                          <AppText script={uiScript}
                             variant="bodySecondary"
                             tone="muted"
                             align={isLandscape ? "center" : undefined}
                             style={styles.cardExplanation}
                           >
-                            {item.explanation}
+                            {cc(item, "explanation", item.explanation)}
                           </AppText>
                         ) : (
-                          <AppText
+                          <AppText script={uiScript}
                             variant="caption"
                             align={isLandscape ? "center" : undefined}
                             style={styles.cardRevealHint}
                           >
-                            TOUCHER POUR DÉCOUVRIR
+                            {l("lesson.tapReveal")}
                           </AppText>
                         )}
                       </View>
@@ -1050,7 +1071,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                   isLandscape && styles.primaryGradientLandscape,
                 ]}
               >
-                <AppText
+                <AppText script={uiScript}
                   variant="button"
                   style={[
                     styles.primaryText,
@@ -1058,14 +1079,14 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                   ]}
                 >
                   {!canStartQuiz
-                    ? `ÉCOUTE LES ${activeScene.cards.length} CARTES`
+                    ? l("lesson.listenCards", { count: activeScene.cards.length })
                     : hasSavedQuiz
-                      ? "REPRENDRE L’EXERCICE"
+                      ? l("lesson.resumeQuiz")
                       : sceneMastered
-                        ? "RECOMMENCER L’ÉTAPE"
+                        ? l("lesson.restartStage")
                         : sceneCompleted
-                          ? "REVOIR L’ÉTAPE"
-                          : "COMMENCER L’ÉTAPE"}
+                          ? l("lesson.reviewStage")
+                          : l("lesson.startStage")}
                 </AppText>
                 {canStartQuiz ? (
                   <ChevronRight size={18} strokeWidth={2.3} color="#020306" />
@@ -1094,17 +1115,17 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                     <Check size={18} strokeWidth={2.4} color={SUCCESS} />
                   </View>
                   <View style={styles.nextCardCopy}>
-                    <AppText
+                    <AppText script={uiScript}
                       variant="sectionLabel"
                       style={styles.nextCardEyebrow}
                     >
-                      ÉTAPE TERMINÉE
+                      {l("lesson.stageCompleted")}
                     </AppText>
-                    <AppText variant="bodyStrong" style={styles.nextCardTitle}>
-                      Toutes les scènes sont maîtrisées.
+                    <AppText script={uiScript} variant="bodyStrong" style={styles.nextCardTitle}>
+                      {l("lesson.allScenesMastered")}
                     </AppText>
-                    <AppText variant="caption" style={styles.nextCardAction}>
-                      OUVRIR {module.nextLabel}
+                    <AppText script={uiScript} variant="caption" style={styles.nextCardAction}>
+                      {l("lesson.openNext", { title: mc("nextLabel", module.nextLabel) })}
                     </AppText>
                   </View>
                   <View style={styles.nextCardArrow}>
@@ -1168,14 +1189,14 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                     >
                       <View style={styles.quizHeader}>
                         <View>
-                          <AppText
+                          <AppText script={uiScript}
                             variant="sectionLabel"
                             style={styles.quizEyebrow}
                           >
-                            QUESTION {questionIndex + 1} / {questions.length}
+                            {l("lesson.quizQuestion", { current: questionIndex + 1, total: questions.length })}
                           </AppText>
-                          <AppText variant="caption" style={styles.quizContext}>
-                            {activeScene.title}
+                          <AppText script={uiScript} variant="caption" style={styles.quizContext}>
+                            {sc(activeScene, "title", activeScene.title)}
                           </AppText>
                         </View>
                         {currentQuestion.audio ? (
@@ -1213,7 +1234,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                           {currentQuestion.display}
                         </AppText>
                       ) : null}
-                      <AppText
+                      <AppText script={uiScript}
                         variant="sceneTitle"
                         align="center"
                         style={[
@@ -1221,7 +1242,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                           useLandscapeQuizLayout && styles.promptLandscape,
                         ]}
                       >
-                        {currentQuestion.prompt}
+                        {qc(currentQuestion.id, "prompt", currentQuestion.prompt)}
                       </AppText>
                     </View>
 
@@ -1262,14 +1283,14 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                                 >
                                   <HangulAudioBadge accent={HANGUL_ACCENT} />
                                   <View style={styles.audioListenCopy}>
-                                    <AppText
+                                    <AppText script={uiScript}
                                       variant="caption"
                                       style={styles.audioListenLabel}
                                     >
-                                      ÉCOUTER
+                                      {l("lesson.listen")}
                                     </AppText>
-                                    <AppText variant="bodyStrong">
-                                      {item.label}
+                                    <AppText script={uiScript} variant="bodyStrong">
+                                      {displayedOption(item)}
                                     </AppText>
                                   </View>
                                 </Pressable>
@@ -1278,11 +1299,11 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                                   onPress={() => answerQuestion(item.value)}
                                   style={styles.audioChoose}
                                 >
-                                  <AppText
+                                  <AppText script={uiScript}
                                     variant="caption"
                                     style={styles.audioChooseText}
                                   >
-                                    CHOISIR
+                                    {l("lesson.choose")}
                                   </AppText>
                                 </Pressable>
                               </View>
@@ -1306,8 +1327,8 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                                   styles.optionPressed,
                               ]}
                             >
-                              <AppText variant="bodyStrong" align="center">
-                                {item.label}
+                              <AppText script={uiScript} variant="bodyStrong" align="center">
+                                {displayedOption(item)}
                               </AppText>
                             </Pressable>
                           );
@@ -1325,18 +1346,16 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                               : styles.feedbackWrong,
                           ]}
                         >
-                          <AppText
+                          <AppText script={uiScript}
                             variant="bodyStrong"
                             style={{
                               color: isCurrentAnswerCorrect ? SUCCESS : ERROR,
                             }}
                           >
-                            {isCurrentAnswerCorrect
-                              ? "Bonne réponse"
-                              : "Mauvaise réponse"}
+                            {l(isCurrentAnswerCorrect ? "lesson.correct" : "lesson.incorrect")}
                           </AppText>
                           {isCurrentAnswerCorrect ? (
-                            <AppText
+                            <AppText script={uiScript}
                               variant="bodyStrong"
                               style={styles.teacherFeedbackText}
                             >
@@ -1344,17 +1363,17 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                             </AppText>
                           ) : (
                             <>
-                              <AppText
+                              <AppText script={uiScript}
                                 variant="bodySecondary"
                                 style={styles.expectedAnswerText}
                               >
-                                À retenir : {correctAnswerLabel}
+                                {l("lesson.remember", { answer: correctAnswerLabel ?? "" })}
                               </AppText>
-                              <AppText
+                              <AppText script={uiScript}
                                 variant="bodySecondary"
                                 style={styles.feedbackText}
                               >
-                                {currentQuestion.explanation}
+                                {qc(currentQuestion.id, "explanation", currentQuestion.explanation)}
                               </AppText>
                             </>
                           )}
@@ -1368,11 +1387,11 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                               end={{ x: 1, y: 0 }}
                               style={styles.continueGradient}
                             >
-                              <AppText
+                              <AppText script={uiScript}
                                 variant="button"
                                 style={styles.primaryText}
                               >
-                                {willContinueQuiz ? "SUIVANT" : "TERMINER"}
+                                {l(willContinueQuiz ? "lesson.next" : "lesson.finish")}
                               </AppText>
                               <ChevronRight
                                 size={17}
@@ -1406,26 +1425,24 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                         <Sparkles size={26} strokeWidth={2} color={WARNING} />
                       )}
                     </View>
-                    <AppText
+                    <AppText script={uiScript}
                       variant="sectionLabel"
                       style={{ color: result.mastered ? SUCCESS : WARNING }}
                     >
-                      {result.mastered ? "LECTURE RÉUSSIE" : "ÉTAPE TERMINÉE"}
+                      {l(result.mastered ? "lesson.quizSuccess" : "lesson.stageCompleted")}
                     </AppText>
-                    <AppText variant="numericValue" style={styles.resultScore}>
+                    <AppText script={uiScript} variant="numericValue" style={styles.resultScore}>
                       {result.score}/{result.total}
                     </AppText>
-                    <AppText
+                    <AppText script={uiScript}
                       variant="bodySecondary"
                       align="center"
                       tone="muted"
                       style={styles.resultText}
                     >
-                      {result.mastered
-                        ? result.hadCorrections
-                          ? "Les sons manqués sont revenus dans la session. Tu peux continuer."
-                          : "Lecture réussie. Tu peux continuer."
-                        : "Revois les caractères signalés, puis recommence."}
+                      {l(result.mastered
+                        ? (result.hadCorrections ? "lesson.resultMasteredAfterCorrections" : "lesson.resultMastered")
+                        : "lesson.resultTryAgain")}
                     </AppText>
                     <Pressable
                       onPress={closeResult}
@@ -1440,12 +1457,8 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
                         end={{ x: 1, y: 0 }}
                         style={styles.continueGradient}
                       >
-                        <AppText variant="button" style={styles.primaryText}>
-                          {result.mastered
-                            ? hasNextScene
-                              ? "SUIVANT"
-                              : "TERMINER"
-                            : "REVOIR L’ÉTAPE"}
+                        <AppText script={uiScript} variant="button" style={styles.primaryText}>
+                          {l(result.mastered ? (hasNextScene ? "lesson.next" : "lesson.finish") : "lesson.reviewStage")}
                         </AppText>
                         {result.mastered ? (
                           <ChevronRight

@@ -1,1 +1,172 @@
-{}
+{
+  "hub": {
+    "heroEyebrow": "PARCOURS · HANGUL",
+    "brand": "Hangul",
+    "heroSubtitle": "Lis le coréen. Décode la ville.",
+    "level": "NIVEAU {{level}}",
+    "levelCount": "{{completed}} / {{total}} étapes",
+    "progress": "PROGRESSION HANGUL",
+    "start": "Commencer",
+    "review": "Revoir",
+    "continue": "À CONTINUER",
+    "journeyCompleted": "PARCOURS TERMINÉ",
+    "stepProgress": "PROGRESSION DE L'ÉTAPE",
+    "journeyTitle": "TON PARCOURS",
+    "journeyCount": "{{completed}} sur {{total}} étapes terminées",
+    "stepLabel": "ÉTAPE {{number}} · HANGUL",
+    "stepDone": "TERMINÉ",
+    "stepUpcoming": "À VENIR",
+    "stepActive": "EN COURS",
+    "stepNew": "À COMMENCER",
+    "after": "Après « {{title}} »",
+    "completedSubtitle": "Terminé · {{subtitle}}",
+    "continueA11y": "À continuer. {{title}}. {{subtitle}}.",
+    "continueHint": "Ouvre l'étape Hangul",
+    "openHint": "Ouvre cette étape Hangul",
+    "openPrerequisiteHint": "Ouvre d'abord {{title}}",
+    "finishedSubtitle": "Parcours Hangul terminé · Revoir la lecture guidée",
+    "resumeSubtitle": "Hangul · {{title}}",
+    "assessmentTitle": "Évaluation Hangul",
+    "assessmentSubtitle": "Décodage cumulatif sans romanisation",
+    "assessmentRequirement": "l’évaluation Hangul",
+    "bridgeTitle": "Lecture guidée",
+    "bridgeSubtitle": "Lecture guidée, vocabulaire et écoute lente"
+  },
+  "lesson": {
+    "gateEyebrow": "PROGRESSION GUIDÉE",
+    "gateTitle": "Une étape avant celle-ci",
+    "gateDescription": "Termine d’abord « {{title}} ». Les exemples n’utilisent que les caractères déjà étudiés.",
+    "gateOpen": "OUVRIR {{title}}",
+    "disableRomanization": "Désactiver l'aide latine",
+    "enableRomanization": "Activer l'aide latine",
+    "romanizationOn": "Aide latine · activée",
+    "romanizationOff": "Aide latine · désactivée",
+    "heroEyebrow": "HANGUL · {{title}}",
+    "stage": "ÉTAPE HANGUL",
+    "scenesMastered": "{{count}} / {{total}} scènes maîtrisées",
+    "stepProgress": "PROGRESSION DE L'ÉTAPE",
+    "start": "Commencer",
+    "sceneLabel": "SCÈNE {{number}}",
+    "statusMastered": "RÉUSSI",
+    "statusReview": "À REVOIR",
+    "statusActive": "EN COURS",
+    "statusNew": "À COMMENCER",
+    "discovery": "DÉCOUVERTE",
+    "discoveryHint": "Écoute et révèle chaque carte",
+    "tapReveal": "TOUCHER POUR DÉCOUVRIR",
+    "listenCards": "ÉCOUTE LES {{count}} CARTES",
+    "resumeQuiz": "REPRENDRE L’EXERCICE",
+    "restartStage": "RECOMMENCER L’ÉTAPE",
+    "reviewStage": "REVOIR L’ÉTAPE",
+    "startStage": "COMMENCER L’ÉTAPE",
+    "stageCompleted": "ÉTAPE TERMINÉE",
+    "allScenesMastered": "Toutes les scènes sont maîtrisées.",
+    "openNext": "OUVRIR {{title}}",
+    "quizQuestion": "QUESTION {{current}} / {{total}}",
+    "listen": "ÉCOUTER",
+    "choose": "CHOISIR",
+    "correct": "Bonne réponse",
+    "incorrect": "Mauvaise réponse",
+    "remember": "À retenir : {{answer}}",
+    "next": "SUIVANT",
+    "finish": "TERMINER",
+    "quizSuccess": "LECTURE RÉUSSIE",
+    "resultMasteredAfterCorrections": "Les sons manqués sont revenus dans la session. Tu peux continuer.",
+    "resultMastered": "Lecture réussie. Tu peux continuer.",
+    "resultTryAgain": "Revois les caractères signalés, puis recommence."
+  },
+  "assessment": {
+    "eyebrow": "VALIDATION FINALE",
+    "title": "Lire sans romanisation",
+    "description": "12 défis, majoritairement inédits. Il faut 11 bonnes réponses pour réussir.",
+    "programTitle": "Au programme",
+    "program": "Reconnaissance visuelle · écoute · assemblage · lecture inédite · batchim · liaison",
+    "best": "Meilleur résultat : {{score}}/{{total}} · {{attempts}} tentative(s)",
+    "completePrerequisite": "Termine d’abord « {{title}} ».",
+    "start": "Commencer sans aide latine",
+    "openPrerequisite": "Ouvrir {{title}}",
+    "passed": "LECTURE RÉUSSIE",
+    "failed": "SONS À REVOIR",
+    "passedDescription": "Tu peux maintenant lire des phrases guidées.",
+    "failedDescription": "Revois les sons concernés avant une nouvelle tentative.",
+    "openBridge": "OUVRIR LA LECTURE GUIDÉE",
+    "restart": "RECOMMENCER L’ÉVALUATION",
+    "question": "QUESTION {{current}}/{{total}}",
+    "correct": "Bien vu",
+    "incorrect": "À revoir",
+    "remember": "À retenir : {{answer}}",
+    "next": "SUIVANT",
+    "finish": "TERMINER"
+  },
+  "bridge": {
+    "eyebrow": "LECTURE GUIDÉE",
+    "title": "Lire des phrases complètes",
+    "description": "Lis chaque phrase, puis écoute-la. Observe les petits éléments attachés aux mots ; tu verras leur rôle plus tard.",
+    "firstPhrases": "PREMIÈRES PHRASES",
+    "listen": "ÉCOUTER",
+    "nextTitle": "Choisis la suite",
+    "nextDescription": "La grammaire est la prochaine étape recommandée pour comprendre l’ordre des mots et les petits éléments que tu viens d’observer.",
+    "goGrammar": "CONTINUER VERS LA GRAMMAIRE",
+    "goHome": "RETOURNER À L’ACCUEIL",
+    "lockedTitle": "Termine d’abord l’évaluation",
+    "lockedDescription": "Cette lecture se débloque avec au moins 11 bonnes réponses sur 12.",
+    "openAssessment": "OUVRIR L’ÉVALUATION",
+    "readings": {
+      "r0": {
+        "guide": "아이 + 가 + 와요 · sujet + verbe",
+        "meaning": "L’enfant arrive."
+      },
+      "r1": {
+        "guide": "여우 + 가 + 와요 · sujet + verbe",
+        "meaning": "Le renard arrive."
+      },
+      "r2": {
+        "guide": "아이 + 가 · 집 + 에 · 가요 · sujet + lieu + verbe",
+        "meaning": "L’enfant va à la maison."
+      },
+      "r3": {
+        "guide": "사과 + 와 · 우유 + 를 · 먹어요 · objets + verbe",
+        "meaning": "Je mange une pomme et du lait."
+      }
+    }
+  },
+  "replay": {
+    "label": "RÉÉCOUTER",
+    "accessibility": "Réécouter le son coréen"
+  },
+  "feedback": {
+    "audio-to-character": {
+      "correct": "Tu as bien reconnu le caractère à l’oreille.",
+      "incorrect": "Réécoute le son et compare-le au caractère attendu."
+    },
+    "character-to-sound": {
+      "correct": "Tu as associé le caractère au bon son.",
+      "incorrect": "Repars du caractère et vérifie son son de référence."
+    },
+    "assemble": {
+      "correct": "Le bloc est correctement construit.",
+      "incorrect": "Reconstruis le bloc dans l’ordre : consonne, voyelle, puis finale."
+    },
+    "layout": {
+      "correct": "Tu as bien placé les éléments du bloc.",
+      "incorrect": "Regarde d’abord la direction de la voyelle."
+    },
+    "read": {
+      "correct": "La lecture est correcte.",
+      "incorrect": "Relis le mot bloc par bloc."
+    },
+    "batchim": {
+      "correct": "Tu as bien identifié la finale.",
+      "incorrect": "Isole la consonne finale avant de relire la syllabe."
+    },
+    "contrast": {
+      "correct": "Tu as bien distingué les sons.",
+      "incorrect": "Réécoute surtout l’attaque, la tension et le souffle."
+    }
+  },
+  "common": {
+    "back": "RETOUR",
+    "backA11y": "Retour à l’écran précédent",
+    "backHint": "Revient à l’écran précédent"
+  }
+}
