@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -19,6 +19,8 @@ import {
   validateHangulCurriculum,
 } from "../data/hangul/curriculum.ts";
 import { createEmptyHangulProgress } from "../data/hangul/types.ts";
+import { buildHangulFrenchCopy, hangulCopyId, needsHangulOptionTranslation, originalHangulOptionIndex } from "../data/localized/hangulRegistry.ts";
+import { japaneseHangulContent } from "../data/localized/ja/hangul.ts";
 import {
   advanceHangulQuiz,
   answerHangulQuizQuestion,
@@ -419,4 +421,92 @@ test("the complete reading foundation remains outside the premium paywall", () =
     assert.equal(PREMIUM_ROUTE_PATHS.has(route), false, `${route} must remain free`);
     assert.equal(PREMIUM_ROUTE_PATHS.has(route.replace("/(tabs)", "")), false, `${route} must remain free`);
   }
+});
+
+// Phase 5: display-only Japanese content must not alter canonical Korean/audio,
+ // scoring, progress keys or shuffled option identities.
+test("Hangul FR/JA copy covers every module, scene, card, quiz and assessment field", () => {
+  const fr = buildHangulFrenchCopy();
+  const ja = japaneseHangulContent;
+  assert.deepEqual(Object.keys(ja).sort(), Object.keys(fr).sort());
+  let itemCount = 0;
+  let exerciseCount = 0;
+  for (const [id, fields] of Object.entries(fr)) {
+    assert.deepEqual(Object.keys(ja[id]).sort(), Object.keys(fields).sort(), id);
+    for (const [field, french] of Object.entries(fields)) {
+      assert.equal(typeof french, "string", id + " " + field);
+      assert.ok(ja[id][field].trim().length > 0, id + " " + field);
+    }
+    itemCount++;
+  }
+  for (const module of HANGUL_MODULES) {
+    const translatedTitle = ja[hangulCopyId("module", module.id)]?.title;
+    assert.ok(translatedTitle);
+    for (const scene of module.scenes) {
+      assert.ok(ja[hangulCopyId("scene", module.id, scene.id)].instruction);
+      for (const card of scene.cards) {
+        assert.equal(typeof card.glyph, "string");
+        assert.ok(ja[hangulCopyId("card", module.id, scene.id, card.id)].explanation);
+      }
+      for (const question of scene.questions) {
+        exerciseCount++;
+        const originalAnswer = question.answer;
+        const originalOptions = question.options.map(({value, audio}) => ({value, audio}));
+        const translated = ja[hangulCopyId("question", module.id, scene.id, question.id)];
+        assert.ok(translated.prompt && translated.explanation);
+        question.options.forEach((option, index) => {
+          if (needsHangulOptionTranslation(option.label)) assert.ok(translated[`option${index}`]);
+          assert.equal(originalHangulOptionIndex(question, option.value), index);
+        });
+        assert.equal(question.answer, originalAnswer);
+        assert.deepEqual(question.options.map(({value, audio}) => ({value, audio})), originalOptions);
+      }
+    }
+  }
+  for (const question of HANGUL_ASSESSMENT_QUESTIONS) {
+    exerciseCount++;
+    const translated = ja[hangulCopyId("question", "assessment", question.id)];
+    assert.ok(translated?.prompt && translated?.explanation);
+  }
+  assert.equal(HANGUL_MODULES.length, 5);
+  assert.equal(HANGUL_ASSESSMENT_QUESTIONS.length, 12);
+  assert.ok(itemCount > 100, "all canonical content has entries");
+  assert.ok(exerciseCount > 100, "all canonical quiz questions have entries");
+});
+
+test("all seven Hangul screens use localized UI without modifying grading and audio", () => {
+  const root = fileURLToPath(new URL("../", import.meta.url));
+  const ja = JSON.parse(readFileSync(join(root, "locales/ja/hangul.json"), "utf8"));
+  const fr = JSON.parse(readFileSync(join(root, "locales/fr/hangul.json"), "utf8"));
+  const flatten = (value, path = "", result = {}) => {
+    for (const [key, child] of Object.entries(value)) {
+      const id = path ? path + "." + key : key;
+      if (typeof child === "string") result[id] = child;
+      else flatten(child, id, result);
+    }
+    return result;
+  };
+  const jpCopy = flatten(ja), frCopy = flatten(fr);
+  assert.deepEqual(Object.keys(jpCopy).sort(), Object.keys(frCopy).sort());
+  for (const key of Object.keys(jpCopy)) {
+    assert.ok(jpCopy[key].trim());
+    assert.deepEqual((jpCopy[key].match(/\{\{[^}]+\}\}/gu) ?? []).sort(), (frCopy[key].match(/\{\{[^}]+\}\}/gu) ?? []).sort(), key);
+  }
+  for (const path of [
+    "components/hangul/HangulLessonScreen.tsx",
+    "app/(tabs)/hangul/index.tsx",
+    "app/(tabs)/hangul/assessment.tsx",
+    "app/(tabs)/hangul/bridge.tsx",
+  ]) {
+    const source = readFileSync(join(root, path), "utf8");
+    assert.match(source, /hangulUiText\(/u, path);
+    assert.match(source, /useTranslation\("hangul"\)/u, path);
+  }
+  const lesson = readFileSync(join(root, "components/hangul/HangulLessonScreen.tsx"), "utf8");
+  assert.match(lesson, /answerQuestion\(item\.value\)/u);
+  assert.match(lesson, /originalQuestion\?\.options\.findIndex/u);
+  assert.match(lesson, /qc\(currentQuestion\.id/u);
+  assert.match(lesson, /createHangulQuizSession/u);
+  assert.match(lesson, /restoreHangulQuizSession/u);
+  assert.match(lesson, /playAudio\(currentQuestion\.audio!/u);
 });
