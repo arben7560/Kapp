@@ -5,13 +5,13 @@ import {
   hangulCopyId, needsHangulOptionTranslation,
 } from "../hangulRegistry.ts";
 import type { LocalizedModule } from "../types.ts";
-import { vowelsBasicJa } from "./hangulCopy/vowelsBasic";
-import { consonantsBasicJa } from "./hangulCopy/consonantsBasic";
-import { consonantsTenseJa } from "./hangulCopy/consonantsTense";
-import { compoundVowelsJa } from "./hangulCopy/compoundVowels";
-import { batchimJa } from "./hangulCopy/batchim";
-import { assessmentQuestionsJa } from "./hangulCopy/assessment";
-import type { JapaneseHangulModule } from "./hangulCopy/types";
+import { vowelsBasicJa } from "./hangulCopy/vowelsBasic.ts";
+import { consonantsBasicJa } from "./hangulCopy/consonantsBasic.ts";
+import { consonantsTenseJa } from "./hangulCopy/consonantsTense.ts";
+import { compoundVowelsJa } from "./hangulCopy/compoundVowels.ts";
+import { batchimJa } from "./hangulCopy/batchim.ts";
+import { assessmentQuestionsJa } from "./hangulCopy/assessment.ts";
+import type { JapaneseHangulModule } from "./hangulCopy/types.ts";
 
 const japaneseModules: Record<string, JapaneseHangulModule> = {
   hangul_vowels_basic: vowelsBasicJa,
