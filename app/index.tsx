@@ -570,6 +570,7 @@ function HeroEntryScreen({ onboardingCompleted }: { onboardingCompleted: boolean
 
 export default function SplashScreenPage() {
   const { preference } = useAppLanguage();
+  const [devLanguageConfirmed, setDevLanguageConfirmed] = useState(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -796,8 +797,8 @@ export default function SplashScreenPage() {
   ]);
 
   if (showHero) {
-    if (shouldOfferLanguageSelection({ preference })) {
-      return <LanguageSelectionScreen />;
+    if ((__DEV__ && !devLanguageConfirmed) || shouldOfferLanguageSelection({ preference })) {
+      return <LanguageSelectionScreen onComplete={() => setDevLanguageConfirmed(true)} />;
     }
     if (onboardingCompleted === null) return <View style={styles.screen} />;
     return <HeroEntryScreen onboardingCompleted={onboardingCompleted} />;
