@@ -1,17 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
 import { EXERCISES_BY_KIND, type ExerciseKind } from "../../data/listen/activeExercises";
 import type { DailyStreakCompletionResult } from "../../lib/dailyStreak";
-import {
-  getListenTrainingNextAction,
-  LISTEN_TRAINING_SUMMARIES,
-} from "../../lib/listenTrainingCompletion";
+import { resolveDisplayMessage, type DisplayMessage } from "../../lib/i18n/displayText";
+import { getListenTrainingNextAction } from "../../lib/listenTrainingCompletion";
 import { AppText } from "../app-text";
 
 type NewDailyStreakResult = Exclude<DailyStreakCompletionResult, "already_completed">;
+type ListeningKey = Extract<DisplayMessage, { namespace: "listening" }>["key"];
 
 type Props = Readonly<{
   trainingKind: ExerciseKind;
@@ -33,20 +33,23 @@ export function ListenTrainingCompletionModal({
   onRestart,
   onNext,
 }: Props) {
-  const summary = LISTEN_TRAINING_SUMMARIES[trainingKind];
+  const { i18n } = useTranslation("listening");
+  const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
+  const l = (key: ListeningKey, values?: Record<string, string | number>) =>
+    resolveDisplayMessage({ namespace: "listening", key, values }, i18n);
+  const summary = {
+    title: l(`summary.trainings.${trainingKind}.title` as ListeningKey),
+    achievement: l(`summary.trainings.${trainingKind}.achievement` as ListeningKey),
+    learning: l(`summary.trainings.${trainingKind}.learning` as ListeningKey),
+  };
   const totalQuestions = EXERCISES_BY_KIND[trainingKind].length;
-  const nextAction = getListenTrainingNextAction(trainingKind);
-  const streakTitle =
-    streakOutcome === "completed_with_freeze"
-      ? "Série protégée"
-      : streakOutcome === "restarted"
-        ? "Nouvelle série commencée"
-        : "Journée validée";
-
-  const streakDescription =
-    streakOutcome === "completed_with_freeze"
-      ? "Une protection a préservé ta série."
-      : "Ton activité du jour est enregistrée.";
+  const nextKind = getListenTrainingNextAction(trainingKind).nextKind;
+  const nextTitle = l(`summary.trainings.${nextKind}.title` as ListeningKey);
+  const nextActionLabel = l(trainingKind === "reaction" ? "summary.back" : "summary.next", { title: nextTitle });
+  const streakTitle = l(streakOutcome === "completed_with_freeze"
+    ? "summary.freezeTitle" : streakOutcome === "restarted" ? "summary.restartTitle" : "summary.doneTitle");
+  const streakDescription = l(streakOutcome === "completed_with_freeze"
+    ? "summary.freezeDescription" : "summary.doneDescription");
 
   return (
     <Modal
@@ -59,16 +62,16 @@ export function ListenTrainingCompletionModal({
         <SafeAreaView style={styles.sheet} edges={["bottom"]}>
           <View style={styles.header}>
             <View style={styles.headerText}>
-              <AppText variant="caption" tone="premium" style={styles.eyebrow}>
-                {`ÉCOUTE · ${summary.title.toUpperCase()}`}
+              <AppText script={uiScript} variant="caption" tone="premium" style={styles.eyebrow}>
+                {l("summary.header", { title: uiScript === "japanese" ? summary.title : summary.title.toUpperCase() })}
               </AppText>
-              <AppText variant="sectionTitle" tone="strong">
-                Entraînement terminé
+              <AppText script={uiScript} variant="sectionTitle" tone="strong">
+                {l("summary.heading")}
               </AppText>
             </View>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Fermer le bilan ${summary.title}`}
+              accessibilityLabel={l("summary.close", { title: summary.title })}
               hitSlop={8}
               onPress={onClose}
               style={styles.closeButton}
@@ -85,10 +88,10 @@ export function ListenTrainingCompletionModal({
               <View style={styles.successIcon}>
                 <Ionicons name="checkmark-circle" size={44} color="#C4A3FF" />
               </View>
-              <AppText variant="sectionTitle" tone="strong" align="center">
-                Bien joué !
+              <AppText script={uiScript} variant="sectionTitle" tone="strong" align="center">
+                {l("summary.congratulations")}
               </AppText>
-              <AppText
+              <AppText script={uiScript}
                 variant="bodySecondary"
                 tone="muted"
                 align="center"
@@ -100,17 +103,17 @@ export function ListenTrainingCompletionModal({
 
             <View style={styles.card}>
               <View style={styles.cardHeading}>
-                <AppText variant="bodyStrong" tone="strong">
-                  Ta progression
+                <AppText script={uiScript} variant="bodyStrong" tone="strong">
+                  {l("summary.progress")}
                 </AppText>
-                <AppText variant="bodyStrong" style={styles.accentText}>
+                <AppText script={uiScript} variant="bodyStrong" style={styles.accentText}>
                   {totalQuestions} / {totalQuestions}
                 </AppText>
               </View>
               <View
                 style={styles.progressSegments}
                 accessible
-                accessibilityLabel={`${totalQuestions} questions validées sur ${totalQuestions}`}
+                accessibilityLabel={l("summary.progressA11y", { total: totalQuestions })}
               >
                 {Array.from({ length: totalQuestions }, (_, index) => (
                   <View key={index} style={styles.progressSegment} />
@@ -118,8 +121,8 @@ export function ListenTrainingCompletionModal({
               </View>
               <View style={styles.inlineRow}>
                 <Ionicons name="checkmark-circle-outline" size={18} color="#A3E4BF" />
-                <AppText variant="caption" tone="muted" style={styles.flexText}>
-                  Toutes les questions sont validées.
+                <AppText script={uiScript} variant="caption" tone="muted" style={styles.flexText}>
+                  {l("summary.allValidated")}
                 </AppText>
               </View>
             </View>
@@ -127,11 +130,11 @@ export function ListenTrainingCompletionModal({
             <View style={styles.card}>
               <View style={styles.inlineRow}>
                 <Ionicons name="book-outline" size={20} color="#C4A3FF" />
-                <AppText variant="bodyStrong" tone="strong" style={styles.flexText}>
-                  Ce que tu as travaillé
+                <AppText script={uiScript} variant="bodyStrong" tone="strong" style={styles.flexText}>
+                  {l("summary.learned")}
                 </AppText>
               </View>
-              <AppText variant="bodySecondary" tone="muted">
+              <AppText script={uiScript} variant="bodySecondary" tone="muted">
                 {summary.learning}
               </AppText>
             </View>
@@ -141,10 +144,10 @@ export function ListenTrainingCompletionModal({
                 <View style={styles.inlineRow}>
                   <Ionicons name="flame" size={21} color="#D5B6FF" />
                   <View style={styles.flexText}>
-                    <AppText variant="bodyStrong" tone="strong">
+                    <AppText script={uiScript} variant="bodyStrong" tone="strong">
                       {streakTitle}
                     </AppText>
-                    <AppText variant="caption" style={styles.mutedText}>
+                    <AppText script={uiScript} variant="caption" style={styles.mutedText}>
                       {streakDescription}
                     </AppText>
                   </View>
@@ -156,18 +159,18 @@ export function ListenTrainingCompletionModal({
           <View style={styles.actions}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={nextAction.label}
+              accessibilityLabel={nextActionLabel}
               onPress={onNext}
               style={({ pressed }) => [styles.primaryAction, pressed && styles.pressed]}
             >
-              <AppText variant="button" style={styles.primaryActionText}>
-                {nextAction.label}
+              <AppText script={uiScript} variant="button" style={styles.primaryActionText}>
+                {nextActionLabel}
               </AppText>
               <Ionicons name="arrow-forward" size={19} color="#050508" />
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Recommencer l'entraînement ${summary.title}`}
+              accessibilityLabel={l("summary.restartA11y", { title: summary.title })}
               onPress={onRestart}
               style={({ pressed }) => [
                 styles.secondaryAction,
@@ -175,8 +178,8 @@ export function ListenTrainingCompletionModal({
               ]}
             >
               <Ionicons name="refresh" size={18} color={TEXT} />
-              <AppText variant="button" tone="strong">
-                Recommencer {summary.title}
+              <AppText script={uiScript} variant="button" tone="strong">
+                {l("summary.restart", { title: summary.title })}
               </AppText>
             </Pressable>
           </View>
