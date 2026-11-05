@@ -163,5 +163,10 @@
       "correct": "Tu as bien distingué les sons.",
       "incorrect": "Réécoute surtout l’attaque, la tension et le souffle."
     }
+  },
+  "common": {
+    "back": "RETOUR",
+    "backA11y": "Retour à l’écran précédent",
+    "backHint": "Revient à l’écran précédent"
   }
 }
