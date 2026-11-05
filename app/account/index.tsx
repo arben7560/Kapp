@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
 import { ApplicationLanguageSettings } from "../../components/application-language-settings";
+import { LanguageSelectionScreen } from "../../components/language-selection-screen";
 import { AppText, AppTextInput } from "../../components/app-text";
 import { ActionButton } from "../../components/ui/action-button";
 import { AppBackButton } from "../../components/ui/app-back-button";
@@ -228,6 +229,7 @@ export default function AccountScreen() {
   const params = useLocalSearchParams<{ action?: string | string[] }>();
   const responsive = useResponsiveLayout({ maxWidth: 760 });
   const [mode, setMode] = React.useState<FormMode>(null);
+  const [showLanguagePreview, setShowLanguagePreview] = React.useState(false);
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [passwordConfirmation, setPasswordConfirmation] = React.useState("");
@@ -520,6 +522,15 @@ export default function AccountScreen() {
     router.push("/premium");
   };
 
+  if (__DEV__ && showLanguagePreview) {
+    return (
+      <LanguageSelectionScreen
+        onComplete={() => setShowLanguagePreview(false)}
+        onCancel={() => setShowLanguagePreview(false)}
+      />
+    );
+  }
+
   return (
     <LinearGradient
       colors={["#020306", "#070A12", "#090817", "#020306"]}
@@ -563,6 +574,23 @@ export default function AccountScreen() {
             <GlassCard>
               <ApplicationLanguageSettings />
             </GlassCard>
+
+            {__DEV__ ? (
+              <GlassCard>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Tester l'écran de sélection de langue"
+                  onPress={() => setShowLanguagePreview(true)}
+                  style={styles.settingsRow}
+                >
+                  <View style={styles.settingsCopy}>
+                    <AppText variant="bodyStrong">Tester l'écran de sélection de langue</AppText>
+                    <AppText variant="caption" tone="soft">Prévisualisation — développement uniquement</AppText>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={COLORS.soft} />
+                </Pressable>
+              </GlassCard>
+            ) : null}
 
             {!auth.isPermanentAccount ? (
               <GlassCard>

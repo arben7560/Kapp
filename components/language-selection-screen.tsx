@@ -9,9 +9,15 @@ import { useAppLanguage } from '../lib/i18n/LanguageProvider';
 import { AppText } from './app-text';
 import { LanguageChoices } from './language-choices';
 
-export function LanguageSelectionScreen() {
-  const { deviceLocale, setPreference } = useAppLanguage();
-  const [selected, setSelected] = useState(deviceLocale);
+type LanguageSelectionScreenProps = {
+  /** Only used by the development-only preview from /account. */
+  onComplete?: () => void;
+  onCancel?: () => void;
+};
+
+export function LanguageSelectionScreen({ onComplete, onCancel }: LanguageSelectionScreenProps = {}) {
+  const { deviceLocale, preference, setPreference } = useAppLanguage();
+  const [selected, setSelected] = useState(preference ?? deviceLocale);
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
   const busy = useRef(false);
@@ -36,8 +42,9 @@ export function LanguageSelectionScreen() {
     setSaving(true);
     setSaveFailed(false);
     try {
-      // Persist only the language. The parent then reveals the existing welcome screen.
+      // Persist only the language. Startup reveals the welcome; preview returns to /account.
       await setPreference(selected);
+      onComplete?.();
     } catch {
       setSaveFailed(true);
     } finally {
@@ -87,6 +94,17 @@ export function LanguageSelectionScreen() {
               </AppText>
               <MoveRight size={19} color="#FFFFFF" />
             </Pressable>
+            {onCancel ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Annuler la prévisualisation"
+                disabled={saving}
+                onPress={onCancel}
+                style={styles.cancel}
+              >
+                <AppText variant="body" align="center" tone="muted">Annuler / キャンセル</AppText>
+              </Pressable>
+            ) : null}
           </ScrollView>
         </Animated.View>
       </SafeAreaView>
@@ -113,6 +131,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12,
   },
   buttonText: { color: '#FFFFFF', flexShrink: 1 },
+  cancel: { alignSelf: 'center', minHeight: 44, justifyContent: 'center', paddingHorizontal: 20, marginTop: 16 },
   error: { color: '#FB7185', marginTop: 16 },
   pressed: { opacity: 0.85 },
 });
