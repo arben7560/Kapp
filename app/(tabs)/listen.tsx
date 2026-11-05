@@ -2,6 +2,7 @@ import type { ScrollViewInstance } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   AccessibilityInfo,
   Animated,
@@ -29,6 +30,7 @@ import {
   type DailyStreakCompletionResult,
 } from "../../lib/dailyStreak";
 import { saveHomeResumeContext } from "../../lib/homeResume";
+import { resolveDisplayMessage, type DisplayMessage } from "../../lib/i18n/displayText";
 import { shuffleListenChoices } from "../../lib/listenExerciseChoices";
 import { canValidateListenAnswer } from "../../lib/listenValidation";
 import { recordListenTrainingSuccess } from "../../lib/listenTrainingCompletion";
@@ -79,43 +81,7 @@ const LISTEN_AUDIO_BY_ID: Partial<Record<string, number>> = {
   "street-reaction-05": require("../../assets/audio/listen/yeogiseo-jjuk-gasimyeon-dwaeyo.mp3"),
 };
 
-const KIND_LABEL: Record<ExerciseKind, { mini: string; skill: string }> = {
-  dictation: { mini: "Orthographe", skill: "Écoute + Hangul" },
-  situation: { mini: "Situation", skill: "Compréhension" },
-  gap: { mini: "Mot manquant", skill: "Vocabulaire" },
-  order: { mini: "Ordre", skill: "Syntaxe" },
-  reaction: { mini: "Réaction", skill: "Conversation" },
-};
-
-function getListenTeacherFeedback(kind: ExerciseKind, correct: boolean) {
-  if (correct) {
-    switch (kind) {
-      case "dictation":
-        return "Oui, c’est bien la phrase que tu as entendue.";
-      case "situation":
-        return "Oui, tu as bien compris ce qui se passe dans la scène.";
-      case "gap":
-        return "Oui, tu as isolé le bon mot dans l’audio.";
-      case "order":
-        return "Oui, tu as retrouvé l’ordre entendu dans la phrase.";
-      case "reaction":
-        return "Oui, cette réaction suit naturellement ce que tu viens d’entendre.";
-    }
-  }
-
-  switch (kind) {
-    case "dictation":
-      return "Pas tout à fait. Réécoute une fois sans lire les choix, puis compare les sons que tu reconnais.";
-    case "situation":
-      return "La réponse choisie ne répond pas vraiment à ce qui vient d’être dit. Repars de la question ou de l’annonce entendue.";
-    case "gap":
-      return "Tu n’as pas isolé le bon mot. Réécoute surtout l’endroit qui correspond au blanc.";
-    case "order":
-      return "Les éléments sont là, mais pas dans l’ordre entendu. Réécoute le rythme de la phrase avant de les replacer.";
-    case "reaction":
-      return "Cette réponse pourrait fonctionner ailleurs, mais pas après cette réplique. Écoute d’abord l’intention de la personne.";
-  }
-}
+type ListeningKey = Extract<DisplayMessage, { namespace: "listening" }>["key"];
 
 function normalizeParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
@@ -143,6 +109,10 @@ function getRequestedListenPosition(
 }
 
 export default function ListenScreen() {
+  const { i18n } = useTranslation("listening");
+  const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
+  const l = (key: ListeningKey, values?: Record<string, string | number>) =>
+    resolveDisplayMessage({ namespace: "listening", key, values }, i18n);
   const params = useLocalSearchParams<{
     training?: string | string[];
     exercise?: string | string[];
@@ -198,7 +168,17 @@ export default function ListenScreen() {
   const exercises = EXERCISES_BY_KIND[trainingKind];
   const sourceItem = exercises[exerciseIndex];
   const item = useMemo(() => shuffleListenChoices(sourceItem), [sourceItem]);
-  const meta = KIND_LABEL[trainingKind];
+  const meta = {
+    mini: l(`kinds.${trainingKind}.mini` as ListeningKey),
+    skill: l(`kinds.${trainingKind}.skill` as ListeningKey),
+  };
+  // These are presentation fields only; canonical questions and audio are untouched.
+  const displayItem = {
+    theme: l(`exercises.${item.id}.theme` as ListeningKey),
+    title: l(`exercises.${item.id}.title` as ListeningKey),
+    instruction: l(`exercises.${item.id}.instruction` as ListeningKey),
+    explanation: l(`exercises.${item.id}.explanation` as ListeningKey),
+  };
   const audioSource = LISTEN_AUDIO_BY_ID[item.id];
   const hasAttempt =
     item.kind === "order" ? picked.length > 0 : selected !== null;
@@ -321,7 +301,7 @@ export default function ListenScreen() {
   };
 
   const isCorrect = checked && isAnswerCorrect();
-  const teacherFeedback = getListenTeacherFeedback(item.kind, isCorrect);
+  const teacherFeedback = l(`feedback.${item.kind}.${isCorrect ? "correct" : "incorrect"}` as ListeningKey);
 
   const resetAnswer = () => {
     validationLockRef.current = false;
@@ -384,7 +364,7 @@ export default function ListenScreen() {
 
     validationLockRef.current = true;
     const correct = isAnswerCorrect();
-    const feedback = getListenTeacherFeedback(item.kind, correct);
+    const feedback = l(`feedback.${item.kind}.${correct ? "correct" : "incorrect"}` as ListeningKey);
     const sessionId = listenSessionRef.current;
 
     setChecked(true);
@@ -392,8 +372,8 @@ export default function ListenScreen() {
 
     AccessibilityInfo.announceForAccessibility(
       correct
-        ? `Bien vu. ${feedback} ${item.explanation}`
-        : `À revoir. ${feedback}`,
+        ? l("ui.accessibilityCorrect", { feedback, explanation: displayItem.explanation })
+        : l("ui.accessibilityIncorrect", { feedback }),
     );
 
     if (correct) {
@@ -410,13 +390,7 @@ export default function ListenScreen() {
           const outcome = state.lastCompletionResult;
           if (outcome && outcome !== "already_completed") {
             setTrainingStreakOutcome((previous) => previous ?? outcome);
-            setDailyMessage(
-              outcome === "completed_with_freeze"
-                ? "Protection de série utilisée. Série conservée."
-                : outcome === "restarted"
-                  ? "Nouvelle série commencée."
-                  : "Journée validée. Série conservée.",
-            );
+            setDailyMessage(outcome);
             setTimeout(
               () => scrollRef.current?.scrollToEnd({ animated: true }),
               80,
@@ -487,15 +461,15 @@ export default function ListenScreen() {
         <View>
           <View style={styles.sentenceBox}>
             {picked.length === 0 ? (
-              <AppText variant="body" tone="soft" style={styles.placeholder}>
-                Construis la phrase ici
+              <AppText script={uiScript} variant="body" tone="soft" style={styles.placeholder}>
+                {l("ui.constructSentence")}
               </AppText>
             ) : (
               picked.map((wordIndex) => (
                 <Pressable
                   key={wordIndex}
                   accessibilityRole="button"
-                  accessibilityLabel={`Retirer ${item.words[wordIndex]} de la phrase`}
+                  accessibilityLabel={l("ui.removeWord", { word: item.words[wordIndex] })}
                   accessibilityState={{ selected: true }}
                   aria-selected={true}
                   hitSlop={6}
@@ -523,7 +497,7 @@ export default function ListenScreen() {
                 <Pressable
                   key={`${word}-${wordIndex}`}
                   accessibilityRole="button"
-                  accessibilityLabel={`Ajouter ${word} a la phrase`}
+                  accessibilityLabel={l("ui.addWord", { word })}
                   accessibilityState={{
                     disabled: used || (checked && isCorrect),
                     selected: used,
@@ -659,15 +633,15 @@ export default function ListenScreen() {
               size={16}
               color={LISTEN_ACCENT.base}
             />
-            <AppText variant="label" tone="strong" style={styles.modeText}>
-              ÉCOUTE
+            <AppText script={uiScript} variant="label" tone="strong" style={styles.modeText}>
+              {l("ui.module")}
             </AppText>
           </View>
 
           <View style={styles.modeSwitcherWrap}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Entraînement précédent"
+              accessibilityLabel={l("ui.previousTraining")}
               hitSlop={8}
               onPress={() => changeTraining(-1)}
               style={styles.arrowButton}
@@ -676,14 +650,14 @@ export default function ListenScreen() {
             </Pressable>
 
             <View style={styles.modeCenterPill}>
-              <AppText
+              <AppText script={uiScript}
                 variant="label"
                 tone="soft"
                 style={styles.modeCenterMini}
               >
-                ENTRAÎNEMENT
+                {l("ui.training")}
               </AppText>
-              <AppText
+              <AppText script={uiScript}
                 variant="bodyStrong"
                 tone="strong"
                 style={styles.modeCenterLabel}
@@ -694,7 +668,7 @@ export default function ListenScreen() {
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Entraînement suivant"
+              accessibilityLabel={l("ui.nextTraining")}
               hitSlop={8}
               onPress={() => changeTraining(1)}
               style={styles.arrowButton}
@@ -708,7 +682,7 @@ export default function ListenScreen() {
               <Pressable
                 key={exercise.id}
                 accessibilityRole="button"
-                accessibilityLabel={`Question ${currentExerciseIndex + 1} sur ${exercises.length}`}
+                accessibilityLabel={l("ui.questionPosition", { current: currentExerciseIndex + 1, total: exercises.length })}
                 accessibilityState={{
                   selected: currentExerciseIndex === exerciseIndex,
                 }}
@@ -733,22 +707,22 @@ export default function ListenScreen() {
           <View style={styles.card}>
             <View style={styles.cardTop}>
               <View style={styles.cardTopTitleWrap}>
-                <AppText
+                <AppText script={uiScript}
                   variant="sectionLabel"
                   tone="brand"
                   style={styles.theme}
                 >
-                  {item.theme}
+                  {displayItem.theme}
                 </AppText>
-                <AppText
+                <AppText script={uiScript}
                   variant="sectionTitle"
                   tone="strong"
                   style={styles.title}
                 >
-                  {item.title}
+                  {displayItem.title}
                 </AppText>
               </View>
-              <AppText
+              <AppText script={uiScript}
                 variant="caption"
                 tone="soft"
                 align="end"
@@ -760,21 +734,21 @@ export default function ListenScreen() {
             </View>
 
             <View style={styles.skillRow}>
-              <AppText variant="label" tone="strong" style={styles.skillPill}>
+              <AppText script={uiScript} variant="label" tone="strong" style={styles.skillPill}>
                 {meta.mini}
               </AppText>
-              <AppText variant="caption" tone="muted" style={styles.skillText}>
+              <AppText script={uiScript} variant="caption" tone="muted" style={styles.skillText}>
                 {meta.skill}
               </AppText>
             </View>
 
-            <AppText variant="body" tone="muted" style={styles.instruction}>
-              {item.instruction}
+            <AppText script={uiScript} variant="body" tone="muted" style={styles.instruction}>
+              {displayItem.instruction}
             </AppText>
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`${hasPlayedCurrentAudio ? "Réécouter" : "Écouter"} l’audio de la question`}
+              accessibilityLabel={l("ui.questionAudio", { action: l(hasPlayedCurrentAudio ? "ui.relisten" : "ui.listen") })}
               accessibilityState={{
                 disabled: !audioSource || isPlayingCurrentAudio,
               }}
@@ -789,12 +763,12 @@ export default function ListenScreen() {
               ]}
             >
               <Ionicons name="play" size={18} color={COLORS.text} />
-              <AppText variant="button" tone="strong" style={styles.listenText}>
-                {hasPlayedCurrentAudio ? "Réécouter" : "Écouter"}
+              <AppText script={uiScript} variant="button" tone="strong" style={styles.listenText}>
+                {l(hasPlayedCurrentAudio ? "ui.relisten" : "ui.listen")}
               </AppText>
             </Pressable>
 
-            <AppText
+            <AppText script={uiScript}
               variant="caption"
               tone="soft"
               align="center"
@@ -802,13 +776,13 @@ export default function ListenScreen() {
             >
               {audioSource
                 ? isPlayingCurrentAudio
-                  ? "Lecture en cours"
+                  ? l("ui.playing")
                   : hasCompletedCurrentAudio
                     ? ""
                     : hasPlayedCurrentAudio
-                      ? "Lecture interrompue · réessaie"
+                      ? l("ui.interrupted")
                       : ""
-                : "Audio indisponible"}
+                : l("ui.unavailable")}
             </AppText>
 
             {!!audioPlaybackError && (
@@ -817,22 +791,22 @@ export default function ListenScreen() {
                 accessibilityLiveRegion="polite"
                 style={styles.audioError}
               >
-                <AppText
+                <AppText script={uiScript}
                   variant="body"
                   tone="strong"
                   style={styles.audioErrorText}
                 >
-                  Impossible de lire l’audio. Vérifie le volume, puis réessaie.
+                  {l("ui.audioError")}
                 </AppText>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Réessayer la lecture audio"
+                  accessibilityLabel={l("ui.retryAudioLabel")}
                   hitSlop={6}
                   onPress={playAudio}
                   style={styles.audioRetryButton}
                 >
-                  <AppText variant="button" tone="strong">
-                    Réessayer
+                  <AppText script={uiScript} variant="button" tone="strong">
+                    {l("ui.retry")}
                   </AppText>
                 </Pressable>
               </View>
@@ -847,24 +821,27 @@ export default function ListenScreen() {
                 accessibilityRole="alert"
                 accessibilityLabel={
                   isCorrect
-                    ? `Bien vu. ${teacherFeedback} ${
-                        item.kind === "situation" || item.kind === "reaction"
-                          ? `Phrase entendue : ${item.sourceText}. `
-                          : ""
-                      }À retenir : ${getExpectedAnswer()}. ${item.explanation}`
-                    : `À revoir. ${teacherFeedback}`
+                    ? l("ui.accessibilityCorrectDetail", {
+                        feedback: teacherFeedback,
+                        source: item.kind === "situation" || item.kind === "reaction"
+                          ? l("ui.accessibilitySource", { phrase: item.sourceText })
+                          : "",
+                        answer: getExpectedAnswer(),
+                        explanation: displayItem.explanation,
+                      })
+                    : l("ui.accessibilityIncorrect", { feedback: teacherFeedback })
                 }
                 style={[styles.feedback, isCorrect ? styles.good : styles.bad]}
               >
-                <AppText
+                <AppText script={uiScript}
                   variant="bodyStrong"
                   tone="strong"
                   style={styles.feedbackTitle}
                 >
-                  {isCorrect ? "Bien vu" : "À revoir"}
+                  {l(isCorrect ? "ui.good" : "ui.review")}
                 </AppText>
 
-                <AppText
+                <AppText script={uiScript}
                   variant="body"
                   tone="strong"
                   style={styles.teacherFeedbackText}
@@ -877,12 +854,12 @@ export default function ListenScreen() {
                     {(item.kind === "situation" ||
                       item.kind === "reaction") && (
                       <>
-                        <AppText
+                        <AppText script={uiScript}
                           variant="label"
                           tone="strong"
                           style={styles.expectedLabel}
                         >
-                          Phrase entendue
+                          {l("ui.heardPhrase")}
                         </AppText>
 
                         <AppText
@@ -897,12 +874,12 @@ export default function ListenScreen() {
                       </>
                     )}
 
-                    <AppText
+                    <AppText script={uiScript}
                       variant="label"
                       tone="strong"
                       style={styles.expectedLabel}
                     >
-                      À retenir
+                      {l("ui.remember")}
                     </AppText>
 
                     <AppText
@@ -915,12 +892,12 @@ export default function ListenScreen() {
                       {getExpectedAnswer()}
                     </AppText>
 
-                    <AppText
+                    <AppText script={uiScript}
                       variant="body"
                       tone="muted"
                       style={styles.feedbackText}
                     >
-                      {item.explanation}
+                      {displayItem.explanation}
                     </AppText>
                   </>
                 ) : null}
@@ -932,8 +909,8 @@ export default function ListenScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={
                   checked && isCorrect && isLastExercise
-                    ? "Recommencer l’entraînement"
-                    : "Réessayer cette question"
+                    ? l("ui.restartTraining")
+                    : l("ui.retryQuestion")
                 }
                 accessibilityState={{
                   disabled:
@@ -961,21 +938,21 @@ export default function ListenScreen() {
                     styles.disabledButton,
                 ]}
               >
-                <AppText
+                <AppText script={uiScript}
                   variant="button"
                   tone="muted"
                   style={styles.secondaryText}
                 >
                   {checked && isCorrect && isLastExercise
-                    ? "Recommencer l’entraînement"
-                    : "Réessayer"}
+                    ? l("ui.restartTraining")
+                    : l("ui.retry")}
                 </AppText>
               </Pressable>
 
               {!checked ? (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Valider la réponse"
+                  accessibilityLabel={l("ui.validateLabel")}
                   accessibilityState={{
                     disabled:
                       !canCheck || !hasCompletedCurrentAudio || !isHydrated,
@@ -994,12 +971,12 @@ export default function ListenScreen() {
                       styles.disabledButton,
                   ]}
                 >
-                  <AppText
+                  <AppText script={uiScript}
                     variant="button"
                     tone="strong"
                     style={styles.actionText}
                   >
-                    Valider
+                    {l("ui.validate")}
                   </AppText>
                 </Pressable>
               ) : (
@@ -1007,12 +984,12 @@ export default function ListenScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={
                     !isCorrect
-                      ? "Question suivante indisponible tant que la réponse est incorrecte"
+                      ? l("ui.blockedNext")
                       : isLastExercise
                         ? isTrainingComplete
-                          ? "Ouvrir le bilan de l'entraînement"
-                          : "Valider les cinq questions pour ouvrir le bilan"
-                        : "Passer à la question suivante"
+                          ? l("ui.openSummary")
+                          : l("ui.requireFive")
+                        : l("ui.nextQuestion")
                   }
                   accessibilityState={{
                     disabled: !isCorrect || (isLastExercise && !isTrainingComplete),
@@ -1031,53 +1008,52 @@ export default function ListenScreen() {
                       styles.disabledButton,
                   ]}
                 >
-                  <AppText
+                  <AppText script={uiScript}
                     variant="button"
                     tone="strong"
                     style={styles.actionText}
                   >
-                    {isLastExercise ? "Voir le bilan" : "Suivant"}
+                    {l(isLastExercise ? "ui.summary" : "ui.next")}
                   </AppText>
                 </Pressable>
               )}
             </View>
             {!isHydrated && (
-              <AppText
+              <AppText script={uiScript}
                 accessibilityLiveRegion="polite"
                 variant="caption"
                 tone="soft"
                 align="center"
                 style={styles.hydrationMessage}
               >
-                Synchronisation de ta progression… Tu peux déjà écouter.
+                {l("ui.sync")}
               </AppText>
             )}
 
             {!!dailyMessage && (
               <View style={styles.streakToast}>
                 <Ionicons name="flame" size={16} color={COLORS.green} />
-                <AppText
+                <AppText script={uiScript}
                   variant="caption"
                   tone="accent"
                   style={styles.streakToastText}
                 >
-                  {dailyMessage}
+                  {l(dailyMessage === "completed_with_freeze" ? "ui.streakFreeze" : dailyMessage === "restarted" ? "ui.streakRestart" : "ui.streakDone")}
                 </AppText>
               </View>
             )}
           </View>
 
           <View style={styles.footerNote}>
-            <AppText
+            <AppText script={uiScript}
               variant="sectionLabel"
               tone="brand"
               style={styles.footerTitle}
             >
-              Objectif
+              {l("ui.objective")}
             </AppText>
-            <AppText variant="body" tone="muted" style={styles.footerText}>
-              Comprendre avant de lire. La traduction n’apparaît qu’après
-              validation.
+            <AppText script={uiScript} variant="body" tone="muted" style={styles.footerText}>
+              {l("ui.objectiveDescription")}
             </AppText>
           </View>
         </Animated.ScrollView>
@@ -1109,13 +1085,10 @@ function ChoiceButton({
   wrong: boolean;
   onPress: () => void;
 }) {
-  const stateLabel = correct
-    ? "Bonne réponse"
-    : wrong
-      ? "Réponse choisie incorrecte"
-      : active
-        ? "Selectionnee"
-        : "Non sélectionnée";
+  const { t } = useTranslation("listening");
+  const stateLabel = t(
+    correct ? "ui.choiceCorrect" : wrong ? "ui.choiceWrong" : active ? "ui.choiceSelected" : "ui.choiceUnselected",
+  );
 
   return (
     <Pressable
