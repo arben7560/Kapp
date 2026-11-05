@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Check, Compass, MoveRight, Play } from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Pressable,
   ScrollView,
@@ -38,60 +39,35 @@ type OnboardingStep = "scene" | "mode";
 
 type SceneOption = {
   key: SceneKey;
-  eyebrow: string;
-  title: string;
-  subtitle: string;
   phrase: string;
   accent: string;
   image: number;
-  badge: string;
-  guidance: string;
 };
 
 const SCENES: SceneOption[] = [
   {
     key: "cafe",
-    eyebrow: "HONGDAE",
-    title: "Café",
-    subtitle: "Commande comme si tu étais à Hongdae.",
     phrase: "아메리카노 한 잔 주세요",
     accent: PINK,
     image: CAFE_IMAGE,
-    badge: "IDÉAL POUR DÉBUTER",
-    guidance: "Aucun prérequis",
   },
   {
     key: "metro",
-    eyebrow: "LIGNE 2",
-    title: "Métro",
-    subtitle: "Trouve ton chemin dans Séoul.",
     phrase: "2호선은 어디예요?",
     accent: CYAN,
     image: METRO_IMAGE,
-    badge: "DÉBUTANT +",
-    guidance: "Scène guidée",
   },
   {
     key: "restaurant",
-    eyebrow: "ITAEWON",
-    title: "Restaurant",
-    subtitle: "Commande naturellement à table.",
     phrase: "이거 주세요",
     accent: GOLD,
     image: RESTAURANT_IMAGE,
-    badge: "DÉBUTANT +",
-    guidance: "Scène guidée",
   },
   {
     key: "airport",
-    eyebrow: "INCHEON",
-    title: "Aéroport",
-    subtitle: "Repère-toi dès ton arrivée en Corée.",
     phrase: "지하철은 어디예요?",
     accent: CYAN,
     image: AIRPORT_IMAGE,
-    badge: "INTERMEDIAIRE",
-    guidance: "Vocabulaire + grammaire guidés",
   },
 ];
 
@@ -153,14 +129,17 @@ function FeaturedScene({
   height: number;
   onStart: () => void;
 }) {
+  const { t, i18n } = useTranslation("onboarding");
+  const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
+  const copy = t(`scenes.${scene.key}`, { returnObjects: true });
   return (
     <View
       accessible
-      accessibilityLabel={`${scene.title}. ${scene.subtitle} ${scene.guidance}.`}
+      accessibilityLabel={t("flow.sceneSummary", { title: copy.title, subtitle: copy.subtitle, guidance: copy.guidance })}
       style={[
         styles.featuredCard,
         {
-          ...(compact ? { minHeight: height } : { height }),
+          ...((compact || uiScript === "japanese") ? { minHeight: height } : { height }),
           borderColor: `${scene.accent}72`,
           shadowColor: scene.accent,
         },
@@ -208,12 +187,12 @@ function FeaturedScene({
           <View
             style={[styles.recommendedDot, { backgroundColor: scene.accent }]}
           />
-          <AppText variant="label" style={styles.recommendedText}>
-            {scene.badge}
+          <AppText script={uiScript} variant="label" style={styles.recommendedText}>
+            {copy.badge}
           </AppText>
         </View>
-        <AppText variant="sectionLabel" style={styles.featuredLocation}>
-          {scene.eyebrow}
+        <AppText script={uiScript} variant="sectionLabel" style={styles.featuredLocation}>
+          {copy.eyebrow}
         </AppText>
       </View>
 
@@ -229,22 +208,24 @@ function FeaturedScene({
           {scene.phrase}
         </AppText>
         <AppText
+          script={uiScript}
           variant={compact ? "onboardingSceneTitleCompact" : "sceneTitle"}
           style={styles.featuredTitle}
         >
-          {scene.title}
+          {copy.title}
         </AppText>
         <AppText
+          script={uiScript}
           variant={compact ? "bodySecondary" : "bodyStrong"}
           style={[
             styles.featuredSubtitle,
             compact && styles.featuredSubtitleCompact,
           ]}
         >
-          {scene.subtitle}
+          {copy.subtitle}
         </AppText>
         <View
-          style={[styles.beginnerRow, compact && styles.beginnerRowCompact]}
+          style={[styles.beginnerRow, (compact || uiScript === "japanese") && styles.beginnerRowCompact]}
         >
           <View style={styles.beginnerMeta}>
             <View
@@ -255,13 +236,13 @@ function FeaturedScene({
             >
               <Check size={12} color={scene.accent} strokeWidth={2.3} />
             </View>
-            <AppText variant="caption" style={styles.beginnerText}>
-              {scene.guidance}
+            <AppText script={uiScript} variant="caption" style={styles.beginnerText}>
+              {copy.guidance}
             </AppText>
           </View>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Commencer l'immersion ${scene.title}`}
+            accessibilityLabel={t("flow.startSceneLabel", { scene: copy.title })}
             onPress={onStart}
             hitSlop={4}
             style={({ pressed }) => [
@@ -270,8 +251,8 @@ function FeaturedScene({
               pressed && styles.pressed,
             ]}
           >
-            <AppText variant="label" style={styles.featuredCtaText}>
-              Commencer l’immersion
+            <AppText script={uiScript} variant="label" style={styles.featuredCtaText}>
+              {t("flow.startImmersion")}
             </AppText>
             <View style={styles.featuredCtaPlay}>
               <Play size={11} color={WHITE} strokeWidth={2.4} fill={WHITE} />
@@ -296,14 +277,17 @@ function AlternativeScene({
   width: number;
   onPress: () => void;
 }) {
+  const { t, i18n } = useTranslation("onboarding");
+  const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
+  const copy = t(`scenes.${scene.key}`, { returnObjects: true });
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Choisir ${scene.title}`}
+      accessibilityLabel={t("flow.chooseSceneLabel", { scene: copy.title })}
       onPress={onPress}
       style={({ pressed }) => [
         styles.alternativeCard,
-        { ...(compact ? { minHeight: height } : { height }), width },
+        { ...((compact || uiScript === "japanese") ? { minHeight: height } : { height }), width },
         pressed && styles.pressed,
       ]}
     >
@@ -330,16 +314,18 @@ function AlternativeScene({
         ]}
       >
         <AppText
+          script={uiScript}
           variant="sectionLabel"
           style={[styles.alternativeEyebrow, { color: scene.accent }]}
         >
-          {scene.eyebrow}
+          {copy.eyebrow}
         </AppText>
         <AppText
+          script={uiScript}
           variant={compact ? "bodyStrong" : "cardTitle"}
           style={styles.alternativeTitle}
         >
-          {scene.title}
+          {copy.title}
         </AppText>
       </View>
       <View
@@ -355,6 +341,8 @@ function AlternativeScene({
 }
 
 export default function OnboardingScreen() {
+  const { t, i18n } = useTranslation("onboarding");
+  const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
   const { width, height, fontScale } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { bottom, left, right, top } = insets;
@@ -458,6 +446,7 @@ export default function OnboardingScreen() {
     () => SCENES.filter((scene) => scene.key !== selectedScene),
     [selectedScene],
   );
+  const selectedCopy = t(`scenes.${selectedSceneData.key}`, { returnObjects: true });
   const alternativeWidth = isTablet
     ? 244
     : isHdPlusNarrow
@@ -510,19 +499,20 @@ export default function OnboardingScreen() {
               ]}
               showsVerticalScrollIndicator={false}
             >
-              <AppText variant="sectionLabel" style={styles.modeEyebrow}>
-                SCÈNE CHOISIE
+              <AppText script={uiScript} variant="sectionLabel" style={styles.modeEyebrow}>
+                {t("flow.chosen")}
               </AppText>
               <AppText
+                script={uiScript}
                 variant={
                   isHdPlusNarrow ? "onboardingTitleCompact" : "screenTitle"
                 }
                 style={styles.modeTitle}
               >
-                {selectedSceneData.title}
+                {selectedCopy.title}
               </AppText>
-              <AppText variant="body" style={styles.modeSubtitle}>
-                Choisis ton approche.
+              <AppText script={uiScript} variant="body" style={styles.modeSubtitle}>
+                {t("flow.approach")}
               </AppText>
 
               <View
@@ -542,13 +532,14 @@ export default function OnboardingScreen() {
                 />
                 <View style={styles.modeHeroCopy}>
                   <AppText
+                    script={uiScript}
                     variant="sectionLabel"
                     style={{ color: selectedSceneData.accent }}
                   >
-                    {selectedSceneData.eyebrow}
+                    {selectedCopy.eyebrow}
                   </AppText>
-                  <AppText variant="cardTitle" style={styles.modeHeroTitle}>
-                    {selectedSceneData.title}
+                  <AppText script={uiScript} variant="cardTitle" style={styles.modeHeroTitle}>
+                    {selectedCopy.title}
                   </AppText>
                 </View>
               </View>
@@ -574,16 +565,18 @@ export default function OnboardingScreen() {
                 >
                   <View style={styles.modeChoiceCopy}>
                     <AppText
+                      script={uiScript}
                       variant={isHdPlusNarrow ? "bodyStrong" : "cardTitle"}
                       style={styles.modeChoiceTitle}
                     >
-                      Entre dans la scène
+                      {t("flow.guidedTitle")}
                     </AppText>
                     <AppText
+                      script={uiScript}
                       variant="bodySecondary"
                       style={styles.modeChoiceText}
                     >
-                      Écoute et réponds comme si tu étais sur place.
+                      {t("flow.guidedDescription")}
                     </AppText>
                   </View>
                   <View
@@ -609,16 +602,18 @@ export default function OnboardingScreen() {
                 >
                   <View style={styles.modeChoiceCopy}>
                     <AppText
+                      script={uiScript}
                       variant={isHdPlusNarrow ? "bodyStrong" : "cardTitle"}
                       style={styles.modeChoiceTitle}
                     >
-                      Expressions utiles
+                      {t("flow.textTitle")}
                     </AppText>
                     <AppText
+                      script={uiScript}
                       variant="bodySecondary"
                       style={styles.modeChoiceText}
                     >
-                      Revois d’abord les mots et expressions de la situation.
+                      {t("flow.textDescription")}
                     </AppText>
                   </View>
                   <View
@@ -645,8 +640,8 @@ export default function OnboardingScreen() {
                   end={{ x: 1, y: 0.5 }}
                   style={StyleSheet.absoluteFill}
                 />
-                <AppText variant="button" style={styles.buttonText}>
-                  Commencer
+                <AppText script={uiScript} variant="button" style={styles.buttonText}>
+                  {t("flow.start")}
                 </AppText>
                 <MoveRight size={19} color={WHITE} strokeWidth={2.2} />
               </Pressable>
@@ -659,8 +654,8 @@ export default function OnboardingScreen() {
                 }}
                 style={styles.modeBack}
               >
-                <AppText variant="button" style={styles.modeBackText}>
-                  Retour aux immersions
+                <AppText script={uiScript} variant="button" style={styles.modeBackText}>
+                  {t("flow.back")}
                 </AppText>
               </Pressable>
             </ScrollView>
@@ -697,15 +692,17 @@ export default function OnboardingScreen() {
               style={[styles.intro, { marginBottom: sceneLayout.introBottom }]}
             >
               <AppText
+                script={uiScript}
                 variant="sectionLabel"
                 style={[
                   styles.introEyebrow,
                   { marginBottom: sceneLayout.eyebrowBottom },
                 ]}
               >
-                TON POINT DE DÉPART
+                {t("flow.eyebrow")}
               </AppText>
               <AppText
+                script={uiScript}
                 accessibilityRole="header"
                 variant={
                   isHdPlusNarrow
@@ -717,16 +714,17 @@ export default function OnboardingScreen() {
                 lineContract="fluid"
                 style={styles.introTitle}
               >
-                Choisis ta première expérience
+                {t("flow.title")}
               </AppText>
               <AppText
+                script={uiScript}
                 variant="body"
                 style={[
                   styles.introSubtitle,
                   { marginTop: sceneLayout.subtitleTop },
                 ]}
               >
-                Lance une scène guidée ou explore librement le Hub.
+                {t("flow.subtitle")}
               </AppText>
             </View>
 
@@ -749,12 +747,12 @@ export default function OnboardingScreen() {
                   { marginBottom: sceneLayout.alternativeHeaderBottom },
                 ]}
               >
-                <AppText variant="sectionLabel" style={styles.alternativeLabel}>
-                  AUTRES IMMERSIONS
+                <AppText script={uiScript} variant="sectionLabel" style={styles.alternativeLabel}>
+                  {t("flow.alternatives")}
                 </AppText>
                 <View
                   style={styles.sceneDots}
-                  accessibilityLabel="Scènes disponibles"
+                  accessibilityLabel={t("flow.availableScenes")}
                 >
                   {SCENES.map((scene) => (
                     <View
@@ -788,8 +786,8 @@ export default function OnboardingScreen() {
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Entrer dans le Hub"
-              accessibilityHint="Ouvre le Hub pour le Hangul, le vocabulaire et la progression"
+              accessibilityLabel={t("flow.hubLabel")}
+              accessibilityHint={t("flow.hubHint")}
               onPress={openHub}
               style={({ pressed }) => [
                 styles.hubCard,
@@ -812,14 +810,14 @@ export default function OnboardingScreen() {
                 <Compass size={18} color={CYAN} strokeWidth={2} />
               </View>
               <View style={styles.hubCardCopy}>
-                <AppText variant="sectionLabel" style={styles.hubCardEyebrow}>
-                  AUTRE PORTE D’ENTRÉE
+                <AppText script={uiScript} variant="sectionLabel" style={styles.hubCardEyebrow}>
+                  {t("flow.hubEyebrow")}
                 </AppText>
-                <AppText variant="sectionTitle" style={styles.hubCardTitle}>
-                  Le Hub
+                <AppText script={uiScript} variant="sectionTitle" style={styles.hubCardTitle}>
+                  {t("flow.hubTitle")}
                 </AppText>
-                <AppText variant="caption" style={styles.hubCardSubtitle}>
-                  Hangul, vocabulaire et ta progression — à ton rythme.
+                <AppText script={uiScript} variant="caption" style={styles.hubCardSubtitle}>
+                  {t("flow.hubSubtitle")}
                 </AppText>
               </View>
               <View style={styles.hubCardArrow}>

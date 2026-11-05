@@ -32,14 +32,22 @@ for (const module of CONTENT_MODULES) {
   errors.push(...validateCataloguePair(localizedContent.fr[module], localizedContent.ja[module])
     .map((error) => `content/${module}/${error}`));
 }
-if (ENABLED_UI_LOCALES.includes('ja') || process.argv.includes('--release-ja')) {
+if (ENABLED_UI_LOCALES.includes('ja')) {
+  // Partial UI rollout is deliberate. Full Japanese publication stays separately gated.
+  for (const namespace of ['common', 'onboarding', 'account']) {
+    if (!manifest.japaneseUiNamespaces?.includes(namespace) || manifest.deferredNamespaces.includes(namespace)) {
+      errors.push(`Japanese first-run UI blocked: ${namespace} is not declared migrated.`);
+    }
+  }
+}
+if (process.argv.includes('--release-ja')) {
   if (!manifest.japaneseReleaseReady || manifest.deferredNamespaces.length) {
-    errors.push('Japanese release blocked: UI/pedagogical coverage is deferred (phase 2).');
+    errors.push('Japanese release blocked: full UI/pedagogical coverage is deferred.');
   }
 }
 if (errors.length) {
   console.error(errors.join('\n'));
   process.exitCode = 1;
 } else {
-  console.log(`FR/JA: ${manifest.namespaces.length} namespaces verified; ${manifest.deferredNamespaces.length} explicitly deferred. Japanese release disabled.`);
+  console.log(`FR/JA: ${manifest.namespaces.length} namespaces verified; ${manifest.deferredNamespaces.length} explicitly deferred. Full Japanese release: ${manifest.japaneseReleaseReady ? 'ready' : 'blocked'}.`);
 }

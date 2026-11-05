@@ -1,8 +1,10 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   AccessibilityInfo,
   Animated,
@@ -27,6 +29,9 @@ import Svg, {
 } from "react-native-svg";
 
 import { AppText } from "../components/app-text";
+import { LanguageSelectionScreen } from "../components/language-selection-screen";
+import { useAppLanguage } from "../lib/i18n/LanguageProvider";
+import { shouldOfferLanguageSelection } from "../lib/i18n/firstRun";
 
 const HERO_IMAGE = require("../assets/images/hero.jpg");
 
@@ -252,6 +257,8 @@ function HeroBackground() {
 }
 
 function HeroEntryScreen() {
+  const { t, i18n } = useTranslation("onboarding");
+  const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
   const { fontScale, height, width } = useWindowDimensions();
   // Measured: S23 Ultra Expo Go = 384 x 742 (nav 48 + status 33).
   // Realme HD+ ≈ 360 x 800. Width 384 must NOT inherit Realme compact.
@@ -392,11 +399,12 @@ function HeroEntryScreen() {
               <View style={styles.heroBadge}>
                 <View style={styles.heroBadgeDot} />
                 <AppText
+                  script={uiScript}
                   variant="label"
                   lineContract="singleLine"
                   style={styles.heroBadgeText}
                 >
-                  SÉOUL IMMERSION
+                  {t("hero.badge")}
                 </AppText>
               </View>
             </View>
@@ -419,15 +427,17 @@ function HeroEntryScreen() {
                 어서 오세요
               </AppText>
               <AppText
+                script={uiScript}
                 accessibilityRole="header"
                 variant={titleVariant}
                 align="center"
                 lineContract="fluid"
                 style={styles.heroBigTitle}
               >
-                Bienvenue à Séoul
+                {t("hero.welcome")}
               </AppText>
               <AppText
+                script={uiScript}
                 variant={isHdPlusNarrow ? "bodySecondary" : "subtitle"}
                 align="center"
                 style={[
@@ -436,7 +446,7 @@ function HeroEntryScreen() {
                   isTallPhone && styles.heroSubtitleTall,
                 ]}
               >
-                Tu n’apprends pas le coréen. Tu entres dans des scènes réelles.
+                {t("hero.subtitle")}
               </AppText>
 
               <AnimatedView
@@ -479,30 +489,32 @@ function HeroEntryScreen() {
                   />
 
                   <AppText
+                    script={uiScript}
                     variant="sectionLabel"
                     style={[
                       styles.heroEyebrow,
                       isHdPlusNarrow && { marginBottom: 6 },
                     ]}
                   >
-                    IMMERSION
+                    {t("hero.eyebrow")}
                   </AppText>
                   <AppText
+                    script={uiScript}
                     variant={cardTitleVariant}
                     lineContract="fluid"
                     style={styles.heroTitle}
                   >
-                    La ville s’ouvre devant toi
+                    {t("hero.title")}
                   </AppText>
                   <AppText
+                    script={uiScript}
                     variant={isHdPlusNarrow ? "bodySecondary" : "body"}
                     style={[
                       styles.heroText,
                       isHdPlusNarrow && { marginTop: 8 },
                     ]}
                   >
-                    Choisis une scène recommandée pour commencer, ou prépare-toi
-                    d’abord avec les bases essentielles.
+                    {t("hero.description")}
                   </AppText>
                 </BlurView>
               </AnimatedView>
@@ -517,8 +529,8 @@ function HeroEntryScreen() {
             >
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Choisir une scène"
-                accessibilityHint="Ouvre le choix de la scène de départ"
+                accessibilityLabel={t("hero.choose")}
+                accessibilityHint={t("hero.chooseHint")}
                 hitSlop={6}
                 style={({ pressed }) => [
                   styles.heroPrimaryWrap,
@@ -540,8 +552,8 @@ function HeroEntryScreen() {
                     end={{ x: 1, y: 1 }}
                     style={StyleSheet.absoluteFill}
                   />
-                  <AppText variant="button" style={styles.heroPrimaryText}>
-                    Choisir une scène
+                  <AppText script={uiScript} variant="button" style={styles.heroPrimaryText}>
+                    {t("hero.choose")}
                   </AppText>
                 </BlurView>
               </Pressable>
@@ -554,6 +566,20 @@ function HeroEntryScreen() {
 }
 
 export default function SplashScreenPage() {
+  const { preference } = useAppLanguage();
+  const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void AsyncStorage.getItem("kapp_onboarding_completed")
+      .then((value) => { if (active) setOnboardingCompleted(value === "true"); })
+      .catch((error) => {
+        console.warn("Unable to read the onboarding state.", error);
+        // A failed read must not impose a new first-run flow on an existing user.
+        if (active) setOnboardingCompleted(true);
+      });
+    return () => { active = false; };
+  }, []);
   const { width, height } = useWindowDimensions();
   const hasShownHero = useRef(false);
   const [showHero, setShowHero] = useState(false);
@@ -767,6 +793,10 @@ export default function SplashScreenPage() {
   ]);
 
   if (showHero) {
+    if (onboardingCompleted === null) return <View style={styles.screen} />;
+    if (shouldOfferLanguageSelection({ preference, onboardingCompleted })) {
+      return <LanguageSelectionScreen />;
+    }
     return <HeroEntryScreen />;
   }
 

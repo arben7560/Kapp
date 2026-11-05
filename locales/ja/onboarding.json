@@ -1,1 +1,66 @@
-{}
+{
+  "hero": {
+    "welcome": "ソウルへようこそ",
+    "subtitle": "リアルな場面に飛び込んで、韓国語を体験しよう。",
+    "eyebrow": "韓国の日常を体験",
+    "title": "ここから、ソウルの日常へ",
+    "description": "おすすめのシーンから始めよう。まずは基礎を学んでからでも大丈夫。",
+    "choose": "シーンを選ぶ",
+    "chooseHint": "最初に体験するシーンを選びます",
+    "badge": "ソウルを体験"
+  },
+  "flow": {
+    "startImmersion": "シーンを体験する",
+    "startSceneLabel": "{{scene}}のシーンを始める",
+    "chooseSceneLabel": "{{scene}}を選ぶ",
+    "sceneSummary": "{{title}}。{{subtitle}} {{guidance}}。",
+    "chosen": "選んだシーン",
+    "approach": "自分に合った始め方を選ぼう。",
+    "guidedTitle": "会話を体験する",
+    "guidedDescription": "その場にいるつもりで、聞いて、答えてみよう。",
+    "textTitle": "役立つフレーズ",
+    "textDescription": "まずは、この場面で使う単語やフレーズを確認しよう。",
+    "start": "始める",
+    "back": "シーン選択に戻る",
+    "eyebrow": "最初の一歩",
+    "title": "最初の体験を選ぼう",
+    "subtitle": "ガイド付きのシーンを体験するか、学習ハブを自由に探索しよう。",
+    "alternatives": "ほかのシーン",
+    "availableScenes": "体験できるシーン",
+    "hubLabel": "学習ハブを開く",
+    "hubHint": "ハングルや単語の学習、学習の進み具合を確認できます",
+    "hubEyebrow": "基礎から始めたいなら",
+    "hubTitle": "学習ハブ",
+    "hubSubtitle": "ハングルも単語も、自分のペースで。学習の進み具合もここで確認。"
+  },
+  "scenes": {
+    "cafe": {
+      "eyebrow": "弘大",
+      "title": "カフェ",
+      "subtitle": "弘大のカフェで注文してみよう。",
+      "badge": "初めての方におすすめ",
+      "guidance": "予備知識なしでOK"
+    },
+    "metro": {
+      "eyebrow": "2号線",
+      "title": "地下鉄",
+      "subtitle": "ソウルの地下鉄で、目的地へ。",
+      "badge": "初級＋",
+      "guidance": "ガイド付きシーン"
+    },
+    "restaurant": {
+      "eyebrow": "梨泰院",
+      "title": "レストラン",
+      "subtitle": "お店で自然に注文してみよう。",
+      "badge": "初級＋",
+      "guidance": "ガイド付きシーン"
+    },
+    "airport": {
+      "eyebrow": "仁川",
+      "title": "空港",
+      "subtitle": "韓国に着いたら、迷わず次の一歩へ。",
+      "badge": "中級",
+      "guidance": "単語と文法のガイド付き"
+    }
+  }
+}

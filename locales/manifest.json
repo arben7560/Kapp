@@ -1,5 +1,5 @@
 {
-  "phase": 2,
+  "phase": 3,
   "japaneseReleaseReady": false,
   "namespaces": [
     "common",
@@ -19,8 +19,6 @@
   ],
   "deferredNamespaces": [
     "navigation",
-    "onboarding",
-    "account",
     "premium",
     "hangul",
     "vocabulary",
@@ -31,5 +29,10 @@
     "missions",
     "speechFeedback",
     "immersion"
+  ],
+  "japaneseUiNamespaces": [
+    "common",
+    "onboarding",
+    "account"
   ]
 }

@@ -1,6 +1,12 @@
 {
   "language": {
     "french": "Français",
-    "japanese": "日本語"
+    "japanese": "日本語",
+    "title": "Choose your language",
+    "subtitle": "언어를 선택해 주세요",
+    "continueLabel": "次へ",
+    "saving": "保存中…",
+    "saveError": "言語設定を保存できませんでした。もう一度お試しください。",
+    "choiceHint": "アプリの表示言語を選んでください"
   }
 }

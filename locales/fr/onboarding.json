@@ -1,1 +1,66 @@
-{}
+{
+  "hero": {
+    "welcome": "Bienvenue à Séoul",
+    "subtitle": "Tu n’apprends pas le coréen. Tu entres dans des scènes réelles.",
+    "eyebrow": "IMMERSION",
+    "title": "La ville s’ouvre devant toi",
+    "description": "Choisis une scène recommandée pour commencer, ou prépare-toi d’abord avec les bases essentielles.",
+    "choose": "Choisir une scène",
+    "chooseHint": "Ouvre le choix de la scène de départ",
+    "badge": "SÉOUL IMMERSION"
+  },
+  "flow": {
+    "startImmersion": "Commencer l’immersion",
+    "startSceneLabel": "Commencer l'immersion {{scene}}",
+    "chooseSceneLabel": "Choisir {{scene}}",
+    "sceneSummary": "{{title}}. {{subtitle}} {{guidance}}.",
+    "chosen": "SCÈNE CHOISIE",
+    "approach": "Choisis ton approche.",
+    "guidedTitle": "Entre dans la scène",
+    "guidedDescription": "Écoute et réponds comme si tu étais sur place.",
+    "textTitle": "Expressions utiles",
+    "textDescription": "Revois d’abord les mots et expressions de la situation.",
+    "start": "Commencer",
+    "back": "Retour aux immersions",
+    "eyebrow": "TON POINT DE DÉPART",
+    "title": "Choisis ta première expérience",
+    "subtitle": "Lance une scène guidée ou explore librement le Hub.",
+    "alternatives": "AUTRES IMMERSIONS",
+    "availableScenes": "Scènes disponibles",
+    "hubLabel": "Entrer dans le Hub",
+    "hubHint": "Ouvre le Hub pour le Hangul, le vocabulaire et la progression",
+    "hubEyebrow": "AUTRE PORTE D’ENTRÉE",
+    "hubTitle": "Le Hub",
+    "hubSubtitle": "Hangul, vocabulaire et ta progression — à ton rythme."
+  },
+  "scenes": {
+    "cafe": {
+      "eyebrow": "HONGDAE",
+      "title": "Café",
+      "subtitle": "Commande comme si tu étais à Hongdae.",
+      "badge": "IDÉAL POUR DÉBUTER",
+      "guidance": "Aucun prérequis"
+    },
+    "metro": {
+      "eyebrow": "LIGNE 2",
+      "title": "Métro",
+      "subtitle": "Trouve ton chemin dans Séoul.",
+      "badge": "DÉBUTANT +",
+      "guidance": "Scène guidée"
+    },
+    "restaurant": {
+      "eyebrow": "ITAEWON",
+      "title": "Restaurant",
+      "subtitle": "Commande naturellement à table.",
+      "badge": "DÉBUTANT +",
+      "guidance": "Scène guidée"
+    },
+    "airport": {
+      "eyebrow": "INCHEON",
+      "title": "Aéroport",
+      "subtitle": "Repère-toi dès ton arrivée en Corée.",
+      "badge": "INTERMEDIAIRE",
+      "guidance": "Vocabulaire + grammaire guidés"
+    }
+  }
+}

@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
+import { ApplicationLanguageSettings } from "../../components/application-language-settings";
 import { AppText, AppTextInput } from "../../components/app-text";
 import { ActionButton } from "../../components/ui/action-button";
 import { AppBackButton } from "../../components/ui/app-back-button";
@@ -558,6 +559,10 @@ export default function AccountScreen() {
                 <Ionicons name="person-outline" size={22} color={COLORS.cyan} />
               </View>
             </View>
+
+            <GlassCard>
+              <ApplicationLanguageSettings />
+            </GlassCard>
 
             {!auth.isPermanentAccount ? (
               <GlassCard>

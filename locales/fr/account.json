@@ -1,1 +1,8 @@
-{}
+{
+  "language": {
+    "title": "Langue de l’application",
+    "hint": "Choisis la langue de l’interface.",
+    "saving": "Enregistrement…",
+    "saveError": "La langue n’a pas pu être enregistrée. Réessaie."
+  }
+}
