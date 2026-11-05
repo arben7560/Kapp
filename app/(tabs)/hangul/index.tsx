@@ -520,7 +520,7 @@ function HangulHero({
       >
         <View style={styles.heroDot} />
 
-        <AppText variant="sectionLabel" style={styles.heroEyebrow}>
+        <AppText script={uiScript} variant="sectionLabel" style={styles.heroEyebrow}>
           {l("hub.heroEyebrow")}
         </AppText>
       </View>
@@ -538,11 +538,11 @@ function HangulHero({
         한글
       </AppText>
 
-      <AppText variant="featureTitle" style={styles.heroTitle}>
+      <AppText script={uiScript} variant="featureTitle" style={styles.heroTitle}>
         {l("hub.brand")}
       </AppText>
 
-      <AppText variant="bodySecondary" style={styles.heroSubtitle}>
+      <AppText script={uiScript} variant="bodySecondary" style={styles.heroSubtitle}>
         {l("hub.heroSubtitle")}
       </AppText>
 
@@ -555,7 +555,7 @@ function HangulHero({
         <View style={styles.levelPill}>
           <View style={styles.levelDot} />
 
-          <AppText
+          <AppText script={uiScript}
             variant="sectionLabel"
             lineContract="singleLine"
             style={styles.levelText}
@@ -564,7 +564,7 @@ function HangulHero({
           </AppText>
         </View>
 
-        <AppText variant="caption" style={styles.heroCompletion}>
+        <AppText script={uiScript} variant="caption" style={styles.heroCompletion}>
           {l("hub.levelCount", { completed: completedCount, total: totalCount })}
         </AppText>
       </View>
@@ -576,11 +576,11 @@ function HangulHero({
         ]}
       >
         <View style={styles.heroProgressMeta}>
-          <AppText variant="caption" style={styles.heroProgressLabel}>
+          <AppText script={uiScript} variant="caption" style={styles.heroProgressLabel}>
             {l("hub.progress")}
           </AppText>
 
-          <AppText
+          <AppText script={uiScript}
             variant="bodyStrong"
             style={[
               styles.heroProgressValue,
@@ -679,7 +679,7 @@ function ContinueCard({
           <View style={styles.continueKicker}>
             <View style={styles.continueKickerDot} />
 
-            <AppText variant="sectionLabel" style={styles.continueKickerText}>
+            <AppText script={uiScript} variant="sectionLabel" style={styles.continueKickerText}>
               {l(completed ? "hub.journeyCompleted" : "hub.continue")}
             </AppText>
           </View>
@@ -690,11 +690,11 @@ function ContinueCard({
         </View>
 
         <View style={styles.continueContent}>
-          <AppText variant="featureTitle" style={styles.continueTitle}>
+          <AppText script={uiScript} variant="featureTitle" style={styles.continueTitle}>
             {title}
           </AppText>
 
-          <AppText
+          <AppText script={uiScript}
             variant="bodySecondary"
             tone="muted"
             style={styles.continueSubtitle}
@@ -710,11 +710,11 @@ function ContinueCard({
           ]}
         >
           <View style={styles.continueProgressMeta}>
-            <AppText variant="caption" style={styles.continueProgressLabel}>
+            <AppText script={uiScript} variant="caption" style={styles.continueProgressLabel}>
               {l("hub.stepProgress")}
             </AppText>
 
-            <AppText
+            <AppText script={uiScript}
               variant="bodyStrong"
               style={[
                 styles.continueProgressValue,
@@ -760,11 +760,11 @@ function JourneySectionHeader({
       ]}
     >
       <View>
-        <AppText variant="sectionLabel" style={styles.sectionTitle}>
+        <AppText script={uiScript} variant="sectionLabel" style={styles.sectionTitle}>
           {l("hub.journeyTitle")}
         </AppText>
 
-        <AppText variant="caption" style={styles.sectionSubtitle}>
+        <AppText script={uiScript} variant="caption" style={styles.sectionSubtitle}>
           {l("hub.journeyCount", { completed: completedCount, total: totalCount })}
         </AppText>
       </View>
@@ -966,7 +966,7 @@ function HangulPathCard({
           </View>
 
           <View style={styles.pathTopMeta}>
-            <AppText
+            <AppText script={uiScript}
               variant="sectionLabel"
               lineContract="singleLine"
               style={[
@@ -995,7 +995,7 @@ function HangulPathCard({
                 />
               )}
 
-              <AppText
+              <AppText script={uiScript}
                 variant="caption"
                 lineContract="singleLine"
                 style={[
@@ -1018,14 +1018,14 @@ function HangulPathCard({
             landscape && styles.pathTextBlockLandscape,
           ]}
         >
-          <AppText
+          <AppText script={uiScript}
             variant="cardTitle"
             style={[styles.pathTitle, isFuture && styles.pathTitleFuture]}
           >
             {module.title}
           </AppText>
 
-          <AppText
+          <AppText script={uiScript}
             variant="bodySecondary"
             tone="muted"
             style={[styles.pathSubtitle, isFuture && styles.pathSubtitleFuture]}
