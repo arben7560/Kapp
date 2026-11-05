@@ -121,7 +121,7 @@ export default function HangulBridgeScreen() {
                   : undefined
               }
             >
-              <View style={[styles.back, useLandscapeLayout && styles.backLandscape]}><AppBackButton /></View>
+              <View style={[styles.back, useLandscapeLayout && styles.backLandscape]}><AppBackButton label={l("common.back")} labelScript={uiScript} accessibilityLabel={l("common.backA11y")} accessibilityHint={l("common.backHint")} /></View>
               <AppText script={uiScript} variant="sectionLabel" style={styles.teal}>{l("bridge.eyebrow")}</AppText>
               <AppText script={uiScript} variant="screenTitle" style={[styles.title, useLandscapeLayout && styles.titleLandscape]}>{l("bridge.title")}</AppText>
               <AppText script={uiScript} variant="bodySecondary" tone="muted">{l("bridge.description")}</AppText>
