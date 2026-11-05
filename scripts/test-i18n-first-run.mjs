@@ -321,12 +321,14 @@ for (const locale of ['fr', 'ja']) {
       assert.ok(elements(tree, (el) => el.props?.children === resources[locale].onboarding.hero.welcome).length);
       assert.deepEqual(welcome.navigations, [], 'welcome must remain visible until the user continues');
       const button = elements(tree, (el) => el.type === 'Pressable')[0];
-      assert.equal(button.props.accessibilityLabel, onboarding === 'true'
-        ? resources[locale].onboarding.flow.hubLabel : resources[locale].onboarding.hero.choose);
+     assert.equal(
+  button.props.accessibilityLabel,
+  resources[locale].onboarding.hero.choose
+);
       button.props.onPress();
       assert.deepEqual(welcome.navigations, [], 'wait for the existing transition');
       welcome.finishTransition();
-      assert.deepEqual(welcome.navigations, [onboarding === 'true' ? '/(tabs)' : '/onboarding']);
+      assert.deepEqual(welcome.navigations, ['/onboarding']);
       assert.deepEqual([...subject.entries].filter(([key]) => key !== LOCALE_STORAGE_KEY), protectedEntries);
       welcome.unmount();
     });

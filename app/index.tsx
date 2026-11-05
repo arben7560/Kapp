@@ -256,11 +256,15 @@ function HeroBackground() {
   );
 }
 
-function HeroEntryScreen({ onboardingCompleted }: { onboardingCompleted: boolean }) {
+function HeroEntryScreen({
+  onboardingCompleted,
+}: {
+  onboardingCompleted: boolean;
+}) {
   const { t, i18n } = useTranslation("onboarding");
   const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
-  const continueLabel = t(onboardingCompleted ? "flow.hubLabel" : "hero.choose");
-  const continueHint = t(onboardingCompleted ? "flow.hubHint" : "hero.chooseHint");
+  const continueLabel = t("hero.choose");
+  const continueHint = t("hero.chooseHint");
   const { fontScale, height, width } = useWindowDimensions();
   // Measured: S23 Ultra Expo Go = 384 x 742 (nav 48 + status 33).
   // Realme HD+ ≈ 360 x 800. Width 384 must NOT inherit Realme compact.
@@ -360,8 +364,8 @@ function HeroEntryScreen({ onboardingCompleted }: { onboardingCompleted: boolean
       Animated.delay(80),
     ]).start(({ finished }) => {
       if (finished) {
-        // Completed users keep the welcome without repeating the first-run steps.
-        router.replace(onboardingCompleted ? "/(tabs)" : "/onboarding");
+        // Always show scene selection after the welcome screen.
+        router.replace("/onboarding");
       } else {
         isLeaving.current = false;
       }
@@ -370,10 +374,7 @@ function HeroEntryScreen({ onboardingCompleted }: { onboardingCompleted: boolean
 
   return (
     <View style={styles.heroScreen}>
-      <StatusBar
-        hidden={false}
-        barStyle="light-content"
-      />
+      <StatusBar hidden={false} barStyle="light-content" />
       <HeroBackground />
 
       <SafeAreaView
@@ -555,7 +556,11 @@ function HeroEntryScreen({ onboardingCompleted }: { onboardingCompleted: boolean
                     end={{ x: 1, y: 1 }}
                     style={StyleSheet.absoluteFill}
                   />
-                  <AppText script={uiScript} variant="button" style={styles.heroPrimaryText}>
+                  <AppText
+                    script={uiScript}
+                    variant="button"
+                    style={styles.heroPrimaryText}
+                  >
                     {continueLabel}
                   </AppText>
                 </BlurView>
@@ -571,18 +576,24 @@ function HeroEntryScreen({ onboardingCompleted }: { onboardingCompleted: boolean
 export default function SplashScreenPage() {
   const { preference } = useAppLanguage();
   const [devLanguageConfirmed, setDevLanguageConfirmed] = useState(false);
-  const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
+  const [onboardingCompleted, setOnboardingCompleted] = useState<
+    boolean | null
+  >(null);
 
   useEffect(() => {
     let active = true;
     void AsyncStorage.getItem("kapp_onboarding_completed")
-      .then((value) => { if (active) setOnboardingCompleted(value === "true"); })
+      .then((value) => {
+        if (active) setOnboardingCompleted(value === "true");
+      })
       .catch((error) => {
         console.warn("Unable to read the onboarding state.", error);
         // A failed read must not impose a new first-run flow on an existing user.
         if (active) setOnboardingCompleted(true);
       });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
   const { width, height } = useWindowDimensions();
   const hasShownHero = useRef(false);
@@ -797,8 +808,15 @@ export default function SplashScreenPage() {
   ]);
 
   if (showHero) {
-    if ((__DEV__ && !devLanguageConfirmed) || shouldOfferLanguageSelection({ preference })) {
-      return <LanguageSelectionScreen onComplete={() => setDevLanguageConfirmed(true)} />;
+    if (
+      (__DEV__ && !devLanguageConfirmed) ||
+      shouldOfferLanguageSelection({ preference })
+    ) {
+      return (
+        <LanguageSelectionScreen
+          onComplete={() => setDevLanguageConfirmed(true)}
+        />
+      );
     }
     if (onboardingCompleted === null) return <View style={styles.screen} />;
     return <HeroEntryScreen onboardingCompleted={onboardingCompleted} />;
