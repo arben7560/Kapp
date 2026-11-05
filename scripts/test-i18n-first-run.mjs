@@ -149,15 +149,15 @@ function mountComponent(path, name, dependencies) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
   const exports = {};
-  new Function('require', 'exports', ...Object.keys(bindings), code)(
+  const declaredComponent = new Function('require', 'exports', ...Object.keys(bindings), `${code}\nreturn ${name};`)(
     (id) => { assert.equal(id, 'react/jsx-runtime'); return { jsx, jsxs }; },
     exports, ...Object.values(bindings),
   );
-  const component = exports.default ?? exports[name];
+  const component = exports.default ?? exports[name] ?? declaredComponent;
   return {
-    async render() {
+    async render(props = {}) {
       cursor = 0;
-      const tree = component();
+      const tree = component(props);
       const pending = effects;
       effects = [];
       pending.forEach((effect) => {
@@ -194,9 +194,10 @@ function mountEntry(subject, reducedMotion = false) {
   return { ...entry, finishLogo: (finished = true) => complete({ finished }) };
 }
 
-for (const onboarding of [null, 'true']) {
+for (const [locale, onboarding] of ['fr', 'ja'].flatMap((locale) =>
+  [null, 'false', 'true'].map((onboarding) => [locale, onboarding]))) {
   for (const reducedMotion of [false, true]) {
-    test(`startup, onboarding=${onboarding}, reducedMotion=${reducedMotion}: logo, selection, normal destination, relaunch`, async () => {
+    test(`startup ${locale}, onboarding=${onboarding}, reducedMotion=${reducedMotion}: logo, selection, welcome, relaunch`, async () => {
       const subject = fixture(['ja-JP'], null, onboarding);
       const protectedEntries = [...subject.entries];
       await subject.controller.initialize();
@@ -212,10 +213,10 @@ for (const onboarding of [null, 'true']) {
       assert.equal((await entry.render()).type, 'selector');
       assert.deepEqual(subject.writes, []);
 
-      await subject.controller.setPreference('ja');
+      await subject.controller.setPreference(locale);
       const destination = await entry.render();
-      assert.equal(destination.type, onboarding === 'true' ? 'redirect' : 'welcome');
-      if (onboarding === 'true') assert.equal(destination.props.href, '/(tabs)');
+      assert.equal(destination.type, 'welcome');
+      assert.equal(destination.props.onboardingCompleted, onboarding === 'true');
       assert.deepEqual([...subject.entries].filter(([key]) => key !== LOCALE_STORAGE_KEY), protectedEntries);
       assert.deepEqual(subject.writes, [LOCALE_STORAGE_KEY]);
       entry.unmount();
@@ -227,11 +228,138 @@ for (const onboarding of [null, 'true']) {
       assert.equal((await reopened.render()).type, 'logo');
       reopened.finishLogo();
       assert.equal((await reopened.render()).type, destination.type);
-      assert.equal(restarted.getSnapshot().locale, 'ja');
+      assert.equal(restarted.getSnapshot().locale, locale);
       reopened.unmount();
     });
   }
 }
+
+function elements(tree, predicate) {
+  if (!tree || typeof tree !== 'object') return [];
+  if (Array.isArray(tree)) return tree.flatMap((child) => elements(child, predicate));
+  return [...(predicate(tree) ? [tree] : []), ...elements(tree.props?.children, predicate)];
+}
+
+function translation(subject) {
+  return (namespace, options) => ({
+    t: subject.instance.getFixedT(options?.lng ?? subject.controller.getSnapshot().locale, namespace),
+    i18n: subject.instance,
+  });
+}
+
+function mountWelcome(subject) {
+  const navigations = [];
+  let complete;
+  const animation = () => ({ start() {}, stop() {} });
+  const welcome = mountComponent('app/index.tsx', 'HeroEntryScreen', {
+    __DEV__: false,
+    useTranslation: translation(subject),
+    useWindowDimensions: () => ({ width: 360, height: 800, fontScale: 1 }),
+    Animated: {
+      Value: class { interpolate() { return 0; } },
+      parallel: animation, loop: animation, timing: animation, delay: animation,
+      sequence: () => ({ start(callback) { complete = callback; }, stop() {} }),
+    },
+    Easing: { out: (value) => value, inOut: (value) => value },
+    router: { replace: (path) => navigations.push(path) },
+    View: 'View', StatusBar: 'StatusBar', HeroBackground: 'HeroBackground', SafeAreaView: 'SafeAreaView',
+    AnimatedView: 'AnimatedView', ScrollView: 'ScrollView', AppText: 'AppText', BlurView: 'BlurView',
+    ExpoLinearGradient: 'ExpoLinearGradient', StyleSheet: {}, Pressable: 'Pressable',
+  });
+  return { ...welcome, navigations, finishTransition: (finished = true) => complete({ finished }) };
+}
+
+for (const locale of ['fr', 'ja']) {
+  for (const onboarding of [null, 'false', 'true']) {
+    test(`${locale}, onboarding=${onboarding}: real selector confirmation, translated welcome, explicit continuation`, async () => {
+      const subject = fixture(['fr-FR'], null, onboarding);
+      await subject.controller.initialize();
+      const protectedEntries = [...subject.entries];
+      const selector = mountComponent('components/language-selection-screen.tsx', 'LanguageSelectionScreen', {
+        useAppLanguage: () => ({ ...subject.controller.getSnapshot(), setPreference: subject.controller.setPreference }),
+        useTranslation: translation(subject),
+        AccessibilityInfo: { isReduceMotionEnabled: async () => true },
+        Animated: { Value: class { setValue() {} }, timing: () => ({ start() {}, stop() {} }), View: 'AnimatedView' },
+        LinearGradient: 'LinearGradient', StatusBar: 'StatusBar', SafeAreaView: 'SafeAreaView', ScrollView: 'ScrollView',
+        View: 'View', Globe2: 'Globe2', AppText: 'AppText', LanguageChoices: 'choices', Pressable: 'Pressable',
+        MoveRight: 'MoveRight', StyleSheet: {},
+      });
+      let tree = await selector.render();
+      elements(tree, (el) => el.type === 'choices')[0].props.onSelect(locale);
+      tree = await selector.render();
+      assert.equal(subject.shouldOffer(), true, 'preview is not confirmation');
+      assert.deepEqual(subject.writes, []);
+      elements(tree, (el) => el.type === 'Pressable')[0].props.onPress();
+      await setImmediate();
+      assert.equal(subject.shouldOffer(), false);
+      assert.equal(subject.entries.get(LOCALE_STORAGE_KEY), locale);
+      selector.unmount();
+
+      const welcome = mountWelcome(subject);
+      tree = await welcome.render({ onboardingCompleted: onboarding === 'true' });
+      assert.ok(elements(tree, (el) => el.props?.children === resources[locale].onboarding.hero.welcome).length);
+      assert.deepEqual(welcome.navigations, [], 'welcome must remain visible until the user continues');
+      const button = elements(tree, (el) => el.type === 'Pressable')[0];
+      assert.equal(button.props.accessibilityLabel, onboarding === 'true'
+        ? resources[locale].onboarding.flow.hubLabel : resources[locale].onboarding.hero.choose);
+      button.props.onPress();
+      assert.deepEqual(welcome.navigations, [], 'wait for the existing transition');
+      welcome.finishTransition();
+      assert.deepEqual(welcome.navigations, [onboarding === 'true' ? '/(tabs)' : '/onboarding']);
+      assert.deepEqual([...subject.entries].filter(([key]) => key !== LOCALE_STORAGE_KEY), protectedEntries);
+      welcome.unmount();
+    });
+  }
+}
+
+for (const locale of ['fr', 'ja']) {
+  for (const onboarding of [null, 'true']) {
+    test(`previously confirmed ${locale}, onboarding=${onboarding}: logo then welcome without selector`, async () => {
+      const subject = fixture(['ja-JP'], locale, onboarding);
+      await subject.controller.initialize();
+      const entry = mountEntry(subject);
+      assert.equal((await entry.render()).type, 'logo');
+      entry.finishLogo();
+      const tree = await entry.render();
+      assert.equal(tree.type, 'welcome');
+      assert.equal(tree.props.onboardingCompleted, onboarding === 'true');
+      assert.deepEqual(subject.writes, []);
+      entry.unmount();
+    });
+  }
+}
+
+test('a slow onboarding read cannot delay the selector after the logo', async () => {
+  const subject = fixture(['fr-FR']);
+  await subject.controller.initialize();
+  let resolveRead;
+  subject.storage.getItem = () => new Promise((resolve) => { resolveRead = resolve; });
+  const entry = mountEntry(subject);
+  await entry.render();
+  entry.finishLogo();
+  assert.equal((await entry.render()).type, 'selector');
+  await subject.controller.setPreference('fr');
+  assert.equal((await entry.render()).type, 'logo', 'wait for continuation state before enabling welcome');
+  resolveRead('true');
+  await setImmediate();
+  assert.equal((await entry.render()).type, 'welcome');
+  entry.unmount();
+});
+
+test('an unreadable onboarding flag preserves selector and welcome without forcing onboarding again', async () => {
+  const subject = fixture(['fr-FR']);
+  await subject.controller.initialize();
+  subject.storage.getItem = async () => { throw new Error('storage unavailable'); };
+  const entry = mountEntry(subject);
+  await entry.render();
+  entry.finishLogo();
+  assert.equal((await entry.render()).type, 'selector');
+  await subject.controller.setPreference('ja');
+  const tree = await entry.render();
+  assert.equal(tree.type, 'welcome');
+  assert.equal(tree.props.onboardingCompleted, true);
+  entry.unmount();
+});
 
 test('closing before confirmation keeps the selector pending on the next launch', async () => {
   const subject = fixture(['fr-FR'], null, 'true');

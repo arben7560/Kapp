@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
-import { Redirect, router } from "expo-router";
+import { router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -256,9 +256,11 @@ function HeroBackground() {
   );
 }
 
-function HeroEntryScreen() {
+function HeroEntryScreen({ onboardingCompleted }: { onboardingCompleted: boolean }) {
   const { t, i18n } = useTranslation("onboarding");
   const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
+  const continueLabel = t(onboardingCompleted ? "flow.hubLabel" : "hero.choose");
+  const continueHint = t(onboardingCompleted ? "flow.hubHint" : "hero.chooseHint");
   const { fontScale, height, width } = useWindowDimensions();
   // Measured: S23 Ultra Expo Go = 384 x 742 (nav 48 + status 33).
   // Realme HD+ ≈ 360 x 800. Width 384 must NOT inherit Realme compact.
@@ -358,7 +360,8 @@ function HeroEntryScreen() {
       Animated.delay(80),
     ]).start(({ finished }) => {
       if (finished) {
-        router.replace("/onboarding");
+        // Completed users keep the welcome without repeating the first-run steps.
+        router.replace(onboardingCompleted ? "/(tabs)" : "/onboarding");
       } else {
         isLeaving.current = false;
       }
@@ -529,8 +532,8 @@ function HeroEntryScreen() {
             >
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={t("hero.choose")}
-                accessibilityHint={t("hero.chooseHint")}
+                accessibilityLabel={continueLabel}
+                accessibilityHint={continueHint}
                 hitSlop={6}
                 style={({ pressed }) => [
                   styles.heroPrimaryWrap,
@@ -553,7 +556,7 @@ function HeroEntryScreen() {
                     style={StyleSheet.absoluteFill}
                   />
                   <AppText script={uiScript} variant="button" style={styles.heroPrimaryText}>
-                    {t("hero.choose")}
+                    {continueLabel}
                   </AppText>
                 </BlurView>
               </Pressable>
@@ -793,12 +796,11 @@ export default function SplashScreenPage() {
   ]);
 
   if (showHero) {
-    if (onboardingCompleted === null) return <View style={styles.screen} />;
     if (shouldOfferLanguageSelection({ preference })) {
       return <LanguageSelectionScreen />;
     }
-    if (onboardingCompleted) return <Redirect href="/(tabs)" />;
-    return <HeroEntryScreen />;
+    if (onboardingCompleted === null) return <View style={styles.screen} />;
+    return <HeroEntryScreen onboardingCompleted={onboardingCompleted} />;
   }
 
   return (
