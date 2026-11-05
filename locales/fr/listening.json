@@ -1,1 +1,292 @@
-{}
+{
+  "kinds": {
+    "dictation": {
+      "mini": "Orthographe",
+      "skill": "Écoute + Hangul"
+    },
+    "situation": {
+      "mini": "Situation",
+      "skill": "Compréhension"
+    },
+    "gap": {
+      "mini": "Mot manquant",
+      "skill": "Vocabulaire"
+    },
+    "order": {
+      "mini": "Ordre",
+      "skill": "Syntaxe"
+    },
+    "reaction": {
+      "mini": "Réaction",
+      "skill": "Conversation"
+    }
+  },
+  "feedback": {
+    "dictation": {
+      "correct": "Oui, c’est bien la phrase que tu as entendue.",
+      "incorrect": "Pas tout à fait. Réécoute une fois sans lire les choix, puis compare les sons que tu reconnais."
+    },
+    "situation": {
+      "correct": "Oui, tu as bien compris ce qui se passe dans la scène.",
+      "incorrect": "La réponse choisie ne répond pas vraiment à ce qui vient d’être dit. Repars de la question ou de l’annonce entendue."
+    },
+    "gap": {
+      "correct": "Oui, tu as isolé le bon mot dans l’audio.",
+      "incorrect": "Tu n’as pas isolé le bon mot. Réécoute surtout l’endroit qui correspond au blanc."
+    },
+    "order": {
+      "correct": "Oui, tu as retrouvé l’ordre entendu dans la phrase.",
+      "incorrect": "Les éléments sont là, mais pas dans l’ordre entendu. Réécoute le rythme de la phrase avant de les replacer."
+    },
+    "reaction": {
+      "correct": "Oui, cette réaction suit naturellement ce que tu viens d’entendre.",
+      "incorrect": "Cette réponse pourrait fonctionner ailleurs, mais pas après cette réplique. Écoute d’abord l’intention de la personne."
+    }
+  },
+  "ui": {
+    "module": "ÉCOUTE",
+    "training": "ENTRAÎNEMENT",
+    "previousTraining": "Entraînement précédent",
+    "nextTraining": "Entraînement suivant",
+    "questionPosition": "Question {{current}} sur {{total}}",
+    "exercisePosition": "Exercice {{current}} / {{total}}",
+    "constructSentence": "Construis la phrase ici",
+    "removeWord": "Retirer {{word}} de la phrase",
+    "addWord": "Ajouter {{word}} a la phrase",
+    "listen": "Écouter",
+    "relisten": "Réécouter",
+    "questionAudio": "{{action}} l’audio de la question",
+    "playing": "Lecture en cours",
+    "interrupted": "Lecture interrompue · réessaie",
+    "unavailable": "Audio indisponible",
+    "audioError": "Impossible de lire l’audio. Vérifie le volume, puis réessaie.",
+    "retryAudioLabel": "Réessayer la lecture audio",
+    "retry": "Réessayer",
+    "good": "Bien vu",
+    "review": "À revoir",
+    "heardPhrase": "Phrase entendue",
+    "remember": "À retenir",
+    "restartTraining": "Recommencer l’entraînement",
+    "retryQuestion": "Réessayer cette question",
+    "validateLabel": "Valider la réponse",
+    "validate": "Valider",
+    "blockedNext": "Question suivante indisponible tant que la réponse est incorrecte",
+    "openSummary": "Ouvrir le bilan de l'entraînement",
+    "requireFive": "Valider les cinq questions pour ouvrir le bilan",
+    "nextQuestion": "Passer à la question suivante",
+    "summary": "Voir le bilan",
+    "next": "Suivant",
+    "sync": "Synchronisation de ta progression… Tu peux déjà écouter.",
+    "objective": "Objectif",
+    "objectiveDescription": "Comprendre avant de lire. La traduction n’apparaît qu’après validation.",
+    "accessibilityCorrect": "Bien vu. {{feedback}} {{explanation}}",
+    "accessibilityIncorrect": "À revoir. {{feedback}}",
+    "accessibilityCorrectDetail": "Bien vu. {{feedback}} {{source}}À retenir : {{answer}}. {{explanation}}",
+    "accessibilitySource": "Phrase entendue : {{phrase}}. ",
+    "choiceCorrect": "Bonne réponse",
+    "choiceWrong": "Réponse choisie incorrecte",
+    "choiceSelected": "Selectionnee",
+    "choiceUnselected": "Non sélectionnée",
+    "streakFreeze": "Protection de série utilisée. Série conservée.",
+    "streakRestart": "Nouvelle série commencée.",
+    "streakDone": "Journée validée. Série conservée."
+  },
+  "summary": {
+    "header": "ÉCOUTE · {{title}}",
+    "heading": "Entraînement terminé",
+    "close": "Fermer le bilan {{title}}",
+    "congratulations": "Bien joué !",
+    "progress": "Ta progression",
+    "progressA11y": "{{total}} questions validées sur {{total}}",
+    "allValidated": "Toutes les questions sont validées.",
+    "learned": "Ce que tu as travaillé",
+    "freezeTitle": "Série protégée",
+    "restartTitle": "Nouvelle série commencée",
+    "doneTitle": "Journée validée",
+    "freezeDescription": "Une protection a préservé ta série.",
+    "doneDescription": "Ton activité du jour est enregistrée.",
+    "next": "Passer à {{title}}",
+    "back": "Revenir à {{title}}",
+    "restartA11y": "Recommencer l'entraînement {{title}}",
+    "restart": "Recommencer {{title}}",
+    "trainings": {
+      "dictation": {
+        "title": "Orthographe",
+        "achievement": "Tu as reconnu les cinq phrases coréennes de cet entraînement.",
+        "learning": "Identifier des phrases courantes à l'oreille, distinguer des expressions proches et reconnaître leur écriture en hangul."
+      },
+      "situation": {
+        "title": "Situation",
+        "achievement": "Tu as compris cinq situations et choisi les réponses adaptées.",
+        "learning": "Comprendre des échanges du quotidien, repérer l'intention de la personne et choisir une réponse logique."
+      },
+      "gap": {
+        "title": "Mot manquant",
+        "achievement": "Tu as retrouvé les cinq mots manquants dans les phrases entendues.",
+        "learning": "Isoler un mot précis dans l'audio, reconnaître le vocabulaire utile et compléter une phrase en contexte."
+      },
+      "order": {
+        "title": "Ordre",
+        "achievement": "Tu as reconstruit cinq phrases coréennes dans le bon ordre.",
+        "learning": "Reconnaître les groupes de mots entendus et retrouver l'ordre naturel des phrases coréennes."
+      },
+      "reaction": {
+        "title": "Réaction",
+        "achievement": "Tu as choisi cinq réactions adaptées aux répliques entendues.",
+        "learning": "Comprendre l'intention d'une réplique et répondre naturellement dans une conversation du quotidien."
+      }
+    }
+  },
+  "exercises": {
+    "cafe-dictation-01": {
+      "theme": "Café",
+      "title": "Repère la question",
+      "instruction": "Écoute, puis choisis la phrase prononcée.",
+      "explanation": "몇 분이세요? veut dire « Vous êtes combien ? ». Ici, 몇 분 porte sur le nombre de personnes."
+    },
+    "cafe-dictation-02": {
+      "theme": "Café",
+      "title": "Repère la commande",
+      "instruction": "Écoute, puis choisis la phrase prononcée.",
+      "explanation": "Tu as bien entendu 아이스 아메리카노 주세요 : « Un americano glacé, s'il vous plaît. »"
+    },
+    "metro-dictation-03": {
+      "theme": "Métro",
+      "title": "Entends la direction",
+      "instruction": "Écoute, puis choisis la phrase prononcée.",
+      "explanation": "이쪽으로 가세요 veut dire « Allez par ici ». Le mot-clé est 이쪽, « ce côté-ci »."
+    },
+    "shop-dictation-04": {
+      "theme": "Boutique",
+      "title": "Repère la question",
+      "instruction": "Écoute, puis choisis la phrase prononcée.",
+      "explanation": "얼마예요? sert à demander le prix : « Combien ça coûte ? »"
+    },
+    "hotel-dictation-05": {
+      "theme": "Hôtel",
+      "title": "Repère la demande",
+      "instruction": "Écoute, puis choisis la phrase prononcée.",
+      "explanation": "예약했어요 signifie « J'ai réservé ». La terminaison -했어요 place ici l'action au passé."
+    },
+    "bbq-situation-01": {
+      "theme": "K-BBQ",
+      "title": "Comprends la situation",
+      "instruction": "Écoute la serveuse et choisis la réponse logique.",
+      "explanation": "몇 분이세요? demande combien de personnes vous êtes ; 두 명이에요 répond directement à la question."
+    },
+    "cafe-situation-02": {
+      "theme": "Café",
+      "title": "Réponds au barista",
+      "instruction": "Écoute la question et choisis la réponse naturelle.",
+      "explanation": "Le barista te demande ce que tu veux commander. Une commande comme 따뜻한 라떼 주세요 répond naturellement."
+    },
+    "metro-situation-03": {
+      "theme": "Métro",
+      "title": "Trouve l'arrêt",
+      "instruction": "Écoute l'annonce et choisis quoi faire.",
+      "explanation": "이번 역은 홍대입구역입니다 signifie « Cette station est la station Hongdae-ipgu ». La bonne réponse confirme donc que vous êtes arrivé à 홍대입구역. Les autres choix parlent de la station suivante ou d'une correspondance, ce que l'annonce ne dit pas."
+    },
+    "shop-situation-04": {
+      "theme": "Boutique",
+      "title": "Comprends la question",
+      "instruction": "Écoute la question et choisis la réponse adaptée.",
+      "explanation": "La question oppose la carte aux espèces. 카드로 할게요 répond directement : « Je vais payer par carte. »"
+    },
+    "street-situation-05": {
+      "theme": "Rue",
+      "title": "Réponds dans la rue",
+      "instruction": "Écoute la personne et choisis la réponse logique.",
+      "explanation": "La personne vient de t'indiquer le chemin ; 네, 감사합니다 est simplement la réaction naturelle pour la remercier."
+    },
+    "restaurant-gap-01": {
+      "theme": "Restaurant",
+      "title": "Complète la quantité",
+      "instruction": "Écoute, puis complète la phrase.",
+      "explanation": "Le groupe entendu est 2인분 : cela signifie « deux portions »."
+    },
+    "cafe-gap-02": {
+      "theme": "Café",
+      "title": "Complète la commande",
+      "instruction": "Écoute, puis choisis le mot manquant.",
+      "explanation": "Le mot entendu est 라떼. La phrase complète est 아이스 라떼 주세요 : « Un latte glacé, s'il vous plaît. »"
+    },
+    "shop-gap-03": {
+      "theme": "Boutique",
+      "title": "Complète le paiement",
+      "instruction": "Écoute, puis complète la phrase.",
+      "explanation": "Tu entends 카드로, « par carte » : 카드로 계산할게요 signifie « Je vais payer par carte. »"
+    },
+    "metro-gap-04": {
+      "theme": "Métro",
+      "title": "Complète le lieu",
+      "instruction": "Écoute, puis choisis le mot manquant.",
+      "explanation": "Le lieu entendu est 홍대입구. 홍대입구에서 내려요 signifie « Je descends à Hongik University. »"
+    },
+    "hotel-gap-05": {
+      "theme": "Hôtel",
+      "title": "Complète la phrase",
+      "instruction": "Écoute, puis complète la phrase.",
+      "explanation": "Le mot entendu est 예약, « réservation » ; 예약했어요 signifie « J'ai réservé. »"
+    },
+    "metro-order-01": {
+      "theme": "Métro",
+      "title": "Remets en ordre",
+      "instruction": "Écoute, puis reconstruis la phrase.",
+      "explanation": "Tu entends 이쪽으로 쭉 가세요 : « Continuez tout droit par ici. » Garde cet ordre quand tu reconstruis la phrase."
+    },
+    "cafe-order-02": {
+      "theme": "Café",
+      "title": "Reconstruis la commande",
+      "instruction": "Écoute, puis remets les mots dans l'ordre.",
+      "explanation": "La commande entendue est 아이스 아메리카노 주세요 : la boisson vient avant 주세요."
+    },
+    "shop-order-03": {
+      "theme": "Boutique",
+      "title": "Replace les mots",
+      "instruction": "Écoute, puis reconstruis la phrase.",
+      "explanation": "La question entendue est 이거 얼마예요? : « Combien coûte ceci ? »"
+    },
+    "restaurant-order-04": {
+      "theme": "Restaurant",
+      "title": "Remets la demande",
+      "instruction": "Écoute, puis remets les mots en ordre.",
+      "explanation": "Tu entends 물 좀 주세요 : une demande naturelle pour dire « Un peu d'eau, s'il vous plaît. »"
+    },
+    "street-order-05": {
+      "theme": "Rue",
+      "title": "Reconstruis la question",
+      "instruction": "Écoute, puis reconstruis la phrase.",
+      "explanation": "La question naturelle est 화장실이 어디예요? : « Où sont les toilettes ? »"
+    },
+    "cafe-reaction-01": {
+      "theme": "Café",
+      "title": "Choisis la réaction",
+      "instruction": "Écoute et choisis la commande appropriée.",
+      "explanation": "뭐 드릴까요? signifie qu'on te demande ce que tu veux prendre. Tu réponds donc par ta commande."
+    },
+    "restaurant-reaction-02": {
+      "theme": "Restaurant",
+      "title": "Réagis à la serveuse",
+      "instruction": "Écoute et choisis la réponse naturelle.",
+      "explanation": "La serveuse demande s'il te faut autre chose. 네, 물 좀 주세요 répond directement en demandant de l'eau."
+    },
+    "shop-reaction-03": {
+      "theme": "Boutique",
+      "title": "Réponds au vendeur",
+      "instruction": "Écoute, puis choisis la bonne réaction.",
+      "explanation": "Le vendeur te propose son aide. 괜찮아요, 그냥 볼게요 lui répond naturellement que tu vas simplement regarder."
+    },
+    "hotel-reaction-04": {
+      "theme": "Hôtel",
+      "title": "Réponds à l'accueil",
+      "instruction": "Écoute et choisis la réponse adaptée.",
+      "explanation": "예약하셨어요? demande si tu as réservé. 예약했어요 répond simplement : « J'ai réservé. »"
+    },
+    "street-reaction-05": {
+      "theme": "Rue",
+      "title": "Réponds dans la rue",
+      "instruction": "Écoute, puis choisis la réponse adaptée.",
+      "explanation": "On vient de t'indiquer le chemin. 감사합니다 est donc la réponse naturelle pour remercier."
+    }
+  }
+}
