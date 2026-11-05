@@ -31,6 +31,7 @@ import {
  * previews, isolated components).
  */
 const AppFontsAvailableContext = React.createContext(false);
+const AppJapaneseFontsAvailableContext = React.createContext(false);
 
 const KOREAN_CHARACTER_PATTERN =
   /[\u1100-\u11ff\u3130-\u318f\ua960-\ua97f\uac00-\ud7af\ud7b0-\ud7ff]/u;
@@ -84,15 +85,19 @@ function normalizeKoreanTitle(
 
 export type AppTextProviderProps = React.PropsWithChildren<{
   customFontsAvailable: boolean;
+  japaneseFontsAvailable?: boolean;
 }>;
 
 export function AppTextProvider({
   children,
   customFontsAvailable,
+  japaneseFontsAvailable = false,
 }: AppTextProviderProps) {
   return (
     <AppFontsAvailableContext.Provider value={customFontsAvailable}>
-      {children}
+      <AppJapaneseFontsAvailableContext.Provider value={japaneseFontsAvailable}>
+        {children}
+      </AppJapaneseFontsAvailableContext.Provider>
     </AppFontsAvailableContext.Provider>
   );
 }
@@ -219,6 +224,7 @@ export const AppText = React.forwardRef<
   ref,
 ) {
   const customFontsAvailable = React.useContext(AppFontsAvailableContext);
+  const japaneseFontsAvailable = React.useContext(AppJapaneseFontsAvailableContext);
   const token = AppTypography[variant];
   const resolvedScript = script ?? token.script;
   const lineProps = AppTextLineContracts[lineContract];
@@ -227,14 +233,14 @@ export const AppText = React.forwardRef<
     ...resolveFontStyle(
       resolvedScript,
       token.fontRole,
-      customFontsAvailable,
+      resolvedScript === 'japanese' ? japaneseFontsAvailable : customFontsAvailable,
     ),
     color: AppTextTones[tone],
     fontSize: token.fontSize,
     lineHeight: token.lineHeight,
-    letterSpacing: token.letterSpacing,
+    letterSpacing: resolvedScript === 'japanese' ? 0 : token.letterSpacing,
     textAlign: AppTextAlignments[align],
-    textTransform: token.textTransform,
+    textTransform: resolvedScript === 'japanese' ? 'none' : token.textTransform,
     // Keep Latin and Noto Sans KR on the same visual baseline on Android.
     // Every semantic token owns an explicit lineHeight, so the platform's
     // extra font padding is neither needed nor allowed to shift compact rows.
@@ -257,6 +263,7 @@ export const AppText = React.forwardRef<
   return (
     <Text
       ref={ref}
+      accessibilityLanguage={resolvedScript === 'japanese' ? 'ja-JP' : undefined}
       {...rest}
       {...lineProps}
       style={[baseStyle, safeStyle]}
@@ -284,6 +291,7 @@ export const AppTextInput = React.forwardRef<
   ref,
 ) {
   const customFontsAvailable = React.useContext(AppFontsAvailableContext);
+  const japaneseFontsAvailable = React.useContext(AppJapaneseFontsAvailableContext);
   const token = AppTypography[variant];
   const resolvedScript = script ?? token.script;
   const safeStyle = sanitizeTextStyle(style);
@@ -291,18 +299,19 @@ export const AppTextInput = React.forwardRef<
   return (
     <TextInput
       ref={ref}
+      accessibilityLanguage={resolvedScript === 'japanese' ? 'ja-JP' : undefined}
       {...rest}
       style={[
         resolveFontStyle(
           resolvedScript,
           token.fontRole,
-          customFontsAvailable,
+          resolvedScript === 'japanese' ? japaneseFontsAvailable : customFontsAvailable,
         ),
         {
           color: AppTextTones.default,
           fontSize: token.fontSize,
           lineHeight: token.lineHeight,
-          letterSpacing: token.letterSpacing,
+          letterSpacing: resolvedScript === 'japanese' ? 0 : token.letterSpacing,
           includeFontPadding: false,
         },
         safeStyle,
@@ -320,7 +329,7 @@ export type AppMixedTextSegment = Readonly<{
   accessibilityLanguage?: TextProps['accessibilityLanguage'];
 }>;
 
-export type AppMixedTextProps = Omit<AppTextProps, 'children' | 'script'> & {
+export type AppMixedTextProps = Omit<AppTextProps, 'children'> & {
   segments: readonly AppMixedTextSegment[];
 };
 
@@ -337,6 +346,7 @@ export const AppMixedText = React.forwardRef<
   ref,
 ) {
   const customFontsAvailable = React.useContext(AppFontsAvailableContext);
+  const japaneseFontsAvailable = React.useContext(AppJapaneseFontsAvailableContext);
   const token = AppTypography[variant];
 
   return (
@@ -350,12 +360,14 @@ export const AppMixedText = React.forwardRef<
         return (
           <Text
             key={segment.key ?? index}
-            accessibilityLanguage={segment.accessibilityLanguage}
+            accessibilityLanguage={segment.accessibilityLanguage ?? (
+              segment.script === 'japanese' ? 'ja-JP' : undefined
+            )}
             style={[
               resolveFontStyle(
                 segment.script,
                 token.fontRole,
-                customFontsAvailable,
+                segment.script === 'japanese' ? japaneseFontsAvailable : customFontsAvailable,
               ),
               toneStyle,
               safeSegmentStyle,

@@ -28,6 +28,12 @@ jobs:
       - name: TypeScript
         run: npx tsc --noEmit
 
+      - name: FR/JA catalogue integrity
+        run: npm run validate:i18n
+
+      - name: Localization foundations
+        run: npm run test:i18n
+
       - name: Auth sync
         run: npm run test:auth-sync
 

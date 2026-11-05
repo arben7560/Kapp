@@ -65,6 +65,10 @@ export const AppFontFamily = {
     regular: 'NotoSansKR_400Regular',
     bold: 'NotoSansKR_700Bold',
   },
+  japanese: {
+    regular: 'NotoSansJP_400Regular',
+    bold: 'NotoSansJP_700Bold',
+  },
   fallback: {
     sans:
       Platform.select({
@@ -80,10 +84,17 @@ export const AppFontFamily = {
         web: "'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif",
         default: 'sans-serif',
       }) ?? 'sans-serif',
+    japanese:
+      Platform.select({
+        ios: 'Hiragino Sans',
+        android: 'sans-serif',
+        web: "'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', Meiryo, sans-serif",
+        default: 'sans-serif',
+      }) ?? 'sans-serif',
   },
 } as const;
 
-export type AppTextScript = 'latin' | 'korean';
+export type AppTextScript = 'latin' | 'korean' | 'japanese';
 export type AppFontRole = keyof typeof AppFontFamily.outfit;
 
 /**
@@ -100,6 +111,14 @@ export const AppFontFamilyByScript = {
     semibold: AppFontFamily.korean.bold,
     bold: AppFontFamily.korean.bold,
     black: AppFontFamily.korean.bold,
+  },
+  japanese: {
+    light: AppFontFamily.japanese.regular,
+    regular: AppFontFamily.japanese.regular,
+    medium: AppFontFamily.japanese.regular,
+    semibold: AppFontFamily.japanese.bold,
+    bold: AppFontFamily.japanese.bold,
+    black: AppFontFamily.japanese.bold,
   },
 } as const satisfies Record<
   AppTextScript,
@@ -128,9 +147,9 @@ export function resolveAppFontFamily(
     return AppFontFamilyByScript[script][role];
   }
 
-  return script === 'korean'
-    ? AppFontFamily.fallback.korean
-    : AppFontFamily.fallback.sans;
+  if (script === 'korean') return AppFontFamily.fallback.korean;
+  if (script === 'japanese') return AppFontFamily.fallback.japanese;
+  return AppFontFamily.fallback.sans;
 }
 
 export type AppTypographyToken = Readonly<{

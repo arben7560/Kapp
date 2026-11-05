@@ -2,6 +2,8 @@ import {
   NotoSansKR_400Regular,
   NotoSansKR_700Bold,
 } from "@expo-google-fonts/noto-sans-kr";
+import { NotoSansJP_400Regular } from "@expo-google-fonts/noto-sans-jp/400Regular";
+import { NotoSansJP_700Bold } from "@expo-google-fonts/noto-sans-jp/700Bold";
 import {
   Outfit_300Light,
   Outfit_400Regular,
@@ -31,6 +33,8 @@ import { useMediaSessionLifecycle } from "../hooks/useMediaSessionLifecycle";
 import { AuthProvider } from "../lib/AuthProvider";
 import { DailyStreakProvider } from "../lib/DailyStreakProvider";
 import { ProgressSyncProvider } from "../lib/ProgressSyncProvider";
+import { LanguageProvider, useLanguageBootstrap } from "../lib/i18n/LanguageProvider";
+import { ENABLED_UI_LOCALES } from "../lib/i18n/config";
 import { PaywallProvider } from "../lib/paywall/PaywallProvider";
 import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard";
 
@@ -60,6 +64,11 @@ const KAPP_NAVIGATION_THEME = {
 };
 
 const forceFontFallback = process.env.EXPO_PUBLIC_FORCE_FONT_FALLBACK === "1";
+// Register Japanese fonts when that UI is enabled; French startup keeps its
+// original font loading cost. Subpath imports bundle only the two required files.
+const japaneseFontSources: Record<string, number> = ENABLED_UI_LOCALES.includes("ja")
+  ? { NotoSansJP_400Regular, NotoSansJP_700Bold }
+  : {};
 
 const enableHiddenRoutesQa =
   __DEV__ && process.env.EXPO_PUBLIC_ENABLE_HIDDEN_ROUTES_QA === "1";
@@ -168,6 +177,8 @@ function InitialOnboardingRoute() {
 }
 
 export default function RootLayout() {
+  const { ready: languageReady } = useLanguageBootstrap();
+  const [japaneseFontsLoaded, japaneseFontError] = useFonts(japaneseFontSources);
   const [fontsLoaded, fontError] = useFonts({
     Outfit_300Light,
     Outfit_400Regular,
@@ -180,7 +191,10 @@ export default function RootLayout() {
   });
 
   const customFontsAvailable = fontsLoaded && !fontError && !forceFontFallback;
-  const appReady = fontsLoaded || Boolean(fontError) || forceFontFallback;
+  const japaneseFontsReady = japaneseFontsLoaded || Boolean(japaneseFontError) || forceFontFallback;
+  const appReady = languageReady &&
+    (fontsLoaded || Boolean(fontError) || forceFontFallback) &&
+    (!ENABLED_UI_LOCALES.includes("ja") || japaneseFontsReady);
 
   // Install once the app has rendered a native window. Keep protection across
   // navigation and backgrounding; releasing it on blur would expose snapshots.
@@ -238,58 +252,66 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={KAPP_NAVIGATION_THEME}>
-      <AppTextProvider customFontsAvailable={customFontsAvailable}>
-        <StoreProvider>
-          <AuthProvider>
-            <ProgressSyncProvider>
-              <DailyStreakProvider>
-                <PaywallProvider>
-                  <SubscriptionAccessGuard>
-                    <ReleaseRouteGuard>
-                      <InitialOnboardingRoute />
+      <LanguageProvider>
+        <AppTextProvider
+          customFontsAvailable={customFontsAvailable}
+          japaneseFontsAvailable={
+            ENABLED_UI_LOCALES.includes("ja") && japaneseFontsLoaded &&
+            !japaneseFontError && !forceFontFallback
+          }
+        >
+          <StoreProvider>
+            <AuthProvider>
+              <ProgressSyncProvider>
+                <DailyStreakProvider>
+                  <PaywallProvider>
+                    <SubscriptionAccessGuard>
+                      <ReleaseRouteGuard>
+                        <InitialOnboardingRoute />
 
-                      <Stack
-                        screenOptions={{
-                          headerShown: false,
-                          contentStyle: {
-                            backgroundColor: "#000000",
-                          },
-                          animation: "fade",
-                          animationDuration: 220,
-                        }}
-                      >
-                        <Stack.Screen
-                          name="index"
-                          options={{
+                        <Stack
+                          screenOptions={{
+                            headerShown: false,
+                            contentStyle: {
+                              backgroundColor: "#000000",
+                            },
                             animation: "fade",
-                            animationDuration: 420,
+                            animationDuration: 220,
                           }}
-                        />
-                        <Stack.Screen
-                          name="onboarding"
-                          options={{
-                            animation: "fade",
-                            animationDuration: 420,
-                          }}
-                        />
-                        <Stack.Screen name="account" />
-                        <Stack.Screen name="premium" />
-                        <Stack.Screen name="streak" />
-                        <Stack.Screen name="(tabs)" />
-                        <Stack.Screen
-                          name="listen/teacherIA"
-                          options={{ animation: "none" }}
-                        />
-                        <Stack.Screen name="listen/teacherIARealtime" />
-                      </Stack>
-                    </ReleaseRouteGuard>
-                  </SubscriptionAccessGuard>
-                </PaywallProvider>
-              </DailyStreakProvider>
-            </ProgressSyncProvider>
-          </AuthProvider>
-        </StoreProvider>
-      </AppTextProvider>
+                        >
+                          <Stack.Screen
+                            name="index"
+                            options={{
+                              animation: "fade",
+                              animationDuration: 420,
+                            }}
+                          />
+                          <Stack.Screen
+                            name="onboarding"
+                            options={{
+                              animation: "fade",
+                              animationDuration: 420,
+                            }}
+                          />
+                          <Stack.Screen name="account" />
+                          <Stack.Screen name="premium" />
+                          <Stack.Screen name="streak" />
+                          <Stack.Screen name="(tabs)" />
+                          <Stack.Screen
+                            name="listen/teacherIA"
+                            options={{ animation: "none" }}
+                          />
+                          <Stack.Screen name="listen/teacherIARealtime" />
+                        </Stack>
+                      </ReleaseRouteGuard>
+                    </SubscriptionAccessGuard>
+                  </PaywallProvider>
+                </DailyStreakProvider>
+              </ProgressSyncProvider>
+            </AuthProvider>
+          </StoreProvider>
+        </AppTextProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

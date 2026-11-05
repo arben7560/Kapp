@@ -1,0 +1,45 @@
+import './i18n-node-loader.mjs';
+import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+
+const { validateCataloguePair } = await import('../lib/i18n/catalogValidation.ts');
+const { resources } = await import('../locales/index.ts');
+const { localizedContent } = await import('../data/localized/index.ts');
+const { CONTENT_MODULES } = await import('../data/localized/types.ts');
+const { ENABLED_UI_LOCALES } = await import('../lib/i18n/config.ts');
+const manifest = JSON.parse(readFileSync(new URL('../locales/manifest.json', import.meta.url), 'utf8'));
+const errors = [];
+
+for (const locale of ['fr', 'ja']) {
+  const directory = new URL(`../locales/${locale}/`, import.meta.url);
+  const files = readdirSync(directory).filter((name) => name.endsWith('.json')).sort();
+  assert.deepEqual(files, manifest.namespaces.map((ns) => `${ns}.json`).sort(), `${locale}: namespace files`);
+  assert.deepEqual(Object.keys(resources[locale]).sort(), [...manifest.namespaces].sort(), `${locale}: bundled namespaces`);
+  for (const namespace of manifest.namespaces) {
+    const file = JSON.parse(readFileSync(new URL(`${namespace}.json`, directory), 'utf8'));
+    assert.deepEqual(resources[locale][namespace], file, `${locale}/${namespace}: bundle differs from disk`);
+    if (!Object.keys(file).length && !manifest.deferredNamespaces.includes(namespace)) {
+      errors.push(`${locale}/${namespace}: required namespace is empty`);
+    }
+  }
+  assert.deepEqual(Object.keys(localizedContent[locale]).sort(), [...CONTENT_MODULES].sort());
+}
+for (const namespace of manifest.namespaces) {
+  errors.push(...validateCataloguePair(resources.fr[namespace], resources.ja[namespace])
+    .map((error) => `${namespace}/${error}`));
+}
+for (const module of CONTENT_MODULES) {
+  errors.push(...validateCataloguePair(localizedContent.fr[module], localizedContent.ja[module])
+    .map((error) => `content/${module}/${error}`));
+}
+if (ENABLED_UI_LOCALES.includes('ja') || process.argv.includes('--release-ja')) {
+  if (!manifest.japaneseReleaseReady || manifest.deferredNamespaces.length) {
+    errors.push('Japanese release blocked: UI/pedagogical coverage is deferred (phase 2).');
+  }
+}
+if (errors.length) {
+  console.error(errors.join('\n'));
+  process.exitCode = 1;
+} else {
+  console.log(`FR/JA: ${manifest.namespaces.length} namespaces verified; ${manifest.deferredNamespaces.length} explicitly deferred. Japanese release disabled.`);
+}

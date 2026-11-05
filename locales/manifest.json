@@ -1,0 +1,35 @@
+{
+  "phase": 2,
+  "japaneseReleaseReady": false,
+  "namespaces": [
+    "common",
+    "navigation",
+    "onboarding",
+    "account",
+    "premium",
+    "hangul",
+    "vocabulary",
+    "counting",
+    "classifiers",
+    "grammar",
+    "listening",
+    "missions",
+    "speechFeedback",
+    "immersion"
+  ],
+  "deferredNamespaces": [
+    "navigation",
+    "onboarding",
+    "account",
+    "premium",
+    "hangul",
+    "vocabulary",
+    "counting",
+    "classifiers",
+    "grammar",
+    "listening",
+    "missions",
+    "speechFeedback",
+    "immersion"
+  ]
+}
