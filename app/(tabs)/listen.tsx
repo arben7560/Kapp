@@ -83,6 +83,15 @@ const LISTEN_AUDIO_BY_ID: Partial<Record<string, number>> = {
 
 type ListeningKey = Extract<DisplayMessage, { namespace: "listening" }>["key"];
 
+// Stable legacy resume metadata; localized labels never become persisted identifiers.
+const RESUME_KIND_LABEL_FR: Record<ExerciseKind, string> = {
+  dictation: "Orthographe",
+  situation: "Situation",
+  gap: "Mot manquant",
+  order: "Ordre",
+  reaction: "Réaction",
+};
+
 function normalizeParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
@@ -246,7 +255,7 @@ export default function ListenScreen() {
       saveHomeResumeContext({
         track: "listen",
         title: item.title,
-        detail: `${meta.mini} · ${item.theme} · Exercice ${exerciseIndex + 1} / ${exercises.length}`,
+        detail: `${RESUME_KIND_LABEL_FR[trainingKind]} · ${item.theme} · Exercice ${exerciseIndex + 1} / ${exercises.length}`,
         route: "/listen",
         routeParams: {
           training: trainingKind,
