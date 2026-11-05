@@ -1,0 +1,43 @@
+diff --git a/scripts/test-i18n-first-run.mjs b/scripts/test-i18n-first-run.mjs
+--- a/scripts/test-i18n-first-run.mjs
++++ b/scripts/test-i18n-first-run.mjs
+@@ -174,10 +174,11 @@ function mountComponent(path, name, dependencies) {
+   };
+ }
+ 
+-function mountEntry(subject, reducedMotion = false) {
++function mountEntry(subject, reducedMotion = false, dev = false) {
+   let complete;
+   const animation = () => ({ start(callback) { complete = callback; }, stop() {} });
+   const entry = mountComponent('app/index.tsx', 'SplashScreenPage', {
++    __DEV__: dev,
+     AsyncStorage: subject.storage,
+     useAppLanguage: subject.controller.getSnapshot,
+     useWindowDimensions: () => ({ width: 360, height: 800 }),
+@@ -236,6 +237,26 @@ for (const [locale, onboarding] of ['fr', 'ja'].flatMap((locale) =>
+   }
+ }
+ 
++test('development: confirmed language can be previewed after each logo without changing storage', async () => {
++  const subject = fixture(['fr-FR'], 'fr', 'true');
++  await subject.controller.initialize();
++  for (let launch = 0; launch < 2; launch++) {
++    const entry = mountEntry(subject, false, true);
++    assert.equal((await entry.render()).type, 'logo');
++    entry.finishLogo();
++    const selector = await entry.render();
++    assert.equal(selector.type, 'selector');
++    assert.equal(typeof selector.props.onComplete, 'function');
++    selector.props.onComplete();
++    const welcome = await entry.render();
++    assert.equal(welcome.type, 'welcome');
++    assert.equal(welcome.props.onboardingCompleted, true);
++    entry.unmount();
++  }
++  assert.equal(subject.entries.get(LOCALE_STORAGE_KEY), 'fr');
++  assert.deepEqual(subject.writes, []);
++});
++
+ function elements(tree, predicate) {
+   if (!tree || typeof tree !== 'object') return [];
+   if (Array.isArray(tree)) return tree.flatMap((child) => elements(child, predicate));

@@ -1,0 +1,111 @@
+diff --git a/components/language-selection-screen.tsx b/components/language-selection-screen.tsx
+--- a/components/language-selection-screen.tsx
++++ b/components/language-selection-screen.tsx
+@@ -8,9 +8,15 @@ import { useAppLanguage } from '../lib/i18n/LanguageProvider';
+ import { AppText } from './app-text';
+ import { LanguageChoices } from './language-choices';
+ 
+-export function LanguageSelectionScreen() {
+-  const { deviceLocale, setPreference } = useAppLanguage();
+-  const [selected, setSelected] = useState(deviceLocale);
++type LanguageSelectionScreenProps = {
++  /** Only used by the development-only preview from /account. */
++  onComplete?: () => void;
++  onCancel?: () => void;
++};
++
++export function LanguageSelectionScreen({ onComplete, onCancel }: LanguageSelectionScreenProps = {}) {
++  const { deviceLocale, preference, setPreference } = useAppLanguage();
++  const [selected, setSelected] = useState(preference ?? deviceLocale);
+   const [saving, setSaving] = useState(false);
+   const [saveFailed, setSaveFailed] = useState(false);
+   const busy = useRef(false);
+@@ -34,8 +42,9 @@ export function LanguageSelectionScreen() {
+     setSaving(true);
+     setSaveFailed(false);
+     try {
+-      // Persist only the language. The parent then reveals the existing welcome screen.
++      // Persist only the language. Startup reveals the welcome; preview returns to /account.
+       await setPreference(selected);
++      onComplete?.();
+     } catch {
+       setSaveFailed(true);
+     } finally {
+@@ -89,5 +98,16 @@ export function LanguageSelectionScreen() {
+               <MoveRight size={19} color="#FFFFFF" />
+             </Pressable>
++            {onCancel ? (
++              <Pressable
++                accessibilityRole="button"
++                accessibilityLabel="Annuler la prévisualisation"
++                disabled={saving}
++                onPress={onCancel}
++                style={styles.cancel}
++              >
++                <AppText variant="body" align="center" tone="muted">Annuler / キャンセル</AppText>
++              </Pressable>
++            ) : null}
+           </ScrollView>
+         </Animated.View>
+       </SafeAreaView>
+@@ -115,5 +135,6 @@ const styles = StyleSheet.create({
+   },
+   buttonText: { color: '#FFFFFF', flexShrink: 1 },
++  cancel: { alignSelf: 'center', minHeight: 44, justifyContent: 'center', paddingHorizontal: 20, marginTop: 16 },
+   error: { color: '#FB7185', marginTop: 16 },
+   pressed: { opacity: 0.85 },
+ });
+diff --git a/app/account/index.tsx b/app/account/index.tsx
+--- a/app/account/index.tsx
++++ b/app/account/index.tsx
+@@ -17,5 +17,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
+ 
+ import { useStore } from "../../_store";
+ import { ApplicationLanguageSettings } from "../../components/application-language-settings";
++import { LanguageSelectionScreen } from "../../components/language-selection-screen";
+ import { AppText, AppTextInput } from "../../components/app-text";
+ import { ActionButton } from "../../components/ui/action-button";
+@@ -241,4 +242,5 @@ export default function AccountScreen() {
+   const responsive = useResponsiveLayout({ maxWidth: 760 });
+   const [mode, setMode] = React.useState<FormMode>(null);
++  const [showLanguagePreview, setShowLanguagePreview] = React.useState(false);
+   const [email, setEmail] = React.useState("");
+   const [password, setPassword] = React.useState("");
+@@ -527,5 +529,14 @@ export default function AccountScreen() {
+     router.push("/premium");
+   };
+ 
++  if (__DEV__ && showLanguagePreview) {
++    return (
++      <LanguageSelectionScreen
++        onComplete={() => setShowLanguagePreview(false)}
++        onCancel={() => setShowLanguagePreview(false)}
++      />
++    );
++  }
++
+   return (
+     <LinearGradient
+@@ -565,5 +576,22 @@ export default function AccountScreen() {
+             <GlassCard>
+               <ApplicationLanguageSettings />
+             </GlassCard>
++
++            {__DEV__ ? (
++              <GlassCard>
++                <Pressable
++                  accessibilityRole="button"
++                  accessibilityLabel="Tester l'écran de sélection de langue"
++                  onPress={() => setShowLanguagePreview(true)}
++                  style={styles.settingsRow}
++                >
++                  <View style={styles.settingsCopy}>
++                    <AppText variant="bodyStrong">Tester l'écran de sélection de langue</AppText>
++                    <AppText variant="caption" tone="soft">Prévisualisation — développement uniquement</AppText>
++                  </View>
++                  <Ionicons name="chevron-forward" size={18} color={COLORS.soft} />
++                </Pressable>
++              </GlassCard>
++            ) : null}
+ 
+             {!auth.isPermanentAccount ? (

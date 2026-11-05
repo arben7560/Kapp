@@ -1,0 +1,25 @@
+diff --git a/app/index.tsx b/app/index.tsx
+--- a/app/index.tsx
++++ b/app/index.tsx
+@@ -1,7 +1,7 @@
+     ]).start(({ finished }) => {
+       if (finished) {
+-        // Completed users keep the welcome without repeating the first-run steps.
+-        router.replace(onboardingCompleted ? "/(tabs)" : "/onboarding");
++        // Always show the existing scene and mode choices after the welcome.
++        router.replace("/onboarding");
+       } else {
+         isLeaving.current = false;
+       }
+diff --git a/scripts/test-i18n-first-run.mjs b/scripts/test-i18n-first-run.mjs
+--- a/scripts/test-i18n-first-run.mjs
++++ b/scripts/test-i18n-first-run.mjs
+@@ -1,7 +1,7 @@
+       button.props.onPress();
+       assert.deepEqual(welcome.navigations, [], 'wait for the existing transition');
+       welcome.finishTransition();
+-      assert.deepEqual(welcome.navigations, [onboarding === 'true' ? '/(tabs)' : '/onboarding']);
++      assert.deepEqual(welcome.navigations, ['/onboarding']);
+       assert.deepEqual([...subject.entries].filter(([key]) => key !== LOCALE_STORAGE_KEY), protectedEntries);
+       welcome.unmount();
+     });

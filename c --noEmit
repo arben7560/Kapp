@@ -1,0 +1,103 @@
+[1mdiff --git a/app/index.tsx b/app/index.tsx[m
+[1mindex 32b21d5..9b8d4dc 100644[m
+[1m--- a/app/index.tsx[m
+[1m+++ b/app/index.tsx[m
+[36m@@ -256,11 +256,15 @@[m [mfunction HeroBackground() {[m
+   );[m
+ }[m
+ [m
+[31m-function HeroEntryScreen({ onboardingCompleted }: { onboardingCompleted: boolean }) {[m
+[32m+[m[32mfunction HeroEntryScreen({[m
+[32m+[m[32m  onboardingCompleted,[m
+[32m+[m[32m}: {[m
+[32m+[m[32m  onboardingCompleted: boolean;[m
+[32m+[m[32m}) {[m
+   const { t, i18n } = useTranslation("onboarding");[m
+   const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";[m
+[31m-  const continueLabel = t(onboardingCompleted ? "flow.hubLabel" : "hero.choose");[m
+[31m-  const continueHint = t(onboardingCompleted ? "flow.hubHint" : "hero.chooseHint");[m
+[32m+[m[32m  const continueLabel = t("hero.choose");[m
+[32m+[m[32m  const continueHint = t("hero.chooseHint");[m
+   const { fontScale, height, width } = useWindowDimensions();[m
+   // Measured: S23 Ultra Expo Go = 384 x 742 (nav 48 + status 33).[m
+   // Realme HD+ ≈ 360 x 800. Width 384 must NOT inherit Realme compact.[m
+[36m@@ -361,7 +365,7 @@[m [mfunction HeroEntryScreen({ onboardingCompleted }: { onboardingCompleted: boolean[m
+     ]).start(({ finished }) => {[m
+       if (finished) {[m
+         // Completed users keep the welcome without repeating the first-run steps.[m
+[31m-        router.replace(onboardingCompleted ? "/(tabs)" : "/onboarding");[m
+[32m+[m[32m        router.replace("/onboarding");[m
+       } else {[m
+         isLeaving.current = false;[m
+       }[m
+[36m@@ -370,10 +374,7 @@[m [mfunction HeroEntryScreen({ onboardingCompleted }: { onboardingCompleted: boolean[m
+ [m
+   return ([m
+     <View style={styles.heroScreen}>[m
+[31m-      <StatusBar[m
+[31m-        hidden={false}[m
+[31m-        barStyle="light-content"[m
+[31m-      />[m
+[32m+[m[32m      <StatusBar hidden={false} barStyle="light-content" />[m
+       <HeroBackground />[m
+ [m
+       <SafeAreaView[m
+[36m@@ -555,7 +556,11 @@[m [mfunction HeroEntryScreen({ onboardingCompleted }: { onboardingCompleted: boolean[m
+                     end={{ x: 1, y: 1 }}[m
+                     style={StyleSheet.absoluteFill}[m
+                   />[m
+[31m-                  <AppText script={uiScript} variant="button" style={styles.heroPrimaryText}>[m
+[32m+[m[32m                  <AppText[m
+[32m+[m[32m                    script={uiScript}[m
+[32m+[m[32m                    variant="button"[m
+[32m+[m[32m                    style={styles.heroPrimaryText}[m
+[32m+[m[32m                  >[m
+                     {continueLabel}[m
+                   </AppText>[m
+                 </BlurView>[m
+[36m@@ -571,18 +576,24 @@[m [mfunction HeroEntryScreen({ onboardingCompleted }: { onboardingCompleted: boolean[m
+ export default function SplashScreenPage() {[m
+   const { preference } = useAppLanguage();[m
+   const [devLanguageConfirmed, setDevLanguageConfirmed] = useState(false);[m
+[31m-  const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);[m
+[32m+[m[32m  const [onboardingCompleted, setOnboardingCompleted] = useState<[m
+[32m+[m[32m    boolean | null[m
+[32m+[m[32m  >(null);[m
+ [m
+   useEffect(() => {[m
+     let active = true;[m
+     void AsyncStorage.getItem("kapp_onboarding_completed")[m
+[31m-      .then((value) => { if (active) setOnboardingCompleted(value === "true"); })[m
+[32m+[m[32m      .then((value) => {[m
+[32m+[m[32m        if (active) setOnboardingCompleted(value === "true");[m
+[32m+[m[32m      })[m
+       .catch((error) => {[m
+         console.warn("Unable to read the onboarding state.", error);[m
+         // A failed read must not impose a new first-run flow on an existing user.[m
+         if (active) setOnboardingCompleted(true);[m
+       });[m
+[31m-    return () => { active = false; };[m
+[32m+[m[32m    return () => {[m
+[32m+[m[32m      active = false;[m
+[32m+[m[32m    };[m
+   }, []);[m
+   const { width, height } = useWindowDimensions();[m
+   const hasShownHero = useRef(false);[m
+[36m@@ -797,8 +808,15 @@[m [mexport default function SplashScreenPage() {[m
+   ]);[m
+ [m
+   if (showHero) {[m
+[31m-    if ((__DEV__ && !devLanguageConfirmed) || shouldOfferLanguageSelection({ preference })) {[m
+[31m-      return <LanguageSelectionScreen onComplete={() => setDevLanguageConfirmed(true)} />;[m
+[32m+[m[32m    if ([m
+[32m+[m[32m      (__DEV__ && !devLanguageConfirmed) ||[m
+[32m+[m[32m      shouldOfferLanguageSelection({ preference })[m
+[32m+[m[32m    ) {[m
+[32m+[m[32m      return ([m
+[32m+[m[32m        <LanguageSelectionScreen[m
+[32m+[m[32m          onComplete={() => setDevLanguageConfirmed(true)}[m
+[32m+[m[32m        />[m
+[32m+[m[32m      );[m
+     }[m
+     if (onboardingCompleted === null) return <View style={styles.screen} />;[m
+     return <HeroEntryScreen onboardingCompleted={onboardingCompleted} />;[m
