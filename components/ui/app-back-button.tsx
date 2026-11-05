@@ -9,6 +9,7 @@ import {
 } from "react-native";
 
 import { AppText } from "../app-text";
+import type { AppTextScript } from "../../constants/theme";
 
 const SPEAK_EXPRESSION_ROUTES = new Set([
   "/lesson/cafe",
@@ -19,6 +20,9 @@ const SPEAK_EXPRESSION_ROUTES = new Set([
 
 type AppBackButtonProps = {
   accessibilityLabel?: string;
+  accessibilityHint?: string;
+  label?: string;
+  labelScript?: AppTextScript;
   fallbackHref?: Href;
   iconColor?: string;
   onPress?: () => void;
@@ -27,6 +31,9 @@ type AppBackButtonProps = {
 
 export function AppBackButton({
   accessibilityLabel = "Retour à l’écran précédent",
+  accessibilityHint = "Revient à l’écran précédent",
+  label = "RETOUR",
+  labelScript,
   fallbackHref = "/(tabs)",
   iconColor = "#FFFFFF",
   onPress,
@@ -63,7 +70,7 @@ export function AppBackButton({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
-        accessibilityHint="Revient à l’écran précédent"
+        accessibilityHint={accessibilityHint}
         hitSlop={8}
         onPress={handlePress}
         style={({ pressed }) => [styles.button, pressed && styles.pressed]}
@@ -73,10 +80,11 @@ export function AppBackButton({
       <AppText
         accessible={false}
         variant="caption"
+        script={labelScript}
         lineContract="singleLine"
         style={styles.label}
       >
-        RETOUR
+        {label}
       </AppText>
     </View>
   );
