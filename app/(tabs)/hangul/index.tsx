@@ -7,6 +7,8 @@ import {
   LockKeyhole
 } from "lucide-react-native";
 import React, { useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import type { i18n } from "i18next";
 import {
   Animated,
   Easing,
@@ -31,6 +33,7 @@ import { ABSOLUTE_FILL } from "../../../constants/layout";
 import { HubModuleAccents, SeoulMidnightGlass } from "../../../constants/theme";
 import { HANGUL_MODULES as HANGUL_CURRICULUM_MODULES } from "../../../data/hangul/curriculum";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
+import { hangulUiText, hangulContentText, type HangulUiKey } from "../../../lib/i18n/hangulDisplay";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
 
@@ -156,7 +159,7 @@ function getModuleProgress(
   return Math.min(1, completedScenes / curriculumModule.scenes.length);
 }
 
-function getCurrentSceneTitle(module: HangulHubModule, progress: any) {
+function getCurrentSceneTitle(module: HangulHubModule, progress: any, instance: i18n) {
   if (module.kind !== "lesson") {
     return null;
   }
@@ -179,7 +182,7 @@ function getCurrentSceneTitle(module: HangulHubModule, progress: any) {
     );
 
     if (currentScene) {
-      return currentScene.title;
+      return hangulContentText(instance, "scene", [module.id, currentScene.id], "title", currentScene.title);
     }
   }
 
@@ -187,7 +190,7 @@ function getCurrentSceneTitle(module: HangulHubModule, progress: any) {
     (scene) => !lesson?.completedScenes?.[scene.id],
   );
 
-  return nextScene?.title ?? null;
+  return nextScene ? hangulContentText(instance, "scene", [module.id, nextScene.id], "title", nextScene.title) : null;
 }
 
 // ──────────────────────────────────────────────
@@ -195,6 +198,10 @@ function getCurrentSceneTitle(module: HangulHubModule, progress: any) {
 // ──────────────────────────────────────────────
 
 export default function HangulHub() {
+  const { i18n } = useTranslation("hangul");
+  const l = (key: HangulUiKey, values?: Record<string, string | number>) => hangulUiText(i18n, key, values);
+  const moduleTitle = (id: string, original: string, field: string = "title") =>
+    hangulContentText(i18n, "module", [id], field, original);
   const { progress } = useStore();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -251,7 +258,7 @@ export default function HangulHub() {
       return progress.completed?.[previous.id]
         ? undefined
         : {
-            title: previous.title,
+            title: moduleTitle(previous.id, previous.title),
             route: previous.route,
           };
     }
@@ -264,7 +271,7 @@ export default function HangulHub() {
 
       return missing
         ? {
-            title: missing.title,
+            title: moduleTitle(missing.id, missing.title),
             route: missing.route,
           }
         : undefined;
@@ -274,13 +281,21 @@ export default function HangulHub() {
     return assessmentPassed
       ? undefined
       : {
-          title: "l’évaluation Hangul",
+          title: l("hub.assessmentRequirement"),
           route: "/(tabs)/hangul/assessment",
         };
   };
 
   const moduleStates = HANGUL_MODULES.map((module, index) => ({
-    module,
+    module: {
+      ...module,
+      title: module.kind === "lesson"
+        ? moduleTitle(module.id, module.title)
+        : l(module.kind === "assessment" ? "hub.assessmentTitle" : "hub.bridgeTitle"),
+      sub: module.kind === "lesson"
+        ? moduleTitle(module.id, module.sub, "subtitle")
+        : l(module.kind === "assessment" ? "hub.assessmentSubtitle" : "hub.bridgeSubtitle"),
+    },
     requirement: requiredBefore(index),
     completed: getModuleCompletion(module, progress, assessmentPassed),
     progress: getModuleProgress(module, progress, assessmentPassed),
@@ -305,16 +320,16 @@ export default function HangulHub() {
 
   const continueModule = continueState.module;
 
-  const currentSceneTitle = getCurrentSceneTitle(continueModule, progress);
+  const currentSceneTitle = getCurrentSceneTitle(continueModule, progress, i18n);
 
   const continueTitle = journeyCompleted
     ? continueModule.title
     : (currentSceneTitle ?? continueModule.title);
 
   const continueSubtitle = journeyCompleted
-    ? "Parcours Hangul terminé · Revoir la lecture guidée"
+    ? l("hub.finishedSubtitle")
     : currentSceneTitle
-      ? `Hangul · ${continueModule.title}`
+      ? l("hub.resumeSubtitle", { title: continueModule.title })
       : continueModule.sub;
 
   const continueProgress = journeyCompleted ? 1 : continueState.progress;
