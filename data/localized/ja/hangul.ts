@@ -99,14 +99,15 @@ function buildJapaneseHangulCopy(): LocalizedModule {
         };
       }
       for (const question of scene.questions) {
-        const copy = question.id.endsWith("-visual") || question.id.endsWith("-audio")
-          ? (() => {
-              const card = scene.cards.find(card => card.glyph === question.answer);
-              if (!card) throw new Error(`Missing recognition card for ${question.id}`);
-              return generatedRecognitionQuestion(
-                question, translatedScene.cards[card.id], card.kind === "consonant",
-              );
-            })()
+        const recognitionCard = scene.cards.find(card =>
+          question.id === `${scene.id}-${card.id}-visual` ||
+          question.id === `${scene.id}-${card.id}-audio`
+        );
+        const copy = recognitionCard
+          ? generatedRecognitionQuestion(
+              question, translatedScene.cards[recognitionCard.id],
+              recognitionCard.kind === "consonant",
+            )
           : translatedScene.questions?.[question.id];
         if (!copy) throw new Error(`Missing Japanese Hangul question ${module.id}/${scene.id}/${question.id}`);
         const fields: Record<string, string> = { prompt: copy[0], explanation: copy[1] };
