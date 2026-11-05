@@ -288,5 +288,13 @@
       "instruction": "Écoute, puis choisis la réponse adaptée.",
       "explanation": "On vient de t'indiquer le chemin. 감사합니다 est donc la réponse naturelle pour remercier."
     }
+  },
+  "home": {
+    "title": "Écoute",
+    "place": "LIGNE 2 • ÉCOUTER",
+    "narrative": "Affûte ton oreille au rythme de Séoul.",
+    "reviewTitle": "Révision d'écoute",
+    "reviewMeta": "Écoute · Parcours terminé · Révision libre",
+    "resumePrefix": "Écoute"
   }
 }
