@@ -235,9 +235,18 @@ export default function AccountScreen() {
   const [passwordConfirmation, setPasswordConfirmation] = React.useState("");
   const [formError, setFormError] = React.useState<string | null>(null);
   const [formSuccess, setFormSuccess] = React.useState<string | null>(null);
-  const [oauthNotice, setOAuthNotice] = React.useState<string | null>(null);
+  const oauthNotice = auth.oauthOutcome?.result === "cancelled"
+    ? "Connexion annulée. Aucun changement de compte."
+    : auth.isPermanentAccount && auth.oauthOutcome?.result === "success"
+      ? `Connexion ${auth.oauthOutcome.provider === "google" ? "Google" : "Apple"} réussie.`
+      : null;
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const didHandleProtectAction = React.useRef(false);
+  const mountedRef = React.useRef(true);
+  React.useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
   const clearAuthError = auth.clearError;
   const clearAccountProtectionSuccess = auth.clearAccountProtectionSuccess;
 
@@ -279,24 +288,15 @@ export default function AccountScreen() {
   const continueWithProvider = React.useCallback(
     async (provider: KappOAuthProvider, existingAccount = false) => {
       setFormError(null);
-      setOAuthNotice(null);
       try {
         const result = provider === "google" || existingAccount
           ? await auth.signInWithOAuth(provider)
           : await auth.linkOAuthIdentity(provider);
-        if (result === "success") {
+        if (mountedRef.current && result === "success") {
           if (existingAccount) setMode(null);
-          setOAuthNotice(
-            provider === "google"
-              ? "Connexion Google réussie."
-              : "Connexion Apple réussie.",
-          );
-        } else {
-          setOAuthNotice("Connexion annulée. Aucun changement de compte.");
         }
       } catch (caught) {
-        setFormError(friendlyCaughtMessage(caught));
-        setOAuthNotice("La connexion n’a pas abouti. Vérifiez votre compte et réessayez.");
+        if (mountedRef.current) setFormError(friendlyCaughtMessage(caught));
       }
     },
     [auth],
@@ -568,6 +568,22 @@ export default function AccountScreen() {
             showsVerticalScrollIndicator={false}
           >
             <AppBackButton fallbackHref="/(tabs)" style={styles.back} />
+            {auth.isHandlingDeepLink && !auth.activeOAuthProvider ? (
+              <View style={styles.inlineNotice}>
+                <ActivityIndicator color={COLORS.cyan} size="small" />
+                <AppText variant="bodySecondary" style={styles.noticeCopy}>
+                  Validation de votre connexion…
+                </AppText>
+              </View>
+            ) : null}
+            {auth.error ? (
+              <View style={styles.inlineNotice}>
+                <Ionicons name="information-circle-outline" size={18} color={COLORS.amber} />
+                <AppText variant="bodySecondary" style={styles.noticeCopy}>
+                  {auth.error}
+                </AppText>
+              </View>
+            ) : null}
             {oauthNotice ? (
               <View style={styles.inlineNotice}>
                 <Ionicons
@@ -608,7 +624,7 @@ export default function AccountScreen() {
                   style={styles.settingsRow}
                 >
                   <View style={styles.settingsCopy}>
-                    <AppText variant="bodyStrong">Tester l'écran de sélection de langue</AppText>
+                    <AppText variant="bodyStrong">{"Tester l'écran de sélection de langue"}</AppText>
                     <AppText variant="caption" tone="soft">Prévisualisation — développement uniquement</AppText>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={COLORS.soft} />
@@ -629,26 +645,18 @@ export default function AccountScreen() {
                 <AppText variant="body" tone="muted" style={styles.cardBody}>
                   Créez un compte ou connectez-vous pour retrouver votre progression après une réinstallation ou sur un autre appareil.
                 </AppText>
-                {auth.error ? (
-                  <View style={styles.inlineNotice}>
-                    <Ionicons name="information-circle-outline" size={18} color={COLORS.amber} />
-                    <AppText variant="bodySecondary" style={styles.noticeCopy}>
-                      {auth.error}
-                    </AppText>
-                  </View>
-                ) : null}
                 <View style={styles.primaryActions}>
                   <ProviderButton
                     provider="google"
                     loading={auth.activeOAuthProvider === "google"}
-                    disabled={!auth.isConfigured || auth.isLoading || Boolean(auth.activeOAuthProvider)}
+                    disabled={!auth.isConfigured || auth.isLoading || auth.isHandlingDeepLink || Boolean(auth.activeOAuthProvider)}
                     onPress={() => void continueWithProvider("google")}
                   />
                   {Platform.OS === "ios" ? (
                     <ProviderButton
                       provider="apple"
                       loading={auth.activeOAuthProvider === "apple"}
-                      disabled={!auth.isConfigured || auth.isLoading || Boolean(auth.activeOAuthProvider)}
+                      disabled={!auth.isConfigured || auth.isLoading || auth.isHandlingDeepLink || Boolean(auth.activeOAuthProvider)}
                       onPress={() => void continueWithProvider("apple")}
                     />
                   ) : null}
@@ -773,9 +781,10 @@ export default function AccountScreen() {
                     label="Se déconnecter"
                     variant="secondary"
                     loading={isSubmitting}
+                    disabled={Boolean(auth.activeOAuthProvider) || auth.isHandlingDeepLink}
                     onPress={requestSignOut}
                   />
-                  <Pressable style={styles.deleteButton} onPress={requestDeletion} disabled={isSubmitting}>
+                  <Pressable style={styles.deleteButton} onPress={requestDeletion} disabled={isSubmitting || Boolean(auth.activeOAuthProvider) || auth.isHandlingDeepLink}>
                     <AppText variant="button" align="center" style={{ color: COLORS.red }}>
                       Supprimer mon compte
                     </AppText>
@@ -920,14 +929,14 @@ export default function AccountScreen() {
                 <ProviderButton
                   provider="google"
                   loading={auth.activeOAuthProvider === "google"}
-                  disabled={Boolean(auth.activeOAuthProvider)}
+                  disabled={auth.isHandlingDeepLink || Boolean(auth.activeOAuthProvider)}
                   onPress={() => void continueWithProvider("google", true)}
                 />
                 {Platform.OS === "ios" ? (
                   <ProviderButton
                     provider="apple"
                     loading={auth.activeOAuthProvider === "apple"}
-                    disabled={Boolean(auth.activeOAuthProvider)}
+                    disabled={auth.isHandlingDeepLink || Boolean(auth.activeOAuthProvider)}
                     onPress={() => void continueWithProvider("apple", true)}
                   />
                 ) : null}

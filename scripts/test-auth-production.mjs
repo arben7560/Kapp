@@ -146,7 +146,7 @@ test("5. anonymous to Apple uses linking and is exposed only on iOS", () => {
 test("6. linking rejects any unexpected UID change", () => {
   assert.doesNotThrow(() => assertLinkedUserId(USER_ID, USER_ID));
   assert.throws(() => assertLinkedUserId(USER_ID, "other-user"));
-  assert.match(authSource, /assertLinkedUserId\(expectedUserId, userResult\.user\.id\)/u);
+  assert.match(authSource, /assertLinkedUserId\(attempt\.expectedUserId, userResult\.user\.id\)/u);
 });
 
 test("7. identity linking keeps the same user_progress ownership", () => {

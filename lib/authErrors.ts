@@ -9,6 +9,8 @@ type AuthErrorCode =
   | "confirmation-email-missing"
   | "delete-account-unavailable"
   | "oauth-cancelled"
+  | "oauth-access-denied"
+  | "oauth-session-unverified"
   | "oauth-provider-disabled"
   | "oauth-linking-disabled"
   | "identity-already-used"
@@ -53,6 +55,14 @@ export function toKappAuthError(error: unknown): KappAuthError {
   const message = normalizedMessage(error);
   const code = normalizedCode(error);
   const detail = `${code} ${message}`;
+
+  if (code === "access_denied") {
+    return new KappAuthError(
+      "oauth-access-denied",
+      "L’autorisation de connexion a été refusée. Relancez la connexion et autorisez l’accès à votre compte.",
+      { cause: error },
+    );
+  }
 
   if (
     detail.includes("network") ||
@@ -146,6 +156,7 @@ export function toKappAuthError(error: unknown): KappAuthError {
   }
 
   if (
+    code === "invalid_credentials" ||
     detail.includes("invalid login credentials") ||
     detail.includes("invalid credentials")
   ) {

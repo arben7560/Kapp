@@ -21,27 +21,40 @@ export function SubscriptionAccessGuard({
 
   const routeRequiresPremium = isPremiumRoutePath(pathname);
 
-  if (
+  const isBlocked =
     routeRequiresPremium &&
     !DEV_UNLOCK_ALL &&
-    (isLoading || !hasPremiumAccess)
-  ) {
-    return (
-      <View
-        accessibilityLabel="Vérification de l’accès Premium"
-        accessibilityRole="progressbar"
-        style={styles.loading}
-      >
-        <ActivityIndicator color="#FDE047" size="small" />
-      </View>
-    );
-  }
+    (isLoading || !hasPremiumAccess);
 
-  return <>{children}</>;
+  // Keep the root Stack at the same position through entitlement/UID changes.
+  // Removing it here destroys navigation state before router.replace can run.
+  return (
+    <View style={styles.container}>
+      <View
+        style={styles.container}
+        pointerEvents={isBlocked ? "none" : "auto"}
+        accessibilityElementsHidden={isBlocked}
+        importantForAccessibility={isBlocked ? "no-hide-descendants" : "auto"}
+      >
+        {children}
+      </View>
+      {isBlocked ? (
+        <View
+          accessibilityLabel="Vérification de l’accès Premium"
+          accessibilityRole="progressbar"
+          style={styles.loading}
+        >
+          <ActivityIndicator color="#FDE047" size="small" />
+        </View>
+      ) : null}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1 },
   loading: {
+    ...StyleSheet.absoluteFillObject,
     alignItems: "center",
     backgroundColor: "#000000",
     flex: 1,

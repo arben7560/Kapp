@@ -7,6 +7,7 @@ import {
   type SupabaseClient,
 } from "@supabase/supabase-js";
 import { AppState, Platform } from "react-native";
+import { createAuthFetch } from "./authFetch";
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL?.trim();
 const supabasePublishableKey =
@@ -18,6 +19,7 @@ export const isSupabaseConfigured = Boolean(
 
 export const supabase: SupabaseClient | null = isSupabaseConfigured
   ? createClient(supabaseUrl!, supabasePublishableKey!, {
+      global: { fetch: createAuthFetch(supabaseUrl!) },
       auth: {
         storage: AsyncStorage,
         autoRefreshToken: true,

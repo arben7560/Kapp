@@ -70,15 +70,27 @@ corresponding Apple/link action). The browser session matches `kapp://account`
 without query parameters: Expo's Android polyfill uses a string prefix, and
 Supabase may return `code` before `action`. K-App then validates the destination
 and processes query or fragment auth parameters through the same handler for
-Linking, the initial URL and the browser result. Duplicate delivery shares the
-same exchange. The action remains available to Expo Router's onboarding guard.
+Linking, the initial URL and the browser result. Duplicate delivery of the same
+code/token pair shares one exchange even when query ordering differs.
+`app/+native-intent.tsx` prevents warm auth callbacks from navigating, while cold
+callbacks open Account with only the action (no auth credentials in router state).
+AuthProvider still reads the original native initial URL independently.
 
 OAuth success requires a callback-established, non-anonymous session and a
 server-verified user with the requested provider; linking also checks the UID.
-Android browser dismissal waits for an already received Linking exchange.
-Cancellation without a callback releases loading immediately. There is no new
-authentication timeout; a pending browser or network exchange remains pending
-until the browser or SDK reports its result.
+Android browser dismissal allows 1.5 seconds for a late native URL event and
+then awaits an exchange already in progress. A verified Linking callback can
+complete the operation even if the browser promise has not resolved. A callback
+arriving after that grace period still verifies and updates the provider's
+durable Account outcome. Closing the browser never constitutes success.
+
+Auth HTTP requests abort after 20 seconds; callback validation and preparation
+have a 30-second deadline. The browser/callback race has a five-minute deadline.
+These are active JavaScript timers, not an Android background service; Android
+may defer their execution while the process is suspended. Progress REST requests
+retain their existing behavior. A timeout releases UI loading and gives a safe
+retry message; a failed PKCE code must be replaced by a fresh OAuth attempt.
+Account notices derive from provider state, including after a screen remount.
 
 Temporary `[auth:oauth]` logs are enabled only in development (`__DEV__`). They
 record steps, callback source, payload-presence flags and mapped error labels.
@@ -103,6 +115,10 @@ against a live service. Validate the following on physical devices:
   browser in either order. On failure, expect `failed` and `loading.released`.
 - Verify email/password login, password-recovery and account-protection links,
   ordinary app deep links, and Apple linking on iOS (including cancellation).
+
+For the diagnosed races, test boundaries and the FR/JA Android validation
+matrix, see [the OAuth/navigation audit](oauth-navigation-audit.md). Passing
+adapter tests does not certify live Google/Supabase or native Android behavior.
 
 ## Conflict policy
 

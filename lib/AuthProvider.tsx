@@ -6,8 +6,10 @@ import React from "react";
 
 import {
   assertLinkedUserId,
+  authCallbackKey,
   authProvidersFromUser,
   matchesAuthCallbackUrl,
+  oauthProviderFromCallback,
   parseAuthCallbackUrl,
   type KappOAuthProvider,
 } from "./authCallback";
@@ -40,6 +42,7 @@ export type ProtectProgressResult =
   | "confirmation-required"
   | "success";
 export type OAuthResult = "success" | "cancelled";
+type OAuthOutcome = { provider: KappOAuthProvider; result: OAuthResult };
 export type SignOutResult = {
   syncDeferred: boolean;
   guestSessionPending: boolean;
@@ -63,6 +66,7 @@ type AuthContextValue = {
   providers: string[];
   hasEmailIdentity: boolean;
   activeOAuthProvider: KappOAuthProvider | null;
+  oauthOutcome: OAuthOutcome | null;
   error: string | null;
   clearError: () => void;
   clearAccountProtectionSuccess: () => void;
@@ -116,6 +120,9 @@ function requireConfiguredAuth() {
 
 async function createAnonymousSession() {
   const client = requireConfiguredAuth();
+  const existing = await client.auth.getSession();
+  if (existing.error) throw existing.error;
+  if (existing.data.session) return existing.data.session;
   const { data, error } = await client.auth.signInAnonymously();
   if (error) throw error;
   return data.session;
@@ -130,7 +137,21 @@ function logOAuthStep(
   if (__DEV__) console.info("[auth:oauth]", step, details);
 }
 
-const handledAuthUrls = new Map<string, Promise<Session | null>>();
+const OAUTH_RESUME_GRACE_MS = 1_500;
+const AUTH_OPERATION_TIMEOUT_MS = 30_000;
+
+function withAuthTimeout<T>(operation: Promise<T>, timeoutMs = AUTH_OPERATION_TIMEOUT_MS): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  return Promise.race([
+    operation,
+    new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new KappAuthError(
+        "network-unavailable",
+        "La validation de connexion a pris trop de temps. Vérifiez votre connexion puis réessayez.",
+      )), timeoutMs);
+    }),
+  ]).finally(() => clearTimeout(timer));
+}
 
 async function applyAuthUrl(url: string) {
   const client = requireConfiguredAuth();
@@ -164,22 +185,6 @@ async function applyAuthUrl(url: string) {
   return null;
 }
 
-function applyAuthUrlOnce(url: string) {
-  const existing = handledAuthUrls.get(url);
-  if (existing) {
-    logOAuthStep("callback.already-handled");
-    return existing;
-  }
-
-  const operation = applyAuthUrl(url);
-  handledAuthUrls.set(url, operation);
-  if (handledAuthUrls.size > 12) {
-    const oldestUrl = handledAuthUrls.keys().next().value;
-    if (typeof oldestUrl === "string") handledAuthUrls.delete(oldestUrl);
-  }
-  return operation;
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = React.useState<Session | null>(null);
   const [isLoading, setIsLoading] = React.useState(isSupabaseConfigured);
@@ -198,16 +203,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isPasswordRecovery, setIsPasswordRecovery] = React.useState(false);
   const [activeOAuthProvider, setActiveOAuthProvider] =
     React.useState<KappOAuthProvider | null>(null);
+  const [oauthOutcome, setOAuthOutcome] = React.useState<OAuthOutcome | null>(null);
+  const mountedRef = React.useRef(false);
+  const sessionRevision = React.useRef(0);
+  const handledAuthUrls = React.useRef(new Map<string, {
+    operation: Promise<Session | null>;
+    attempt: object | null;
+    settled: boolean;
+  }>());
   const pendingProtectionRevision = React.useRef(0);
   const activeOAuthAttempt = React.useRef<{
     redirectTo: string;
+    provider: KappOAuthProvider;
+    expectedUserId: string | null;
     callback: Promise<Session | null> | null;
+    notifyCallback: (operation: Promise<Session | null>) => void;
   } | null>(null);
   const pendingAuthUrls = React.useRef(0);
+  const assertAuthIdle = React.useCallback(() => {
+    if (activeOAuthAttempt.current || pendingAuthUrls.current > 0) {
+      throw new KappAuthError("auth-operation-failed", "Une connexion est déjà en cours.");
+    }
+  }, []);
 
   const captureError = React.useCallback((caught: unknown) => {
     const mapped = toKappAuthError(caught);
-    setError(mapped.message);
+    if (mountedRef.current) setError(mapped.message);
     return mapped;
   }, []);
 
@@ -217,6 +238,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       PENDING_PROTECTION_EMAIL_KEY,
       PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY,
     ]);
+    if (!mountedRef.current) return;
     pendingProtectionRevision.current += 1;
     setConfirmationEmail(null);
     setNeedsPasswordSetup(false);
@@ -227,6 +249,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     url: string,
     source: "initial" | "linking" | "browser" = "linking",
   ) => {
+    if (!mountedRef.current) return null;
     if (!matchesAuthCallbackUrl(url, createAuthRedirectUrl())) return null;
     const callback = parseAuthCallbackUrl(url);
     logOAuthStep("callback.received", {
@@ -237,18 +260,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     // Unrelated deep links never enter the auth loading state.
     if (!callback.hasAuthPayload) return null;
+    const attempt = activeOAuthAttempt.current;
+    // A different auth action must not mutate the session under an active flow.
+    if (attempt && !matchesAuthCallbackUrl(url, attempt.redirectTo)) return null;
+    const key = authCallbackKey(callback);
+    const existing = handledAuthUrls.current.get(key);
+    // Replays from an earlier operation cannot complete a retry or reconnect.
+    if (existing && existing.attempt !== attempt) return null;
     pendingAuthUrls.current += 1;
     setIsHandlingDeepLink(true);
     try {
-      const operation = applyAuthUrlOnce(url);
-      const attempt = activeOAuthAttempt.current;
-      if (attempt && matchesAuthCallbackUrl(url, attempt.redirectTo)) {
+      let operation = existing?.operation;
+      if (!operation) {
+        operation = withAuthTimeout((async () => {
+          const callbackSession = await applyAuthUrl(url);
+          const provider = attempt?.provider ?? oauthProviderFromCallback(url, callbackSession?.user ?? null);
+          if (provider) {
+            if (!callbackSession || isAnonymousUser(callbackSession.user)) {
+              throw new KappAuthError("oauth-session-unverified", "Aucune session de compte n’a été confirmée. Relancez la connexion depuis K-App.");
+            }
+            const { data: userResult, error: userError } = await requireConfiguredAuth().auth.getUser();
+            if (userError) throw userError;
+            if (!userResult.user || isAnonymousUser(userResult.user) ||
+                userResult.user.id !== callbackSession.user.id ||
+                !authProvidersFromUser(userResult.user).includes(provider)) {
+              throw new KappAuthError("oauth-session-unverified", "La connexion à ce compte n’a pas pu être vérifiée. Vérifiez votre connexion puis réessayez.");
+            }
+            if (attempt?.expectedUserId) {
+              assertLinkedUserId(attempt.expectedUserId, userResult.user.id);
+            }
+            return { ...callbackSession, user: userResult.user };
+          }
+          return callbackSession;
+        })()).then((nextSession) => {
+          if (mountedRef.current && nextSession) {
+            sessionRevision.current += 1;
+            setSession(nextSession);
+            const provider = attempt?.provider ?? oauthProviderFromCallback(url, nextSession.user);
+            if (provider === "google" || provider === "apple") {
+              setOAuthOutcome({ provider, result: "success" });
+              setError(null);
+              logOAuthStep("callback.verified", { provider });
+            }
+          }
+          return nextSession;
+        });
+        const entry = { operation, attempt, settled: false };
+        handledAuthUrls.current.set(key, entry);
+        // Keep recent single-use callbacks for replay rejection without retaining
+        // every session for the lifetime of the application. Never evict in flight.
+        void operation.finally(() => {
+          entry.settled = true;
+          for (const [oldKey, oldEntry] of handledAuthUrls.current) {
+            if (handledAuthUrls.current.size <= 24) break;
+            if (oldEntry.settled) handledAuthUrls.current.delete(oldKey);
+          }
+        }).catch(() => undefined);
+      } else {
+        logOAuthStep("callback.already-handled");
+      }
+      if (attempt) {
         attempt.callback = operation;
+        attempt.notifyCallback(operation);
       }
       return await operation;
     } finally {
       pendingAuthUrls.current -= 1;
-      setIsHandlingDeepLink(pendingAuthUrls.current > 0);
+      if (mountedRef.current) setIsHandlingDeepLink(pendingAuthUrls.current > 0);
     }
   }, []);
 
@@ -259,10 +337,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const client = supabase;
     let mounted = true;
+    mountedRef.current = true;
     const { data: authListener } = client.auth.onAuthStateChange(
       (event, nextSession) => {
         if (!mounted) return;
-        setSession(nextSession);
+        sessionRevision.current += 1;
+        // SDK SIGNED_IN precedes getUser verification. Publish the OAuth session
+        // once, through handleAuthUrl, so cloud sync cannot race verification.
+        if (!((activeOAuthAttempt.current || pendingAuthUrls.current > 0) &&
+              nextSession && !isAnonymousUser(nextSession.user))) {
+          setSession(nextSession);
+        }
         setIsLoading(false);
         if (activeOAuthAttempt.current) {
           logOAuthStep("session.event", {
@@ -337,17 +422,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initialize = async () => {
       try {
+        const initialRevision = sessionRevision.current;
         const [
           sessionResult,
           pendingEmailWithPassword,
           legacyPendingEmail,
           initialUrl,
-        ] = await Promise.all([
+        ] = await withAuthTimeout(Promise.all([
           client.auth.getSession(),
           AsyncStorage.getItem(PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY),
           AsyncStorage.getItem(PENDING_PROTECTION_EMAIL_KEY),
           Linking.getInitialURL(),
-        ]);
+        ]));
+        if (!mounted) return;
         if (sessionResult.error) throw sessionResult.error;
 
         if (legacyPendingEmail) {
@@ -356,17 +443,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (pendingEmailWithPassword && mounted) {
           setConfirmationEmail(pendingEmailWithPassword);
         }
+        if (mounted && sessionRevision.current === initialRevision && sessionResult.data.session) {
+          setSession(sessionResult.data.session);
+        }
         if (initialUrl) {
           try {
             await handleAuthUrl(initialUrl, "initial");
           } catch (caught) {
             if (mounted) captureError(caught);
+            // Do not replace a failed verification with the SDK's unverified
+            // stored result, and never start an anonymous sign-in over it.
+            return;
           }
         }
 
-        const refreshedSession = (await client.auth.getSession()).data.session;
-        const resolvedSession = refreshedSession ?? sessionResult.data.session;
-        const activeSession = resolvedSession ?? (await createAnonymousSession());
+        const refreshRevision = sessionRevision.current;
+        const refreshedResult = await withAuthTimeout(client.auth.getSession());
+        if (refreshedResult.error) throw refreshedResult.error;
+        // A newer auth event wins over a session read started before it.
+        if (!mounted || refreshRevision !== sessionRevision.current) return;
+        const resolvedSession = refreshedResult.data.session ??
+          (initialRevision === sessionRevision.current ? sessionResult.data.session : null);
+        if (!resolvedSession && activeOAuthAttempt.current) return;
+        const activeSession = resolvedSession ?? (await withAuthTimeout(createAnonymousSession()));
 
         if (mounted) {
           setSession(activeSession);
@@ -404,6 +503,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
+      mountedRef.current = false;
       authListener.subscription.unsubscribe();
       linkingSubscription.remove();
     };
@@ -506,6 +606,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = React.useCallback(
     async (rawEmail: string, password: string) => {
+      assertAuthIdle();
       const client = requireConfiguredAuth();
       const email = validateEmail(rawEmail);
       validatePassword(password);
@@ -524,7 +625,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw captureError(caught);
       }
     },
-    [captureError, clearPendingProtectionState],
+    [assertAuthIdle, captureError, clearPendingProtectionState],
   );
 
   const runOAuth = React.useCallback(
@@ -545,28 +646,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
       }
 
-      if (activeOAuthAttempt.current) {
-        throw new KappAuthError(
-          "auth-operation-failed",
-          "Une connexion est déjà en cours.",
-        );
-      }
+      assertAuthIdle();
       const attempt = {
         redirectTo: createAuthRedirectUrl(`oauth-${intent}-${provider}`),
+        provider,
+        expectedUserId: expectedUserId ?? null,
         callback: null as Promise<Session | null> | null,
+        notifyCallback: (_operation: Promise<Session | null>) => {},
       };
+      const callbackReceived = new Promise<Session | null>((resolve, reject) => {
+        attempt.notifyCallback = (operation) => { void operation.then(resolve, reject); };
+      });
+      // A callback can fail before authorization or browser startup finishes.
+      void callbackReceived.catch(() => undefined);
       activeOAuthAttempt.current = attempt;
       setError(null);
+      setOAuthOutcome(null);
       setActiveOAuthProvider(provider);
       logOAuthStep("start", { provider, intent });
       try {
         if (intent === "login") {
-          await clearPendingProtectionState();
+          await withAuthTimeout(clearPendingProtectionState());
           setIsPasswordRecovery(false);
           // The local snapshot remains available for the post-login merge even
           // if the guest cloud sync is temporarily unavailable.
-          await synchronizeProgressNow().catch(() => undefined);
+          await withAuthTimeout(synchronizeProgressNow()).catch(() => undefined);
         }
+        if (!mountedRef.current) return "cancelled";
 
         const redirectTo = attempt.redirectTo;
         const credentials = {
@@ -576,10 +682,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             skipBrowserRedirect: true,
           },
         } as const;
-        const result =
+        const result = await withAuthTimeout(
           intent === "link"
-            ? await client.auth.linkIdentity(credentials)
-            : await client.auth.signInWithOAuth(credentials);
+            ? client.auth.linkIdentity(credentials)
+            : client.auth.signInWithOAuth(credentials));
 
         if (result.error) throw result.error;
         if (!result.data.url) {
@@ -587,50 +693,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         logOAuthStep("browser.open", { provider, intent });
-        const browserResult = await WebBrowser.openAuthSessionAsync(
+        const browserOperation = WebBrowser.openAuthSessionAsync(
           result.data.url,
           // Expo's Android polyfill uses startsWith(returnUrl). Keep the
           // matching URL free of query params; retain action in redirectTo
           // for Expo Router and the onboarding bypass on cold starts.
           createAuthRedirectUrl(),
         );
-        logOAuthStep("browser.result", { type: browserResult.type });
-
-        // Linking may already be exchanging the callback when Android reports
-        // that the browser was dismissed on app resume. Await that exchange.
+        const completion = await withAuthTimeout(Promise.race([
+          browserOperation.then((browserResult) => ({ browserResult })),
+          callbackReceived.then((callbackSession) => ({ callbackSession })),
+        ]), 5 * 60_000);
         let callbackSession: Session | null;
-        if (browserResult.type === "success") {
-          if (!matchesAuthCallbackUrl(browserResult.url, redirectTo)) {
-            throw new Error("OAuth returned an unexpected callback destination.");
-          }
-          callbackSession = await handleAuthUrl(browserResult.url, "browser");
-        } else if (attempt.callback) {
-          callbackSession = await attempt.callback;
+        if ("callbackSession" in completion) {
+          callbackSession = completion.callbackSession;
         } else {
-          logOAuthStep("cancelled", { provider, intent });
-          return "cancelled";
+          const browserResult = completion.browserResult;
+          logOAuthStep("browser.result", { type: browserResult.type });
+
+          // Linking may already be exchanging the callback when Android reports
+          // that the browser was dismissed on app resume. Await that exchange.
+          if (browserResult.type === "success") {
+            if (!matchesAuthCallbackUrl(browserResult.url, redirectTo)) {
+              throw new Error("OAuth returned an unexpected callback destination.");
+            }
+            callbackSession = await handleAuthUrl(browserResult.url, "browser");
+          } else if (attempt.callback) {
+            callbackSession = await attempt.callback;
+          } else {
+            // Android AppState(active) can win Expo's internal Promise.race
+            // before the URL event is delivered on the next native bridge turn.
+            let timer: ReturnType<typeof setTimeout> | undefined;
+            try {
+              callbackSession = await Promise.race([
+                callbackReceived,
+                new Promise<null>((resolve) => {
+                  timer = setTimeout(() => resolve(null), OAUTH_RESUME_GRACE_MS);
+                }),
+              ]);
+              if (attempt.callback) callbackSession = await attempt.callback;
+            } finally {
+              clearTimeout(timer);
+            }
+            if (!callbackSession) {
+              if (mountedRef.current) setOAuthOutcome({ provider, result: "cancelled" });
+              logOAuthStep("cancelled", { provider, intent });
+              return "cancelled";
+            }
+          }
         }
 
         if (!callbackSession || isAnonymousUser(callbackSession.user)) {
           throw new Error("OAuth callback did not establish a permanent session.");
         }
-        const { data: userResult, error: userError } =
-          await client.auth.getUser();
-        if (userError) throw userError;
-        if (
-          !userResult.user ||
-          isAnonymousUser(userResult.user) ||
-          userResult.user.id !== callbackSession.user.id ||
-          !authProvidersFromUser(userResult.user).includes(provider)
-        ) {
-          throw new Error("OAuth callback did not authenticate the requested provider.");
-        }
-
-        if (expectedUserId) {
-          assertLinkedUserId(expectedUserId, userResult.user.id);
-        }
-
-        setSession({ ...callbackSession, user: userResult.user });
         logOAuthStep("success", { provider, intent });
         return "success";
       } catch (caught) {
@@ -638,11 +753,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw captureError(caught);
       } finally {
         activeOAuthAttempt.current = null;
-        setActiveOAuthProvider(null);
+        if (mountedRef.current) setActiveOAuthProvider(null);
         logOAuthStep("loading.released", { provider, intent });
       }
     },
-    [captureError, clearPendingProtectionState, handleAuthUrl, session],
+    [assertAuthIdle, captureError, clearPendingProtectionState, handleAuthUrl, session],
   );
 
   const linkOAuthIdentity = React.useCallback(
@@ -656,16 +771,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const signOut = React.useCallback(async () => {
+    assertAuthIdle();
     const client = requireConfiguredAuth();
     const signedOutUserId = session?.user.id;
     setError(null);
+    setOAuthOutcome(null);
 
     let syncDeferred = false;
     try {
       await synchronizeProgressNow();
     } catch (syncError) {
       syncDeferred = true;
-      console.warn("[auth] Synchronisation différée avant déconnexion.", syncError);
+      console.warn("[auth] Synchronisation différée avant déconnexion.", toKappAuthError(syncError).code);
     }
 
     try {
@@ -687,7 +804,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           await isolateProgressAfterSignOut(signedOutUserId);
         } catch (isolationError) {
-          console.error("[auth] Isolation locale impossible.", isolationError);
+          console.error("[auth] Isolation locale impossible.", toKappAuthError(isolationError).code);
           setSession(null);
           setError(
             "Vous êtes déconnecté. Votre progression reste conservée localement ; la session invitée sera créée au retour du réseau.",
@@ -704,7 +821,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setError(
           "Vous êtes déconnecté. La nouvelle session invitée sera créée au retour du réseau.",
         );
-        console.warn("[auth] Session invitée différée.", anonymousError);
+        console.warn("[auth] Session invitée différée.", toKappAuthError(anonymousError).code);
         setIsPasswordRecovery(false);
         setNeedsPasswordSetup(false);
         return { syncDeferred, guestSessionPending: true };
@@ -716,7 +833,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (caught) {
       throw captureError(caught);
     }
-  }, [captureError, clearPendingProtectionState, session?.user.id]);
+  }, [assertAuthIdle, captureError, clearPendingProtectionState, session?.user.id]);
 
   const resetPassword = React.useCallback(
     async (rawEmail: string) => {
@@ -760,6 +877,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const deleteAccount = React.useCallback(async () => {
+    assertAuthIdle();
     const client = requireConfiguredAuth();
     setError(null);
 
@@ -785,7 +903,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (caught) {
       throw captureError(caught);
     }
-  }, [captureError, clearPendingProtectionState]);
+  }, [assertAuthIdle, captureError, clearPendingProtectionState]);
 
   const user = session?.user ?? null;
   const isAnonymous = isAnonymousUser(user);
@@ -809,6 +927,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       providers,
       hasEmailIdentity,
       activeOAuthProvider,
+      oauthOutcome,
       error,
       clearError,
       clearAccountProtectionSuccess,
@@ -836,6 +955,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       providers,
       hasEmailIdentity,
       activeOAuthProvider,
+      oauthOutcome,
       error,
       clearError,
       clearAccountProtectionSuccess,

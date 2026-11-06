@@ -54,6 +54,26 @@ export function matchesAuthCallbackUrl(url: string, redirectTo: string) {
   }
 }
 
+/** A PKCE code is single-use even when native listeners reorder the URL. */
+export function authCallbackKey(callback: ParsedAuthCallback) {
+  return JSON.stringify(callback.code
+    ? ["code", callback.code]
+    : callback.accessToken && callback.refreshToken
+      ? ["tokens", callback.accessToken, callback.refreshToken]
+      : ["error", callback.errorCode, callback.errorDescription]);
+}
+
+export function oauthProviderFromCallback(
+  url: string,
+  user: Parameters<typeof authProvidersFromUser>[0],
+): KappOAuthProvider | null {
+  const action = new URL(url).searchParams.get("action");
+  const candidate = action
+    ? action.match(/^oauth-(?:login|link)-(google|apple)$/u)?.[1]
+    : authProvidersFromUser(user).find((provider) => provider === "google" || provider === "apple");
+  return candidate === "google" || candidate === "apple" ? candidate : null;
+}
+
 export function authProvidersFromUser(
   user:
     | {
