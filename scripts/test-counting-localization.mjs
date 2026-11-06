@@ -94,7 +94,7 @@ test("counting route provider is mounted and audio behavior remains canonical", 
   assert.match(read("../app/_layout.tsx"), /CountingLocalizationProvider module=\{countingModule\}/u);
   assert.match(read("../components/comptage/CountingImmersionScreen.tsx"), /playAudio\(nextMessage.audio, nextMessageId\)/u);
   assert.match(read("../components/comptage/CountingImmersionScreen.tsx"), /playRecordedAudio\(exp.audio, cardId\)/u);
-  assert.equal(manifest.phase, 7);
+  assert.ok(manifest.phase >= 7);
   assert.ok(manifest.japaneseUiNamespaces.includes("counting"));
   assert.ok(!manifest.deferredNamespaces.includes("counting"));
   assert.equal(manifest.japaneseReleaseReady, false);

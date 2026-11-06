@@ -14,6 +14,7 @@ import { StatusBadge } from "./ui/status-badge";
 import { ABSOLUTE_FILL } from "../constants/layout";
 import { SeoulMidnightGlass } from "../constants/theme";
 import { usePaywall } from "../lib/paywall/PaywallProvider";
+import { useVocabularyText } from "../lib/i18n/VocabularyTextContext";
 
 const colors = SeoulMidnightGlass.colors;
 
@@ -27,7 +28,7 @@ type ModuleCardBaseProps = {
   selected?: boolean;
   lockedSubtitle?: string;
   accessibilityContext: string;
-  iconScript?: "latin" | "korean";
+  iconScript?: "latin" | "korean" | "japanese";
   visualVariant?: "default" | "legacyGlass";
 };
 
@@ -60,23 +61,24 @@ export function ModuleCard({
   visualVariant = "default",
 }: ModuleCardProps) {
   const { hasPremiumAccess } = usePaywall();
+  const translate = useVocabularyText();
   const isAction = onPress !== undefined;
   const isLegacyGlass = visualVariant === "legacyGlass";
   const isLocked = requiresPremium && !hasPremiumAccess;
   const targetHref = isLocked ? "/premium" : href;
   const activeColor = requiresPremium ? colors.premiumGold : accentColor;
-  const displayedSubtitle = isLocked ? lockedSubtitle : subtitle;
-  const accessLabel = isLocked
+  const displayedSubtitle = translate(isLocked ? lockedSubtitle : subtitle);
+  const accessLabel = translate(isLocked
     ? "Accès Premium verrouillé"
     : requiresPremium
       ? "Accès Premium inclus"
-      : "Accès gratuit";
-  const selectedLabel = selected ? "Sélectionné" : undefined;
-  const actionLabel = isLocked
+      : "Accès gratuit");
+  const selectedLabel = selected ? translate("Sélectionné") : undefined;
+  const actionLabel = translate(isLocked
     ? "Découvrir Premium"
-    : `Ouvre ${accessibilityContext}`;
+    : `Ouvre ${accessibilityContext}`);
   const accessibilityLabel = [
-    title,
+    translate(title),
     selectedLabel,
     accessLabel,
     displayedSubtitle,
@@ -219,12 +221,12 @@ export function ModuleCard({
                 tone={requiresPremium ? "premium" : "soft"}
                 style={styles.cardMeta}
               >
-                {requiresPremium ? `${metaLabel} · PREMIUM` : metaLabel}
+                {translate(requiresPremium ? `${metaLabel} · PREMIUM` : metaLabel)}
               </AppText>
 
               {requiresPremium ? (
                 <StatusBadge
-                  label={isLocked ? "PREMIUM 🔒" : "PREMIUM"}
+                  label={translate(isLocked ? "PREMIUM 🔒" : "PREMIUM")}
                   tone="premium"
                   appearance="solid"
                   size="compact"
