@@ -38,7 +38,8 @@
     "validate:i18n:release-ja": "node --experimental-strip-types ./scripts/validate-i18n.mjs --release-ja",
     "test:i18n": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-i18n.mjs ./scripts/test-i18n-typography.mjs ./scripts/test-i18n-first-run.mjs",
     "lint": "expo lint",
-    "test:vocabulary": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-vocabulary-localization.mjs"
+    "test:vocabulary": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-vocabulary-localization.mjs",
+    "test:counting-localization": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-counting-localization.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/noto-sans-jp": "^0.4.4",

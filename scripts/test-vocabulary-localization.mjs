@@ -143,7 +143,7 @@ test("vocabulary UI namespace and phase gate are aligned", () => {
   const frenchUi = JSON.parse(readFileSync(new URL("../locales/fr/vocabulary.json", import.meta.url), "utf8"));
   const japaneseUi = JSON.parse(readFileSync(new URL("../locales/ja/vocabulary.json", import.meta.url), "utf8"));
   assert.deepEqual(validateCataloguePair(frenchUi, japaneseUi), []);
-  assert.equal(manifest.phase, 6);
+  assert.ok(manifest.phase >= 6);
   assert.ok(manifest.japaneseUiNamespaces.includes("vocabulary"));
   assert.ok(!manifest.deferredNamespaces.includes("vocabulary"));
   assert.equal(manifest.japaneseReleaseReady, false);

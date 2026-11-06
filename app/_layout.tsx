@@ -35,6 +35,7 @@ import { DailyStreakProvider } from "../lib/DailyStreakProvider";
 import { ProgressSyncProvider } from "../lib/ProgressSyncProvider";
 import { LanguageProvider, useLanguageBootstrap } from "../lib/i18n/LanguageProvider";
 import { VocabularyLocalizationProvider } from "../lib/i18n/VocabularyLocalizationProvider";
+import { CountingLocalizationProvider } from "../lib/i18n/CountingLocalizationProvider";
 import { ENABLED_UI_LOCALES } from "../lib/i18n/config";
 import { PaywallProvider } from "../lib/paywall/PaywallProvider";
 import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard";
@@ -108,10 +109,19 @@ function ReleaseRouteGuard({ children }: { children: React.ReactNode }) {
       : segments[vocabularyIndex + 1] && segments[vocabularyIndex + 1] !== "index"
         ? segments[vocabularyIndex + 1]
         : "hub";
+  const countingIndex = segments.lastIndexOf("comptage");
+  const countingModule =
+    countingIndex < 0 ? null
+      : segments[countingIndex + 1] && segments[countingIndex + 1] !== "index"
+        ? segments[countingIndex + 1] : "hub";
   const routedChildren = vocabularyModule ? (
     <VocabularyLocalizationProvider module={vocabularyModule}>
       {children}
     </VocabularyLocalizationProvider>
+  ) : countingModule ? (
+    <CountingLocalizationProvider module={countingModule}>
+      {children}
+    </CountingLocalizationProvider>
   ) : children;
 
   if (enableHiddenRoutesQa) {

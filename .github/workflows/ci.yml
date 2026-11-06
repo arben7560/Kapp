@@ -37,6 +37,12 @@ jobs:
       - name: Japanese vocabulary localization
         run: npm run test:vocabulary
 
+      - name: Japanese counting localization
+        run: npm run test:counting-localization
+
+      - name: Counting audio contract
+        run: npm run test:counting-audio
+
       - name: Hangul learning and localization
         run: npm run test:hangul
 

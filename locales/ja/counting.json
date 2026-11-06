@@ -1,1 +1,9 @@
-{}
+{
+  "hub": {
+    "includedCourses": "基本コース {{count}} 件",
+    "premiumActiveCourses": "プレミアムコース {{count}} 件 · 利用可能",
+    "premiumLockedCourses": "プレミアムコース {{count}} 件 · ロック中",
+    "includedCount": "利用可能 {{count}} 件",
+    "premiumCount": "プレミアム {{count}} 件"
+  }
+}

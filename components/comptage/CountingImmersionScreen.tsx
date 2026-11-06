@@ -16,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { useVocAudio } from "../../hooks/useVocAudio";
 import { VOC_DIALOGUE_COPY } from "../../hooks/useVocDialogue";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import { saveHomeResumeContext } from "../../lib/homeResume";
 import { trackSceneCompleted } from "../../lib/immersionStreak";
 import { buildProgressId } from "../../lib/progressIds";
@@ -84,6 +85,7 @@ export default function CountingImmersionScreen({
   stopAudioOnDialogueChange = false,
 }: Props) {
   const { complete } = useStore();
+  const translate = useVocabularyText();
   const pathname = usePathname();
   const params = useLocalSearchParams<{
     scene?: string | string[];
@@ -264,7 +266,7 @@ export default function CountingImmersionScreen({
         >
           <View style={styles.header}>
             <View style={styles.backBtn}>
-              <AppBackButton accessibilityLabel={`Retour — ${backLabel}`} />
+              <AppBackButton accessibilityLabel={`${translate("Retour")} — ${translate(backLabel)}`} />
             </View>
 
             <View

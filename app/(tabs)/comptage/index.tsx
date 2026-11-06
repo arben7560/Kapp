@@ -29,6 +29,7 @@ import {
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
 import { AppBackButton } from "../../../components/ui/app-back-button";
+import { useVocabularyText } from "../../../lib/i18n/VocabularyTextContext";
 import { HubModuleAccents, SeoulMidnightGlass } from "../../../constants/theme";
 import { useResponsiveLayout } from "../../../hooks/useResponsiveLayout";
 import {
@@ -367,6 +368,7 @@ function CountingHero({
   compact: boolean;
   landscape: boolean;
 }) {
+  const translate = useVocabularyText();
   return (
     <View style={[styles.hero, landscape && styles.heroLandscape]}>
       <View
@@ -420,9 +422,9 @@ function CountingHero({
         </View>
 
         <AppText variant="caption" style={styles.heroCollectionCount}>
-          {INCLUDED_MODULES.length} inclus
+          {translate(`${INCLUDED_MODULES.length} inclus`)}
           {" · "}
-          {PREMIUM_MODULES.length} Premium
+          {translate(`${PREMIUM_MODULES.length} Premium`)}
         </AppText>
       </View>
     </View>
@@ -442,6 +444,7 @@ function FeaturedPathCard({
   landscape: boolean;
   onPress: () => void;
 }) {
+  const translate = useVocabularyText();
   const isPremium = module.isLocked;
   const premiumLocked = isPremium && !hasPremiumAccess;
   const premiumActive = isPremium && hasPremiumAccess;
@@ -450,10 +453,10 @@ function FeaturedPathCard({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${
-        isResume ? "À continuer" : "Pour commencer"
-      }. ${module.title}. ${module.sub}.`}
+        translate(isResume ? "À continuer" : "Pour commencer")
+      }. ${translate(module.title)}. ${translate(module.sub)}.`}
       accessibilityHint={
-        premiumLocked ? "Ouvre l'accès Premium" : "Ouvre ce parcours"
+        translate(premiumLocked ? "Ouvre l'accès Premium" : "Ouvre ce parcours")
       }
       onPress={onPress}
       style={({ pressed }) => [
@@ -728,6 +731,7 @@ function CountingPathCard({
   landscape: boolean;
   onPress: () => void;
 }) {
+  const translate = useVocabularyText();
   const isPremium = module.isLocked;
   const premiumLocked = isPremium && !hasPremiumAccess;
   const premiumActive = isPremium && hasPremiumAccess;
@@ -736,11 +740,11 @@ function CountingPathCard({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${module.title}. ${module.sub}. ${
-        isPremium ? "Premium" : "Inclus"
-      }.${isCurrent ? " En cours." : ""}`}
+      accessibilityLabel={`${translate(module.title)}. ${translate(module.sub)}. ${
+        translate(isPremium ? "Premium" : "Inclus")
+      }.${isCurrent ? ` ${translate("En cours.")}` : ""}`}
       accessibilityHint={
-        unlocked ? "Ouvre ce parcours" : "Ouvre l'accès Premium"
+        translate(unlocked ? "Ouvre ce parcours" : "Ouvre l'accès Premium")
       }
       onPress={onPress}
       style={({ pressed }) => [
@@ -841,7 +845,7 @@ function CountingPathCard({
                   premiumActive && styles.collectionIndexPremiumActive,
                 ]}
               >
-                PARCOURS {String(order).padStart(2, "0")}
+                {translate("PARCOURS")} {String(order).padStart(2, "0")}
               </AppText>
 
               {isPremium ? (
