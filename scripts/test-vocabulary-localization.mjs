@@ -121,7 +121,7 @@ test("all French pedagogical fields on vocabulary routes have Japanese display c
     const source = readFileSync(new URL(relativePath, import.meta.url), "utf8");
     for (const match of source.matchAll(plainTextPattern)) {
       const sourceText = match[1].replace(/\s+/gu, " ").trim();
-      if (!/[A-Za-zÀ-ÿ]/u.test(sourceText) || /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]/u.test(sourceText)) {
+      if (!/[A-Za-zÀ-ÿ]/u.test(sourceText)) {
         continue;
       }
       if (resolveVocabularyText(module, sourceText, "ja") === sourceText) {
