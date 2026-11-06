@@ -31,7 +31,7 @@ for (const namespace of manifest.namespaces) {
 for (const module of CONTENT_MODULES) {
   errors.push(...validateCataloguePair(
     localizedContent.fr[module], localizedContent.ja[module],
-    module === 'hangul' || module === 'vocabulary' ? { koreanSegments: 'display-adaptation' } : {},
+    module === 'hangul' || module === 'vocabulary' || module === 'counting' ? { koreanSegments: 'display-adaptation' } : {},
   )
     .map((error) => `content/${module}/${error}`));
 }

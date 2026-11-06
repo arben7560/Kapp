@@ -1,5 +1,5 @@
 {
-  "phase": 6,
+  "phase": 7,
   "japaneseReleaseReady": false,
   "namespaces": [
     "common",
@@ -20,7 +20,6 @@
   "deferredNamespaces": [
     "navigation",
     "premium",
-    "counting",
     "classifiers",
     "grammar",
     "missions",
@@ -33,6 +32,7 @@
     "account",
     "listening",
     "hangul",
-    "vocabulary"
+    "vocabulary",
+    "counting"
   ]
 }

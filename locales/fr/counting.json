@@ -1,1 +1,9 @@
-{}
+{
+  "hub": {
+    "includedCourses": "{{count}} parcours essentiels",
+    "premiumActiveCourses": "{{count}} parcours Premium · accès actif",
+    "premiumLockedCourses": "{{count}} parcours Premium à débloquer",
+    "includedCount": "{{count}} inclus",
+    "premiumCount": "{{count}} Premium"
+  }
+}
