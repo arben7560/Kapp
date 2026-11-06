@@ -40,6 +40,9 @@ jobs:
       - name: Japanese counting localization
         run: npm run test:counting-localization
 
+      - name: Japanese classifier localization
+        run: npm run test:classifiers-localization
+
       - name: Counting audio contract
         run: npm run test:counting-audio
 
