@@ -35,6 +35,13 @@ test("Comptage routes select their own content without changing route identity",
     namespace: "counting", module: "sino",
   });
 });
+test("OAuth account URLs must not be treated as localized lesson routes", () => {
+  assert.equal(getContentLocalizationScope("/account"), null);
+  assert.equal(getContentLocalizationScope("/account?code=auth-callback"), null);
+  assert.equal(getContentLocalizationScope("/account?action=oauth-login-google"), null);
+  assert.equal(getContentLocalizationScope("/(tabs)"), null);
+});
+
 test("Unrelated routes are never localized with another lesson's catalogue", () => {
   assert.equal(getContentLocalizationScope("/"), null);
   assert.equal(getContentLocalizationScope("/hangul"), null);

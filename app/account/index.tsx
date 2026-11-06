@@ -235,6 +235,7 @@ export default function AccountScreen() {
   const [passwordConfirmation, setPasswordConfirmation] = React.useState("");
   const [formError, setFormError] = React.useState<string | null>(null);
   const [formSuccess, setFormSuccess] = React.useState<string | null>(null);
+  const [oauthNotice, setOAuthNotice] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const didHandleProtectAction = React.useRef(false);
   const clearAuthError = auth.clearError;
@@ -278,13 +279,24 @@ export default function AccountScreen() {
   const continueWithProvider = React.useCallback(
     async (provider: KappOAuthProvider, existingAccount = false) => {
       setFormError(null);
+      setOAuthNotice(null);
       try {
         const result = provider === "google" || existingAccount
           ? await auth.signInWithOAuth(provider)
           : await auth.linkOAuthIdentity(provider);
-        if (result === "success" && existingAccount) setMode(null);
+        if (result === "success") {
+          if (existingAccount) setMode(null);
+          setOAuthNotice(
+            provider === "google"
+              ? "Connexion Google réussie."
+              : "Connexion Apple réussie.",
+          );
+        } else {
+          setOAuthNotice("Connexion annulée. Aucun changement de compte.");
+        }
       } catch (caught) {
         setFormError(friendlyCaughtMessage(caught));
+        setOAuthNotice("La connexion n’a pas abouti. Vérifiez votre compte et réessayez.");
       }
     },
     [auth],
@@ -293,6 +305,29 @@ export default function AccountScreen() {
   const requestedAction = Array.isArray(params.action)
     ? params.action[0]
     : params.action;
+
+  React.useEffect(() => {
+    // A provider callback can reopen /account with OAuth parameters and leave
+    // an obsolete deep-link route in Expo Router's navigation history.
+    // Normalize it only AFTER a confirmed permanent session is available.
+    if (
+      typeof requestedAction !== "string" ||
+      !/^oauth-(login|link)-(google|apple)$/u.test(requestedAction) ||
+      !auth.isPermanentAccount ||
+      auth.isLoading ||
+      auth.isHandlingDeepLink ||
+      Boolean(auth.activeOAuthProvider)
+    ) {
+      return;
+    }
+    router.replace("/account");
+  }, [
+    requestedAction,
+    auth.isPermanentAccount,
+    auth.isLoading,
+    auth.isHandlingDeepLink,
+    auth.activeOAuthProvider,
+  ]);
 
   React.useEffect(() => {
     if (
@@ -556,6 +591,18 @@ export default function AccountScreen() {
             showsVerticalScrollIndicator={false}
           >
             <AppBackButton fallbackHref="/(tabs)" style={styles.back} />
+            {oauthNotice ? (
+              <View style={styles.inlineNotice}>
+                <Ionicons
+                  name={auth.isPermanentAccount ? "checkmark-circle-outline" : "information-circle-outline"}
+                  size={18}
+                  color={auth.isPermanentAccount ? COLORS.green : COLORS.amber}
+                />
+                <AppText variant="bodySecondary" style={styles.noticeCopy}>
+                  {oauthNotice}
+                </AppText>
+              </View>
+            ) : null}
 
             <View style={styles.headingRow}>
               <View style={styles.headingCopy}>

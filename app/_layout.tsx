@@ -32,7 +32,6 @@ import { AuthProvider } from "../lib/AuthProvider";
 import { DailyStreakProvider } from "../lib/DailyStreakProvider";
 import { ProgressSyncProvider } from "../lib/ProgressSyncProvider";
 import { LanguageProvider, useLanguageBootstrap } from "../lib/i18n/LanguageProvider";
-import { ContentLocalizationProvider } from "../lib/i18n/ContentLocalizationProvider";
 import { ENABLED_UI_LOCALES } from "../lib/i18n/config";
 import { PaywallProvider } from "../lib/paywall/PaywallProvider";
 import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard";
@@ -105,13 +104,9 @@ function ReleaseRouteGuard({ children }: { children: React.ReactNode }) {
     return <Redirect href="/" />;
   }
 
-  // Keep the provider type and the Expo Router Stack mounted across all routes.
-  // Only the translation resolver changes when the active lesson changes.
-  return (
-    <ContentLocalizationProvider pathname={pathname}>
-      {children}
-    </ContentLocalizationProvider>
-  );
+  // Auth redirects and release guards must never wrap the root navigator
+  // in route-specific localization providers.
+  return <>{children}</>;
 }
 
 function InitialOnboardingRoute() {
