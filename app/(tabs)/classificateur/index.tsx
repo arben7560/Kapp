@@ -147,7 +147,8 @@ export default function ClassifiersHub() {
                     subtitle={module.subtitle}
                     href={module.href}
                     accentColor={module.accentColor}
-                    icon={module.title.charAt(0)}
+                    icon={translate(module.title).charAt(0)}
+                    iconScript={translate(module.title) === module.title ? "latin" : "japanese"}
                     requiresPremium={module.requiresPremium}
                     metaLabel="UNITÉ DE MESURE"
                     accessibilityContext="ce classificateur coréen"
