@@ -50,6 +50,11 @@ test("Japanese vocabulary copy includes contextual explanations for Japanese lea
     ["health", "Utilisez la particule de sujet \"", "主格助詞"],
     ["lieux", "À Séoul, les numéros d'étages sont cruciaux. \"", "ソウルでは階数"],
     ["work", "Le message", "メッセージ"],
+    ["shared", "Toucher pour continuer", "タップして続ける"],
+    ["shared", "Toucher pour recommencer l’étape", "タップしてこの場面を最初から再生"],
+    ["shared", "Réponse en cours...", "返答中…"],
+    ["shared", "La lecture audio a échoué.", "音声の再生に失敗しました。"],
+    ["shared", "Aucune source audio n’est disponible.", "音声データがありません。"],
   ];
 
   for (const [module, sourceText, expectedFragment] of samples) {
