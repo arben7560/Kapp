@@ -49,6 +49,7 @@ test("Japanese vocabulary copy includes contextual explanations for Japanese lea
     ["famille", "Les termes comme", "韓国語では"],
     ["health", "Utilisez la particule de sujet \"", "主格助詞"],
     ["lieux", "À Séoul, les numéros d'étages sont cruciaux. \"", "ソウルでは階数"],
+    ["lieux", "\" est souvent le niveau de la rue, mais attention aux \"", "日本語の「1階」"],
     ["work", "Le message", "メッセージ"],
     ["shared", "Toucher pour continuer", "タップして続ける"],
     ["shared", "Toucher pour recommencer l’étape", "タップしてこの場面を最初から再生"],

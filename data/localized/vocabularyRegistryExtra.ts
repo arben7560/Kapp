@@ -465,7 +465,7 @@ const VOCABULARY_COPY_EXTRA_BY_MODULE = {
     "URBAN SCANNER": "街のスキャナー",
     "Astuce Urbaine": "街歩きのヒント",
     "À Séoul, les numéros d'étages sont cruciaux. \"": "ソウルでは階数の表示が重要です。「",
-    "\" est souvent le niveau de la rue, mais attention aux \"": "」は多くの場合、地上階を指します。一方、「",
+    "\" est souvent le niveau de la rue, mais attention aux \"": "」は日本語の「1階」と同じく、通常は地上階を指します。一方、「",
     "\" (sous-sols) très animés.": "」（地下）には活気のある店が多いので覚えておきましょう。",
     "CONTEXTE RÉEL": "実際の場面"
   },
