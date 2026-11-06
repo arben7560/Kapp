@@ -1,5 +1,5 @@
 import React from 'react';
-import { VocabularyTextContext } from '../lib/i18n/VocabularyTextContext';
+import { VocabularyTextContext } from '../lib/i18n/VocabularyTextContext.ts';
 import {
   Animated,
   StyleSheet,

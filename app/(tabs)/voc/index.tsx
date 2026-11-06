@@ -38,7 +38,7 @@ import {
   type HomeResumeContext,
 } from "../../../lib/homeResume";
 import { usePaywall } from "../../../lib/paywall/PaywallProvider";
-import { useVocabularyText } from "../../../lib/i18n/VocabularyTextContext";
+import { useVocabularyText } from "../../../lib/i18n/VocabularyTextContext.ts";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vocabulaire.jpg");
 

@@ -9,7 +9,7 @@ import {
 } from "react-native";
 
 import { AppText } from "../app-text";
-import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext.ts";
 import type { AppTextScript } from "../../constants/theme";
 
 const SPEAK_EXPRESSION_ROUTES = new Set([
