@@ -71,6 +71,8 @@ test("classifier hub copy, premium labels, statuses and accessibility are transl
   assert.match(card, /translate\(isLocked\s*\?\s*"Accès Premium verrouillé"/u);
   assert.match(card, /translate\(isLocked\s*\?\s*"Découvrir Premium"/u);
   assert.match(source, /badgeLabel=\{translate\("IMMERSION NIVEAU 1"\)\}/u);
+  assert.match(source, /icon=\{translate\(module\.title\)\.charAt\(0\)\}/u);
+  assert.match(source, /iconScript=\{translate\(module\.title\) === module\.title \? "latin" : "japanese"\}/u);
 });
 
 test("shared lesson labels and Korean speech remain unchanged", () => {
