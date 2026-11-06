@@ -28,7 +28,7 @@ type ModuleCardBaseProps = {
   selected?: boolean;
   lockedSubtitle?: string;
   accessibilityContext: string;
-  iconScript?: "latin" | "korean";
+  iconScript?: "latin" | "korean" | "japanese";
   visualVariant?: "default" | "legacyGlass";
 };
 
