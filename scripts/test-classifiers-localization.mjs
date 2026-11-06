@@ -113,9 +113,10 @@ test("Japanese descriptions follow the Korean statements, not misleading French 
 
 test("the route-scoped display provider preserves the release gate and earlier phases", () => {
   const root = read("../app/_layout.tsx");
-  assert.match(root, /ClassifierLocalizationProvider module=\{classifierModule\}/u);
-  assert.match(root, /CountingLocalizationProvider module=\{countingModule\}/u);
-  assert.match(root, /VocabularyLocalizationProvider module=\{vocabularyModule\}/u);
+  for (const module of ["classificateur", "comptage", "voc"]) {
+    assert.match(read(`../app/(tabs)/${module}/_layout.tsx`), /<ContentLocalizationProvider pathname=\{pathname\}>/u);
+  }
+  assert.doesNotMatch(root, /<ContentLocalizationProvider/u);
   assert.match(root, /"\/classificateur"/u);
   assert.match(read("../lib/i18n/ClassifierLocalizationProvider.tsx"), /VocabularyTextContext.Provider/u);
   assert.equal(manifest.phase, 8);

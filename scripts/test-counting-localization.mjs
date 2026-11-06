@@ -91,7 +91,8 @@ test("translations follow actual Korean meaning and do not alter canonical data"
 });
 
 test("counting route provider is mounted and audio behavior remains canonical", () => {
-  assert.match(read("../app/_layout.tsx"), /CountingLocalizationProvider module=\{countingModule\}/u);
+  assert.match(read("../app/(tabs)/comptage/_layout.tsx"), /<ContentLocalizationProvider pathname=\{pathname\}>/u);
+  assert.match(read("../lib/i18n/ContentLocalizationProvider.tsx"), /resolveCountingText\(scope.module, core, locale, i18n\)/u);
   assert.match(read("../components/comptage/CountingImmersionScreen.tsx"), /playAudio\(nextMessage.audio, nextMessageId\)/u);
   assert.match(read("../components/comptage/CountingImmersionScreen.tsx"), /playRecordedAudio\(exp.audio, cardId\)/u);
   assert.ok(manifest.phase >= 7);

@@ -14,8 +14,8 @@ import { VocabularyTextContext } from "./VocabularyTextContext";
  * come exclusively from react-i18next. New lessons should use
  * useTranslation(namespace) and semantic keys directly.
  *
- * This provider is ALWAYS mounted around the navigator: updating its value
- * never replaces the Stack, loses navigation history or remounts a lesson.
+ * Mounted inside each localized module layout. Updating its value preserves
+ * the child navigator's identity; the root Stack is outside this provider.
  */
 export function ContentLocalizationProvider({
   pathname,
@@ -28,6 +28,11 @@ export function ContentLocalizationProvider({
     () => getContentLocalizationScope(pathname),
     [pathname],
   );
+
+  React.useEffect(() => {
+    if (!__DEV__ || process.env.EXPO_PUBLIC_DEBUG_OAUTH_NAV !== "1") return;
+    console.info("[kapp:oauth-nav]", "content.scope", { pathname, scope, locale });
+  }, [pathname, scope, locale]);
 
   const translate = React.useCallback(
     (sourceText: string) => {

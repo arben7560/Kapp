@@ -4,6 +4,7 @@ import { AppState } from "react-native";
 
 import { useAuth } from "../../lib/AuthProvider";
 import { useAppLanguage } from "../../lib/i18n/LanguageProvider";
+import { getActiveNavigationRouteChain } from "../../lib/navigationDiagnostics";
 
 /** Opt-in development traces; never log URLs, authorization codes, emails, or tokens. */
 const DEBUG = __DEV__ && process.env.EXPO_PUBLIC_DEBUG_OAUTH_NAV === "1";
@@ -13,6 +14,10 @@ export function OAuthNavigationDiagnostics() {
   const navState = useRootNavigationState();
   const auth = useAuth();
   const { locale } = useAppLanguage();
+  const routeChain = React.useMemo(
+    () => getActiveNavigationRouteChain(navState),
+    [navState],
+  );
 
   React.useEffect(() => {
     if (!DEBUG) return;
@@ -26,6 +31,7 @@ export function OAuthNavigationDiagnostics() {
       pathname,
       navigatorKey: navState?.key ?? null,
       routeIndex: navState?.index ?? null,
+      routeChain,
       locale,
       authenticated: auth.isAuthenticated,
       permanentAccount: auth.isPermanentAccount,
@@ -37,6 +43,7 @@ export function OAuthNavigationDiagnostics() {
     pathname,
     navState?.key,
     navState?.index,
+    routeChain,
     locale,
     auth.isAuthenticated,
     auth.isPermanentAccount,
