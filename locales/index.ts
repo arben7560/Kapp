@@ -26,6 +26,8 @@ import frSpeechFeedback from './fr/speechFeedback.json';
 import jaSpeechFeedback from './ja/speechFeedback.json';
 import frImmersion from './fr/immersion.json';
 import jaImmersion from './ja/immersion.json';
+import { frenchContent } from '../data/localized/fr/index.ts';
+import { japaneseContent } from '../data/localized/ja/index.ts';
 
 export const resources = {
   fr: {
@@ -35,9 +37,9 @@ export const resources = {
     account: frAccount,
     premium: frPremium,
     hangul: frHangul,
-    vocabulary: frVocabulary,
-    counting: frCounting,
-    classifiers: frClassifiers,
+    vocabulary: { ...frVocabulary, content: frenchContent.vocabulary },
+    counting: { ...frCounting, content: frenchContent.counting },
+    classifiers: { ...frClassifiers, content: frenchContent.classifiers },
     grammar: frGrammar,
     listening: frListening,
     missions: frMissions,
@@ -51,9 +53,9 @@ export const resources = {
     account: jaAccount,
     premium: jaPremium,
     hangul: jaHangul,
-    vocabulary: jaVocabulary,
-    counting: jaCounting,
-    classifiers: jaClassifiers,
+    vocabulary: { ...jaVocabulary, content: japaneseContent.vocabulary },
+    counting: { ...jaCounting, content: japaneseContent.counting },
+    classifiers: { ...jaClassifiers, content: japaneseContent.classifiers },
     grammar: jaGrammar,
     listening: jaListening,
     missions: jaMissions,

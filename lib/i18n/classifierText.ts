@@ -1,15 +1,24 @@
-import { localizedContent } from "../../data/localized/index.ts";
+import type { i18n } from "i18next";
 import { classifierCopyId } from "../../data/localized/classifiersRegistry.ts";
-import { resolveContentText } from "./displayText.ts";
 import type { AppLocale } from "./config.ts";
+import { appI18n } from "./instance.ts";
 
-/** The original Korean examples and pronunciation strings are not in the dictionary. */
-export function resolveClassifierText(module: string, sourceText: string, locale: AppLocale): string {
+/** Keep Korean expressions and lesson IDs unchanged; localize display copy. */
+export function resolveClassifierText(
+  module: string,
+  sourceText: string,
+  locale: AppLocale,
+  instance: i18n = appI18n,
+): string {
   if (locale === "fr") return sourceText;
-  const catalogue = localizedContent[locale].classifiers;
-  const localId = classifierCopyId(module, sourceText);
-  const sharedId = classifierCopyId("shared", sourceText);
-  const id = catalogue[localId] ? localId : catalogue[sharedId] ? sharedId : null;
-  if (!id) return sourceText;
-  return resolveContentText({ module: "classifiers", entityId: id, field: "text" }, sourceText, locale);
+
+  const specific = instance.getResource(
+    locale, "classifiers", `content.${classifierCopyId(module, sourceText)}.text`,
+  );
+  if (typeof specific === "string" && specific.trim()) return specific;
+
+  const shared = instance.getResource(
+    locale, "classifiers", `content.${classifierCopyId("shared", sourceText)}.text`,
+  );
+  return typeof shared === "string" && shared.trim() ? shared : sourceText;
 }

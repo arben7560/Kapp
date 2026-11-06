@@ -32,9 +32,7 @@ import { AuthProvider } from "../lib/AuthProvider";
 import { DailyStreakProvider } from "../lib/DailyStreakProvider";
 import { ProgressSyncProvider } from "../lib/ProgressSyncProvider";
 import { LanguageProvider, useLanguageBootstrap } from "../lib/i18n/LanguageProvider";
-import { VocabularyLocalizationProvider } from "../lib/i18n/VocabularyLocalizationProvider";
-import { CountingLocalizationProvider } from "../lib/i18n/CountingLocalizationProvider";
-import { ClassifierLocalizationProvider } from "../lib/i18n/ClassifierLocalizationProvider";
+import { ContentLocalizationProvider } from "../lib/i18n/ContentLocalizationProvider";
 import { ENABLED_UI_LOCALES } from "../lib/i18n/config";
 import { PaywallProvider } from "../lib/paywall/PaywallProvider";
 import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard";
@@ -98,52 +96,22 @@ const RELEASE_HIDDEN_PREFIXES = ["/classificateur", "/immersion"] as const;
 
 function ReleaseRouteGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const segments = pathname.split("/").filter(Boolean);
-  const vocabularyIndex = segments.lastIndexOf("voc");
-  const vocabularyModule =
-    vocabularyIndex < 0
-      ? null
-      : segments[vocabularyIndex + 1] && segments[vocabularyIndex + 1] !== "index"
-        ? segments[vocabularyIndex + 1]
-        : "hub";
-  const countingIndex = segments.lastIndexOf("comptage");
-  const countingModule =
-    countingIndex < 0 ? null
-      : segments[countingIndex + 1] && segments[countingIndex + 1] !== "index"
-        ? segments[countingIndex + 1] : "hub";
-  const classifierIndex = segments.lastIndexOf("classificateur");
-  const classifierModule =
-    classifierIndex < 0 ? null
-      : segments[classifierIndex + 1] && segments[classifierIndex + 1] !== "index"
-        ? segments[classifierIndex + 1] : "hub";
-  const routedChildren = vocabularyModule ? (
-    <VocabularyLocalizationProvider module={vocabularyModule}>
-      {children}
-    </VocabularyLocalizationProvider>
-  ) : countingModule ? (
-    <CountingLocalizationProvider module={countingModule}>
-      {children}
-    </CountingLocalizationProvider>
-  ) : classifierModule ? (
-    <ClassifierLocalizationProvider module={classifierModule}>
-      {children}
-    </ClassifierLocalizationProvider>
-  ) : children;
-
-  if (enableHiddenRoutesQa) {
-    return routedChildren;
-  }
-
   const isHidden =
     RELEASE_HIDDEN_PREFIXES.some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
     ) || RELEASE_HIDDEN_PATHS.has(pathname);
 
-  if (isHidden) {
+  if (!enableHiddenRoutesQa && isHidden) {
     return <Redirect href="/" />;
   }
 
-  return routedChildren;
+  // Keep the provider type and the Expo Router Stack mounted across all routes.
+  // Only the translation resolver changes when the active lesson changes.
+  return (
+    <ContentLocalizationProvider pathname={pathname}>
+      {children}
+    </ContentLocalizationProvider>
+  );
 }
 
 function InitialOnboardingRoute() {

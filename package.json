@@ -21,6 +21,7 @@
     "test:restaurant-speech": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-restaurant-speech.mjs",
     "test:aeroport-speech": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-aeroport-speech.mjs ./scripts/test-aeroport-intent-regressions.mjs",
     "test:counting-audio": "node --test ./scripts/test-counting-audio.mjs",
+    "test:content-locale": "node --test --experimental-strip-types ./scripts/test-content-localization-scope.mjs",
     "test:hangul": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-hangul-curriculum.mjs",
     "test:grammar": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-grammar-registry.mjs ./scripts/test-grammar-experience.mjs ./scripts/test-grammar-responsive.mjs",
     "test:choices": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-choice-order.mjs",

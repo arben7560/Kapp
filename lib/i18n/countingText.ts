@@ -1,14 +1,24 @@
-import { localizedContent } from "../../data/localized/index.ts";
+import type { i18n } from "i18next";
 import { countingCopyId } from "../../data/localized/countingRegistry.ts";
-import { resolveContentText } from "./displayText.ts";
 import type { AppLocale } from "./config.ts";
+import { appI18n } from "./instance.ts";
 
-export function resolveCountingText(module: string, sourceText: string, locale: AppLocale): string {
+/** Source strings remain canonical; translated display copy lives in i18next. */
+export function resolveCountingText(
+  module: string,
+  sourceText: string,
+  locale: AppLocale,
+  instance: i18n = appI18n,
+): string {
   if (locale === "fr") return sourceText;
-  const catalogue = localizedContent[locale].counting;
-  const specificId = countingCopyId(module, sourceText);
-  const sharedId = countingCopyId("shared", sourceText);
-  const id = catalogue[specificId] ? specificId : catalogue[sharedId] ? sharedId : null;
-  if (!id) return sourceText;
-  return resolveContentText({ module: "counting", entityId: id, field: "text" }, sourceText, locale);
+
+  const specific = instance.getResource(
+    locale, "counting", `content.${countingCopyId(module, sourceText)}.text`,
+  );
+  if (typeof specific === "string" && specific.trim()) return specific;
+
+  const shared = instance.getResource(
+    locale, "counting", `content.${countingCopyId("shared", sourceText)}.text`,
+  );
+  return typeof shared === "string" && shared.trim() ? shared : sourceText;
 }
