@@ -100,14 +100,14 @@ test("all French pedagogical fields on vocabulary routes have Japanese display c
     objets: "../app/(tabs)/voc/objets.tsx",
     voyage: "../app/(tabs)/voc/voyage.tsx",
   };
-  const fieldPattern = /\b(?:fr|title|sub|description|mean|context|prompt|explain|tab|text)\s*:\s*"((?:\\.|[^"\\])*)"/g;
+  const fieldPattern = /\b(?:fr|title|sub|description|mean|context|prompt|explain|tab|text|mood|mission|realLife|cultureHint)\s*:\s*"((?:\\.|[^"\\])*)"/g;
   const missing = [];
 
   for (const [module, relativePath] of Object.entries(screens)) {
     const source = readFileSync(new URL(relativePath, import.meta.url), "utf8");
     for (const match of source.matchAll(fieldPattern)) {
       const sourceText = JSON.parse('"' + match[1] + '"').trim();
-      if (!/[A-Za-zÀ-ÿ]/u.test(sourceText) || /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]/u.test(sourceText)) {
+      if (!/[A-Za-zÀ-ÿ]/u.test(sourceText)) {
         continue;
       }
       if (resolveVocabularyText(module, sourceText, "ja") === sourceText) {
