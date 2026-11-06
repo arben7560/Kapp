@@ -98,13 +98,13 @@ test("all French pedagogical fields on vocabulary routes have Japanese display c
     objets: "../app/(tabs)/voc/objets.tsx",
     voyage: "../app/(tabs)/voc/voyage.tsx",
   };
-  const fieldPattern = /\b(?:fr|title|sub|description|mean|context|prompt|explain|tab)\s*:\s*"((?:\\.|[^"\\])*)"/g;
+  const fieldPattern = /\b(?:fr|title|sub|description|mean|context|prompt|explain|tab|text)\s*:\s*"((?:\\.|[^"\\])*)"/g;
   const missing = [];
 
   for (const [module, relativePath] of Object.entries(screens)) {
     const source = readFileSync(new URL(relativePath, import.meta.url), "utf8");
     for (const match of source.matchAll(fieldPattern)) {
-      const sourceText = JSON.parse('"' + match[1] + '"');
+      const sourceText = JSON.parse('"' + match[1] + '"').trim();
       if (!/[A-Za-zÀ-ÿ]/u.test(sourceText) || /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]/u.test(sourceText)) {
         continue;
       }
@@ -114,7 +114,21 @@ test("all French pedagogical fields on vocabulary routes have Japanese display c
     }
   }
 
-  assert.deepEqual(missing, [], "Missing Japanese translations for pedagogical fields:\n" + missing.join("\n"));
+  const plainTextPattern = /<AppText\\b[^>]*>\\s*([^<{][^<{}]*)\\s*<\\/AppText>/gs;
+  for (const [module, relativePath] of Object.entries(screens)) {
+    const source = readFileSync(new URL(relativePath, import.meta.url), "utf8");
+    for (const match of source.matchAll(plainTextPattern)) {
+      const sourceText = match[1].replace(/\\s+/gu, " ").trim();
+      if (!/[A-Za-zÀ-ÿ]/u.test(sourceText) || /[\\u1100-\\u11ff\\u3130-\\u318f\\uac00-\\ud7af]/u.test(sourceText)) {
+        continue;
+      }
+      if (resolveVocabularyText(module, sourceText, "ja") === sourceText) {
+        missing.push(module + " AppText: " + sourceText);
+      }
+    }
+  }
+
+  assert.deepEqual(missing, [], "Missing Japanese translations for vocabulary display copy:\\n" + missing.join("\\n"));
 });
 
 test("vocabulary UI namespace and phase gate are aligned", () => {

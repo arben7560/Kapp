@@ -39,6 +39,16 @@ const COPY = {
     fr: "Se présenter, répondre avec confiance et laisser une bonne impression.",
     ja: "自己紹介や質問への回答を通じて、自信を持って好印象を与える場面です。",
   },
+  [vocabularyCopyId("hub", "PREMIUM")]: { fr: "PREMIUM", ja: "プレミアム" },
+  [vocabularyCopyId("hub", "À DÉBLOQUER")]: { fr: "À DÉBLOQUER", ja: "ロックを解除" },
+  [vocabularyCopyId("basics", "Premiers pas")]: { fr: "Premiers pas", ja: "はじめの一歩" },
+  [vocabularyCopyId("gastronomie", "Gastronomie")]: { fr: "Gastronomie", ja: "食文化" },
+  [vocabularyCopyId("kdrama", "Culture des K-dramas")]: { fr: "Culture des K-dramas", ja: "韓国ドラマ文化" },
+  [vocabularyCopyId("nuit", "Vie nocturne")]: { fr: "Vie nocturne", ja: "夜の楽しみ方" },
+  [vocabularyCopyId("romance", "Rencontres")]: { fr: "Rencontres", ja: "出会い・恋愛" },
+  [vocabularyCopyId("sante", "Urgences et santé")]: { fr: "Urgences et santé", ja: "緊急時と健康" },
+  [vocabularyCopyId("work", "Vie professionnelle")]: { fr: "Vie professionnelle", ja: "仕事・ビジネス" },
+  [vocabularyCopyId("famille", "💡 Nuance culturelle")]: { fr: "💡 Nuance culturelle", ja: "💡 文化のポイント" },
 } as const;
 
 function build(locale: "fr" | "ja"): LocalizedModule {
