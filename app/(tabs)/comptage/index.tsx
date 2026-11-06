@@ -368,6 +368,7 @@ function CountingHero({
   compact: boolean;
   landscape: boolean;
 }) {
+  const translate = useVocabularyText();
   return (
     <View style={[styles.hero, landscape && styles.heroLandscape]}>
       <View
@@ -421,9 +422,9 @@ function CountingHero({
         </View>
 
         <AppText variant="caption" style={styles.heroCollectionCount}>
-          {INCLUDED_MODULES.length} inclus
+          {translate(`${INCLUDED_MODULES.length} inclus`)}
           {" · "}
-          {PREMIUM_MODULES.length} Premium
+          {translate(`${PREMIUM_MODULES.length} Premium`)}
         </AppText>
       </View>
     </View>
@@ -844,7 +845,7 @@ function CountingPathCard({
                   premiumActive && styles.collectionIndexPremiumActive,
                 ]}
               >
-                PARCOURS {String(order).padStart(2, "0")}
+                {translate("PARCOURS")} {String(order).padStart(2, "0")}
               </AppText>
 
               {isPremium ? (

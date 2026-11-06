@@ -75,6 +75,8 @@ export const COUNTING_COPY_BY_MODULE = {
   "DÉBLOQUER PREMIUM": "プレミアムを解放",
   "OUVRIR LE PARCOURS": "コースを開く",
   "EN COURS": "学習中",
+  "En cours.": "学習中です。",
+  "PARCOURS": "コース",
   "INCLUS": "利用可能",
   "Inclus": "利用可能",
   "Ouvre l'accès Premium": "プレミアムプランを開く",
