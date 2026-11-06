@@ -114,12 +114,12 @@ test("all French pedagogical fields on vocabulary routes have Japanese display c
     }
   }
 
-  const plainTextPattern = /<AppText\\b[^>]*>\\s*([^<{][^<{}]*)\\s*<\\/AppText>/gs;
+  const plainTextPattern = /<AppText\b[^>]*>\s*([^<{][^<{}]*)\s*<\/AppText>/gs;
   for (const [module, relativePath] of Object.entries(screens)) {
     const source = readFileSync(new URL(relativePath, import.meta.url), "utf8");
     for (const match of source.matchAll(plainTextPattern)) {
-      const sourceText = match[1].replace(/\\s+/gu, " ").trim();
-      if (!/[A-Za-zÀ-ÿ]/u.test(sourceText) || /[\\u1100-\\u11ff\\u3130-\\u318f\\uac00-\\ud7af]/u.test(sourceText)) {
+      const sourceText = match[1].replace(/\s+/gu, " ").trim();
+      if (!/[A-Za-zÀ-ÿ]/u.test(sourceText) || /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]/u.test(sourceText)) {
         continue;
       }
       if (resolveVocabularyText(module, sourceText, "ja") === sourceText) {
@@ -128,7 +128,7 @@ test("all French pedagogical fields on vocabulary routes have Japanese display c
     }
   }
 
-  assert.deepEqual(missing, [], "Missing Japanese translations for vocabulary display copy:\\n" + missing.join("\\n"));
+  assert.deepEqual(missing, [], "Missing Japanese translations for vocabulary display copy:\n" + missing.join("\n"));
 });
 
 test("vocabulary UI namespace and phase gate are aligned", () => {
