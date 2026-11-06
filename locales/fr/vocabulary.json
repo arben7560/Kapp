@@ -1,1 +1,9 @@
-{}
+{
+  "hub": {
+    "includedCollections": "{{count}} collections essentielles",
+    "premiumActiveCollections": "{{count}} collections Premium · accès actif",
+    "premiumLockedCollections": "{{count}} collections Premium à débloquer",
+    "includedCount": "{{count}} incluses",
+    "premiumCount": "{{count}} Premium"
+  }
+}

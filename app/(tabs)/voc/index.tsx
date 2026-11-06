@@ -1,6 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
+import { useTranslation } from "react-i18next";
 import {
   Check,
   ChevronRight,
@@ -37,6 +38,7 @@ import {
   type HomeResumeContext,
 } from "../../../lib/homeResume";
 import { usePaywall } from "../../../lib/paywall/PaywallProvider";
+import { useVocabularyText } from "../../../lib/i18n/VocabularyTextContext";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vocabulaire.jpg");
 
@@ -145,6 +147,7 @@ export default function VocabHub() {
   });
 
   const { hasPremiumAccess } = usePaywall();
+  const { t } = useTranslation("vocabulary");
   const { setTrack } = useStore();
 
   const [resumeContext, setResumeContext] = useState<HomeResumeContext | null>(
@@ -301,7 +304,7 @@ export default function VocabHub() {
 
             <CollectionSectionHeader
               title="COLLECTIONS INCLUSES"
-              subtitle={`${INCLUDED_THEMES.length} collections essentielles`}
+              subtitle={t("hub.includedCollections", { count: INCLUDED_THEMES.length })}
               landscape={isLandscape}
             />
 
@@ -340,11 +343,12 @@ export default function VocabHub() {
 
             <CollectionSectionHeader
               title="COLLECTIONS PREMIUM"
-              subtitle={
+              subtitle={t(
                 hasPremiumAccess
-                  ? `${PREMIUM_THEMES.length} collections Premium · accès actif`
-                  : `${PREMIUM_THEMES.length} collections Premium à débloquer`
-              }
+                  ? "hub.premiumActiveCollections"
+                  : "hub.premiumLockedCollections",
+                { count: PREMIUM_THEMES.length },
+              )}
               premium
               premiumActive={hasPremiumAccess}
               landscape={isLandscape}
@@ -396,6 +400,8 @@ function VocabularyHero({
   compact: boolean;
   landscape: boolean;
 }) {
+  const { t } = useTranslation("vocabulary");
+
   return (
     <View style={[styles.hero, landscape && styles.heroLandscape]}>
       <View
@@ -451,9 +457,9 @@ function VocabularyHero({
         </View>
 
         <AppText variant="caption" style={styles.heroCollectionCount}>
-          {INCLUDED_THEMES.length} incluses
+          {t("hub.includedCount", { count: INCLUDED_THEMES.length })}
           {" · "}
-          {PREMIUM_THEMES.length} Premium
+          {t("hub.premiumCount", { count: PREMIUM_THEMES.length })}
         </AppText>
       </View>
     </View>
@@ -473,6 +479,7 @@ function FeaturedCollectionCard({
   landscape: boolean;
   onPress: () => void;
 }) {
+  const translate = useVocabularyText();
   const isPremium = theme.isLocked;
 
   const premiumLocked = isPremium && !hasPremiumAccess;
@@ -483,11 +490,11 @@ function FeaturedCollectionCard({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${
-        isResume ? "À continuer" : "Pour commencer"
-      }. ${theme.title}. ${theme.sub}.`}
-      accessibilityHint={
-        premiumLocked ? "Ouvre l'accès Premium" : "Ouvre cette collection"
-      }
+        translate(isResume ? "À continuer" : "Pour commencer")
+      }. ${translate(theme.title)}. ${translate(theme.sub)}.`}
+      accessibilityHint={translate(
+        premiumLocked ? "Ouvre l'accès Premium" : "Ouvre cette collection",
+      )}
       onPress={onPress}
       style={({ pressed }) => [
         styles.featuredWrap,
@@ -774,6 +781,7 @@ function VocabularyCollectionCard({
   landscape: boolean;
   onPress: () => void;
 }) {
+  const translate = useVocabularyText();
   const isPremium = theme.isLocked;
 
   const premiumLocked = isPremium && !hasPremiumAccess;
@@ -785,12 +793,12 @@ function VocabularyCollectionCard({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${theme.title}. ${theme.sub}. ${
-        isPremium ? "Premium" : "Incluse"
-      }.${isCurrent ? " En cours." : ""}`}
-      accessibilityHint={
-        unlocked ? "Ouvre cette collection" : "Ouvre l'accès Premium"
-      }
+      accessibilityLabel={`${translate(theme.title)}. ${translate(theme.sub)}. ${
+        translate(isPremium ? "Premium" : "Incluse")
+      }.${isCurrent ? " " + translate("En cours.") : ""}`}
+      accessibilityHint={translate(
+        unlocked ? "Ouvre cette collection" : "Ouvre l'accès Premium",
+      )}
       onPress={onPress}
       style={({ pressed }) => [
         styles.collectionWrap,

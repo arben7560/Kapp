@@ -79,10 +79,9 @@ export function validateCataloguePair(
     const expectedKorean = koreanSegments(texts[0] ?? '');
     for (const text of texts) {
       if (placeholders(text) !== expectedParams) errors.push(`${family}: inconsistent interpolation parameters`);
-      // The Hangul curriculum has immutable canonical glyphs, answers and audio
-      // outside these display-only catalogues. Japanese teaching explanations
-      // can repeat/expand Korean examples to improve clarity, so those examples
-      // are verified alongside canonical exercise invariants separately.
+      // Canonical Korean glyphs, answers and audio remain in the source curriculum.
+      // Japanese display explanations in Hangul/vocabulary may repeat or expand
+      // Korean examples; canonical exercise invariants are checked separately.
       if (options.koreanSegments !== "display-adaptation" && koreanSegments(text) !== expectedKorean) {
         errors.push(`${family}: Korean segments differ`);
       }

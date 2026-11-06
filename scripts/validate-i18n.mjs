@@ -31,13 +31,13 @@ for (const namespace of manifest.namespaces) {
 for (const module of CONTENT_MODULES) {
   errors.push(...validateCataloguePair(
     localizedContent.fr[module], localizedContent.ja[module],
-    module === 'hangul' ? { koreanSegments: 'display-adaptation' } : {},
+    module === 'hangul' || module === 'vocabulary' ? { koreanSegments: 'display-adaptation' } : {},
   )
     .map((error) => `content/${module}/${error}`));
 }
 if (ENABLED_UI_LOCALES.includes('ja')) {
   // Partial UI rollout is deliberate. Full Japanese publication stays separately gated.
-  for (const namespace of ['common', 'onboarding', 'account']) {
+  for (const namespace of ['common', 'onboarding', 'account', 'vocabulary']) {
     if (!manifest.japaneseUiNamespaces?.includes(namespace) || manifest.deferredNamespaces.includes(namespace)) {
       errors.push(`Japanese first-run UI blocked: ${namespace} is not declared migrated.`);
     }

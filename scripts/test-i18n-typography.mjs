@@ -5,6 +5,7 @@ import test from 'node:test';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import ts from 'typescript';
+import { VocabularyTextContext } from '../lib/i18n/VocabularyTextContext.ts';
 
 const nativeMockUrl = new URL('./i18n-native.mock.mjs', import.meta.url).href;
 registerHooks({
@@ -54,6 +55,14 @@ function render(Component, props, { frenchFonts = true, japaneseFonts = true } =
   return renderToStaticMarkup(React.createElement(AppTextProvider, {
     customFontsAvailable: frenchFonts, japaneseFontsAvailable: japaneseFonts,
   }, React.createElement(Component, props)));
+}
+
+function renderWithVocabularyCopy(Component, props, translator) {
+  return renderToStaticMarkup(React.createElement(AppTextProvider, {
+    customFontsAvailable: true, japaneseFontsAvailable: true,
+  }, React.createElement(VocabularyTextContext.Provider, { value: translator },
+    React.createElement(Component, props),
+  )));
 }
 const decodedStyles = (html) => [...html.matchAll(/data-style="([^"]+)"/gu)]
   .map((match) => JSON.parse(match[1].replaceAll('&quot;', '"')));
@@ -109,4 +118,31 @@ test('Japanese inputs and explicit mixed segments use the same centralized font 
   assert.equal(parentStyle.letterSpacing, 0);
   assert.equal(parentStyle.textTransform, 'none');
   assert.ok(parentStyle.fontFamily.startsWith('NotoSansJP_'));
+});
+
+
+test('Japanese glyph runs are detected automatically inside default French typography', () => {
+  const html = render(AppText, { children: '日本語 한국어' });
+  const styles = decodedStyles(html);
+  assert.equal(styles[0].fontFamily, 'Outfit_400Regular');
+  assert.equal(styles[1].fontFamily, 'NotoSansJP_400Regular');
+  assert.equal(styles[2].fontFamily, 'NotoSansKR_400Regular');
+  assert.ok(html.includes('lang="ja-JP"'));
+  assert.ok(html.includes('lang="ko-KR"'));
+});
+
+test('vocabulary display copy is translated at render time and uses Japanese glyphs', () => {
+  const translate = (value) => value === 'Famille' ? '家族' : value;
+  const html = renderWithVocabularyCopy(AppText, { children: 'Famille' }, translate);
+  assert.ok(html.includes('家族'));
+  assert.equal(decodedStyles(html)[0].fontFamily, 'Outfit_400Regular');
+  assert.equal(decodedStyles(html)[1].fontFamily, 'NotoSansJP_400Regular');
+  assert.ok(html.includes('lang="ja-JP"'));
+
+  const mixed = renderWithVocabularyCopy(AppMixedText, {
+    segments: [{ script: 'latin', text: 'Nuance culturelle' }],
+  }, (value) => value === 'Nuance culturelle' ? '文化のポイント' : value);
+  assert.ok(mixed.includes('文化のポイント'));
+  assert.equal(decodedStyles(mixed)[2].fontFamily, 'NotoSansJP_400Regular');
+  assert.ok(mixed.includes('lang="ja-JP"'));
 });

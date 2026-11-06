@@ -34,6 +34,7 @@ import { AuthProvider } from "../lib/AuthProvider";
 import { DailyStreakProvider } from "../lib/DailyStreakProvider";
 import { ProgressSyncProvider } from "../lib/ProgressSyncProvider";
 import { LanguageProvider, useLanguageBootstrap } from "../lib/i18n/LanguageProvider";
+import { VocabularyLocalizationProvider } from "../lib/i18n/VocabularyLocalizationProvider";
 import { ENABLED_UI_LOCALES } from "../lib/i18n/config";
 import { PaywallProvider } from "../lib/paywall/PaywallProvider";
 import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard";
@@ -99,9 +100,22 @@ const RELEASE_HIDDEN_PREFIXES = ["/classificateur", "/immersion"] as const;
 
 function ReleaseRouteGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const segments = pathname.split("/").filter(Boolean);
+  const vocabularyIndex = segments.lastIndexOf("voc");
+  const vocabularyModule =
+    vocabularyIndex < 0
+      ? null
+      : segments[vocabularyIndex + 1] && segments[vocabularyIndex + 1] !== "index"
+        ? segments[vocabularyIndex + 1]
+        : "hub";
+  const routedChildren = vocabularyModule ? (
+    <VocabularyLocalizationProvider module={vocabularyModule}>
+      {children}
+    </VocabularyLocalizationProvider>
+  ) : children;
 
   if (enableHiddenRoutesQa) {
-    return children;
+    return routedChildren;
   }
 
   const isHidden =
@@ -113,7 +127,7 @@ function ReleaseRouteGuard({ children }: { children: React.ReactNode }) {
     return <Redirect href="/" />;
   }
 
-  return children;
+  return routedChildren;
 }
 
 function InitialOnboardingRoute() {
