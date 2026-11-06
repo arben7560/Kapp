@@ -63,7 +63,6 @@
     "expo-linking": "~58.0.15",
     "expo-localization": "~58.0.5",
     "expo-router": "~58.0.29",
-    "expo-screen-capture": "~58.0.6",
     "expo-speech": "~58.0.3",
     "expo-speech-recognition": "58.0.1",
     "expo-splash-screen": "~58.0.12",

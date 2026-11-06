@@ -24,8 +24,6 @@ import {
   usePathname,
 } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import * as ScreenCapture from "expo-screen-capture";
-import { Platform } from "react-native";
 import React from "react";
 import { StoreProvider } from "../_store";
 import { AppTextProvider } from "../components/app-text";
@@ -46,8 +44,6 @@ void SplashScreen.preventAutoHideAsync().catch(() => {});
 export const unstable_settings = { anchor: "index" };
 
 const ONBOARDING_KEY = "kapp_onboarding_completed";
-// Serialize native setup/teardown when React remounts effects in development.
-let screenPrivacyOperations: Promise<void> = Promise.resolve();
 const AUTH_ONBOARDING_BYPASS_ACTIONS = new Set([
   "recovery",
   "protect",
@@ -230,33 +226,6 @@ export default function RootLayout() {
     (fontsLoaded || Boolean(fontError) || forceFontFallback) &&
     (!ENABLED_UI_LOCALES.includes("ja") || japaneseFontsReady);
 
-  // Install once the app has rendered a native window. Keep protection across
-  // navigation and backgrounding; releasing it on blur would expose snapshots.
-  React.useEffect(() => {
-    if (!appReady || (Platform.OS !== "android" && Platform.OS !== "ios")) return;
-
-    screenPrivacyOperations = screenPrivacyOperations.then(async () => {
-      await ScreenCapture.preventScreenCaptureAsync("kapp-global").catch((error) => {
-        console.warn("Unable to prevent screen capture.", error);
-      });
-      // iOS needs a separate native privacy overlay for the app switcher.
-      // Android's FLAG_SECURE already blanks the recent-apps preview.
-      if (Platform.OS === "ios") {
-        await ScreenCapture.enableAppSwitcherProtectionAsync(1).catch((error) => {
-          console.warn("Unable to protect the app switcher preview.", error);
-        });
-      }
-    });
-
-    return () => {
-      screenPrivacyOperations = screenPrivacyOperations.then(async () => {
-        await ScreenCapture.allowScreenCaptureAsync("kapp-global").catch(() => {});
-        if (Platform.OS === "ios") {
-          await ScreenCapture.disableAppSwitcherProtectionAsync().catch(() => {});
-        }
-      });
-    };
-  }, [appReady]);
   useMediaSessionLifecycle();
 
   React.useEffect(() => {
