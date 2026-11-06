@@ -3,9 +3,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { localizedContent } from "../data/localized/index.ts";
-import { validateCataloguePair } from "../lib/i18n/catalogValidation.ts";
-import { resolveVocabularyText } from "../lib/i18n/vocabularyText.ts";
+const { localizedContent } = await import("../data/localized/index.ts");
+const { validateCataloguePair } = await import("../lib/i18n/catalogValidation.ts");
+const { resolveVocabularyText } = await import("../lib/i18n/vocabularyText.ts");
+
 
 const manifest = JSON.parse(
   readFileSync(new URL("../locales/manifest.json", import.meta.url), "utf8"),
