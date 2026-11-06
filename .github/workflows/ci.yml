@@ -34,6 +34,9 @@ jobs:
       - name: Localization foundations
         run: npm run test:i18n
 
+      - name: Japanese vocabulary localization
+        run: npm run test:vocabulary
+
       - name: Hangul learning and localization
         run: npm run test:hangul
 

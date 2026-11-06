@@ -1,4 +1,5 @@
 import React from 'react';
+import { VocabularyTextContext } from '../lib/i18n/VocabularyTextContext.ts';
 import {
   Animated,
   StyleSheet,
@@ -35,8 +36,10 @@ const AppJapaneseFontsAvailableContext = React.createContext(false);
 
 const KOREAN_CHARACTER_PATTERN =
   /[\u1100-\u11ff\u3130-\u318f\ua960-\ua97f\uac00-\ud7af\ud7b0-\ud7ff]/u;
-const KOREAN_RUN_PATTERN =
-  /([\u1100-\u11ff\u3130-\u318f\ua960-\ua97f\uac00-\ud7af\ud7b0-\ud7ff]+)/u;
+const JAPANESE_CHARACTER_PATTERN =
+  /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]/u;
+const SCRIPT_RUN_PATTERN =
+  /([\u1100-\u11ff\u3130-\u318f\ua960-\ua97f\uac00-\ud7af\ud7b0-\ud7ff]+|[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]+)/gu;
 
 /**
  * A few legacy vocabulary/counting scenes stored bare Hangul, an incomplete
@@ -170,40 +173,68 @@ function resolveFontStyle(
 }
 
 /**
- * Dynamic data can contain a French/Korean mix that cannot be identified at
- * the call site. Keep the parent metrics authoritative and switch only Hangul
- * runs to Noto Sans KR, exactly like AppMixedText does for explicit segments.
+ * Dynamic content can mix French, Japanese and Hangul. Keep the parent's
+ * typography metrics authoritative and switch only script runs to their
+ * matching fonts.
  */
+function containsJapaneseText(children: React.ReactNode): boolean {
+  return React.Children.toArray(children).some((child) => {
+    if (typeof child === "string") return JAPANESE_CHARACTER_PATTERN.test(child);
+    if (!React.isValidElement(child)) return false;
+    const nestedChildren = (child.props as { children?: React.ReactNode }).children;
+    return containsJapaneseText(nestedChildren);
+  });
+}
+
 function renderScriptAwareChildren(
   children: React.ReactNode,
   parentScript: AppTextScript,
   fontRole: AppFontRole,
   customFontsAvailable: boolean,
+  japaneseFontsAvailable: boolean,
 ) {
-  if (parentScript === 'korean') return children;
+  if (parentScript === "korean") return children;
 
   return React.Children.map(children, (child) => {
-    if (typeof child !== 'string' && typeof child !== 'number') return child;
+    if (typeof child !== "string" && typeof child !== "number") return child;
 
     const value = String(child);
-    if (!KOREAN_CHARACTER_PATTERN.test(value)) return child;
+    if (
+      !KOREAN_CHARACTER_PATTERN.test(value) &&
+      !JAPANESE_CHARACTER_PATTERN.test(value)
+    ) return child;
 
-    return value.split(KOREAN_RUN_PATTERN).map((run, index) => {
-      if (!run || !KOREAN_CHARACTER_PATTERN.test(run)) return run;
+    return value.split(SCRIPT_RUN_PATTERN).map((run, index) => {
+      if (!run) return run;
 
-      return (
-        <Text
-          key={`korean-run-${index}`}
-          accessibilityLanguage="ko-KR"
-          style={resolveFontStyle(
-            'korean',
-            fontRole,
-            customFontsAvailable,
-          )}
-        >
-          {run}
-        </Text>
-      );
+      if (KOREAN_CHARACTER_PATTERN.test(run)) {
+        return (
+          <Text
+            key={"korean-run-" + index}
+            accessibilityLanguage="ko-KR"
+            style={resolveFontStyle("korean", fontRole, customFontsAvailable)}
+          >
+            {run}
+          </Text>
+        );
+      }
+
+      if (
+        JAPANESE_CHARACTER_PATTERN.test(run) &&
+        parentScript !== "japanese"
+      ) {
+        return (
+          <Text
+            key={"japanese-run-" + index}
+            accessibilityLanguage="ja-JP"
+            style={resolveFontStyle("japanese", fontRole, japaneseFontsAvailable)}
+          >
+            {run}
+          </Text>
+        );
+      }
+
+      return run;
     });
   });
 }
@@ -225,6 +256,7 @@ export const AppText = React.forwardRef<
 ) {
   const customFontsAvailable = React.useContext(AppFontsAvailableContext);
   const japaneseFontsAvailable = React.useContext(AppJapaneseFontsAvailableContext);
+  const vocabularyText = React.useContext(VocabularyTextContext);
   const token = AppTypography[variant];
   const resolvedScript = script ?? token.script;
   const lineProps = AppTextLineContracts[lineContract];
@@ -253,18 +285,34 @@ export const AppText = React.forwardRef<
     variant,
     resolvedScript,
   );
+  const localizedChildren = React.Children.map(normalizedChildren, (child) =>
+    typeof child === "string" && vocabularyText ? vocabularyText(child) : child,
+  );
+  const hasJapaneseText = containsJapaneseText(localizedChildren);
   const renderedChildren = renderScriptAwareChildren(
-    normalizedChildren,
+    localizedChildren,
     resolvedScript,
     token.fontRole,
     customFontsAvailable,
+    japaneseFontsAvailable,
   );
+  const localizedRest = {
+    ...rest,
+    accessibilityLabel:
+      typeof rest.accessibilityLabel === "string" && vocabularyText
+        ? vocabularyText(rest.accessibilityLabel)
+        : rest.accessibilityLabel,
+    accessibilityHint:
+      typeof rest.accessibilityHint === "string" && vocabularyText
+        ? vocabularyText(rest.accessibilityHint)
+        : rest.accessibilityHint,
+  };
 
   return (
     <Text
       ref={ref}
-      accessibilityLanguage={resolvedScript === 'japanese' ? 'ja-JP' : undefined}
-      {...rest}
+      accessibilityLanguage={resolvedScript === "japanese" || hasJapaneseText ? "ja-JP" : undefined}
+      {...localizedRest}
       {...lineProps}
       style={[baseStyle, safeStyle]}
     >
@@ -292,15 +340,31 @@ export const AppTextInput = React.forwardRef<
 ) {
   const customFontsAvailable = React.useContext(AppFontsAvailableContext);
   const japaneseFontsAvailable = React.useContext(AppJapaneseFontsAvailableContext);
+  const vocabularyText = React.useContext(VocabularyTextContext);
   const token = AppTypography[variant];
   const resolvedScript = script ?? token.script;
   const safeStyle = sanitizeTextStyle(style);
+  const localizedRest = {
+    ...rest,
+    placeholder:
+      typeof rest.placeholder === "string" && vocabularyText
+        ? vocabularyText(rest.placeholder)
+        : rest.placeholder,
+    accessibilityLabel:
+      typeof rest.accessibilityLabel === "string" && vocabularyText
+        ? vocabularyText(rest.accessibilityLabel)
+        : rest.accessibilityLabel,
+    accessibilityHint:
+      typeof rest.accessibilityHint === "string" && vocabularyText
+        ? vocabularyText(rest.accessibilityHint)
+        : rest.accessibilityHint,
+  };
 
   return (
     <TextInput
       ref={ref}
       accessibilityLanguage={resolvedScript === 'japanese' ? 'ja-JP' : undefined}
-      {...rest}
+      {...localizedRest}
       style={[
         resolveFontStyle(
           resolvedScript,
@@ -347,6 +411,7 @@ export const AppMixedText = React.forwardRef<
 ) {
   const customFontsAvailable = React.useContext(AppFontsAvailableContext);
   const japaneseFontsAvailable = React.useContext(AppJapaneseFontsAvailableContext);
+  const vocabularyText = React.useContext(VocabularyTextContext);
   const token = AppTypography[variant];
 
   return (
@@ -356,12 +421,26 @@ export const AppMixedText = React.forwardRef<
           ? { color: AppTextTones[segment.tone] }
           : undefined;
         const safeSegmentStyle = sanitizeTextStyle(segment.style);
+        const localizedText =
+          typeof segment.text === "string" && vocabularyText
+            ? vocabularyText(segment.text)
+            : segment.text;
+        const renderedSegmentText = renderScriptAwareChildren(
+          localizedText,
+          segment.script,
+          token.fontRole,
+          customFontsAvailable,
+          japaneseFontsAvailable,
+        );
+        const containsJapanese =
+          typeof localizedText === "string" &&
+          JAPANESE_CHARACTER_PATTERN.test(localizedText);
 
         return (
           <Text
             key={segment.key ?? index}
             accessibilityLanguage={segment.accessibilityLanguage ?? (
-              segment.script === 'japanese' ? 'ja-JP' : undefined
+              segment.script === "japanese" || containsJapanese ? "ja-JP" : undefined
             )}
             style={[
               resolveFontStyle(
@@ -373,7 +452,7 @@ export const AppMixedText = React.forwardRef<
               safeSegmentStyle,
             ]}
           >
-            {segment.text}
+            {renderedSegmentText}
           </Text>
         );
       })}

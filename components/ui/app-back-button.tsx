@@ -9,6 +9,7 @@ import {
 } from "react-native";
 
 import { AppText } from "../app-text";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext.ts";
 import type { AppTextScript } from "../../constants/theme";
 
 const SPEAK_EXPRESSION_ROUTES = new Set([
@@ -40,6 +41,7 @@ export function AppBackButton({
   style,
 }: AppBackButtonProps) {
   const pathname = usePathname();
+  const translate = useVocabularyText();
 
   const handlePress = () => {
     if (pathname === "/speak") {
@@ -69,8 +71,8 @@ export function AppBackButton({
     <View style={[styles.control, style]}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={accessibilityLabel}
-        accessibilityHint={accessibilityHint}
+        accessibilityLabel={translate(accessibilityLabel)}
+        accessibilityHint={translate(accessibilityHint)}
         hitSlop={8}
         onPress={handlePress}
         style={({ pressed }) => [styles.button, pressed && styles.pressed]}
