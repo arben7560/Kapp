@@ -36,6 +36,7 @@ import { ProgressSyncProvider } from "../lib/ProgressSyncProvider";
 import { LanguageProvider, useLanguageBootstrap } from "../lib/i18n/LanguageProvider";
 import { VocabularyLocalizationProvider } from "../lib/i18n/VocabularyLocalizationProvider";
 import { CountingLocalizationProvider } from "../lib/i18n/CountingLocalizationProvider";
+import { ClassifierLocalizationProvider } from "../lib/i18n/ClassifierLocalizationProvider";
 import { ENABLED_UI_LOCALES } from "../lib/i18n/config";
 import { PaywallProvider } from "../lib/paywall/PaywallProvider";
 import { SubscriptionAccessGuard } from "../lib/paywall/SubscriptionAccessGuard";
@@ -114,6 +115,11 @@ function ReleaseRouteGuard({ children }: { children: React.ReactNode }) {
     countingIndex < 0 ? null
       : segments[countingIndex + 1] && segments[countingIndex + 1] !== "index"
         ? segments[countingIndex + 1] : "hub";
+  const classifierIndex = segments.lastIndexOf("classificateur");
+  const classifierModule =
+    classifierIndex < 0 ? null
+      : segments[classifierIndex + 1] && segments[classifierIndex + 1] !== "index"
+        ? segments[classifierIndex + 1] : "hub";
   const routedChildren = vocabularyModule ? (
     <VocabularyLocalizationProvider module={vocabularyModule}>
       {children}
@@ -122,6 +128,10 @@ function ReleaseRouteGuard({ children }: { children: React.ReactNode }) {
     <CountingLocalizationProvider module={countingModule}>
       {children}
     </CountingLocalizationProvider>
+  ) : classifierModule ? (
+    <ClassifierLocalizationProvider module={classifierModule}>
+      {children}
+    </ClassifierLocalizationProvider>
   ) : children;
 
   if (enableHiddenRoutesQa) {

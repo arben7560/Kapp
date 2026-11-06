@@ -4,9 +4,10 @@ import { japaneseVocabularyExtraContent } from '../vocabularyRegistryExtra.ts';
 import { japaneseVocabularySupplementContent } from '../vocabularyRegistrySupplement.ts';
 import type { ContentModule, LocalizedModule } from '../types.ts';
 import { japaneseCountingContent } from '../countingRegistry.ts';
+import { japaneseClassifierContent } from '../classifiersRegistry.ts';
 
 // Japanese vocabulary copy is display-only; Korean source data and exercise contracts remain unchanged.
 export const japaneseContent = {
-  hangul: japaneseHangulContent, vocabulary: { ...japaneseVocabularyContent, ...japaneseVocabularyExtraContent, ...japaneseVocabularySupplementContent }, counting: japaneseCountingContent, classifiers: {}, grammar: {},
+  hangul: japaneseHangulContent, vocabulary: { ...japaneseVocabularyContent, ...japaneseVocabularyExtraContent, ...japaneseVocabularySupplementContent }, counting: japaneseCountingContent, classifiers: japaneseClassifierContent, grammar: {},
   listening: {}, missions: {}, speechFeedback: {}, immersion: {},
 } as const satisfies Record<ContentModule, LocalizedModule>;

@@ -21,6 +21,7 @@ import { ModuleCard } from "@/components/ModuleCard";
 import { ABSOLUTE_FILL } from "@/constants/layout";
 import { SeoulMidnightGlass } from "@/constants/theme";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
+import { useVocabularyText } from "../../../lib/i18n/VocabularyTextContext";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/classificateur.jpg");
 
@@ -87,6 +88,7 @@ const CLASSIFIERS = [
 ] as const satisfies readonly ClassifierModule[];
 
 export default function ClassifiersHub() {
+  const translate = useVocabularyText();
   const responsive = useResponsiveLayout({ maxWidth: 920 });
   const gridColumns = responsive.getColumns({
     minColumnWidth: 330,
@@ -120,7 +122,7 @@ export default function ClassifiersHub() {
               title="Classificateurs"
               subtitle={'"L’art de compter avec précision."'}
               eyebrow="GRAMMAIRE VISUELLE"
-              badgeLabel="IMMERSION NIVEAU 1"
+              badgeLabel={translate("IMMERSION NIVEAU 1")}
               accentColor={colors.cyan}
               badgeBlurIntensity={18}
             />
@@ -149,6 +151,7 @@ export default function ClassifiersHub() {
                     requiresPremium={module.requiresPremium}
                     metaLabel="UNITÉ DE MESURE"
                     accessibilityContext="ce classificateur coréen"
+                    lockedSubtitle={translate("Découvrir Premium")}
                     visualVariant="legacyGlass"
                   />
                 </AnimatedModule>
@@ -162,6 +165,7 @@ export default function ClassifiersHub() {
 }
 
 function HubNavigation() {
+  const translate = useVocabularyText();
   return (
     <View style={styles.navigation}>
       <View style={styles.backButton}>
@@ -170,7 +174,7 @@ function HubNavigation() {
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Paramètres"
+        accessibilityLabel={translate("Paramètres")}
         accessibilityState={{ disabled: true }}
         aria-disabled
         hitSlop={8}

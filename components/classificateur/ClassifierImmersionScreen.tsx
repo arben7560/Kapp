@@ -19,6 +19,7 @@ import { trackSceneCompleted } from "../../lib/immersionStreak";
 import { buildProgressId } from "../../lib/progressIds";
 import { AnimatedAppText, AppText } from "../app-text";
 import { AppBackButton } from "../ui/app-back-button";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 
 type DialogueLine = {
   char: string;
@@ -68,6 +69,7 @@ export default function ClassifierImmersionScreen({
 }: Props) {
   useSpeechLifecycle();
   const { complete } = useStore();
+  const translate = useVocabularyText();
   const [activeScene, setActiveScene] = useState(scenes[0]);
   const [visibleMessages, setVisibleMessages] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
@@ -197,7 +199,7 @@ export default function ClassifierImmersionScreen({
         >
           <View style={styles.header}>
             <View style={styles.backBtn}>
-              <AppBackButton accessibilityLabel={`Retour — ${backLabel}`} />
+              <AppBackButton accessibilityLabel={`${translate("Retour")} — ${translate(backLabel)}`} />
             </View>
 
             <View
