@@ -27,6 +27,7 @@ import * as SplashScreen from "expo-splash-screen";
 import React from "react";
 import { StoreProvider } from "../_store";
 import { AppTextProvider } from "../components/app-text";
+import { OAuthNavigationDiagnostics } from "../components/debug/OAuthNavigationDiagnostics";
 import { useMediaSessionLifecycle } from "../hooks/useMediaSessionLifecycle";
 import { AuthProvider } from "../lib/AuthProvider";
 import { DailyStreakProvider } from "../lib/DailyStreakProvider";
@@ -233,6 +234,7 @@ export default function RootLayout() {
                   <PaywallProvider>
                     <SubscriptionAccessGuard>
                       <ReleaseRouteGuard>
+                        <OAuthNavigationDiagnostics />
                         <InitialOnboardingRoute />
 
                         <Stack

@@ -304,3 +304,12 @@ test("auth deep links bypass only the initial onboarding redirect", () => {
     /completed !== "true"[\s\S]*?pathname !== "\/onboarding"[\s\S]*?!isAuthAccountCallback[\s\S]*?router\.replace\("\/onboarding"\)/u,
   );
 });
+
+test("OAuth callback does not imperatively replace the account screen during deep-link resolution", () => {
+  assert.doesNotMatch(accountSource, /router\\.replace\\(["']\\/account["']\\)/u);
+  assert.match(accountSource, /auth\\.isPermanentAccount/u);
+});
+
+test("Navigation diagnostics never run unless enabled explicitly", () => {
+  assert.match(rootLayoutSource, /<OAuthNavigationDiagnostics \\/>/u);
+});

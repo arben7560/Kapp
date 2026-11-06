@@ -983,6 +983,12 @@ export default function Home() {
   );
 
   const openSequence = (sequence: any) => {
+    if (__DEV__ && process.env.EXPO_PUBLIC_DEBUG_OAUTH_NAV === "1") {
+      console.info("[kapp:oauth-nav]", "hub.openSequence", {
+        track: sequence.trackKey,
+        destination: sequence.route,
+      });
+    }
     setTrack(sequence.trackKey);
 
     if (sequence.routeParams) {

@@ -307,29 +307,6 @@ export default function AccountScreen() {
     : params.action;
 
   React.useEffect(() => {
-    // A provider callback can reopen /account with OAuth parameters and leave
-    // an obsolete deep-link route in Expo Router's navigation history.
-    // Normalize it only AFTER a confirmed permanent session is available.
-    if (
-      typeof requestedAction !== "string" ||
-      !/^oauth-(login|link)-(google|apple)$/u.test(requestedAction) ||
-      !auth.isPermanentAccount ||
-      auth.isLoading ||
-      auth.isHandlingDeepLink ||
-      Boolean(auth.activeOAuthProvider)
-    ) {
-      return;
-    }
-    router.replace("/account");
-  }, [
-    requestedAction,
-    auth.isPermanentAccount,
-    auth.isLoading,
-    auth.isHandlingDeepLink,
-    auth.activeOAuthProvider,
-  ]);
-
-  React.useEffect(() => {
     if (
       didHandleProtectAction.current ||
       requestedAction !== "protect" ||
