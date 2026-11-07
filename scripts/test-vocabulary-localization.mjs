@@ -13,7 +13,7 @@ const manifest = JSON.parse(
 );
 
 const REQUIRED_MODULES = [
-  "hub", "basics", "gastronomie", "transport", "kdrama", "nuit",
+  "hub", "basics", "gastronomie", "transport", "speak", "kdrama", "nuit",
   "romance", "sante", "work", "emotion", "famille", "health",
   "lieux", "meteo", "objets", "voyage",
 ];
@@ -56,6 +56,10 @@ test("Japanese vocabulary copy includes contextual explanations for Japanese lea
     ["shared", "Réponse en cours...", "返答中…"],
     ["shared", "La lecture audio a échoué.", "音声の再生に失敗しました。"],
     ["shared", "Aucune source audio n’est disponible.", "音声データがありません。"],
+    ["speak", "Scène guidée", "ガイド付き会話"],
+    ["speak", "Choisis ton approche", "学習方法を選ぶ"],
+    ["speak", "Itaewon • Dîner", "梨泰院・夕食"],
+    ["speak", "Ouvrir les options de la scène.", "シーンのオプション"],
   ];
 
   for (const [module, sourceText, expectedFragment] of samples) {
@@ -78,6 +82,12 @@ test("Japanese vocabulary copy includes contextual explanations for Japanese lea
 
   assert.equal(resolveVocabularyText("basics", "Mirae", "ja"), "Mirae",
     "Names not in the copy catalogue must remain unchanged.");
+  assert.equal(resolveVocabularyText("speak", "카페", "ja"), "카페",
+    "Speak keeps Korean titles unchanged.");
+  assert.equal(resolveVocabularyText("speak", "실전", "ja"), "실전",
+    "Speak keeps Korean mode labels unchanged.");
+  assert.equal(resolveVocabularyText("speak", "Scène guidée", "fr"), "Scène guidée",
+    "Switching back to French restores the canonical copy.");
   assert.equal(resolveVocabularyText("basics", "안녕하세요", "ja"), "안녕하세요",
     "Canonical Korean source strings must remain unchanged.");
   assert.equal(resolveVocabularyText("basics", "Merci", "fr"), "Merci",
