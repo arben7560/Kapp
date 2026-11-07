@@ -82,12 +82,11 @@ const SEMAINE_AUDIO = {
     require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-7.mp3"),
     undefined,
     require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-4.mp3"),
-    undefined,
+    require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-5.mp3"),
     require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-8.mp3"),
     require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-9.mp3"),
     require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-2.mp3"),
     require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-3.mp3"),
-    require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-5.mp3"),
     require("../../../assets/audio/comptage/date-calendrier/semaine/toolbox/semaine-toolbox-6.mp3"),
   ],
 };
@@ -290,10 +289,10 @@ const SCENES = withSceneAudio(
           context: "Jour associé au bois, souvent raccourci à l'oral.",
         },
         {
-          word: "금요일",
-          rom: "Geum-yo-il",
-          mean: "Vendredi (Métal)",
-          context: "Nom du jour seul ; l'audio existant correspond à 금요일까지 (jusqu'à vendredi).",
+          word: "금요일까지",
+          rom: "Geum-yo-il-kkaji",
+          mean: "Jusqu'à vendredi",
+          context: "Kkaji marque une limite temporelle.",
         },
         {
           word: "토요일",
@@ -318,12 +317,6 @@ const SCENES = withSceneAudio(
           rom: "Mu-seun yo-il?",
           mean: "Quel jour (semaine) ?",
           context: "À ne pas confondre avec 'Myeot il' (Quel jour du mois).",
-        },
-        {
-          word: "금요일까지",
-          rom: "Geum-yo-il-kkaji",
-          mean: "Jusqu'à vendredi",
-          context: "Kkaji marque une limite temporelle.",
         },
         {
           word: "자료",
