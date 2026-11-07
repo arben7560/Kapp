@@ -8,9 +8,7 @@
     "scheme": "kapp",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#000000",
-    "assetBundlePatterns": [
-      "assets/**/*"
-    ],
+    "assetBundlePatterns": ["assets/**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.arben60.kapp",
@@ -47,7 +45,7 @@
       "package": "com.arben60.kapp"
     },
     "web": {
-      "output": "static",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
