@@ -123,7 +123,7 @@ const SCENES = withSceneAudio(
         {
           word: "살",
           rom: "Sal",
-          mean: "An(s) [Natif]",
+          mean: "An(s)",
           context: "Utilisé avec Hana, Dul, Set pour l'âge parlé.",
         },
         {
