@@ -25,6 +25,8 @@ import {
 
 import { AppText } from "../../components/app-text";
 import { AppBackButton } from "../../components/ui/app-back-button";
+import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import { HubModuleAccents, SeoulMidnightGlass } from "../../constants/theme";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 
@@ -146,6 +148,14 @@ const PUBLIC_THEME_KEYS: readonly ThemeKey[] = [
 ];
 
 export default function SpeakScreen() {
+  return (
+    <ContentLocalizationProvider pathname="/speak">
+      <SpeakScreenContent />
+    </ContentLocalizationProvider>
+  );
+}
+
+function SpeakScreenContent() {
   const [sheetVisible, setSheetVisible] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<ThemeKey | null>(null);
   const responsive = useResponsiveLayout({ maxWidth: 920 });
@@ -327,6 +337,7 @@ function Scenes({
 }: {
   onSelectTheme: (theme: ThemeKey) => void;
 }) {
+  const translate = useVocabularyText();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const listRef = useRef<FlatListInstance>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -432,7 +443,7 @@ function Scenes({
               <View style={{ width: itemSize }}>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={`${config.title}. ${config.sub}. Ouvrir les options de la scène.`}
+                  accessibilityLabel={`${translate(config.title)}. ${translate(config.sub)}. ${translate("Ouvrir les options de la scène.")}`}
                   onPress={() => onSelectTheme(item)}
                   style={({ pressed }) => [
                     styles.scenePressable,
@@ -641,7 +652,7 @@ function Scenes({
         <View
           style={styles.pagination}
           accessibilityRole="tablist"
-          accessibilityLabel="Sélection des scènes"
+          accessibilityLabel={translate("Sélection des scènes")}
         >
           {PUBLIC_THEME_KEYS.map((key, index) => {
             const active = index === activeIndex;
@@ -651,7 +662,7 @@ function Scenes({
               <Pressable
                 key={key}
                 accessibilityRole="tab"
-                accessibilityLabel={THEME_CONFIG[key].title}
+                accessibilityLabel={translate(THEME_CONFIG[key].title)}
                 accessibilityState={{ selected: active }}
                 onPress={() => scrollToIndex(index)}
                 hitSlop={8}
@@ -700,6 +711,7 @@ function ThemeModeSheet({
   selectedTheme: ThemeKey | null;
   backButtonLeft: number;
 }) {
+  const translate = useVocabularyText();
   const [translateY] = useState(() => new Animated.Value(80));
   const [backdropOpacity] = useState(() => new Animated.Value(0));
   const [mounted, setMounted] = useState(visible);
@@ -847,7 +859,7 @@ function ThemeModeSheet({
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Retour depuis la sélection de scène"
+          accessibilityLabel={translate("Retour depuis la sélection de scène")}
           hitSlop={8}
           onPress={handleBack}
           style={[
@@ -959,7 +971,7 @@ function ThemeModeSheet({
 
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Fermer"
+                  accessibilityLabel={translate("Fermer")}
                   onPress={onClose}
                   hitSlop={6}
                   style={styles.sheetCloseIcon}
