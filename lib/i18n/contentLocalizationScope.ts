@@ -9,6 +9,10 @@ export function getContentLocalizationScope(
   pathname: string,
 ): ContentLocalizationScope | null {
   const segments = pathname.split("/").filter(Boolean);
+  // Speak is a top-level tab but uses the same display-copy bridge as Vocabulaire.
+  if (segments[segments.length - 1] === "speak") {
+    return { namespace: "vocabulary", module: "speak" };
+  }
   const roots = [
     { route: "voc", namespace: "vocabulary" },
     { route: "comptage", namespace: "counting" },
