@@ -39,6 +39,7 @@ const PHARMACIE_AUDIO = {
   toolbox2: require("../../../assets/audio/voc/pharmacie/toolbox/pharmacie-toolbox-2.mp3"),
   toolbox3: require("../../../assets/audio/voc/pharmacie/toolbox/pharmacie-toolbox-3.mp3"),
   toolbox4: require("../../../assets/audio/voc/pharmacie/toolbox/pharmacie-toolbox-4.mp3"),
+  toolbox5: require("../../../assets/audio/voc/pharmacie/toolbox/pharmacie-toolbox-5.mp3"),
 };
 
 const HOPITAL_AUDIO = {
@@ -133,6 +134,13 @@ const SCENES = [
         mean: "Après le repas",
         context: "Instruction fréquente pour prendre un médicament.",
         audio: PHARMACIE_AUDIO.toolbox4,
+      },
+      {
+        word: "식전",
+        rom: "Sik-jeon",
+        mean: "Avant le repas",
+        context: "Instruction fréquente pour prendre un médicament avant de manger.",
+        audio: PHARMACIE_AUDIO.toolbox5,
       },
     ],
   },
