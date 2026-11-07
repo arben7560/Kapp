@@ -24,6 +24,15 @@ test("Vocabulaire routes select the same content for FR and JA", () => {
     namespace: "vocabulary", module: "basics",
   });
 });
+test("Speak route uses the vocabulary display catalogue without changing route IDs", () => {
+  assert.deepEqual(getContentLocalizationScope("/speak"), {
+    namespace: "vocabulary", module: "speak",
+  });
+  assert.deepEqual(getContentLocalizationScope("/(tabs)/speak"), {
+    namespace: "vocabulary", module: "speak",
+  });
+});
+
 test("Comptage routes select their own content without changing route identity", () => {
   assert.deepEqual(getContentLocalizationScope("/comptage"), {
     namespace: "counting", module: "hub",
