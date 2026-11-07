@@ -92,6 +92,7 @@ const TAXI_AUDIO = {
   toolbox7: require("../../../assets/audio/voc/Taxi/toolbox/taxi-toolbox-7.mp3"),
   toolbox8: require("../../../assets/audio/voc/Taxi/toolbox/taxi-toolbox-8.mp3"),
   toolbox9: require("../../../assets/audio/voc/Taxi/toolbox/taxi-toolbox-9.mp3"),
+  toolbox10: require("../../../assets/audio/voc/Taxi/toolbox/taxi-toolbox-10.mp3"),
 };
 
 const STREET_AUDIO = {
@@ -266,6 +267,13 @@ const SCENES: Scene[] = [
         mean: "Allez à...",
         audio: TAXI_AUDIO.toolbox2,
         context: "Structure de base pour donner une destination.",
+      },
+      {
+        word: "~으로 가주세요",
+        rom: "~euro ga-juseyo",
+        mean: "Allez à...",
+        audio: TAXI_AUDIO.toolbox10,
+        context: "À utiliser après un nom de lieu se terminant par une consonne, sauf ㄹ.",
       },
       {
         word: "강남역으로 가주세요",
