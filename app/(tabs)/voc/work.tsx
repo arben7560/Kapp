@@ -78,6 +78,7 @@ const INTERVIEW_AUDIO = {
   toolbox7: require("../../../assets/audio/voc/interview/toolbox/interview-toolbox-7.mp3"),
   toolbox8: require("../../../assets/audio/voc/interview/toolbox/interview-toolbox-8.mp3"),
   toolbox9: require("../../../assets/audio/voc/interview/toolbox/interview-toolbox-9.mp3"),
+  toolbox10: require("../../../assets/audio/voc/interview/toolbox/interview-toolbox-10.mp3"),
 };
 
 const SCENES = [
@@ -410,6 +411,14 @@ const SCENES = [
         context: "Utile pour parler de ses qualités.",
         speak: "장점",
         audio: INTERVIEW_AUDIO.toolbox8,
+      },
+      {
+        word: "단점",
+        rom: "Danjeom",
+        mean: "Point faible",
+        context: "Utile pour évoquer ses points à améliorer lors d'un entretien.",
+        speak: "단점",
+        audio: INTERVIEW_AUDIO.toolbox10,
       },
       {
         word: "잘 부탁드립니다",
