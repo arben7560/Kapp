@@ -11,6 +11,7 @@ import {
 } from "../../data/grammar/lessonGuides";
 import { GRAMMAR_STAGE_BY_ID } from "../../data/grammar/stages";
 import { AppText } from "../app-text";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import { grammarLessonGuideStyles as styles } from "./GrammarLessonGuide.styles";
 import { GRAMMAR_REGISTER_NOTES } from "./grammarRegisterNotes";
 import { useGrammarModalLayout } from "./useGrammarModalLayout";
@@ -50,6 +51,7 @@ function SectionHeading({ index, label, detail }: SectionHeadingProps) {
 }
 
 export function GrammarLessonGuide({ guide }: GrammarLessonGuideProps) {
+  const translate = useVocabularyText();
   const layout = useGrammarModalLayout();
   const isQuickGuide = isGrammarQuickGuideStage(guide.stageId);
   const [showDetails, setShowDetails] = React.useState(false);
@@ -103,11 +105,11 @@ export function GrammarLessonGuide({ guide }: GrammarLessonGuideProps) {
           <Pressable
             accessibilityRole="button"
             accessibilityState={{ expanded: showDetails }}
-            accessibilityLabel={
+            accessibilityLabel={translate(
               showDetails
                 ? "Masquer les explications détaillées"
-                : "Afficher les explications détaillées"
-            }
+                : "Afficher les explications détaillées",
+            )}
             onPress={() => setShowDetails((current) => !current)}
             style={({ pressed }) => [
               styles.quickDetailsButton,
