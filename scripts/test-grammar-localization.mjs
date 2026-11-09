@@ -13,6 +13,7 @@ const { JAPANESE_GRAMMAR_GUIDES } = await import("../data/localized/grammarGuide
 const { JAPANESE_GRAMMAR_DRILLS } = await import("../data/localized/grammarDrillsJapanese.ts");
 const { JAPANESE_GRAMMAR_CORRECT_FEEDBACK, JAPANESE_GRAMMAR_WRONG_FEEDBACK } = await import("../data/localized/grammarFeedbackJapanese.ts");
 const { getJapaneseGrammarFeedback } = await import("../data/localized/grammarFeedbackDisplay.ts");
+const { getJapaneseGrammarVocabulary } = await import("../data/localized/grammarVocabularyJapanese.ts");
 const { GRAMMAR_LESSON_GUIDES } = await import("../data/grammar/lessonGuides.ts");
 const { GRAMMAR_PRACTICE_DRILLS } = await import("../data/grammar/practiceDrills.ts");
 const { GRAMMAR_STAGE_BY_ID } = await import("../data/grammar/stages.ts");
@@ -231,4 +232,22 @@ test("new lessons do not alter Korean stimuli or answer correctness", () => {
       }
     }
   }
+});
+
+test("French vocabulary micro-glosses are localized to Japanese only at display time", () => {
+  const samples = [
+    ["existence", "subject-i-ga", "bus-vowel", "버스", "バス"],
+    ["object-actions", "object-eul-reul", "coffee-vowel", "커피", "コーヒー"],
+  ];
+  for (const [stageId, conceptId, drillId, korean, expected] of samples) {
+    const drill = GRAMMAR_PRACTICE_DRILLS[conceptId].find((item) => item.id === drillId);
+    assert.ok(drill.vocabulary, drillId);
+    const question = {stageId, vocabulary: drill.vocabulary};
+    const original = drill.vocabulary.find((item) => item.korean === korean).french;
+    const translated = getJapaneseGrammarVocabulary(question);
+    assert.equal(translated.find((item) => item.korean === korean).french, expected);
+    assert.equal(drill.vocabulary.find((item) => item.korean === korean).french, original);
+  }
+  const source = read("../app/(tabs)/grammar/[stageId].tsx");
+  assert.match(source, /japanese \? getJapaneseGrammarVocabulary\(question\) : question\.vocabulary/u);
 });
