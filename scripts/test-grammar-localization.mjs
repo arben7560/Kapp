@@ -153,7 +153,7 @@ test("grammar feedback is varied and retains a rule for every correct and incorr
   const wrong = Object.values(JAPANESE_GRAMMAR_WRONG_FEEDBACK).flatMap((byDrill) =>
     Object.values(byDrill).flatMap(Object.values),
   );
-  assert.ok(wrong.length >= 255);
+  assert.equal(wrong.length, 252); // 3 stage-one order permutations use a dynamic feedback resolver
   for (const copy of wrong) {
     assert.ok(copy.length >= 25, copy);
     assert.match(copy, /[가-힣]/u);
