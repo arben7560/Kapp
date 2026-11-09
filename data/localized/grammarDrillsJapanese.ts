@@ -1,4 +1,4 @@
-/** Exercise-local Japanese display copy for stages 1–5, keyed by stable drill ID.
+/** Exercise-local Japanese display copy for stages 1–15, keyed by stable drill ID.
  * All Korean stimuli, answer values, distractors and scoring stay canonical. */
 export const JAPANESE_GRAMMAR_DRILLS = {
   "sentence-structure": {
