@@ -11,6 +11,7 @@ export const countingLifeCopy = {
     "J'ai 30 ans. Et vous, In-ho ?": "私は30歳です。インホさんは？",
     "Oui, j'ai aussi trente ans. Nous avons le même âge.": "はい、私も30歳です。同い年ですね。",
     "Alors, on peut parler plus naturellement ?": "では、もう少しくだけた話し方でもいいですか？",
+    "An(s)": "歳",
     "An(s) [Natif]": "歳（固有数詞とともに）",
     "Utilisé avec Hana, Dul, Set pour l'âge parlé.": "日常会話では「살（歳）」の前に固有数詞を置きます。例：스무 살（20歳）。",
     "30 ans": "30歳",
