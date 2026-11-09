@@ -342,7 +342,7 @@ test("canonical Korean drills, scores, and lesson navigation are display-only in
     }
     assert.equal(resolveGrammarText(id, GRAMMAR_STAGE_BY_ID[id].title, "fr"), GRAMMAR_STAGE_BY_ID[id].title);
   }
-  assert.equal(resolveGrammarText("request-item", "Commander une chose", "ja"), "Commander une chose");
+  assert.equal(resolveGrammarText("request-item", "Commander une chose", "ja"), "品物を注文する");
 });
 
 test("stages 16–20 have Japanese-first guides and complete two-concept counting coverage", () => {
