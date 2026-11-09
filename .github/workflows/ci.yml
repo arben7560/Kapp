@@ -43,6 +43,9 @@ jobs:
       - name: Japanese classifier localization
         run: npm run test:classifiers-localization
 
+      - name: Japanese grammar localization — stages 1–5
+        run: npm run test:grammar-localization
+
       - name: Counting audio contract
         run: npm run test:counting-audio
 
