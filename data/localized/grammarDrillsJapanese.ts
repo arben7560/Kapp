@@ -468,7 +468,13 @@ export const JAPANESE_GRAMMAR_DRILLS = {
     "iced-americano-meaning": {
       "context": "カフェのカウンターで、お客さんの注文を聞きました。",
       "prompt": "この韓国語の注文が表す意味を選びましょう。",
-      "explanation": "아이스 아메리카노 주세요. は「アイスアメリカーノをください」。飲み物を注文する言い方です。在庫を尋ねたり、相手に飲むよう頼んだりする文ではありません。"
+      "explanation": "아이스 아메리카노 주세요. は「アイスアメリカーノをください」。飲み物を注文する言い方です。在庫を尋ねたり、相手に飲むよう頼んだりする文ではありません。",
+      "choices": {
+        "Un americano glacé, s’il vous plaît.": "アイスアメリカーノをください。",
+        "Avez-vous un americano glacé ?": "アイスアメリカーノはありますか？",
+        "Je bois un americano glacé.": "アイスアメリカーノを飲みます。",
+        "Buvez un americano glacé, s’il vous plaît.": "アイスアメリカーノを飲んでください。"
+      }
     },
     "bag-direct": {
       "stimulus": "袋をください。",
