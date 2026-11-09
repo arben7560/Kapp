@@ -197,7 +197,7 @@ test("stages 6–10 teach Japanese-first concepts and all stage-seven drill fami
     assert.notEqual(resolveGrammarText(id, GRAMMAR_STAGE_BY_ID[id].title, "ja"), GRAMMAR_STAGE_BY_ID[id].title);
   }
   assert.match(JAPANESE_GRAMMAR_GUIDES["nominal-questions"].mainRule, /助数詞/u);
-  assert.match(JAPANESE_GRAMMAR_GUIDES.existence.introduction, /イ\\/ガ|이\\/가/u);
+  assert.match(JAPANESE_GRAMMAR_GUIDES.existence.introduction, /이／가/u);
   assert.match(JAPANESE_GRAMMAR_GUIDES["locate-thing"].formula.explanation, /에서/u);
   assert.match(JAPANESE_GRAMMAR_GUIDES["present-actions"].mainRule, /ヘヨ体|아요/u);
   assert.match(JAPANESE_GRAMMAR_GUIDES["object-actions"].formula.explanation, /日本語の「を」/u);
