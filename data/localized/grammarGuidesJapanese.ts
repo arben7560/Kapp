@@ -467,7 +467,7 @@ export const JAPANESE_GRAMMAR_GUIDES = {
         [
           [
             "トイレは",
-            "話題になっているもの"
+            "位置を伝える対象"
           ],
           [
             "２階に",
@@ -484,7 +484,7 @@ export const JAPANESE_GRAMMAR_GUIDES = {
         [
           [
             "カードが",
-            "場所を示す対象"
+            "位置を伝える対象"
           ],
           [
             "かばんの中に",
