@@ -137,7 +137,6 @@ const SHARED_COPY: Record<string, string> = {
   "COMMENCER LES EXERCICES": "練習を始める",
   "Revoir l’explication": "解説を見直す",
   "Revoir l’explication avant de commencer": "始める前に解説を見直す",
-  "Revoir l’explication sans quitter les exercices": "練習を続けたまま解説を見直す",
   "OUVRIR L’EXPLICATION": "解説を開く",
   "CONTEXTE": "場面",
   "PHRASE À FORMER": "文を作ろう",
