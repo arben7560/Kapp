@@ -22,6 +22,7 @@ import { useVocabularyText } from "../../../lib/i18n/VocabularyTextContext";
 import { GrammarLessonGuideModal } from "../../../components/grammar/GrammarLessonGuideModal";
 import { isGrammarQuickGuideStage } from "../../../data/grammar/lessonGuides";
 import { getJapaneseGrammarFeedback } from "../../../data/localized/grammarFeedbackDisplay";
+import { getJapaneseGrammarVocabulary } from "../../../data/localized/grammarVocabularyJapanese";
 import { useGrammarModalLayout } from "../../../components/grammar/useGrammarModalLayout";
 import { StatusBadge } from "../../../components/ui/status-badge";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
@@ -1059,6 +1060,8 @@ function PracticePanel({
   onReviewExplanation: () => void;
 }) {
   const translate = useVocabularyText();
+  const { i18n } = useTranslation("grammar");
+  const japanese = (i18n.resolvedLanguage ?? i18n.language).startsWith("ja");
   const question = session.questions[session.questionIndex];
   const response = session.responses.find(
     (item) => item.questionId === question.id,
@@ -1140,7 +1143,7 @@ function PracticePanel({
         {question.display ? (
           <QuestionDisplay
             value={question.display}
-            vocabulary={question.vocabulary}
+            vocabulary={japanese ? getJapaneseGrammarVocabulary(question) : question.vocabulary}
             compactFrench={
               question.stageId === "sentence-structure" ||
               question.stageId === "identify-with-copula" ||
