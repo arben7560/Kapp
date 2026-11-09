@@ -20,6 +20,7 @@ import {
   type GrammarLessonGuide,
 } from "../../data/grammar/lessonGuides";
 import { AppText } from "../app-text";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import { ActionButton } from "../ui/action-button";
 import { AppDialog, DialogActions } from "../ui/app-dialog";
 import { GrammarLessonGuide as GrammarLessonGuideContent } from "./GrammarLessonGuide";
@@ -52,6 +53,7 @@ export function GrammarLessonGuideModal({
   const bodyScrollRef = React.useRef<ScrollViewInstance>(null);
 
   const layout = useGrammarModalLayout();
+  const translate = useVocabularyText();
   const isQuickGuide = !!guide && isGrammarQuickGuideStage(guide.stageId);
 
   React.useEffect(() => {
@@ -231,7 +233,7 @@ export function GrammarLessonGuideModal({
       onRequestClose={onRequestClose}
       accentColor={GRAMMAR_ACCENT.base}
       animationType="fade"
-      accessibilityLabel={`Explication de la leçon ${title}`}
+      accessibilityLabel={translate(`Explication de la leçon ${title}`)}
       maxWidth={920}
       maxHeight={1040}
       fillAvailableHeight
@@ -326,7 +328,7 @@ export function GrammarLessonGuideModal({
             >
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Fermer l’explication"
+                accessibilityLabel={translate("Fermer l’explication")}
                 hitSlop={8}
                 onPress={onRequestClose}
                 style={({ pressed }) => [
@@ -513,7 +515,7 @@ export function GrammarLessonGuideModal({
           >
             <ActionButton
               label="Accéder aux exercices"
-              accessibilityHint="Ferme l’explication et ouvre les exercices de cette leçon"
+              accessibilityHint={translate("Ferme l’explication et ouvre les exercices de cette leçon")}
               size={layout.isVeryShortHeight || (isQuickGuide && layout.isShortHeight) ? "regular" : "large"}
               accentColor={GRAMMAR_ACCENT.base}
               onPress={onAccessExercises}
