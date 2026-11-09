@@ -102,6 +102,7 @@ const SHARED_COPY: Record<string, string> = {
   "Revoir l’explication sans quitter les exercices": "練習を続けながら解説を見直す",
   "Repères A2 Premium verrouillés. Ouvre l’offre Premium": "A2の応用ポイントはプレミアム限定です。プレミアムのご案内を開きます",
   "Ouvre l’offre Premium": "プレミアムのご案内を開きます",
+  "A2 · PREMIUM": "A2・プレミアム",
   "Ferme l’explication et ouvre les exercices de cette leçon": "解説を閉じて、このレッスンの練習問題に進みます",
   "Poli courant": "ヘヨ体",
   "Formel": "ハムニダ体",
