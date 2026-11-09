@@ -29,7 +29,7 @@ export function getJapaneseGrammarFeedback(
   if (correct) {
     return (correctByDrill as Record<string, string>)[drillId];
   }
-  if (Array.isArray(selected)) {
+  if (typeof selected !== "string") {
     // Only the first lesson has an ordering task; explain the actual placement.
     if (stageId !== "sentence-structure" || !Array.isArray(question.answer)) return undefined;
     const words = selected.map((word) => word.replace(/[.!?]+$/u, ""));
