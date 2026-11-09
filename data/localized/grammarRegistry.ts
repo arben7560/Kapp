@@ -7,7 +7,7 @@ import { JAPANESE_GRAMMAR_GUIDES } from "./grammarGuidesJapanese.ts";
 import { JAPANESE_GRAMMAR_DRILLS } from "./grammarDrillsJapanese.ts";
 
 /**
- * Grammar localization blocks 1–3: stages 1–15. A source-string display
+ * Grammar localization blocks 1–4: stages 1–20. A source-string display
  * catalogue, following Vocabulary/Counting/Classifiers. No questions,
  * Korean, answers, scores, navigation IDs or stored progress are translated.
  */
@@ -27,6 +27,11 @@ const STAGE_CONCEPTS = {
   "possession": "possession-ui-je-nae",
   "information-questions": "interrogatives-basic",
   "simple-negation": "negation-an",
+  "request-item": "request-n-juseyo",
+  "request-quantity": "native-numbers",
+  "sino-number-contexts": "sino-korean-numbers",
+  "coordinate-items": "noun-link-hago-irang",
+  "choose-alternative": "alternative-ina-animyeon",
 } as const;
 
 const STAGE_COPY = {
@@ -105,6 +110,31 @@ const STAGE_COPY = {
     goal: "動作・状態・名詞の否定を使い分ける",
     examples: ["辛くありません。", "学生ではありません。"],
   },
+  "request-item": {
+    title: "品物を注文する",
+    goal: "欲しい飲み物や品物を丁寧に頼む",
+    examples: ["お水をください。"],
+  },
+  "request-quantity": {
+    title: "数を指定して注文する",
+    goal: "品物の数を助数詞と一緒に伝える",
+    examples: ["アメリカーノを１杯ください。"],
+  },
+  "sino-number-contexts": {
+    title: "日常生活の漢数詞",
+    goal: "値段・時間・日付・番号を正しく読む",
+    examples: ["これは１万ウォンです。"],
+  },
+  "coordinate-items": {
+    title: "品物を「と」でつなぐ",
+    goal: "複数の品物を一緒に注文する",
+    examples: ["コーヒーとケーキをください。"],
+  },
+  "choose-alternative": {
+    title: "「または」を使って選ぶ",
+    goal: "２つの選択肢を示す",
+    examples: ["コーヒーかお茶はありますか？"],
+  },
 } as const;
 
 /** Shared UI wording and display-only labels for the first localized block.
@@ -156,6 +186,12 @@ const SHARED_COPY: Record<string, string> = {
   "Formule, décomposition, erreurs fréquentes et astuce mémoire": "文の形、分解、よくある間違い、覚え方",
   "L’IDÉE ESSENTIELLE": "大事なポイント",
   "REGISTRE": "話し方",
+  "PRIX À LIRE": "値段を読もう",
+  "SUITE À COMPLÉTER": "続きを入れよう",
+  "LIGNE À IDENTIFIER": "路線を選ぼう",
+  "MOIS À IDENTIFIER": "月を選ぼう",
+  "CHIFFRES À LIRE": "数字を読もう",
+  "QUESTION À EXPRIMER": "質問を韓国語にしよう",
   "PHRASE CORÉENNE": "韓国語の文",
   "PHRASE À TRADUIRE": "韓国語にしてみよう",
   "EXERCICE": "問題",
@@ -382,6 +418,45 @@ const CONCEPT_COPY: Record<string, Record<string, string>> = {
     "Ce n’est pas du café.": "コーヒーではありません。",
     "Reconnaître l’idée de « seulement » avec une négation.": "「〜しか〜ない」に近い否定表現を見分ける。",
   },
+  "request-item": {
+    "Demander une chose simplement.": "欲しい品物を丁寧に頼む。",
+    "Place le nom demandé devant 주세요. 좀 peut adoucir la demande, mais il n’est pas obligatoire.": "注文したい物の後ろに 주세요 を付けます。좀 を加えると少し柔らかい依頼になります。",
+    "Après avoir payé, tu demandes le reçu au vendeur.": "支払いの後、店員さんにレシートを渡してもらいます。",
+    "Le reçu, s’il vous plaît.": "レシートをください。",
+    "De l’eau, s’il vous plaît.": "お水をください。",
+    "Un americano glacé, s’il vous plaît.": "アイスアメリカーノをください。",
+  },
+  "request-quantity": {
+    "Devant un classificateur, 하나, 둘, 셋 et 넷 deviennent 한, 두, 세 et 네 devant les noms comptés.": "助数詞の前では 하나・둘・셋・넷 が 한・두・세・네 に変わります。",
+    "Place le nombre puis le classificateur après le nom : 개 pour les objets, 명 pour les personnes, 잔 pour les boissons.": "物の個数は 개、人は 명、飲み物の杯数は 잔。名詞の後に数詞と助数詞を続けます。",
+    "Au marché, tu commandes trois pommes.": "市場でリンゴを３個注文します。",
+    "Trois pommes, s’il vous plaît.": "リンゴを３個ください。",
+    "Au guichet, tu commandes deux billets.": "窓口でチケットを２枚注文します。",
+    "Deux billets, s’il vous plaît.": "チケットを２枚ください。",
+    "Un americano, s’il vous plaît.": "アメリカーノを１杯ください。",
+  },
+  "sino-number-contexts": {
+    "Utilise les nombres sino-coréens pour les prix, les minutes, les dates, les étages, les lignes et les numéros.": "値段・分・日付・階・路線番号などには韓国語の漢数詞を使います。",
+    "Le vendeur annonce un prix de cinq mille wons.": "店員さんが5,000ウォンだと伝えています。",
+    "Cela coûte cinq mille wons.": "5,000ウォンです。",
+    "Cela coûte dix mille wons.": "１万ウォンです。",
+  },
+  "coordinate-items": {
+    "Ajoute 하고 ou (이)랑 au premier nom pour dire « et » ou « avec » ; (이)랑 suit la présence d’une consonne. 와/과 exprime le même lien dans un registre plus écrit ou formel.": "名詞に 하고／(이)랑 を付けて「と・一緒に」を表します。パッチムがあれば 이랑、なければ 랑。와／과 はより書き言葉的なつなぎ方です。",
+    "À l’épicerie, tu demandes du pain et du lait.": "お店でパンと牛乳の両方を注文します。",
+    "Du pain et du lait, s’il vous plaît.": "パンと牛乳をください。",
+    "Un café et un gâteau, s’il vous plaît.": "コーヒーとケーキをください。",
+  },
+  "choose-alternative": {
+    "Ajoute 이나 après une consonne et 나 après une voyelle pour relier des noms possibles. 아니면 relie plutôt deux propositions ou introduit une autre possibilité : 커피나 차, mais 가요? 아니면 집에 있어요?": "名詞にパッチムがあれば 이나、なければ 나 を付けて２択を示します。２つの質問を「それとも」でつなぐには 아니면 を使います。",
+    "N(이)나 N": "名詞＋(이)나＋名詞",
+    "(이)나 relie directement deux noms possibles.": "(이)나 は２つの名詞を選択肢としてつなぎます。",
+    "proposition + 아니면 + proposition": "文＋아니면＋文",
+    "아니면 introduit une autre proposition ou une nouvelle option.": "아니면 は「それとも」と、別の選択肢を示します。",
+    "Pour le trajet, tu proposes le bus ou le métro comme possibilités.": "移動手段としてバスか地下鉄のどちらかを提案します。",
+    "J’y vais en bus ou en métro.": "バスか地下鉄で行きます。",
+    "Avez-vous du café ou du thé ?": "コーヒーかお茶はありますか？",
+  },
 };
 
 export const GRAMMAR_COPY_BY_MODULE: Record<string, Record<string, string>> = {
@@ -450,13 +525,25 @@ for (const stageId of Object.keys(STAGE_CONCEPTS) as (keyof typeof STAGE_CONCEPT
   for (const [drillId, entry] of Object.entries(localizedDrills)) {
     const drill = drills.find((candidate) => candidate.id === drillId);
     if (!drill) throw new Error(`Unknown Japanese grammar drill: ${stageId}/${drillId}`);
-    const translated = entry as Partial<Record<"stimulus" | "prompt" | "context" | "explanation", string>>;
+    const translated = entry as Partial<Record<"stimulus" | "prompt" | "context" | "explanation", string>> & {
+      choices?: Readonly<Record<string, string>>;
+    };
     add(stageId, drill.stimulus, translated.stimulus);
     add(stageId, drill.explanation, translated.explanation);
     if (drill.context) add(stageId, drill.context, translated.context);
     // Some stage-one drills put their French instruction in prompt, with no context.
     if (translated.prompt) add(stageId, drill.prompt, translated.prompt);
     else if (!drill.context && translated.context) add(stageId, drill.prompt, translated.context);
+    // French answer choices are display strings only. Keep the untouched source
+    // values for selection and scoring, and translate via the same AppText lookup.
+    if (translated.choices) {
+      if (drill.kind === "order") throw new Error(`Unexpected localizable choices: ${stageId}/${drillId}`);
+      const choices = [drill.answer, ...drill.distractors];
+      for (const [source, japanese] of Object.entries(translated.choices)) {
+        if (!choices.includes(source)) throw new Error(`Unknown option translation: ${stageId}/${drillId}/${source}`);
+        add(stageId, source, japanese);
+      }
+    }
   }
 }
 

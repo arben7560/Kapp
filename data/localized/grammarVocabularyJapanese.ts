@@ -14,6 +14,21 @@ const JAPANESE_GLOSSES: Readonly<Record<string, Readonly<Record<string, string>>
     커피: "コーヒー",
     차: "お茶",
   },
+  "choose-alternative": {
+    커피: "コーヒー",
+    차: "お茶",
+    빵: "パン",
+    케이크: "ケーキ",
+    먹어요: "食べます",
+    버스: "バス",
+    지하철: "地下鉄",
+    가요: "行きます",
+    물: "水",
+    마셔요: "飲みます",
+    지금: "今",
+    집: "家",
+    있어요: "います・あります",
+  },
 };
 
 export function getJapaneseGrammarVocabulary(
