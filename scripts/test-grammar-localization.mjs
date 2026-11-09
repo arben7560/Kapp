@@ -141,7 +141,7 @@ test("Japanese course copy is written for Japanese learners with consistent Kore
 test("grammar feedback is varied and retains a rule for every correct and incorrect answer", () => {
   const positive = Object.values(JAPANESE_GRAMMAR_CORRECT_FEEDBACK).flatMap(Object.values);
   assert.equal(positive.length, 55);
-  assert.equal(new Set(positive).size, 25);
+  assert.equal(new Set(positive).size, 55);
   assert.equal(positive.filter((copy) => copy.startsWith("正解。")).length, 0);
   for (const copy of positive) assert.match(copy, /[가-힣]/u);
   const wrong = Object.values(JAPANESE_GRAMMAR_WRONG_FEEDBACK).flatMap((byDrill) =>
@@ -189,7 +189,7 @@ test("stages 6–10 teach Japanese-first concepts and all stage-seven drill fami
   for (const id of newer) {
     const guide = JAPANESE_GRAMMAR_GUIDES[id];
     assert.equal(guide.steps.length, 3, id);
-    assert.equal(guide.commonMistakes.length, 2, id);
+    assert.equal(guide.mistakes.length, 2, id);
     assert.ok(guide.introduction.length > 25, id);
     assert.ok(guide.memoryTip.length > 20, id);
     assert.doesNotMatch(JSON.stringify(guide), /フランス語|フランス語のつづり|フランス語の語順/u, id);
