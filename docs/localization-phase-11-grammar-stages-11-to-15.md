@@ -19,7 +19,7 @@ L’étape 10 (« Agir sur un objet ») est déjà traduite, relue et conservée
 - Les règles pour les étapes 11–12 gagnent à être présentées avec les repères du japonais **「で」「に」「へ」「から」「まで」**, sans les assimiler mécaniquement aux particules coréennes.
 - Pour l’étape 13, présenter 의 comme proche de 「の」 et **제 / 내** selon le registre, sans les confondre avec les pronoms 저 ou 제가.
 - Pour l’étape 14, rejeter les recommandations source basées sur « l’ordre français » : le japonais permet au contraire d’expliquer naturellement la position des interrogatifs au sein de la phrase.
-- L’étape 15 contient deux familles de cinq exercices chacune, avec le contraste essentiel **安（안）/ 못 / -지 않아요 / 아니에요 / 없어요**. Certains distracteurs sont grammaticalement corrects, mais ne répondent pas à la consigne spécifique. Les feedbacks doivent reconnaître ces variantes.
+- L’étape 15 contient deux familles de cinq exercices chacune, avec le contraste essentiel **안 / 못 / -지 않아요 / 아니에요 / 없어요**. Certains distracteurs sont grammaticalement corrects, mais ne répondent pas à la consigne spécifique. Les feedbacks doivent reconnaître ces variantes.
 - Pour **안 공부해요**, forme attendue par l’exercice canonique, la version japonaise signale aussi que **공부 안 해요** est fréquent à l’oral, sans modifier la réponse attendue.
 - Plusieurs exercices de l’étape 15 réemploient exactement la même consigne française : chaque source identique reçoit donc une **traduction japonaise identique**, conformément au registre de localisation par chaîne source.
 
