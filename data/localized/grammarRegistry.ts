@@ -7,7 +7,7 @@ import { JAPANESE_GRAMMAR_GUIDES } from "./grammarGuidesJapanese.ts";
 import { JAPANESE_GRAMMAR_DRILLS } from "./grammarDrillsJapanese.ts";
 
 /**
- * Phase 9, blocks 1–2: grammar stages 1–10. A source-string display
+ * Grammar localization blocks 1–3: stages 1–15. A source-string display
  * catalogue, following Vocabulary/Counting/Classifiers. No questions,
  * Korean, answers, scores, navigation IDs or stored progress are translated.
  */
@@ -22,6 +22,11 @@ const STAGE_CONCEPTS = {
   "locate-thing": "location-e",
   "present-actions": "present-a-eoyo",
   "object-actions": "object-eul-reul",
+  "action-location": "action-location-eseo",
+  "destination-and-time": "destination-time-e",
+  "possession": "possession-ui-je-nae",
+  "information-questions": "interrogatives-basic",
+  "simple-negation": "negation-an",
 } as const;
 
 const STAGE_COPY = {
@@ -74,6 +79,31 @@ const STAGE_COPY = {
     title: "「〜を」を使って話す",
     goal: "何をするかを目的格助詞で伝える",
     examples: ["コーヒーを飲みます。"],
+  },
+  "action-location": {
+    title: "動作の場所を表す",
+    goal: "どこで何をするかを伝える",
+    examples: ["カフェで勉強します。"],
+  },
+  "destination-and-time": {
+    title: "行き先と時刻を伝える",
+    goal: "目的地や具体的な時刻・曜日を伝える",
+    examples: ["３時にソウル駅へ行きます。"],
+  },
+  "possession": {
+    title: "持ち主を表す",
+    goal: "自分や友達の持ち物について話す",
+    examples: ["私の名前はマークです。"],
+  },
+  "information-questions": {
+    title: "質問して情報を聞く",
+    goal: "場所・時間・理由・方法・値段を尋ねる",
+    examples: ["トイレはどこですか？"],
+  },
+  "simple-negation": {
+    title: "否定の言い方",
+    goal: "動作・状態・名詞の否定を使い分ける",
+    examples: ["辛くありません。", "学生ではありません。"],
   },
 } as const;
 
@@ -301,6 +331,57 @@ const CONCEPT_COPY: Record<string, Record<string, string>> = {
     "Je bois du café.": "コーヒーを飲みます。",
     "J’étudie le coréen.": "韓国語を勉強します。",
   },
+  "action-location": {
+    "Situer l’endroit où une action se déroule.": "動作が行われる場所を示す。",
+    "Ajoute 에서 au lieu où une action se déroule, puis place le verbe à la fin. Avec 있어요 ou 없어요, utilise 에 : 카페에서 공부해요, mais 카페에 있어요. La distinction dépend donc du verbe.": "動作が行われる場所には 에서 を付けます。카페에서 공부해요.（カフェで勉強します）と、카페에 있어요.（カフェにいます）を比べましょう。",
+    "On te demande où tu lis habituellement.": "普段どこで読書するかを聞かれています。",
+    "Je lis un livre à la bibliothèque.": "図書館で本を読みます。",
+    "J’étudie au café.": "カフェで勉強します。",
+    "Je descends à Hongdae.": "弘大入口で降ります。",
+  },
+  "destination-and-time": {
+    "Indiquer une destination ou un moment.": "行き先や時刻を示す。",
+    "Ajoute 에 après une destination avec un verbe de déplacement, ou après un moment précis. Le contexte distingue les deux emplois : 서울에 가요 signifie aller à Séoul ; 세 시에 만나요, se retrouver à trois heures.": "移動の目的地や特定の時刻には 에 を付けます。서울에 가요.（ソウルへ行きます）と 세 시에 만나요.（３時に会います）を比べましょう。",
+    "destination + 에 + déplacement": "目的地＋에＋移動の動詞",
+    "에 marque le lieu vers lequel on va.": "에 は向かう先を表します。",
+    "moment précis + 에": "特定の時刻＋에",
+    "에 marque l’heure ou le moment d’une action.": "에 は動作の時刻を表します。",
+    "Tu confirmes à quelle heure tu retrouves un ami.": "友達と会う時刻を確認しています。",
+    "Je retrouve un ami à deux heures.": "２時に友達と会います。",
+    "Je vais à la gare de Séoul à trois heures.": "３時にソウル駅へ行きます。",
+    "Je rentre à la maison.": "家に帰ります。",
+  },
+  "possession": {
+    "Dire à qui une chose appartient.": "物の持ち主を表す。",
+    "Place 의 entre le possesseur et l’objet. 제 et 내 signifient respectivement « mon » en style poli et familier.": "持ち主と物の間に 의 を付けます。「私の」は丁寧な 제 と、くだけた 내 を使い分けます。",
+    "À bord, tu confirmes qu’il s’agit bien de ton billet.": "車内で、自分のチケットだと確認します。",
+    "C’est mon billet.": "私のチケットです。",
+    "Mon nom est Marc.": "私の名前はマークです。",
+    "C’est le sac de mon ami.": "友達のかばんです。",
+  },
+  "information-questions": {
+    "Demander une information simple.": "必要な情報を質問する。",
+    "Garde le mot interrogatif à la place de l’information inconnue : 어디 pour un lieu, 언제 pour un moment, 왜 pour une raison.": "知りたい情報に合わせて疑問詞を置きます。場所は 어디、時間は 언제、理由は 왜 です。",
+    "Sur le quai, tu demandes l’heure d’arrivée du train.": "ホームで、列車の到着時刻を尋ねます。",
+    "Quand arrive le train ?": "列車はいつ来ますか？",
+    "Où sont les toilettes ?": "トイレはどこですか？",
+    "Combien coûte cet article-ci ?": "これはいくらですか？",
+  },
+  "simple-negation": {
+    "Dire qu’une action ou un état ne se réalise pas.": "動作や状態を否定する。",
+    "Corriger une identité ou une catégorie.": "名詞の内容を否定する。",
+    "Place 안 juste avant le verbe ou l’adjectif conjugué. Avec 하다, la forme naturelle est souvent 안 해요.": "短い否定は動詞や形容詞の前に 안 を付けます。하다 動詞では 공부 안 해요. のような言い方もよく使います。",
+    "Pour nier un nom, ajoute 이/가 puis 아니에요. N’utilise pas 안 devant 이에요 ou 예요.": "名詞を否定するには 이／가 아니에요 を使います。이에요／예요 の前に 안 を付けることはできません。",
+    "On t’invite à sortir aujourd’hui, mais tu déclines simplement.": "今日は誘われましたが、出かけないと答えます。",
+    "Je n’y vais pas aujourd’hui.": "今日は行きません。",
+    "Dans le train, tu indiques que le siège montré n’est pas le tien.": "車内で、示された座席が自分の席ではないと伝えます。",
+    "Ce n’est pas ma place.": "私の席ではありません。",
+    "Ce n’est pas épicé.": "辛くありません。",
+    "Je ne bois pas de café.": "コーヒーは飲みません。",
+    "Je ne suis pas étudiant.": "学生ではありません。",
+    "Ce n’est pas du café.": "コーヒーではありません。",
+    "Reconnaître l’idée de « seulement » avec une négation.": "「〜しか〜ない」に近い否定表現を見分ける。",
+  },
 };
 
 export const GRAMMAR_COPY_BY_MODULE: Record<string, Record<string, string>> = {
@@ -362,12 +443,9 @@ for (const stageId of Object.keys(STAGE_CONCEPTS) as (keyof typeof STAGE_CONCEPT
       add(stageId, source, japanese);
     }
   }
-  // Stage 7 teaches both subject particles and existence: keep all ten drills.
-  const drillConceptIds: readonly (keyof typeof GRAMMAR_PRACTICE_DRILLS)[] =
-    stageId === "existence"
-      ? ["subject-i-ga", "existence-isseoyo-eopseoyo"]
-      : [STAGE_CONCEPTS[stageId]];
-  const drills = drillConceptIds.flatMap((id) => GRAMMAR_PRACTICE_DRILLS[id] ?? []);
+  // Each stage owns its canonical concept IDs (stages 7 and 15 have two).
+  // Keep all source drills; translations affect display text only.
+  const drills = stage.conceptIds.flatMap((id) => GRAMMAR_PRACTICE_DRILLS[id] ?? []);
   const localizedDrills = JAPANESE_GRAMMAR_DRILLS[stageId];
   for (const [drillId, entry] of Object.entries(localizedDrills)) {
     const drill = drills.find((candidate) => candidate.id === drillId);
