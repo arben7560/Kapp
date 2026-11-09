@@ -749,7 +749,7 @@ export const JAPANESE_GRAMMAR_CORRECT_FEEDBACK = {
   },
   "sino-number-contexts": {
     "price-five-thousand": "そのとおり。5,000원 は 오천 원。천 が千の単位なので5,000ウォンになります。",
-    "duration-ten-minutes": "はい、십 分ではなく韓国語では 십 분。10分後なら 십 분 후에 출발해요. です。",
+    "duration-ten-minutes": "はい、십 분 です。10分後の出発なら 십 분 후에 출발해요. と言えます。",
     "line-two-route": "いいですね。2호선（이호선）は地下鉄２号線。２番出口とは区別できています。",
     "month-march": "カレンダーの３月は 3월（삼월）ですね。期間の 삼 개월 とは異なります。",
     "phone-prefix-010": "そうです。010 は 공일공 と１桁ずつ読みます。電話番号の０は 공 がよく使われます。"
