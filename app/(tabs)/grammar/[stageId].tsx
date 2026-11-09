@@ -1563,7 +1563,7 @@ function LockedLesson({ stageId }: { stageId: GrammarStageId }) {
         Cette étape n’est pas encore accessible.
       </AppText>
       <AppText variant="bodySecondary" tone="muted">
-        {`Termine d’abord les étapes requises pour ouvrir « ${stage.title} ». ` .trim()}
+        {`Termine d’abord les étapes requises pour ouvrir « ${stage.title} ».`}
       </AppText>
       <PrimaryButton
         label="VOIR LE PARCOURS"
