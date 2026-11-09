@@ -7,7 +7,7 @@ import { JAPANESE_GRAMMAR_GUIDES } from "./grammarGuidesJapanese.ts";
 import { JAPANESE_GRAMMAR_DRILLS } from "./grammarDrillsJapanese.ts";
 
 /**
- * Phase 9, block 1: grammar stages 1–5 only. A source-string display
+ * Phase 9, blocks 1–2: grammar stages 1–10. A source-string display
  * catalogue, following Vocabulary/Counting/Classifiers. No questions,
  * Korean, answers, scores, navigation IDs or stored progress are translated.
  */
@@ -17,6 +17,11 @@ const STAGE_CONCEPTS = {
   "polite-register": "polite-style-yo",
   "introduce-topic": "topic-eun-neun",
   "demonstratives": "demonstratives-i-geu-jeo",
+  "nominal-questions": "question-mwo-nugu-myeot",
+  "existence": "subject-i-ga",
+  "locate-thing": "location-e",
+  "present-actions": "present-a-eoyo",
+  "object-actions": "object-eul-reul",
 } as const;
 
 const STAGE_COPY = {
@@ -44,6 +49,31 @@ const STAGE_COPY = {
     title: "これ・それ・あれ",
     goal: "近くの物や遠くの物を指して説明する",
     examples: ["これは何ですか。"],
+  },
+  "nominal-questions": {
+    title: "誰・何・いくつを尋ねる",
+    goal: "人・物・数について丁寧に質問する",
+    examples: ["誰ですか？", "何人ですか？"],
+  },
+  "existence": {
+    title: "ある・ないを伝える",
+    goal: "人や物、時間の有無を伝える",
+    examples: ["時間がありません。"],
+  },
+  "locate-thing": {
+    title: "人や物の場所を伝える",
+    goal: "人や物がどこにいる・あるかを説明する",
+    examples: ["トイレは２階にあります。"],
+  },
+  "present-actions": {
+    title: "現在形で話す",
+    goal: "今の動作や普段の習慣を丁寧に伝える",
+    examples: ["毎日勉強します。"],
+  },
+  "object-actions": {
+    title: "「〜を」を使って話す",
+    goal: "何をするかを目的格助詞で伝える",
+    examples: ["コーヒーを飲みます。"],
   },
 } as const;
 
@@ -243,6 +273,34 @@ const CONCEPT_COPY: Record<string, Record<string, string>> = {
     "Qu’est-ce que cet objet-ci ?": "これは何ですか。",
     "Je suis étudiant.": "学生です。",
   },
+  "nominal-questions": {
+    "Demander qui, quoi ou combien.": "誰・何・数について尋ねる。",
+    "Qui est cette personne ?": "誰ですか？",
+    "Vous êtes combien ?": "何人ですか？",
+  },
+  "existence": {
+    "Marquer ce qui est ou ce qui arrive.": "何が起こるか・何があるかを示す。",
+    "Dire qu’une chose existe ou manque.": "人や物の有無を伝える。",
+    "Je n’ai pas le temps.": "時間がありません。",
+    "Où sont les toilettes ?": "トイレはどこですか？",
+    "Avez-vous un plat à recommander ?": "おすすめの料理はありますか？",
+  },
+  "locate-thing": {
+    "Situer une personne ou une chose.": "人や物のいる場所・ある場所を伝える。",
+    "Les toilettes sont au deuxième étage.": "トイレは２階にあります。",
+    "La carte est dans le sac.": "カードはかばんの中にあります。",
+  },
+  "present-actions": {
+    "Parler d’une action présente ou habituelle.": "今の動作や普段の習慣について話す。",
+    "J’étudie tous les jours.": "毎日勉強します。",
+    "Je bois du café.": "コーヒーを飲みます。",
+    "Reconnaître une proposition qui précise un nom.": "名詞を詳しく説明する表現を見分ける。",
+  },
+  "object-actions": {
+    "Marquer ce que l’action concerne.": "動作の対象を目的格助詞で示す。",
+    "Je bois du café.": "コーヒーを飲みます。",
+    "J’étudie le coréen.": "韓国語を勉強します。",
+  },
 };
 
 export const GRAMMAR_COPY_BY_MODULE: Record<string, Record<string, string>> = {
@@ -304,7 +362,12 @@ for (const stageId of Object.keys(STAGE_CONCEPTS) as (keyof typeof STAGE_CONCEPT
       add(stageId, source, japanese);
     }
   }
-  const drills = GRAMMAR_PRACTICE_DRILLS[STAGE_CONCEPTS[stageId]] ?? [];
+  // Stage 7 teaches both subject particles and existence: keep all ten drills.
+  const drillConceptIds: readonly (keyof typeof GRAMMAR_PRACTICE_DRILLS)[] =
+    stageId === "existence"
+      ? ["subject-i-ga", "existence-isseoyo-eopseoyo"]
+      : [STAGE_CONCEPTS[stageId]];
+  const drills = drillConceptIds.flatMap((id) => GRAMMAR_PRACTICE_DRILLS[id] ?? []);
   const localizedDrills = JAPANESE_GRAMMAR_DRILLS[stageId];
   for (const [drillId, entry] of Object.entries(localizedDrills)) {
     const drill = drills.find((candidate) => candidate.id === drillId);
