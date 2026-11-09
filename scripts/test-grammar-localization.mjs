@@ -110,3 +110,70 @@ test("language changes are display-only and preserve canonical Korean responses"
   assert.doesNotMatch(read("../lib/grammar/exercises.ts"), /JAPANESE_GRAMMAR_/u);
   assert.doesNotMatch(read("../lib/grammar/feedback.ts"), /JAPANESE_GRAMMAR_/u);
 });
+
+
+test("Japanese course copy is written for Japanese learners with consistent Korean-grammar terminology", () => {
+  const first = JAPANESE_GRAMMAR_GUIDES["sentence-structure"];
+  const copula = JAPANESE_GRAMMAR_GUIDES["identify-with-copula"];
+  const polite = JAPANESE_GRAMMAR_GUIDES["polite-register"];
+  const topic = JAPANESE_GRAMMAR_GUIDES["introduce-topic"];
+  assert.match(first.introduction, /日本語/u);
+  assert.doesNotMatch(first.mistakes[0][0], /フランス語/u);
+  assert.doesNotMatch(copula.mistakes[1][0], /フランス語/u);
+  assert.match(polite.introduction, /ヘヨ体/u);
+  assert.match(polite.formula.explanation, /ハムニダ体/u);
+  assert.match(polite.formula.pattern, /語幹/u);
+  for (const example of polite.examples) {
+    assert.equal(example[1][0][1], "요を付ける前の活用形");
+  }
+  assert.match(topic.introduction, /日本語の「は」/u);
+  assert.equal(resolveGrammarText("polite-register", "Poli courant", "ja"), "ヘヨ体");
+  assert.equal(resolveGrammarText("polite-register", "Formel", "ja"), "ハムニダ体");
+  assert.equal(resolveGrammarText("polite-register", "Poli courant", "fr"), "Poli courant");
+});
+
+test("grammar feedback is varied and retains a rule for every correct and incorrect answer", () => {
+  const positive = Object.values(JAPANESE_GRAMMAR_CORRECT_FEEDBACK).flatMap(Object.values);
+  assert.equal(positive.length, 25);
+  assert.equal(new Set(positive).size, 25);
+  assert.equal(positive.filter((copy) => copy.startsWith("正解。")).length, 0);
+  for (const copy of positive) assert.match(copy, /[가-힣]/u);
+  const wrong = Object.values(JAPANESE_GRAMMAR_WRONG_FEEDBACK).flatMap((byDrill) =>
+    Object.values(byDrill).flatMap(Object.values),
+  );
+  assert.ok(wrong.length >= 55);
+  for (const copy of wrong) {
+    assert.ok(copy.length >= 25, copy);
+    assert.match(copy, /[가-힣]/u);
+  }
+  assert.match(JAPANESE_GRAMMAR_WRONG_FEEDBACK["polite-register"]["good-daily"]["좋습니다"], /ハムニダ体/u);
+  assert.match(JAPANESE_GRAMMAR_WRONG_FEEDBACK["demonstratives"]["this-bag"]["거기"], /「そこ」/u);
+});
+
+test("Japanese UI translates assembled labels, score and screen-reader descriptions without leaking French fragments", () => {
+  const examples = [
+    ["hub", "2 / 41 étapes", "2／41ステップ"],
+    ["hub", "ÉTAPE 03 · NIVEAU A0", "ステップ 03・A0レベル"],
+    ["hub", "ÉTAPE 04 · A0", "ステップ 04・A0"],
+    ["sentence-structure", "NIVEAU A0 · ÉTAPE 1", "A0レベル・ステップ 1"],
+    ["sentence-structure", "EXERCICE 1 / 5", "問題 1／5"],
+    ["sentence-structure", "3 réponses correctes sur 5.", "5問中3問正解"],
+    ["sentence-structure", "Explication de la leçon L’ordre de la phrase", "「文の語順」の解説"],
+    ["sentence-structure", "Termine d’abord les étapes requises pour ouvrir « L’ordre de la phrase ».", "「文の語順」を始めるには、前提のステップを完了してください。"],
+    ["sentence-structure", "Cette leçon avancée et ses exercices approfondis sont inclus dans K-App Premium.", "この応用レッスンと練習問題は、K-App Premiumで学べます。"],
+  ];
+  for (const [module, original, translated] of examples) {
+    assert.equal(resolveGrammarText(module, original, "ja"), translated);
+    assert.equal(resolveGrammarText(module, original, "fr"), original);
+  }
+  const lesson = read("../app/(tabs)/grammar/[stageId].tsx");
+  const hub = read("../app/(tabs)/grammar/index.tsx");
+  const modal = read("../components/grammar/GrammarLessonGuideModal.tsx");
+  const guide = read("../components/grammar/GrammarLessonGuide.tsx");
+  assert.match(lesson, /\{\x60NIVEAU \$\{stage\.status/u);
+  assert.match(lesson, /\{\x60\$\{scoreLabel\(session\.score\)\} sur/u);
+  assert.match(lesson, /response\.correct && !localizedLead/u);
+  assert.match(hub, /\{\x60\$\{completedStages\} \/ \$\{GRAMMAR_STAGE_IDS\.length\} étapes\x60\}/u);
+  assert.match(modal, /accessibilityLabel=\{translate\(\x60Explication de la leçon/u);
+  assert.match(guide, /accessibilityLabel=\{translate\(/u);
+});

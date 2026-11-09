@@ -18,6 +18,7 @@ import { AppBackButton } from "../../../components/ui/app-back-button";
 
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
+import { useVocabularyText } from "../../../lib/i18n/VocabularyTextContext";
 import { GrammarLessonGuideModal } from "../../../components/grammar/GrammarLessonGuideModal";
 import { isGrammarQuickGuideStage } from "../../../data/grammar/lessonGuides";
 import { getJapaneseGrammarFeedback } from "../../../data/localized/grammarFeedbackDisplay";
@@ -395,6 +396,7 @@ function EditorialNote({
 }
 
 export default function GrammarLessonScreen() {
+  const translate = useVocabularyText();
   const params = useLocalSearchParams<{
     stageId?: string | string[];
     theory?: string | string[];
@@ -691,7 +693,7 @@ export default function GrammarLessonScreen() {
           <View style={[styles.frame, { maxWidth: responsive.maxWidth }]}>
             <View style={styles.navRow}>
               <View style={styles.backButton}>
-                <AppBackButton accessibilityLabel="Retour au parcours Grammaire" />
+                <AppBackButton accessibilityLabel={translate("Retour au parcours Grammaire")} />
               </View>
               <AppText variant="caption" tone="soft">
                 {stage.number} / {GRAMMAR_STAGE_IDS.length}
@@ -708,8 +710,7 @@ export default function GrammarLessonScreen() {
                       : styles.accentText
                   }
                 >
-                  {stage.status === "pre-a1" ? "NIVEAU A0" : "NIVEAU A1"} ·
-                  ÉTAPE {stage.number}
+                  {`NIVEAU ${stage.status === "pre-a1" ? "A0" : "A1"} · ÉTAPE ${stage.number}`}
                 </AppText>
                 <StatusBadge
                   label={stage.access === "premium" ? "PREMIUM" : "GRATUIT"}
@@ -775,6 +776,7 @@ function GrammarLessonTheory({
   onOpenPremium: () => void;
 }) {
   const modalLayout = useGrammarModalLayout();
+  const translate = useVocabularyText();
   const { i18n } = useTranslation("grammar");
   const japanese = (i18n.resolvedLanguage ?? i18n.language).startsWith("ja");
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
@@ -955,8 +957,8 @@ function GrammarLessonTheory({
       {!isPremium && advancedForms.length > 0 ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Repères A2 Premium verrouillés. Ouvre l’offre Premium"
-          accessibilityHint="Ouvre l’offre Premium"
+          accessibilityLabel={translate("Repères A2 Premium verrouillés. Ouvre l’offre Premium")}
+          accessibilityHint={translate("Ouvre l’offre Premium")}
           onPress={onOpenPremium}
           style={({ pressed }) => [
             styles.advancedLockedCard,
@@ -995,6 +997,7 @@ function LessonOverview({
   onOpenExplanation: () => void;
   onStartExercises?: () => void;
 }) {
+  const translate = useVocabularyText();
   return (
     <BlurView intensity={55} tint="dark" style={styles.practiceLaunchCard}>
       <LinearGradient
@@ -1021,7 +1024,7 @@ function LessonOverview({
           />
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Revoir l’explication avant de commencer"
+            accessibilityLabel={translate("Revoir l’explication avant de commencer")}
             onPress={onOpenExplanation}
             style={({ pressed }) => [
               styles.reviewTheoryButton,
@@ -1055,6 +1058,7 @@ function PracticePanel({
   onContinue: () => void;
   onReviewExplanation: () => void;
 }) {
+  const translate = useVocabularyText();
   const question = session.questions[session.questionIndex];
   const response = session.responses.find(
     (item) => item.questionId === question.id,
@@ -1070,7 +1074,7 @@ function PracticePanel({
     <View style={styles.practiceStack}>
       <View style={styles.practiceMetaRow}>
         <AppText variant="sectionLabel" style={styles.accentText}>
-          EXERCICE {session.questionIndex + 1} / {session.questions.length}
+          {`EXERCICE ${session.questionIndex + 1} / ${session.questions.length}`}
         </AppText>
         <View style={styles.practiceMetaActions}>
           <AppText variant="caption" tone="soft">
@@ -1078,7 +1082,7 @@ function PracticePanel({
           </AppText>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Revoir l’explication sans quitter les exercices"
+            accessibilityLabel={translate("Revoir l’explication sans quitter les exercices")}
             onPress={onReviewExplanation}
             style={({ pressed }) => [
               styles.reviewTheoryButton,
@@ -1304,10 +1308,11 @@ function FeedbackCard({
   isLast: boolean;
 }) {
   const { i18n } = useTranslation("grammar");
+  const japanese = (i18n.resolvedLanguage ?? i18n.language).startsWith("ja");
   const teacherLead = response.correct
     ? getCorrectFeedbackLead(question)
     : getGrammarIncorrectFeedback(question, response.answer);
-  const localizedLead = (i18n.resolvedLanguage ?? i18n.language).startsWith("ja")
+  const localizedLead = japanese
     ? getJapaneseGrammarFeedback(question, response.answer, response.correct)
     : undefined;
 
@@ -1369,7 +1374,7 @@ function FeedbackCard({
           <AppText variant="bodyStrong">{answerLabel(question.answer)}</AppText>
         </View>
       ) : null}
-      {response.correct && (
+      {response.correct && !localizedLead && (
         question.stageId === "a1-validation" ||
         GRAMMAR_STAGE_IDS.slice(0, 14).includes(question.stageId)
       ) ? (
@@ -1440,7 +1445,7 @@ function LessonResult({
           {session.score}/{session.questions.length}
         </AppText>
         <AppText variant="sectionTitle">
-          {scoreLabel(session.score)} sur {session.questions.length}.
+          {`${scoreLabel(session.score)} sur ${session.questions.length}.`}
         </AppText>
         <AppText variant="bodySecondary" tone="muted">
           {passed
@@ -1558,7 +1563,7 @@ function LockedLesson({ stageId }: { stageId: GrammarStageId }) {
         Cette étape n’est pas encore accessible.
       </AppText>
       <AppText variant="bodySecondary" tone="muted">
-        Termine d’abord les étapes requises pour ouvrir « {stage.title} ».
+        {`Termine d’abord les étapes requises pour ouvrir « ${stage.title} ».`}
       </AppText>
       <PrimaryButton
         label="VOIR LE PARCOURS"
@@ -1584,8 +1589,7 @@ function PremiumLockedLesson({ stageId }: { stageId: GrammarStageId }) {
       />
       <AppText variant="sectionTitle">{stage.title}</AppText>
       <AppText variant="bodySecondary" tone="muted">
-        Cette leçon {stage.status === "a1" ? "A1" : "avancée"} et ses exercices
-        approfondis sont inclus dans K-App Premium.
+        {`Cette leçon ${stage.status === "a1" ? "A1" : "avancée"} et ses exercices approfondis sont inclus dans K-App Premium.`}
       </AppText>
       <PrimaryButton
         label="DÉCOUVRIR PREMIUM"
