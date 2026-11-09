@@ -40,6 +40,8 @@ export function resolveGrammarText(
   if (match) return `ステップ ${match[1]}・${match[2]}`;
   match = source.match(/^ÉTAPE (\d+)$/u);
   if (match) return `ステップ ${match[1]}`;
+  match = source.match(/^NIVEAU (A\d) · ÉTAPE (\d+)$/u);
+  if (match) return `${match[1]}レベル・ステップ ${match[2]}`;
   match = source.match(/^(\d+) \/ (\d+) étapes$/u);
   if (match) return `${match[1]}／${match[2]}ステップ`;
   match = source.match(/^(\d+) étapes · progression A0 → A1$/u);
@@ -53,6 +55,20 @@ export function resolveGrammarText(
   if (match) return `${match[2]}問中${match[1]}問正解`;
   match = source.match(/^(\d+) réponses? correctes?$/u);
   if (match) return `${match[1]}問正解`;
+  match = source.match(/^Explication de la leçon (.+)$/u);
+  if (match) {
+    const title = exact(module, match[1]) ?? exact("hub", match[1]) ?? match[1];
+    return `「${title}」の解説`;
+  }
+  match = source.match(/^Termine d’abord les étapes requises pour ouvrir « (.+) »\.$/u);
+  if (match) {
+    const title = exact(module, match[1]) ?? exact("hub", match[1]) ?? match[1];
+    return `「${title}」を始めるには、前提のステップを完了してください。`;
+  }
+  match = source.match(/^Cette leçon (A1|avancée) et ses exercices approfondis sont inclus dans K-App Premium\.$/u);
+  if (match) return match[1] === "A1"
+    ? "このA1レッスンと練習問題は、K-App Premiumで学べます。"
+    : "この応用レッスンと練習問題は、K-App Premiumで学べます。";
 
   if (source.startsWith("Requis : ")) {
     const stage = source.slice("Requis : ".length);
