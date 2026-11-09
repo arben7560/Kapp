@@ -17,7 +17,16 @@ for (const locale of ['fr', 'ja']) {
   assert.deepEqual(Object.keys(resources[locale]).sort(), [...manifest.namespaces].sort(), `${locale}: bundled namespaces`);
   for (const namespace of manifest.namespaces) {
     const file = JSON.parse(readFileSync(new URL(`${namespace}.json`, directory), 'utf8'));
-    assert.deepEqual(resources[locale][namespace], file, `${locale}/${namespace}: bundle differs from disk`);
+    // Migrated learning modules append a display-only content registry at bundling.
+    // The namespace JSON itself must still match the on-disk source catalogue.
+    const bundled = resources[locale][namespace];
+    if (["vocabulary", "counting", "classifiers", "grammar"].includes(namespace)) {
+      const { content, ...staticMessages } = bundled;
+      assert.deepEqual(staticMessages, file, `${locale}/${namespace}: source catalogue differs from disk`);
+      assert.deepEqual(content, localizedContent[locale][namespace], `${locale}/${namespace}: content catalogue differs`);
+    } else {
+      assert.deepEqual(bundled, file, `${locale}/${namespace}: bundle differs from disk`);
+    }
     if (!Object.keys(file).length && !manifest.deferredNamespaces.includes(namespace)) {
       errors.push(`${locale}/${namespace}: required namespace is empty`);
     }
@@ -25,13 +34,17 @@ for (const locale of ['fr', 'ja']) {
   assert.deepEqual(Object.keys(localizedContent[locale]).sort(), [...CONTENT_MODULES].sort());
 }
 for (const namespace of manifest.namespaces) {
-  errors.push(...validateCataloguePair(resources.fr[namespace], resources.ja[namespace])
+  errors.push(...validateCataloguePair(resources.fr[namespace], resources.ja[namespace],
+    ["vocabulary", "counting", "classifiers", "grammar"].includes(namespace)
+      ? { koreanSegments: "display-adaptation" }
+      : {},
+  )
     .map((error) => `${namespace}/${error}`));
 }
 for (const module of CONTENT_MODULES) {
   errors.push(...validateCataloguePair(
     localizedContent.fr[module], localizedContent.ja[module],
-    module === 'hangul' || module === 'vocabulary' || module === 'counting' || module === 'classifiers' ? { koreanSegments: 'display-adaptation' } : {},
+    module === 'hangul' || module === 'vocabulary' || module === 'counting' || module === 'classifiers' || module === 'grammar' ? { koreanSegments: 'display-adaptation' } : {},
   )
     .map((error) => `content/${module}/${error}`));
 }
