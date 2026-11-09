@@ -362,7 +362,7 @@ test("stages 16–20 have Japanese-first guides and complete two-concept countin
     assert.equal(resolveGrammarText(id, GRAMMAR_STAGE_BY_ID[id].title, "fr"), GRAMMAR_STAGE_BY_ID[id].title);
   }
   assert.match(JAPANESE_GRAMMAR_GUIDES["request-quantity"].introduction, /助数詞/u);
-  assert.match(JAPANESE_GRAMMAR_GUIDES["sino-number-contexts"].mainRule, /公|漢数詞/u);
+  assert.match(JAPANESE_GRAMMAR_GUIDES["sino-number-contexts"].mainRule, /공・일・공/u);
   assert.match(JAPANESE_GRAMMAR_GUIDES["coordinate-items"].introduction, /日本語の「と」/u);
   assert.match(JAPANESE_GRAMMAR_GUIDES["choose-alternative"].mainRule, /아니면/u);
   const both = [
@@ -410,4 +410,23 @@ test("new grammar stage 16–20 copy preserves Korean options and never adds Fre
   for (const label of ["PRIX À LIRE", "SUITE À COMPLÉTER", "LIGNE À IDENTIFIER", "MOIS À IDENTIFIER", "CHIFFRES À LIRE", "QUESTION À EXPRIMER"]) {
     assert.notEqual(resolveGrammarText("sino-number-contexts", label, "ja"), label);
   }
+});
+
+test("stage 20 renders all French lexical hints in Japanese without modifying the canonical exercise", () => {
+  const ids = ["coffee-or-tea-vowel", "bread-or-cake-batchim", "bus-or-subway-choice", "water-or-tea-choice", "two-complete-questions"];
+  const canonical = GRAMMAR_PRACTICE_DRILLS["alternative-ina-animyeon"];
+  const seen = new Set();
+  for (const id of ids) {
+    const drill = canonical.find((item) => item.id === id);
+    assert.ok(drill?.vocabulary?.length, id);
+    const original = drill.vocabulary.map((hint) => ({ ...hint }));
+    const local = getJapaneseGrammarVocabulary({stageId:"choose-alternative",vocabulary:drill.vocabulary});
+    for (const hint of local) {
+      assert.ok(/[ぁ-ゔァ-ヴー一-龠]/u.test(hint.french), id+" / "+hint.korean+" / "+hint.french);
+      assert.doesNotMatch(hint.french, /[À-ÿ]|[a-z]/u);
+      seen.add(hint.korean);
+    }
+    assert.deepEqual(drill.vocabulary, original);
+  }
+  assert.ok(seen.size >= 10);
 });
