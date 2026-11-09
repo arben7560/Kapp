@@ -1,4 +1,4 @@
-/** Japanese display-only copy for grammar stages 1–5.
+/** Japanese display-only copy for grammar stages 1–15.
  * The canonical lesson guides, Korean examples and answer keys are not changed. */
 export const JAPANESE_GRAMMAR_GUIDES = {
   "sentence-structure": {
