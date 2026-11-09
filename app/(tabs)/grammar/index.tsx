@@ -27,6 +27,7 @@ import {
 
 import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
+import { useVocabularyText } from "../../../lib/i18n/VocabularyTextContext";
 import { AppBackButton } from "../../../components/ui/app-back-button";
 import { HubModuleAccents, SeoulMidnightGlass } from "../../../constants/theme";
 import {
@@ -89,6 +90,7 @@ function prerequisiteLabel(prerequisite: GrammarPrerequisite): string {
 }
 
 export default function GrammarHubScreen() {
+  const translate = useVocabularyText();
   const { progress, setTrack } = useStore();
   const { hasPremiumAccess: isPremium } = usePaywall();
   const { width, height } = useWindowDimensions();
@@ -224,7 +226,7 @@ export default function GrammarHubScreen() {
                 isLandscape && styles.navHeaderLandscape,
               ]}
             >
-              <AppBackButton accessibilityLabel="Retour à l’accueil" />
+              <AppBackButton accessibilityLabel={translate("Retour à l’accueil")} />
             </View>
 
             <GrammarHero
@@ -418,7 +420,7 @@ function GrammarHero({
           </AppText>
         </View>
         <AppText variant="caption" style={styles.heroStageCount}>
-          {completedStages} / {GRAMMAR_STAGE_IDS.length} étapes
+          {`${completedStages} / ${GRAMMAR_STAGE_IDS.length} étapes`}
         </AppText>
       </View>
     </View>
@@ -520,7 +522,7 @@ function FeaturedGrammarCard({
         </View>
 
         <AppText variant="caption" style={styles.stageMeta}>
-          ÉTAPE {String(stage.number).padStart(2, "0")} · NIVEAU {level}
+          {`ÉTAPE ${String(stage.number).padStart(2, "0")} · NIVEAU ${level}`}
         </AppText>
         <AppText variant="featureTitle" style={styles.featuredTitle}>
           {stage.title}
@@ -561,10 +563,11 @@ function GrammarStartingPointCard({
   landscape: boolean;
   onPress: () => void;
 }) {
+  const translate = useVocabularyText();
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Commencer par une phrase simple"
+      accessibilityLabel={translate("Commencer par une phrase simple")}
       onPress={onPress}
       style={({ pressed }) => [
         styles.startingPointWrap,
@@ -694,7 +697,7 @@ function GrammarStageCard({
         <View style={styles.stageTopRow}>
           <View style={styles.stageIdentity}>
             <AppText variant="sectionLabel" style={styles.stageIndex}>
-              ÉTAPE {String(stage.number).padStart(2, "0")} · {level}
+              {`ÉTAPE ${String(stage.number).padStart(2, "0")} · ${level}`}
             </AppText>
             {isPremiumStage ? (
               <AppText variant="caption" style={styles.premiumMicro}>
