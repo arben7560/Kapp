@@ -5,6 +5,7 @@ import { DEFAULT_LOCALE, isAppLocale } from "./config";
 import { getContentLocalizationScope } from "./contentLocalizationScope";
 import { resolveClassifierText } from "./classifierText";
 import { resolveCountingText } from "./countingText";
+import { resolveGrammarText } from "./grammarText";
 import { resolveVocabularyText } from "./vocabularyText";
 import { VocabularyTextContext } from "./VocabularyTextContext";
 
@@ -48,7 +49,9 @@ export function ContentLocalizationProvider({
           ? resolveVocabularyText(scope.module, core, locale, i18n)
           : scope.namespace === "counting"
             ? resolveCountingText(scope.module, core, locale, i18n)
-            : resolveClassifierText(scope.module, core, locale, i18n);
+            : scope.namespace === "classifiers"
+              ? resolveClassifierText(scope.module, core, locale, i18n)
+              : resolveGrammarText(scope.module, core, locale, i18n);
 
       return `${leading}${localized}${trailing}`;
     },

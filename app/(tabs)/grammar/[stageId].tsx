@@ -3,6 +3,7 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   ImageBackground,
   Pressable,
@@ -19,6 +20,7 @@ import { useStore } from "../../../_store";
 import { AppText } from "../../../components/app-text";
 import { GrammarLessonGuideModal } from "../../../components/grammar/GrammarLessonGuideModal";
 import { isGrammarQuickGuideStage } from "../../../data/grammar/lessonGuides";
+import { getJapaneseGrammarFeedback } from "../../../data/localized/grammarFeedbackDisplay";
 import { useGrammarModalLayout } from "../../../components/grammar/useGrammarModalLayout";
 import { StatusBadge } from "../../../components/ui/status-badge";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
@@ -773,6 +775,8 @@ function GrammarLessonTheory({
   onOpenPremium: () => void;
 }) {
   const modalLayout = useGrammarModalLayout();
+  const { i18n } = useTranslation("grammar");
+  const japanese = (i18n.resolvedLanguage ?? i18n.language).startsWith("ja");
   const stage = GRAMMAR_STAGE_BY_ID[stageId];
   const concepts = stage.conceptIds
     .map((conceptId) =>
@@ -843,7 +847,7 @@ function GrammarLessonTheory({
                 />
                 <AppText
                   variant="koreanPrimary"
-                  script="korean"
+                  script={japanese ? "japanese" : "korean"}
                   style={styles.accentText}
                 >
                   {concept.form}
@@ -1299,9 +1303,13 @@ function FeedbackCard({
   onContinue: () => void;
   isLast: boolean;
 }) {
+  const { i18n } = useTranslation("grammar");
   const teacherLead = response.correct
     ? getCorrectFeedbackLead(question)
     : getGrammarIncorrectFeedback(question, response.answer);
+  const localizedLead = (i18n.resolvedLanguage ?? i18n.language).startsWith("ja")
+    ? getJapaneseGrammarFeedback(question, response.answer, response.correct)
+    : undefined;
 
   return (
     <BlurView
@@ -1336,7 +1344,7 @@ function FeedbackCard({
             ? "TON CHOIX EXPLIQUÉ"
             : "TON CHOIX EXPLIQUÉ"}
       </AppText>
-      <AppText variant="bodyStrong">{teacherLead}</AppText>
+      <AppText variant="bodyStrong">{localizedLead ?? teacherLead}</AppText>
       {!response.correct ? (
         <View style={styles.correctAnswerBox}>
           <AppText variant="caption" tone="soft">
@@ -1387,6 +1395,8 @@ function LessonResult({
   onRetry: () => void;
   onOpenStage: (stageId: GrammarStageId) => void;
 }) {
+  const { i18n } = useTranslation("grammar");
+  const japanese = (i18n.resolvedLanguage ?? i18n.language).startsWith("ja");
   const stage = GRAMMAR_STAGE_BY_ID[session.stageId];
   const stageIndex = GRAMMAR_STAGE_IDS.indexOf(session.stageId);
   const nextStageId = GRAMMAR_STAGE_IDS[stageIndex + 1];
@@ -1504,7 +1514,8 @@ function LessonResult({
                   {answerLabel(question.answer)}
                 </AppText>
                 <AppText variant="bodySecondary" tone="muted">
-                  {getGrammarIncorrectFeedback(question, response.answer)}
+                  {(japanese ? getJapaneseGrammarFeedback(question, response.answer, false) : undefined)
+                    ?? getGrammarIncorrectFeedback(question, response.answer)}
                 </AppText>
               </View>
             );

@@ -1,6 +1,6 @@
 /** A localized display scope; route identities never depend on the UI language. */
 export type ContentLocalizationScope = Readonly<{
-  namespace: "vocabulary" | "counting" | "classifiers";
+  namespace: "vocabulary" | "counting" | "classifiers" | "grammar";
   module: string;
 }>;
 
@@ -17,6 +17,7 @@ export function getContentLocalizationScope(
     { route: "voc", namespace: "vocabulary" },
     { route: "comptage", namespace: "counting" },
     { route: "classificateur", namespace: "classifiers" },
+    { route: "grammar", namespace: "grammar" },
   ] as const;
 
   for (const root of roots) {

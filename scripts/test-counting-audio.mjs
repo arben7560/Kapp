@@ -71,7 +71,7 @@ test("chaque dialogue et chaque carte Comptage référence son MP3 intégré", (
 
   // Only lesson-referenced MP3 files form the runtime contract. The asset
   // directory can legitimately contain additional unused recordings.
-  assert.equal(requiredAssets.length, 243); // 24 scenes: 96 dialogue clips + 147 expression clips.
+  assert.equal(requiredAssets.length, 246); // 24 scenes: 96 dialogue clips + 150 expression clips.
   assert.equal(new Set(requiredAssets).size, requiredAssets.length);
   const missing = requiredAssets.filter((path) => !assets.includes(path));
   assert.deepEqual(missing, [], "Lesson MP3 files missing from the bundled assets");
