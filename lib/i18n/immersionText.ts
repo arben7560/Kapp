@@ -7,10 +7,97 @@ export function resolveImmersionText(module: string, source: string, locale: App
   if (locale === "fr") return source;
   const exact = (text: string): string | undefined => {
     const resolved = instance.getResource(locale, "immersion", "content." + immersionCopyId(module, text) + ".text");
-    return typeof resolved === "string" && resolved.trim() ? resolved : undefined;
+    if (typeof resolved === "string" && resolved.trim()) return resolved;
+    // Reuse common presentation strings already translated for Café, but only as a Métro fallback.
+    if (module === "metro") {
+      const shared = instance.getResource(locale, "immersion", "content." + immersionCopyId("cafe", text) + ".text");
+      if (typeof shared === "string" && shared.trim()) return shared;
+    }
+    return undefined;
   };
   const direct = exact(source);
   if (direct) return direct;
+  // Metro voice feedback is assembled at runtime from selected intents, suggested
+  // answers and incremental hints. Translate presentation fragments only; never
+  // alter the evaluator's original French feedback or Korean transcript.
+  if (module === "metro") {
+    const translatePart = (part: string): string => {
+      const translated = resolveImmersionText(module, part, locale, instance);
+      if (translated !== part) return translated;
+      if (!part.endsWith(".")) {
+        const punctuated = part + ".";
+        const retry = resolveImmersionText(module, punctuated, locale, instance);
+        if (retry !== punctuated) return retry;
+      }
+      return part;
+    };
+
+    const answerSeparator = " — réponses proposées : ";
+    const answerIndex = source.lastIndexOf(answerSeparator);
+    if (answerIndex >= 0) {
+      const feedback = source.slice(0, answerIndex);
+      const options = source.slice(answerIndex + answerSeparator.length)
+        .replace(/[.]$/u, "")
+        .split(" · ")
+        .map((option) => {
+          const choice = option.match(/^« (.+) »$/u);
+          return choice ? "「" + translatePart(choice[1]) + "」" : translatePart(option);
+        })
+        .join("・");
+      return translatePart(feedback) + " — 選べる返答：" + options;
+    }
+
+    const guidanceSeparator = " — ";
+    const guidanceIndex = source.lastIndexOf(guidanceSeparator);
+    if (guidanceIndex >= 0) {
+      return translatePart(source.slice(0, guidanceIndex)) + " — " +
+        translatePart(source.slice(guidanceIndex + guidanceSeparator.length));
+    }
+
+    let metroMatch = source.match(/^Ici, les choix proposés te permettent de (.+)\.$/u);
+    if (metroMatch) {
+      const options = metroMatch[1].split(", ").map(translatePart).join("、");
+      return "この場面では、次の行動から選べます：" + options + "。";
+    }
+
+    metroMatch = source.match(/^J’ai compris : (.+?)\. (Ici, .+)$/u);
+    if (metroMatch) {
+      const rest = metroMatch[2];
+      const expectation = rest.match(
+        /^(?:Ici, le plus naturel est de demander simplement comment aller vers Gangnam depuis Hongik University\.|Ici, reste simplement sur ce que tu peux répondre à cette étape\.|Ici, les choix proposés te permettent de [^.]+\.)/u,
+      );
+      if (expectation) {
+        const guidance = rest.slice(expectation[0].length).trim();
+        return "「" + translatePart(metroMatch[1]) + "」という意図が伝わりました。" +
+          translatePart(expectation[0]) + (guidance ? " " + translatePart(guidance) : "");
+      }
+    }
+
+    const expectationIndex = source.indexOf(" Ici, ");
+    if (expectationIndex >= 0) {
+      const preceding = source.slice(0, expectationIndex);
+      const expectation = source.slice(expectationIndex + 1);
+      const translatedPreceding = translatePart(preceding);
+      const translatedExpectation = translatePart(expectation);
+      if (translatedPreceding !== preceding || translatedExpectation !== expectation) {
+        return translatedPreceding + " " + translatedExpectation;
+      }
+    }
+
+    metroMatch = source.match(/^Ta phrase peut vouloir dire plusieurs choses ici\. (Ici, .+)$/u);
+    if (metroMatch) return "この場面では複数の意味に取れる返答です。" + translatePart(metroMatch[1]);
+
+    metroMatch = source.match(/^Tu as cité plusieurs lignes \((.+)\)\. Pour aller vers Gangnam dans cette scène, c’est la ligne 2\.$/u);
+    if (metroMatch) return "「" + metroMatch[1].replaceAll(" et ", "」「") +
+      "」という複数の路線を挙げていますが、この場面で江南へ向かうのは２号線です。";
+
+    metroMatch = source.match(/^Tu as cité la ligne (\d+)\. Pour aller vers Gangnam dans cette scène, c’est la ligne 2 : demande où prendre « 2호선 » vers Gangnam\.$/u);
+    if (metroMatch) return metroMatch[1] + "号線と言いましたが、この場面で江南へ向かうのは２号線です。「2호선」でどちらに乗るか尋ねましょう。";
+
+    metroMatch = source.match(/^Ta demande semble bien concerner un trajet, mais tu as donné (.+?) au lieu de Gangnam\. Ici, l’erreur porte sur la destination, pas sur la structure de ta question\.$/u);
+    if (metroMatch) return "移動について尋ねていることは伝わりますが、江南ではなく「" +
+      metroMatch[1] + "」と言っています。文の形ではなく目的地が違っています。";
+  }
   let m = source.match(/^(\d+) situations à pratiquer$/u);
   if (m) return m[1] + "つの場面を練習";
   m = source.match(/^(\d+) tentatives avec le même diagnostic$/u);
