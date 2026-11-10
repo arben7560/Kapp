@@ -20,7 +20,7 @@ for (const locale of ['fr', 'ja']) {
     // Migrated learning modules append a display-only content registry at bundling.
     // The namespace JSON itself must still match the on-disk source catalogue.
     const bundled = resources[locale][namespace];
-    if (["vocabulary", "counting", "classifiers", "grammar"].includes(namespace)) {
+    if (["vocabulary", "counting", "classifiers", "grammar", "immersion"].includes(namespace)) {
       const { content, ...staticMessages } = bundled;
       assert.deepEqual(staticMessages, file, `${locale}/${namespace}: source catalogue differs from disk`);
       assert.deepEqual(content, localizedContent[locale][namespace], `${locale}/${namespace}: content catalogue differs`);
@@ -35,7 +35,7 @@ for (const locale of ['fr', 'ja']) {
 }
 for (const namespace of manifest.namespaces) {
   errors.push(...validateCataloguePair(resources.fr[namespace], resources.ja[namespace],
-    ["vocabulary", "counting", "classifiers", "grammar"].includes(namespace)
+    ["vocabulary", "counting", "classifiers", "grammar", "immersion"].includes(namespace)
       ? { koreanSegments: "display-adaptation" }
       : {},
   )
@@ -44,7 +44,7 @@ for (const namespace of manifest.namespaces) {
 for (const module of CONTENT_MODULES) {
   errors.push(...validateCataloguePair(
     localizedContent.fr[module], localizedContent.ja[module],
-    module === 'hangul' || module === 'vocabulary' || module === 'counting' || module === 'classifiers' || module === 'grammar' ? { koreanSegments: 'display-adaptation' } : {},
+    module === 'hangul' || module === 'vocabulary' || module === 'counting' || module === 'classifiers' || module === 'grammar' || module === 'immersion' ? { koreanSegments: 'display-adaptation' } : {},
   )
     .map((error) => `content/${module}/${error}`));
 }
