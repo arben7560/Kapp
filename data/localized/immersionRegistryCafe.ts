@@ -385,7 +385,12 @@ export const CAFE_IMMERSION_COPY: Readonly<Record<string, string>> = {
   "le latte": "ラテ",
   "le cheesecake": "チーズケーキ",
   "demande une boisson": "飲み物を注文する",
-  "demande un dessert": "デザートを注文する"
+  "demande un dessert": "デザートを注文する",
+  "Ta réponse peut correspondre à plusieurs choix. Garde une seule intention.": "返答が複数の選択肢に当てはまる可能性があります。伝えたいことを一つに絞りましょう。",
+  "Demander où sont les toilettes": "トイレの場所を尋ねる",
+  "Demander un numéro de sortie": "出口番号を尋ねる",
+  "Reconnaissance vocale indisponible": "音声認識を利用できません",
+  "La reconnaissance vocale n’est pas disponible dans Expo Go. Utilisez un Development Build pour tester cette fonctionnalité.": "Expo Goでは音声認識を利用できません。この機能を試すには開発用ビルドを使用してください。"
 };
 
 export function immersionCopyId(module: string, sourceText: string): string {
