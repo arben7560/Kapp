@@ -1065,22 +1065,22 @@ test("Grammar hub final: all six dynamic chapter headers and all 41 counters are
   for (const chapter of GRAMMAR_CHAPTERS) {
     const number=String(chapter.number).padStart(2,"0");
     const title=assertJapaneseHubCopy(
-      \`CHAPITRE \${number} · \${chapter.title}\`,"chapter "+chapter.id);
+      `CHAPITRE ${number} · ${chapter.title}`,"chapter "+chapter.id);
     assert.match(title,new RegExp("^第"+chapter.number+"章"));
     assertJapaneseHubCopy(
-      \`\${chapter.stageIds.length} étapes · progression A0 → A1\`,
+      `${chapter.stageIds.length} étapes · progression A0 → A1`,
       "chapter progression "+chapter.id);
     assertJapaneseHubCopy(chapter.title,"chapter name "+chapter.id);
   }
   for(let count=0; count<=total;count++) {
-    assertJapaneseHubCopy(\`\${count} / \${total} étapes\`,"completion "+count);
+    assertJapaneseHubCopy(`${count} / ${total} étapes`,"completion "+count);
   }
   for (const stage of Object.values(GRAMMAR_STAGE_BY_ID)) {
     const number=String(stage.number).padStart(2,"0");
     const level=stage.status==="pre-a1"?"A0":"A1";
-    assertJapaneseHubCopy(\`ÉTAPE \${number} · NIVEAU \${level}\`,
+    assertJapaneseHubCopy(`ÉTAPE ${number} · NIVEAU ${level}`,
       "featured step "+stage.id);
-    assertJapaneseHubCopy(\`ÉTAPE \${number} · \${level}\`,
+    assertJapaneseHubCopy(`ÉTAPE ${number} · ${level}`,
       "stage step "+stage.id);
   }
 });
