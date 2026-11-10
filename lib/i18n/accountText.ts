@@ -43,7 +43,20 @@ export function resolveAccountText(
   const confirmation = text.match(/^Un lien a été envoyé à (.+)\.$/u);
   if (confirmation) {
     const template = copy?.dialogs?.[accountCopyId("Un lien a été envoyé à {{email}}.")];
-    if (template) return leading + template.replace("{{email}}", confirmation[1]) + trailing;
+    const recipient = confirmation[1] === "votre adresse"
+      ? resolveAccountText(confirmation[1], locale, instance)
+      : confirmation[1];
+    if (template) return leading + template.replace("{{email}}", recipient) + trailing;
+  }
+
+  // Multiple sign-in identities can appear together (e.g. Google + email).
+  // Translate each provider description without changing the identity values.
+  if (text.includes(" • ")) {
+    const parts = text.split(" • ");
+    const translated = parts.map((part) => resolveAccountText(part, locale, instance));
+    if (translated.some((part, index) => part !== parts[index])) {
+      return leading + translated.join(" • ") + trailing;
+    }
   }
   return source;
 }
