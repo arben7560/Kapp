@@ -108,7 +108,12 @@ const JAPANESE_GLOSSES: Readonly<Record<string, Readonly<Record<string, string>>
 export function getJapaneseGrammarVocabulary(
   question: GrammarPracticeQuestion,
 ): GrammarPracticeQuestion["vocabulary"] {
-  const lexicon = JAPANESE_GLOSSES[question.stageId];
+  // A1 final review reuses drills from all 40 lessons. Their French
+  // vocabulary hints must still appear in Japanese for every attempt.
+  // This changes display glosses only, never Korean text or evaluation.
+  const lexicon = question.stageId === "a1-validation"
+    ? Object.assign({}, ...Object.values(JAPANESE_GLOSSES))
+    : JAPANESE_GLOSSES[question.stageId];
   if (!lexicon || !question.vocabulary) return question.vocabulary;
   return question.vocabulary.map((hint) => ({
     ...hint,
