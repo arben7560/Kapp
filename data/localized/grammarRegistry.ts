@@ -825,6 +825,14 @@ export const GRAMMAR_COPY_BY_MODULE: Record<string, Record<string, string>> = {
   hub: {
     ...SHARED_COPY,
     "Commencer par une phrase simple": "簡単な文から始める",
+    // Hub-only labels: concept forms are shown in the original Korean, but
+    // French metalinguistic descriptions and Latin N/V placeholders are not.
+    "prédicat final ; sujet souvent omis": "述語は文末・主語は省略できる",
+    "N에 있어요": "名詞＋에 있어요",
+    "N 주세요": "名詞＋주세요",
+    "V-아/어 주세요": "動詞＋아/어 주세요",
+    // The only content prerequisite currently referenced by grammar stages.
+    "Pont après le Hangul": "ハングル学習後のステップ",
   },
 };
 

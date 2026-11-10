@@ -17,6 +17,7 @@ const { getJapaneseGrammarVocabulary } = await import("../data/localized/grammar
 const { GRAMMAR_LESSON_GUIDES } = await import("../data/grammar/lessonGuides.ts");
 const { GRAMMAR_PRACTICE_DRILLS } = await import("../data/grammar/practiceDrills.ts");
 const { GRAMMAR_STAGE_BY_ID } = await import("../data/grammar/stages.ts");
+const { GRAMMAR_CHAPTERS, GRAMMAR_CONCEPTS, CONTENT_REFS } = await import("../data/grammar/index.ts");
 const { buildGrammarPracticeQuestions, areGrammarAnswersEqual } = await import("../lib/grammar/exercises.ts");
 const { A1_REVIEW_SLOTS_JAPANESE, A1_REVIEW_COMPOSED_JAPANESE,
   A1_REVIEW_HONORIFIC_JAPANESE, getJapaneseA1ReviewFeedback } =
@@ -991,4 +992,142 @@ test("41: feedback distinguishes Japanese-native honorific nuances and review or
   }
   assert.doesNotMatch(read("../lib/grammar/exercises.ts"),/JAPANESE_GRAMMAR_/u);
   assert.doesNotMatch(read("../lib/grammar/feedback.ts"),/JAPANESE_GRAMMAR_/u);
+});
+
+
+const GRAMMAR_HUB_STATIC_LABELS = [
+  "PARCOURS · GRAMMAIRE",
+  "Grammaire",
+  "Construis des phrases naturelles, étape par étape.",
+  "À CONTINUER",
+  "PROCHAINE ÉTAPE",
+  "PRÉREQUIS",
+  "ACCÈS ACTIF",
+  "PREMIUM",
+  "GRATUIT",
+  "À DÉBLOQUER",
+  "À VENIR",
+  "MAÎTRISÉE",
+  "TERMINÉE",
+  "EN COURS",
+  "DISPONIBLE",
+  "DÉBLOQUER PREMIUM",
+  "PRÉREQUIS À TERMINER",
+  "REPRENDRE LA LEÇON",
+  "COMMENCER LA LEÇON",
+  "POUR BIEN COMMENCER",
+  "Commencer par une phrase simple",
+  "Avant d’étudier la grammaire, découvre d’abord la structure de la phrase coréenne.",
+  "Inclus avec K-App Premium",
+  "Retour à l’accueil",
+  "Pont après le Hangul",
+];
+
+function assertJapaneseHubCopy(source, context) {
+  const actual = resolveGrammarText("hub", source, "ja");
+  const french = resolveGrammarText("hub", source, "fr");
+  assert.equal(french, source, "FR should keep the canonical source: " + context);
+  // Product name, language level and original Korean examples are allowed.
+  const prose = actual.replaceAll("K-App Premium", "").replace(/\bA[01]\b/gu, "");
+  assert.doesNotMatch(prose, /[A-Za-zÀ-ÿ]/u,
+    "French/Latin prose leaked in JA hub: " + context + " / " + source + " => " + actual);
+  if (/[A-Za-zÀ-ÿ]/u.test(source) &&
+    !/^A[01](?:\s*→\s*A[01])?$/u.test(source)) {
+    assert.notEqual(actual, source, "Missing Japanese localization: " + context + " / " + source);
+  }
+  return actual;
+}
+
+test("Grammar hub final: static visual labels, CTAs, statuses and accessibility are fully Japanese", () => {
+  assert.equal(getContentLocalizationScope("/grammar").module, "hub");
+  assert.equal(getContentLocalizationScope("/grammar/index").module, "hub");
+  for (const source of GRAMMAR_HUB_STATIC_LABELS) assertJapaneseHubCopy(source, "hub label");
+  assert.match(assertJapaneseHubCopy("Pont après le Hangul", "Hangul prerequisite"), /ハングル/u);
+  assert.match(assertJapaneseHubCopy("Commencer par une phrase simple", "accessibility"),
+    /簡単な文/u);
+
+  const screen=read("../app/(tabs)/grammar/index.tsx");
+  const layout=read("../app/(tabs)/grammar/_layout.tsx");
+  const text=read("../components/app-text.tsx");
+  assert.match(layout, /ContentLocalizationProvider pathname=\{pathname\}/u);
+  assert.match(screen, /useVocabularyText\(\)/u);
+  assert.match(screen, /accessibilityLabel=\{translate\("Retour à l’accueil"\)\}/u);
+  assert.match(screen, /accessibilityLabel=\{translate\("Commencer par une phrase simple"\)\}/u);
+  assert.match(text, /typeof child === "string" && vocabularyText \? vocabularyText\(child\)/u);
+  assert.match(screen, /\.map\(\(form\) => translate\(form\)\)/u,
+    "Each grammar concept notation must be localized BEFORE concatenation.");
+});
+
+test("Grammar hub final: all six dynamic chapter headers and all 41 counters are Japanese", () => {
+  assert.equal(GRAMMAR_CHAPTERS.length,6);
+  const total = Object.keys(GRAMMAR_STAGE_BY_ID).length;
+  assert.equal(total, 41);
+  for (const chapter of GRAMMAR_CHAPTERS) {
+    const number=String(chapter.number).padStart(2,"0");
+    const title=assertJapaneseHubCopy(
+      `CHAPITRE ${number} · ${chapter.title}`,"chapter "+chapter.id);
+    assert.match(title,new RegExp("^第"+chapter.number+"章"));
+    assertJapaneseHubCopy(
+      `${chapter.stageIds.length} étapes · progression A0 → A1`,
+      "chapter progression "+chapter.id);
+    assertJapaneseHubCopy(chapter.title,"chapter name "+chapter.id);
+  }
+  for(let count=0; count<=total;count++) {
+    assertJapaneseHubCopy(`${count} / ${total} étapes`,"completion "+count);
+  }
+  for (const stage of Object.values(GRAMMAR_STAGE_BY_ID)) {
+    const number=String(stage.number).padStart(2,"0");
+    const level=stage.status==="pre-a1"?"A0":"A1";
+    assertJapaneseHubCopy(`ÉTAPE ${number} · NIVEAU ${level}`,
+      "featured step "+stage.id);
+    assertJapaneseHubCopy(`ÉTAPE ${number} · ${level}`,
+      "stage step "+stage.id);
+  }
+});
+
+test("Grammar hub final: all 41 stage cards, Korean grammar notations and prerequisite variants", () => {
+  let cards=0,forms=0;
+  const byConcept=new Map(GRAMMAR_CONCEPTS.map((concept)=>[concept.id,concept]));
+  for(const stage of Object.values(GRAMMAR_STAGE_BY_ID)) {
+    cards++;
+    assertJapaneseHubCopy(stage.title, "stage title "+stage.id);
+    assertJapaneseHubCopy(stage.communicativeGoal,"stage goal "+stage.id);
+    const concepts=stage.conceptIds.slice(0,3).map((id)=>byConcept.get(id)?.form)
+      .filter((value)=>typeof value==="string" && value.length>0);
+    const original=concepts.join(" · ");
+    const localized=concepts.map((form)=>assertJapaneseHubCopy(form,
+      "stage grammar form "+stage.id)).join(" · ");
+    if (original) {
+      forms++;
+      const remainingLatin=localized.replace(/\bA[01]\b/gu,"");
+      assert.doesNotMatch(remainingLatin,/[A-Za-zÀ-ÿ]/u,
+        "French metalinguistic copy: "+stage.id+" / "+localized);
+      // In FR the original forms are not modified.
+      assert.equal(concepts.join(" · "),original);
+    }
+    assertJapaneseHubCopy("Ordre conseillé : après "+stage.title,
+      "recommended stage title "+stage.id);
+    assertJapaneseHubCopy("Requis : "+stage.title,
+      "required stage title "+stage.id);
+  }
+  assert.equal(cards,41);
+  assert.equal(forms,41);
+  const content=CONTENT_REFS.find((item)=>item.id==="hangul:bridge");
+  assert.ok(content);
+  assertJapaneseHubCopy("Ordre conseillé : après "+content.title,
+    "current Hangul recommended prerequisite");
+  assertJapaneseHubCopy("Requis : "+content.title,
+    "future Hangul required prerequisite");
+
+  assert.equal(assertJapaneseHubCopy("prédicat final ; sujet souvent omis",
+    "grammatical syntax description"),"述語は文末・主語は省略できる");
+  assert.equal(assertJapaneseHubCopy("N에 있어요", "noun+location"),
+    "名詞＋에 있어요");
+  assert.equal(assertJapaneseHubCopy("N 주세요", "noun request"),
+    "名詞＋주세요");
+  assert.equal(assertJapaneseHubCopy("V-아/어 주세요", "verb request"),
+    "動詞＋아/어 주세요");
+  // Korean-only expressions remain canonical, without changing the lesson data.
+  assert.equal(resolveGrammarText("hub", "이/가", "ja"),"이/가");
+  assert.equal(resolveGrammarText("hub", "-(으)ㄹ까요?", "ja"),"-(으)ㄹ까요?");
 });
