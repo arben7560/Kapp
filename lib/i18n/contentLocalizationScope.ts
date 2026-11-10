@@ -17,6 +17,10 @@ export function getContentLocalizationScope(
   if (segments.includes("lesson") && ["metro", "metroMissions", "metroIA"].includes(segments[segments.length - 1] ?? "")) {
     return { namespace: "immersion", module: "metro" };
   }
+  // Restaurant uses the same presentation-only immersion bridge as Café and Métro.
+  if (segments.includes("lesson") && ["restaurant", "restaurantMissions", "restaurantIA"].includes(segments[segments.length - 1] ?? "")) {
+    return { namespace: "immersion", module: "restaurant" };
+  }
   // Speak is a top-level tab but uses the same display-copy bridge as Vocabulaire.
   if (segments[segments.length - 1] === "speak") {
     return { namespace: "vocabulary", module: "speak" };
