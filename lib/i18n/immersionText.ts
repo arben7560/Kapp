@@ -42,6 +42,14 @@ export function resolveImmersionText(module: string, source: string, locale: App
       return text;
     };
 
+    // The intent engine removes the final full stop before adding its list
+    // of choices. Restore punctuation for matching, but not in the source data.
+    if (!/[.!?…]$/u.test(source)) {
+      const punctuated = source + ".";
+      const translated = resolveImmersionText(module, punctuated, locale, instance);
+      if (translated !== punctuated) return translated;
+    }
+
     // One or more labelled choices may be appended after a dynamic diagnostic.
     const proposedSeparator = " — réponses proposées : ";
     const proposedIndex = source.lastIndexOf(proposedSeparator);
