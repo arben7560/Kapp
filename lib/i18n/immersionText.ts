@@ -34,8 +34,10 @@ export function resolveImmersionText(module: string, source: string, locale: App
   m = source.match(/^(Réécouter|Écouter) (.+)$/u);
   if (m && /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]/u.test(m[2])) return (exact(m[1]) ?? m[1]) + "：" + m[2];
   // Dynamic teaching feedback is translated only at display time. Korean examples are interpolated verbatim.
-  const jaExamples = (value: string) => value.replace(/ ou /gu, " または ").replace(/, /gu, "、");
   const jaTerm = (value: string) => exact(value) ?? value;
+  const jaExamples = (value: string) => value.split(/( ou |, )/gu).map((part) =>
+    part === " ou " ? " または " : part === ", " ? "、" : jaTerm(part),
+  ).join("");
   m = source.match(/^Je t’ai compris malgré le mélange de langues \((.+)\)\. Pour rester en coréen : “(.+?)”(?: (.+))?$/u);
   if (m) return "複数の言語が混ざっていましたが、意味は伝わりました（" + m[1] + "）。韓国語だけで言うなら「" + m[2] + "」です。" + (m[3] ? " " + resolveImmersionText(module, m[3], locale, instance) : "");
   m = source.match(/^Je t’ai compris : (.+?)\. Pour compter ce produit, utilise ([^ ]+) plutôt que ([^ ]+) : “(.+?)”$/u);
@@ -80,6 +82,12 @@ export function resolveImmersionText(module: string, source: string, locale: App
   if (m) return "言いたいことは伝わりますが、この言い方ではまだ判定しきれません。" + jaExamples(m[1]) + "のように答えてみましょう。";
   m = source.match(/^Cette réponse correspond à une autre étape\. Ici, (.+?)\. Tu peux répondre (.+?)\.$/u);
   if (m) return "その返答は別の場面に合っています。今は" + jaTerm(m[1]) + "。" + jaExamples(m[2]) + "のように答えましょう。";
+  m = source.match(/^Je pense que (.+?), mais je préfère vérifier\. (.+)$/u);
+  if (m) return "「" + jaTerm(m[1]) + "」という意味だと思いますが、念のため確認しましょう。" + jaTerm(m[2]);
+  m = source.match(/^Je vois ce que tu veux dire : (.+?), mais ce n’est pas la question actuelle\. (.+?)\. Tu peux répondre (.+?)\.$/u);
+  if (m) return "「" + jaTerm(m[1]) + "」という意味ですね。ただ、今の質問への返答ではありません。" + jaTerm(m[2]) + "。" + jaExamples(m[3]) + "のように答えましょう。";
+  m = source.match(/^(.+?)\. C’est compréhensible, mais ce n’est pas ce que le serveur te demande ici\. Tu peux répondre (.+?)\.$/u);
+  if (m && exact(m[1])) return jaTerm(m[1]) + "。意味は伝わりますが、店員が今尋ねていることとは違います。" + jaExamples(m[2]) + "のように答えましょう。";
   m = source.match(/^Ta négation change le sens de la réponse, donc je ne peux pas valider ce choix\. Ici, (.+?)\. Tu peux dire (.+?)\.$/u);
   if (m) return "否定が入ると意味が変わるため、この選択肢としては判定できません。今は" + jaTerm(m[1]) + "。" + jaExamples(m[2]) + "と言ってみましょう。";
   m = source.match(/^Tu demandes « (.+?) »\. La phrase se comprend, mais elle ne répond pas à la question actuelle\. Ici, (.+?)\. Tu peux répondre (.+?)\.$/u);
