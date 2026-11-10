@@ -140,7 +140,7 @@ test("language changes are display-only and preserve canonical Korean responses"
     assert.notEqual(ja, original);
     assert.equal(resolveGrammarText(stage, original, "fr"), original);
   }
-  assert.equal(resolveGrammarText("a1-validation", "Révision générale A1", "ja"), "Révision générale A1");
+  assert.equal(resolveGrammarText("a1-validation", "Révision générale A1", "ja"), "A1総復習");
   assert.match(read("../app/(tabs)/grammar/_layout.tsx"), /<ContentLocalizationProvider pathname=\{pathname\}>/u);
   assert.match(read("../app/(tabs)/grammar/[stageId].tsx"), /getJapaneseGrammarFeedback/u);
   assert.match(read("../lib/i18n/ContentLocalizationProvider.tsx"), /useTranslation\("common"\)/u);
@@ -845,7 +845,7 @@ test("36–40: Japanese corrections preserve legitimate alternatives and disting
   assert.match(wrong["necessity-and-obligation"]["show-passport-obligation"]["볼 수 있어요"],/見る/u);
   assert.match(wrong["simple-comparison"]["bag-comparison"]["제일"],/最上位/u);
   assert.match(wrong["make-suggestion"]["go-suggestion"]["갈게요"],/決意/u);
-  assert.match(JAPANESE_GRAMMAR_GUIDES["simple-comparison"].steps[2][1],/不可能ではありません/u);
+  assert.match(JAPANESE_GRAMMAR_GUIDES["simple-comparison"].steps[2][1],/二つだけの場合も文脈によって使えます/u);
   assert.equal(resolveGrammarText("simple-comparison","버스보다 지하철이 빨라요.","ja"),"버스보다 지하철이 빨라요.");
   assert.doesNotMatch(read("../lib/grammar/exercises.ts"),/JAPANESE_GRAMMAR_/u);
   assert.doesNotMatch(read("../lib/grammar/feedback.ts"),/JAPANESE_GRAMMAR_/u);
