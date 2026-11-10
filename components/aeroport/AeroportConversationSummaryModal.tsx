@@ -11,6 +11,7 @@ import {
   type AeroportConversationMemory,
 } from "../../lib/aeroportConversationMemory";
 import { AppText } from "../app-text";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 
 type Props = Readonly<{
   memory: AeroportConversationMemory;
@@ -29,6 +30,7 @@ export function AeroportConversationSummaryModal({
   visible,
 }: Props) {
   useSpeechLifecycle();
+  const translate = useVocabularyText();
   const [hasListened, setHasListened] = useState(false);
   const summary = buildAeroportConversationSummary(memory);
 
@@ -58,7 +60,7 @@ export function AeroportConversationSummaryModal({
             </View>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Fermer le bilan"
+              accessibilityLabel={translate("Fermer le bilan")}
               hitSlop={8}
               onPress={handleClose}
               style={styles.closeButton}
@@ -121,7 +123,7 @@ export function AeroportConversationSummaryModal({
               </AppText>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`${hasListened ? "Réécouter" : "Écouter"} la phrase à retenir`}
+                accessibilityLabel={translate(`${hasListened ? "Réécouter" : "Écouter"} la phrase à retenir`)}
                 onPress={() => {
                   Speech.stop();
                   setHasListened(true);
