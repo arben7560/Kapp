@@ -11,8 +11,9 @@ const { resources } = await import("../locales/index.ts");
 const { localizedContent } = await import("../data/localized/index.ts");
 const { HANGUL_MODULES } = await import("../data/hangul/curriculum.ts");
 const { hangulCopyId } = await import("../data/localized/hangulRegistry.ts");
-const { cafeMissions } = await import("../data/lesson/cafe/cafeMissions.ts");
-const { GRAMMAR_STAGE_BY_ID, GRAMMAR_STAGE_IDS } = await import("../data/grammar/index.ts");
+// Avoid importing the runtime mission graph: it uses Metro-only path resolution.
+const { GRAMMAR_STAGE_BY_ID } = await import("../data/grammar/stages.ts");
+const { GRAMMAR_STAGE_IDS } = await import("../data/grammar/types.ts");
 
 const read = (file) => readFileSync(new URL(file, import.meta.url), "utf8");
 const fr = JSON.parse(read("../locales/fr/navigation.json"));
@@ -101,7 +102,7 @@ test("Stored Hangul, grammar and mission titles reuse existing pedagogical trans
     localizedContent.ja.grammar[entry].text,
   );
 
-  const cafeTitle = cafeMissions[0]?.title;
+  const cafeTitle = "Commander un café simple";
   assert.ok(cafeTitle);
   const item = Object.keys(localizedContent.fr.immersion).find((key) =>
     localizedContent.fr.immersion[key]?.text === cafeTitle &&
