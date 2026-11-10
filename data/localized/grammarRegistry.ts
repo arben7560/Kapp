@@ -7,7 +7,7 @@ import { JAPANESE_GRAMMAR_GUIDES } from "./grammarGuidesJapanese.ts";
 import { JAPANESE_GRAMMAR_DRILLS } from "./grammarDrillsJapanese.ts";
 
 /**
- * Grammar localization blocks 1–6: stages 1–30. A source-string display
+ * Grammar localization blocks 1–7: stages 1–35. A source-string display
  * catalogue, following Vocabulary/Counting/Classifiers. No questions,
  * Korean, answers, scores, navigation IDs or stored progress are translated.
  */
@@ -42,6 +42,11 @@ const STAGE_CONCEPTS = {
   "add-item": "additive-do",
   "limit-request": "restrictive-man",
   "range-and-limit": "range-buteo-kkaji",
+  "past-event": "past-ass-eosseoyo",
+  "future-plan": "future-eul-geoyeyo",
+  "decision-and-promise": "intention-eulgeyo",
+  "link-actions": "sequence-go",
+  "give-reason": "reason-a-eoseo",
 } as const;
 
 const STAGE_COPY = {
@@ -213,6 +218,41 @@ const STAGE_COPY = {
     "goal": "時間の範囲や移動の到達点を示す",
     "examples": [
       "営業時間は9時から5時までです。"
+    ]
+  },
+  "past-event": {
+    "title": "過去形で話す",
+    "goal": "終わった出来事をヘヨ体の過去形で伝える",
+    "examples": [
+      "予約しました。"
+    ]
+  },
+  "future-plan": {
+    "title": "これからの予定を話す",
+    "goal": "自分の計画や未来の予想を伝える",
+    "examples": [
+      "明日、ソウルへ行く予定です。"
+    ]
+  },
+  "decision-and-promise": {
+    "title": "決意・約束を伝える",
+    "goal": "会話の中で決めたことや約束を相手に伝える",
+    "examples": [
+      "カードで払いますね。"
+    ]
+  },
+  "link-actions": {
+    "title": "二つの動作をつなぐ",
+    "goal": "「〜して、〜する」と二つの動作をつなげる",
+    "examples": [
+      "ここで食べてから行きます。"
+    ]
+  },
+  "give-reason": {
+    "title": "理由を説明する",
+    "goal": "ある出来事の理由と結果をつなげて伝える",
+    "examples": [
+      "遅れてすみません。"
     ]
   }
 
@@ -630,6 +670,51 @@ const CONCEPT_COPY: Record<string, Record<string, string>> = {
     "Je vais jusqu’à la gare de Séoul.": "ソウル駅まで行きます。",
     "CONTEXTE\nTu indiques les horaires d’ouverture d’un lieu.": "場面\n施設の営業時間を案内しています。",
     "Reconnaître l’idée de répétition à chaque occasion.": "「〜するたびに」という繰り返しの意味を見分ける。"
+  },
+  "past-event": {
+    "Parler d’un événement terminé.": "終わった出来事を伝える。",
+    "Ajoute 았어요 si la dernière voyelle est ㅏ ou ㅗ, sinon 었어요 ; 하다 devient 했어요. Cette terminaison présente une action ou un état comme achevé : 어제 영화를 봤어요.": "語幹の最後の母音が ㅏ・ㅗ なら 았어요、それ以外なら 었어요 が基本。하다 は 했어요。어제 영화를 봤어요. のように過去の出来事を表します。",
+    "Tu racontes ce que tu as regardé hier.": "昨日見た映画について話します。",
+    "J’ai regardé un film hier.": "昨日、映画を見ました。",
+    "J’ai réservé.": "予約しました。",
+    "J’ai mangé hier.": "昨日、食べました。"
+  },
+  "future-plan": {
+    "Parler d’un projet simple.": "これからの計画を伝える。",
+    "Ajoute ㄹ 거예요 après une voyelle et 을 거예요 après une consonne pour annoncer un projet ou une prévision. Cette forme présente un plan, sans la nuance de décision adressée à quelqu’un portée par -(으)ㄹ게요.": "母音終わりの語幹には ㄹ 거예요、ㄹ以外のパッチムには 을 거예요 を付けます。予定・予想を伝える形で、相手に向けた申し出の -(으)ㄹ게요 と区別します。",
+    "Tu annonces ton projet de voyage pour la semaine prochaine.": "来週の旅行予定を伝えます。",
+    "Je vais aller à Busan la semaine prochaine.": "来週、釜山へ行く予定です。",
+    "Demain, j’irai à Séoul.": "明日、ソウルへ行く予定です。",
+    "Je vais voir un ami ce week-end.": "週末、友達に会う予定です。"
+  },
+  "decision-and-promise": {
+    "Annoncer une décision ou une promesse.": "自分が引き受けることや約束を伝える。",
+    "Ajoute ㄹ게요 après une voyelle et 을게요 après une consonne pour annoncer une décision prise par le locuteur, souvent en réaction à l’interlocuteur. Pour un simple projet déjà prévu, utilise plutôt -(으)ㄹ 거예요.": "相手への返事として決意・約束を伝えるには、母音終わりの語幹に ㄹ게요、それ以外のパッチムに 을게요 を付けます。予定の報告は -(으)ㄹ 거예요 と区別します。",
+    "Quelqu’un doit ouvrir la porte ; tu proposes de t’en charger.": "ドアを開ける人が必要なので、自分が引き受けると申し出ます。",
+    "Je vais ouvrir la porte.": "私がドアを開けますね。",
+    "Je vais régler par carte.": "カードで払いますね。",
+    "Je m’en charge.": "私がやります。",
+    "NUANCE\nDécision prise maintenant": "ニュアンス\nその場で決めたこと",
+    "CONTEXTE\nQuelqu’un demande qui accomplira l’action.": "場面\n誰がその作業をするか尋ねられています。"
+  },
+  "link-actions": {
+    "Relier deux actions.": "二つの動作をつなげる。",
+    "Ajoute 고 au radical du premier verbe, puis conjugue seulement le dernier pour relier deux actions. L’ordre peut suivre la chronologie, mais 고 signifie d’abord simplement « et » : 먹고 가요.": "一つ目の動詞の語幹に 고 を付け、文末の動詞だけを活用します。-고 は動作をつなぎ、文脈によって時間の順番も表しますが、それ自体は必ずしも順序を示しません。",
+    "Tu décris deux actions successives de ton repas.": "食事をして、コーヒーを飲むという二つの動作を伝えます。",
+    "Je mange, puis je bois un café.": "ご飯を食べて、コーヒーを飲みます。",
+    "Je vais manger ici avant de partir.": "ここで食べてから行きます。",
+    "Je prends le métro, puis je change de ligne.": "地下鉄に乗って、乗り換えます。",
+    "CONTEXTE\nAu restaurant, on te demande : « Sur place ou à emporter ? »": "場面\n飲食店で「店内で召し上がりますか、お持ち帰りですか」と聞かれています。",
+    "Reconnaître deux actions reliées avec une nuance.": "二つの動作をつなぐ表現の違いを聞き分ける。",
+    "Reconnaître une parole rapportée.": "人が話した内容を間接的に伝える表現を理解する。"
+  },
+  "give-reason": {
+    "Donner une raison simple.": "理由を簡単に説明する。",
+    "Ajoute 아서 si la dernière voyelle est ㅏ ou ㅗ, sinon 어서, pour relier une cause à sa conséquence. Dans cette construction, ne marque généralement pas le passé sur la première proposition : 늦어서 죄송해요.": "理由を表すとき、語幹の母音が ㅏ・ㅗ なら 아서、それ以外なら 어서、하다 なら 해서 です。늦어서 죄송해요. のように理由を先に示し、この初級構文では時制は通常文末で表します。",
+    "Comme il pleut, tu expliques pourquoi tu prends un taxi.": "雨が降っているのでタクシーに乗ると説明します。",
+    "Je prends un taxi parce qu’il pleut.": "雨が降っているので、タクシーに乗ります。",
+    "Désolé d’être en retard.": "遅れてすみません。",
+    "Je ne peux pas y aller parce que je suis malade.": "具合が悪いので行けません。"
   }
 
 };
