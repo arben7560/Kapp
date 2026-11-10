@@ -1,3 +1,5 @@
+import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import type { ScrollViewInstance } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
@@ -366,8 +368,9 @@ function isComingSoonMetroChoice(
 }
 
 // ==================== MAIN ====================
-export default function MetroIaScreen() {
+function MetroIaContent() {
   const { complete } = useStore();
+  const translate = useVocabularyText();
 
   const insets = useSafeAreaInsets();
   const responsive = useResponsiveLayout({
@@ -986,7 +989,7 @@ export default function MetroIaScreen() {
   const pendingSpeechIntent = pendingSpeechChoice
     ? getMetroSpeechChoiceIntent(pendingSpeechChoice)
     : null;
-  const displayedConfirmationLabel =
+  const displayedConfirmationLabel = translate((
     speechUiNodeId === currentNodeId && pendingSpeechChoice
       ? pendingSpeechIntent === "repeat"
         ? "une demande de répétition"
@@ -997,7 +1000,7 @@ export default function MetroIaScreen() {
             : pendingSpeechIntent === "transfer"
               ? "une question sur la correspondance"
               : "la direction vers Gangnam"
-      : null;
+      : null));
   const shouldShowSpeechChoices =
     showSpeechChoices ||
     speechState.status === "permission-denied" ||
@@ -1023,12 +1026,12 @@ export default function MetroIaScreen() {
             accessibilityRole="button"
             accessibilityLabel={
               isComingSoon
-                ? `${choice.korean}. ${choice.label}. Prochainement disponible.`
-                : `${choice.korean}. ${choice.label}`
+                ? `${choice.korean}. ${translate(choice.label)}. ${translate("Prochainement disponible.")}`
+                : `${choice.korean}. ${translate(choice.label)}`
             }
             accessibilityHint={
               isComingSoon
-                ? "Cette scène est temporairement indisponible"
+                ? translate("Cette scène est temporairement indisponible")
                 : undefined
             }
             accessibilityState={{
@@ -1169,7 +1172,7 @@ export default function MetroIaScreen() {
           ]}
         >
           <AppBackButton
-            accessibilityLabel="Quitter la scène"
+            accessibilityLabel={translate("Quitter la scène")}
             onPress={handleExit}
           />
         </View>
@@ -1242,7 +1245,7 @@ export default function MetroIaScreen() {
                 <VideoView
                   accessible
                   accessibilityRole="image"
-                  accessibilityLabel="Vidéo de l’interlocuteur du métro"
+                  accessibilityLabel={translate("Vidéo de l’interlocuteur du métro")}
                   player={player}
                   style={[styles.video, { height: avatarVideoHeight }]}
                   {...IMMERSIVE_VIDEO_VIEW_PROPS}
@@ -1273,8 +1276,8 @@ export default function MetroIaScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={
                   isTranscriptOpen
-                    ? "Refermer la transcription"
-                    : "Revoir la transcription"
+                    ? translate("Refermer la transcription")
+                    : translate("Revoir la transcription")
                 }
                 accessibilityState={{
                   disabled: !isReviewableTranscript,
@@ -1415,7 +1418,7 @@ export default function MetroIaScreen() {
                   <View style={styles.endActions}>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Rejouer la scène"
+                      accessibilityLabel={translate("Rejouer la scène")}
                       hitSlop={6}
                       onPress={handleRestart}
                       style={({ pressed }) => [
@@ -1445,7 +1448,7 @@ export default function MetroIaScreen() {
 
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Ouvrir la fiche vocabulaire du métro"
+                      accessibilityLabel={translate("Ouvrir la fiche vocabulaire du métro")}
                       hitSlop={6}
                       onPress={handleOpenVocabulary}
                       style={({ pressed }) => [
@@ -1466,7 +1469,7 @@ export default function MetroIaScreen() {
 
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Retour aux missions"
+                      accessibilityLabel={translate("Retour aux missions")}
                       hitSlop={6}
                       onPress={handleExit}
                       style={({ pressed }) => [
@@ -1492,7 +1495,7 @@ export default function MetroIaScreen() {
                     {lastIaVideoSource ? (
                       <Pressable
                         accessibilityRole="button"
-                        accessibilityLabel="Réécouter la dernière intervention"
+                        accessibilityLabel={translate("Réécouter la dernière intervention")}
                         accessibilityState={{ disabled: isReplayingLastIa }}
                         aria-disabled={isReplayingLastIa}
                         disabled={isReplayingLastIa}
@@ -1590,6 +1593,14 @@ export default function MetroIaScreen() {
 }
 
 // ==================== STYLES ====================
+export default function MetroIaScreen() {
+  return (
+    <ContentLocalizationProvider pathname="/lesson/metroIA">
+      <MetroIaContent />
+    </ContentLocalizationProvider>
+  );
+}
+
 const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
