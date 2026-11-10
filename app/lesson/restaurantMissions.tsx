@@ -1,3 +1,4 @@
+import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
@@ -53,7 +54,7 @@ function normalizeMode(rawMode: string | string[] | undefined) {
   return value === "real" ? "real" : "guided";
 }
 
-export default function RestaurantMissionsScreen() {
+function RestaurantMissionsContent() {
   const params = useLocalSearchParams();
   const mode = normalizeMode(params.mode as string | string[] | undefined);
   const { setTrack } = useStore();
@@ -245,6 +246,14 @@ export default function RestaurantMissionsScreen() {
         />
       </SafeAreaView>
     </ImageBackground>
+  );
+}
+
+export default function RestaurantMissionsScreen() {
+  return (
+    <ContentLocalizationProvider pathname="/lesson/restaurantMissions">
+      <RestaurantMissionsContent />
+    </ContentLocalizationProvider>
   );
 }
 
