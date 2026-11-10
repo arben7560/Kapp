@@ -377,7 +377,9 @@ export const CAFE_IMMERSION_COPY: Readonly<Record<string, string>> = {
   "« 몇 번 출구예요? » sert à demander le numéro d’une sortie, plutôt dans un contexte de métro": "「몇 번 출구예요?」は出口番号を尋ねる表現で、主に地下鉄で使います",
   "tu commandes un sandwich": "サンドイッチを注文しています",
   "tu commandes un cappuccino": "カプチーノを注文しています",
-  "tu commandes un espresso": "エスプレッソを注文しています"
+  "tu commandes un espresso": "エスプレッソを注文しています",
+  "La reconnaissance vocale n’est pas disponible sur cet appareil ou ce navigateur. Utilise « Besoin d’aide » pour continuer.": "この端末またはブラウザーでは音声認識を利用できません。「ヒントを見る」から続けてください。",
+  "Je reconnais bien « 먹고 » et « 갈게요 », mais l’ordre est trop mélangé pour former une phrase naturelle. Reprends simplement : « 먹고 갈게요. »": "「먹고」と「갈게요」は分かりますが、自然な韓国語の語順になっていません。「먹고 갈게요.」と言い直しましょう。"
 };
 
 export function immersionCopyId(module: string, sourceText: string): string {
