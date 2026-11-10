@@ -226,6 +226,7 @@ function MissionMasteryCelebrationModal({
   total,
   onContinue,
 }: MissionMasteryCelebrationModalProps) {
+  const translate = useVocabularyText();
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
   const isCompactLandscape = isLandscape && height < 440;
