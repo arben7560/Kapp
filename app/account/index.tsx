@@ -638,7 +638,7 @@ function AccountScreenContent() {
               <GlassCard>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Tester l'écran de sélection de langue"
+                  accessibilityLabel={translate("Tester l'écran de sélection de langue")}
                   onPress={() => setShowLanguagePreview(true)}
                   style={styles.settingsRow}
                 >
