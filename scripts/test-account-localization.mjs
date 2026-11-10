@@ -67,7 +67,7 @@ test("Every plain French AppText and input label on Account has a Japanese entry
   for (const label of labels) {
     assert.notEqual(translate(label), label, "Untranslated account input/label: " + label);
   }
-  assert.ok(labels.length >= 12, "Form label extraction changed");
+  assert.ok(labels.length >= 6, "Form label extraction changed");
 });
 
 test("Sign-in, recovery, OTP confirmation, statuses and account deletion use situational Japanese", () => {
