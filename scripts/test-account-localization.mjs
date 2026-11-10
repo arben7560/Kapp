@@ -90,17 +90,17 @@ test("Sign-in, recovery, OTP confirmation, statuses and account deletion use sit
   }
   assert.equal(
     translate("Un lien a été envoyé à test@example.com."),
-    "test@example.com に確認用リンクを送信しました。",
+    "test@example.comに確認用リンクを送信しました。",
   );
   assert.equal(
     translate("Un lien a été envoyé à votre adresse."),
-    "ご登録のメールアドレス に確認用リンクを送信しました。",
+    "ご登録のメールアドレスに確認用リンクを送信しました。",
   );
   assert.equal(
     translate("Google • Email + mot de passe"),
     "Google • メールアドレスとパスワード",
   );
-  assert.equal(resolveAccountText("  Compte protégé  ", "ja", instance), "  保護されたアカウント  ");
+  assert.equal(resolveAccountText("  Compte protégé  ", "ja", instance), "  保護済みアカウント  ");
   assert.equal(resolveAccountText("Google", "ja", instance), "Google", "Provider brand must stay unchanged");
 });
 
