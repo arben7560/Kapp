@@ -11,6 +11,7 @@ import {
 import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
 import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
 import { AppText } from "../app-text";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 
 type Props = {
   memory: MetroConversationMemory;
@@ -58,6 +59,7 @@ export function MetroConversationSummaryModal({
   visible,
 }: Props) {
   useSpeechLifecycle();
+  const translate = useVocabularyText();
   const [hasListened, setHasListened] = useState(false);
   const summary = buildMetroConversationSummary(memory);
   const referencePhrase =
@@ -89,7 +91,7 @@ export function MetroConversationSummaryModal({
             </View>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Fermer le bilan"
+              accessibilityLabel={translate("Fermer le bilan")}
               hitSlop={8}
               onPress={handleClose}
               style={styles.closeButton}
@@ -152,7 +154,7 @@ export function MetroConversationSummaryModal({
               </AppText>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`${hasListened ? "Réécouter" : "Écouter"} la phrase à retenir`}
+                accessibilityLabel={translate(`${hasListened ? "Réécouter" : "Écouter"} la phrase à retenir`)}
                 onPress={() => {
                   Speech.stop();
                   setHasListened(true);
