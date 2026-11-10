@@ -1,3 +1,4 @@
+import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
 import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
@@ -280,7 +281,7 @@ const buildScenes = (): Scene[] => {
   ];
 };
 
-export default function RestaurantLesson() {
+function RestaurantLessonContent() {
   const scenes = useMemo(() => buildScenes(), []);
   const [activeScene, setActiveScene] = useState<Scene>(scenes[0]);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
@@ -482,6 +483,14 @@ export default function RestaurantLesson() {
         </ScrollView>
       </ImageBackground>
     </SafeAreaView>
+  );
+}
+
+export default function RestaurantLesson() {
+  return (
+    <ContentLocalizationProvider pathname="/lesson/restaurant">
+      <RestaurantLessonContent />
+    </ContentLocalizationProvider>
   );
 }
 
