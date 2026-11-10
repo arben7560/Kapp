@@ -18,7 +18,7 @@ test("Café immersion uses its own namespace without changing navigation or Spea
     assert.ok(source.includes('ContentLocalizationProvider pathname="' + route + '"'), route);
   }
   assert.deepEqual(getContentLocalizationScope("/speak"), { namespace: "vocabulary", module: "speak" });
-  assert.equal(getContentLocalizationScope("/lesson/metro"), null, "Other immersion scenes are out of scope");
+  assert.deepEqual(getContentLocalizationScope("/lesson/metro"), { namespace: "immersion", module: "metro" }, "Métro now has its own independent catalogue");
 });
 
 test("Café has paired FR/JA catalogues with Korean kept in the original lesson data", () => {
