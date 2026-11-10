@@ -93,12 +93,12 @@ test("Stored Hangul, grammar and mission titles reuse existing pedagogical trans
 
   const stage = GRAMMAR_STAGE_BY_ID[GRAMMAR_STAGE_IDS[0]];
   const entry = Object.keys(localizedContent.fr.grammar).find((key) =>
-    localizedContent.fr.grammar[key]?.title === stage.title &&
-    localizedContent.ja.grammar[key]?.title);
+    localizedContent.fr.grammar[key]?.text === stage.title &&
+    localizedContent.ja.grammar[key]?.text);
   assert.ok(entry, "Missing grammar resume title in existing catalogue");
   assert.equal(
     translate(stage.title),
-    localizedContent.ja.grammar[entry].title,
+    localizedContent.ja.grammar[entry].text,
   );
 
   const cafeTitle = cafeMissions[0]?.title;
