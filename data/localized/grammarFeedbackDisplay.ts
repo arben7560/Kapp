@@ -30,8 +30,24 @@ export function getJapaneseGrammarFeedback(
     return (correctByDrill as Record<string, string>)[drillId];
   }
   if (typeof selected !== "string") {
-    // Only the first lesson has an ordering task; explain the actual placement.
-    if (stageId !== "sentence-structure" || !Array.isArray(question.answer)) return undefined;
+    if (!Array.isArray(selected) || !Array.isArray(question.answer)) return undefined;
+    // Stage 29 is also a canonical order task. Explain its actual ordering
+    // only in the Japanese display layer; do not touch answer evaluation.
+    if (stageId === "limit-request" && drillId === "one-only-order") {
+      const words = selected.map((part) => part.replace(/[.!?]+$/u, ""));
+      const expected = question.answer.map((part) => part.replace(/[.!?]+$/u, ""));
+      const chosen = `「${words.join(" ")}.」`;
+      const [time, quantity, verb] = expected;
+      if (words.indexOf(verb) !== words.length - 1) {
+        return `${chosen} は「あります」の ${verb} が文末にありません。場所や時点 ${time} と数量 ${quantity} の後に置きましょう。`;
+      }
+      if (words.indexOf(quantity) !== 1) {
+        return `${chosen} では、限定する数量 ${quantity} の位置に注目しましょう。「今」${time} の後、述語 ${verb} の前に置きます。`;
+      }
+      return `${chosen} を見直しましょう。この練習では ${time} → ${quantity} → ${verb} の順です。`;
+    }
+    // Stage one: explain the actual verb position, not the score.
+    if (stageId !== "sentence-structure") return undefined;
     const words = selected.map((word) => word.replace(/[.!?]+$/u, ""));
     const expected = question.answer.map((word) => word.replace(/[.!?]+$/u, ""));
     const verb = expected[expected.length - 1];

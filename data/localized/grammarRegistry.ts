@@ -7,7 +7,7 @@ import { JAPANESE_GRAMMAR_GUIDES } from "./grammarGuidesJapanese.ts";
 import { JAPANESE_GRAMMAR_DRILLS } from "./grammarDrillsJapanese.ts";
 
 /**
- * Grammar localization blocks 1–4: stages 1–25. A source-string display
+ * Grammar localization blocks 1–6: stages 1–30. A source-string display
  * catalogue, following Vocabulary/Counting/Classifiers. No questions,
  * Korean, answers, scores, navigation IDs or stored progress are translated.
  */
@@ -37,6 +37,11 @@ const STAGE_CONCEPTS = {
   "direction-and-means": "direction-means-ro-euro",
   "express-desire": "desire-go-sipeoyo",
   "express-ability": "ability-eul-su-isseoyo",
+  "ask-permission": "permission-a-eodo-dwaeyo",
+  "express-inability": "inability-mot",
+  "add-item": "additive-do",
+  "limit-request": "restrictive-man",
+  "range-and-limit": "range-buteo-kkaji",
 } as const;
 
 const STAGE_COPY = {
@@ -173,6 +178,41 @@ const STAGE_COPY = {
     "goal": "自分の能力と、その場での実行可能性を伝える",
     "examples": [
       "ここでカードをチャージできますか？"
+    ]
+  },
+  "ask-permission": {
+    "title": "「〜してもいいですか」",
+    "goal": "相手に行動の許可を求める",
+    "examples": [
+      "写真を撮ってもいいですか？"
+    ]
+  },
+  "express-inability": {
+    "title": "「〜できない」を伝える",
+    "goal": "しないことと、事情があってできないことを区別する",
+    "examples": [
+      "具合が悪くて、今日は行けません。"
+    ]
+  },
+  "add-item": {
+    "title": "「〜も」を使って追加する",
+    "goal": "すでにある物や人に、別の要素を加える",
+    "examples": [
+      "水もください。"
+    ]
+  },
+  "limit-request": {
+    "title": "「〜だけ」を表す",
+    "goal": "ある物や数量がそれだけだと伝える",
+    "examples": [
+      "水だけあります。"
+    ]
+  },
+  "range-and-limit": {
+    "title": "「〜から〜まで」を表す",
+    "goal": "時間の範囲や移動の到達点を示す",
+    "examples": [
+      "営業時間は9時から5時までです。"
     ]
   }
 
@@ -547,6 +587,49 @@ const CONCEPT_COPY: Record<string, Record<string, string>> = {
     "Je sais lire le coréen.": "韓国語を読めます。",
     "CONTEXTE\nTu es à un guichet T-money avec ta carte.": "場面\nT-moneyカードを持って窓口に来ています。",
     "Reconnaître une possibilité parmi d’autres.": "複数の可能性のうちの一つであることを見分ける。"
+  },
+  "ask-permission": {
+    "Demander si une action est autorisée.": "ある行動をしてもよいか尋ねる。",
+    "Conjugue le verbe en -아/어도 돼요? pour demander si une action est autorisée. Cette forme demande une permission, tandis que -(으)ㄹ 수 있어요? vérifie plutôt une possibilité ou une capacité.": "動詞を아／어形にして 도 돼요? を付けると「〜してもいいですか」と許可を尋ねられます。(으)ㄹ 수 있어요? は主に可能性・能力を尋ねます。",
+    "Dans une chambre, tu demandes l’autorisation d’ouvrir la fenêtre.": "部屋の窓を開けてもよいか管理者に聞きます。",
+    "Puis-je ouvrir la fenêtre ?": "窓を開けてもいいですか？",
+    "Puis-je prendre une photo ?": "写真を撮ってもいいですか？",
+    "Puis-je m’asseoir ici ?": "ここに座ってもいいですか？",
+    "INTENTION\nDemande d’autorisation": "意図\n行動の許可を求める"
+  },
+  "express-inability": {
+    "Dire que l’on ne peut pas faire quelque chose.": "できない事情があることを伝える。",
+    "Ce module entraîne 못 : place-le avant le verbe quand l’action est impossible ou hors de tes capacités. 안 exprime un choix ; un son trop faible se décrit avec 잘 안 들려요. Retiens 못 가요 : « je ne peux pas y aller ».": "못 は動詞の前に置き、事情や能力の問題で「できない」ことを表します。안 は単なる否定にも使われ、聞こえにくいときには 잘 안 들려요 も自然です。못 가요 は「行けません」。",
+    "Tu expliques que tu voudrais venir, mais qu’une urgence t’en empêche.": "行きたいのに急用のため行けないと説明します。",
+    "Je ne peux pas y aller aujourd’hui.": "今日は行けません。",
+    "Je ne comprends pas bien.": "よく聞き取れません。",
+    "Je ne peux pas manger de plats épicés.": "辛い料理は食べられません。",
+    "Je ne peux pas y aller aujourd’hui parce que je suis malade.": "具合が悪くて、今日は行けません。"
+  },
+  "add-item": {
+    "Ajouter une personne ou une chose.": "人や物をもう一つ加える。",
+    "Ajoute 도 directement au nom pour signifier « aussi » ou « même ». La particule remplace généralement 은/는, 이/가 ou 을/를 : 저도 가요 signifie « moi aussi, j’y vais ». Compare 물도 주세요 et 물만 주세요.": "도 を名詞に直接付けると「〜も」と追加を表します。通常は 은／는、이／가、을／를 と置き換えます。저도 가요 は「私も行きます」。물도 と 물만 の違いも押さえましょう。",
+    "Après une première commande, tu ajoutes du kimchi.": "最初の注文にキムチを追加します。",
+    "Du kimchi aussi, s’il vous plaît.": "キムチもください。",
+    "De l’eau aussi, s’il vous plaît.": "水もください。",
+    "Moi aussi, j’y vais.": "私も行きます。"
+  },
+  "limit-request": {
+    "Dire qu’un seul élément est disponible.": "利用できる物・数量を「〜だけ」と限定して伝える。",
+    "Ajoute 만 au groupe disponible et garde la phrase affirmative : 물만 있어요, « il n’y a que de l’eau ». Pour annoncer une disponibilité, 만 convient ; pour une possession exclusive, 밖에 없어요 peut être plus naturel.": "存在する物のまとまりに 만 を付け、肯定文の 있어요 を続けます。물만 있어요 は「水だけあります」。所有物がそれしかない場合は 밖에 없어요 が自然なこともあります。",
+    "On te demande quelle boisson est disponible ; tu l’annonces directement avec la forme positive de la leçon.": "提供できる飲み物を、レッスンの肯定文の形で答えます。",
+    "Il n’y a que de l’eau.": "水だけあります。",
+    "Il n’y a que du café.": "コーヒーだけあります。"
+  },
+  "range-and-limit": {
+    "Donner un début, une fin ou une limite.": "開始点・終点・到達点を伝える。",
+    "Ajoute 부터 au point de départ et 까지 au point d’arrivée d’une période ou d’un trajet. Tu peux employer les deux ensemble ou seulement 까지 : 아홉 시부터 다섯 시까지.": "期間の始まりに 부터、終わりや到達点に 까지 を付けます。両方を使うほか、서울역까지 のように 까지 だけでも使えます。",
+    "Tu indiques les jours entre lesquels tu travailles.": "勤務する曜日の範囲を伝えます。",
+    "Je travaille du lundi au vendredi.": "月曜日から金曜日まで働きます。",
+    "Les horaires sont de neuf heures à cinq heures.": "営業時間は9時から5時までです。",
+    "Je vais jusqu’à la gare de Séoul.": "ソウル駅まで行きます。",
+    "CONTEXTE\nTu indiques les horaires d’ouverture d’un lieu.": "場面\n施設の営業時間を案内しています。",
+    "Reconnaître l’idée de répétition à chaque occasion.": "「〜するたびに」という繰り返しの意味を見分ける。"
   }
 
 };
