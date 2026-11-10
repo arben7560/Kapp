@@ -120,7 +120,7 @@ test("Screen and nested cards keep navigation untouched and localize all accessi
   assert.match(home, /accessibilityLabel=\{translate\("Ouvrir mon profil"\)\}/u);
   assert.match(home, /accessibilityHint=\{translate\("Ouvre la page Mon profil"\)\}/u);
   assert.match(home, /accessibilityLabel=\{dailySummary\}/u);
-  assert.match(home, /accessibilityLabel=\{\`\$\{translate\(item\.title\)\}/u);
+  assert.ok(home.includes('accessibilityLabel={`${translate(item.title)}. ${translate(item.narrative)}`}'));
   assert.match(home, /accessibilityHint=\{isListening \? listenText\("home\.resumeHint"\) : translate\("Ouvre le parcours actif"\)\}/u);
   assert.match(home, /listenText\("home\.title"\)/u);
   assert.match(home, /resolveAccountText\(source, locale, i18n\)/u);
