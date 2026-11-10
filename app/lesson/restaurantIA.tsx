@@ -824,8 +824,8 @@ function RestaurantIaContent() {
     : null;
   const displayedConfirmationLabel =
     speechUiMatchesCurrentNode && pendingSpeechChoice
-      ? pendingSpeechChoice.label
-          .replace(/[.!?]+$/u, "")
+      ? translate(pendingSpeechChoice.label)
+          .replace(/[.!?。！？]+$/u, "")
           .toLocaleLowerCase("fr-FR")
       : null;
   const shouldShowSpeechChoices =
