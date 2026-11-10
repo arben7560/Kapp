@@ -279,11 +279,28 @@ export const RESTAURANT_IMMERSION_COPY: Readonly<Record<string, string>> = {
   "Je reconnais le produit ou le moyen de paiement, mais il manque une vraie phrase en coréen. Pars d’une des réponses proposées.": "料理名や支払い方法は分かりますが、韓国語の文になっていません。提示された返答を参考にしてみましょう。",
   "Je ne retrouve pas encore une réponse adaptée à ce que la serveuse vient de demander.": "店員の今の質問に合う返答としては、まだ認識できません。",
   "D’accord, je prends ta correction.": "分かりました。言い直しを反映しました。",
-  "le compteur du menu": "メニューに応じた助数詞",
+  "le compteur du menu": "料理に合う助数詞",
   "Commander du samgyeopsal": "サムギョプサルを注文する",
   "une commande de samgyeopsal": "サムギョプサルの注文",
   "une commande de galbi": "カルビの注文",
-  "Oui, j’ai compris.": "はい、分かりました。"
+  "Oui, j’ai compris.": "はい、分かりました。",
+  "Pouvez-vous répéter, s’il vous plaît ?": "もう一度言っていただけますか？",
+  "Je t’ai compris malgré le mélange de langues. Pour rester en coréen :": "複数の言語が混ざっていますが、意図は伝わりました。韓国語だけで言うなら：",
+  "Tu veux bien commander de la viande, mais on ne sait pas encore laquelle.": "肉を注文したいことは伝わりますが、どの肉かまだ分かりません。",
+  "Tu parles bien de la cuisson, mais on ne sait pas clairement qui doit s’en charger.": "焼き方について話していますが、誰が焼くかまだ分かりません。",
+  "Tu veux ajouter un accompagnement, mais tu ne l’as pas identifié.": "おかずを追加したいことは伝わりますが、何を追加するかまだ分かりません。",
+  "Tu demandes un goût standard, mais ce n’est pas assez précis pour distinguer les trois niveaux de piquant proposés.": "標準的な味付けを希望していますが、このシーンの辛さの３段階のどれか分かりません。",
+  "Tu en veux davantage, mais tu n’as pas précisé quoi.": "おかわりを頼みたいのですね。ただ、何が必要かまだ分かりません。",
+  "Tu veux payer, mais tu n’as pas indiqué le moyen de paiement.": "支払いたいことは伝わりますが、支払い方法がまだ分かりません。",
+  "Tu demandes qu’on te donne quelque chose, mais tu n’as pas nommé le reçu.": "何かを渡してほしいと伝えていますが、レシートだとは分かりません。",
+  "Tu demandes bien l’accompagnement.": "おかずを頼んでいることは伝わっています。",
+  "Je t’ai compris : la reconnaissance a probablement accroché sur un mot.": "意図は伝わりますが、音声認識が単語を聞き違えた可能性があります。",
+  "Le plat est clair. Il manque seulement la quantité :": "料理は分かりますが、数量がまだ指定されていません：",
+  "Oui, le moyen de paiement est clair. Une tournure plus naturelle ici est :": "はい、支払い方法は伝わっています。この場面でより自然なのは：",
+  "Ta phrase peut correspondre à plusieurs réponses.": "返答が複数の選択肢に当てはまる可能性があります。",
+  "Ta demande est claire.": "お願いの内容は伝わります。",
+  "Je t’ai compris, mais l’ordre des mots sonne inversé.": "意図は伝わりますが、韓国語の語順が逆になっています。",
+  "Pour indiquer le moyen utilisé, « (으)로 » correspond ici à « avec/par ».": "手段を表すには、ここでは「(으)로」を使います。"
 };
 
 function buildRestaurantCopy(locale: "fr" | "ja"): LocalizedModule {
