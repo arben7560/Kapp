@@ -243,7 +243,14 @@ export const AEROPORT_IMMERSION_COPY: Readonly<Record<string, string>> = {
   "Écoute de l'interlocuteur...": "案内係が話しています…",
   "Écoute de l’interlocuteur...": "案内係が話しています…",
   "La scène continue automatiquement.": "シーンは自動的に進みます。",
-  "Vidéo de l’interlocuteur à l’aéroport": "空港の案内係の動画"
+  "Vidéo de l’interlocuteur à l’aéroport": "空港の案内係の動画",
+  "Que faire si je me perds ?": "道に迷ったらどうすればいいですか？",
+  "Vidéo de l’interlocuteur": "案内係の動画",
+  "2 situations à pratiquer": "２つの場面を練習",
+  "J’ai compris :": "意図が伝わりました：",
+  "Revoir la transcription": "文字起こしをもう一度見る",
+  "Refermer la transcription": "文字起こしを閉じる",
+  "Écoute de l&apos;interlocuteur...": "案内係が話しています…"
 };
 
 function buildAeroportCopy(locale: "fr" | "ja"): LocalizedModule {
