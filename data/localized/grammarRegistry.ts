@@ -7,7 +7,7 @@ import { JAPANESE_GRAMMAR_GUIDES } from "./grammarGuidesJapanese.ts";
 import { JAPANESE_GRAMMAR_DRILLS } from "./grammarDrillsJapanese.ts";
 
 /**
- * Grammar localization blocks 1–4: stages 1–20. A source-string display
+ * Grammar localization blocks 1–4: stages 1–25. A source-string display
  * catalogue, following Vocabulary/Counting/Classifiers. No questions,
  * Korean, answers, scores, navigation IDs or stored progress are translated.
  */
@@ -32,6 +32,11 @@ const STAGE_CONCEPTS = {
   "sino-number-contexts": "sino-korean-numbers",
   "coordinate-items": "noun-link-hago-irang",
   "choose-alternative": "alternative-ina-animyeon",
+  "request-action": "request-v-a-eo-juseyo",
+  "polite-instructions": "polite-instruction-euseyo",
+  "direction-and-means": "direction-means-ro-euro",
+  "express-desire": "desire-go-sipeoyo",
+  "express-ability": "ability-eul-su-isseoyo",
 } as const;
 
 const STAGE_COPY = {
@@ -135,6 +140,42 @@ const STAGE_COPY = {
     goal: "２つの選択肢を示す",
     examples: ["コーヒーかお茶はありますか？"],
   },
+  "request-action": {
+    "title": "動作をお願いする",
+    "goal": "相手にしてほしい動作を丁寧に頼む",
+    "examples": [
+      "もう一度言ってください。"
+    ]
+  },
+  "polite-instructions": {
+    "title": "丁寧な指示・案内",
+    "goal": "-(으)세요 を使って案内や指示をする",
+    "examples": [
+      "ここで降りてください。"
+    ]
+  },
+  "direction-and-means": {
+    "title": "方向と手段を表す",
+    "goal": "進む方向や交通・支払いの手段を伝える",
+    "examples": [
+      "カードにします。"
+    ]
+  },
+  "express-desire": {
+    "title": "「〜したい」を伝える",
+    "goal": "自分の希望や、やってみたいことを表す",
+    "examples": [
+      "T-moneyカードを買いたいです。"
+    ]
+  },
+  "express-ability": {
+    "title": "できる・可能を表す",
+    "goal": "自分の能力と、その場での実行可能性を伝える",
+    "examples": [
+      "ここでカードをチャージできますか？"
+    ]
+  }
+
 } as const;
 
 /** Shared UI wording and display-only labels for the first localized block.
@@ -457,6 +498,57 @@ const CONCEPT_COPY: Record<string, Record<string, string>> = {
     "J’y vais en bus ou en métro.": "バスか地下鉄で行きます。",
     "Avez-vous du café ou du thé ?": "コーヒーかお茶はありますか？",
   },
+  "request-action": {
+    "Demander à quelqu’un de faire une action.": "相手に動作をしてもらうよう丁寧に頼む。",
+    "Conjugue le verbe en -아/어, puis ajoute 주세요 pour demander une action au destinataire. Cette construction porte sur une action ; pour demander un objet, place simplement le nom devant 주세요.": "動詞を아／어形にして 주세요 を続けます。物が欲しいときの名詞＋주세요 と、動作をしてほしいときの動詞＋아／어 주세요 を区別しましょう。",
+    "Ton interlocuteur parle trop vite ; tu lui demandes de ralentir.": "相手の話す速度が速いので、ゆっくり話してもらいます。",
+    "Parlez lentement, s’il vous plaît.": "ゆっくり話してください。",
+    "Répétez, s’il vous plaît.": "もう一度言ってください。",
+    "Emballez cette commande pour l’emporter, s’il vous plaît.": "持ち帰り用に包んでください。",
+    "Reconnaître une action faite humblement pour quelqu’un.": "相手のために謙譲的に行動する表現を聞き取る。",
+    "Reconnaître des requêtes plus nuancées.": "より丁寧で控えめなお願いの言い方を見分ける。"
+  },
+  "polite-instructions": {
+    "Parler à l’impératif de façon polie.": "相手に丁寧に指示したり案内したりする。",
+    "Ajoute 으세요 après une consonne et 세요 après une voyelle pour parler à l’impératif de façon polie. En coréen courant, la forme peut aussi servir à inviter respectueusement quelqu’un à agir : 앉으세요 signifie « asseyez-vous ».": "語幹が母音で終われば 세요、パッチムで終われば 으세요（ㄹは脱落）。앉으세요 は丁寧な指示だけでなく、席を勧める言い方にもなります。",
+    "Tu demandes poliment à une personne de s’asseoir ici.": "来客にこの席へ座るよう丁寧に案内します。",
+    "Asseyez-vous ici.": "ここにお座りください。",
+    "Descendez ici.": "ここで降りてください。",
+    "Allez dans cette direction.": "こちらへ進んでください。"
+  },
+  "direction-and-means": {
+    "Indiquer une direction ou un moyen.": "進む方向や利用する手段を示す。",
+    "Ajoute 으로 après une consonne, sauf ㄹ, et 로 après une voyelle ou ㄹ. La particule indique une direction ou un moyen : 오른쪽으로 가요, 카드로 계산해요. Le nom précède toujours la particule.": "母音・ㄹ の後は 로、それ以外のパッチムの後は 으로。오른쪽으로 は進む方向、카드로 は支払いの手段です。",
+    "direction + (으)로": "方向＋(으)로",
+    "(으)로 indique la direction suivie.": "(으)로 は進む方向を表します。",
+    "moyen + (으)로": "手段＋(으)로",
+    "(으)로 indique le moyen utilisé pour agir.": "(으)로 は交通・支払いなどの手段を表します。",
+    "Dans la rue, tu indiques à quelqu’un de partir vers la droite.": "道で相手に右へ進むよう案内します。",
+    "Allez à droite.": "右へ進んでください。",
+    "Ce sera par carte.": "カードにします。",
+    "J’y vais en métro.": "地下鉄で行きます。",
+    "CONTEXTE\nOn te demande : « Carte ou espèces ? »": "場面\n「カードですか、現金ですか」と聞かれています。",
+    "CONTEXTE\nLa destination du trajet est déjà connue.": "場面\n行き先はすでに共有しています。"
+  },
+  "express-desire": {
+    "Dire ce que l’on souhaite faire.": "自分の「〜したい」という希望を表す。",
+    "Retire 다 de la forme du dictionnaire, puis ajoute 고 싶어요 pour exprimer ton propre souhait. Avec une autre personne, préfère une question ou une formulation indirecte : 뭐 먹고 싶어요?": "辞書形の 다 を取り、語幹に 고 싶어요 を続けます。相手の希望を聞くなら 뭐 먹고 싶어요? のように質問しましょう。",
+    "Au restaurant, tu dis ce que tu aimerais manger.": "レストランで食べたい物を伝えます。",
+    "Je veux manger du bibimbap.": "ビビンバを食べたいです。",
+    "Je voudrais acheter une carte T-money.": "T-moneyカードを買いたいです。",
+    "Je veux aller en Corée.": "韓国へ行きたいです。"
+  },
+  "express-ability": {
+    "Dire ce qu’on peut faire ou ce qui est faisable dans une situation.": "能力や、その場で実行できる可能性を伝える。",
+    "Ajoute ㄹ 수 있어요 après une voyelle et 을 수 있어요 après une consonne pour exprimer une capacité ou une possibilité. La forme vérifie si l’action est réalisable, jamais si elle est autorisée. Remplace 있어요 par 없어요 quand elle est impossible.": "語幹が母音で終われば ㄹ 수 있어요、パッチムで終われば 을 수 있어요。能力・状況上の可能性を表し、없어요 にすると不可能です。この練習では許可を求める -아／어도 돼요? と区別します。",
+    "À la caisse, tu demandes si le paiement par carte est possible ici.": "レジでカード決済が利用できるかを確認します。",
+    "Le paiement par carte est-il possible ici ?": "ここでカード決済できますか？",
+    "Est-il possible de recharger ma carte ici ?": "ここでカードをチャージできますか？",
+    "Je sais lire le coréen.": "韓国語を読めます。",
+    "CONTEXTE\nTu es à un guichet T-money avec ta carte.": "場面\nT-moneyカードを持って窓口に来ています。",
+    "Reconnaître une possibilité parmi d’autres.": "複数の可能性のうちの一つであることを見分ける。"
+  }
+
 };
 
 export const GRAMMAR_COPY_BY_MODULE: Record<string, Record<string, string>> = {
