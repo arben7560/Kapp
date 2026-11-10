@@ -844,7 +844,7 @@ function RestaurantIaContent() {
           <Pressable
             key={choice.id}
             accessibilityRole="button"
-            accessibilityLabel={`${choice.korean}. ${choice.label}`}
+            accessibilityLabel={`${choice.korean}. ${translate(choice.label)}`}
             accessibilityState={{
               disabled: isTransitioning,
               selected: isSelected,
