@@ -100,11 +100,11 @@
       "Une%20activit%C3%A9%20suffit%20pour%20prot%C3%A9ger%20ta%20s%C3%A9rie%2E": "あと１つ学習すれば、連続記録を維持できます。",
       "jour": "日連続",
       "jours": "日連続",
-      "protection": "個の保護アイテム",
-      "protections": "個の保護アイテム",
+      "protection": "保護アイテム",
+      "protections": "保護アイテム",
       "Journ%C3%A9e%20valid%C3%A9e%2E": "今日の学習は完了しました。",
       "Journ%C3%A9e%20%C3%A0%20compl%C3%A9ter%2E": "今日の学習はまだ完了していません。",
-      "Rythme%20du%20jour%2E%20%7B%7Bstatus%7D%7D%20S%C3%A9rie%20de%20%7B%7Bstreak%7D%7D%20%7B%7Bdays%7D%7D%2E%20%7B%7Bfreezes%7D%7D%20%7B%7Bprotections%7D%7D%2E": "今日の学習状況。{{status}} {{streak}}{{days}}、{{freezes}}{{protections}}。",
+      "Rythme%20du%20jour%2E%20%7B%7Bstatus%7D%7D%20S%C3%A9rie%20de%20%7B%7Bstreak%7D%7D%20%7B%7Bdays%7D%7D%2E%20%7B%7Bfreezes%7D%7D%20%7B%7Bprotections%7D%7D%2E": "今日の学習状況。{{status}} {{streak}}{{days}}、{{freezes}}個の{{protections}}。",
       "Ouvre%20le%20d%C3%A9tail%20de%20la%20s%C3%A9rie%20quotidienne": "連続学習記録の詳細を開きます"
     }
   }
