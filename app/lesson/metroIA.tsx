@@ -989,18 +989,20 @@ function MetroIaContent() {
   const pendingSpeechIntent = pendingSpeechChoice
     ? getMetroSpeechChoiceIntent(pendingSpeechChoice)
     : null;
-  const displayedConfirmationLabel = translate((
+  const displayedConfirmationLabel =
     speechUiNodeId === currentNodeId && pendingSpeechChoice
-      ? pendingSpeechIntent === "repeat"
-        ? "une demande de répétition"
-        : pendingSpeechIntent === "thanks"
-          ? "un remerciement"
-          : pendingSpeechIntent === "duration"
-            ? "une question sur la durée"
-            : pendingSpeechIntent === "transfer"
-              ? "une question sur la correspondance"
-              : "la direction vers Gangnam"
-      : null));
+      ? translate(
+          pendingSpeechIntent === "repeat"
+            ? "une demande de répétition"
+            : pendingSpeechIntent === "thanks"
+              ? "un remerciement"
+              : pendingSpeechIntent === "duration"
+                ? "une question sur la durée"
+                : pendingSpeechIntent === "transfer"
+                  ? "une question sur la correspondance"
+                  : "la direction vers Gangnam",
+        )
+      : null;
   const shouldShowSpeechChoices =
     showSpeechChoices ||
     speechState.status === "permission-denied" ||
