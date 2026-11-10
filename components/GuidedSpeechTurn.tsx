@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 
 import type { SpeechRecognitionState } from "../lib/speechRecognitionState";
 import { AppText } from "./app-text";
+import { useVocabularyText } from "../lib/i18n/VocabularyTextContext";
 
 type GuidedSpeechTurnProps = {
   accent: string;
@@ -232,6 +233,7 @@ export function GuidedSpeechTurn({
   speechState,
   children,
 }: GuidedSpeechTurnProps) {
+  const translate = useVocabularyText();
   const isListening = speechState.status === "listening";
   const isBusy =
     interactionDisabled ||
@@ -243,8 +245,10 @@ export function GuidedSpeechTurn({
     interactionDisabledLabel ||
     (isListening ? "Arrêter" : canRetry ? "Réessayer" : "Parler");
   const primaryIcon = isListening ? "stop" : "mic";
+  // Prefer the pedagogically localized original feedback when a Japanese copy exists;
+  // French users keep the existing conversational rewrite unchanged.
   const displayedFeedback = feedback
-    ? humanizeCafeSpeechFeedback(feedback)
+    ? translate(feedback) !== feedback ? feedback : humanizeCafeSpeechFeedback(feedback)
     : speechState.message;
   const needsConfirmation = confirmationLabel !== null;
 
@@ -340,7 +344,7 @@ export function GuidedSpeechTurn({
           <>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Confirmer ${confirmationLabel}`}
+              accessibilityLabel={translate(`Confirmer ${confirmationLabel}`)}
               hitSlop={6}
               onPress={onConfirm}
               style={({ pressed }) => [
@@ -368,7 +372,7 @@ export function GuidedSpeechTurn({
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Réessayer"
+              accessibilityLabel={translate("Réessayer")}
               hitSlop={6}
               onPress={onRetry}
               style={({ pressed }) => [
@@ -397,7 +401,7 @@ export function GuidedSpeechTurn({
         ) : (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={primaryLabel}
+            accessibilityLabel={translate(primaryLabel)}
             accessibilityState={{ disabled: isBusy }}
             aria-disabled={isBusy}
             disabled={isBusy}
@@ -431,7 +435,7 @@ export function GuidedSpeechTurn({
         {!needsConfirmation && !showChoices ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Besoin d’aide"
+            accessibilityLabel={translate("Besoin d’aide")}
             accessibilityState={{ disabled: interactionDisabled }}
             aria-disabled={interactionDisabled}
             disabled={interactionDisabled}
