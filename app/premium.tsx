@@ -221,7 +221,7 @@ function PremiumScreenContent() {
                             annualMetrics?.savingsPercent !== undefined && (
                             <View style={styles.savingBadge}>
                               <AppText variant="caption" style={styles.savingBadgeText}>
-                                Économisez {annualMetrics.savingsPercent} %
+                                {`Économisez ${annualMetrics.savingsPercent} %`}
                               </AppText>
                             </View>
                           )}
