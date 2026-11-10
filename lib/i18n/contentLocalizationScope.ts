@@ -1,6 +1,6 @@
 /** A localized display scope; route identities never depend on the UI language. */
 export type ContentLocalizationScope = Readonly<{
-  namespace: "vocabulary" | "counting" | "classifiers" | "grammar";
+  namespace: "vocabulary" | "counting" | "classifiers" | "grammar" | "immersion";
   module: string;
 }>;
 
@@ -9,6 +9,10 @@ export function getContentLocalizationScope(
   pathname: string,
 ): ContentLocalizationScope | null {
   const segments = pathname.split("/").filter(Boolean);
+  // Café screens use an independent display-only immersion catalogue.
+  if (segments.includes("lesson") && ["cafe", "cafeMissions", "cafeIA"].includes(segments[segments.length - 1] ?? "")) {
+    return { namespace: "immersion", module: "cafe" };
+  }
   // Speak is a top-level tab but uses the same display-copy bridge as Vocabulaire.
   if (segments[segments.length - 1] === "speak") {
     return { namespace: "vocabulary", module: "speak" };
