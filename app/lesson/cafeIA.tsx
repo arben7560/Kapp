@@ -871,7 +871,7 @@ function CafeIaScreenContent() {
           ]}
         >
           <AppBackButton
-            accessibilityLabel="Quitter la scène"
+            accessibilityLabel={translate("Quitter la scène")}
             onPress={handleExit}
           />
         </View>
@@ -1114,7 +1114,7 @@ function CafeIaScreenContent() {
                   <View style={styles.endActions}>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Rejouer la scène"
+                      accessibilityLabel={translate("Rejouer la scène")}
                       hitSlop={6}
                       onPress={handleRestart}
                       style={({ pressed }) => [
@@ -1144,7 +1144,7 @@ function CafeIaScreenContent() {
 
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Ouvrir la fiche vocabulaire du café"
+                      accessibilityLabel={translate("Ouvrir la fiche vocabulaire du café")}
                       hitSlop={6}
                       onPress={handleOpenVocabulary}
                       style={({ pressed }) => [
@@ -1165,7 +1165,7 @@ function CafeIaScreenContent() {
 
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Retour aux missions"
+                      accessibilityLabel={translate("Retour aux missions")}
                       hitSlop={6}
                       onPress={handleExit}
                       style={({ pressed }) => [
@@ -1188,7 +1188,7 @@ function CafeIaScreenContent() {
                   {shouldShowPremiumSuggestion ? (
                     <Pressable
                       accessibilityRole="link"
-                      accessibilityLabel="Découvrir Premium"
+                      accessibilityLabel={translate("Découvrir Premium")}
                       hitSlop={6}
                       onPress={() => router.push("/premium")}
                       style={({ pressed }) => [
