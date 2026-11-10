@@ -5,6 +5,7 @@ import { AppText } from "../app-text";
 import { ActionButton } from "../ui/action-button";
 import { AppDialog, DialogActions } from "../ui/app-dialog";
 import type { ImmersionMission } from "../../lib/immersion/missions";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import { MissionAccessBadge } from "./MissionAccessBadge";
 
 const LINE = "rgba(255,255,255,0.12)";
@@ -67,6 +68,7 @@ export function MissionLaunchModal({
   onCancel,
   onStart,
 }: MissionLaunchModalProps) {
+  const translate = useVocabularyText();
   const startLockRef = React.useRef(false);
   const { height, width } = useWindowDimensions();
   const isPhoneLandscape = width > height && height <= 600;
@@ -223,7 +225,7 @@ export function MissionLaunchModal({
       visible={visible}
       onRequestClose={onCancel}
       accentColor={accent}
-      accessibilityLabel={`Lancer la mission ${mission.title}`}
+      accessibilityLabel={translate(`Lancer la mission ${mission.title}`)}
       maxHeight={landscapeModalHeight}
       fillAvailableHeight={isPhoneLandscape}
       respectHorizontalSafeArea={isPhoneLandscape}
