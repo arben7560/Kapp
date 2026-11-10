@@ -7,7 +7,7 @@ import { JAPANESE_GRAMMAR_GUIDES } from "./grammarGuidesJapanese.ts";
 import { JAPANESE_GRAMMAR_DRILLS } from "./grammarDrillsJapanese.ts";
 
 /**
- * Grammar localization blocks 1–7: stages 1–35. A source-string display
+ * Grammar localization blocks 1–8: stages 1–40. A source-string display
  * catalogue, following Vocabulary/Counting/Classifiers. No questions,
  * Korean, answers, scores, navigation IDs or stored progress are translated.
  */
@@ -47,6 +47,11 @@ const STAGE_CONCEPTS = {
   "decision-and-promise": "intention-eulgeyo",
   "link-actions": "sequence-go",
   "give-reason": "reason-a-eoseo",
+  "mark-contrast": "contrast-jiman",
+  "simple-condition": "condition-eumyeon",
+  "necessity-and-obligation": "obligation-a-eoya-haeyo",
+  "simple-comparison": "comparison-boda-deo-jeil",
+  "make-suggestion": "suggestion-eulkkayo",
 } as const;
 
 const STAGE_COPY = {
@@ -253,6 +258,41 @@ const STAGE_COPY = {
     "goal": "ある出来事の理由と結果をつなげて伝える",
     "examples": [
       "遅れてすみません。"
+    ]
+  },
+  "mark-contrast": {
+    "title": "「〜だけど」を使って対比する",
+    "goal": "二つの事実を「〜だけど／〜ですが」で対比する",
+    "examples": [
+      "この料理は辛いですが、おいしいです。"
+    ]
+  },
+  "simple-condition": {
+    "title": "条件を表す「〜なら」",
+    "goal": "「もし〜なら」と、条件と結果をつなげる",
+    "examples": [
+      "時間があれば行きます。"
+    ]
+  },
+  "necessity-and-obligation": {
+    "title": "必要なこと・物を伝える",
+    "goal": "「しなければならない」と「〜が必要」を使い分ける",
+    "examples": [
+      "切符を買わなければなりません。"
+    ]
+  },
+  "simple-comparison": {
+    "title": "「〜より」「いちばん」で比較する",
+    "goal": "二つの物を比べたり、いちばん好きな物を選んだりする",
+    "examples": [
+      "地下鉄はバスより速いです。"
+    ]
+  },
+  "make-suggestion": {
+    "title": "「〜しましょうか」と提案する",
+    "goal": "相手に一緒の行動や自分の申し出を提案する",
+    "examples": [
+      "一緒に行きましょうか？"
     ]
   }
 
@@ -715,6 +755,56 @@ const CONCEPT_COPY: Record<string, Record<string, string>> = {
     "Je prends un taxi parce qu’il pleut.": "雨が降っているので、タクシーに乗ります。",
     "Désolé d’être en retard.": "遅れてすみません。",
     "Je ne peux pas y aller parce que je suis malade.": "具合が悪いので行けません。"
+  },
+  "mark-contrast": {
+    "Relier deux idées qui s’opposent.": "二つの事実を対比させて話す。",
+    "Ajoute 지만 au radical du verbe ou de l’adjectif pour opposer deux informations, puis conjugue la proposition finale. La première information reste vraie malgré la seconde, sans annuler aucune des deux : 작지만 편해요.": "動詞・形容詞の語幹に 지만 を直接付け、後ろの述語を文末に合わせて活用します。作った対比は双方とも成立します。작지만 편해요 は「小さいけれど快適です」。",
+    "Tu décris une chambre petite, mais confortable.": "小さいけれど快適な部屋について話します。",
+    "Cette chambre est petite, mais confortable.": "この部屋は小さいですが快適です。",
+    "Ce plat est épicé, mais délicieux.": "この料理は辛いですが、おいしいです。",
+    "Cet article est cher, mais il me plaît.": "この商品は高いですが気に入っています。"
+  },
+  "simple-condition": {
+    "Poser une condition simple.": "「もし〜なら」という条件を表す。",
+    "Ajoute 으면 après une consonne et 면 après une voyelle pour poser une condition. La construction -(으)면 돼요 exprime séparément qu’une action suffit : 여기에서 내리면 돼요, « il suffit de descendre ici ».": "語幹が母音終わりなら 면、ㄹ以外のパッチムなら 으면 を付けます。-(으)면 돼요 は「〜すれば十分です」という別の意味を持ち、여기에서 내리면 돼요 は「ここで降りれば大丈夫です」。",
+    "-(으)면 pose la condition nécessaire à la suite.": "-(으)면 は「〜なら／〜たら」という条件を表します。",
+    "-(으)면 돼요 indique que cette action suffit.": "-(으)면 돼요 は「〜すればそれでいい」という十分条件を表します。",
+    "Tu expliques ce que tu fais s’il pleut.": "雨が降った場合にどうするか説明します。",
+    "S’il pleut, je reste à la maison.": "雨が降ったら家にいます。",
+    "J’y vais si j’ai le temps.": "時間があれば行きます。",
+    "Il suffit de descendre ici.": "ここで降りれば大丈夫です。",
+    "CONTEXTE\nTu parles d’une sortie déjà prévue.": "場面\nすでに計画している外出について話しています。",
+    "Reconnaître une condition plus nuancée.": "より細かな条件表現を聞いて理解する。"
+  },
+  "necessity-and-obligation": {
+    "Dire ce qui est nécessaire.": "行動の義務や、必要な物を伝える。",
+    "Conjugue le verbe en -아/어야 해요 pour dire qu’une action est obligatoire. 필요해요 exprime séparément qu’un nom est nécessaire : 표를 사야 해요, mais 표가 필요해요. Ne mélange pas ces deux constructions.": "行動の義務には動詞の아／어形＋야 해요 を使い、必要な物には名詞＋이／가 필요해요 を使います。표를 사야 해요（切符を買う必要がある）と 표가 필요해요（切符が必要）を区別します。",
+    "Cette terminaison porte sur une action obligatoire.": "-아／어야 해요 は、実行しなければならない行動を示します。",
+    "필요해요 porte sur une chose dont on a besoin.": "이／가 필요해요 は、必要な物を示します。",
+    "Au contrôle, on t’explique que tu dois montrer ton passeport.": "審査で、パスポートを提示する必要があると説明されます。",
+    "Il faut montrer son passeport.": "パスポートを見せなければなりません。",
+    "Il faut acheter un billet.": "切符を買わなければなりません。",
+    "J’ai besoin d’une carte T-money.": "T-moneyカードが必要です。",
+    "Reconnaître une nécessité constatée sur le moment.": "その場で必要だと気付いたときの言い方を理解する。"
+  },
+  "simple-comparison": {
+    "Comparer simplement.": "二つの物や、候補の中の順位を比べる。",
+    "Place 보다 après l’élément de référence et 더 devant l’adjectif pour former un comparatif. 제일 signifie « le plus » sans second terme : 버스보다 지하철이 더 빨라요 ; 이게 제일 빨라요.": "比較の基準になる名詞に 보다 を付け、比較する特徴の前に 더 を置きます。더 を省いても比較できる場合があります。제일 は候補の中の「いちばん」で、버스보다 지하철이 더 빨라요／이게 제일 빨라요 のように使います。",
+    "보다 fixe la référence et 더 marque le comparatif.": "보다 が「〜より」という比較基準を示し、더 が「もっと」を表します。",
+    "제일 forme un superlatif sans second terme de comparaison.": "제일 は「いちばん」と、候補の中の最上位を示します。",
+    "Tu compares deux sacs et indiques que celui-ci est plus léger.": "二つのバッグを比べ、こちらのほうが軽いと伝えます。",
+    "Ce sac est plus léger que celui-là.": "このバッグはあのバッグより軽いです。",
+    "Le métro est plus rapide que le bus.": "地下鉄はバスより速いです。",
+    "Cet article-ci est le moins cher.": "これがいちばん安いです。"
+  },
+  "make-suggestion": {
+    "Faire une suggestion simple.": "相手に提案したり、申し出たりする。",
+    "Ajoute ㄹ까요 après une voyelle et 을까요 après une consonne pour proposer une action commune ou demander l’avis de l’interlocuteur. Avec je comme sujet implicite, la forme peut aussi offrir de faire quelque chose.": "相手に提案するとき、母音終わりの語幹に ㄹ까요?、ㄹ以外のパッチムに 을까요? を付けます。「一緒に〜しましょうか」だけでなく、「私が〜しましょうか」という申し出にも使えます。",
+    "À midi, tu proposes à un collègue de déjeuner ensemble.": "昼休みに同僚を一緒の食事に誘います。",
+    "On déjeune ensemble ?": "一緒に昼ご飯を食べませんか？",
+    "On y va ensemble ?": "一緒に行きましょうか？",
+    "On prend un café ?": "コーヒーでも飲みましょうか？",
+    "CONTEXTE\nLa destination du trajet est déjà connue.": "場面\n行き先はすでに相手と共有しています。"
   }
 
 };
