@@ -9,9 +9,12 @@ export function resolveImmersionText(module: string, source: string, locale: App
     const resolved = instance.getResource(locale, "immersion", "content." + immersionCopyId(module, text) + ".text");
     if (typeof resolved === "string" && resolved.trim()) return resolved;
     // Reuse common presentation strings already translated for Café, but only as a Métro fallback.
-    if (module === "metro") {
-      const shared = instance.getResource(locale, "immersion", "content." + immersionCopyId("cafe", text) + ".text");
-      if (typeof shared === "string" && shared.trim()) return shared;
+    if (module === "metro" || module === "restaurant") {
+      const sharedModules = module === "restaurant" ? ["cafe", "metro"] : ["cafe"];
+      for (const sharedModule of sharedModules) {
+        const shared = instance.getResource(locale, "immersion", "content." + immersionCopyId(sharedModule, text) + ".text");
+        if (typeof shared === "string" && shared.trim()) return shared;
+      }
     }
     return undefined;
   };
