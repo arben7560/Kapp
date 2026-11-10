@@ -6,6 +6,7 @@ import { getContentLocalizationScope } from "./contentLocalizationScope";
 import { resolveClassifierText } from "./classifierText";
 import { resolveCountingText } from "./countingText";
 import { resolveGrammarText } from "./grammarText";
+import { resolveImmersionText } from "./immersionText";
 import { resolveVocabularyText } from "./vocabularyText";
 import { VocabularyTextContext } from "./VocabularyTextContext";
 
@@ -51,7 +52,9 @@ export function ContentLocalizationProvider({
             ? resolveCountingText(scope.module, core, locale, i18n)
             : scope.namespace === "classifiers"
               ? resolveClassifierText(scope.module, core, locale, i18n)
-              : resolveGrammarText(scope.module, core, locale, i18n);
+              : scope.namespace === "grammar"
+                ? resolveGrammarText(scope.module, core, locale, i18n)
+                : resolveImmersionText(scope.module, core, locale, i18n);
 
       return `${leading}${localized}${trailing}`;
     },
