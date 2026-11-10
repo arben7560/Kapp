@@ -329,7 +329,7 @@ export const CAFE_IMMERSION_COPY: Readonly<Record<string, string>> = {
   "moyen de paiement": "支払い方法",
   "choix concernant le reçu": "レシートの要否",
   "réponse attendue à cette étape": "この場面で求められる返答",
-  "une des formulations proposées à l’écran": "画面に提示されている表現のいずれか",
+  "une des formulations proposées à l’écran": "画面に表示された表現のいずれか",
   "Dire que tu vas consommer la commande sans préciser où": "店内か持ち帰りかを伝えていない",
   "Payer sans préciser le moyen de paiement": "支払い方法を伝えていない",
   "tu commandes un americano, notamment avec l’abréviation coréenne « 아아 »": "韓国語の略語「아아」を使ってアメリカーノを注文しています",
@@ -361,7 +361,23 @@ export const CAFE_IMMERSION_COPY: Readonly<Record<string, string>> = {
   "jus d’orange": "オレンジジュース",
   "latte": "ラテ",
   "cheesecake": "チーズケーキ",
-  "le serveur": "店員"
+  "le serveur": "店員",
+  "PREMIUM": "プレミアム",
+  "L’accès au micro a été refusé. Tu peux autoriser le micro dans les réglages ou utiliser « Besoin d’aide ».": "マイクの利用が拒否されました。端末の設定でマイクを許可するか、「ヒントを見る」を使ってください。",
+  "Aucune parole n’a été reconnue. Réessaie ou affiche les réponses proposées.": "音声を認識できませんでした。もう一度話すか、返答の例を表示してください。",
+  "La reconnaissance vocale a rencontré un problème. Réessaie ou utilise les réponses proposées.": "音声認識でエラーが発生しました。もう一度話すか、返答の例を使ってください。",
+  "utilise les choix proposés": "提示された選択肢を使う",
+  "le produit": "その商品",
+  "« 물 주세요 » = « De l’eau, s’il vous plaît »": "「물 주세요」は「お水をお願いします」という意味です",
+  "« 메뉴 주세요 » = « Le menu, s’il vous plaît »": "「메뉴 주세요」は「メニューをお願いします」という意味です",
+  "« 화장실 » désigne les toilettes": "「화장실」はトイレのことです",
+  "ta phrase concerne le Wi-Fi du café": "その発話はカフェのWi-Fiについて尋ねています",
+  "« 빨대 » signifie « paille »": "「빨대」はストローを意味します",
+  "ta phrase demande une serviette ou du papier": "紙ナプキンを求めています",
+  "« 몇 번 출구예요? » sert à demander le numéro d’une sortie, plutôt dans un contexte de métro": "「몇 번 출구예요?」は出口番号を尋ねる表現で、主に地下鉄で使います",
+  "tu commandes un sandwich": "サンドイッチを注文しています",
+  "tu commandes un cappuccino": "カプチーノを注文しています",
+  "tu commandes un espresso": "エスプレッソを注文しています"
 };
 
 export function immersionCopyId(module: string, sourceText: string): string {
