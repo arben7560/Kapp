@@ -310,7 +310,7 @@ function MissionMasteryCelebrationModal({
         </AppText>
 
         <AppText variant="body" style={[styles.sceneMeta, { color: accent }]}>
-          {celebration.sceneTitle} · {celebration.location}
+          {translate(celebration.sceneTitle)} · {translate(celebration.location)}
         </AppText>
       </View>
 
