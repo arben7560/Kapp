@@ -21,6 +21,10 @@ export function getContentLocalizationScope(
   if (segments.includes("lesson") && ["restaurant", "restaurantMissions", "restaurantIA"].includes(segments[segments.length - 1] ?? "")) {
     return { namespace: "immersion", module: "restaurant" };
   }
+  // Aéroport: route alias "airport" for expressions, and "aeroport" for missions and voice scenes.
+  if (segments.includes("lesson") && ["airport", "aeroport", "airportIA", "aeroportMissions", "aeroportIA"].includes(segments[segments.length - 1] ?? "")) {
+    return { namespace: "immersion", module: "aeroport" };
+  }
   // Speak is a top-level tab but uses the same display-copy bridge as Vocabulaire.
   if (segments[segments.length - 1] === "speak") {
     return { namespace: "vocabulary", module: "speak" };
