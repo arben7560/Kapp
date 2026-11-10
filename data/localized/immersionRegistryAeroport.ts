@@ -250,7 +250,9 @@ export const AEROPORT_IMMERSION_COPY: Readonly<Record<string, string>> = {
   "J’ai compris :": "意図が伝わりました：",
   "Revoir la transcription": "文字起こしをもう一度見る",
   "Refermer la transcription": "文字起こしを閉じる",
-  "Écoute de l&apos;interlocuteur...": "案内係が話しています…"
+  "Écoute de l&apos;interlocuteur...": "案内係が話しています…",
+  "Oui, ta formulation est suffisamment naturelle et précise pour cette situation.": "はい、この状況に合った十分に自然で分かりやすい言い方です。",
+  "La transcription semble avoir déformé un mot": "音声認識が単語を聞き違えた可能性があります"
 };
 
 function buildAeroportCopy(locale: "fr" | "ja"): LocalizedModule {
