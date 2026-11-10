@@ -367,7 +367,7 @@ export const CAFE_IMMERSION_COPY: Readonly<Record<string, string>> = {
   "Aucune parole n’a été reconnue. Réessaie ou affiche les réponses proposées.": "音声を認識できませんでした。もう一度話すか、返答の例を表示してください。",
   "La reconnaissance vocale a rencontré un problème. Réessaie ou utilise les réponses proposées.": "音声認識でエラーが発生しました。もう一度話すか、返答の例を使ってください。",
   "utilise les choix proposés": "提示された選択肢を使う",
-  "le produit": "その商品",
+  "le produit": "商品",
   "« 물 주세요 » = « De l’eau, s’il vous plaît »": "「물 주세요」は「お水をお願いします」という意味です",
   "« 메뉴 주세요 » = « Le menu, s’il vous plaît »": "「메뉴 주세요」は「メニューをお願いします」という意味です",
   "« 화장실 » désigne les toilettes": "「화장실」はトイレのことです",
@@ -379,7 +379,13 @@ export const CAFE_IMMERSION_COPY: Readonly<Record<string, string>> = {
   "tu commandes un cappuccino": "カプチーノを注文しています",
   "tu commandes un espresso": "エスプレッソを注文しています",
   "La reconnaissance vocale n’est pas disponible sur cet appareil ou ce navigateur. Utilise « Besoin d’aide » pour continuer.": "この端末またはブラウザーでは音声認識を利用できません。「ヒントを見る」から続けてください。",
-  "Je reconnais bien « 먹고 » et « 갈게요 », mais l’ordre est trop mélangé pour former une phrase naturelle. Reprends simplement : « 먹고 갈게요. »": "「먹고」と「갈게요」は分かりますが、自然な韓国語の語順になっていません。「먹고 갈게요.」と言い直しましょう。"
+  "Je reconnais bien « 먹고 » et « 갈게요 », mais l’ordre est trop mélangé pour former une phrase naturelle. Reprends simplement : « 먹고 갈게요. »": "「먹고」と「갈게요」は分かりますが、自然な韓国語の語順になっていません。「먹고 갈게요.」と言い直しましょう。",
+  "l’americano": "アメリカーノ",
+  "le jus d’orange": "オレンジジュース",
+  "le latte": "ラテ",
+  "le cheesecake": "チーズケーキ",
+  "demande une boisson": "飲み物を注文する",
+  "demande un dessert": "デザートを注文する"
 };
 
 export function immersionCopyId(module: string, sourceText: string): string {
