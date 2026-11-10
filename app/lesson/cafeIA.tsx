@@ -18,6 +18,7 @@ import {
 
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import { CafeConversationSummaryModal } from "../../components/cafe/CafeConversationSummaryModal";
 import { GuidedSpeechTurn } from "../../components/GuidedSpeechTurn";
 import { ImmersiveMediaStatusOverlay } from "../../components/immersion/ImmersiveMediaStatusOverlay";
@@ -188,6 +189,7 @@ function getAutoAdvanceDelay(node: DialogueNodeWithVideo, mode: ModeType) {
 
 // ==================== MAIN ====================
 function CafeIaScreenContent() {
+  const translate = useVocabularyText();
   const { complete } = useStore();
   const insets = useSafeAreaInsets();
   const responsive = useResponsiveLayout({
@@ -741,9 +743,7 @@ function CafeIaScreenContent() {
     : null;
   const displayedConfirmationLabel =
     speechUiMatchesCurrentNode && pendingSpeechChoice
-      ? pendingSpeechChoice.label
-          .replace(/[.!?]+$/u, "")
-          .toLocaleLowerCase("fr-FR")
+      ? translate(pendingSpeechChoice.label.replace(/[.!?]+$/u, ""))
       : null;
   const shouldShowSpeechChoices =
     speechUiMatchesCurrentNode && showSpeechChoices;
@@ -760,7 +760,7 @@ function CafeIaScreenContent() {
           <Pressable
             key={choice.id}
             accessibilityRole="button"
-            accessibilityLabel={`${choice.korean}. ${choice.label}`}
+            accessibilityLabel={`${choice.korean}. ${translate(choice.label)}`}
             accessibilityState={{
               disabled: isTransitioning,
               selected: isSelected,
@@ -944,7 +944,7 @@ function CafeIaScreenContent() {
                 <VideoView
                   accessible
                   accessibilityRole="image"
-                  accessibilityLabel="Vidéo de l’interlocutrice du café"
+                  accessibilityLabel={translate("Vidéo de l’interlocutrice du café")}
                   player={player}
                   style={[styles.video, { height: avatarVideoHeight }]}
                   {...IMMERSIVE_VIDEO_VIEW_PROPS}
