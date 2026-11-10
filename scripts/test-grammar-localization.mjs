@@ -17,6 +17,10 @@ const { getJapaneseGrammarVocabulary } = await import("../data/localized/grammar
 const { GRAMMAR_LESSON_GUIDES } = await import("../data/grammar/lessonGuides.ts");
 const { GRAMMAR_PRACTICE_DRILLS } = await import("../data/grammar/practiceDrills.ts");
 const { GRAMMAR_STAGE_BY_ID } = await import("../data/grammar/stages.ts");
+const { buildGrammarPracticeQuestions, areGrammarAnswersEqual } = await import("../lib/grammar/exercises.ts");
+const { A1_REVIEW_SLOTS_JAPANESE, A1_REVIEW_COMPOSED_JAPANESE,
+  A1_REVIEW_HONORIFIC_JAPANESE, getJapaneseA1ReviewFeedback } =
+  await import("../data/localized/grammarReviewJapanese.ts");
 
 const stages = {
   "sentence-structure": "sentence-order",
@@ -61,16 +65,16 @@ const stages = {
   "make-suggestion": "suggestion-eulkkayo",
 };
 
-test("the grammar phase translates stages 1–40 with paired display catalogues", () => {
+test("the grammar phase translates stages 1–41 with paired display catalogues", () => {
   const fr = localizedContent.fr.grammar;
   const ja = localizedContent.ja.grammar;
   assert.deepEqual(Object.keys(fr).sort(), Object.keys(ja).sort());
   assert.ok(Object.keys(fr).length > 200, "Expected complete initial grammar block and UI");
   assert.deepEqual(validateCataloguePair(fr, ja, { koreanSegments: "display-adaptation" }), []);
-  assert.deepEqual(Object.keys(JAPANESE_GRAMMAR_GUIDES).sort(), Object.keys(stages).sort());
+  assert.deepEqual(Object.keys(JAPANESE_GRAMMAR_GUIDES).sort(), [...Object.keys(stages), "a1-validation"].sort());
   assert.deepEqual(Object.keys(JAPANESE_GRAMMAR_DRILLS).sort(), Object.keys(stages).sort());
   for (const id of Object.keys(stages)) assert.ok(Object.hasOwn(GRAMMAR_COPY_BY_MODULE, id));
-  assert.ok(!Object.hasOwn(GRAMMAR_COPY_BY_MODULE, "a1-validation"));
+  assert.ok(Object.hasOwn(GRAMMAR_COPY_BY_MODULE, "a1-validation"));
   assert.equal(resolveGrammarText("sentence-structure", "저는 커피를 마셔요.", "ja"), "저는 커피를 마셔요.");
 });
 
@@ -847,6 +851,141 @@ test("36–40: Japanese corrections preserve legitimate alternatives and disting
   assert.match(wrong["make-suggestion"]["go-suggestion"]["갈게요"],/決意/u);
   assert.match(JAPANESE_GRAMMAR_GUIDES["simple-comparison"].steps[2][1],/二つだけの場合も文脈によって使えます/u);
   assert.equal(resolveGrammarText("simple-comparison","버스보다 지하철이 빨라요.","ja"),"버스보다 지하철이 빨라요.");
+  assert.doesNotMatch(read("../lib/grammar/exercises.ts"),/JAPANESE_GRAMMAR_/u);
+  assert.doesNotMatch(read("../lib/grammar/feedback.ts"),/JAPANESE_GRAMMAR_/u);
+});
+
+const A1_STAGE = "a1-validation";
+test("41: Japanese theory, canonical examples, notes and all guide parts are localized", () => {
+  const stage=GRAMMAR_STAGE_BY_ID[A1_STAGE];
+  const original=GRAMMAR_LESSON_GUIDES[A1_STAGE];
+  const japanese=JAPANESE_GRAMMAR_GUIDES[A1_STAGE];
+  assert.equal(stage.mode,"review");
+  assert.equal(stage.practiceQuestionCount,25);
+  assert.equal(A1_REVIEW_SLOTS_JAPANESE.length,25);
+  assert.equal(Object.keys(A1_REVIEW_COMPOSED_JAPANESE).length,8);
+  assert.equal(Object.keys(A1_REVIEW_HONORIFIC_JAPANESE).length,5);
+  assert.equal(japanese.steps.length,original.steps.length);
+  assert.equal(japanese.examples.length,original.examples.length);
+  assert.equal(japanese.mistakes.length,original.commonMistakes.length);
+  assert.equal(japanese.examples.length,4);
+  assert.equal(japanese.mistakes.length,3);
+  const fields=[stage.title,stage.communicativeGoal,original.introduction,original.mainRule,
+    original.formula.pattern,original.formula.explanation,original.memoryTip];
+  for(const step of original.steps) fields.push(step.title,step.explanation);
+  for(const ex of original.examples){
+    fields.push(ex.french);
+    for(const part of ex.parts) fields.push(part.french,part.role);
+  }
+  for(const mistake of original.commonMistakes) fields.push(mistake.mistake,mistake.correction);
+  for(const ex of stage.canonicalExamples) {
+    fields.push(ex.french,ex.note);
+    assert.equal(resolveGrammarText(A1_STAGE,ex.korean,"ja"),ex.korean);
+    assert.match(resolveGrammarText(A1_STAGE,ex.note,"ja"),/注目ポイント/u);
+  }
+  for(const source of fields){
+    const ja=resolveGrammarText(A1_STAGE,source,"ja");
+    assert.notEqual(ja,source,"Missing Japanese guide copy: "+source);
+    assert.equal(resolveGrammarText(A1_STAGE,source,"fr"),source);
+    assert.match(ja,/[ぁ-ゔァ-ヴー一-龠]/u);
+  }
+  assert.match(japanese.mainRule,/20問正解/u);
+  assert.match(japanese.formula.explanation,/聞き取りや発音ではありません/u);
+  assert.equal(getContentLocalizationScope("/grammar/a1-validation").module,A1_STAGE);
+});
+test("41: all 25 question positions and changing attempt variants have Japanese prompts, stimuli and feedback", () => {
+  let checks=0,variantCount=0,vocabCount=0,orderCount=0,wrongCount=0;
+  const seenIds=new Set(),seenComposed=new Set(),seenHonorific=new Set();
+  for(let attempt=1;attempt<=12;attempt++){
+    const questions=buildGrammarPracticeQuestions(A1_STAGE,attempt,()=>0.27);
+    assert.equal(questions.length,25);
+    assert.deepEqual(questions.map((q)=>q.conceptIds[0]),A1_REVIEW_SLOTS_JAPANESE.map((slot)=>
+      slot.conceptIds[(attempt-1)%slot.conceptIds.length]
+    ));
+    for(const [idx,q] of questions.entries()){
+      checks++;
+      assert.equal(q.stageId,A1_STAGE);
+      const before=JSON.stringify(q);
+      const slot=A1_REVIEW_SLOTS_JAPANESE[idx];
+      const localizedPrompt=resolveGrammarText(A1_STAGE,q.prompt,"ja");
+      assert.notEqual(localizedPrompt,q.prompt,"Unlocalized prompt: "+q.id+" / "+q.prompt);
+      assert.match(localizedPrompt,new RegExp("^A1総復習・"+slot.japaneseFamily));
+      assert.equal(resolveGrammarText(A1_STAGE,q.prompt,"fr"),q.prompt);
+      assert.ok(!localizedPrompt.includes("BILAN A1"));
+      assert.notEqual(resolveGrammarText(A1_STAGE,q.explanation,"ja"),q.explanation,"Unlocalized explanation: "+q.id);
+      const parts=q.display?.split("\n\n")??[];
+      for(const part of parts){
+        const [label,...contents]=part.split("\n");
+        const body=contents.join("\n").replace(/^«\s*|\s*»$/gu,"");
+        if(!body || /[가-힣]/u.test(body))continue;
+        if(/[A-Za-zÀ-ÿ]/u.test(body)){
+          assert.notEqual(resolveGrammarText(A1_STAGE,body,"ja"),body,
+            "Unlocalized stimulus or context: "+q.id+" / "+body);
+        }
+      }
+      const right=getJapaneseGrammarFeedback(q,q.answer,true);
+      assert.ok(right && right.length>=25,"No success feedback: "+q.id);
+      assert.match(right,/[ぁ-ゔァ-ヴー一-龠]/u);
+      assert.equal(getJapaneseA1ReviewFeedback(q,q.answer,true),right);
+      if (Array.isArray(q.answer)) {
+        orderCount++;
+        const wrong=[...q.answer].reverse();
+        assert.ok(!areGrammarAnswersEqual(wrong,q.answer));
+        const correction=getJapaneseGrammarFeedback(q,wrong,false);
+        assert.ok(correction && correction.length>=35,"Order correction missing: "+q.id);
+        assert.match(correction,/語順|文末|順|述語/u);
+      } else {
+        assert.ok(q.options.includes(q.answer));
+        for(const answer of q.options.filter(v=>v!==q.answer)){
+          wrongCount++;
+          const feedback=getJapaneseGrammarFeedback(q,answer,false);
+          assert.ok(feedback && feedback.length>=25,
+            "Missing Japanese feedback: "+q.id+" / "+answer);
+          assert.match(feedback,/[ぁ-ゔァ-ヴー一-龠]/u);
+          if(/[A-Za-zÀ-ÿ]/u.test(answer) && !/[가-힣]/u.test(answer))
+            assert.notEqual(resolveGrammarText(A1_STAGE,answer,"ja"),answer,"French answer label "+answer);
+        }
+      }
+      if(q.vocabulary){
+        vocabCount++;
+        const localized=getJapaneseGrammarVocabulary(q);
+        for(const hint of localized){
+          assert.match(hint.french,/[ぁ-ゔァ-ヴー一-龠]/u,"Unlocalized vocabulary: "+q.id+"/"+hint.korean);
+          assert.doesNotMatch(hint.french,/[À-ÿ]|[a-z]/u);
+        }
+      }
+      const m=q.id.match(/:drill-.*-(review-[a-z-]+)-\d+$/u);
+      if(m)seenComposed.add(m[1]);
+      if(q.conceptIds[0]==="honorific-si")seenHonorific.add(q.id.match(/honorific-si-(.+)-\d+$/u)?.[1]);
+      seenIds.add(q.id.slice(q.id.indexOf(":drill-")+7).replace(/-\d+$/u,""));
+      assert.equal(JSON.stringify(q),before,"Localization changed canonical question: "+q.id);
+    }
+    variantCount++;
+  }
+  assert.equal(checks,300);
+  assert.equal(variantCount,12);
+  assert.ok(orderCount>=48);
+  assert.ok(wrongCount>600);
+  assert.equal(seenComposed.size,8);
+  assert.equal(seenHonorific.size,5);
+  assert.ok(seenIds.size>=100);
+  assert.ok(vocabCount>0);
+});
+test("41: feedback distinguishes Japanese-native honorific nuances and review ordering errors", () => {
+  const h=A1_REVIEW_HONORIFIC_JAPANESE;
+  assert.match(h["honorific-people"].wrong["명"],/正しい表現/u);
+  assert.match(h["teacher-present"].wrong["있어요"],/正しい文/u);
+  assert.match(h["teacher-arrives"].wrong["오셨어요"],/過去/u);
+  assert.match(h["customer-name"].wrong["이름"],/丁寧表現/u);
+  assert.match(h["repeat-respectfully"].wrong["말할까요"],/提案/u);
+  assert.match(A1_REVIEW_COMPOSED_JAPANESE["review-coffee-water-order"].correct,/도/u);
+  assert.match(A1_REVIEW_COMPOSED_JAPANESE["review-reason-order"].orderHint,/비가 와서/u);
+  for(const [id,entry] of Object.entries(A1_REVIEW_COMPOSED_JAPANESE)){
+    for(const f of ["prompt","context","stimulus","explanation"]){
+      assert.notEqual(resolveGrammarText(A1_STAGE,entry.source[f],"ja"),entry.source[f],id+"/"+f);
+      assert.equal(resolveGrammarText(A1_STAGE,entry.source[f],"fr"),entry.source[f]);
+    }
+  }
   assert.doesNotMatch(read("../lib/grammar/exercises.ts"),/JAPANESE_GRAMMAR_/u);
   assert.doesNotMatch(read("../lib/grammar/feedback.ts"),/JAPANESE_GRAMMAR_/u);
 });
