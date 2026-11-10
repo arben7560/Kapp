@@ -3,6 +3,9 @@ import React from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { DEV_UNLOCK_ALL, isPremiumRoutePath } from "./config";
 import { usePaywall } from "./PaywallProvider";
+import { useTranslation } from "react-i18next";
+import { DEFAULT_LOCALE, isAppLocale } from "../i18n/config";
+import { resolvePremiumText } from "../i18n/premiumText";
 
 export function SubscriptionAccessGuard({
   children,
@@ -10,6 +13,9 @@ export function SubscriptionAccessGuard({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { i18n } = useTranslation("premium");
+  const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
+  const locale = isAppLocale(activeLanguage) ? activeLanguage : DEFAULT_LOCALE;
   const { hasPremiumAccess, isLoading } = usePaywall();
 
   React.useEffect(() => {
@@ -40,7 +46,7 @@ export function SubscriptionAccessGuard({
       </View>
       {isBlocked ? (
         <View
-          accessibilityLabel="Vérification de l’accès Premium"
+          accessibilityLabel={resolvePremiumText("Vérification de l’accès Premium", locale, i18n)}
           accessibilityRole="progressbar"
           style={styles.loading}
         >
