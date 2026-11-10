@@ -75,6 +75,9 @@ import {
 import { subscribeToProgressHydration } from "../../lib/progressSyncEvents";
 import { resolveDisplayMessage, type DisplayMessage } from "../../lib/i18n/displayText";
 import { resolveAccountText } from "../../lib/i18n/accountText";
+import { HomeLocalizationProvider } from "../../lib/i18n/HomeLocalizationProvider";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
+import { resolveHomeText } from "../../lib/i18n/homeText";
 import { DEFAULT_LOCALE, isAppLocale } from "../../lib/i18n/config";
 import { buildProgressId } from "../../lib/progressIds";
 
@@ -633,6 +636,9 @@ type SeoulHeroProps = {
 };
 
 function SeoulHero({ cityTime, landscape }: SeoulHeroProps) {
+  const translate = useVocabularyText();
+  const { i18n } = useTranslation("navigation");
+  const isJapanese = (i18n.resolvedLanguage ?? i18n.language) === "ja";
   return (
     <View style={[styles.hero, landscape && styles.heroLandscape]}>
       <View style={styles.heroEyebrowRow}>
@@ -644,9 +650,9 @@ function SeoulHero({ cityTime, landscape }: SeoulHeroProps) {
       </View>
 
       <View style={styles.heroTitleRow}>
-        <Text style={[styles.heroTitle, styles.heroTitleShadow]}>Tu es à </Text>
+        <Text style={[styles.heroTitle, styles.heroTitleShadow]}>{translate("Tu es à")}{isJapanese ? "" : " "}</Text>
 
-        <MaskedView maskElement={<Text style={styles.heroTitle}>Séoul.</Text>}>
+        <MaskedView maskElement={<Text style={styles.heroTitle}>{translate("Séoul.")}</Text>}>
           <LinearGradient
             colors={[TEAL, CYAN, PINK]}
             start={{
@@ -659,14 +665,14 @@ function SeoulHero({ cityTime, landscape }: SeoulHeroProps) {
             }}
           >
             <Text style={[styles.heroTitle, styles.heroAccentPlaceholder]}>
-              Séoul.
+              {translate("Séoul.")}
             </Text>
           </LinearGradient>
         </MaskedView>
       </View>
 
       <AppText variant="bodySecondary" style={styles.heroSubtitle}>
-        {cityTime} là-bas. La ville devient ton terrain d'apprentissage.
+        {translate("{{time}} là-bas. La ville devient ton terrain d'apprentissage.").replace("{{time}}", cityTime)}
       </AppText>
     </View>
   );
@@ -676,7 +682,7 @@ function SeoulHero({ cityTime, landscape }: SeoulHeroProps) {
 // HOME
 // ──────────────────────────────────────────────
 
-export default function Home() {
+function HomeContent() {
   const { i18n } = useTranslation("listening");
   const listenText = (key: ListeningKey, values?: Record<string, string | number>) =>
     resolveDisplayMessage({ namespace: "listening", key, values }, i18n);
@@ -1211,6 +1217,14 @@ export default function Home() {
   );
 }
 
+export default function Home() {
+  return (
+    <HomeLocalizationProvider>
+      <HomeContent />
+    </HomeLocalizationProvider>
+  );
+}
+
 // ──────────────────────────────────────────────
 // GLASS HEADER
 // ──────────────────────────────────────────────
@@ -1228,6 +1242,7 @@ function GlassHeader({
   isProtected: boolean;
   onOpenProfile: () => void;
 }) {
+  const translate = useVocabularyText();
   return (
     <View style={styles.headerShell}>
       <BlurView intensity={48} tint="dark" style={styles.headerBlur}>
@@ -1291,12 +1306,12 @@ function GlassHeader({
 
           {!compact ? (
             <AppText
-              accessibilityLabel={`Heure à Séoul : ${cityTime}`}
+              accessibilityLabel={translate("Heure à Séoul : {{time}}").replace("{{time}}", cityTime)}
               variant="label"
               lineContract="singleLine"
               style={styles.headerTime}
             >
-              {cityTime} · SEOUL
+              {`${cityTime} · ${translate("SEOUL")}`}
             </AppText>
           ) : null}
         </View>
@@ -1304,9 +1319,9 @@ function GlassHeader({
         <View style={styles.headerActionSlot}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Ouvrir mon profil"
-            accessibilityValue={{ text: isProtected ? "Compte protégé" : "Compte local" }}
-            accessibilityHint="Ouvre la page Mon profil"
+            accessibilityLabel={translate("Ouvrir mon profil")}
+            accessibilityValue={{ text: translate(isProtected ? "Compte protégé" : "Compte local") }}
+            accessibilityHint={translate("Ouvre la page Mon profil")}
             hitSlop={4}
             onPress={onOpenProfile}
             style={({ pressed }) => [
@@ -1419,20 +1434,25 @@ function DailyMomentumCard({
   streak: DailyStreakState | null;
   onPress: () => void;
 }) {
+  const translate = useVocabularyText();
   const currentStreak = streak?.currentStreak ?? 0;
   const freezesAvailable = streak?.freezesAvailable ?? 0;
   const isValidated = streak?.isTodayCompleted ?? false;
 
   const dayLabel = currentStreak > 1 ? "jours" : "jour";
   const protectionLabel = freezesAvailable > 1 ? "protections" : "protection";
+  const dailySummary = translate("Rythme du jour. {{status}} Série de {{streak}} {{days}}. {{freezes}} {{protections}}.")
+    .replace("{{status}}", translate(isValidated ? "Journée validée." : "Journée à compléter."))
+    .replace("{{streak}}", String(currentStreak))
+    .replace("{{days}}", translate(dayLabel))
+    .replace("{{freezes}}", String(freezesAvailable))
+    .replace("{{protections}}", translate(protectionLabel));
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Rythme du jour. ${
-        isValidated ? "Journée validée." : "Journée à compléter."
-      } Série de ${currentStreak} ${dayLabel}. ${freezesAvailable} ${protectionLabel}.`}
-      accessibilityHint="Ouvre le détail de la série quotidienne"
+      accessibilityLabel={dailySummary}
+      accessibilityHint={translate("Ouvre le détail de la série quotidienne")}
       onPress={onPress}
       style={({ pressed }) => [
         styles.dailyCardWrap,
@@ -1605,6 +1625,7 @@ function MainActionCard({
   landscape,
   onPress,
 }: any) {
+  const translate = useVocabularyText();
   const { i18n } = useTranslation("listening");
   const isListening = sequence.trackKey === "listen";
   const listeningScript = isListening && i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
@@ -1615,6 +1636,10 @@ function MainActionCard({
   const resumeMeta = sequence.resumeMeta as string | undefined;
 
   const isMission = sequence.trackKey.endsWith("_ia");
+  const resumeAnnouncement = translate("Reprendre {{kind}} {{title}}. {{narrative}}")
+    .replace("{{kind}}", translate(isMission ? "la mission" : "le parcours"))
+    .replace("{{title}}", translate(displayLabel))
+    .replace("{{narrative}}", translate(narrative));
 
   const accent = sequence.hubAccent;
 
@@ -1652,8 +1677,8 @@ function MainActionCard({
       accessibilityRole="link"
       accessibilityLabel={isListening
         ? listenText("home.resumeA11y", { title: displayLabel, narrative })
-        : `Reprendre ${isMission ? "la mission" : "le parcours"} ${displayLabel}. ${narrative}`}
-      accessibilityHint={isListening ? listenText("home.resumeHint") : "Ouvre le parcours actif"}
+        : resumeAnnouncement}
+      accessibilityHint={isListening ? listenText("home.resumeHint") : translate("Ouvre le parcours actif")}
       onPress={onPress}
       style={({ pressed }) => [
         styles.mainCardWrap,
@@ -2023,6 +2048,7 @@ function SequenceIconGlyph({ icon, color }: { icon: string; color: string }) {
 // ──────────────────────────────────────────────
 
 function SequenceCard({ item, isActive, landscape, onPress }: any) {
+  const translate = useVocabularyText();
   const { i18n } = useTranslation("listening");
   const isListening = item.trackKey === "listen";
   const listeningScript = isListening && i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
@@ -2033,13 +2059,13 @@ function SequenceCard({ item, isActive, landscape, onPress }: any) {
   return (
     <Pressable
       accessibilityRole="link"
-      accessibilityLabel={`${item.title}. ${item.narrative}`}
+      accessibilityLabel={`${translate(item.title)}. ${translate(item.narrative)}`}
       accessibilityState={{
         selected: isActive,
       }}
       accessibilityHint={isListening
         ? resolveDisplayMessage({ namespace: "listening", key: "home.openHint" }, i18n)
-        : "Ouvre ce parcours"}
+        : translate("Ouvre ce parcours")}
       aria-selected={isActive}
       onPress={onPress}
       style={({ pressed }) => [
