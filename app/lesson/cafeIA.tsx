@@ -1,3 +1,4 @@
+import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
 import type { ScrollViewInstance } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
@@ -186,7 +187,7 @@ function getAutoAdvanceDelay(node: DialogueNodeWithVideo, mode: ModeType) {
 }
 
 // ==================== MAIN ====================
-export default function CafeIaScreen() {
+function CafeIaScreenContent() {
   const { complete } = useStore();
   const insets = useSafeAreaInsets();
   const responsive = useResponsiveLayout({
@@ -1272,6 +1273,14 @@ export default function CafeIaScreen() {
         </LinearGradient>
       */}
     </ImageBackground>
+  );
+}
+
+export default function CafeIaScreen() {
+  return (
+    <ContentLocalizationProvider pathname="/lesson/cafeIA">
+      <CafeIaScreenContent />
+    </ContentLocalizationProvider>
   );
 }
 
