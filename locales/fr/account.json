@@ -168,6 +168,14 @@
       "Une erreur est survenue pendant la gestion de l’abonnement. Réessaie dans quelques instants.": "Une erreur est survenue pendant la gestion de l’abonnement. Réessaie dans quelques instants.",
       "Le système d’abonnement est indisponible dans cet environnement.": "Le système d’abonnement est indisponible dans cet environnement.",
       "Impossible de terminer la demande. Veuillez réessayer.": "Impossible de terminer la demande. Veuillez réessayer."
+    },
+    "prompt": {
+      "Protégez votre progression": "Protégez votre progression",
+      "Retrouvez votre apprentissage après une réinstallation ou sur un autre appareil.": "Retrouvez votre apprentissage après une réinstallation ou sur un autre appareil.",
+      "Protéger ma progression maintenant": "Protéger ma progression maintenant",
+      "Protéger maintenant": "Protéger maintenant",
+      "Me le rappeler plus tard": "Me le rappeler plus tard",
+      "Plus tard": "Plus tard"
     }
   }
 }
