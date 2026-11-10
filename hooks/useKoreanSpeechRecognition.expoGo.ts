@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { Alert } from "react-native";
+import { useVocabularyText } from "../lib/i18n/VocabularyTextContext";
 
 import {
   INITIAL_SPEECH_RECOGNITION_STATE,
@@ -17,6 +18,7 @@ export const EXPO_GO_SPEECH_RECOGNITION_MESSAGE =
 export const useKoreanSpeechRecognition: UseKoreanSpeechRecognition = (
   _options: UseKoreanSpeechRecognitionOptions = {},
 ) => {
+  const translate = useVocabularyText();
   const [state, setState] = useState<SpeechRecognitionState>(
     INITIAL_SPEECH_RECOGNITION_STATE,
   );
@@ -30,17 +32,17 @@ export const useKoreanSpeechRecognition: UseKoreanSpeechRecognition = (
       setState({
         status: "unavailable",
         transcript: "",
-        message: EXPO_GO_SPEECH_RECOGNITION_MESSAGE,
+        message: translate(EXPO_GO_SPEECH_RECOGNITION_MESSAGE),
       });
 
       Alert.alert(
-        "Reconnaissance vocale indisponible",
-        EXPO_GO_SPEECH_RECOGNITION_MESSAGE,
+        translate("Reconnaissance vocale indisponible"),
+        translate(EXPO_GO_SPEECH_RECOGNITION_MESSAGE),
       );
 
       return false;
     },
-    [],
+    [translate],
   );
 
   const stopListening = useCallback(() => {}, []);
