@@ -372,7 +372,8 @@ export const METRO_IMMERSION_COPY: Readonly<Record<string, string>> = {
   "Tu évoques bien une autre ligne ou une étape intermédiaire, mais tu n’as pas formulé la question.": "別の路線や途中の駅に言及していますが、まだ質問の形になっていません。",
   "Ta phrase peut vouloir dire plusieurs choses ici.": "この場面では複数の意味に取れる返答です。",
   "J’ai compris :": "伝わった意図：",
-  "réponses proposées :": "選べる返答："
+  "réponses proposées :": "選べる返答：",
+  "Vous obtenez maintenant des précisions sur la durée et le rythme du trajet.": "ここでは所要時間や移動の流れについて、もう少し詳しく説明してもらいます。"
 };
 
 function buildMetroCopy(locale: "fr" | "ja"): LocalizedModule {
