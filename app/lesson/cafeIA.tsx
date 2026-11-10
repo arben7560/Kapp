@@ -743,7 +743,9 @@ function CafeIaScreenContent() {
     : null;
   const displayedConfirmationLabel =
     speechUiMatchesCurrentNode && pendingSpeechChoice
-      ? translate(pendingSpeechChoice.label.replace(/[.!?]+$/u, ""))
+      ? translate(pendingSpeechChoice.label)
+          .replace(/[.!?。！？]+$/u, "")
+          .toLocaleLowerCase("fr-FR")
       : null;
   const shouldShowSpeechChoices =
     speechUiMatchesCurrentNode && showSpeechChoices;
