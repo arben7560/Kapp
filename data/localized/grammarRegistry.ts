@@ -1023,7 +1023,7 @@ for (const stageId of Object.keys(STAGE_CONCEPTS) as (keyof typeof STAGE_CONCEPT
       "文末に述語を置き、余計な強調のない基本語順で文を組み立てましょう。");
 
   for (const [drillId, entry] of Object.entries(A1_REVIEW_COMPOSED_JAPANESE)) {
-    for (const field of ["context", "stimulus", "explanation"] as const)
+    for (const field of ["prompt", "context", "stimulus", "explanation"] as const)
       add(stageId, entry.source[field], entry.ja[field]);
     const slotIndex = ({
       "review-destination-order": 8, "review-transport-order": 8,
