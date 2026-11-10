@@ -19,8 +19,13 @@ import { useStore } from "../../_store";
 import { ApplicationLanguageSettings } from "../../components/application-language-settings";
 import { LanguageSelectionScreen } from "../../components/language-selection-screen";
 import { AppText, AppTextInput } from "../../components/app-text";
-import { ActionButton } from "../../components/ui/action-button";
+import { AccountActionButton as ActionButton } from "../../components/account/AccountActionButton";
 import { AppBackButton } from "../../components/ui/app-back-button";
+import { useTranslation } from "react-i18next";
+import { AccountLocalizationProvider } from "../../lib/i18n/AccountLocalizationProvider";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
+import { resolveAccountError } from "../../lib/i18n/accountText";
+import { DEFAULT_LOCALE, isAppLocale } from "../../lib/i18n/config";
 import { AppDialog, DialogActions } from "../../components/ui/app-dialog";
 import { SeoulMidnightGlass } from "../../constants/theme";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
@@ -66,11 +71,11 @@ function friendlyCaughtMessage(caught: unknown) {
     : "L’opération n’a pas abouti. Réessayez dans quelques instants.";
 }
 
-function formatSyncDate(value: string | null) {
+function formatSyncDate(value: string | null, locale: "fr" | "ja") {
   if (!value) return "Aucune synchronisation réussie";
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return "Date indisponible";
-  return new Intl.DateTimeFormat("fr-FR", {
+  return new Intl.DateTimeFormat(locale === "ja" ? "ja-JP" : "fr-FR", {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
@@ -122,11 +127,12 @@ function ProviderButton({
   disabled?: boolean;
   onPress: () => void;
 }) {
+  const translate = useVocabularyText();
   const label = provider === "google" ? "Continuer avec Google" : "Continuer avec Apple";
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={translate(label)}
       disabled={disabled || loading}
       onPress={onPress}
       style={({ pressed }) => [
@@ -179,6 +185,7 @@ function Field({
   autoComplete?: React.ComponentProps<typeof AppTextInput>["autoComplete"];
 }) {
   const [isSecureTextVisible, setIsSecureTextVisible] = React.useState(false);
+  const translate = useVocabularyText();
 
   return (
     <View style={styles.fieldGroup}>
@@ -203,7 +210,7 @@ function Field({
         {secureTextEntry ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={isSecureTextVisible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+            accessibilityLabel={translate(isSecureTextVisible ? "Masquer le mot de passe" : "Afficher le mot de passe")}
             accessibilityState={{ checked: isSecureTextVisible }}
             hitSlop={8}
             onPress={() => setIsSecureTextVisible((visible) => !visible)}
@@ -221,7 +228,19 @@ function Field({
   );
 }
 
-export default function AccountScreen() {
+function AccountScreenContent() {
+  const translate = useVocabularyText();
+  const { i18n } = useTranslation("account");
+  const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
+  const locale = isAppLocale(activeLanguage) ? activeLanguage : DEFAULT_LOCALE;
+  const localizeError = React.useCallback(
+    (message: string) => resolveAccountError(message, locale, i18n),
+    [locale, i18n],
+  );
+  const friendlyError = React.useCallback(
+    (caught: unknown) => localizeError(friendlyCaughtMessage(caught)),
+    [localizeError],
+  );
   const auth = useAuth();
   const paywall = usePaywall();
   const sync = useProgressSync();
@@ -296,7 +315,7 @@ export default function AccountScreen() {
           if (existingAccount) setMode(null);
         }
       } catch (caught) {
-        if (mountedRef.current) setFormError(friendlyCaughtMessage(caught));
+        if (mountedRef.current) setFormError(friendlyError(caught));
       }
     },
     [auth],
@@ -405,7 +424,7 @@ export default function AccountScreen() {
         setMode("password-success");
       }
     } catch (caught) {
-      setFormError(friendlyCaughtMessage(caught));
+      setFormError(friendlyError(caught));
     } finally {
       setIsSubmitting(false);
     }
@@ -413,12 +432,12 @@ export default function AccountScreen() {
 
   const requestSignOut = () => {
     Alert.alert(
-      "Se déconnecter ?",
-      "K-App synchronisera d’abord les modifications en attente, puis créera une nouvelle session invitée sur cet appareil.",
+      translate("Se déconnecter ?"),
+      translate("K-App synchronisera d’abord les modifications en attente, puis créera une nouvelle session invitée sur cet appareil."),
       [
-        { text: "Annuler", style: "cancel" },
+        { text: translate("Annuler"), style: "cancel" },
         {
-          text: "Se déconnecter",
+          text: translate("Se déconnecter"),
           onPress: () => {
             setIsSubmitting(true);
             void auth
@@ -432,14 +451,14 @@ export default function AccountScreen() {
                 );
                 if (result.syncDeferred || result.guestSessionPending) {
                   Alert.alert(
-                    "Déconnexion effectuée",
+                    translate("Déconnexion effectuée"),
                     result.guestSessionPending
-                      ? "Votre progression reste conservée localement. La session invitée sera créée lorsque le réseau sera disponible."
-                      : "Certaines modifications restent conservées localement et seront synchronisées ultérieurement.",
+                      ? translate("Votre progression reste conservée localement. La session invitée sera créée lorsque le réseau sera disponible.")
+                      : translate("Certaines modifications restent conservées localement et seront synchronisées ultérieurement."),
                   );
                 }
               })
-              .catch((caught) => Alert.alert("Déconnexion suspendue", friendlyCaughtMessage(caught)))
+              .catch((caught) => Alert.alert(translate("Déconnexion suspendue"), friendlyError(caught)))
               .finally(() => setIsSubmitting(false));
           },
         },
@@ -449,12 +468,12 @@ export default function AccountScreen() {
 
   const requestDeletion = () => {
     Alert.alert(
-      "Supprimer définitivement le compte ?",
-      "La progression cloud et le compte seront supprimés. Cette action n’annule pas un abonnement App Store ou Google Play.",
+      translate("Supprimer définitivement le compte ?"),
+      translate("La progression cloud et le compte seront supprimés. Cette action n’annule pas un abonnement App Store ou Google Play."),
       [
-        { text: "Annuler", style: "cancel" },
+        { text: translate("Annuler"), style: "cancel" },
         {
-          text: "Supprimer",
+          text: translate("Supprimer"),
           style: "destructive",
           onPress: () => {
             setIsSubmitting(true);
@@ -469,7 +488,7 @@ export default function AccountScreen() {
                   ),
                 );
               })
-              .catch((caught) => Alert.alert("Suppression impossible", friendlyCaughtMessage(caught)))
+              .catch((caught) => Alert.alert(translate("Suppression impossible"), friendlyError(caught)))
               .finally(() => setIsSubmitting(false));
           },
         },
@@ -580,7 +599,7 @@ export default function AccountScreen() {
               <View style={styles.inlineNotice}>
                 <Ionicons name="information-circle-outline" size={18} color={COLORS.amber} />
                 <AppText variant="bodySecondary" style={styles.noticeCopy}>
-                  {auth.error}
+                  {localizeError(auth.error)}
                 </AppText>
               </View>
             ) : null}
@@ -700,7 +719,7 @@ export default function AccountScreen() {
                   </AppText>
                   {sync.errorMessage ? (
                     <AppText variant="body" tone="muted" style={styles.cardBody}>
-                      {sync.errorMessage}
+                      {localizeError(sync.errorMessage)}
                     </AppText>
                   ) : null}
                   <View style={styles.accountLine}>
@@ -734,7 +753,7 @@ export default function AccountScreen() {
                     <View style={styles.lineCopy}>
                       <AppText variant="caption" tone="soft">DERNIÈRE SYNCHRONISATION</AppText>
                       <AppText variant="bodySecondary">
-                        {formatSyncDate(sync.lastSyncedAt)}
+                        {formatSyncDate(sync.lastSyncedAt, locale)}
                       </AppText>
                     </View>
                   </View>
@@ -844,7 +863,7 @@ export default function AccountScreen() {
               />
               {paywall.error ? (
                 <AppText variant="caption" style={styles.subscriptionError}>
-                  {paywall.error.message}
+                  {localizeError(paywall.error.message)}
                 </AppText>
               ) : null}
             </View>
@@ -855,7 +874,7 @@ export default function AccountScreen() {
       <AppDialog
         visible={mode !== null}
         onRequestClose={closeDialog}
-        accessibilityLabel={dialogTitle}
+        accessibilityLabel={translate(dialogTitle)}
         accentColor={
           mode === "confirmation"
             ? COLORS.amber
@@ -985,7 +1004,7 @@ export default function AccountScreen() {
           <View style={styles.formMessage}>
             <Ionicons name="alert-circle-outline" size={17} color={COLORS.red} />
             <AppText variant="bodySecondary" style={styles.formMessageCopy}>
-              {formError ?? auth.error}
+              {localizeError(formError ?? auth.error ?? "")}
             </AppText>
           </View>
         ) : null}
@@ -1010,7 +1029,7 @@ export default function AccountScreen() {
                 void auth
                   .resendProtectionEmail()
                   .then(() => setFormSuccess("Un nouvel email vient d’être envoyé."))
-                  .catch((caught) => setFormError(friendlyCaughtMessage(caught)))
+                  .catch((caught) => setFormError(friendlyError(caught)))
                   .finally(() => setIsSubmitting(false));
               }}
             />
@@ -1053,6 +1072,14 @@ export default function AccountScreen() {
         </DialogActions>
       </AppDialog>
     </LinearGradient>
+  );
+}
+
+export default function AccountScreen() {
+  return (
+    <AccountLocalizationProvider>
+      <AccountScreenContent />
+    </AccountLocalizationProvider>
   );
 }
 
