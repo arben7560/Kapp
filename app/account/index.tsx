@@ -318,7 +318,7 @@ function AccountScreenContent() {
         if (mountedRef.current) setFormError(friendlyError(caught));
       }
     },
-    [auth],
+    [auth, friendlyError],
   );
 
   const requestedAction = Array.isArray(params.action)
@@ -428,7 +428,7 @@ function AccountScreenContent() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [auth, email, ensureMatchingPasswords, mode, password]);
+  }, [auth, email, ensureMatchingPasswords, friendlyError, mode, password]);
 
   const requestSignOut = () => {
     Alert.alert(
