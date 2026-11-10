@@ -291,6 +291,9 @@ export default function GrammarHubScreen() {
                       state === "practiced" || state === "mastered";
                     const isCurrent = stageId === nextStageId && !completed;
                     const missingRecommended = access.missingRecommended[0];
+                    // Resolve each grammar notation before joining: the final
+                    // string can mix Korean forms and French editorial labels.
+                    // Keep the canonical concept forms untouched.
                     const conceptForms = stage.conceptIds
                       .slice(0, 3)
                       .map(
@@ -299,7 +302,8 @@ export default function GrammarHubScreen() {
                             (concept) => concept.id === conceptId,
                           )?.form,
                       )
-                      .filter(Boolean)
+                      .filter((form): form is string => !!form)
+                      .map((form) => translate(form))
                       .join(" · ");
 
                     const status = premiumLocked
