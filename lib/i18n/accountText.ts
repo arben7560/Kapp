@@ -8,6 +8,10 @@ import type { AppLocale } from "./config";
  * in authentication, validation, sync and OAuth; only their rendered copy is
  * localized. Copy is grouped in locales/{fr,ja}/account.json.
  */
+function accountCopyId(source: string): string {
+  return encodeURIComponent(source).replaceAll(".", "%2E");
+}
+
 const accountCopySectionBySource = new Map<string, string>();
 for (const [section, messages] of Object.entries(frenchAccount.copy)) {
   for (const source of Object.values(messages)) {
@@ -31,14 +35,14 @@ export function resolveAccountText(
   const copy = instance.getResource(locale, "account", "copy") as
     | Record<string, Record<string, string>>
     | undefined;
-  const localized = section ? copy?.[section]?.[text] : undefined;
+  const localized = section ? copy?.[section]?.[accountCopyId(text)] : undefined;
   if (typeof localized === "string" && localized.trim()) {
     return leading + localized + trailing;
   }
 
   const confirmation = text.match(/^Un lien a été envoyé à (.+)\.$/u);
   if (confirmation) {
-    const template = copy?.dialogs?.["Un lien a été envoyé à {{email}}."];
+    const template = copy?.dialogs?.[accountCopyId("Un lien a été envoyé à {{email}}.")];
     if (template) return leading + template.replace("{{email}}", confirmation[1]) + trailing;
   }
   return source;
