@@ -7,6 +7,7 @@ import {
 
 import type { ImmersiveVideoPlaybackStatus } from "../../hooks/useImmersiveVideoLifecycle";
 import { AppText } from "../app-text";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 
 type Props = Readonly<{
   onExit?: () => void;
@@ -21,6 +22,7 @@ export function ImmersiveMediaStatusOverlay({
   onRetry,
   status,
 }: Props) {
+  const translate = useVocabularyText();
   if (
     status === "idle" ||
     status === "loaded" ||
@@ -57,7 +59,7 @@ export function ImmersiveMediaStatusOverlay({
       {isInterrupted && onResume ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Reprendre la vidéo"
+          accessibilityLabel={translate("Reprendre la vidéo")}
           onPress={onResume}
           style={styles.primaryAction}
         >
@@ -72,7 +74,7 @@ export function ImmersiveMediaStatusOverlay({
           {onRetry ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Réessayer la vidéo"
+              accessibilityLabel={translate("Réessayer la vidéo")}
               onPress={onRetry}
               style={styles.primaryAction}
             >
@@ -84,7 +86,7 @@ export function ImmersiveMediaStatusOverlay({
           {onExit ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Quitter la scène"
+              accessibilityLabel={translate("Quitter la scène")}
               onPress={onExit}
               style={styles.secondaryAction}
             >
