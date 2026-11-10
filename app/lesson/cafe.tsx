@@ -1,3 +1,4 @@
+import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
 import { router } from "expo-router";
 import { useCallback, useState } from "react";
 import {
@@ -265,7 +266,7 @@ const SCENES = [
   },
 ];
 
-export default function CafeLesson() {
+function CafeLessonContent() {
   const [activeScene, setActiveScene] = useState(SCENES[0]);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
@@ -453,6 +454,14 @@ export default function CafeLesson() {
         </ScrollView>
       </ImageBackground>
     </SafeAreaView>
+  );
+}
+
+export default function CafeLesson() {
+  return (
+    <ContentLocalizationProvider pathname="/lesson/cafe">
+      <CafeLessonContent />
+    </ContentLocalizationProvider>
   );
 }
 
