@@ -11,6 +11,7 @@ import {
   type CafeGroupedImperfection,
 } from "../../lib/cafeConversationMemory";
 import { AppText } from "../app-text";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 
 type CafeConversationSummaryModalProps = Readonly<{
   memory: CafeConversationMemory;
@@ -103,6 +104,7 @@ export function CafeConversationSummaryModal({
   onClose,
   onFinish,
 }: CafeConversationSummaryModalProps) {
+  const translate = useVocabularyText();
   useSpeechLifecycle();
   const [isReviewing, setIsReviewing] = useState(false);
   const [listenedPhrases, setListenedPhrases] = useState<Record<string, true>>(
@@ -158,7 +160,7 @@ export function CafeConversationSummaryModal({
               </AppText>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Fermer le bilan"
+                accessibilityLabel={translate("Fermer le bilan")}
                 hitSlop={8}
                 onPress={handleClose}
                 style={styles.closeButton}
@@ -196,7 +198,7 @@ export function CafeConversationSummaryModal({
                         </AppText>
                         <Pressable
                           accessibilityRole="button"
-                          accessibilityLabel={`${listenedPhrases[phrase] ? "Réécouter" : "Écouter"} ${phrase}`}
+                          accessibilityLabel={translate(`${listenedPhrases[phrase] ? "Réécouter" : "Écouter"} ${phrase}`)}
                           hitSlop={6}
                           onPress={() => speak(phrase)}
                           style={styles.listenButton}
@@ -348,7 +350,7 @@ export function CafeConversationSummaryModal({
                         </AppText>
                         <Pressable
                           accessibilityRole="button"
-                          accessibilityLabel={`${listenedPhrases[phraseToRemember] ? "Réécouter" : "Écouter"} ${phraseToRemember}`}
+                          accessibilityLabel={translate(`${listenedPhrases[phraseToRemember] ? "Réécouter" : "Écouter"} ${phraseToRemember}`)}
                           hitSlop={6}
                           onPress={() => speak(phraseToRemember)}
                           style={styles.listenButton}
@@ -373,9 +375,7 @@ export function CafeConversationSummaryModal({
             <View style={styles.actions}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={
-                  isReviewing ? "Retour au bilan" : "Ouvrir les phrases"
-                }
+                accessibilityLabel={translate(isReviewing ? "Retour au bilan" : "Ouvrir les phrases")}
                 hitSlop={6}
                 onPress={() => setIsReviewing((current) => !current)}
                 style={styles.secondaryAction}
@@ -391,7 +391,7 @@ export function CafeConversationSummaryModal({
               </Pressable>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Terminer la mission"
+                accessibilityLabel={translate("Terminer la mission")}
                 hitSlop={6}
                 onPress={handleFinish}
                 style={styles.primaryAction}
