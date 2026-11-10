@@ -7,9 +7,10 @@ import type { ContentModule, LocalizedModule } from '../types.ts';
 import { frenchCountingContent } from '../countingRegistry.ts';
 import { frenchClassifierContent } from '../classifiersRegistry.ts';
 import { frenchGrammarContent } from '../grammarRegistry.ts';
+import { frenchCafeImmersionContent } from '../immersionRegistryCafe.ts';
 
 // Canonical French vocabulary display strings are catalogued by source text; engine data stays in the lesson modules.
 export const frenchContent = {
   hangul: buildHangulFrenchCopy(), vocabulary: { ...frenchVocabularyContent, ...frenchVocabularyExtraContent, ...frenchVocabularySupplementContent, ...frenchSpeakContent }, counting: frenchCountingContent, classifiers: frenchClassifierContent, grammar: frenchGrammarContent,
-  listening: {}, missions: {}, speechFeedback: {}, immersion: {},
+  listening: {}, missions: {}, speechFeedback: {}, immersion: frenchCafeImmersionContent,
 } as const satisfies Record<ContentModule, LocalizedModule>;
