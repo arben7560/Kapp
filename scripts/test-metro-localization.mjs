@@ -20,7 +20,7 @@ test("Métro is scoped to three screens without changing Café, Speak or other l
   }
   assert.deepEqual(getContentLocalizationScope("/lesson/cafe"), { namespace: "immersion", module: "cafe" });
   assert.deepEqual(getContentLocalizationScope("/speak"), { namespace: "vocabulary", module: "speak" });
-  assert.equal(getContentLocalizationScope("/lesson/restaurant"), null);
+  assert.deepEqual(getContentLocalizationScope("/lesson/restaurant"), { namespace: "immersion", module: "restaurant" });
 });
 
 test("Métro FR and JA catalogues are paired and share the existing i18next immersion namespace", () => {
