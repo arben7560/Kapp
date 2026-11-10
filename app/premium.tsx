@@ -13,10 +13,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../components/app-text";
 import { AppBackButton } from "../components/ui/app-back-button";
-import { ActionButton } from "../components/ui/action-button";
+import { PremiumActionButton as ActionButton } from "../components/premium/PremiumActionButton";
+import { useTranslation } from "react-i18next";
+import { PremiumLocalizationProvider } from "../lib/i18n/PremiumLocalizationProvider";
+import { useVocabularyText } from "../lib/i18n/VocabularyTextContext";
+import { resolvePremiumError } from "../lib/i18n/premiumText";
+import { DEFAULT_LOCALE, isAppLocale } from "../lib/i18n/config";
 import {
   PAYWALL_COPY,
   PREMIUM_SUBSCRIPTION_OFFERS,
+  PREMIUM_PRICE_FALLBACKS,
 } from "../lib/paywall/config";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { usePaywall } from "../lib/paywall/PaywallProvider";
@@ -50,7 +56,11 @@ const isAnnualOffer = (offer: (typeof PREMIUM_SUBSCRIPTION_OFFERS)[number]) => {
   );
 };
 
-export default function PremiumScreen() {
+function PremiumScreenContent() {
+  const translate = useVocabularyText();
+  const { i18n } = useTranslation("premium");
+  const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
+  const locale = isAppLocale(activeLanguage) ? activeLanguage : DEFAULT_LOCALE;
   const responsive = useResponsiveLayout({ maxWidth: 620 });
   const {
     displayPrices,
@@ -91,6 +101,12 @@ export default function PremiumScreen() {
       ) ?? PREMIUM_SUBSCRIPTION_OFFERS[0],
     [effectiveSelectedOfferId],
   );
+  const displayedPrice = (offerId: (typeof PREMIUM_SUBSCRIPTION_OFFERS)[number]["id"]) => {
+    const price = displayPrices[offerId];
+    // Display-only localization for the development fallback. Prices returned
+    // by App Store / Google Play remain exactly as provided by the store.
+    return price === PREMIUM_PRICE_FALLBACKS[offerId] ? translate(price) : price;
+  };
   const canSubscribe =
     !!selectedOffer &&
     !!subscriptions[selectedOffer.id] &&
@@ -175,6 +191,9 @@ export default function PremiumScreen() {
               {PREMIUM_SUBSCRIPTION_OFFERS.map((offer) => (
                 <Pressable
                   key={offer.id}
+                  accessibilityRole="radio"
+                  accessibilityLabel={`${translate(offer.title)}. ${displayedPrice(offer.id)}`}
+                  accessibilityState={{ selected: offer.id === effectiveSelectedOfferId, disabled: busy || hasPremiumAccess || (!isLoading && !subscriptions[offer.id]) }}
                   disabled={
                     busy ||
                     hasPremiumAccess ||
@@ -233,7 +252,7 @@ export default function PremiumScreen() {
                         }
                         style={styles.price}
                       >
-                        {displayPrices[offer.id]}
+                        {displayedPrice(offer.id)}
                       </AppText>
                       <AppText variant="bodySecondary" tone="muted" style={styles.priceCaption}>
                         {offer.id === "yearly" && annualMetrics
@@ -272,7 +291,7 @@ export default function PremiumScreen() {
           {!!error && (
             <View style={styles.errorCard}>
               <AppText variant="bodyStrong" style={styles.errorTitle}>Impossible de continuer</AppText>
-              <AppText variant="bodySecondary" style={styles.errorText}>{error.message}</AppText>
+              <AppText variant="bodySecondary" style={styles.errorText}>{resolvePremiumError(error.message, locale, i18n)}</AppText>
             </View>
           )}
 
@@ -290,7 +309,7 @@ export default function PremiumScreen() {
 
           {!hasPremiumAccess && selectedOffer && (
             <AppText variant="caption" style={styles.selectedPlanText}>
-              Offre sélectionnée : {selectedOffer.title}
+              {`Offre sélectionnée : ${selectedOffer.title}`}
             </AppText>
           )}
 
@@ -322,6 +341,14 @@ export default function PremiumScreen() {
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
+  );
+}
+
+export default function PremiumScreen() {
+  return (
+    <PremiumLocalizationProvider>
+      <PremiumScreenContent />
+    </PremiumLocalizationProvider>
   );
 }
 
