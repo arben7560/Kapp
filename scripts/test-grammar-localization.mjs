@@ -916,7 +916,10 @@ test("41: all 25 question positions and changing attempt variants have Japanese 
       const parts=q.display?.split("\n\n")??[];
       for(const part of parts){
         const [label,...contents]=part.split("\n");
-        const body=contents.join("\n").replace(/^«\s*|\s*»$/gu,"");
+        const rawBody=contents.join("\n");
+        const body=rawBody.trim().startsWith("«") && rawBody.trim().endsWith("»")
+          ? rawBody.replace(/^«\s*/u,"").replace(/\s*»$/u,"")
+          : rawBody;
         if(!body || /[가-힣]/u.test(body))continue;
         if(/[A-Za-zÀ-ÿ]/u.test(body)){
           assert.notEqual(resolveGrammarText(A1_STAGE,body,"ja"),body,
