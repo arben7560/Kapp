@@ -168,6 +168,14 @@
       "Une erreur est survenue pendant la gestion de l’abonnement. Réessaie dans quelques instants.": "サブスクリプションの処理中にエラーが発生しました。しばらくしてからもう一度お試しください。",
       "Le système d’abonnement est indisponible dans cet environnement.": "この環境ではサブスクリプション機能を利用できません。",
       "Impossible de terminer la demande. Veuillez réessayer.": "操作を完了できませんでした。もう一度お試しください。"
+    },
+    "prompt": {
+      "Protégez votre progression": "学習の進捗を保護する",
+      "Retrouvez votre apprentissage après une réinstallation ou sur un autre appareil.": "アプリを再インストールした後や別の端末でも、学習の進捗を引き継げます。",
+      "Protéger ma progression maintenant": "今すぐ学習の進捗を保護する",
+      "Protéger maintenant": "今すぐ保護する",
+      "Me le rappeler plus tard": "後でもう一度通知する",
+      "Plus tard": "あとで"
     }
   }
 }
