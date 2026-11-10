@@ -44,7 +44,7 @@ export const resources = {
     listening: frListening,
     missions: frMissions,
     speechFeedback: frSpeechFeedback,
-    immersion: frImmersion,
+    immersion: { ...frImmersion, content: frenchContent.immersion },
   },
   ja: {
     common: jaCommon,
@@ -60,7 +60,7 @@ export const resources = {
     listening: jaListening,
     missions: jaMissions,
     speechFeedback: jaSpeechFeedback,
-    immersion: jaImmersion,
+    immersion: { ...jaImmersion, content: japaneseContent.immersion },
   },
 } as const;
 
