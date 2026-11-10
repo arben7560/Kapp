@@ -54,9 +54,14 @@ const stages = {
   "decision-and-promise": "intention-eulgeyo",
   "link-actions": "sequence-go",
   "give-reason": "reason-a-eoseo",
+  "mark-contrast": "contrast-jiman",
+  "simple-condition": "condition-eumyeon",
+  "necessity-and-obligation": "obligation-a-eoya-haeyo",
+  "simple-comparison": "comparison-boda-deo-jeil",
+  "make-suggestion": "suggestion-eulkkayo",
 };
 
-test("the grammar phase translates stages 1–35 with paired display catalogues", () => {
+test("the grammar phase translates stages 1–40 with paired display catalogues", () => {
   const fr = localizedContent.fr.grammar;
   const ja = localizedContent.ja.grammar;
   assert.deepEqual(Object.keys(fr).sort(), Object.keys(ja).sort());
@@ -65,7 +70,7 @@ test("the grammar phase translates stages 1–35 with paired display catalogues"
   assert.deepEqual(Object.keys(JAPANESE_GRAMMAR_GUIDES).sort(), Object.keys(stages).sort());
   assert.deepEqual(Object.keys(JAPANESE_GRAMMAR_DRILLS).sort(), Object.keys(stages).sort());
   for (const id of Object.keys(stages)) assert.ok(Object.hasOwn(GRAMMAR_COPY_BY_MODULE, id));
-  assert.ok(!Object.hasOwn(GRAMMAR_COPY_BY_MODULE, "mark-contrast"));
+  assert.ok(!Object.hasOwn(GRAMMAR_COPY_BY_MODULE, "a1-validation"));
   assert.equal(resolveGrammarText("sentence-structure", "저는 커피를 마셔요.", "ja"), "저는 커피를 마셔요.");
 });
 
@@ -92,7 +97,7 @@ test("all theory fields, examples, parts and common mistakes are present in Japa
   assert.deepEqual(errors, [], errors.join("\n"));
 });
 
-test("192 existing drills and all expected corrective variants have Japanese explanations", () => {
+test("217 existing drills and all expected corrective variants have Japanese explanations", () => {
   const errors = [];
   let count = 0;
   for (const [stageId, conceptId] of Object.entries(stages)) {
@@ -122,7 +127,7 @@ test("192 existing drills and all expected corrective variants have Japanese exp
       }
     }
   }
-  assert.equal(count, 192);
+  assert.equal(count, 217);
   assert.deepEqual(errors, [], errors.join("\n"));
 });
 
@@ -135,7 +140,7 @@ test("language changes are display-only and preserve canonical Korean responses"
     assert.notEqual(ja, original);
     assert.equal(resolveGrammarText(stage, original, "fr"), original);
   }
-  assert.equal(resolveGrammarText("mark-contrast", "Marquer un contraste", "ja"), "Marquer un contraste");
+  assert.equal(resolveGrammarText("a1-validation", "Révision générale A1", "ja"), "Révision générale A1");
   assert.match(read("../app/(tabs)/grammar/_layout.tsx"), /<ContentLocalizationProvider pathname=\{pathname\}>/u);
   assert.match(read("../app/(tabs)/grammar/[stageId].tsx"), /getJapaneseGrammarFeedback/u);
   assert.match(read("../lib/i18n/ContentLocalizationProvider.tsx"), /useTranslation\("common"\)/u);
@@ -166,14 +171,14 @@ test("Japanese course copy is written for Japanese learners with consistent Kore
 
 test("grammar feedback is varied and retains a rule for every correct and incorrect answer", () => {
   const positive = Object.values(JAPANESE_GRAMMAR_CORRECT_FEEDBACK).flatMap(Object.values);
-  assert.equal(positive.length, 192);
-  assert.equal(new Set(positive).size, 192);
+  assert.equal(positive.length, 217);
+  assert.equal(new Set(positive).size, 217);
   assert.equal(positive.filter((copy) => copy.startsWith("正解。")).length, 0);
   for (const copy of positive) assert.match(copy, /[가-힣]/u);
   const wrong = Object.values(JAPANESE_GRAMMAR_WRONG_FEEDBACK).flatMap((byDrill) =>
     Object.values(byDrill).flatMap(Object.values),
   );
-  assert.equal(wrong.length, 570); // 3 stage-one order permutations use a dynamic feedback resolver
+  assert.equal(wrong.length, 645); // 3 stage-one order permutations use a dynamic feedback resolver
   for (const copy of wrong) {
     assert.ok(copy.length >= 25, copy);
     assert.match(copy, /[가-힣]/u);
@@ -513,7 +518,7 @@ test("all 27 stage 21–25 drills preserve display-only answer keys and targeted
     }
   }
   assert.equal(total,27);
-  assert.equal(Object.values(JAPANESE_GRAMMAR_WRONG_FEEDBACK).flatMap((stage) => Object.values(stage).flatMap(Object.values)).length,570);
+  assert.equal(Object.values(JAPANESE_GRAMMAR_WRONG_FEEDBACK).flatMap((stage) => Object.values(stage).flatMap(Object.values)).length,645);
 });
 test("21–25 teaching decisions distinguish requests, instructions, means, desire and permission", () => {
   assert.match(JAPANESE_GRAMMAR_WRONG_FEEDBACK["request-action"]["item-vs-action"]["주세요"], /動作/u);
@@ -735,6 +740,113 @@ test("31–35: native Korean-Japanese pedagogical contrasts address the selected
   assert.match(JAPANESE_GRAMMAR_WRONG_FEEDBACK["give-reason"]["rain-reason"]["오면"],/条件/u);
   assert.match(JAPANESE_GRAMMAR_GUIDES["past-event"].mistakes[0][1],/一律に誤りとはせず/u);
   for(const stage of STAGES_31_TO_35) assert.ok(!Object.values(JAPANESE_GRAMMAR_DRILLS[stage]).some((d)=>d.choices));
+  assert.doesNotMatch(read("../lib/grammar/exercises.ts"),/JAPANESE_GRAMMAR_/u);
+  assert.doesNotMatch(read("../lib/grammar/feedback.ts"),/JAPANESE_GRAMMAR_/u);
+});
+
+const STAGES_36_TO_40 = [
+  "mark-contrast", "simple-condition", "necessity-and-obligation",
+  "simple-comparison", "make-suggestion",
+];
+test("36–40: Japanese teaching guides cover complete original sections without altering Korean", () => {
+  for(const stageId of STAGES_36_TO_40) {
+    const original=GRAMMAR_LESSON_GUIDES[stageId],localized=JAPANESE_GRAMMAR_GUIDES[stageId];
+    assert.ok(localized.introduction.length>60,stageId);
+    assert.ok(localized.mainRule.length>60,stageId);
+    assert.equal(localized.steps.length,original.steps.length,stageId);
+    assert.equal(localized.examples.length,original.examples.length,stageId);
+    assert.equal(localized.mistakes.length,original.commonMistakes.length,stageId);
+    assert.equal(localized.examples.length,2,stageId);
+    assert.equal(localized.mistakes.length,2,stageId);
+    assert.equal(Object.keys(JAPANESE_GRAMMAR_DRILLS[stageId]).length,5,stageId);
+    assert.doesNotMatch(JSON.stringify(localized),/フランス語|français|orthographe/u,stageId);
+    for (const ex of original.examples) assert.equal(resolveGrammarText(stageId,ex.korean,"ja"),ex.korean);
+    for (const ex of GRAMMAR_STAGE_BY_ID[stageId].canonicalExamples) assert.equal(resolveGrammarText(stageId,ex.korean,"ja"),ex.korean);
+    assert.equal(resolveGrammarText(stageId,GRAMMAR_STAGE_BY_ID[stageId].title,"fr"),GRAMMAR_STAGE_BY_ID[stageId].title);
+    assert.notEqual(resolveGrammarText(stageId,GRAMMAR_STAGE_BY_ID[stageId].title,"ja"),GRAMMAR_STAGE_BY_ID[stageId].title);
+    assert.deepEqual(getContentLocalizationScope("/grammar/"+stageId),{namespace:"grammar",module:stageId});
+  }
+  assert.match(JAPANESE_GRAMMAR_GUIDES["mark-contrast"].formula.explanation,/맵지만/u);
+  assert.match(JAPANESE_GRAMMAR_GUIDES["simple-condition"].formula.explanation,/내리면 돼요/u);
+  assert.match(JAPANESE_GRAMMAR_GUIDES["necessity-and-obligation"].mainRule,/여권이 필요해요/u);
+  assert.match(JAPANESE_GRAMMAR_GUIDES["simple-comparison"].mainRule,/省略/u);
+  assert.match(JAPANESE_GRAMMAR_GUIDES["make-suggestion"].introduction,/申し出/u);
+});
+test("36–40: every exercise has display-only Japanese explanations and all 75 distractor-specific corrections", () => {
+  let total=0,incorrect=0;
+  const correctTexts=new Set();
+  for(const stageId of STAGES_36_TO_40) {
+    const conceptId=GRAMMAR_STAGE_BY_ID[stageId].conceptIds[0];
+    const drills=GRAMMAR_PRACTICE_DRILLS[conceptId];
+    assert.equal(drills.length,5,stageId);
+    const usedPrompts=new Map();
+    for (const drill of drills) {
+      total++;
+      const localized=JAPANESE_GRAMMAR_DRILLS[stageId][drill.id];
+      assert.ok(localized,stageId+"/"+drill.id);
+      const q={stageId,id:stageId+":1:drill-"+conceptId+"-"+drill.id+"-1",answer:drill.answer};
+      const success=getJapaneseGrammarFeedback(q,drill.answer,true);
+      assert.ok(success && success.length>=25,stageId+"/"+drill.id+"/correct");
+      assert.match(success,/[가-힣]/u);
+      assert.ok(!correctTexts.has(success),"Repeated correct-feedback text: "+stageId+"/"+drill.id);
+      correctTexts.add(success);
+      for(const field of ["stimulus","context","prompt","explanation"]) {
+        const source=drill[field];
+        if(typeof source!=="string" || !/[A-Za-zÀ-ÿ]/u.test(source)) continue;
+        if(field==="stimulus" && /[가-힣]/u.test(source) && !localized.stimulus) continue;
+        assert.equal(resolveGrammarText(stageId,source,"ja"),localized[field],stageId+"/"+drill.id+"/"+field);
+        assert.equal(resolveGrammarText(stageId,source,"fr"),source);
+      }
+      if(usedPrompts.has(drill.prompt)) assert.equal(localized.prompt,usedPrompts.get(drill.prompt),stageId+"/"+drill.id+"/shared prompt");
+      usedPrompts.set(drill.prompt,localized.prompt);
+      assert.equal(drill.distractors.length,3,stageId+"/"+drill.id);
+      for(const answer of drill.distractors) {
+        incorrect++;
+        const correction=getJapaneseGrammarFeedback(q,answer,false);
+        assert.ok(correction && correction.length>=25,stageId+"/"+drill.id+"/"+answer);
+        assert.match(correction,/[가-힣]/u);
+        assert.equal(JAPANESE_GRAMMAR_WRONG_FEEDBACK[stageId][drill.id][answer],correction);
+        assert.equal(resolveGrammarText(stageId,answer,"ja"),answer);
+      }
+      assert.equal(resolveGrammarText(stageId,drill.answer,"ja"),drill.answer);
+      if(drill.vocabulary) {
+        const original=drill.vocabulary.map((entry)=>({...entry}));
+        for(const hint of getJapaneseGrammarVocabulary({stageId,vocabulary:drill.vocabulary})) {
+          assert.match(hint.french,/[ぁ-ゔァ-ヴー一-龠]/u);
+          assert.doesNotMatch(hint.french,/[À-ÿ]|[a-z]/u);
+        }
+        assert.deepEqual(drill.vocabulary,original);
+      }
+    }
+  }
+  assert.equal(total,25);
+  assert.equal(incorrect,75);
+  assert.equal(correctTexts.size,25);
+});
+test("36–40: editorial concept and nuance translations are linked to the active stages", async () => {
+  const {GRAMMAR_EDITORIAL} = await import("../data/grammar/editorial.ts");
+  for(const stageId of STAGES_36_TO_40) {
+    const conceptId=GRAMMAR_STAGE_BY_ID[stageId].conceptIds[0];
+    const editorial=GRAMMAR_EDITORIAL[conceptId];
+    assert.ok(editorial,stageId);
+    assert.notEqual(resolveGrammarText(stageId,editorial.rule,"ja"),editorial.rule,stageId+"/rule");
+    assert.equal(resolveGrammarText(stageId,editorial.rule,"fr"),editorial.rule);
+    assert.notEqual(resolveGrammarText(stageId,editorial.practice.scenario,"ja"),editorial.practice.scenario,stageId+"/scenario");
+    assert.notEqual(resolveGrammarText(stageId,editorial.practice.scene.french,"ja"),editorial.practice.scene.french,stageId+"/scene");
+    for (const part of editorial.ruleParts??[]) {
+      assert.notEqual(resolveGrammarText(stageId,part.explanation,"ja"),part.explanation,stageId+"/rulePart");
+    }
+  }
+});
+test("36–40: Japanese corrections preserve legitimate alternatives and distinguish meaning", () => {
+  const wrong=JAPANESE_GRAMMAR_WRONG_FEEDBACK;
+  assert.match(wrong["mark-contrast"]["spicy-delicious"]["매우면"],/条件形/u);
+  assert.match(wrong["simple-condition"]["get-off-suffices"]["내리면 가요"],/降りたら/u);
+  assert.match(wrong["necessity-and-obligation"]["show-passport-obligation"]["볼 수 있어요"],/見る/u);
+  assert.match(wrong["simple-comparison"]["bag-comparison"]["제일"],/最上位/u);
+  assert.match(wrong["make-suggestion"]["go-suggestion"]["갈게요"],/決意/u);
+  assert.match(JAPANESE_GRAMMAR_GUIDES["simple-comparison"].steps[2][1],/不可能ではありません/u);
+  assert.equal(resolveGrammarText("simple-comparison","버스보다 지하철이 빨라요.","ja"),"버스보다 지하철이 빨라요.");
   assert.doesNotMatch(read("../lib/grammar/exercises.ts"),/JAPANESE_GRAMMAR_/u);
   assert.doesNotMatch(read("../lib/grammar/feedback.ts"),/JAPANESE_GRAMMAR_/u);
 });
