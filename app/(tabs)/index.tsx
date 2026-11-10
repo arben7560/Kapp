@@ -77,7 +77,6 @@ import { resolveDisplayMessage, type DisplayMessage } from "../../lib/i18n/displ
 import { resolveAccountText } from "../../lib/i18n/accountText";
 import { HomeLocalizationProvider } from "../../lib/i18n/HomeLocalizationProvider";
 import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
-import { resolveHomeText } from "../../lib/i18n/homeText";
 import { DEFAULT_LOCALE, isAppLocale } from "../../lib/i18n/config";
 import { buildProgressId } from "../../lib/progressIds";
 
