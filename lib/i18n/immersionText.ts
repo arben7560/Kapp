@@ -17,6 +17,90 @@ export function resolveImmersionText(module: string, source: string, locale: App
   };
   const direct = exact(source);
   if (direct) return direct;
+  // Restaurant feedback is produced by the Korean-only intent engine.
+  // Translate it *after* evaluation, keeping its Korean examples and decisions.
+  if (module === "restaurant") {
+    const ja = (value: string): string => {
+      const key = value.trim();
+      return exact(key) ?? exact(key + ".") ?? value;
+    };
+    const m1 = (re: RegExp) => source.match(re);
+    let r: RegExpMatchArray | null;
+
+    r = m1(/^(.*) — tu peux répondre : (.+)\.$/u);
+    if (r) return resolveImmersionText(module, r[1] + ".", locale, instance) +
+      " — 例えば " + r[2].split(" · ").map((p) => {
+        const label = p.match(/^« (.+) »$/u);
+        return label ? "「" + ja(label[1]) + "」" : ja(p);
+      }).join("・") + " と答えられます。";
+
+    r = m1(/^(.*) — phrase modèle : (.+)\.$/u);
+    if (r) return resolveImmersionText(module, r[1] + ".", locale, instance) +
+      " — お手本のフレーズ：" + r[2].replaceAll(" ou ", " または ") + "。";
+
+    r = m1(/^Je t’ai compris malgré le mélange de langues\. Pour rester en coréen : (.+)\.$/u);
+    if (r) return "複数の言語が混ざっていますが、意図は伝わりました。韓国語だけで言うなら「" + r[1] + "」です。";
+
+    r = m1(/^Pour indiquer le moyen utilisé, « \(으\)로 » correspond ici à « avec\/par »\. Dis : « (.+?) 할게요\. »$/u);
+    if (r) return "手段を表す助詞は「(으)로」です。「" + r[1] + " 할게요.」と言いましょう。";
+
+    r = m1(/^Je t’ai compris, mais l’ordre des mots sonne inversé\. Garde le plat ou le choix avant la demande : « (.+?) »$/u);
+    if (r) return "意図は伝わりますが、語順が逆になっています。料理名や選択を先に置いて、「" + r[1] + "」のように言いましょう。";
+
+    r = m1(/^Le plat est clair\. Il manque seulement la quantité : « (.+?) »$/u);
+    if (r) return "料理は分かりますが、数量がまだ指定されていません。「" + r[1] + "」と言いましょう。";
+
+    r = m1(/^Je t’ai compris : la reconnaissance a probablement accroché sur un mot\. La phrase visée est « (.+?) »$/u);
+    if (r) return "意図は伝わりますが、音声認識が一部の単語を聞き違えた可能性があります。お手本は「" + r[1] + "」です。";
+
+    r = m1(/^Oui, le moyen de paiement est clair\. Une tournure plus naturelle ici est : « (.+?) »$/u);
+    if (r) return "はい、支払い方法は伝わっています。この場面では「" + r[1] + "」と言うほうが自然です。";
+
+    r = m1(/^Tu demandes bien l’accompagnement\. Ajoute « 더 » pour dire que tu en veux davantage : « (.+?) »$/u);
+    if (r) return "おかずを頼んでいることは伝わっています。「もっと」を表す「더」を加えて、「" + r[1] + "」と言いましょう。";
+
+    r = m1(/^Ta demande est claire\. Pour des portions de viande au restaurant, « 인분 » est le compteur naturel ; « (.+?) » ne convient pas ici\.$/u);
+    if (r) return "注文の意図は伝わりますが、肉を人数分で注文するときは助数詞「인분」を使います。ここでは「" + r[1] + "」は適切ではありません。";
+
+    r = m1(/^Ta demande est claire\. Pour ce plat, « (.+?) » est plus naturel que « (.+?) »\.$/u);
+    if (r) return "注文の意図は伝わります。この料理には「" + r[2] + "」より「" + ja(r[1]) + "」が自然です。";
+
+    r = m1(/^La quantité est comprise, mais il manque le compteur\. Pour des portions au restaurant, ajoute « 인분 » : « (.+?) »$/u);
+    if (r) return "数量は伝わっていますが、助数詞が抜けています。人数分を注文するときは「인분」を付けて、「" + r[1] + "」と言いましょう。";
+
+    r = m1(/^Ta phrase est correcte en coréen, mais la quantité ne correspond pas à la commande de cette scène\. Ici, il faut (\d+) portions? : « (.+?) »$/u);
+    if (r) return "韓国語としては正しいですが、今回の注文で必要な数量と違います。ここでは" + r[1] + "人前なので「" + r[2] + "」と言いましょう。";
+
+    r = m1(/^Ta phrase peut correspondre à plusieurs réponses\. (.+?) Garde une seule intention\.$/u);
+    if (r) return "返答が複数の選択肢に当てはまる可能性があります。" + ja(r[1]) + " 伝えたいことを一つに絞りましょう。";
+
+    r = m1(/^J’ai compris : tu veux (.+?)\. (.+)$/u);
+    if (r) return "「" + ja(r[1]) + "」という意図は伝わりました。" + ja(r[2]);
+
+    r = m1(/^Tu veux bien commander de la viande, mais on ne sait pas encore laquelle\. (.+)$/u);
+    if (r) return "肉を注文したいことは伝わりますが、どの肉かまだ分かりません。" + ja(r[1]);
+
+    const incompletePrefixes: Readonly<Record<string, string>> = {
+      "Tu parles bien de la cuisson, mais on ne sait pas clairement qui doit s’en charger.": "焼き方について話していますが、誰が焼くかまだ分かりません。",
+      "Tu veux ajouter un accompagnement, mais tu ne l’as pas identifié.": "おかずを追加したいことは伝わりますが、何を追加するかまだ分かりません。",
+      "Tu demandes un goût standard, mais ce n’est pas assez précis pour distinguer les trois niveaux de piquant proposés.": "通常の味付けを希望していますが、ここで提示された３段階の辛さのどれか分かりません。",
+      "Tu en veux davantage, mais tu n’as pas précisé quoi.": "追加したいことは伝わりますが、何を追加するかまだ分かりません。",
+      "Tu veux payer, mais tu n’as pas indiqué le moyen de paiement.": "支払いたいことは伝わりますが、支払い方法がまだ分かりません。",
+      "Tu demandes qu’on te donne quelque chose, mais tu n’as pas nommé le reçu.": "何かを渡してほしいと伝えていますが、レシートだとは分かりません。",
+    };
+    for (const [prefix, japanese] of Object.entries(incompletePrefixes)) {
+      if (source.startsWith(prefix + " ")) {
+        return japanese + ja(source.slice(prefix.length + 1));
+      }
+    }
+
+    // Composed feedback uses a contextual explanation followed by a fixed
+    // pedagogical instruction. The context is already mapped by source.
+    r = m1(/^(.+?)\. (.+)$/u);
+    if (r && exact(r[1] + ".") && exact(r[2])) {
+      return exact(r[1] + ".") + exact(r[2]);
+    }
+  }
   // Metro voice feedback is assembled at runtime from selected intents, suggested
   // answers and incremental hints. Translate presentation fragments only; never
   // alter the evaluator's original French feedback or Korean transcript.
