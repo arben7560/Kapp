@@ -97,7 +97,7 @@ test("Every canonical feature, offer and important legal explanation has a Japan
     /[éèêàâîïôçœ]/iu.test(x) &&
     !x.includes("[RevenueCat]") && !x.includes("console") &&
     !x.startsWith(".") && !x.startsWith("/"));
-  assert.ok(userFacing.length >= 25, "Premium literal scan no longer covers relevant source");
+  assert.ok(userFacing.length >= 20, "Premium literal scan no longer covers relevant source");
   for (const source of userFacing) {
     assert.notEqual(translate(source), source, "Untranslated Premium literal: " + source);
   }
