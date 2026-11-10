@@ -95,7 +95,7 @@ export const CAFE_IMMERSION_COPY: Readonly<Record<string, string>> = {
   "Une commande courte, sur place.": "店内での簡単な注文を練習します。",
   "Commander une boisson et payer.": "飲み物を注文して会計する",
   "Commander": "注文する",
-  "Confirmer": "確認する",
+  "Confirmer": "これで確定",
   "Payer": "支払う",
   "Dire sur place": "店内で飲食すると伝える",
   "Commander un café + dessert": "コーヒーとデザートを注文する",
@@ -212,7 +212,21 @@ export const CAFE_IMMERSION_COPY: Readonly<Record<string, string>> = {
   "Arrêter": "停止",
   "Parler": "話す",
   "Besoin d’aide": "ヒントを見る",
-  "RÉPONSES PROPOSÉES": "返答の例"
+  "RÉPONSES PROPOSÉES": "返答の例",
+  "Mission accomplie": "ミッション達成！",
+  "Continuer": "続ける",
+  "Séoul": "ソウル",
+  "Autorisation du micro…": "マイクの使用許可を確認中…",
+  "Activation du micro…": "マイクを起動中…",
+  "Transcription en cours…": "文字起こし中…",
+  "Transcription reconnue": "音声を認識しました",
+  "Reconnaissance indisponible": "音声認識を利用できません",
+  "Aucune parole reconnue": "音声を認識できませんでした",
+  "Erreur du micro": "マイクでエラーが発生しました",
+  "CE QUE TU VEUX DIRE": "伝えたいこと",
+  "TRANSCRIPTION": "音声認識の結果",
+  "Reprendre une expression": "表現をもう一度練習",
+  "Mets 먹고 avant 갈게요 dans cette expression.": "この表現では「먹고」を「갈게요」の前に置きましょう。"
 };
 
 export function immersionCopyId(module: string, sourceText: string): string {
