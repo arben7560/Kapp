@@ -6,12 +6,19 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppText } from "../../components/app-text";
-import { ActionButton } from "../../components/ui/action-button";
+import { AccountActionButton as ActionButton } from "../../components/account/AccountActionButton";
+import { useTranslation } from "react-i18next";
+import { AccountLocalizationProvider } from "../../lib/i18n/AccountLocalizationProvider";
+import { resolveAccountError } from "../../lib/i18n/accountText";
+import { DEFAULT_LOCALE, isAppLocale } from "../../lib/i18n/config";
 import { SeoulMidnightGlass } from "../../constants/theme";
 import { useAuth } from "../../lib/AuthProvider";
 
-export default function AccountCallbackScreen() {
+function AccountCallbackContent() {
   const { error, isHandlingDeepLink, isLoading } = useAuth();
+  const { i18n } = useTranslation("account");
+  const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
+  const locale = isAppLocale(activeLanguage) ? activeLanguage : DEFAULT_LOCALE;
 
   React.useEffect(() => {
     if (isLoading || isHandlingDeepLink || error) return;
@@ -35,7 +42,7 @@ export default function AccountCallbackScreen() {
             {error ? "Lien non validé" : "Validation en cours"}
           </AppText>
           <AppText variant="bodySecondary" align="center" tone="muted">
-            {error ?? "K-App sécurise votre session puis ouvre Mon profil."}
+            {error ? resolveAccountError(error, locale, i18n) : "K-App sécurise votre session puis ouvre Mon profil."}
           </AppText>
           {error ? (
             <ActionButton
@@ -48,6 +55,14 @@ export default function AccountCallbackScreen() {
         </View>
       </SafeAreaView>
     </LinearGradient>
+  );
+}
+
+export default function AccountCallbackScreen() {
+  return (
+    <AccountLocalizationProvider>
+      <AccountCallbackContent />
+    </AccountLocalizationProvider>
   );
 }
 
