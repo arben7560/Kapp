@@ -1,1 +1,67 @@
-{}
+{
+  "copy": {
+    "hero": {
+      "Premium": "Premium",
+      "ACC%C3%88S%20TOTAL": "ACCÈS TOTAL",
+      "K-App%20Premium": "K-App Premium",
+      "D%C3%A9bloque%20les%20parcours%20et%20missions%20Premium%20disponibles%2E": "Débloque les parcours et missions Premium disponibles.",
+      "Tous%20les%20parcours%20disponibles%20d%C3%A9bloqu%C3%A9s": "Tous les parcours disponibles débloqués",
+      "Exercices%20et%20programmes%20Premium%20inclus": "Exercices et programmes Premium inclus",
+      "Toutes%20les%20missions%20Premium%20disponibles": "Toutes les missions Premium disponibles",
+      "Achats%20restaurables%20via%20ton%20compte%20App%20Store%20ou%20Google%20Play": "Achats restaurables via ton compte App Store ou Google Play",
+      "L%E2%80%99acc%C3%A8s%20Premium%20est%20actif%2E": "L’accès Premium est actif.",
+      "Impossible%20de%20continuer": "Impossible de continuer",
+      "Premium%20actif": "Premium actif"
+    },
+    "plans": {
+      "Premium%20mensuel": "Premium mensuel",
+      "Premium%20annuel": "Premium annuel",
+      "Choisir%20l%E2%80%99abonnement%20mensuel": "Choisir l’abonnement mensuel",
+      "Choisir%20l%E2%80%99abonnement%20annuel": "Choisir l’abonnement annuel",
+      "7%2C99%20%E2%82%AC%20%2F%20mois": "7,99 € / mois",
+      "69%2C99%20%E2%82%AC%20%2F%20an": "69,99 € / an",
+      "Abonnement%20mensuel%2C%20r%C3%A9siliable%20depuis%20l%E2%80%99App%20Store%20ou%20Google%20Play%2E": "Abonnement mensuel, résiliable depuis l’App Store ou Google Play.",
+      "Abonnement%20annuel%2C%20r%C3%A9siliable%20depuis%20l%E2%80%99App%20Store%20ou%20Google%20Play%2E": "Abonnement annuel, résiliable depuis l’App Store ou Google Play.",
+      "%C3%89conomisez%20%7B%7Bpercent%7D%7D%20%25": "Économisez {{percent}} %",
+      "Soit%20%7B%7Bprice%7D%7D%20%2F%20mois%2E": "Soit {{price}} / mois.",
+      "Offre%20s%C3%A9lectionn%C3%A9e%20%3A%20%7B%7Bplan%7D%7D": "Offre sélectionnée : {{plan}}"
+    },
+    "actions": {
+      "S%E2%80%99abonner": "S’abonner",
+      "Restaurer%20mes%20achats": "Restaurer mes achats",
+      "G%C3%A9rer%20mon%20abonnement": "Gérer mon abonnement",
+      "Fermer%20Premium": "Fermer Premium",
+      "RETOUR": "RETOUR",
+      "Retour%20%C3%A0%20l%E2%80%99%C3%A9cran%20pr%C3%A9c%C3%A9dent": "Retour à l’écran précédent",
+      "Revient%20%C3%A0%20l%E2%80%99%C3%A9cran%20pr%C3%A9c%C3%A9dent": "Revient à l’écran précédent"
+    },
+    "legal": {
+      "Le%20paiement%20est%20effectu%C3%A9%20via%20Google%20Play%2E%20L%E2%80%99abonnement%20est%20renouvel%C3%A9%20automatiquement%20sauf%20r%C3%A9siliation%2E%20Vous%20pouvez%20le%20g%C3%A9rer%20ou%20l%E2%80%99annuler%20depuis%20votre%20compte%20Google%20Play%2E%20Les%20achats%20peuvent%20%C3%AAtre%20restaur%C3%A9s%20avec%20le%20m%C3%AAme%20compte%2E": "Le paiement est effectué via Google Play. L’abonnement est renouvelé automatiquement sauf résiliation. Vous pouvez le gérer ou l’annuler depuis votre compte Google Play. Les achats peuvent être restaurés avec le même compte.",
+      "Le%20paiement%20est%20effectu%C3%A9%20via%20l%E2%80%99App%20Store%2E%20L%E2%80%99abonnement%20est%20renouvel%C3%A9%20automatiquement%20sauf%20r%C3%A9siliation%2E%20Vous%20pouvez%20le%20g%C3%A9rer%20ou%20l%E2%80%99annuler%20depuis%20votre%20compte%20App%20Store%2E%20Les%20achats%20peuvent%20%C3%AAtre%20restaur%C3%A9s%20avec%20le%20m%C3%AAme%20compte%2E": "Le paiement est effectué via l’App Store. L’abonnement est renouvelé automatiquement sauf résiliation. Vous pouvez le gérer ou l’annuler depuis votre compte App Store. Les achats peuvent être restaurés avec le même compte."
+    },
+    "accessibility": {
+      "V%C3%A9rification%20de%20l%E2%80%99acc%C3%A8s%20Premium": "Vérification de l’accès Premium"
+    },
+    "errors": {
+      "Le%20syst%C3%A8me%20d%E2%80%99abonnement%20est%20indisponible%20dans%20cet%20environnement%2E": "Le système d’abonnement est indisponible dans cet environnement.",
+      "Aucune%20offre%20RevenueCat%20active%20n%E2%80%99est%20disponible%2E": "Aucune offre RevenueCat active n’est disponible.",
+      "Aucune%20formule%20Premium%20compatible%20n%E2%80%99est%20disponible%20sur%20le%20Store%2E": "Aucune formule Premium compatible n’est disponible sur le Store.",
+      "Les%20abonnements%20ne%20peuvent%20pas%20%C3%AAtre%20charg%C3%A9s%20hors%20ligne%2E%20Ton%20acc%C3%A8s%20Premium%20existant%20reste%20disponible%2E": "Les abonnements ne peuvent pas être chargés hors ligne. Ton accès Premium existant reste disponible.",
+      "Les%20abonnements%20sont%20momentan%C3%A9ment%20indisponibles%2E": "Les abonnements sont momentanément indisponibles.",
+      "Le%20service%20d%E2%80%99abonnement%20n%E2%80%99est%20pas%20configur%C3%A9%20pour%20cette%20plateforme%2E": "Le service d’abonnement n’est pas configuré pour cette plateforme.",
+      "Cette%20formule%20d%E2%80%99abonnement%20est%20momentan%C3%A9ment%20indisponible%2E": "Cette formule d’abonnement est momentanément indisponible.",
+      "L%E2%80%99achat%20a%20%C3%A9t%C3%A9%20enregistr%C3%A9%2C%20mais%20l%E2%80%99acc%C3%A8s%20Premium%20n%E2%80%99a%20pas%20encore%20%C3%A9t%C3%A9%20activ%C3%A9%2E%20Utilise%20%C2%AB%20Restaurer%20mes%20achats%20%C2%BB%20dans%20quelques%20instants%2E": "L’achat a été enregistré, mais l’accès Premium n’a pas encore été activé. Utilise « Restaurer mes achats » dans quelques instants.",
+      "Aucun%20abonnement%20Premium%20actif%20n%E2%80%99a%20%C3%A9t%C3%A9%20trouv%C3%A9%20pour%20ce%20compte%2E": "Aucun abonnement Premium actif n’a été trouvé pour ce compte.",
+      "Aucun%20abonnement%20actif%20ne%20peut%20%C3%AAtre%20g%C3%A9r%C3%A9%20pour%20le%20moment%2E": "Aucun abonnement actif ne peut être géré pour le moment.",
+      "Le%20lien%20de%20gestion%20de%20l%E2%80%99abonnement%20ne%20peut%20pas%20%C3%AAtre%20ouvert%2E": "Le lien de gestion de l’abonnement ne peut pas être ouvert.",
+      "Connexion%20indisponible%2E%20V%C3%A9rifie%20ta%20connexion%20puis%20r%C3%A9essaie%2E": "Connexion indisponible. Vérifie ta connexion puis réessaie.",
+      "L%E2%80%99App%20Store%20ou%20Google%20Play%20est%20momentan%C3%A9ment%20indisponible%2E": "L’App Store ou Google Play est momentanément indisponible.",
+      "Cette%20formule%20n%E2%80%99est%20pas%20disponible%20sur%20le%20Store%2E": "Cette formule n’est pas disponible sur le Store.",
+      "Les%20achats%20ne%20sont%20pas%20autoris%C3%A9s%20sur%20cet%20appareil%2E": "Les achats ne sont pas autorisés sur cet appareil.",
+      "Le%20paiement%20est%20en%20attente%20de%20validation%2E%20Premium%20sera%20activ%C3%A9%20d%C3%A8s%20sa%20confirmation%20par%20le%20Store%2E": "Le paiement est en attente de validation. Premium sera activé dès sa confirmation par le Store.",
+      "Une%20op%C3%A9ration%20d%E2%80%99achat%20est%20d%C3%A9j%C3%A0%20en%20cours%2E": "Une opération d’achat est déjà en cours.",
+      "Le%20service%20d%E2%80%99abonnement%20n%E2%80%99est%20pas%20correctement%20configur%C3%A9%2E": "Le service d’abonnement n’est pas correctement configuré.",
+      "Une%20erreur%20est%20survenue%20pendant%20la%20gestion%20de%20l%E2%80%99abonnement%2E%20R%C3%A9essaie%20dans%20quelques%20instants%2E": "Une erreur est survenue pendant la gestion de l’abonnement. Réessaie dans quelques instants."
+    }
+  }
+}
