@@ -363,7 +363,16 @@ export const METRO_IMMERSION_COPY: Readonly<Record<string, string>> = {
   "La phrase contient une forme très proche de « 강남 » et le reste de la demande indique clairement un trajet. Je l’interprète donc comme une récupération probable de transcription, pas comme une faute certaine de ta part.": "「강남」に非常に近い音があり、ほかの部分から移動についての質問だと分かります。音声認識の聞き違いの可能性があるため、本人の間違いとは断定しません。",
   "La transcription ressemble à une demande vers « 강남 », mais l’indice n’est pas assez solide pour valider la destination. Confirme ou réessaie.": "文字起こしは「강남」への行き方を尋ねているようですが、目的地を確定するには根拠が足りません。確認するか、もう一度話してください。",
   "La structure de ta question indique bien un trajet, mais aucune destination claire n’a été reconnue. Ajoute « 강남 » pour que la demande soit univoque.": "質問の形から移動についてだと分かりますが、目的地を聞き取れませんでした。「강남」を入れて、行き先を明確にしましょう。",
-  "Je ne reconnais pas encore une demande de trajet vers Gangnam. Cela ne signifie pas forcément que le coréen est incorrect ; je ne peux simplement pas relier la réponse à l’intention attendue ici.": "江南への行き方を尋ねる発話としては、まだ認識できません。韓国語が間違っているとは限りませんが、今求められている意図と結び付けられません。"
+  "Je ne reconnais pas encore une demande de trajet vers Gangnam. Cela ne signifie pas forcément que le coréen est incorrect ; je ne peux simplement pas relier la réponse à l’intention attendue ici.": "江南への行き方を尋ねる発話としては、まだ認識できません。韓国語が間違っているとは限りませんが、今求められている意図と結び付けられません。",
+  "Quelle sortie dois-je prendre à Itaewon ?": "梨泰院では何番出口を使えばいいですか？",
+  "Mots utiles : 강남 · 방향 · 어느 쪽.": "役立つ単語：강남 · 방향 · 어느 쪽",
+  "Ta phrase donne plutôt l’impression d’écarter cette question plutôt que de la poser.": "その質問をするというより、否定しているように聞こえます。",
+  "Je vois que tu parles bien du métro, du quai ou de la direction, mais tu n’as pas indiqué la destination.": "地下鉄やホーム、方面について話していますが、行き先がまだ分かりません。",
+  "Tu es bien sur la durée du trajet, mais ta question s’arrête un peu trop tôt.": "所要時間について尋ねようとしていますが、質問が途中で終わっています。",
+  "Tu évoques bien une autre ligne ou une étape intermédiaire, mais tu n’as pas formulé la question.": "別の路線や途中の駅に言及していますが、まだ質問の形になっていません。",
+  "Ta phrase peut vouloir dire plusieurs choses ici.": "この場面では複数の意味に取れる返答です。",
+  "J’ai compris :": "伝わった意図：",
+  "réponses proposées :": "選べる返答："
 };
 
 function buildMetroCopy(locale: "fr" | "ja"): LocalizedModule {
