@@ -1,3 +1,4 @@
+import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
@@ -60,7 +61,7 @@ function normalizeMode(rawMode: string | string[] | undefined) {
   return value === "real" ? "real" : "guided";
 }
 
-export default function AeroportMissionsScreen() {
+function AeroportMissionsContent() {
   const params = useLocalSearchParams();
   const mode = normalizeMode(params.mode as string | string[] | undefined);
   const { setTrack } = useStore();
@@ -212,6 +213,14 @@ export default function AeroportMissionsScreen() {
         />
       </SafeAreaView>
     </ImageBackground>
+  );
+}
+
+export default function AeroportMissionsScreen() {
+  return (
+    <ContentLocalizationProvider pathname="/lesson/aeroportMissions">
+      <AeroportMissionsContent />
+    </ContentLocalizationProvider>
   );
 }
 
