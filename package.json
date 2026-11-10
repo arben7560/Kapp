@@ -50,7 +50,8 @@
     "test:vocabulary": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-vocabulary-localization.mjs",
     "test:counting-localization": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-counting-localization.mjs",
     "test:classifiers-localization": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-classifiers-localization.mjs",
-    "test:grammar-localization": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-grammar-localization.mjs"
+    "test:grammar-localization": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-grammar-localization.mjs",
+    "test:account-localization": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-account-localization.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/noto-sans-jp": "^0.4.4",
