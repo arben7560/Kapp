@@ -1,3 +1,4 @@
+import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
 import { BlurView } from "expo-blur";
 import React, { useState } from "react";
 import {
@@ -238,7 +239,7 @@ const SCENES: Scene[] = [
   },
 ];
 
-export default function AirportLessonScreen() {
+function AirportLessonContent() {
   const [activeScene, setActiveScene] = useState<Scene>(SCENES[0]);
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);
@@ -435,6 +436,14 @@ export default function AirportLessonScreen() {
         </ScrollView>
       </View>
     </SafeAreaView>
+  );
+}
+
+export default function AirportLessonScreen() {
+  return (
+    <ContentLocalizationProvider pathname="/lesson/airport">
+      <AirportLessonContent />
+    </ContentLocalizationProvider>
   );
 }
 
