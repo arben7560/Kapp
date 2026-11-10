@@ -74,6 +74,8 @@ import {
 } from "../../lib/homeResume";
 import { subscribeToProgressHydration } from "../../lib/progressSyncEvents";
 import { resolveDisplayMessage, type DisplayMessage } from "../../lib/i18n/displayText";
+import { resolveAccountText } from "../../lib/i18n/accountText";
+import { DEFAULT_LOCALE, isAppLocale } from "../../lib/i18n/config";
 import { buildProgressId } from "../../lib/progressIds";
 
 // masked-view 0.3.2 still types its native ref with the removed NativeMethods API.
@@ -1334,6 +1336,10 @@ function AccountProtectionCard({
   onProtect: () => void;
   onDismiss: () => void;
 }) {
+  const { i18n } = useTranslation("account");
+  const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
+  const locale = isAppLocale(activeLanguage) ? activeLanguage : DEFAULT_LOCALE;
+  const translate = (source: string) => resolveAccountText(source, locale, i18n);
   return (
     <View style={styles.protectionCardShell}>
       <BlurView intensity={56} tint="dark" style={styles.protectionCard}>
@@ -1355,15 +1361,14 @@ function AccountProtectionCard({
           </View>
           <View style={styles.protectionCopy}>
             <AppText variant="sectionTitle" style={styles.protectionTitle}>
-              Protégez votre progression
+              {translate("Protégez votre progression")}
             </AppText>
             <AppText
               variant="bodySecondary"
               tone="muted"
               style={styles.protectionBody}
             >
-              Retrouvez votre apprentissage après une réinstallation ou sur un
-              autre appareil.
+              {translate("Retrouvez votre apprentissage après une réinstallation ou sur un autre appareil.")}
             </AppText>
           </View>
         </View>
@@ -1374,16 +1379,16 @@ function AccountProtectionCard({
           ]}
         >
           <ActionButton
-            accessibilityLabel="Protéger ma progression maintenant"
-            label="Protéger maintenant"
+            accessibilityLabel={translate("Protéger ma progression maintenant")}
+            label={translate("Protéger maintenant")}
             accentColor={CYAN}
             fullWidth={compact}
             onPress={onProtect}
             style={compact ? undefined : styles.protectionPrimaryAction}
           />
           <ActionButton
-            accessibilityLabel="Me le rappeler plus tard"
-            label="Plus tard"
+            accessibilityLabel={translate("Me le rappeler plus tard")}
+            label={translate("Plus tard")}
             variant="secondary"
             fullWidth={compact}
             onPress={onDismiss}
