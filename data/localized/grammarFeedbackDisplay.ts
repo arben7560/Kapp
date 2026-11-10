@@ -2,6 +2,7 @@ import type {
   GrammarPracticeAnswer,
   GrammarPracticeQuestion,
 } from "../grammar/types.ts";
+import { getJapaneseA1ReviewFeedback } from "./grammarReviewJapanese.ts";
 import {
   JAPANESE_GRAMMAR_WRONG_FEEDBACK,
   JAPANESE_GRAMMAR_CORRECT_FEEDBACK,
@@ -17,6 +18,8 @@ export function getJapaneseGrammarFeedback(
   selected: GrammarPracticeAnswer,
   correct: boolean,
 ): string | undefined {
+  if (question.stageId === "a1-validation")
+    return getJapaneseA1ReviewFeedback(question, selected, correct);
   const stageId = question.stageId as keyof typeof JAPANESE_GRAMMAR_CORRECT_FEEDBACK;
   const correctByDrill = JAPANESE_GRAMMAR_CORRECT_FEEDBACK[stageId];
   const wrongByDrill = JAPANESE_GRAMMAR_WRONG_FEEDBACK[stageId];

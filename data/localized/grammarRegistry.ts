@@ -5,9 +5,10 @@ import { GRAMMAR_CONCEPTS } from "../grammar/concepts.ts";
 import { GRAMMAR_PRACTICE_DRILLS } from "../grammar/practiceDrills.ts";
 import { JAPANESE_GRAMMAR_GUIDES } from "./grammarGuidesJapanese.ts";
 import { JAPANESE_GRAMMAR_DRILLS } from "./grammarDrillsJapanese.ts";
+import { A1_REVIEW_SLOTS_JAPANESE, A1_REVIEW_COMPOSED_JAPANESE, A1_REVIEW_HONORIFIC_JAPANESE } from "./grammarReviewJapanese.ts";
 
 /**
- * Grammar localization blocks 1–8: stages 1–40. A source-string display
+ * Grammar localization blocks 1–9: stages 1–41. A source-string display
  * catalogue, following Vocabulary/Counting/Classifiers. No questions,
  * Korean, answers, scores, navigation IDs or stored progress are translated.
  */
@@ -294,8 +295,18 @@ const STAGE_COPY = {
     "examples": [
       "一緒に行きましょうか？"
     ]
-  }
-
+  },"a1-validation": {
+  "title": "A1総復習",
+  "goal": "40ステップで学んだ基本文法を、短い会話や文の中で使い分ける",
+  "examples": [
+    "客：こんにちは。予約しています。\n店員：かしこまりました。お名前をお伺いしてもよろしいでしょうか。\n客：マークです。窓際の席に座ってもいいですか。\n店員：はい、こちらへどうぞ。",
+    "乗客：ソウル駅まではどう行けばいいですか。\n係員：地下鉄をご利用ください。2駅行けば大丈夫です。"
+  ],
+  "notes": [
+    "注目ポイント\n예약했어요（過去）、앉아도 돼요?（許可）、이쪽으로（方向）、오세요（丁寧な指示）。성함 は「お名前」を表す敬語の語彙です。",
+    "注目ポイント\n까지（到達点）、로（手段）、-(으)세요（丁寧な指示）、만（限定）、-(으)면 돼요（〜すれば十分）を確認しましょう。"
+  ]
+}
 } as const;
 
 /** Shared UI wording and display-only labels for the first localized block.
@@ -894,6 +905,136 @@ for (const stageId of Object.keys(STAGE_CONCEPTS) as (keyof typeof STAGE_CONCEPT
         add(stageId, source, japanese);
       }
     }
+  }
+}
+
+// Final A1 review: unlike ordinary lessons, its 25 slots mix drills from 40
+// different stages and alternate concept/variant on subsequent attempts.
+// Register their exact canonical display sources in the final-stage namespace.
+// This is display-only; the source blueprint, validation and Korean stay intact.
+{
+  const stageId = "a1-validation";
+  const stage = GRAMMAR_STAGE_BY_ID[stageId];
+  const translatedStage = STAGE_COPY[stageId];
+  const sourceGuide = GRAMMAR_LESSON_GUIDES[stageId];
+  const guide = JAPANESE_GRAMMAR_GUIDES[stageId];
+  add(stageId, stage.title, translatedStage.title);
+  add("hub", stage.title, translatedStage.title);
+  add(stageId, stage.communicativeGoal, translatedStage.goal);
+  add("hub", stage.communicativeGoal, translatedStage.goal);
+  stage.canonicalExamples.forEach((example, index) => {
+    add(stageId, example.french, translatedStage.examples[index]);
+    if (example.note) {
+      add(stageId, example.note, translatedStage.notes[index]);
+      const [sourceHeading, ...sourceLines] = example.note.split("\n");
+      const [japaneseHeading, ...japaneseLines] = translatedStage.notes[index].split("\n");
+      add(stageId, sourceHeading, japaneseHeading);
+      add(stageId, sourceLines.join("\n"), japaneseLines.join("\n"));
+    }
+  });
+  add(stageId, sourceGuide.introduction, guide.introduction);
+  add(stageId, sourceGuide.mainRule, guide.mainRule);
+  add(stageId, sourceGuide.formula.pattern, guide.formula.pattern);
+  add(stageId, sourceGuide.formula.explanation, guide.formula.explanation);
+  sourceGuide.steps.forEach((step, index) => {
+    const translated = guide.steps[index];
+    if (!translated) throw new Error(`Missing A1 Japanese guide step: ${index}`);
+    add(stageId, step.title, translated[0]);
+    add(stageId, step.explanation, translated[1]);
+  });
+  sourceGuide.examples.forEach((example, index) => {
+    const translated = guide.examples[index];
+    if (!translated || translated[1].length !== example.parts.length)
+      throw new Error(`Mismatched A1 Japanese guide example: ${index}`);
+    add(stageId, example.french, translated[0]);
+    example.parts.forEach((part, indexPart) => {
+      add(stageId, part.french, translated[1][indexPart][0]);
+      add(stageId, part.role, translated[1][indexPart][1]);
+    });
+  });
+  sourceGuide.commonMistakes.forEach((mistake, index) => {
+    const translated = guide.mistakes[index];
+    if (!translated) throw new Error(`Missing A1 Japanese mistake: ${index}`);
+    add(stageId, mistake.mistake, translated[0]);
+    add(stageId, mistake.correction, translated[1]);
+  });
+  add(stageId, sourceGuide.memoryTip, guide.memoryTip);
+
+  // Reuse the source-stage translations for wording, display stimuli, French
+  // answer labels and drill explanations. The final stage may choose ANY of
+  // these variants; no canonical exercise question is duplicated or modified.
+  const conceptStage: Record<string, string> = {};
+  for (const stageKey of Object.keys(STAGE_CONCEPTS) as (keyof typeof STAGE_CONCEPTS)[]) {
+    for (const conceptId of GRAMMAR_STAGE_BY_ID[stageKey].conceptIds) {
+      conceptStage[conceptId] ??= stageKey;
+    }
+  }
+  const reviewScope = (GRAMMAR_COPY_BY_MODULE[stageId] ??= {});
+  for (const slot of A1_REVIEW_SLOTS_JAPANESE) {
+    for (const conceptId of slot.conceptIds) {
+      const sourceStage = conceptStage[conceptId];
+      const sourceDrills = GRAMMAR_PRACTICE_DRILLS[conceptId];
+      if (!sourceDrills) throw new Error(`Unknown final-review concept: ${conceptId}`);
+      if (conceptId === "honorific-si") {
+        for (const drill of sourceDrills) {
+          const translated = A1_REVIEW_HONORIFIC_JAPANESE[drill.id as keyof typeof A1_REVIEW_HONORIFIC_JAPANESE];
+          if (!translated) throw new Error(`Missing A1 honorific copy: ${drill.id}`);
+          add(stageId, drill.context, translated.context);
+          add(stageId, drill.explanation, translated.explanation);
+          add(stageId, drill.stimulus, undefined);
+          // Canonical prompt strings can repeat: keep one stable Japanese
+          // equivalent for each exact prefixed source prompt.
+          const originalPrompt = `BILAN A1 · ${slot.family.toUpperCase()}\n${drill.prompt}`;
+          if (!reviewScope[originalPrompt])
+            add(stageId, originalPrompt, `A1総復習・${slot.japaneseFamily}\n${translated.prompt}`);
+        }
+        continue;
+      }
+      if (!sourceStage) throw new Error(`Missing source stage for A1 review: ${conceptId}`);
+      const translations = JAPANESE_GRAMMAR_DRILLS[sourceStage as keyof typeof JAPANESE_GRAMMAR_DRILLS] as Record<string, {
+        context?: string; prompt?: string; stimulus?: string; explanation: string; choices?: Readonly<Record<string,string>>;
+      }>;
+      const sourceStageCopy = GRAMMAR_COPY_BY_MODULE[sourceStage];
+      for (const drill of sourceDrills) {
+        const translated = translations[drill.id];
+        if (!translated) throw new Error(`Missing reused A1 Japanese drill: ${sourceStage}/${drill.id}`);
+        // For a shared canonical source string, use the first translation
+        // consistently. The review scene and personalized feedback carry the
+        // rule-specific nuance.
+        const stableAdd = (src?: string, ja?: string) => {
+          if (src && ja && !reviewScope[src]) add(stageId, src, ja);
+        };
+        stableAdd(drill.stimulus, translated.stimulus ?? sourceStageCopy?.[drill.stimulus]);
+        stableAdd(drill.context, translated.context ?? (drill.context ? sourceStageCopy?.[drill.context] : undefined));
+        stableAdd(drill.explanation, translated.explanation);
+        for (const [source, japanese] of Object.entries(translated.choices ?? {}))
+          stableAdd(source, japanese);
+        const originalPrompt = `BILAN A1 · ${slot.family.toUpperCase()}\n${drill.prompt}`;
+        const japanesePrompt = translated.prompt ?? sourceStageCopy?.[drill.prompt] ??
+          "場面に合う形を選びましょう。";
+        if (!reviewScope[originalPrompt])
+          add(stageId, originalPrompt, `A1総復習・${slot.japaneseFamily}\n${japanesePrompt}`);
+      }
+    }
+  }
+  // Stage-one review can turn a previously multiple-choice question into an
+  // ordering task, adding this French context without touching its answer.
+  add(stageId, "Reconstitue une phrase neutre, sans placer de complément après le verbe.",
+      "文末に述語を置き、余計な強調のない基本語順で文を組み立てましょう。");
+
+  for (const [drillId, entry] of Object.entries(A1_REVIEW_COMPOSED_JAPANESE)) {
+    for (const field of ["prompt", "context", "stimulus", "explanation"] as const)
+      add(stageId, entry.source[field], entry.ja[field]);
+    const slotIndex = ({
+      "review-destination-order": 8, "review-transport-order": 8,
+      "review-water-order": 13, "review-coffee-water-order": 13,
+      "review-past-order": 19, "review-future-order": 19,
+      "review-sequence-order": 21, "review-reason-order": 21,
+    } as Record<string, number>)[drillId];
+    const slot = A1_REVIEW_SLOTS_JAPANESE[slotIndex];
+    if (!slot) throw new Error(`Missing A1 review slot for ${drillId}`);
+    const originalPrompt = `BILAN A1 · ${slot.family.toUpperCase()}\n${entry.source.prompt}`;
+    add(stageId, originalPrompt, `A1総復習・${slot.japaneseFamily}\n${entry.ja.prompt}`);
   }
 }
 
