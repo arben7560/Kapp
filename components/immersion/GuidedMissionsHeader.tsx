@@ -26,6 +26,7 @@ import {
   type MissionMasteryScene,
 } from "../../lib/immersion/missionMastery";
 import { AppText } from "../app-text";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import { AppBackButton } from "../ui/app-back-button";
 
 type GuidedMissionsHeaderProps = {
@@ -52,6 +53,7 @@ export function GuidedMissionsHeader({
   onBack,
   title,
 }: GuidedMissionsHeaderProps) {
+  const translate = useVocabularyText();
   const params = useLocalSearchParams();
   const { progress, isHydrated } = useStore();
   const scene = getMissionMasterySceneFromTitle(title);
@@ -88,7 +90,7 @@ export function GuidedMissionsHeader({
         ]}
       >
         <AppBackButton
-          accessibilityLabel={`Retour depuis les missions ${title}`}
+          accessibilityLabel={translate(`Retour depuis les missions ${title}`)}
           onPress={onBack}
           style={[
             styles.backButton,
@@ -132,7 +134,7 @@ export function GuidedMissionsHeader({
 
           {masteryProgress && masteryProgress.total > 0 ? (
             <View
-              accessibilityLabel={`${masteryProgress.completedCount} missions maîtrisées sur ${masteryProgress.total}`}
+              accessibilityLabel={translate(`${masteryProgress.completedCount} missions maîtrisées sur ${masteryProgress.total}`)}
               style={[
                 styles.masteryPanel,
                 landscape && styles.masteryPanelLandscape,
@@ -364,7 +366,7 @@ function MissionMasteryCelebrationModal({
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Continuer vers les missions"
+          accessibilityLabel={translate("Continuer vers les missions")}
           onPress={onContinue}
           style={({ pressed }) => [
             styles.continueButton,
