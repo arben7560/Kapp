@@ -1,8 +1,8 @@
 import type { i18n } from "i18next";
 import { localizedContent } from "../../data/localized/index.ts";
 import frenchNavigation from "../../locales/fr/navigation.json";
-import { appI18n } from "./instance";
-import type { AppLocale } from "./config";
+import { appI18n } from "./instance.ts";
+import type { AppLocale } from "./config.ts";
 
 /**
  * Seoul Home display-only catalogue: no changes to route IDs, saved progress,
