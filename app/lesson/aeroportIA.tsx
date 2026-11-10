@@ -1,3 +1,5 @@
+import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import type { ScrollViewInstance } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
@@ -285,7 +287,8 @@ function buildAeroportScenarioFromScript(): DialogueScenario {
 }
 
 // ==================== MAIN ====================
-export default function AeroportIaScreen() {
+function AeroportIaContent() {
+  const translate = useVocabularyText();
   const { complete } = useStore();
   const [displayedVideoSource, setDisplayedVideoSource] = useState<
     number | null
@@ -939,7 +942,7 @@ export default function AeroportIaScreen() {
           <Pressable
             key={choice.id}
             accessibilityRole="button"
-            accessibilityLabel={`${choice.korean}. ${choice.label}`}
+            accessibilityLabel={`${choice.korean}. ${translate(choice.label)}`}
             accessibilityState={{
               disabled: isTransitioning || isReplayingLastIa,
               selected: isSelected,
@@ -1012,7 +1015,7 @@ export default function AeroportIaScreen() {
             { paddingTop: Math.max(6, insets.top * 0.15) },
           ]}
         >
-          <AppBackButton accessibilityLabel="Quitter la scène" onPress={handleExit} />
+          <AppBackButton accessibilityLabel={translate("Quitter la scène")} onPress={handleExit} />
         </View>
 
         <View
@@ -1250,7 +1253,7 @@ export default function AeroportIaScreen() {
                   <View style={styles.endActions}>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Rejouer la scène"
+                      accessibilityLabel={translate("Rejouer la scène")}
                       hitSlop={6}
                       onPress={handleRestart}
                       style={({ pressed }) => [
@@ -1280,7 +1283,7 @@ export default function AeroportIaScreen() {
 
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Ouvrir la fiche vocabulaire de l’aéroport"
+                      accessibilityLabel={translate("Ouvrir la fiche vocabulaire de l’aéroport")}
                       hitSlop={6}
                       onPress={handleOpenVocabulary}
                       style={({ pressed }) => [
@@ -1301,7 +1304,7 @@ export default function AeroportIaScreen() {
 
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Retour aux missions"
+                      accessibilityLabel={translate("Retour aux missions")}
                       hitSlop={6}
                       onPress={handleExit}
                       style={({ pressed }) => [
@@ -1327,7 +1330,7 @@ export default function AeroportIaScreen() {
                     {lastIaVideoSource ? (
                       <Pressable
                         accessibilityRole="button"
-                        accessibilityLabel="Réécouter la dernière intervention"
+                        accessibilityLabel={translate("Réécouter la dernière intervention")}
                         accessibilityState={{ disabled: isReplayingLastIa }}
                         aria-disabled={isReplayingLastIa}
                         disabled={isReplayingLastIa}
@@ -1353,7 +1356,7 @@ export default function AeroportIaScreen() {
 
                     <GuidedSpeechTurn
                       accent={PURPLE}
-                      confirmationLabel={displayedConfirmationLabel}
+                      confirmationLabel={displayedConfirmationLabel ? translate(displayedConfirmationLabel) : null}
                       feedback={displayedSpeechFeedback}
                       interactionDisabled={isReplayingLastIa || isTransitioning}
                       interactionDisabledLabel={
@@ -1416,6 +1419,14 @@ export default function AeroportIaScreen() {
 }
 
 // ==================== STYLES ====================
+export default function AeroportIaScreen() {
+  return (
+    <ContentLocalizationProvider pathname="/lesson/aeroportIA">
+      <AeroportIaContent />
+    </ContentLocalizationProvider>
+  );
+}
+
 const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
