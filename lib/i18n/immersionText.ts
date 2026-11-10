@@ -42,14 +42,6 @@ export function resolveImmersionText(module: string, source: string, locale: App
       return text;
     };
 
-    // The intent engine removes the final full stop before adding its list
-    // of choices. Restore punctuation for matching, but not in the source data.
-    if (!/[.!?…]$/u.test(source)) {
-      const punctuated = source + ".";
-      const translated = resolveImmersionText(module, punctuated, locale, instance);
-      if (translated !== punctuated) return translated;
-    }
-
     // One or more labelled choices may be appended after a dynamic diagnostic.
     const proposedSeparator = " — réponses proposées : ";
     const proposedIndex = source.lastIndexOf(proposedSeparator);
@@ -101,6 +93,16 @@ export function resolveImmersionText(module: string, source: string, locale: App
           (expectation ? translatePart(expectation) : translatePart(m[2])) +
           (guidance ? " " + guidance : "");
       }
+    }
+
+    // Apply punctuation recovery only after natural, unpunctuated
+    // contextual feedback has had a chance to match its native-Japanese copy.
+    // The intent engine removes the final full stop before adding its list
+    // of choices. Restore punctuation for matching, but not in the source data.
+    if (!/[.!?…]$/u.test(source)) {
+      const punctuated = source + ".";
+      const translated = resolveImmersionText(module, punctuated, locale, instance);
+      if (translated !== punctuated) return translated;
     }
 
     m = source.match(/^Tu as cité plusieurs repères d’étage \((.+?)\)\. Dans cette scène, l’agent a indiqué « 지하 1층 », le sous-sol 1\. Garde un seul repère après une éventuelle auto-correction\.$/u);
