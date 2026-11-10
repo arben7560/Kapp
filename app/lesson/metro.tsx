@@ -1,3 +1,4 @@
+import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
 import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
@@ -245,7 +246,7 @@ const buildScenes = (): Scene[] => {
   ];
 };
 
-export default function MetroLesson() {
+function MetroLessonScreen() {
   const scenes = useMemo(() => buildScenes(), []);
   const [activeScene, setActiveScene] = useState<Scene>(scenes[0]);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
@@ -435,6 +436,14 @@ export default function MetroLesson() {
         </ScrollView>
       </ImageBackground>
     </SafeAreaView>
+  );
+}
+
+export default function MetroLesson() {
+  return (
+    <ContentLocalizationProvider pathname="/lesson/metro">
+      <MetroLessonScreen />
+    </ContentLocalizationProvider>
   );
 }
 
