@@ -1029,7 +1029,7 @@ function assertJapaneseHubCopy(source, context) {
   assert.equal(french, source, "FR should keep the canonical source: " + context);
   // Product name, language level and original Korean examples are allowed.
   const prose = actual.replaceAll("K-App Premium", "").replace(/\bA[01]\b/gu, "");
-  assert.doesNotMatch(prose, /[A-Za-zÀ-ÿ]/u, 
+  assert.doesNotMatch(prose, /[A-Za-zÀ-ÿ]/u,
     "French/Latin prose leaked in JA hub: " + context + " / " + source + " => " + actual);
   if (/[A-Za-zÀ-ÿ]/u.test(source) &&
     !/^A[01](?:\s*→\s*A[01])?$/u.test(source)) {
