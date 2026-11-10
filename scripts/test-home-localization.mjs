@@ -12,7 +12,7 @@ const { localizedContent } = await import("../data/localized/index.ts");
 const { HANGUL_MODULES } = await import("../data/hangul/curriculum.ts");
 const { hangulCopyId } = await import("../data/localized/hangulRegistry.ts");
 const { cafeMissions } = await import("../data/lesson/cafe/cafeMissions.ts");
-const { GRAMMAR_STAGE_BY_ID, GRAMMAR_STAGE_IDS } = await import("../data/grammar/stages.ts");
+const { GRAMMAR_STAGE_BY_ID, GRAMMAR_STAGE_IDS } = await import("../data/grammar/index.ts");
 
 const read = (file) => readFileSync(new URL(file, import.meta.url), "utf8");
 const fr = JSON.parse(read("../locales/fr/navigation.json"));
