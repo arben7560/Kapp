@@ -21,7 +21,7 @@ test("Restaurant localization covers its three lesson routes only", () => {
   assert.deepEqual(getContentLocalizationScope("/lesson/cafe"), { namespace: "immersion", module: "cafe" });
   assert.deepEqual(getContentLocalizationScope("/lesson/metro"), { namespace: "immersion", module: "metro" });
   assert.deepEqual(getContentLocalizationScope("/speak"), { namespace: "vocabulary", module: "speak" });
-  assert.equal(getContentLocalizationScope("/lesson/aeroport"), null);
+  assert.deepEqual(getContentLocalizationScope("/lesson/aeroportIA"), { namespace: "immersion", module: "aeroport" });
 });
 
 test("Restaurant French and Japanese immersion catalogues match and retain all Hangul segments", () => {
