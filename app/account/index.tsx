@@ -25,6 +25,7 @@ import { useTranslation } from "react-i18next";
 import { AccountLocalizationProvider } from "../../lib/i18n/AccountLocalizationProvider";
 import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import { resolveAccountError } from "../../lib/i18n/accountText";
+import { resolvePremiumError } from "../../lib/i18n/premiumText";
 import { DEFAULT_LOCALE, isAppLocale } from "../../lib/i18n/config";
 import { AppDialog, DialogActions } from "../../components/ui/app-dialog";
 import { SeoulMidnightGlass } from "../../constants/theme";
@@ -863,7 +864,7 @@ function AccountScreenContent() {
               />
               {paywall.error ? (
                 <AppText variant="caption" style={styles.subscriptionError}>
-                  {localizeError(paywall.error.message)}
+                  {resolvePremiumError(paywall.error.message, locale, i18n)}
                 </AppText>
               ) : null}
             </View>
