@@ -192,6 +192,7 @@ export function MissionLaunchModal({
     >
       <ActionButton
         label="Commencer la mission"
+        accessibilityLabel={translate("Commencer la mission")}
         size="large"
         accentColor={accent}
         onPress={handleStart}
@@ -206,6 +207,7 @@ export function MissionLaunchModal({
       />
       <ActionButton
         label="Annuler"
+        accessibilityLabel={translate("Annuler")}
         variant="secondary"
         onPress={onCancel}
         style={
