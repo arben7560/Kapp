@@ -9,8 +9,9 @@ export function resolveImmersionText(module: string, source: string, locale: App
     const resolved = instance.getResource(locale, "immersion", "content." + immersionCopyId(module, text) + ".text");
     if (typeof resolved === "string" && resolved.trim()) return resolved;
     // Reuse common presentation strings already translated for Café, but only as a Métro fallback.
-    if (module === "metro" || module === "restaurant") {
-      const sharedModules = module === "restaurant" ? ["cafe", "metro"] : ["cafe"];
+    if (module === "metro" || module === "restaurant" || module === "aeroport") {
+      const sharedModules = module === "restaurant" ? ["cafe", "metro"] :
+        module === "aeroport" ? ["cafe", "metro", "restaurant"] : ["cafe"];
       for (const sharedModule of sharedModules) {
         const shared = instance.getResource(locale, "immersion", "content." + immersionCopyId(sharedModule, text) + ".text");
         if (typeof shared === "string" && shared.trim()) return shared;
@@ -20,6 +21,116 @@ export function resolveImmersionText(module: string, source: string, locale: App
   };
   const direct = exact(source);
   if (direct) return direct;
+  // Incheon → Seoul Station spoken feedback: translate only the displayed
+  // diagnostic, never the Korean transcript, its examples or recognition rules.
+  if (module === "aeroport") {
+    const translatePart = (part: string) => {
+      const clean = part.trim();
+      return exact(clean) ?? (!clean.endsWith(".") ? exact(clean + ".") : undefined) ?? clean;
+    };
+    const translateComposed = (text: string) => {
+      const directPart = translatePart(text);
+      if (directPart !== text.trim()) return directPart;
+      const split = text.indexOf(" Ici, ");
+      if (split >= 0) {
+        const first = text.slice(0, split);
+        const rest = text.slice(split + 1);
+        const f = translatePart(first);
+        const r = translatePart(rest);
+        if (f !== first || r !== rest) return f + " " + r;
+      }
+      return text;
+    };
+
+    // One or more labelled choices may be appended after a dynamic diagnostic.
+    const proposedSeparator = " — réponses proposées : ";
+    const proposedIndex = source.lastIndexOf(proposedSeparator);
+    if (proposedIndex >= 0) {
+      const message = source.slice(0, proposedIndex);
+      const options = source.slice(proposedIndex + proposedSeparator.length)
+        .replace(/[.]$/u, "")
+        .split(" · ")
+        .map((option) => {
+          const label = option.match(/^« (.+) »$/u);
+          return label ? "「" + translatePart(label[1]) + "」" : translatePart(option);
+        }).join("・");
+      return resolveImmersionText(module, message, locale, instance) + " — 選べる返答：" + options;
+    }
+
+    // Repetition attempts append one of two fixed hints to the analysis.
+    for (const help of [
+      " Si tu bloques encore, affiche les réponses et choisis celle qui correspond à ce que tu veux dire.",
+      " Réécoute l’agent et concentre-toi sur une seule intention.",
+    ]) {
+      const index = source.lastIndexOf(help);
+      if (index >= 0 && index + help.length === source.length) {
+        return resolveImmersionText(module, source.slice(0, index), locale, instance) + " " + translatePart(help);
+      }
+    }
+
+    let m: RegExpMatchArray | null;
+    m = source.match(/^La transcription semble avoir déformé un mot \((.+?)\)\. L’intention reste suffisamment claire, donc je ne le compte pas comme une faute certaine de ta part\.(?: (.+))?$/u);
+    if (m) return "音声認識が単語を聞き違えた可能性があります（" + m[1] +
+      "）。意図は十分に伝わっているので、発音ミスと断定しません。" +
+      (m[2] ? " " + resolveImmersionText(module, m[2], locale, instance) : "");
+
+    // The voice engine combines the understood intent, current step and
+    // pedagogical guidance. All fragments have their own native-Japanese copy.
+    m = source.match(/^J’ai compris : (.+?)\. (.+)$/u);
+    if (m) {
+      const expectation = [
+        "Ici, tu viens d’arriver à Incheon : l’objectif est de demander comment rejoindre Seoul Station.",
+        "Ici, l’agent vient de t’indiquer le centre de transport. Tu peux lui demander ce que tu dois faire ensuite ou lui demander de répéter.",
+        "Ici, l’agent vient de présenter les trains AREX. Tu peux lui demander lequel il te conseille ou lui demander de répéter.",
+        "Ici, tu as choisi ton train. Tu peux maintenant demander où prendre le train, ou faire répéter la recommandation.",
+        "Ici, tu sais où prendre le train. Tu peux remercier l’agent et terminer l’échange, ou lui demander de répéter.",
+        "Ici, réponds simplement à ce que l’agent vient de te demander.",
+      ].find((part) => m![2].startsWith(part));
+      const rest = expectation ? m[2].slice(expectation.length).trim() : "";
+      const guidance = rest ? translatePart(rest) : "";
+      if (translatePart(m[1]) !== m[1] && (expectation || translatePart(m[2]) !== m[2])) {
+        return "「" + translatePart(m[1]) + "」という意図が伝わりました。" +
+          (expectation ? translatePart(expectation) : translatePart(m[2])) +
+          (guidance ? " " + guidance : "");
+      }
+    }
+
+    m = source.match(/^Tu as cité plusieurs repères d’étage \((.+?)\)\. Dans cette scène, l’agent a indiqué « 지하 1층 », le sous-sol 1\. Garde un seul repère après une éventuelle auto-correction\.$/u);
+    if (m) return "「" + m[1].replaceAll(" et ", "」「") + "」という複数の階数を挙げています。ここでは地下１階「지하 1층」と案内されています。言い直す場合も、階数を一つに絞りましょう。";
+
+    m = source.match(/^Tu as indiqué « (.+?) », alors que l’agent a donné « 지하 1층 », le sous-sol 1\.$/u);
+    if (m) return "「" + m[1] + "」と言いましたが、係員が案内したのは地下１階「지하 1층」です。";
+
+    m = source.match(/^Tu demandes un trajet vers (.+?), mais cette scène travaille le trajet vers Seoul Station\. (.+)$/u);
+    if (m) return "「" + m[1] + "」への行き方を尋ねていますが、この場面ではソウル駅への移動を練習しています。" + translatePart(m[2]);
+
+    m = source.match(/^Ta formulation est compréhensible : (.+?)\. Elle ne correspond simplement pas à l’objectif de ce tour\. (.+)$/u);
+    if (m) return "「" + translatePart(m[1]) + "」という意図は伝わりますが、今の場面で練習する内容とは違います。" + translatePart(m[2]);
+
+    // Many speech messages consist of an exact first sentence plus an exact
+    // current-step expectation. Keep each part and the Korean as authored.
+    const expectations = [
+      "Ici, tu viens d’arriver à Incheon : l’objectif est de demander comment rejoindre Seoul Station.",
+      "Ici, l’agent vient de t’indiquer le centre de transport. Tu peux lui demander ce que tu dois faire ensuite ou lui demander de répéter.",
+      "Ici, l’agent vient de présenter les trains AREX. Tu peux lui demander lequel il te conseille ou lui demander de répéter.",
+      "Ici, tu as choisi ton train. Tu peux maintenant demander où prendre le train, ou faire répéter la recommandation.",
+      "Ici, tu sais où prendre le train. Tu peux remercier l’agent et terminer l’échange, ou lui demander de répéter.",
+      "Ici, réponds simplement à ce que l’agent vient de te demander.",
+    ];
+    for (const expectation of expectations) {
+      if (!source.endsWith(" " + expectation)) continue;
+      const prefix = source.slice(0, source.length - expectation.length - 1);
+      const translated = translateComposed(prefix);
+      if (translated !== prefix) return translated + " " + translatePart(expectation);
+    }
+
+    m = source.match(/^(.+?)\. (.+)$/u);
+    if (m) {
+      const first = translatePart(m[1] + ".");
+      const second = translatePart(m[2]);
+      if (first !== m[1] + "." && second !== m[2]) return first + second;
+    }
+  }
   // Restaurant feedback is produced by the Korean-only intent engine.
   // Translate it *after* evaluation, keeping its Korean examples and decisions.
   if (module === "restaurant") {
