@@ -19,6 +19,7 @@ import {
 
 import { SeoulMidnightGlass } from "../../constants/theme";
 import type { ImmersionMission } from "../../lib/immersion/missions";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import { AppText } from "../app-text";
 
 const TXT = "rgba(255,255,255,0.98)";
@@ -55,6 +56,7 @@ export function MissionCollectionCard({
   compact = false,
   style,
 }: MissionCollectionCardProps) {
+  const translate = useVocabularyText();
   const isPremium = mission.access === "premium";
   const premiumLocked = isPremium && !hasPremiumAccess && !isComingSoon;
   const premiumActive = isPremium && hasPremiumAccess && !isComingSoon;
@@ -73,7 +75,7 @@ export function MissionCollectionCard({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${mission.title}. ${
+      accessibilityLabel={`${translate(mission.title)}. ${translate(
         isComingSoon
           ? "Mission prochainement disponible"
           : premiumLocked
@@ -83,14 +85,14 @@ export function MissionCollectionCard({
               : isVocal
                 ? "Mission vocale incluse"
                 : "Mission incluse"
-      }. ${mission.subtitle}`}
-      accessibilityHint={
+      )}. ${translate(mission.subtitle)}`}
+      accessibilityHint={translate(
         isComingSoon
           ? "Cette mission sera disponible prochainement"
           : premiumLocked
             ? "Ouvre l'offre Premium"
             : "Prépare le lancement de cette mission"
-      }
+      )}
       accessibilityState={{ disabled: isComingSoon }}
       aria-disabled={isComingSoon}
       disabled={isComingSoon}
