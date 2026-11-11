@@ -1,0 +1,51 @@
+{
+  "copy": {
+    "header": {
+      "S%C3%A9rie": "Série",
+      "RETOUR": "RETOUR",
+      "Retour%20%C3%A0%20l%E2%80%99%C3%A9cran%20pr%C3%A9c%C3%A9dent": "Retour à l’écran précédent",
+      "Revient%20%C3%A0%20l%E2%80%99%C3%A9cran%20pr%C3%A9c%C3%A9dent": "Revient à l’écran précédent"
+    },
+    "hero": {
+      "HABITUDE%20QUOTIDIENNE": "HABITUDE QUOTIDIENNE",
+      "jour%20de%20suite": "jour de suite",
+      "jours%20de%20suite": "jours de suite",
+      "Jour%20valide%2E%20Ta%20s%C3%A9rie%20est%20conserv%C3%A9e%2E": "Jour valide. Ta série est conservée.",
+      "Une%20petite%20activit%C3%A9%20suffit%20pour%20conserver%20ta%20s%C3%A9rie%2E": "Une petite activité suffit pour conserver ta série."
+    },
+    "stats": {
+      "Record": "Record",
+      "%7B%7Bcount%7D%7D%20j": "{{count}} j",
+      "Aujourd'hui": "Aujourd'hui",
+      "Valide": "Valide",
+      "%C3%80%20faire": "À faire",
+      "Protection%20de%20s%C3%A9rie": "Protection de série"
+    },
+    "calendar": {
+      "Calendrier": "Calendrier",
+      "Derniers%20%7B%7Bcount%7D%7D%20jours": "Derniers {{count}} jours",
+      "Journ%C3%A9e%20valid%C3%A9e": "Journée validée",
+      "Protection%20utilis%C3%A9e": "Protection utilisée",
+      "Aucune%20activit%C3%A9%20valid%C3%A9e": "Aucune activité validée"
+    },
+    "protection": {
+      "Protection%20douce": "Protection douce",
+      "Une%20protection%20de%20s%C3%A9rie%20couvre%20une%20journ%C3%A9e%20manqu%C3%A9e%2E%20Si%20tu%20rates%20une%20seule%20journ%C3%A9e%2C%20elle%20peut%20conserver%20ta%20s%C3%A9rie%2E": "Une protection de série couvre une journée manquée. Si tu rates une seule journée, elle peut conserver ta série.",
+      "Utiliser%20une%20protection": "Utiliser une protection"
+    },
+    "badges": {
+      "Badges": "Badges",
+      "Paliers%20non%20punitifs": "Paliers non punitifs",
+      "jours": "jours",
+      "D%C3%A9bloqu%C3%A9": "Débloqué",
+      "Verrouill%C3%A9": "Verrouillé"
+    },
+    "accessibility": {
+      "%7B%7Blabel%7D%7D%20%3A%20%7B%7Bvalue%7D%7D": "{{label}} : {{value}}",
+      "%7B%7Bdate%7D%7D%20%3A%20%7B%7Bstatus%7D%7D%2E": "{{date}} : {{status}}.",
+      "Aujourd'hui%20(%7B%7Bdate%7D%7D)%20%3A%20%7B%7Bstatus%7D%7D%2E": "Aujourd'hui ({{date}}) : {{status}}.",
+      "Badge%20%7B%7Bcount%7D%7D%20jours%20%3A%20%7B%7Bstatus%7D%7D%2E": "Badge {{count}} jours : {{status}}.",
+      "Utilise%20une%20protection%20pour%20conserver%20la%20s%C3%A9rie%20apr%C3%A8s%20une%20journ%C3%A9e%20manqu%C3%A9e%2E": "Utilise une protection pour conserver la série après une journée manquée."
+    }
+  }
+}
