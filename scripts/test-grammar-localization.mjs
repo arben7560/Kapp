@@ -12,7 +12,7 @@ const { GRAMMAR_COPY_BY_MODULE } = await import("../data/localized/grammarRegist
 const { JAPANESE_GRAMMAR_GUIDES } = await import("../data/localized/grammarGuidesJapanese.ts");
 const { JAPANESE_GRAMMAR_DRILLS } = await import("../data/localized/grammarDrillsJapanese.ts");
 const { JAPANESE_GRAMMAR_CORRECT_FEEDBACK, JAPANESE_GRAMMAR_WRONG_FEEDBACK } = await import("../data/localized/grammarFeedbackJapanese.ts");
-const { getJapaneseGrammarFeedback } = await import("../data/localized/grammarFeedbackDisplay.ts");
+const { getJapaneseGrammarFeedback, getJapaneseGrammarFeedbackOrFallback } = await import("../data/localized/grammarFeedbackDisplay.ts");
 const { getJapaneseGrammarVocabulary } = await import("../data/localized/grammarVocabularyJapanese.ts");
 const { GRAMMAR_LESSON_GUIDES } = await import("../data/grammar/lessonGuides.ts");
 const { GRAMMAR_PRACTICE_DRILLS } = await import("../data/grammar/practiceDrills.ts");
@@ -1130,4 +1130,79 @@ test("Grammar hub final: all 41 stage cards, Korean grammar notations and prereq
   // Korean-only expressions remain canonical, without changing the lesson data.
   assert.equal(resolveGrammarText("hub", "이/가", "ja"),"이/가");
   assert.equal(resolveGrammarText("hub", "-(으)ㄹ까요?", "ja"),"-(으)ㄹ까요?");
+});
+
+
+test("Japanese corrections never fall back to French for unknown or legacy feedback IDs", () => {
+  const [known] = buildGrammarPracticeQuestions("identify-with-copula", 1, () => 0.25);
+  const correctText = getJapaneseGrammarFeedback(known, known.answer, true);
+  assert.ok(correctText && correctText.trim());
+  assert.equal(
+    getJapaneseGrammarFeedbackOrFallback(known, known.answer, true, "既存の説明です。"),
+    correctText,
+    "An existing Japanese correction must not be replaced.",
+  );
+
+  const wrongOption = known.options.find((option) => option !== known.answer);
+  assert.ok(wrongOption);
+  const knownWrong = getJapaneseGrammarFeedback(known, wrongOption, false);
+  assert.ok(knownWrong && knownWrong.trim());
+  assert.equal(
+    getJapaneseGrammarFeedbackOrFallback(known, wrongOption, false, "既存の説明です。"),
+    knownWrong,
+    "An existing distractor-specific Japanese explanation must be preserved.",
+  );
+
+  const legacy = {
+    ...known,
+    id: "identify-with-copula:old-version:retired-question-id",
+    explanation: "Dans cette question, il faut choisir une autre terminaison.",
+  };
+  assert.equal(getJapaneseGrammarFeedback(legacy, wrongOption, false), undefined);
+
+  const cases = [
+    getJapaneseGrammarFeedbackOrFallback(legacy, legacy.answer, true, legacy.explanation),
+    getJapaneseGrammarFeedbackOrFallback(legacy, wrongOption, false, legacy.explanation),
+    getJapaneseGrammarFeedbackOrFallback(legacy, wrongOption, false, undefined),
+    getJapaneseGrammarFeedbackOrFallback(legacy, wrongOption, false, "文の形を確認しましょう。"),
+    getJapaneseGrammarFeedbackOrFallback(legacy, legacy.answer, true, "文の形を確認しましょう。"),
+    getJapaneseGrammarFeedbackOrFallback(
+      { ...legacy, stageId: "a1-validation" },
+      wrongOption,
+      false,
+      legacy.explanation,
+    ),
+  ];
+  for (const japanese of cases) {
+    assert.ok(japanese && japanese.length > 15);
+    assert.match(japanese, /[\u3040-\u30ff\u3400-\u9fff]/u);
+    assert.doesNotMatch(japanese, /Dans cette question|terminaison|choisir|autre/u);
+  }
+  assert.match(cases[3], /文の形を確認しましょう/u);
+  assert.match(cases[4], /文の形を確認しましょう/u);
+
+  const orderQuestion = {
+    ...legacy,
+    answer: ["저는", "학교에", "가요."],
+  };
+  const orderedFallback = getJapaneseGrammarFeedbackOrFallback(
+    orderQuestion,
+    ["가요.", "저는", "학교에"],
+    false,
+    legacy.explanation,
+  );
+  assert.match(orderedFallback, /語句の並び方/u);
+  assert.doesNotMatch(orderedFallback, /Dans|terminaison/u);
+
+  // Both render sites must be Japanese-only; the French path remains explicit.
+  const screen = read("../app/(tabs)/grammar/[stageId].tsx");
+  assert.match(screen, /getJapaneseGrammarFeedbackOrFallback\(/u);
+  assert.equal((screen.match(/getJapaneseGrammarFeedbackOrFallback\(/gu) ?? []).length, 2);
+  assert.doesNotMatch(screen, /localizedLead\s*\?\?\s*teacherLead/u);
+  assert.doesNotMatch(
+    screen,
+    /getJapaneseGrammarFeedback\(question,\s*response\.answer,\s*false\)\s*:\s*undefined\)\s*\?\?\s*getGrammarIncorrectFeedback/u,
+  );
+  assert.match(screen, /response\.correct\s*&&\s*!japanese\s*&&/u);
+  assert.match(screen, /:\s*getGrammarIncorrectFeedback\(question,\s*response\.answer\)/u);
 });
