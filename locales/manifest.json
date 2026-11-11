@@ -7,6 +7,7 @@
     "onboarding",
     "account",
     "premium",
+    "streak",
     "hangul",
     "vocabulary",
     "counting",
@@ -33,6 +34,7 @@
     "hangul",
     "vocabulary",
     "counting",
-    "classifiers"
+    "classifiers",
+    "streak"
   ]
 }
