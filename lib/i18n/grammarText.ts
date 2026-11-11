@@ -50,7 +50,7 @@ export function resolveGrammarText(
   // Resolve the translated template from the shared catalogue, not from
   // the saved French string, so legacy/revised sessions keep their own count.
   if (module === "a1-validation") {
-    match = source.match(/^Tu as validé un échantillon de (\\d+) questions de grammaire A1\\. Une nouvelle tentative proposera d’autres notions : ce bilan ne remplace pas un test de compréhension orale\\.$/u);
+    match = source.match(/^Tu as validé un échantillon de (\d+) questions de grammaire A1\. Une nouvelle tentative proposera d’autres notions : ce bilan ne remplace pas un test de compréhension orale\.$/u);
     if (match) {
       const template = exact("shared",
         "Tu as validé un échantillon de {{count}} questions de grammaire A1. Une nouvelle tentative proposera d’autres notions : ce bilan ne remplace pas un test de compréhension orale.");
