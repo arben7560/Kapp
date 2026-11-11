@@ -42,6 +42,7 @@ import {
 } from "../../lib/authErrors";
 import { useProgressSync } from "../../lib/ProgressSyncProvider";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
+import { IS_REVENUECAT_TEST_STORE } from "../../lib/paywall/config";
 import { synchronizeProgressNow } from "../../services/progressSync";
 
 type FormMode =
@@ -544,6 +545,9 @@ function AccountScreenContent() {
         ? "Formule annuelle"
         : null;
 
+  const isTestStoreSubscription =
+    IS_REVENUECAT_TEST_STORE && paywall.hasPremiumAccess && !paywall.isDeveloperUnlocked;
+
   const handleSubscriptionAction = () => {
     paywall.clearError();
     if (paywall.hasPremiumAccess && !paywall.isDeveloperUnlocked) {
@@ -849,20 +853,34 @@ function AccountScreenContent() {
                   </AppText>
                 </View>
               </View>
-              <ActionButton
-                label={
-                  paywall.hasPremiumAccess && !paywall.isDeveloperUnlocked
-                    ? "Gérer mon abonnement"
-                    : paywall.hasPremiumAccess
-                      ? "Voir l’offre Premium"
-                      : "Découvrir Premium"
-                }
-                variant="secondary"
-                disabled={paywall.isLoading}
-                onPress={handleSubscriptionAction}
-                style={styles.subscriptionAction}
-              />
-              {paywall.error ? (
+              {isTestStoreSubscription ? (
+                <View style={styles.subscriptionTestNotice}>
+                  <AppText variant="bodyStrong" style={styles.subscriptionTestTitle}>
+                    Abonnement de test actif
+                  </AppText>
+                  <AppText variant="caption" tone="soft">
+                    Cet abonnement fictif est géré par RevenueCat Test Store.
+                    La gestion et la résiliation via Google Play seront disponibles
+                    avec un abonnement Google Play.
+                  </AppText>
+                </View>
+              ) : (
+                <ActionButton
+                  label={
+                    paywall.hasPremiumAccess && !paywall.isDeveloperUnlocked
+                      ? "Gérer mon abonnement"
+                      : paywall.hasPremiumAccess
+                        ? "Voir l’offre Premium"
+                        : "Découvrir Premium"
+                  }
+                  variant="secondary"
+                  disabled={paywall.isLoading}
+                  onPress={handleSubscriptionAction}
+                  style={styles.subscriptionAction}
+                />
+              )}
+              {paywall.error &&
+              !(isTestStoreSubscription && paywall.error.code === "management-url-unavailable") ? (
                 <AppText variant="caption" style={styles.subscriptionError}>
                   {resolvePremiumError(paywall.error.message, locale, i18n)}
                 </AppText>
@@ -1248,6 +1266,16 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(103,232,168,0.08)",
   },
   subscriptionAction: { marginTop: 16 },
+  subscriptionTestNotice: {
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(103,232,168,0.20)",
+    backgroundColor: "rgba(103,232,168,0.06)",
+    gap: 6,
+  },
+  subscriptionTestTitle: { color: COLORS.green },
   subscriptionError: { color: COLORS.red, marginTop: 10 },
   rowDivider: {
     height: 1,
