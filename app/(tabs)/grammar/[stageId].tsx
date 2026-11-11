@@ -21,7 +21,7 @@ import { AppText } from "../../../components/app-text";
 import { useVocabularyText } from "../../../lib/i18n/VocabularyTextContext";
 import { GrammarLessonGuideModal } from "../../../components/grammar/GrammarLessonGuideModal";
 import { isGrammarQuickGuideStage } from "../../../data/grammar/lessonGuides";
-import { getJapaneseGrammarFeedback } from "../../../data/localized/grammarFeedbackDisplay";
+import { getJapaneseGrammarFeedbackOrFallback } from "../../../data/localized/grammarFeedbackDisplay";
 import { getJapaneseGrammarVocabulary } from "../../../data/localized/grammarVocabularyJapanese";
 import { useGrammarModalLayout } from "../../../components/grammar/useGrammarModalLayout";
 import { StatusBadge } from "../../../components/ui/status-badge";
@@ -1311,13 +1311,18 @@ function FeedbackCard({
   isLast: boolean;
 }) {
   const { i18n } = useTranslation("grammar");
+  const translate = useVocabularyText();
   const japanese = (i18n.resolvedLanguage ?? i18n.language).startsWith("ja");
-  const teacherLead = response.correct
-    ? getCorrectFeedbackLead(question)
-    : getGrammarIncorrectFeedback(question, response.answer);
-  const localizedLead = japanese
-    ? getJapaneseGrammarFeedback(question, response.answer, response.correct)
-    : undefined;
+  const displayedFeedback = japanese
+    ? getJapaneseGrammarFeedbackOrFallback(
+        question,
+        response.answer,
+        response.correct,
+        translate(question.explanation),
+      )
+    : response.correct
+      ? getCorrectFeedbackLead(question)
+      : getGrammarIncorrectFeedback(question, response.answer);
 
   return (
     <BlurView
@@ -1352,7 +1357,7 @@ function FeedbackCard({
             ? "TON CHOIX EXPLIQUÉ"
             : "TON CHOIX EXPLIQUÉ"}
       </AppText>
-      <AppText variant="bodyStrong">{localizedLead ?? teacherLead}</AppText>
+      <AppText variant="bodyStrong">{displayedFeedback}</AppText>
       {!response.correct ? (
         <View style={styles.correctAnswerBox}>
           <AppText variant="caption" tone="soft">
@@ -1377,7 +1382,7 @@ function FeedbackCard({
           <AppText variant="bodyStrong">{answerLabel(question.answer)}</AppText>
         </View>
       ) : null}
-      {response.correct && !localizedLead && (
+      {response.correct && !japanese && (
         question.stageId === "a1-validation" ||
         GRAMMAR_STAGE_IDS.slice(0, 14).includes(question.stageId)
       ) ? (
@@ -1404,6 +1409,7 @@ function LessonResult({
   onOpenStage: (stageId: GrammarStageId) => void;
 }) {
   const { i18n } = useTranslation("grammar");
+  const translate = useVocabularyText();
   const japanese = (i18n.resolvedLanguage ?? i18n.language).startsWith("ja");
   const stage = GRAMMAR_STAGE_BY_ID[session.stageId];
   const stageIndex = GRAMMAR_STAGE_IDS.indexOf(session.stageId);
@@ -1522,8 +1528,14 @@ function LessonResult({
                   {answerLabel(question.answer)}
                 </AppText>
                 <AppText variant="bodySecondary" tone="muted">
-                  {(japanese ? getJapaneseGrammarFeedback(question, response.answer, false) : undefined)
-                    ?? getGrammarIncorrectFeedback(question, response.answer)}
+                  {japanese
+                    ? getJapaneseGrammarFeedbackOrFallback(
+                        question,
+                        response.answer,
+                        false,
+                        translate(question.explanation),
+                      )
+                    : getGrammarIncorrectFeedback(question, response.answer)}
                 </AppText>
               </View>
             );
