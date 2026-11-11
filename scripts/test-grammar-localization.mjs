@@ -1206,3 +1206,138 @@ test("Japanese corrections never fall back to French for unknown or legacy feedb
   assert.match(screen, /response\.correct\s*&&\s*!japanese\s*&&/u);
   assert.match(screen, /:\s*getGrammarIncorrectFeedback\(question,\s*response\.answer\)/u);
 });
+
+
+test("A1 review outcomes, actions and five score families have complete Japanese copy", () => {
+  const labels = [
+    ["BILAN A1 VALIDÉ", "A1総復習クリア"],
+    ["RÉVISION À REPRENDRE", "もう一度復習しましょう"],
+    ["REFAIRE UN BILAN VARIÉ", "別の問題でもう一度挑戦"],
+    ["RÉSULTATS PAR FAMILLE", "分野別の結果"],
+    ["FONDATIONS", "基礎"],
+    ["CONSTRUIRE LA PHRASE", "文の組み立て"],
+    ["QUANTITÉS ET ÉCHANGES", "数量とやり取り"],
+    ["CHOIX ET INTENTIONS", "選択と意志"],
+    ["TEMPS, LIENS ET NUANCES", "時制・接続・ニュアンス"],
+    ["ÉTAPE TERMINÉE", "ステップ完了"],
+    ["ÉTAPE À REPRENDRE", "もう一度チャレンジ"],
+    ["TES POINTS À REVOIR", "復習したいポイント"],
+    ["PRÉCISION", "正答率"],
+    ["POINTS À REVOIR", "復習する問題"],
+    ["TENTATIVE", "挑戦回数"],
+    ["REFAIRE LA LEÇON", "もう一度練習"],
+    ["RÉESSAYER", "再挑戦"],
+    ["ÉTAPE SUIVANTE", "次のステップ"],
+    ["RETOUR AU PARCOURS", "コースに戻る"],
+  ];
+  for (const [source, expected] of labels) {
+    assert.equal(resolveGrammarText(A1_STAGE, source, "ja"), expected, "Missing JA: " + source);
+    assert.equal(resolveGrammarText(A1_STAGE, source, "fr"), source);
+  }
+  const screen = read("../app/(tabs)/grammar/[stageId].tsx");
+  assert.ok(screen.includes("{translate(family)} · {correctCount}/{familyQuestions.length}"));
+  assert.ok(screen.includes("question.prompt.startsWith("));
+  assert.ok(screen.includes('label={isGeneralReview ? "REFAIRE UN BILAN VARIÉ"'));
+  for (const source of labels.slice(4, 9).map(([source]) => source)) {
+    assert.ok(screen.includes('"' + source + '"'), "Family filter is not canonical: " + source);
+  }
+});
+
+test("A1 success result localizes varying question counts and keeps French source intact", () => {
+  const prefix = "Tu as validé un échantillon de ";
+  const suffix = " questions de grammaire A1. Une nouvelle tentative proposera d’autres notions : ce bilan ne remplace pas un test de compréhension orale.";
+  for (const count of [5, 10, 25, 30]) {
+    const source = prefix + count + suffix;
+    const expected = "A1文法の" + count + "問に合格しました。もう一度挑戦すると、別の文法項目も出題されます。ただし、この結果はリスニング力を測るものではありません。";
+    assert.equal(resolveGrammarText(A1_STAGE, source, "ja"), expected, "Untranslated success: " + count);
+    assert.equal(resolveGrammarText(A1_STAGE, source, "fr"), source);
+  }
+  const template = prefix + "{{count}}" + suffix;
+  const key = "shared__" + encodeURIComponent(template).replaceAll(".", "%2E");
+  assert.equal(localizedContent.fr.grammar[key]?.text, template);
+  assert.equal(
+    localizedContent.ja.grammar[key]?.text,
+    "A1文法の{{count}}問に合格しました。もう一度挑戦すると、別の文法項目も出題されます。ただし、この結果はリスニング力を測るものではありません。",
+  );
+  for (const [source, ja] of [
+    ["0 réponses correctes sur 25.", "25問中0問正解"],
+    ["1 réponse correcte sur 5.", "5問中1問正解"],
+    ["20 réponses correctes sur 25.", "25問中20問正解"],
+    ["25 réponses correctes sur 25.", "25問中25問正解"],
+  ]) {
+    assert.equal(resolveGrammarText(A1_STAGE, source, "ja"), ja);
+    assert.equal(resolveGrammarText(A1_STAGE, source, "fr"), source);
+  }
+});
+
+test("archived A1 session without modern family labels has Japanese notice and corrections", () => {
+  const questions = buildGrammarPracticeQuestions(A1_STAGE, 1, () => 0.27);
+  const first = questions.find((question) => !Array.isArray(question.answer) && question.options.length > 1);
+  assert.ok(first);
+  const wrong = first.options.find((answer) => answer !== first.answer);
+  assert.ok(wrong);
+  const oldQuestion = {
+    ...first,
+    id: "a1-validation:archived-before-redesign:legacy-question-1",
+    prompt: "Ancienne question A1 sans famille.",
+    explanation: "Explication française archivée sans traduction.",
+  };
+  const snapshot = JSON.stringify({
+    id: "legacy-a1-session",
+    stageId: A1_STAGE,
+    attemptNumber: 2,
+    questions: [oldQuestion],
+    questionIndex: 0,
+    responses: [{ questionId: oldQuestion.id, answer: wrong, correct: false }],
+    score: 0,
+    startedAt: "2025-04-01T11:00:00.000Z",
+    completedAt: "2025-04-01T11:03:00.000Z",
+  });
+  const restored = JSON.parse(snapshot);
+  const hasFamilyScores = restored.questions.some((question) =>
+    question.prompt.startsWith("BILAN A1 · "));
+  assert.equal(hasFamilyScores, false);
+  const notice = "Cette session date de l'ancienne révision A1. Refais le bilan pour retrouver les 25 questions et les résultats par famille.";
+  assert.equal(
+    resolveGrammarText(A1_STAGE, notice, "ja"),
+    "以前のA1復習結果です。もう一度受けると25問と分野別の結果を確認できます。",
+  );
+  assert.equal(resolveGrammarText(A1_STAGE, notice, "fr"), notice);
+  assert.equal(getJapaneseGrammarFeedback(restored.questions[0], wrong, false), undefined);
+  const explanation = resolveGrammarText(A1_STAGE, restored.questions[0].explanation, "ja");
+  assert.equal(explanation, oldQuestion.explanation);
+  const safe = getJapaneseGrammarFeedbackOrFallback(restored.questions[0], wrong, false, explanation);
+  assert.match(safe, /[ぁ-ゔァ-ヴー一-龠]/u);
+  assert.doesNotMatch(safe, /Explication|française|archivée|traduction/u);
+  assert.equal(JSON.stringify(restored), snapshot);
+  const screen = read("../app/(tabs)/grammar/[stageId].tsx");
+  assert.ok(screen.includes("isGeneralReview && !hasFamilyScores"));
+  assert.ok(screen.includes("getJapaneseGrammarFeedbackOrFallback("));
+});
+
+test("reloaded 25-question A1 session retains canonical family scores and Korean answers", () => {
+  const questions = buildGrammarPracticeQuestions(A1_STAGE, 1, () => 0.27);
+  const saved = JSON.stringify({
+    id: "persisted-a1-session",
+    stageId: A1_STAGE,
+    attemptNumber: 1,
+    questions,
+    questionIndex: 24,
+    responses: [],
+    score: 0,
+    startedAt: "2026-01-01T08:00:00.000Z",
+  });
+  const restored = JSON.parse(saved);
+  for (const family of [
+    "FONDATIONS", "CONSTRUIRE LA PHRASE", "QUANTITÉS ET ÉCHANGES",
+    "CHOIX ET INTENTIONS", "TEMPS, LIENS ET NUANCES",
+  ]) {
+    const sourceQuestions = restored.questions.filter((question) =>
+      question.prompt.startsWith("BILAN A1 · " + family + "\n"));
+    assert.equal(sourceQuestions.length, 5, "Incorrect archived score family: " + family);
+    assert.notEqual(resolveGrammarText(A1_STAGE, family, "ja"), family);
+  }
+  assert.deepEqual(restored.questions.map((question) => question.answer), questions.map((question) => question.answer));
+  assert.equal(restored.score, 0);
+  assert.equal(JSON.stringify(restored), saved);
+});
