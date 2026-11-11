@@ -71,3 +71,42 @@ export function getJapaneseGrammarFeedback(
     (wrongByDrill as Record<string, Record<string, string>>)[drillId]?.[selected]
   );
 }
+
+/**
+ * Safe Japanese-only fallback for a missing / older drill feedback entry.
+ * Keep the specific correction whenever it exists. If the canonical
+ * explanation has a proven Japanese display translation, reuse it;
+ * never expose the French source explanation as the fallback.
+ */
+export function getJapaneseGrammarFeedbackOrFallback(
+  question: GrammarPracticeQuestion,
+  selected: GrammarPracticeAnswer,
+  correct: boolean,
+  localizedExplanation?: string,
+): string {
+  const specific = getJapaneseGrammarFeedback(question, selected, correct);
+  if (typeof specific === "string" && specific.trim()) return specific;
+
+  const explanation =
+    localizedExplanation &&
+    localizedExplanation !== question.explanation &&
+    /[\u3040-\u30ff\u3400-\u9fff]/u.test(localizedExplanation)
+      ? localizedExplanation
+      : undefined;
+
+  if (correct) {
+    return explanation
+      ? `正解です。${explanation}`
+      : "正解です。答えの意味や形を確認して、次の問題に進みましょう。";
+  }
+
+  if (Array.isArray(selected)) {
+    return explanation
+      ? `正しい語順を確認しましょう。${explanation}`
+      : "正解の文と比べて、語句の並び方をもう一度確認しましょう。";
+  }
+
+  return explanation
+    ? `正解と見比べてみましょう。${explanation}`
+    : "正解と見比べて、文の意味や形の違いを確認しましょう。";
+}
