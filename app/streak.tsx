@@ -15,6 +15,8 @@ import { AppBackButton } from "../components/ui/app-back-button";
 import { HubModuleAccents } from "../constants/theme";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { useDailyStreak } from "../lib/DailyStreakProvider";
+import { StreakLocalizationProvider, useStreakCopy } from "../lib/i18n/StreakLocalizationProvider";
+import { formatStreakCalendarDate } from "../lib/i18n/streakText";
 import {
   STREAK_BADGE_MILESTONES,
   getStreakDateKey,
@@ -43,7 +45,8 @@ const ABSOLUTE_FILL = {
   left: 0,
 };
 
-export default function StreakScreen() {
+function StreakScreenContent() {
+  const { text } = useStreakCopy();
   const { applyFreeze, isLoading, streak } = useDailyStreak();
   const responsive = useResponsiveLayout({ maxWidth: 860 });
   const currentStreak = streak?.currentStreak ?? 0;
@@ -127,7 +130,7 @@ export default function StreakScreen() {
               responsive.isCompact && styles.statsGridCompact,
             ]}
           >
-            <StatCard label="Record" value={`${longestStreak} j`} />
+            <StatCard label="Record" value={text("{{count}} j", { count: longestStreak })} />
             <StatCard
               label="Aujourd'hui"
               value={isTodayCompleted ? "Valide" : "À faire"}
@@ -152,7 +155,7 @@ export default function StreakScreen() {
                 tone="soft"
                 style={styles.sectionCaption}
               >
-                Derniers {CALENDAR_DAYS} jours
+                {text("Derniers {{count}} jours", { count: CALENDAR_DAYS })}
               </AppText>
             </View>
             <CalendarGrid streak={streak} />
@@ -176,11 +179,14 @@ export default function StreakScreen() {
               </AppText>
             </View>
             <AppText variant="body" tone="muted" style={styles.bodyText}>
-              Une protection de série couvre une journée manquée. Si tu rates
-              une seule journée, elle peut conserver ta série.
+              {"Une protection de série couvre une journée manquée. Si tu rates une seule journée, elle peut conserver ta série."}
             </AppText>
             <View style={styles.actionRow}>
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={text("Utiliser une protection")}
+                accessibilityHint={text("Utilise une protection pour conserver la série après une journée manquée.")}
+                accessibilityState={{ disabled: isLoading || (streak?.freezesAvailable ?? 0) <= 0 }}
                 disabled={isLoading || (streak?.freezesAvailable ?? 0) <= 0}
                 onPress={() => {
                   Vibration.vibrate(8);
@@ -222,6 +228,12 @@ export default function StreakScreen() {
                 return (
                   <View
                     key={milestone}
+                    accessible
+                    accessibilityRole="text"
+                    accessibilityLabel={text("Badge {{count}} jours : {{status}}.", {
+                      count: milestone,
+                      status: text(unlocked ? "Débloqué" : "Verrouillé"),
+                    })}
                     style={[styles.badgeCard, unlocked && styles.badgeUnlocked]}
                   >
                     <AppText
@@ -254,9 +266,28 @@ export default function StreakScreen() {
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+export default function StreakScreen() {
   return (
-    <BlurView intensity={34} tint="dark" style={styles.statCard}>
+    <StreakLocalizationProvider>
+      <StreakScreenContent />
+    </StreakLocalizationProvider>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  const { text } = useStreakCopy();
+  return (
+    <BlurView
+      intensity={34}
+      tint="dark"
+      style={styles.statCard}
+      accessible
+      accessibilityRole="text"
+      accessibilityLabel={text("{{label}} : {{value}}", {
+        label: text(label),
+        value: text(value),
+      })}
+    >
       <AppText
         variant="sectionTitle"
         tone="strong"
@@ -278,6 +309,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
 }
 
 function CalendarGrid({ streak }: { streak: DailyStreakState | null }) {
+  const { locale, text } = useStreakCopy();
   const days = React.useMemo(() => {
     const today = new Date();
     return Array.from({ length: CALENDAR_DAYS }, (_, index) => {
@@ -293,10 +325,20 @@ function CalendarGrid({ streak }: { streak: DailyStreakState | null }) {
         const completed = !!streak?.completedDates[date];
         const frozen = !!streak?.freezeDates[date];
         const isToday = date === streak?.todayDate;
+        const dayStatus = text(
+          completed ? "Journée validée" : frozen ? "Protection utilisée" : "Aucune activité validée",
+        );
+        const dayAccessibilityLabel = text(
+          isToday ? "Aujourd'hui ({{date}}) : {{status}}." : "{{date}} : {{status}}.",
+          { date: formatStreakCalendarDate(date, locale), status: dayStatus },
+        );
 
         return (
           <View
             key={date}
+            accessible
+            accessibilityRole="text"
+            accessibilityLabel={dayAccessibilityLabel}
             style={[
               styles.calendarDay,
               completed && styles.calendarCompleted,
