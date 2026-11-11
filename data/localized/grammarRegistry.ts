@@ -429,6 +429,17 @@ const SHARED_COPY: Record<string, string> = {
   "VOIR MON BILAN": "結果を見る",
   "ÉTAPE TERMINÉE": "ステップ完了",
   "ÉTAPE À REPRENDRE": "もう一度チャレンジ",
+  // Résumé du bilan A1 : seuls les textes affichés sont localisés.
+  "BILAN A1 VALIDÉ": "A1総復習クリア",
+  "RÉVISION À REPRENDRE": "もう一度復習しましょう",
+  "REFAIRE UN BILAN VARIÉ": "別の問題でもう一度挑戦",
+  "Tu as validé un échantillon de {{count}} questions de grammaire A1. Une nouvelle tentative proposera d’autres notions : ce bilan ne remplace pas un test de compréhension orale.": "A1文法の{{count}}問に合格しました。もう一度挑戦すると、別の文法項目も出題されます。ただし、この結果はリスニング力を測るものではありません。",
+  // Ces libellés restent en français dans les données et les filtres de score.
+  "FONDATIONS": "基礎",
+  "CONSTRUIRE LA PHRASE": "文の組み立て",
+  "QUANTITÉS ET ÉCHANGES": "数量とやり取り",
+  "CHOIX ET INTENTIONS": "選択と意志",
+  "TEMPS, LIENS ET NUANCES": "時制・接続・ニュアンス",
   "Objectif atteint. Tu peux poursuivre ou refaire la leçon.": "目標達成！ 次に進んでも、もう一度練習しても大丈夫です。",
   "Revois les corrections ci-dessous, puis essaie de nouveau.": "下の解説を確認してから、もう一度挑戦しましょう。",
   "PRÉCISION": "正答率",
