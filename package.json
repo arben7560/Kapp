@@ -53,7 +53,8 @@
     "test:grammar-localization": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-grammar-localization.mjs",
     "test:account-localization": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-account-localization.mjs",
     "test:premium-localization": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-premium-localization.mjs",
-    "test:home-localization": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-home-localization.mjs"
+    "test:home-localization": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-home-localization.mjs",
+    "test:streak-localization": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-streak-localization.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/noto-sans-jp": "^0.4.4",
