@@ -1,10 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import type { SpeechRecognitionState } from "../lib/speechRecognitionState";
 import { AppText } from "./app-text";
 import { useVocabularyText } from "../lib/i18n/VocabularyTextContext";
+import { resolveImmersionSpeechDisplay } from "../lib/i18n/immersionSpeechDisplay";
 
 type GuidedSpeechTurnProps = {
   accent: string;
@@ -234,6 +236,8 @@ export function GuidedSpeechTurn({
   children,
 }: GuidedSpeechTurnProps) {
   const translate = useVocabularyText();
+  const { i18n } = useTranslation("immersion");
+  const japanese = (i18n.resolvedLanguage ?? i18n.language).startsWith("ja");
   const isListening = speechState.status === "listening";
   const isBusy =
     interactionDisabled ||
@@ -245,11 +249,24 @@ export function GuidedSpeechTurn({
     interactionDisabledLabel ||
     (isListening ? "Arrêter" : canRetry ? "Réessayer" : "Parler");
   const primaryIcon = isListening ? "stop" : "mic";
-  // Prefer the pedagogically localized original feedback when a Japanese copy exists;
-  // French users keep the existing conversational rewrite unchanged.
-  const displayedFeedback = feedback
-    ? translate(feedback) !== feedback ? feedback : humanizeCafeSpeechFeedback(feedback)
+  // Keep French pedagogical rewrites unchanged. In Japanese, prefer the
+  // scene-specific translation and prevent unmatched/partially French speech
+  // diagnostics from leaking through AppText's source-string lookup.
+  const feedbackSource = feedback
+    ? japanese
+      ? feedback
+      : translate(feedback) !== feedback
+        ? feedback
+        : humanizeCafeSpeechFeedback(feedback)
     : speechState.message;
+  const displayedFeedback = japanese
+    ? resolveImmersionSpeechDisplay(
+        feedbackSource,
+        feedbackSource ? translate(feedbackSource) : null,
+        "ja",
+        feedback ? "feedback" : speechState.status,
+      )
+    : feedbackSource;
   const needsConfirmation = confirmationLabel !== null;
 
   return (
