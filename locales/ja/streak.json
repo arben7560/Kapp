@@ -1,0 +1,51 @@
+{
+  "copy": {
+    "header": {
+      "S%C3%A9rie": "連続学習の記録",
+      "RETOUR": "戻る",
+      "Retour%20%C3%A0%20l%E2%80%99%C3%A9cran%20pr%C3%A9c%C3%A9dent": "前の画面に戻る",
+      "Revient%20%C3%A0%20l%E2%80%99%C3%A9cran%20pr%C3%A9c%C3%A9dent": "前の画面に戻ります"
+    },
+    "hero": {
+      "HABITUDE%20QUOTIDIENNE": "毎日の学習習慣",
+      "jour%20de%20suite": "日連続",
+      "jours%20de%20suite": "日連続",
+      "Jour%20valide%2E%20Ta%20s%C3%A9rie%20est%20conserv%C3%A9e%2E": "今日の学習は完了。連続記録は維持されています。",
+      "Une%20petite%20activit%C3%A9%20suffit%20pour%20conserver%20ta%20s%C3%A9rie%2E": "今日、学習を１つ完了すれば連続記録を維持できます。"
+    },
+    "stats": {
+      "Record": "最長記録",
+      "%7B%7Bcount%7D%7D%20j": "{{count}}日",
+      "Aujourd'hui": "今日",
+      "Valide": "達成",
+      "%C3%80%20faire": "未完了",
+      "Protection%20de%20s%C3%A9rie": "連続記録の保護"
+    },
+    "calendar": {
+      "Calendrier": "学習カレンダー",
+      "Derniers%20%7B%7Bcount%7D%7D%20jours": "過去{{count}}日間",
+      "Journ%C3%A9e%20valid%C3%A9e": "学習済み",
+      "Protection%20utilis%C3%A9e": "保護アイテム使用",
+      "Aucune%20activit%C3%A9%20valid%C3%A9e": "学習記録なし"
+    },
+    "protection": {
+      "Protection%20douce": "休んだ日も記録を守る",
+      "Une%20protection%20de%20s%C3%A9rie%20couvre%20une%20journ%C3%A9e%20manqu%C3%A9e%2E%20Si%20tu%20rates%20une%20seule%20journ%C3%A9e%2C%20elle%20peut%20conserver%20ta%20s%C3%A9rie%2E": "学習を休んだ１日を、保護アイテムで補えます。使うと連続学習の記録を維持できます。",
+      "Utiliser%20une%20protection": "保護アイテムを使う"
+    },
+    "badges": {
+      "Badges": "達成バッジ",
+      "Paliers%20non%20punitifs": "獲得したバッジは失われません",
+      "jours": "日連続",
+      "D%C3%A9bloqu%C3%A9": "獲得済み",
+      "Verrouill%C3%A9": "未獲得"
+    },
+    "accessibility": {
+      "%7B%7Blabel%7D%7D%20%3A%20%7B%7Bvalue%7D%7D": "{{label}}：{{value}}",
+      "%7B%7Bdate%7D%7D%20%3A%20%7B%7Bstatus%7D%7D%2E": "{{date}}：{{status}}。",
+      "Aujourd'hui%20(%7B%7Bdate%7D%7D)%20%3A%20%7B%7Bstatus%7D%7D%2E": "今日（{{date}}）：{{status}}。",
+      "Badge%20%7B%7Bcount%7D%7D%20jours%20%3A%20%7B%7Bstatus%7D%7D%2E": "{{count}}日連続のバッジ：{{status}}。",
+      "Utilise%20une%20protection%20pour%20conserver%20la%20s%C3%A9rie%20apr%C3%A8s%20une%20journ%C3%A9e%20manqu%C3%A9e%2E": "学習を休んだ１日を補い、連続記録を維持します。"
+    }
+  }
+}
