@@ -1493,7 +1493,7 @@ function LessonResult({
             return (
               <View key={family} style={styles.reviewRow}>
                 <AppText variant="bodyStrong">
-                  {family} · {correctCount}/{familyQuestions.length}
+                  {translate(family)} · {correctCount}/{familyQuestions.length}
                 </AppText>
               </View>
             );
