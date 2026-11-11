@@ -46,6 +46,17 @@ export function resolveGrammarText(
   if (match) return `${match[1]}／${match[2]}ステップ`;
   match = source.match(/^(\d+) étapes · progression A0 → A1$/u);
   if (match) return `${match[1]}ステップ・A0からA1へ`;
+  // The A1 result message contains the number of questions in the session.
+  // Resolve the translated template from the shared catalogue, not from
+  // the saved French string, so legacy/revised sessions keep their own count.
+  if (module === "a1-validation") {
+    match = source.match(/^Tu as validé un échantillon de (\\d+) questions de grammaire A1\\. Une nouvelle tentative proposera d’autres notions : ce bilan ne remplace pas un test de compréhension orale\\.$/u);
+    if (match) {
+      const template = exact("shared",
+        "Tu as validé un échantillon de {{count}} questions de grammaire A1. Une nouvelle tentative proposera d’autres notions : ce bilan ne remplace pas un test de compréhension orale.");
+      if (template) return template.replace("{{count}}", match[1]);
+    }
+  }
   match = source.match(/^CHAPITRE (\d+) · (.+)$/u);
   if (match) {
     const chapter = exact("shared", match[2]) ?? match[2];
