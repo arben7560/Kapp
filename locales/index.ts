@@ -8,6 +8,8 @@ import frAccount from './fr/account.json';
 import jaAccount from './ja/account.json';
 import frPremium from './fr/premium.json';
 import jaPremium from './ja/premium.json';
+import frStreak from './fr/streak.json';
+import jaStreak from './ja/streak.json';
 import frHangul from './fr/hangul.json';
 import jaHangul from './ja/hangul.json';
 import frVocabulary from './fr/vocabulary.json';
@@ -36,6 +38,7 @@ export const resources = {
     onboarding: frOnboarding,
     account: frAccount,
     premium: frPremium,
+    streak: frStreak,
     hangul: frHangul,
     vocabulary: { ...frVocabulary, content: frenchContent.vocabulary },
     counting: { ...frCounting, content: frenchContent.counting },
@@ -52,6 +55,7 @@ export const resources = {
     onboarding: jaOnboarding,
     account: jaAccount,
     premium: jaPremium,
+    streak: jaStreak,
     hangul: jaHangul,
     vocabulary: { ...jaVocabulary, content: japaneseContent.vocabulary },
     counting: { ...jaCounting, content: japaneseContent.counting },
