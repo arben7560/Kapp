@@ -12,6 +12,7 @@ import { useAuth } from "../AuthProvider";
 import {
   DEV_UNLOCK_ALL,
   ENABLE_NATIVE_IAP,
+  IS_REVENUECAT_TEST_STORE,
   PREMIUM_PRICE_FALLBACKS,
   type SubscriptionOfferId,
 } from "./config";
@@ -21,6 +22,7 @@ import {
   deriveRevenueCatEntitlement,
   hasActivePremiumEntitlement,
   mapSubscriptionPackages,
+  selectSubscriptionOffering,
   toRevenueCatError,
 } from "./revenueCatLogic";
 import type {
@@ -136,6 +138,7 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
   const [customerInfo, setCustomerInfo] = React.useState<CustomerInfo | null>(
     null,
   );
+  const [entitlementCheckedAt, setEntitlementCheckedAt] = React.useState(Date.now);
 
   const [subscriptions, setSubscriptions] =
     React.useState<Partial<Record<SubscriptionOfferId, PurchasesPackage>>>(
@@ -158,7 +161,10 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
 
   const updateCustomerInfo = React.useCallback(
     (nextCustomerInfo: CustomerInfo) => {
-      if (isMountedRef.current) setCustomerInfo(nextCustomerInfo);
+      if (isMountedRef.current) {
+        if (IS_REVENUECAT_TEST_STORE) setEntitlementCheckedAt(Date.now());
+        setCustomerInfo(nextCustomerInfo);
+      }
     },
     [],
   );
@@ -194,6 +200,9 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
+        if (IS_REVENUECAT_TEST_STORE) {
+          await Purchases.invalidateCustomerInfoCache();
+        }
         const nextCustomerInfo = await Purchases.getCustomerInfo();
         updateCustomerInfo(nextCustomerInfo);
       } catch (refreshError) {
@@ -221,6 +230,9 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
 
     const customerInfoOperation = (async () => {
       try {
+        if (IS_REVENUECAT_TEST_STORE) {
+          await Purchases.invalidateCustomerInfoCache();
+        }
         const nextCustomerInfo = await Purchases.getCustomerInfo();
         updateCustomerInfo(nextCustomerInfo);
       } catch (customerInfoError) {
@@ -233,12 +245,13 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
     const offeringsOperation = (async () => {
       try {
         const offerings = await Purchases.getOfferings();
-        const nextSubscriptions = mapSubscriptionPackages(offerings.current);
+        const offering = selectSubscriptionOffering(offerings);
+        const nextSubscriptions = mapSubscriptionPackages(offering);
 
         if (isMountedRef.current) {
           setSubscriptions(nextSubscriptions);
 
-          if (!offerings.current) {
+          if (!offering) {
             setError({
               code: "offering-unavailable",
               message: "Aucune offre RevenueCat active n’est disponible.",
@@ -321,6 +334,7 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
         previousAppState = nextAppState;
 
         if (becameActive) {
+          if (IS_REVENUECAT_TEST_STORE) setEntitlementCheckedAt(Date.now());
           void synchronizeIdentity()
             .catch((identityError) => {
               if (__DEV__) {
@@ -494,9 +508,18 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
   );
 
   const entitlement = React.useMemo(
-    () => deriveRevenueCatEntitlement(customerInfo),
-    [customerInfo],
+    () => deriveRevenueCatEntitlement(customerInfo, entitlementCheckedAt),
+    [customerInfo, entitlementCheckedAt],
   );
+
+  React.useEffect(() => {
+    if (!IS_REVENUECAT_TEST_STORE || !entitlement.hasAccess || !entitlement.expiresAt) return;
+    const timeout = setTimeout(() => {
+      setEntitlementCheckedAt(Date.now());
+      void refreshCustomerInfo(false);
+    }, Math.min(Math.max(0, entitlement.expiresAt - Date.now()), 2_147_483_647));
+    return () => clearTimeout(timeout);
+  }, [entitlement.hasAccess, entitlement.expiresAt, refreshCustomerInfo]);
 
   const activeSubscriptions = React.useMemo(
     () => customerInfo?.activeSubscriptions ?? [],

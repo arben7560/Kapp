@@ -4,6 +4,22 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "iapTest": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "environment": "development",
+      "env": {
+        "KAPP_BUILD_PROFILE": "iapTest",
+        "EXPO_PUBLIC_DEV_UNLOCK_ALL": "0",
+        "EXPO_PUBLIC_INTERNAL_PREMIUM_ACCESS": "0",
+        "EXPO_PUBLIC_ENABLE_NATIVE_IAP": "1",
+        "EXPO_PUBLIC_REVENUECAT_STORE": "test"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      }
+    },
     "development": {
       "developmentClient": true,
       "distribution": "internal",

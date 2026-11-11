@@ -1,12 +1,14 @@
 import type {
   CustomerInfo,
   PurchasesOffering,
+  PurchasesOfferings,
   PurchasesPackage,
   PurchasesStoreProduct,
 } from "react-native-purchases";
 
 import {
   PREMIUM_ENTITLEMENT_ID,
+  IS_REVENUECAT_TEST_STORE,
   SUBSCRIPTION_PRODUCT_IDS,
   type SubscriptionOfferId,
 } from "./config.ts";
@@ -99,12 +101,20 @@ export function getPremiumEntitlementInfo(customerInfo: CustomerInfo) {
   return customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID] ?? null;
 }
 
-export function hasActivePremiumEntitlement(customerInfo: CustomerInfo) {
-  return getPremiumEntitlementInfo(customerInfo)?.isActive === true;
+export function hasActivePremiumEntitlement(customerInfo: CustomerInfo, now = Date.now()) {
+  const entitlement = getPremiumEntitlementInfo(customerInfo);
+  if (entitlement?.isActive !== true) return false;
+  // Test Store renewals are short. Do not keep granting access from an expired
+  // cached response while waiting for the next SDK refresh (or while offline).
+  // Production keeps RevenueCat's existing entitlement/grace-period semantics.
+  return !IS_REVENUECAT_TEST_STORE ||
+    entitlement.expirationDateMillis === null ||
+    entitlement.expirationDateMillis > now;
 }
 
 export function deriveRevenueCatEntitlement(
   customerInfo: CustomerInfo | null,
+  now = Date.now(),
 ): PremiumEntitlement {
   if (!customerInfo) {
     return { hasAccess: false, source: "none" };
@@ -112,7 +122,7 @@ export function deriveRevenueCatEntitlement(
 
   const entitlementInfo = getPremiumEntitlementInfo(customerInfo);
 
-  if (!entitlementInfo?.isActive) {
+  if (!entitlementInfo || !hasActivePremiumEntitlement(customerInfo, now)) {
     return { hasAccess: false, source: "none" };
   }
 
@@ -123,6 +133,12 @@ export function deriveRevenueCatEntitlement(
     expiresAt: entitlementInfo.expirationDateMillis,
     willAutoRenew: entitlementInfo.willRenew,
   };
+}
+
+export function selectSubscriptionOffering(offerings: PurchasesOfferings) {
+  return IS_REVENUECAT_TEST_STORE
+    ? offerings.all.default ?? null
+    : offerings.current;
 }
 
 export function mapSubscriptionPackages(
@@ -148,10 +164,12 @@ export function mapSubscriptionPackages(
     );
   };
 
-  return {
-    monthly: findPackage("monthly", currentOffering.monthly),
-    yearly: findPackage("yearly", currentOffering.annual),
-  };
+  const packages: Partial<Record<SubscriptionOfferId, PurchasesPackage>> = {};
+  const monthly = findPackage("monthly", currentOffering.monthly);
+  const yearly = findPackage("yearly", currentOffering.annual);
+  if (monthly) packages.monthly = monthly;
+  if (yearly) packages.yearly = yearly;
+  return packages;
 }
 
 export type AnnualOfferMetrics = {

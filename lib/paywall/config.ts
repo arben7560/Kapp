@@ -16,11 +16,15 @@ export function isDeveloperPremiumUnlockEnabled(
   );
 }
 
-export const DEV_UNLOCK_ALL = isDeveloperPremiumUnlockEnabled(
-  IS_DEVELOPMENT,
-  process.env.EXPO_PUBLIC_DEV_UNLOCK_ALL,
-  process.env.EXPO_PUBLIC_INTERNAL_PREMIUM_ACCESS,
-);
+export const IS_REVENUECAT_TEST_STORE =
+  process.env.EXPO_PUBLIC_REVENUECAT_STORE === "test";
+
+export const DEV_UNLOCK_ALL =
+  !IS_REVENUECAT_TEST_STORE && isDeveloperPremiumUnlockEnabled(
+    IS_DEVELOPMENT,
+    process.env.EXPO_PUBLIC_DEV_UNLOCK_ALL,
+    process.env.EXPO_PUBLIC_INTERNAL_PREMIUM_ACCESS,
+  );
 
 export const ENABLE_NATIVE_IAP =
   process.env.EXPO_PUBLIC_ENABLE_NATIVE_IAP === "1" ||
@@ -42,7 +46,7 @@ export type PremiumSubscriptionOffer = {
 export const PREMIUM_SUBSCRIPTION_OFFERS = [
   {
     id: "monthly",
-    productId: "kapp_premium_monthly",
+    productId: IS_REVENUECAT_TEST_STORE ? "monthly" : "kapp_premium_monthly",
     title: "Premium mensuel",
     cta: "Choisir l’abonnement mensuel",
     fallbackPrice: "7,99 € / mois",
@@ -50,7 +54,7 @@ export const PREMIUM_SUBSCRIPTION_OFFERS = [
   },
   {
     id: "yearly",
-    productId: "kapp_premium_yearly",
+    productId: IS_REVENUECAT_TEST_STORE ? "yearly" : "kapp_premium_yearly",
     title: "Premium annuel",
     cta: "Choisir l’abonnement annuel",
     fallbackPrice: "69,99 € / an",

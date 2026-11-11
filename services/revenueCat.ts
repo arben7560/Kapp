@@ -1,5 +1,7 @@
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
 import { Platform } from "react-native";
+import Constants from "expo-constants";
+import { IS_REVENUECAT_TEST_STORE } from "../lib/paywall/config";
 
 let revenueCatConfigured = false;
 
@@ -9,6 +11,14 @@ const IS_DEVELOPMENT =
     : process.env.NODE_ENV !== "production";
 
 function getPlatformApiKey(): string | undefined {
+  if (IS_REVENUECAT_TEST_STORE) {
+    const testConfig = Constants.expoConfig?.extra?.revenueCatTestStore;
+    return IS_DEVELOPMENT && testConfig?.profile === "iapTest" &&
+      typeof testConfig.apiKey === "string"
+      ? testConfig.apiKey.trim()
+      : undefined;
+  }
+
   const platformKey =
     Platform.OS === "ios"
       ? process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY
@@ -16,12 +26,7 @@ function getPlatformApiKey(): string | undefined {
         ? process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY
         : undefined;
 
-  return (
-    platformKey?.trim() ||
-    (IS_DEVELOPMENT
-      ? process.env.EXPO_PUBLIC_REVENUECAT_TEST_KEY?.trim()
-      : undefined)
-  );
+  return platformKey?.trim();
 }
 
 export function configureRevenueCat(): boolean {
@@ -38,15 +43,17 @@ export function configureRevenueCat(): boolean {
     return false;
   }
 
-  if (!IS_DEVELOPMENT && apiKey.startsWith("test_")) {
+  if (!IS_REVENUECAT_TEST_STORE && apiKey.startsWith("test_")) {
     console.error(
       "[RevenueCat] Une clé Test Store ne peut pas être utilisée dans un build de release.",
     );
     return false;
   }
 
-  const expectedPrefix = Platform.OS === "ios" ? "appl_" : "goog_";
-  if (!apiKey.startsWith("test_") && !apiKey.startsWith(expectedPrefix)) {
+  const expectedPrefix = IS_REVENUECAT_TEST_STORE
+    ? "test_"
+    : Platform.OS === "ios" ? "appl_" : "goog_";
+  if (!apiKey.startsWith(expectedPrefix)) {
     console.error(
       `[RevenueCat] La clé publique ne correspond pas à la plateforme ${Platform.OS}.`,
     );
