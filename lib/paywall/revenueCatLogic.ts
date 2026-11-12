@@ -211,9 +211,8 @@ export function subscriptionManagementURL(customerInfo: CustomerInfo): string | 
   if (!entitlement || entitlement.store === "TEST_STORE") return null;
   const subscription = getPremiumSubscription(customerInfo);
   if (entitlement.store === "PLAY_STORE") {
-    // CustomerInfo.managementURL can point to the generic subscription list.
-    // Target this entitlement explicitly, keeping the existing package/product.
-    return `https://play.google.com/store/account/subscriptions?sku=${encodeURIComponent(entitlement.productIdentifier.split(":")[0])}&package=${encodeURIComponent(STORE_PACKAGE_NAME_ANDROID)}`;
+    return customerInfo.managementURL || subscription?.managementURL ||
+      `https://play.google.com/store/account/subscriptions?sku=${encodeURIComponent(entitlement.productIdentifier.split(":")[0])}&package=${encodeURIComponent(STORE_PACKAGE_NAME_ANDROID)}`;
   }
   if (entitlement.store === "APP_STORE" || entitlement.store === "MAC_APP_STORE") {
     return customerInfo.managementURL || subscription?.managementURL || "https://apps.apple.com/account/subscriptions";

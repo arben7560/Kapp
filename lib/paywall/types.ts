@@ -23,6 +23,11 @@ export type PaywallError = {
   message: string;
 };
 
+export type PurchaseNotice = {
+  userId: string;
+  purchasedAt: number;
+};
+
 export type PaywallContextValue = {
   hasPremiumAccess: boolean;
   entitlement: PremiumEntitlement;
@@ -45,6 +50,8 @@ export type PaywallContextValue = {
   activeSubscriptions: string[];
 
   refreshEntitlements: () => Promise<void>;
+  refreshSubscription: () => Promise<void>;
+  takePurchaseNotice: () => PurchaseNotice | null;
   subscribeMonthly: () => Promise<boolean>;
   subscribeYearly: () => Promise<boolean>;
   subscribe: (

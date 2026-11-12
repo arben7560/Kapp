@@ -68,6 +68,7 @@ function PremiumScreenContent() {
   const [intentError, setIntentError] = React.useState<string | null>(null);
   const [isPreparingAuth, setIsPreparingAuth] = React.useState(false);
   const [authenticationAction, setAuthenticationAction] = React.useState<"purchase" | "restore" | null>(null);
+  const [confirmationUserId, setConfirmationUserId] = React.useState<string | null>(null);
   const authNavigationRef = React.useRef(false);
   const translate = useVocabularyText();
   const { t, i18n } = useTranslation("premium");
@@ -166,12 +167,18 @@ function PremiumScreenContent() {
     }
   }, [signInWithOAuth, returnTo, selectedOfferId]);
 
-  const handleSubscribe = React.useCallback(async () => {
-    if (!selectedOffer) return;
+  const handleSubscribe = React.useCallback(() => {
+    if (!canSubscribe) return;
     if (!auth.isPermanentAccount) { setAuthenticationAction("purchase"); return; }
+    setConfirmationUserId(auth.user?.id ?? null);
+  }, [auth.isPermanentAccount, auth.user?.id, canSubscribe]);
+
+  const confirmSubscription = React.useCallback(async () => {
+    if (!canSubscribe || !confirmationUserId || confirmationUserId !== auth.user?.id) return;
+    setConfirmationUserId(null);
     const premiumGranted = await subscribe(selectedOffer.id);
-    if (premiumGranted && isMountedRef.current) closePaywall();
-  }, [auth.isPermanentAccount, closePaywall, selectedOffer, subscribe]);
+    if (premiumGranted && isMountedRef.current) router.replace("/account");
+  }, [auth.user?.id, canSubscribe, confirmationUserId, selectedOffer.id, subscribe]);
 
   const handleRestore = React.useCallback(async () => {
     if (!auth.isPermanentAccount) { setAuthenticationAction("restore"); return; }
@@ -402,6 +409,30 @@ function PremiumScreenContent() {
             onPress={() => setAuthenticationAction(null)} />
         </DialogActions>
       </AppDialog>
+      <AppDialog
+        visible={confirmationUserId !== null && confirmationUserId === auth.user?.id && auth.isPermanentAccount && !hasPremiumAccess}
+        onRequestClose={() => setConfirmationUserId(null)}
+        accessibilityLabel={t("confirmation.title")}
+        accentColor={COLORS.cyan}
+      >
+        <AppText variant="cardTitle" accessibilityRole="header">{t("confirmation.title")}</AppText>
+        <View style={styles.confirmationSummary}>
+          <AppText variant="bodyStrong">{t(`subscription.plan.${selectedOffer.id}`)}</AppText>
+          <AppText variant="cardTitle">{subscriptions[selectedOffer.id]?.product.priceString}</AppText>
+          <AppText variant="bodySecondary" tone="muted">{t(`confirmation.${selectedOffer.id}`)}</AppText>
+        </View>
+        <AppText variant="bodySecondary" tone="muted" style={styles.confirmationNotice}>
+          {t(IS_REVENUECAT_TEST_STORE ? "subscription.testNotice" : "confirmation.autoRenew")}
+        </AppText>
+        <DialogActions>
+          <ActionButton
+            label={t("confirmation.continue", { store: IS_REVENUECAT_TEST_STORE ? "RevenueCat Test Store" : Platform.OS === "android" ? "Google Play" : "App Store" })}
+            disabled={!canSubscribe}
+            onPress={() => void confirmSubscription()}
+          />
+          <ActionButton label={t("authentication.cancel")} variant="secondary" onPress={() => setConfirmationUserId(null)} />
+        </DialogActions>
+      </AppDialog>
     </LinearGradient>
   );
 }
@@ -415,6 +446,16 @@ export default function PremiumScreen() {
 }
 
 const styles = StyleSheet.create({
+  confirmationSummary: {
+    gap: 8,
+    marginVertical: 20,
+    padding: 16,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    backgroundColor: COLORS.card,
+  },
+  confirmationNotice: { marginBottom: 20 },
   screen: {
     flex: 1,
   },

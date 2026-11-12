@@ -18,6 +18,19 @@ const ja = JSON.parse(read("../locales/ja/premium.json"));
 const instance = createAppI18n();
 const translate = (source) => resolvePremiumText(source, "ja", instance);
 
+test("confirmation, notification et résiliation conservent les accents et les textes japonais", () => {
+  assert.equal(fr.subscription.cancel, "Résilier mon abonnement");
+  assert.equal(fr.confirmation.title, "Confirmer mon abonnement");
+  assert.equal(fr.purchaseSuccess.title, "Abonnement Premium activé !");
+  assert.equal(fr.purchaseSuccess.message, "Votre abonnement a bien été souscrit. Profitez de toutes les fonctionnalités Premium de K-App.");
+  for (const catalogue of [fr, ja]) {
+    for (const section of ["subscription", "authentication", "confirmation", "purchaseSuccess"]) {
+      assert.doesNotMatch(JSON.stringify(catalogue[section]), /\?/u, `${section}: corrupted encoding`);
+    }
+  }
+  assert.match(ja.subscription.cancel, /[\u3040-\u30ff\u4e00-\u9fff]/u);
+});
+
 test("Premium uses structured aligned French/Japanese copy with stable source IDs", () => {
   assert.deepEqual(validateCataloguePair(resources.fr.premium, resources.ja.premium), []);
   assert.deepEqual(Object.keys(fr.copy).sort(), Object.keys(ja.copy).sort());

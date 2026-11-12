@@ -45,6 +45,7 @@ import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { subscriptionDetails } from "../../lib/paywall/subscriptionDetails";
 import { resumePurchaseIntent } from "../../lib/paywall/purchaseIntent";
 import { SubscriptionDetails } from "../../components/premium/SubscriptionDetails";
+import { PurchaseSuccessNotice } from "../../components/premium/PurchaseSuccessNotice";
 import { synchronizeProgressNow } from "../../services/progressSync";
 
 type FormMode =
@@ -331,6 +332,10 @@ function AccountScreenContent() {
 
   const canResumePurchase = auth.isPermanentAccount && !auth.isLoading &&
     !auth.isHandlingDeepLink && !auth.needsPasswordSetup && !auth.isPasswordRecovery;
+  const refreshSubscription = paywall.refreshSubscription;
+  useFocusEffect(React.useCallback(() => {
+    if (auth.isPermanentAccount && auth.user?.id && !auth.isLoading) void refreshSubscription();
+  }, [auth.isPermanentAccount, auth.isLoading, auth.user?.id, refreshSubscription]));
   useFocusEffect(React.useCallback(() => {
     if (!canResumePurchase) return;
     let active = true;
@@ -563,7 +568,7 @@ function AccountScreenContent() {
   const activePlanLabel = details.plan ? i18n.t(`premium:subscription.plan.${details.plan}`) : null;
   const isTestStoreSubscription = details.isTestStore;
   const [cancellationUserId, setCancellationUserId] = React.useState<string | null>(null);
-  const canCancelSubscription = details.hasAccess && details.canManage && details.willRenew === true && !paywall.isDeveloperUnlocked;
+  const canCancelSubscription = details.canCancel && !paywall.isDeveloperUnlocked;
   const cancellationVisible = canCancelSubscription && cancellationUserId !== null && cancellationUserId === auth.user?.id;
   const subscriptionText = (key: "cancel" | "manage" | "cancelledTitle" | "cancelledNotice" |
     "cancelledUnknownDate" | "checkingReturn" | "unconfirmedReturn" | "cancelIntro" |
@@ -612,6 +617,9 @@ function AccountScreenContent() {
       <View pointerEvents="none" style={styles.ambientTop} />
       <View pointerEvents="none" style={styles.ambientBottom} />
       <SafeAreaView style={styles.safe}>
+        <View style={{ width: "100%", maxWidth: responsive.maxWidth, alignSelf: "center", paddingHorizontal: responsive.horizontalPadding }}>
+          <PurchaseSuccessNotice />
+        </View>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={styles.safe}
@@ -896,7 +904,7 @@ function AccountScreenContent() {
                     {subscriptionText(endDate ? "cancelledNotice" : "cancelledUnknownDate", { date: endDate })}
                   </AppText>
                 </View>
-              ) : paywall.managementReturnStatus !== "idle" ? (
+              ) : paywall.managementReturnStatus === "checking" || paywall.managementReturnStatus === "unconfirmed" ? (
                 <AppText variant="caption" tone="soft" accessibilityLiveRegion="polite" style={styles.subscriptionAction}>
                   {subscriptionText(paywall.managementReturnStatus === "checking" ? "checkingReturn" : "unconfirmedReturn", { store: storeName })}
                 </AppText>

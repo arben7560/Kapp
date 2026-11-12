@@ -63,6 +63,8 @@ function DevPaywallProvider({ children }: { children: React.ReactNode }) {
       managementReturnStatus: "idle",
       openSubscriptionManagement: noopAsync,
       refreshEntitlements: noopAsync,
+      refreshSubscription: noopAsync,
+      takePurchaseNotice: () => null,
       restorePurchases: succeedAsync,
       subscribe: succeedAsync,
       subscribeMonthly: succeedAsync,
@@ -122,6 +124,8 @@ function LockedPreviewPaywallProvider({
       managementReturnStatus: "idle",
       openSubscriptionManagement: showNativeRuntimeError,
       refreshEntitlements: noopAsync,
+      refreshSubscription: noopAsync,
+      takePurchaseNotice: () => null,
       restorePurchases: failNativeSubscription,
       subscribe: failNativeSubscription,
       subscribeMonthly: failNativeSubscription,
@@ -171,6 +175,8 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
   const isConfiguredRef = React.useRef(false);
   const processingRef = React.useRef(false);
   const lastCustomerInfoRef = React.useRef<CustomerInfo | null>(null);
+  const lastReadRef = React.useRef<{ key: string; generation: number; at: number } | null>(null);
+  const purchaseNoticeRef = React.useRef<{ snapshot: typeof authRef.current; purchasedAt: number } | null>(null);
   const refreshInFlightRef = React.useRef<Promise<CustomerInfo | null> | null>(null);
   const pendingManagementRef = React.useRef<{ snapshot: typeof authRef.current; requestDate: number } | null>(null);
   const [managementReturn, setManagementReturn] = React.useState<{
@@ -189,6 +195,7 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
     (info: CustomerInfo, snapshot: typeof authRef.current) => {
       if (!isCurrent(snapshot) || snapshot.key === "guest") return;
       lastCustomerInfoRef.current = info;
+      lastReadRef.current = { key: snapshot.key, generation: snapshot.generation, at: Date.now() };
       setOwnedInfo({ key: snapshot.key, generation: snapshot.generation, info });
       setEntitlementCheckedAt(Date.now());
       setManagementReturn((current) => current?.key === snapshot.key &&
@@ -238,10 +245,15 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const refreshCustomerInfo = React.useCallback(async (showLoader: boolean) => {
+  const refreshCustomerInfo = React.useCallback(async (showLoader: boolean, allowRecent = false) => {
     if (!isConfiguredRef.current) return null;
     if (refreshInFlightRef.current) return refreshInFlightRef.current;
     const snapshot = { ...authRef.current };
+    const lastRead = lastReadRef.current;
+    if (allowRecent && lastRead && lastRead.key === snapshot.key &&
+        lastRead.generation === snapshot.generation && Date.now() - lastRead.at < 5_000) {
+      return lastCustomerInfoRef.current;
+    }
     const operation = (async () => {
       if (showLoader) { setIsRefreshing(true); setError(null); }
       try {
@@ -273,6 +285,21 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
     await refreshCustomerInfo(true);
     await loadOfferings();
   }, [loadOfferings, refreshCustomerInfo]);
+
+  // Account focus shares recent startup/purchase/foreground reads and never
+  // reloads the product catalogue. Explicit refresh still bypasses the cache.
+  const refreshSubscription = React.useCallback(async () => {
+    await refreshCustomerInfo(false, true);
+  }, [refreshCustomerInfo]);
+
+  const takePurchaseNotice = React.useCallback(() => {
+    const notice = purchaseNoticeRef.current;
+    purchaseNoticeRef.current = null;
+    if (!notice || !isCurrent(notice.snapshot) ||
+        Date.now() - notice.purchasedAt > 60_000 ||
+        !lastCustomerInfoRef.current || !hasActivePremiumEntitlement(lastCustomerInfoRef.current)) return null;
+    return { userId: notice.snapshot.key, purchasedAt: notice.purchasedAt };
+  }, [isCurrent]);
 
   React.useEffect(() => {
     isMountedRef.current = true;
@@ -306,7 +333,8 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
             setManagementReturn({ ...pending.snapshot, requestDate: pending.requestDate, status: fresh ? "verified" : "unconfirmed" });
           })();
         } else {
-          void refreshCustomerInfo(false);
+          // Native purchase results already return the verified CustomerInfo.
+          if (!operationGuardRef.current.isBusy()) void refreshCustomerInfo(false);
         }
       }
     });
@@ -340,6 +368,7 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
         void loadOfferings();
         await withIdentity(snapshot, async () => {
           if (snapshot.key === "guest") return;
+          await Purchases.invalidateCustomerInfoCache();
           const info = await Purchases.getCustomerInfo();
           updateCustomerInfo(info, snapshot);
         });
@@ -392,6 +421,9 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
         if (!isCurrent(snapshot)) return false;
         updateCustomerInfo(info, snapshot);
         const hasPremium = hasActivePremiumEntitlement(info);
+        if (operation === "purchase" && hasPremium) {
+          purchaseNoticeRef.current = { snapshot, purchasedAt: Date.now() };
+        }
         if (!hasPremium) {
           const historical = info.entitlements.all?.[PREMIUM_ENTITLEMENT_ID];
           setError(operation === "purchase"
@@ -479,13 +511,13 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
     hasPremiumAccess: entitlement.hasAccess,
     isDeveloperUnlocked: false, isLoading, isPurchasing,
     isReady: !isLoading, isRestoring, managementReturnStatus,
-    openSubscriptionManagement, refreshEntitlements, restorePurchases, subscribe,
+    openSubscriptionManagement, refreshEntitlements, refreshSubscription, takePurchaseNotice, restorePurchases, subscribe,
     subscribeMonthly: () => subscribe("monthly"),
     subscribeYearly: () => subscribe("yearly"),
     subscriptions,
   }), [customerInfo, displayPrices, entitlement, error, isLoading, isPurchasing,
     isRestoring, managementReturnStatus, openSubscriptionManagement, refreshEntitlements, restorePurchases,
-    subscribe, subscriptions]);
+    refreshSubscription, takePurchaseNotice, subscribe, subscriptions]);
 
   return <PaywallContext.Provider value={value}>{children}</PaywallContext.Provider>;
 }

@@ -90,14 +90,28 @@ test("packages Google Play : base plans distingués, mauvaise période et ambigu
   assert.equal(mapSubscriptionPackages({ availablePackages: [monthly, duplicate] }).monthly, undefined);
 });
 
-test("gestion : lien Google ciblé sur le produit existant, aucun lien pour Test Store", () => {
+test("gestion : priorité au lien RevenueCat, repli Google ciblé, aucun lien fictif", () => {
   const customer = info();
   assert.equal(subscriptionManagementURL(customer), "https://play.google.com/store/account/subscriptions?sku=kapp_premium_monthly&package=com.arben60.kapp");
   customer.managementURL = "https://play.google.com/store/account/subscriptions";
-  assert.equal(subscriptionManagementURL(customer), "https://play.google.com/store/account/subscriptions?sku=kapp_premium_monthly&package=com.arben60.kapp");
+  assert.equal(subscriptionManagementURL(customer), customer.managementURL);
+  const specificURL = "https://play.google.com/store/account/subscriptions?sku=historical-plan";
+  assert.equal(subscriptionManagementURL(info({}, { managementURL: specificURL })), specificURL);
   assert.equal(subscriptionManagementURL(info({ store: "TEST_STORE" })), null);
+  assert.equal(subscriptionManagementURL(info({ store: "PROMOTIONAL" })), null);
   assert.equal(hasActivePremiumEntitlement(info({ store: "TEST_STORE" }), now), false);
   assert.equal(subscriptionManagementURL(info({ store: "APP_STORE" })), "https://apps.apple.com/account/subscriptions");
+});
+
+test("résiliation réservée aux abonnements Store actifs et renouvelables, même en sandbox Google", () => {
+  for (const store of ["PLAY_STORE", "APP_STORE"]) {
+    assert.equal(subscriptionDetails(info({ store, isSandbox: true }), {}, now).canCancel, true);
+    assert.equal(subscriptionDetails(info({ store, willRenew: false }), {}, now).canCancel, false);
+    assert.equal(subscriptionDetails(info({ store, isActive: false }), {}, now).canCancel, false);
+  }
+  for (const store of ["TEST_STORE", "PROMOTIONAL", "UNKNOWN_STORE"]) {
+    assert.equal(subscriptionDetails(info({ store }), {}, now).canCancel, false);
+  }
 });
 
 function load(file, dependencies, globals = {}, expose = "") {
@@ -178,11 +192,15 @@ test(`invité → modale → Google → confirmation explicite : ${offerId}, ann
       "../lib/paywall/PaywallProvider": { usePaywall: () => ({
         displayPrices: { monthly: "8,99 €", yearly: "79,99 €" }, error: null, hasPremiumAccess: false,
         isLoading: false, isPurchasing: false, isRestoring: false,
-        subscriptions: { monthly: {}, yearly: {} },
+        subscriptions: {
+          monthly: { product: { priceString: "8,99 €", price: 8.99, currencyCode: "EUR" } },
+          yearly: { product: { priceString: "79,99 €", price: 79.99, currencyCode: "EUR" } },
+        },
         subscribe: async (offerId) => { purchased.push(offerId); return true; },
       }) },
       "../lib/paywall/revenueCatLogic": { calculateAnnualOfferMetrics },
       "../lib/AuthProvider": { useAuth: () => ({ isPermanentAccount: permanent, isLoading: false,
+        user: permanent ? { id: "account-a" } : null,
         signInWithOAuth: async (provider) => { assert.equal(provider, "google"); authCalls++; return authResult; },
       }) },
       "../lib/paywall/purchaseIntent": api,
@@ -222,8 +240,19 @@ test(`invité → modale → Google → confirmation explicite : ${offerId}, ann
   assert.equal(purchased.length, 0);
   after.render().find((n) => n.props.label === label).props.onPress();
   await new Promise(setImmediate);
+  assert.equal(purchased.length, 0);
+  const confirmation = () => after.render().find((n) => n.type === "Dialog" && n.props.accessibilityLabel === "confirmation.title");
+  assert.equal(confirmation().props.visible, true);
+  assert.ok(after.render().some(n => n.type === "Text" && n.children.includes(index === 0 ? "8,99 €" : "79,99 €")));
+  assert.ok(after.render().some(n => n.type === "Text" && n.children.includes(`confirmation.${offerId}`)));
+  confirmation().props.onRequestClose();
+  assert.equal(confirmation().props.visible, false);
+  assert.equal(purchased.length, 0);
+  after.render().find((n) => n.props.label === label).props.onPress();
+  after.render().find((n) => n.props.label === "confirmation.continue").props.onPress();
+  await new Promise(setImmediate);
   assert.deepEqual(purchased, [offerId]);
-  assert.equal(replacements.at(-1), "/voc/kdrama");
+  assert.equal(replacements.at(-1), "/account");
   after.hook.cleanup();
 });
 }
@@ -232,10 +261,11 @@ test("Account : actions actives, confirmation native, résiliation vérifiée et
   const hook = createHookHarness();
   const react = { ...hook.react, createElement: (type, props, ...children) => ({ type, props: props ?? {}, children: children.flat() }) };
   let customer = info();
-  let managementReturnStatus = "idle", error = null, opened = 0;
+  let managementReturnStatus = "idle", error = null, opened = 0, refreshed = 0;
   const pushes = [];
   const auth = { user: { id: "account-a", email: "test@example.com" }, isPermanentAccount: true, providers: ["google"], clearError() {}, clearAccountProtectionSuccess() {} };
-  const paywall = () => ({ customerInfo: customer, subscriptions: packages,
+  const refreshSubscription = async () => { refreshed++; };
+  const paywall = () => ({ customerInfo: customer, subscriptions: packages, refreshSubscription,
     hasPremiumAccess: !!customer && hasActivePremiumEntitlement(customer),
     managementReturnStatus, error, clearError() {}, openSubscriptionManagement: async () => { opened++; },
   });
@@ -254,6 +284,7 @@ test("Account : actions actives, confirmation native, résiliation vérifiée et
     "../../components/ui/app-back-button": { AppBackButton: "Back" },
     "../../components/ui/app-dialog": { AppDialog: "Dialog", DialogActions: "Actions" },
     "../../components/premium/SubscriptionDetails": { SubscriptionDetails: "Details" },
+    "../../components/premium/PurchaseSuccessNotice": { PurchaseSuccessNotice: "Notice" },
     "react-i18next": { useTranslation: () => ({ i18n: { language: "fr", t } }) },
     "../../lib/i18n/AccountLocalizationProvider": {},
     "../../lib/i18n/VocabularyTextContext": { useVocabularyText: () => (s) => s },
@@ -275,6 +306,7 @@ test("Account : actions actives, confirmation native, résiliation vérifiée et
   const confirmation = () => render().some((node) => node.type === "Text" && node.children.includes("premium:subscription.cancelledTitle"));
   try {
     assert.equal(button("Restaurer mes achats"), undefined);
+    assert.equal(refreshed, 1);
     assert.equal(button("premium:subscription.refresh"), undefined);
     button("premium:subscription.cancel").props.onPress();
     assert.equal(opened, 0);
@@ -287,6 +319,7 @@ test("Account : actions actives, confirmation native, résiliation vérifiée et
     assert.equal(confirmation(), false);
     managementReturnStatus = "verified";
     assert.equal(confirmation(), false);
+    assert.equal(render().some(n => n.type === "Text" && n.children.includes("premium:subscription.unconfirmedReturn")), false);
     customer = info({ willRenew: false, unsubscribeDetectedAt: iso(-1000) });
     assert.equal(confirmation(), true);
     managementReturnStatus = "unconfirmed";
@@ -301,4 +334,58 @@ test("Account : actions actives, confirmation native, résiliation vérifiée et
     assert.equal(pushes[0].params.returnTo, "/account");
     assert.ok(button("Restaurer mes achats"));
   } finally { hook.cleanup(); }
+});
+
+test("notification Account : disparition automatique, aucun rejeu au retour, ni fuite entre comptes", async () => {
+  const hook = createHookHarness();
+  const react = { ...hook.react, createElement: (type, props, ...children) => ({ type, props: props ?? {}, children: children.flat() }) };
+  let focused = true, userId = "account-a", nextNotice = { userId, purchasedAt: Date.now() };
+  const timers = new Map();
+  let timerId = 0, takes = 0, animations = 0;
+  const takePurchaseNotice = () => { takes++; const result = nextNotice; nextNotice = null; return result; };
+  const { PurchaseSuccessNotice } = load("components/premium/PurchaseSuccessNotice.tsx", {
+    react,
+    "@expo/vector-icons": { Ionicons: "Icon" },
+    "expo-router": { useFocusEffect: fn => react.useEffect(() => focused ? fn() : undefined, [fn, focused]) },
+    "react-native": {
+      View: "View", StyleSheet: { create: s => s },
+      AccessibilityInfo: { isReduceMotionEnabled: async () => false },
+      Animated: {
+        View: "AnimatedView",
+        Value: class { setValue() {} stopAnimation() {} },
+        timing: () => ({ start: () => { animations++; } }),
+      },
+    },
+    "react-i18next": { useTranslation: () => ({ t: key => key }) },
+    "../app-text": { AppText: "Text" },
+    "../../lib/AuthProvider": { useAuth: () => ({ user: { id: userId } }) },
+    "../../lib/paywall/PaywallProvider": { usePaywall: () => ({ takePurchaseNotice, hasPremiumAccess: true }) },
+  }, {
+    setTimeout: (callback, delay) => { const id = ++timerId; timers.set(id, { callback, delay }); return id; },
+    clearTimeout: id => timers.delete(id),
+  });
+  const render = () => { hook.render(PurchaseSuccessNotice); hook.render(PurchaseSuccessNotice); return hook.render(PurchaseSuccessNotice); };
+  try {
+    assert.equal(render().props.accessibilityRole, "alert");
+    await new Promise(setImmediate);
+    assert.equal(animations, 1);
+    assert.equal(takes, 1);
+    const timer = [...timers.values()][0];
+    assert.equal(timer.delay, 6000);
+    timer.callback();
+    assert.equal(render(), null);
+    assert.equal(timers.size, 0);
+    focused = false; render();
+    focused = true;
+    assert.equal(render(), null);
+    nextNotice = { userId, purchasedAt: Date.now() };
+    focused = false; render();
+    focused = true;
+    assert.ok(render());
+    userId = "account-b";
+    assert.equal(render(), null);
+    userId = "account-a";
+    assert.equal(render(), null);
+  } finally { hook.cleanup(); }
+  assert.equal(timers.size, 0);
 });

@@ -293,6 +293,86 @@ test("un abonné existant ne peut pas déclencher un second achat", async () => 
   } finally { p.cleanup(); }
 });
 
+for (const offerId of ["monthly", "yearly"]) {
+  test(`achat Google Play ${offerId} : notification unique seulement après entitlement actif`, async () => {
+    const storeOffer = { availablePackages: [storePackage("kapp_premium_monthly"), storePackage("kapp_premium_yearly")] };
+    const p = await provider({ platformStore: true, offerings: { current: storeOffer } });
+    const purchasedInfo = info(true);
+    const active = purchasedInfo.entitlements.active.premium_all_access;
+    active.store = "PLAY_STORE";
+    active.productIdentifier = `kapp_premium_${offerId}`;
+    active.willRenew = true;
+    try {
+      assert.equal(p.render().takePurchaseNotice(), null);
+      p.sdk.purchasePackage = async (selected) => {
+        p.calls.purchases.push(selected);
+        p.setInfo(purchasedInfo);
+        return { customerInfo: purchasedInfo };
+      };
+      const beforePurchase = p.calls.invalidations;
+      assert.equal(await p.render().subscribe(offerId), true);
+      assert.equal(p.calls.purchases[0].product.identifier, `kapp_premium_${offerId}`);
+      assert.equal(p.render().hasPremiumAccess, true);
+      await p.render().refreshSubscription();
+      assert.equal(p.calls.invalidations, beforePurchase, "Account reuses the purchase response");
+      assert.equal(p.render().takePurchaseNotice().userId, "account-a");
+      assert.equal(p.render().takePurchaseNotice(), null);
+      assert.equal(await p.render().subscribe(offerId), true);
+      assert.equal(p.calls.purchases.length, 1, "existing subscribers do not repurchase");
+      assert.equal(p.render().takePurchaseNotice(), null);
+    } finally { p.cleanup(); }
+  });
+}
+
+test("aucune notification après annulation, refus, attente, entitlement absent ou restauration", async () => {
+  const p = await provider();
+  try {
+    for (const code of ["1", "2", "20"]) {
+      p.sdk.purchasePackage = async () => { throw { code }; };
+      assert.equal(await p.render().subscribeMonthly(), false);
+      assert.equal(p.render().takePurchaseNotice(), null);
+    }
+    p.sdk.purchasePackage = async () => ({ customerInfo: info() });
+    assert.equal(await p.render().subscribeMonthly(), false);
+    assert.equal(p.render().takePurchaseNotice(), null);
+    p.sdk.restorePurchases = async () => info(true);
+    assert.equal(await p.render().restorePurchases(), true);
+    assert.equal(p.render().takePurchaseNotice(), null);
+  } finally { p.cleanup(); }
+});
+
+test("notification perdue au changement de compte et absente au redémarrage avec abonnement", async () => {
+  const p = await provider();
+  try {
+    p.sdk.purchasePackage = async () => ({ customerInfo: info(true) });
+    assert.equal(await p.render().subscribeMonthly(), true);
+    p.setUser({ id: "account-b", is_anonymous: false });
+    p.render();
+    await p.flush();
+    assert.equal(p.render().takePurchaseNotice(), null);
+  } finally { p.cleanup(); }
+  const restarted = await provider({ initial: info(true) });
+  try {
+    assert.equal(restarted.render().hasPremiumAccess, true);
+    assert.equal(restarted.render().takePurchaseNotice(), null);
+    assert.equal(restarted.calls.invalidations, 1, "startup forces a fresh read");
+  } finally { restarted.cleanup(); }
+});
+
+test("Account : lectures récentes partagées, nouvelle ouverture actualisée et concurrence dédupliquée", async () => {
+  const p = await provider({ initial: info(true) });
+  try {
+    const initial = p.calls.invalidations;
+    await p.render().refreshSubscription();
+    assert.equal(p.calls.invalidations, initial);
+    p.advance(5_001);
+    p.setInfo(info());
+    await Promise.all([p.render().refreshSubscription(), p.render().refreshSubscription()]);
+    assert.equal(p.calls.invalidations, initial + 1);
+    assert.equal(p.render().hasPremiumAccess, false);
+  } finally { p.cleanup(); }
+});
+
 test("déconnexion immédiate, nouveau compte verrouillé, puis reconnexion au même UUID", async () => {
   const p = await provider({ initial: info(true) });
   try {

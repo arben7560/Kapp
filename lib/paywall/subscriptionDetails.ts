@@ -45,6 +45,7 @@ export function subscriptionDetails(
   });
   const plan = period === "P1M" ? "monthly" as const : period === "P1Y" ? "yearly" as const
     : knownPlans.length === 1 ? knownPlans[0][0] : null;
+  const canManage = !!info && !!subscriptionManagementURL(info);
   return {
     state, hasAccess, isTestStore, plan, store: entitlement?.store,
     // A current catalogue price, never represented as the historical amount
@@ -53,7 +54,8 @@ export function subscriptionDetails(
     expiresAt, graceExpiresAt, autoResumeAt,
     willRenew: entitlement?.willRenew,
     renewalAt: hasAccess && entitlement?.willRenew && !billingIssue ? expiresAt : null,
-    canManage: !!info && !!subscriptionManagementURL(info),
+    canManage,
+    canCancel: hasAccess && entitlement?.willRenew === true && canManage,
     hasHistory: !!entitlement,
   } as const;
 }

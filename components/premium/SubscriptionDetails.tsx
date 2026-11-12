@@ -20,6 +20,7 @@ export function SubscriptionDetails({ details }: { details: ReturnType<typeof su
   if (details.state === "billingIssue") rows.push(t(details.hasAccess ? "subscription.billingAccess" : "subscription.billingNoAccess"));
   if (details.state === "paused" && details.autoResumeAt) rows.push(t("subscription.resumeDate", { date: format(details.autoResumeAt) }));
   if (details.isTestStore) rows.push(t("subscription.testNotice"));
+  else if (details.hasAccess && !details.canManage) rows.push(t("subscription.internalNotice"));
   if (!rows.length) return null;
   return <View style={{ gap: 8, marginTop: 12 }}>
     {rows.map((text) => <AppText key={text} variant="caption" tone="soft">{text}</AppText>)}
