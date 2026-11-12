@@ -567,12 +567,18 @@ function AccountScreenContent() {
   const details = subscriptionDetails(paywall.customerInfo, paywall.subscriptions);
   const activePlanLabel = details.plan ? i18n.t(`premium:subscription.plan.${details.plan}`) : null;
   const isTestStoreSubscription = details.isTestStore;
+  const [subscriptionDialogOpen, setSubscriptionDialogOpen] = React.useState(false);
   const [cancellationUserId, setCancellationUserId] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    setSubscriptionDialogOpen(false);
+    setCancellationUserId(null);
+  }, [auth.user?.id]);
   const canCancelSubscription = details.canCancel && !paywall.isDeveloperUnlocked;
   const cancellationVisible = canCancelSubscription && cancellationUserId !== null && cancellationUserId === auth.user?.id;
   const subscriptionText = (key: "cancel" | "manage" | "cancelledTitle" | "cancelledNotice" |
     "cancelledUnknownDate" | "checkingReturn" | "unconfirmedReturn" | "cancelIntro" |
-    "cancelAccess" | "cancelAccessUnknown" | "keep" | "continueToStore",
+    "cancelAccess" | "cancelAccessUnknown" | "keep" | "continueToStore" |
+    "planLabel" | "statusLabel" | "planUnknown" | "noPlan" | "checking" | "close",
     options: Record<string, unknown> = {}) => i18n.t(`premium:subscription.${key}`, options);
   const endDate = details.expiresAt ? new Intl.DateTimeFormat(locale, { dateStyle: "long", timeStyle: "short" }).format(details.expiresAt) : null;
   const cancellationConfirmed = details.state === "cancelled" && !paywall.error &&
@@ -581,12 +587,13 @@ function AccountScreenContent() {
   const [restoredUserId, setRestoredUserId] = React.useState<string | null>(null);
   const handleRestore = async () => {
     setRestoredUserId(null);
-    if (!auth.isPermanentAccount) { openMode("sign-in"); return; }
+    if (!auth.isPermanentAccount) { setSubscriptionDialogOpen(false); openMode("sign-in"); return; }
     if (await paywall.restorePurchases()) setRestoredUserId(auth.user?.id ?? null);
   };
 
   const handleSubscriptionAction = () => {
     paywall.clearError();
+    setSubscriptionDialogOpen(false);
     if (canCancelSubscription) {
       setCancellationUserId(auth.user?.id ?? null);
       return;
@@ -864,103 +871,134 @@ function AccountScreenContent() {
               </>
             )}
 
-            <View style={styles.sectionCard}>
-              <AppText variant="sectionLabel" tone="soft">ABONNEMENT</AppText>
-              <View style={styles.subscriptionStatusRow}>
-                <View
-                  style={[
-                    styles.settingsIcon,
-                    paywall.hasPremiumAccess && styles.subscriptionActiveIcon,
-                  ]}
-                >
-                  <Ionicons
-                    name={paywall.hasPremiumAccess ? "sparkles" : "diamond-outline"}
-                    size={19}
-                    color={paywall.hasPremiumAccess ? COLORS.green : COLORS.cyan}
-                  />
-                </View>
-                <View style={styles.settingsCopy}>
-                  <AppText variant="bodyStrong">
-                    {paywall.isLoading
-                      ? "Vérification de Premium…"
-                      : paywall.isDeveloperUnlocked ? "Premium actif"
-                        : i18n.t(`premium:subscription.states.${details.state}`)}
-                  </AppText>
-                  <AppText variant="caption" tone="soft">
-                    {paywall.isDeveloperUnlocked
-                      ? "Accès de développement"
-                      : activePlanLabel ??
-                        (paywall.hasPremiumAccess
-                          ? "Accès Premium confirmé"
-                          : "Découvrir tous les parcours Premium")}
-                  </AppText>
-                </View>
+            <ActionButton
+              label={subscriptionText("manage")}
+              variant="secondary"
+              onPress={() => {
+                paywall.clearError();
+                setSubscriptionDialogOpen(true);
+              }}
+              style={styles.subscriptionManageButton}
+            />
+            {cancellationConfirmed ? (
+              <View accessibilityLiveRegion="polite" style={styles.cancellationConfirmation}>
+                <AppText variant="bodyStrong" style={{ color: COLORS.green }}>
+                  {subscriptionText("cancelledTitle")}
+                </AppText>
+                <AppText variant="bodySecondary" tone="muted">
+                  {subscriptionText(endDate ? "cancelledNotice" : "cancelledUnknownDate", { date: endDate })}
+                </AppText>
               </View>
-              <SubscriptionDetails details={details} />
-              {cancellationConfirmed ? (
-                <View accessibilityLiveRegion="polite" style={styles.cancellationConfirmation}>
-                  <AppText variant="bodyStrong" style={{ color: COLORS.green }}>{subscriptionText("cancelledTitle")}</AppText>
-                  <AppText variant="bodySecondary" tone="muted">
-                    {subscriptionText(endDate ? "cancelledNotice" : "cancelledUnknownDate", { date: endDate })}
-                  </AppText>
-                </View>
-              ) : paywall.managementReturnStatus === "checking" || paywall.managementReturnStatus === "unconfirmed" ? (
-                <AppText variant="caption" tone="soft" accessibilityLiveRegion="polite" style={styles.subscriptionAction}>
-                  {subscriptionText(paywall.managementReturnStatus === "checking" ? "checkingReturn" : "unconfirmedReturn", { store: storeName })}
-                </AppText>
-              ) : null}
-              {(!paywall.hasPremiumAccess || (details.canManage && !isTestStoreSubscription && !paywall.isDeveloperUnlocked)) ? (
-                <ActionButton
-                  label={
-                    !paywall.hasPremiumAccess ? "Découvrir Premium"
-                      : subscriptionText(canCancelSubscription ? "cancel" : "manage")
-                  }
-                  variant="secondary"
-                  disabled={paywall.isLoading || paywall.isPurchasing || paywall.isRestoring || paywall.managementReturnStatus === "checking"}
-                  onPress={handleSubscriptionAction}
-                  style={styles.subscriptionAction}
-                />
-              ) : null}
-              {!paywall.hasPremiumAccess ? <><ActionButton
-                label="Restaurer mes achats"
-                variant="secondary"
-                loading={paywall.isRestoring}
-                disabled={paywall.isLoading || paywall.isPurchasing || paywall.isRestoring}
-                onPress={() => void handleRestore()}
-                style={styles.subscriptionAction}
-              />
-              <ActionButton
-                label={i18n.t("premium:subscription.refresh")}
-                variant="ghost"
-                disabled={paywall.isLoading || paywall.isPurchasing || paywall.isRestoring}
-                onPress={() => void paywall.refreshEntitlements()}
-              /></> : null}
-              {restoredUserId === auth.user?.id && paywall.hasPremiumAccess ? <AppText variant="caption" tone="soft">
-                {i18n.t("premium:subscription.restored")}
-              </AppText> : null}
-              {paywall.error &&
-              !(isTestStoreSubscription && paywall.error.code === "management-url-unavailable") ? (
-                <AppText variant="caption" style={styles.subscriptionError}>
-                  {resolvePremiumError(paywall.error.message, locale, i18n)}
-                </AppText>
-              ) : null}
-            </View>
+            ) : null}
+            {paywall.managementReturnStatus === "checking" || paywall.managementReturnStatus === "unconfirmed" ? (
+              <AppText variant="caption" tone="soft" accessibilityLiveRegion="polite" style={styles.subscriptionAction}>
+                {subscriptionText(paywall.managementReturnStatus === "checking" ? "checkingReturn" : "unconfirmedReturn", { store: storeName })}
+              </AppText>
+            ) : null}
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
 
-      <AppDialog visible={cancellationVisible} onRequestClose={() => setCancellationUserId(null)}
-        accessibilityLabel={subscriptionText("cancel")} accentColor={COLORS.cyan}>
-        <AppText variant="cardTitle" accessibilityRole="header">{subscriptionText("cancel")}</AppText>
-        <AppText variant="body" tone="muted" style={styles.subscriptionAction}>{subscriptionText("cancelIntro")}</AppText>
-        <AppText variant="body" tone="muted" style={styles.subscriptionAction}>
-          {subscriptionText(endDate ? "cancelAccess" : "cancelAccessUnknown", { date: endDate, store: storeName })}
-        </AppText>
-        <DialogActions>
-          <ActionButton label={subscriptionText("keep")} onPress={() => setCancellationUserId(null)} />
-          <ActionButton label={subscriptionText("continueToStore", { store: storeName })} variant="secondary"
-            onPress={() => { setCancellationUserId(null); void paywall.openSubscriptionManagement(); }} />
-        </DialogActions>
+      <AppDialog
+        visible={subscriptionDialogOpen || cancellationVisible}
+        onRequestClose={() => {
+          setSubscriptionDialogOpen(false);
+          setCancellationUserId(null);
+        }}
+        accessibilityLabel={subscriptionText(cancellationVisible ? "cancel" : "manage")}
+        accentColor={COLORS.cyan}
+      >
+        {cancellationVisible ? (
+          <>
+            <AppText variant="cardTitle" accessibilityRole="header">{subscriptionText("cancel")}</AppText>
+            <AppText variant="body" tone="muted" style={styles.subscriptionAction}>
+              {subscriptionText("cancelIntro")}
+            </AppText>
+            <AppText variant="body" tone="muted" style={styles.subscriptionAction}>
+              {subscriptionText(endDate ? "cancelAccess" : "cancelAccessUnknown", { date: endDate, store: storeName })}
+            </AppText>
+            <DialogActions style={styles.dialogActions}>
+              <ActionButton label={subscriptionText("keep")} onPress={() => {
+                setCancellationUserId(null);
+                setSubscriptionDialogOpen(true);
+              }} />
+              <ActionButton
+                label={subscriptionText("continueToStore", { store: storeName })}
+                variant="secondary"
+                onPress={() => {
+                  setCancellationUserId(null);
+                  setSubscriptionDialogOpen(false);
+                  void paywall.openSubscriptionManagement();
+                }}
+              />
+            </DialogActions>
+          </>
+        ) : (
+          <>
+            <AppText variant="cardTitle" accessibilityRole="header">{subscriptionText("manage")}</AppText>
+            <View style={styles.subscriptionDialogSummary}>
+              <AppText variant="label" tone="soft">{subscriptionText("planLabel")}</AppText>
+              <AppText variant="bodyStrong">
+                {paywall.isDeveloperUnlocked
+                  ? subscriptionText("planUnknown")
+                  : activePlanLabel ?? subscriptionText(paywall.hasPremiumAccess ? "planUnknown" : "noPlan")}
+              </AppText>
+              <AppText variant="label" tone="soft" style={styles.subscriptionDialogStatusLabel}>
+                {subscriptionText("statusLabel")}
+              </AppText>
+              <AppText variant="bodyStrong" style={{ color: paywall.hasPremiumAccess ? COLORS.green : COLORS.text }}>
+                {paywall.isLoading
+                  ? subscriptionText("checking")
+                  : paywall.isDeveloperUnlocked
+                    ? "Accès de développement"
+                    : i18n.t(`premium:subscription.states.${details.state}`)}
+              </AppText>
+              <SubscriptionDetails details={details} />
+            </View>
+            <DialogActions style={styles.dialogActions}>
+              {(!paywall.hasPremiumAccess ||
+                (details.canManage && !isTestStoreSubscription && !paywall.isDeveloperUnlocked)) ? (
+                <ActionButton
+                  label={!paywall.hasPremiumAccess
+                    ? "Découvrir Premium"
+                    : subscriptionText(canCancelSubscription ? "cancel" : "manage")}
+                  variant="secondary"
+                  disabled={paywall.isLoading || paywall.isPurchasing || paywall.isRestoring ||
+                    paywall.managementReturnStatus === "checking"}
+                  onPress={handleSubscriptionAction}
+                />
+              ) : null}
+              {!paywall.hasPremiumAccess ? (
+                <>
+                  <ActionButton
+                    label="Restaurer mes achats"
+                    variant="secondary"
+                    loading={paywall.isRestoring}
+                    disabled={paywall.isLoading || paywall.isPurchasing || paywall.isRestoring}
+                    onPress={() => void handleRestore()}
+                  />
+                  <ActionButton
+                    label={i18n.t("premium:subscription.refresh")}
+                    variant="ghost"
+                    disabled={paywall.isLoading || paywall.isPurchasing || paywall.isRestoring}
+                    onPress={() => void paywall.refreshEntitlements()}
+                  />
+                </>
+              ) : null}
+              {restoredUserId === auth.user?.id && paywall.hasPremiumAccess ? (
+                <AppText variant="caption" tone="soft">{i18n.t("premium:subscription.restored")}</AppText>
+              ) : null}
+              {paywall.error &&
+                !(isTestStoreSubscription && paywall.error.code === "management-url-unavailable") ? (
+                  <AppText variant="caption" style={styles.subscriptionError}>
+                    {resolvePremiumError(paywall.error.message, locale, i18n)}
+                  </AppText>
+                ) : null}
+              <ActionButton label={subscriptionText("close")} variant="ghost"
+                onPress={() => setSubscriptionDialogOpen(false)} />
+            </DialogActions>
+          </>
+        )}
       </AppDialog>
 
       <AppDialog
@@ -1337,6 +1375,16 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.065)",
   },
   settingsCopy: { flex: 1, gap: 2 },
+  subscriptionManageButton: { marginTop: 14, minHeight: 62 },
+  subscriptionDialogSummary: {
+    marginTop: 18,
+    padding: 17,
+    borderWidth: 1,
+    borderRadius: 20,
+    borderColor: "rgba(103,232,168,0.18)",
+    backgroundColor: "rgba(103,232,168,0.045)",
+  },
+  subscriptionDialogStatusLabel: { marginTop: 14 },
   subscriptionStatusRow: {
     flexDirection: "row",
     alignItems: "center",

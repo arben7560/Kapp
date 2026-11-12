@@ -13,9 +13,12 @@ export function SubscriptionDetails({ details }: { details: ReturnType<typeof su
   if (details.currentPrice && details.plan) rows.push(t("subscription.currentPrice", {
     price: details.currentPrice, period: t(`subscription.period.${details.plan}`),
   }));
-  if (details.renewalAt) rows.push(t("subscription.nextRenewal", { date: format(details.renewalAt) }));
-  if (details.expiresAt && !details.renewalAt) rows.push(t("subscription.expiration", { date: format(details.expiresAt) }));
+  if (details.hasHistory) rows.push(details.purchaseAt
+    ? t("subscription.purchaseDate", { date: format(details.purchaseAt) })
+    : t("subscription.purchaseDateUnknown"));
+  if (details.expiresAt) rows.push(t("subscription.periodEnd", { date: format(details.expiresAt) }));
   if (details.willRenew !== undefined) rows.push(t(details.willRenew ? "subscription.autoRenewOn" : "subscription.autoRenewOff"));
+  else if (details.hasHistory) rows.push(t("subscription.autoRenewUnknown"));
   if (details.state === "grace" && details.graceExpiresAt) rows.push(t("subscription.graceNotice", { date: format(details.graceExpiresAt) }));
   if (details.state === "billingIssue") rows.push(t(details.hasAccess ? "subscription.billingAccess" : "subscription.billingNoAccess"));
   if (details.state === "paused" && details.autoResumeAt) rows.push(t("subscription.resumeDate", { date: format(details.autoResumeAt) }));

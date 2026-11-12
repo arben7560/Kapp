@@ -15,6 +15,7 @@ export function subscriptionDetails(
     const parsed = value ? Date.parse(value) : NaN;
     return Number.isFinite(parsed) ? parsed : null;
   };
+  const purchaseAt = date(entitlement?.originalPurchaseDate);
   const expiresAt = typeof entitlement?.expirationDateMillis === "number" && Number.isFinite(entitlement.expirationDateMillis)
     ? entitlement.expirationDateMillis : date(entitlement?.expirationDate) ?? date(subscription?.expiresDate);
   const graceExpiresAt = date(subscription?.gracePeriodExpiresDate);
@@ -51,7 +52,7 @@ export function subscriptionDetails(
     // A current catalogue price, never represented as the historical amount
     // charged to a grandfathered subscriber or the price of an introductory offer.
     currentPrice: plan ? matchingPackage?.product.priceString : undefined,
-    expiresAt, graceExpiresAt, autoResumeAt,
+    purchaseAt, expiresAt, graceExpiresAt, autoResumeAt,
     willRenew: entitlement?.willRenew,
     renewalAt: hasAccess && entitlement?.willRenew && !billingIssue ? expiresAt : null,
     canManage,

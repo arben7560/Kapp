@@ -115,7 +115,7 @@
     "refresh": "Actualiser mon abonnement",
     "restored": "Votre accès Premium a été restauré.",
     "cancel": "Résilier mon abonnement",
-    "manage": "Gérer mon abonnement",
+    "manage": "Gérer l’abonnement",
     "cancelIntro": "La résiliation sera à confirmer dans le Store. Elle désactivera le renouvellement automatique de votre abonnement Premium.",
     "cancelAccess": "Votre accès Premium restera disponible jusqu’au {{date}}.\n\nAprès cette date, votre compte reviendra automatiquement à la version gratuite.",
     "cancelAccessUnknown": "Votre accès Premium restera disponible jusqu’à la fin de la période en cours. La date de fin n’est pas disponible ici : vérifiez-la dans {{store}}. Après cette date, votre compte reviendra automatiquement à la version gratuite.",
@@ -124,7 +124,17 @@
     "cancelledTitle": "Votre abonnement est résilié.",
     "cancelledUnknownDate": "Le renouvellement automatique est désactivé. Votre accès Premium est encore actif ; la date de fin est momentanément indisponible.",
     "checkingReturn": "Vérification de votre abonnement…",
-    "unconfirmedReturn": "La résiliation n’est pas confirmée. Vérifiez votre abonnement dans {{store}}."
+    "unconfirmedReturn": "La résiliation n’est pas confirmée. Vérifiez votre abonnement dans {{store}}.",
+    "planLabel": "Formule choisie",
+    "statusLabel": "Statut de l’abonnement",
+    "planUnknown": "Formule Premium non disponible",
+    "noPlan": "Aucune formule active",
+    "checking": "Vérification de l’abonnement…",
+    "close": "Fermer",
+    "purchaseDate": "Date de souscription : {{date}}",
+    "purchaseDateUnknown": "Date de souscription indisponible",
+    "periodEnd": "Fin de la période en cours : {{date}}",
+    "autoRenewUnknown": "Statut du renouvellement indisponible"
   },
   "authentication": {
     "title": "Connexion nécessaire",

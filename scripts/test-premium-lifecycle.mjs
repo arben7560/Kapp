@@ -48,6 +48,13 @@ test("états réels : actif, essai, résilié, expiré, grâce, paiement, suspen
   }
 });
 
+test("la date initiale d’achat est fournie uniquement si RevenueCat la connaît", () => {
+  const firstPurchase = iso(-86_400_000);
+  assert.equal(subscriptionDetails(info({ originalPurchaseDate: firstPurchase }), packages, now).purchaseAt, Date.parse(firstPurchase));
+  assert.equal(subscriptionDetails(info({ originalPurchaseDate: "invalid" }), packages, now).purchaseAt, null);
+  assert.equal(subscriptionDetails(info(), packages, now).purchaseAt, null);
+});
+
 test("résiliation : aucune date inventée, accès jusqu’à l’échéance, aucun renouvellement affiché", () => {
   const customer = info({ willRenew: false, unsubscribeDetectedAt: iso(-1000) });
   assert.equal(hasActivePremiumEntitlement(customer, now + 59_999), true);
@@ -308,11 +315,13 @@ test("Account : actions actives, confirmation native, résiliation vérifiée et
     assert.equal(button("Restaurer mes achats"), undefined);
     assert.equal(refreshed, 1);
     assert.equal(button("premium:subscription.refresh"), undefined);
+    button("premium:subscription.manage").props.onPress();
+    assert.equal(render().find((node) => node.type === "Dialog").props.visible, true);
     button("premium:subscription.cancel").props.onPress();
     assert.equal(opened, 0);
     assert.equal(render().find((node) => node.type === "Dialog").props.visible, true);
     button("premium:subscription.keep").props.onPress();
-    assert.equal(render().find((node) => node.type === "Dialog").props.visible, false);
+    assert.equal(render().find((node) => node.type === "Dialog").props.visible, true);
     button("premium:subscription.cancel").props.onPress();
     button("premium:subscription.continueToStore").props.onPress();
     assert.equal(opened, 1);
@@ -329,6 +338,7 @@ test("Account : actions actives, confirmation native, résiliation vérifiée et
     assert.equal(confirmation(), false);
     customer = info({ isActive: false, expirationDateMillis: now - 1 });
     error = null;
+    button("premium:subscription.manage").props.onPress();
     button("Découvrir Premium").props.onPress();
     assert.equal(pushes[0].pathname, "/premium");
     assert.equal(pushes[0].params.returnTo, "/account");
