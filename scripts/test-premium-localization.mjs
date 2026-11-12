@@ -59,7 +59,7 @@ test("Offers and the paywall retain their original IDs and currency amounts", ()
   assert.equal(translate("7,99 € / mois"), "7,99 €／月");
   assert.equal(translate("69,99 € / an"), "69,99 €／年");
   assert.equal(translate(PAYWALL_COPY.restore), "購入情報を復元");
-  assert.equal(translate(PAYWALL_COPY.manage), "サブスクリプションを管理");
+  assert.equal(translate(PAYWALL_COPY.manage), "サブスクリプションの管理・解約");
 });
 
 test("Savings, monthly equivalent and selected plan are adapted to natural Japanese", () => {

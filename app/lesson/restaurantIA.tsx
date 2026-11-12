@@ -55,6 +55,7 @@ import {
 } from "../../hooks/useKoreanSpeechRecognition";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
+import { premiumRoute } from "../../lib/paywall/purchaseIntent";
 import { buildProgressId } from "../../lib/progressIds";
 import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
 import {
@@ -311,8 +312,8 @@ function RestaurantIaContent() {
 
   useEffect(() => {
     if (isPaywallLoading || canEnterMission) return;
-    router.replace("/premium");
-  }, [canEnterMission, isPaywallLoading]);
+    router.replace(premiumRoute("/lesson/restaurantIA", { mode, mission: missionId }));
+  }, [canEnterMission, isPaywallLoading, missionId, mode]);
 
   const portraitMediaLayout = getImmersivePortraitMediaLayout({
     contentWidth: responsive.contentWidth,

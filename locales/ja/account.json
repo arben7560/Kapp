@@ -65,7 +65,10 @@
       "D%C3%A9couvrir%20tous%20les%20parcours%20Premium": "Premiumの全コースを見る",
       "G%C3%A9rer%20mon%20abonnement": "サブスクリプションを管理",
       "Voir%20l%E2%80%99offre%20Premium": "Premiumプランを見る",
-      "D%C3%A9couvrir%20Premium": "Premiumについて見る"
+      "D%C3%A9couvrir%20Premium": "Premiumについて見る",
+      "G%C3%A9rer%20ou%20r%C3%A9silier%20mon%20abonnement": "サブスクリプションの管理・解約",
+      "Restaurer%20mes%20achats": "購入情報を復元",
+      "Impossible%20de%20retrouver%20la%20formule%20s%C3%A9lectionn%C3%A9e%2E%20Rouvre%20Premium%20pour%20continuer%2E": "選択したプランを取得できませんでした。Premiumを開き直してください。"
     },
     "dialogs": {
       "Prot%C3%A9ger%20ma%20progression": "学習の進捗を保護する",

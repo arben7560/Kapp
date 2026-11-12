@@ -31,6 +31,7 @@ export type PaywallContextValue = {
   isLoading: boolean;
   isPurchasing: boolean;
   isRestoring: boolean;
+  managementReturnStatus: "idle" | "checking" | "verified" | "unconfirmed";
 
   customerInfo: CustomerInfo | null;
 

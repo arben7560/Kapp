@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
@@ -42,7 +42,9 @@ import {
 } from "../../lib/authErrors";
 import { useProgressSync } from "../../lib/ProgressSyncProvider";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
-import { IS_REVENUECAT_TEST_STORE } from "../../lib/paywall/config";
+import { subscriptionDetails } from "../../lib/paywall/subscriptionDetails";
+import { resumePurchaseIntent } from "../../lib/paywall/purchaseIntent";
+import { SubscriptionDetails } from "../../components/premium/SubscriptionDetails";
 import { synchronizeProgressNow } from "../../services/progressSync";
 
 type FormMode =
@@ -327,6 +329,25 @@ function AccountScreenContent() {
     ? params.action[0]
     : params.action;
 
+  const canResumePurchase = auth.isPermanentAccount && !auth.isLoading &&
+    !auth.isHandlingDeepLink && !auth.needsPasswordSetup && !auth.isPasswordRecovery;
+  useFocusEffect(React.useCallback(() => {
+    if (!canResumePurchase) return;
+    let active = true;
+    void resumePurchaseIntent((intent) => {
+      if (!active) return false;
+      setMode(null);
+      clearAccountProtectionSuccess();
+      router.replace({ pathname: "/premium", params: {
+        offerId: intent.offerId, returnTo: intent.returnTo ?? "", action: intent.action,
+      } });
+      return true;
+    }).catch(() => {
+      if (active) setFormError("Impossible de retrouver la formule sélectionnée. Rouvre Premium pour continuer.");
+    });
+    return () => { active = false; };
+  }, [canResumePurchase, clearAccountProtectionSuccess]));
+
   React.useEffect(() => {
     if (
       didHandleProtectAction.current ||
@@ -538,24 +559,39 @@ function AccountScreenContent() {
     mode === "change-password";
   const requiresConfirmation =
     mode === "protect" || mode === "set-password" || mode === "change-password";
-  const activePlanLabel =
-    paywall.entitlement.productId === "kapp_premium_monthly"
-      ? "Formule mensuelle"
-      : paywall.entitlement.productId === "kapp_premium_yearly"
-        ? "Formule annuelle"
-        : null;
-
-  const isTestStoreSubscription =
-    IS_REVENUECAT_TEST_STORE && paywall.hasPremiumAccess && !paywall.isDeveloperUnlocked;
+  const details = subscriptionDetails(paywall.customerInfo, paywall.subscriptions);
+  const activePlanLabel = details.plan ? i18n.t(`premium:subscription.plan.${details.plan}`) : null;
+  const isTestStoreSubscription = details.isTestStore;
+  const [cancellationUserId, setCancellationUserId] = React.useState<string | null>(null);
+  const canCancelSubscription = details.hasAccess && details.canManage && details.willRenew === true && !paywall.isDeveloperUnlocked;
+  const cancellationVisible = canCancelSubscription && cancellationUserId !== null && cancellationUserId === auth.user?.id;
+  const subscriptionText = (key: "cancel" | "manage" | "cancelledTitle" | "cancelledNotice" |
+    "cancelledUnknownDate" | "checkingReturn" | "unconfirmedReturn" | "cancelIntro" |
+    "cancelAccess" | "cancelAccessUnknown" | "keep" | "continueToStore",
+    options: Record<string, unknown> = {}) => i18n.t(`premium:subscription.${key}`, options);
+  const endDate = details.expiresAt ? new Intl.DateTimeFormat(locale, { dateStyle: "long", timeStyle: "short" }).format(details.expiresAt) : null;
+  const cancellationConfirmed = details.state === "cancelled" && !paywall.error &&
+    paywall.managementReturnStatus !== "checking" && paywall.managementReturnStatus !== "unconfirmed";
+  const storeName = details.store === "PLAY_STORE" ? "Google Play" : "App Store";
+  const [restoredUserId, setRestoredUserId] = React.useState<string | null>(null);
+  const handleRestore = async () => {
+    setRestoredUserId(null);
+    if (!auth.isPermanentAccount) { openMode("sign-in"); return; }
+    if (await paywall.restorePurchases()) setRestoredUserId(auth.user?.id ?? null);
+  };
 
   const handleSubscriptionAction = () => {
     paywall.clearError();
-    if (paywall.hasPremiumAccess && !paywall.isDeveloperUnlocked) {
+    if (canCancelSubscription) {
+      setCancellationUserId(auth.user?.id ?? null);
+      return;
+    }
+    if (paywall.hasPremiumAccess && details.canManage && !paywall.isDeveloperUnlocked) {
       void paywall.openSubscriptionManagement();
       return;
     }
 
-    router.push("/premium");
+    router.push({ pathname: "/premium", params: { returnTo: "/account" } });
   };
 
   if (__DEV__ && showLanguagePreview) {
@@ -839,9 +875,8 @@ function AccountScreenContent() {
                   <AppText variant="bodyStrong">
                     {paywall.isLoading
                       ? "Vérification de Premium…"
-                      : paywall.hasPremiumAccess
-                        ? "Premium actif"
-                        : "K-App Premium"}
+                      : paywall.isDeveloperUnlocked ? "Premium actif"
+                        : i18n.t(`premium:subscription.states.${details.state}`)}
                   </AppText>
                   <AppText variant="caption" tone="soft">
                     {paywall.isDeveloperUnlocked
@@ -853,32 +888,48 @@ function AccountScreenContent() {
                   </AppText>
                 </View>
               </View>
-              {isTestStoreSubscription ? (
-                <View style={styles.subscriptionTestNotice}>
-                  <AppText variant="bodyStrong" style={styles.subscriptionTestTitle}>
-                    Abonnement de test actif
-                  </AppText>
-                  <AppText variant="caption" tone="soft">
-                    Cet abonnement fictif est géré par RevenueCat Test Store.
-                    La gestion et la résiliation via Google Play seront disponibles
-                    avec un abonnement Google Play.
+              <SubscriptionDetails details={details} />
+              {cancellationConfirmed ? (
+                <View accessibilityLiveRegion="polite" style={styles.cancellationConfirmation}>
+                  <AppText variant="bodyStrong" style={{ color: COLORS.green }}>{subscriptionText("cancelledTitle")}</AppText>
+                  <AppText variant="bodySecondary" tone="muted">
+                    {subscriptionText(endDate ? "cancelledNotice" : "cancelledUnknownDate", { date: endDate })}
                   </AppText>
                 </View>
-              ) : (
+              ) : paywall.managementReturnStatus !== "idle" ? (
+                <AppText variant="caption" tone="soft" accessibilityLiveRegion="polite" style={styles.subscriptionAction}>
+                  {subscriptionText(paywall.managementReturnStatus === "checking" ? "checkingReturn" : "unconfirmedReturn", { store: storeName })}
+                </AppText>
+              ) : null}
+              {(!paywall.hasPremiumAccess || (details.canManage && !isTestStoreSubscription && !paywall.isDeveloperUnlocked)) ? (
                 <ActionButton
                   label={
-                    paywall.hasPremiumAccess && !paywall.isDeveloperUnlocked
-                      ? "Gérer mon abonnement"
-                      : paywall.hasPremiumAccess
-                        ? "Voir l’offre Premium"
-                        : "Découvrir Premium"
+                    !paywall.hasPremiumAccess ? "Découvrir Premium"
+                      : subscriptionText(canCancelSubscription ? "cancel" : "manage")
                   }
                   variant="secondary"
-                  disabled={paywall.isLoading}
+                  disabled={paywall.isLoading || paywall.isPurchasing || paywall.isRestoring || paywall.managementReturnStatus === "checking"}
                   onPress={handleSubscriptionAction}
                   style={styles.subscriptionAction}
                 />
-              )}
+              ) : null}
+              {!paywall.hasPremiumAccess ? <><ActionButton
+                label="Restaurer mes achats"
+                variant="secondary"
+                loading={paywall.isRestoring}
+                disabled={paywall.isLoading || paywall.isPurchasing || paywall.isRestoring}
+                onPress={() => void handleRestore()}
+                style={styles.subscriptionAction}
+              />
+              <ActionButton
+                label={i18n.t("premium:subscription.refresh")}
+                variant="ghost"
+                disabled={paywall.isLoading || paywall.isPurchasing || paywall.isRestoring}
+                onPress={() => void paywall.refreshEntitlements()}
+              /></> : null}
+              {restoredUserId === auth.user?.id && paywall.hasPremiumAccess ? <AppText variant="caption" tone="soft">
+                {i18n.t("premium:subscription.restored")}
+              </AppText> : null}
               {paywall.error &&
               !(isTestStoreSubscription && paywall.error.code === "management-url-unavailable") ? (
                 <AppText variant="caption" style={styles.subscriptionError}>
@@ -889,6 +940,20 @@ function AccountScreenContent() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      <AppDialog visible={cancellationVisible} onRequestClose={() => setCancellationUserId(null)}
+        accessibilityLabel={subscriptionText("cancel")} accentColor={COLORS.cyan}>
+        <AppText variant="cardTitle" accessibilityRole="header">{subscriptionText("cancel")}</AppText>
+        <AppText variant="body" tone="muted" style={styles.subscriptionAction}>{subscriptionText("cancelIntro")}</AppText>
+        <AppText variant="body" tone="muted" style={styles.subscriptionAction}>
+          {subscriptionText(endDate ? "cancelAccess" : "cancelAccessUnknown", { date: endDate, store: storeName })}
+        </AppText>
+        <DialogActions>
+          <ActionButton label={subscriptionText("keep")} onPress={() => setCancellationUserId(null)} />
+          <ActionButton label={subscriptionText("continueToStore", { store: storeName })} variant="secondary"
+            onPress={() => { setCancellationUserId(null); void paywall.openSubscriptionManagement(); }} />
+        </DialogActions>
+      </AppDialog>
 
       <AppDialog
         visible={mode !== null}
@@ -1103,6 +1168,15 @@ export default function AccountScreen() {
 }
 
 const styles = StyleSheet.create({
+  cancellationConfirmation: {
+    gap: 8,
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(74,222,128,0.24)",
+    backgroundColor: "rgba(74,222,128,0.08)",
+  },
   screen: { flex: 1, backgroundColor: "#020306" },
   safe: { flex: 1 },
   ambientTop: {

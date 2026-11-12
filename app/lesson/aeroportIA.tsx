@@ -62,6 +62,7 @@ import {
 } from "../../lib/aeroportSpeechIntents";
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
+import { premiumRoute } from "../../lib/paywall/purchaseIntent";
 import { buildProgressId } from "../../lib/progressIds";
 import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
 
@@ -395,8 +396,8 @@ function AeroportIaContent() {
 
   useEffect(() => {
     if (isPaywallLoading || canEnterMission) return;
-    router.replace("/premium");
-  }, [canEnterMission, isPaywallLoading]);
+    router.replace(premiumRoute("/lesson/aeroportIA", { mode, mission: missionId }));
+  }, [canEnterMission, isPaywallLoading, missionId, mode]);
 
   const portraitMediaLayout = getImmersivePortraitMediaLayout({
     contentWidth: responsive.contentWidth,

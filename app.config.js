@@ -6,6 +6,16 @@ module.exports = ({ config }) => {
   const profile = process.env.EAS_BUILD_PROFILE ?? process.env.KAPP_BUILD_PROFILE;
   const testStore = process.env.EXPO_PUBLIC_REVENUECAT_STORE === "test";
 
+  if (["production", "closedTest", "preview"].includes(profile) &&
+      (process.env.EXPO_PUBLIC_DEV_UNLOCK_ALL === "1" ||
+       process.env.EXPO_PUBLIC_INTERNAL_PREMIUM_ACCESS === "1")) {
+    throw new Error("Release profiles cannot enable Premium development bypasses.");
+  }
+  if (["production", "closedTest"].includes(profile) &&
+      process.env.EXPO_PUBLIC_ENABLE_NATIVE_IAP !== "1") {
+    throw new Error("Store builds require native IAP.");
+  }
+
   if (testStore !== (profile === "iapTest")) {
     throw new Error("RevenueCat Test Store requires the iapTest profile and explicit test store selection.");
   }

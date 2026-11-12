@@ -3,6 +3,7 @@ import React from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { DEV_UNLOCK_ALL, isPremiumRoutePath } from "./config";
 import { usePaywall } from "./PaywallProvider";
+import { premiumRoute } from "./purchaseIntent";
 import { useTranslation } from "react-i18next";
 import { DEFAULT_LOCALE, isAppLocale } from "../i18n/config";
 import { resolvePremiumText } from "../i18n/premiumText";
@@ -22,7 +23,7 @@ export function SubscriptionAccessGuard({
     if (DEV_UNLOCK_ALL || isLoading || hasPremiumAccess) return;
     if (!isPremiumRoutePath(pathname)) return;
 
-    router.replace("/premium");
+    router.replace(premiumRoute(pathname));
   }, [hasPremiumAccess, isLoading, pathname]);
 
   const routeRequiresPremium = isPremiumRoutePath(pathname);

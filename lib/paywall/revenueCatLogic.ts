@@ -10,6 +10,7 @@ import {
   PREMIUM_ENTITLEMENT_ID,
   IS_REVENUECAT_TEST_STORE,
   SUBSCRIPTION_PRODUCT_IDS,
+  STORE_PACKAGE_NAME_ANDROID,
   type SubscriptionOfferId,
 } from "./config.ts";
 import type { PaywallError, PremiumEntitlement } from "./types.ts";
@@ -48,6 +49,16 @@ export function toRevenueCatError(error: unknown): PaywallError {
   }
 
   switch (code) {
+    case "7":
+    case "13":
+      return { code: "purchase-owned-by-another-account", message: "Cet achat est associé à un autre compte K-App. Connecte-toi au compte utilisé lors de l’achat." };
+    case "authentication-required":
+    case "identity-changed":
+      return { code, message: "Connecte-toi à ton compte K-App pour continuer." };
+    case "legacy-anonymous-purchases":
+      return { code, message: "Un ancien achat invité a été détecté. Ferme puis rouvre K-App en restant connecté, puis utilise Restaurer mes achats. Si nécessaire, contacte l’assistance pour retrouver le compte d’origine." };
+    case "account-policy-unverified":
+      return { code, message: "Les achats et restaurations sont temporairement indisponibles. Ton abonnement existant reste associé à ton compte." };
     case REVENUECAT_ERROR_CODES.network:
     case REVENUECAT_ERROR_CODES.offline:
       return {
@@ -104,12 +115,32 @@ export function getPremiumEntitlementInfo(customerInfo: CustomerInfo) {
 export function hasActivePremiumEntitlement(customerInfo: CustomerInfo, now = Date.now()) {
   const entitlement = getPremiumEntitlementInfo(customerInfo);
   if (entitlement?.isActive !== true) return false;
-  // Test Store renewals are short. Do not keep granting access from an expired
-  // cached response while waiting for the next SDK refresh (or while offline).
-  // Production keeps RevenueCat's existing entitlement/grace-period semantics.
-  return !IS_REVENUECAT_TEST_STORE ||
-    entitlement.expirationDateMillis === null ||
-    entitlement.expirationDateMillis > now;
+  if (IS_REVENUECAT_TEST_STORE
+    ? entitlement.store !== "TEST_STORE"
+    : entitlement.store === "TEST_STORE") return false;
+  const deadline = getPremiumAccessDeadline(customerInfo);
+  return deadline === null || deadline > now;
+}
+
+export function getPremiumSubscription(customerInfo: CustomerInfo | null) {
+  const entitlement = customerInfo?.entitlements.all?.[PREMIUM_ENTITLEMENT_ID] ??
+    customerInfo?.entitlements.active[PREMIUM_ENTITLEMENT_ID];
+  if (!entitlement || !customerInfo) return null;
+  const subscriptions = Object.values(customerInfo.subscriptionsByProductIdentifier ?? {});
+  return subscriptions.find((subscription) =>
+    subscription.productIdentifier.split(":")[0] === entitlement.productIdentifier.split(":")[0] &&
+    (!entitlement.productPlanIdentifier || subscription.productPlanIdentifier === entitlement.productPlanIdentifier),
+  ) ?? null;
+}
+
+export function getPremiumAccessDeadline(customerInfo: CustomerInfo): number | null {
+  const entitlement = getPremiumEntitlementInfo(customerInfo);
+  if (!entitlement) return 0;
+  const expiry = entitlement.expirationDateMillis;
+  const graceDate = getPremiumSubscription(customerInfo)?.gracePeriodExpiresDate;
+  const grace = graceDate ? Date.parse(graceDate) : 0;
+  if (expiry === null) return null;
+  return Math.max(Number.isFinite(expiry) ? expiry : 0, Number.isFinite(grace) ? grace : 0);
 }
 
 export function deriveRevenueCatEntitlement(
@@ -130,7 +161,7 @@ export function deriveRevenueCatEntitlement(
     hasAccess: true,
     source: "store",
     productId: entitlementInfo.productIdentifier,
-    expiresAt: entitlementInfo.expirationDateMillis,
+    expiresAt: getPremiumAccessDeadline(customerInfo),
     willAutoRenew: entitlementInfo.willRenew,
   };
 }
@@ -150,26 +181,44 @@ export function mapSubscriptionPackages(
 
   const findPackage = (
     offerId: SubscriptionOfferId,
-    standardPackage: PurchasesPackage | null,
   ) => {
     const expectedProductId = SUBSCRIPTION_PRODUCT_IDS[offerId];
 
-    if (standardPackage?.product.identifier === expectedProductId) {
-      return standardPackage;
-    }
-
-    return currentOffering.availablePackages.find(
-      (storePackage) =>
-        storePackage?.product?.identifier === expectedProductId,
-    );
+    const matches = (storePackage: PurchasesPackage) => {
+      const product = storePackage?.product;
+      if (!product) return false;
+      const idMatches = product.identifier === expectedProductId ||
+        (!expectedProductId.includes(":") && product.identifier.startsWith(`${expectedProductId}:`));
+      return idMatches && (!product.subscriptionPeriod ||
+        product.subscriptionPeriod === (offerId === "monthly" ? "P1M" : "P1Y"));
+    };
+    const candidates = currentOffering.availablePackages.filter(matches);
+    // An ambiguous base plan must be configured using its full product:plan ID.
+    return candidates.length === 1 ? candidates[0] : undefined;
   };
 
   const packages: Partial<Record<SubscriptionOfferId, PurchasesPackage>> = {};
-  const monthly = findPackage("monthly", currentOffering.monthly);
-  const yearly = findPackage("yearly", currentOffering.annual);
+  const monthly = findPackage("monthly");
+  const yearly = findPackage("yearly");
   if (monthly) packages.monthly = monthly;
   if (yearly) packages.yearly = yearly;
   return packages;
+}
+
+export function subscriptionManagementURL(customerInfo: CustomerInfo): string | null {
+  const entitlement = customerInfo.entitlements.all?.[PREMIUM_ENTITLEMENT_ID] ??
+    getPremiumEntitlementInfo(customerInfo);
+  if (!entitlement || entitlement.store === "TEST_STORE") return null;
+  const subscription = getPremiumSubscription(customerInfo);
+  if (entitlement.store === "PLAY_STORE") {
+    // CustomerInfo.managementURL can point to the generic subscription list.
+    // Target this entitlement explicitly, keeping the existing package/product.
+    return `https://play.google.com/store/account/subscriptions?sku=${encodeURIComponent(entitlement.productIdentifier.split(":")[0])}&package=${encodeURIComponent(STORE_PACKAGE_NAME_ANDROID)}`;
+  }
+  if (entitlement.store === "APP_STORE" || entitlement.store === "MAC_APP_STORE") {
+    return customerInfo.managementURL || subscription?.managementURL || "https://apps.apple.com/account/subscriptions";
+  }
+  return null;
 }
 
 export type AnnualOfferMetrics = {

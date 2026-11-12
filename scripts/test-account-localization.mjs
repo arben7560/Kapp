@@ -137,7 +137,7 @@ test("Native confirmation alerts and raw service errors never bypass Japanese UI
   }
   assert.match(account, /\{localizeError\(auth\.error\)\}/u);
   assert.match(account, /\{localizeError\(sync\.errorMessage\)\}/u);
-  assert.match(account, /\{localizeError\(paywall\.error\.message\)\}/u);
+  assert.match(account, /\{resolvePremiumError\(paywall\.error\.message, locale, i18n\)\}/u);
   assert.match(account, /friendlyError\(caught\)/u);
   assert.match(callback, /resolveAccountError\(error, locale, i18n\)/u);
 });

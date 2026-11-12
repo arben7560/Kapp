@@ -92,6 +92,10 @@ test("entitlement checks never remove the root navigator during an identity tran
     "react-native": { View: "View", ActivityIndicator: "ActivityIndicator", StyleSheet: { create: (value) => value, absoluteFillObject: {} } },
     "./config": { DEV_UNLOCK_ALL: false, isPremiumRoutePath },
     "./PaywallProvider": { usePaywall: () => paywall },
+    "./purchaseIntent": { premiumRoute: (returnTo) => ({ pathname: "/premium", params: { returnTo } }) },
+    "react-i18next": { useTranslation: () => ({ i18n: { language: "fr" } }) },
+    "../i18n/config": { DEFAULT_LOCALE: "fr", isAppLocale: () => true },
+    "../i18n/premiumText": { resolvePremiumText: (text) => text },
   });
   const navigator = { type: "ROOT_NAVIGATOR" };
   const contains = (node) => node === navigator || node?.children?.some(contains);
@@ -101,5 +105,8 @@ test("entitlement checks never remove the root navigator during an identity tran
       effects.splice(0).forEach((effect) => effect());
     }
   }
-  assert.deepEqual(replacements, ["/premium", "/premium"]);
+  assert.deepEqual(replacements, [
+    { pathname: "/premium", params: { returnTo: "/voc/kdrama" } },
+    { pathname: "/premium", params: { returnTo: "/comptage/heures" } },
+  ]);
 });

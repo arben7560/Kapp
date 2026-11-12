@@ -1,18 +1,19 @@
 import { router } from "expo-router";
 import React from "react";
 import { usePaywall } from "./PaywallProvider";
+import { premiumRoute } from "./purchaseIntent";
 
 export function usePremiumAccess() {
   const paywall = usePaywall();
 
   const requirePremiumAccess = React.useCallback(
-    (onAllowed?: () => void) => {
+    (onAllowed?: () => void, returnTo?: string) => {
       if (paywall.hasPremiumAccess) {
         onAllowed?.();
         return true;
       }
 
-      router.push("/premium");
+      router.push(premiumRoute(returnTo));
       return false;
     },
     [paywall.hasPremiumAccess]

@@ -14,6 +14,7 @@
       "Premium%20actif": "Premium利用中"
     },
     "plans": {
+      "Formule%20de%20test%20RevenueCat%2C%20sans%20paiement%20r%C3%A9el%2E": "RevenueCatのテスト用プランです。実際の請求はありません。",
       "Premium%20mensuel": "月額Premiumプラン",
       "Premium%20annuel": "年額Premiumプラン",
       "Choisir%20l%E2%80%99abonnement%20mensuel": "月額プランに申し込む",
@@ -33,7 +34,20 @@
       "Fermer%20Premium": "Premium画面を閉じる",
       "RETOUR": "戻る",
       "Retour%20%C3%A0%20l%E2%80%99%C3%A9cran%20pr%C3%A9c%C3%A9dent": "前の画面に戻る",
-      "Revient%20%C3%A0%20l%E2%80%99%C3%A9cran%20pr%C3%A9c%C3%A9dent": "前の画面に戻ります"
+      "Revient%20%C3%A0%20l%E2%80%99%C3%A9cran%20pr%C3%A9c%C3%A9dent": "前の画面に戻ります",
+      "G%C3%A9rer%20ou%20r%C3%A9silier%20mon%20abonnement": "サブスクリプションの管理・解約",
+      "Connecte-toi%20%C3%A0%20ton%20compte%20K-App%20pour%20continuer%2E": "続けるにはK-Appアカウントにログインしてください。",
+      "Cet%20achat%20est%20associ%C3%A9%20%C3%A0%20un%20autre%20compte%20K-App%2E%20Connecte-toi%20au%20compte%20utilis%C3%A9%20lors%20de%20l%E2%80%99achat%2E": "この購入は別のK-Appアカウントに紐づいています。購入時のアカウントでログインしてください。",
+      "Un%20ancien%20achat%20invit%C3%A9%20a%20%C3%A9t%C3%A9%20d%C3%A9tect%C3%A9%2E%20Ferme%20puis%20rouvre%20K-App%20en%20restant%20connect%C3%A9%2C%20puis%20utilise%20Restaurer%20mes%20achats%2E%20Si%20n%C3%A9cessaire%2C%20contacte%20l%E2%80%99assistance%20pour%20retrouver%20le%20compte%20d%E2%80%99origine%2E": "以前のゲスト購入が見つかりました。ログインしたままアプリを終了して開き直し、購入情報を復元してください。元のアカウントが不明な場合はサポートにお問い合わせください。",
+      "Les%20achats%20et%20restaurations%20sont%20temporairement%20indisponibles%2E%20Ton%20abonnement%20existant%20reste%20associ%C3%A9%20%C3%A0%20ton%20compte%2E": "現在、購入と復元を利用できません。既存のサブスクリプションは引き続きアカウントに紐づいています。",
+      "L%E2%80%99abonnement%20retrouv%C3%A9%20a%20expir%C3%A9%2E%20Aucun%20acc%C3%A8s%20Premium%20actif%20n%E2%80%99est%20disponible%2E": "見つかったサブスクリプションは期限切れです。有効なPremiumアクセスはありません。",
+      "Impossible%20de%20pr%C3%A9parer%20la%20connexion%2E%20R%C3%A9essaie%20dans%20quelques%20instants%2E": "ログインの準備ができませんでした。しばらくしてから再度お試しください。",
+      "R%C3%A9essayer": "再試行",
+      "Continuer": "続ける",
+      "Connecte-toi%20ou%20cr%C3%A9e%20un%20compte%20pour%20continuer%2E%20Tu%20confirmeras%20ton%20achat%20apr%C3%A8s%20la%20connexion%2E": "続けるにはログインするかアカウントを作成してください。ログイン後に購入を確認できます。",
+      "Ton%20choix%20a%20%C3%A9t%C3%A9%20conserv%C3%A9%2E%20Confirme%20ton%20achat%20ou%20ta%20restauration%20pour%20continuer%2E": "選択したプランを保存しました。続けるには購入または復元を確認してください。",
+      "Achat%20fictif%20RevenueCat%20Test%20Store%2E%20Aucun%20paiement%20r%C3%A9el%20ni%20abonnement%20r%C3%A9siliable%20dans%20Google%20Play%2E": "RevenueCat Test Storeのテスト購入です。実際の請求はなく、Google Playから解約するサブスクリプションもありません。",
+      "Indisponible": "利用できません"
     },
     "legal": {
       "Le%20paiement%20est%20effectu%C3%A9%20via%20Google%20Play%2E%20L%E2%80%99abonnement%20est%20renouvel%C3%A9%20automatiquement%20sauf%20r%C3%A9siliation%2E%20Vous%20pouvez%20le%20g%C3%A9rer%20ou%20l%E2%80%99annuler%20depuis%20votre%20compte%20Google%20Play%2E%20Les%20achats%20peuvent%20%C3%AAtre%20restaur%C3%A9s%20avec%20le%20m%C3%AAme%20compte%2E": "お支払いはGoogle Playを通じて行われます。解約しない限りサブスクリプションは自動更新されます。管理・解約はGoogle Playアカウントから行えます。購入時と同じアカウントで購入情報を復元できます。",
@@ -63,5 +77,59 @@
       "Le%20service%20d%E2%80%99abonnement%20n%E2%80%99est%20pas%20correctement%20configur%C3%A9%2E": "サブスクリプションサービスが正しく設定されていません。",
       "Une%20erreur%20est%20survenue%20pendant%20la%20gestion%20de%20l%E2%80%99abonnement%2E%20R%C3%A9essaie%20dans%20quelques%20instants%2E": "サブスクリプションの処理中にエラーが発生しました。しばらくしてからもう一度お試しください。"
     }
+  },
+  "subscription": {
+    "states": {
+      "unavailable": "状態を取得できません",
+      "free": "K-App Premium",
+      "paused": "サブスクリプション一時停止中",
+      "grace": "支払い猶予期間中",
+      "billingIssue": "お支払いに問題があります",
+      "cancelled": "解約済み・Premium利用可能",
+      "trial": "Premium無料体験中",
+      "active": "Premium有効",
+      "verifying": "状態の確認が必要です",
+      "expired": "サブスクリプション期限切れ"
+    },
+    "plan": {
+      "monthly": "月額プラン",
+      "yearly": "年額プラン"
+    },
+    "period": {
+      "monthly": "月",
+      "yearly": "年"
+    },
+    "currentPrice": "現在のストア価格：{{price}}／{{period}}",
+    "nextRenewal": "次回更新予定：{{date}}",
+    "expiration": "サブスクリプション期間の終了：{{date}}",
+    "autoRenewOn": "自動更新：有効",
+    "autoRenewOff": "自動更新：無効",
+    "cancelledNotice": "Premium?{{date}}??????????????????????????",
+    "graceNotice": "{{date}}まで支払い猶予期間中のため、Premiumをご利用いただけます。ストアでお支払い方法をご確認ください。",
+    "billingAccess": "お支払いに問題が報告されています。Premiumは引き続き利用可能です。ストアでサブスクリプションをご確認ください。",
+    "billingNoAccess": "お支払いの問題によりPremiumを利用できません。ストアでサブスクリプションをご確認ください。",
+    "resumeDate": "ストアによる再開予定：{{date}}",
+    "testNotice": "RevenueCat Test Storeのテスト用サブスクリプションです。実際の請求はありません。Google Playから管理・解約はできません。",
+    "testTitle": "テスト用サブスクリプション",
+    "refresh": "サブスクリプションを更新",
+    "restored": "Premiumアクセスを復元しました。",
+    "cancel": "????????????",
+    "manage": "????????????",
+    "cancelIntro": "Premium????????????????????????????",
+    "cancelAccess": "Premium?{{date}}????????????\n\n???????????????????????",
+    "cancelAccessUnknown": "??????????????Premium???????????????????????????{{store}}????????????????????????????????",
+    "keep": "????????????",
+    "continueToStore": "{{store}}???",
+    "cancelledTitle": "?????????????????",
+    "cancelledUnknownDate": "??????????????Premium???????????????????????????",
+    "checkingReturn": "??????????????",
+    "unconfirmedReturn": "??????????????{{store}}???????????????????"
+  },
+  "authentication": {
+    "title": "?????????",
+    "message": "Premium??????????Google?????????????????",
+    "restoreMessage": "Premium???????????????Google?????????????????",
+    "signIn": "????",
+    "cancel": "?????"
   }
 }

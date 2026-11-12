@@ -31,6 +31,7 @@ export function createHookHarness() {
       });
     },
   };
+  react.useLayoutEffect = react.useEffect;
   return {
     react,
     render(Component, props = { children: null }) {

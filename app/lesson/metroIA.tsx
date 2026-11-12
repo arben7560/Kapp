@@ -63,6 +63,7 @@ import {
   METRO_SPEECH_PILOT_MISSION_ID,
 } from "../../lib/metroSpeechIntents";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
+import { premiumRoute } from "../../lib/paywall/purchaseIntent";
 import { buildProgressId } from "../../lib/progressIds";
 
 // ==================== DESIGN SYSTEM ====================
@@ -474,8 +475,8 @@ function MetroIaContent() {
 
   useEffect(() => {
     if (isPaywallLoading || canEnterMission) return;
-    router.replace("/premium");
-  }, [canEnterMission, isPaywallLoading]);
+    router.replace(premiumRoute("/lesson/metroIA", { mode, mission: missionId }));
+  }, [canEnterMission, isPaywallLoading, missionId, mode]);
 
   const portraitMediaLayout = getImmersivePortraitMediaLayout({
     contentWidth: responsive.contentWidth,

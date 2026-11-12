@@ -123,7 +123,7 @@ test("cloud and local snapshots keep both sets of completed learning", () => {
 });
 
 test("the Hub exposes profile access and keeps protection in the account route", () => {
-  assert.match(hubSource, /accessibilityLabel="Ouvrir mon profil"/u);
+  assert.match(hubSource, /accessibilityLabel=\{translate\("Ouvrir mon profil"\)\}/u);
   assert.match(hubSource, /onOpenProfile=\{\(\) => router\.push\("\/account"\)\}/u);
   assert.match(hubSource, /pathname: "\/account",[\s\S]*?action: "protect"/u);
   assert.match(hubSource, /useAuth\(\)/u);

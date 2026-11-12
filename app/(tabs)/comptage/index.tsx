@@ -38,6 +38,7 @@ import {
   type HomeResumeContext,
 } from "../../../lib/homeResume";
 import { usePaywall } from "../../../lib/paywall/PaywallProvider";
+import { premiumRoute } from "../../../lib/paywall/purchaseIntent";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/comptage.jpg");
 
@@ -211,7 +212,7 @@ export default function ComptageHub() {
 
   const openModule = async (module: CountingModule) => {
     if (module.isLocked && !hasPremiumAccess) {
-      router.push("/premium");
+      router.push(premiumRoute(module.route));
       return;
     }
 

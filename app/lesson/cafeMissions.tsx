@@ -23,6 +23,7 @@ import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { saveHomeResumeContext } from "../../lib/homeResume";
 import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
+import { premiumRoute } from "../../lib/paywall/purchaseIntent";
 
 const cafeBackground = require("../../assets/images/cafe.jpg");
 
@@ -67,12 +68,20 @@ function CafeMissionsScreenContent() {
 
   const openMission = (mission: CafeMission) => {
     if (!canOpenImmersionMission(mission, hasPremiumAccess)) {
-      router.push("/premium");
+      router.push(premiumRoute("/lesson/cafeMissions", { mode, premiumMission: mission.id }));
       return;
     }
 
     setSelectedMission(mission);
   };
+
+  React.useEffect(() => {
+    if (!hasPremiumAccess || typeof params.premiumMission !== "string") return;
+    const mission = cafeMissions.find((item) => item.id === params.premiumMission);
+    if (!mission || !canOpenImmersionMission(mission, hasPremiumAccess)) return;
+    const timer = setTimeout(() => setSelectedMission(mission), 0);
+    return () => clearTimeout(timer);
+  }, [hasPremiumAccess, params.premiumMission]);
 
   const startSelectedMission = async () => {
     if (!selectedMission) return;

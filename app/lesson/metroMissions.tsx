@@ -26,6 +26,7 @@ import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { saveHomeResumeContext } from "../../lib/homeResume";
 import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
+import { premiumRoute } from "../../lib/paywall/purchaseIntent";
 
 const metroBackground = require("../../assets/images/metrobg.jpg");
 const metroCardBackground = require("../../assets/images/metroIA.jpg");
@@ -89,12 +90,20 @@ function MetroMissionsContent() {
     if (COMING_SOON_MISSION_IDS.has(mission.id)) return;
 
     if (!canOpenImmersionMission(mission, hasPremiumAccess)) {
-      router.push("/premium");
+      router.push(premiumRoute("/lesson/metroMissions", { mode, premiumMission: mission.id }));
       return;
     }
 
     setSelectedMission(mission);
   };
+
+  React.useEffect(() => {
+    if (!hasPremiumAccess || typeof params.premiumMission !== "string") return;
+    const mission = metroMissions.find((item) => item.id === params.premiumMission);
+    if (!mission || !canOpenImmersionMission(mission, hasPremiumAccess) || COMING_SOON_MISSION_IDS.has(mission.id)) return;
+    const timer = setTimeout(() => setSelectedMission(mission), 0);
+    return () => clearTimeout(timer);
+  }, [hasPremiumAccess, params.premiumMission]);
 
   const startSelectedMission = async () => {
     if (!selectedMission || COMING_SOON_MISSION_IDS.has(selectedMission.id)) {

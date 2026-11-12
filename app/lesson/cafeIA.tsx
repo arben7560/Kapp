@@ -73,6 +73,7 @@ import {
 import { completeDailyActivity } from "../../lib/dailyStreak";
 import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
+import { premiumRoute } from "../../lib/paywall/purchaseIntent";
 import { buildProgressId } from "../../lib/progressIds";
 
 // ==================== DESIGN SYSTEM ====================
@@ -291,8 +292,8 @@ function CafeIaScreenContent() {
 
   useEffect(() => {
     if (isPaywallLoading || canEnterMission) return;
-    router.replace("/premium");
-  }, [canEnterMission, isPaywallLoading]);
+    router.replace(premiumRoute("/lesson/cafeIA", { mode, mission: missionId }));
+  }, [canEnterMission, isPaywallLoading, missionId, mode]);
 
   const portraitMediaLayout = getImmersivePortraitMediaLayout({
     contentWidth: responsive.contentWidth,
@@ -1192,7 +1193,7 @@ function CafeIaScreenContent() {
                       accessibilityRole="link"
                       accessibilityLabel={translate("Découvrir Premium")}
                       hitSlop={6}
-                      onPress={() => router.push("/premium")}
+                      onPress={() => router.push(premiumRoute("/lesson/cafeIA", { mode, mission: missionId }))}
                       style={({ pressed }) => [
                         styles.endPremiumLink,
                         { opacity: pressed ? 0.82 : 1 },

@@ -14,6 +14,7 @@
       "Premium%20actif": "Premium actif"
     },
     "plans": {
+      "Formule%20de%20test%20RevenueCat%2C%20sans%20paiement%20r%C3%A9el%2E": "Formule de test RevenueCat, sans paiement réel.",
       "Premium%20mensuel": "Premium mensuel",
       "Premium%20annuel": "Premium annuel",
       "Choisir%20l%E2%80%99abonnement%20mensuel": "Choisir l’abonnement mensuel",
@@ -33,7 +34,20 @@
       "Fermer%20Premium": "Fermer Premium",
       "RETOUR": "RETOUR",
       "Retour%20%C3%A0%20l%E2%80%99%C3%A9cran%20pr%C3%A9c%C3%A9dent": "Retour à l’écran précédent",
-      "Revient%20%C3%A0%20l%E2%80%99%C3%A9cran%20pr%C3%A9c%C3%A9dent": "Revient à l’écran précédent"
+      "Revient%20%C3%A0%20l%E2%80%99%C3%A9cran%20pr%C3%A9c%C3%A9dent": "Revient à l’écran précédent",
+      "G%C3%A9rer%20ou%20r%C3%A9silier%20mon%20abonnement": "Gérer ou résilier mon abonnement",
+      "Connecte-toi%20%C3%A0%20ton%20compte%20K-App%20pour%20continuer%2E": "Connecte-toi à ton compte K-App pour continuer.",
+      "Cet%20achat%20est%20associ%C3%A9%20%C3%A0%20un%20autre%20compte%20K-App%2E%20Connecte-toi%20au%20compte%20utilis%C3%A9%20lors%20de%20l%E2%80%99achat%2E": "Cet achat est associé à un autre compte K-App. Connecte-toi au compte utilisé lors de l’achat.",
+      "Un%20ancien%20achat%20invit%C3%A9%20a%20%C3%A9t%C3%A9%20d%C3%A9tect%C3%A9%2E%20Ferme%20puis%20rouvre%20K-App%20en%20restant%20connect%C3%A9%2C%20puis%20utilise%20Restaurer%20mes%20achats%2E%20Si%20n%C3%A9cessaire%2C%20contacte%20l%E2%80%99assistance%20pour%20retrouver%20le%20compte%20d%E2%80%99origine%2E": "Un ancien achat invité a été détecté. Ferme puis rouvre K-App en restant connecté, puis utilise Restaurer mes achats. Si nécessaire, contacte l’assistance pour retrouver le compte d’origine.",
+      "Les%20achats%20et%20restaurations%20sont%20temporairement%20indisponibles%2E%20Ton%20abonnement%20existant%20reste%20associ%C3%A9%20%C3%A0%20ton%20compte%2E": "Les achats et restaurations sont temporairement indisponibles. Ton abonnement existant reste associé à ton compte.",
+      "L%E2%80%99abonnement%20retrouv%C3%A9%20a%20expir%C3%A9%2E%20Aucun%20acc%C3%A8s%20Premium%20actif%20n%E2%80%99est%20disponible%2E": "L’abonnement retrouvé a expiré. Aucun accès Premium actif n’est disponible.",
+      "Impossible%20de%20pr%C3%A9parer%20la%20connexion%2E%20R%C3%A9essaie%20dans%20quelques%20instants%2E": "Impossible de préparer la connexion. Réessaie dans quelques instants.",
+      "R%C3%A9essayer": "Réessayer",
+      "Continuer": "Continuer",
+      "Connecte-toi%20ou%20cr%C3%A9e%20un%20compte%20pour%20continuer%2E%20Tu%20confirmeras%20ton%20achat%20apr%C3%A8s%20la%20connexion%2E": "Connecte-toi ou crée un compte pour continuer. Tu confirmeras ton achat après la connexion.",
+      "Ton%20choix%20a%20%C3%A9t%C3%A9%20conserv%C3%A9%2E%20Confirme%20ton%20achat%20ou%20ta%20restauration%20pour%20continuer%2E": "Ton choix a été conservé. Confirme ton achat ou ta restauration pour continuer.",
+      "Achat%20fictif%20RevenueCat%20Test%20Store%2E%20Aucun%20paiement%20r%C3%A9el%20ni%20abonnement%20r%C3%A9siliable%20dans%20Google%20Play%2E": "Achat fictif RevenueCat Test Store. Aucun paiement réel ni abonnement résiliable dans Google Play.",
+      "Indisponible": "Indisponible"
     },
     "legal": {
       "Le%20paiement%20est%20effectu%C3%A9%20via%20Google%20Play%2E%20L%E2%80%99abonnement%20est%20renouvel%C3%A9%20automatiquement%20sauf%20r%C3%A9siliation%2E%20Vous%20pouvez%20le%20g%C3%A9rer%20ou%20l%E2%80%99annuler%20depuis%20votre%20compte%20Google%20Play%2E%20Les%20achats%20peuvent%20%C3%AAtre%20restaur%C3%A9s%20avec%20le%20m%C3%AAme%20compte%2E": "Le paiement est effectué via Google Play. L’abonnement est renouvelé automatiquement sauf résiliation. Vous pouvez le gérer ou l’annuler depuis votre compte Google Play. Les achats peuvent être restaurés avec le même compte.",
@@ -63,5 +77,59 @@
       "Le%20service%20d%E2%80%99abonnement%20n%E2%80%99est%20pas%20correctement%20configur%C3%A9%2E": "Le service d’abonnement n’est pas correctement configuré.",
       "Une%20erreur%20est%20survenue%20pendant%20la%20gestion%20de%20l%E2%80%99abonnement%2E%20R%C3%A9essaie%20dans%20quelques%20instants%2E": "Une erreur est survenue pendant la gestion de l’abonnement. Réessaie dans quelques instants."
     }
+  },
+  "subscription": {
+    "states": {
+      "unavailable": "Statut indisponible",
+      "free": "K-App Premium",
+      "paused": "Abonnement suspendu",
+      "grace": "Période de grâce",
+      "billingIssue": "Problème de paiement",
+      "cancelled": "R?sili? ? acc?s Premium maintenu",
+      "trial": "Essai Premium actif",
+      "active": "Premium actif",
+      "verifying": "Statut à vérifier",
+      "expired": "Abonnement expiré"
+    },
+    "plan": {
+      "monthly": "Premium mensuel",
+      "yearly": "Premium annuel"
+    },
+    "period": {
+      "monthly": "mois",
+      "yearly": "an"
+    },
+    "currentPrice": "Tarif actuel du Store : {{price}} / {{period}}",
+    "nextRenewal": "Prochain renouvellement prévu : {{date}}",
+    "expiration": "Date de fin d?acc?s : {{date}}",
+    "autoRenewOn": "Renouvellement automatique activé",
+    "autoRenewOff": "Renouvellement automatique désactivé",
+    "cancelledNotice": "Votre acc?s Premium reste actif jusqu?au {{date}}. Aucun nouveau renouvellement automatique n?est pr?vu.",
+    "graceNotice": "Votre accès Premium est maintenu pendant la période de grâce jusqu’au {{date}}. Vérifiez votre moyen de paiement dans le Store.",
+    "billingAccess": "Un problème de paiement a été signalé. Votre accès Premium est encore actif. Vérifiez votre abonnement dans le Store.",
+    "billingNoAccess": "Un problème de paiement empêche l’accès Premium. Vérifiez votre abonnement dans le Store.",
+    "resumeDate": "Reprise prévue par le Store : {{date}}",
+    "testNotice": "Abonnement fictif RevenueCat Test Store. Aucun paiement réel. La gestion et la résiliation ne sont pas disponibles dans Google Play.",
+    "testTitle": "Abonnement de test",
+    "refresh": "Actualiser mon abonnement",
+    "restored": "Votre accès Premium a été restauré.",
+    "cancel": "R?silier mon abonnement",
+    "manage": "G?rer mon abonnement",
+    "cancelIntro": "Vous ?tes sur le point de d?sactiver le renouvellement automatique de votre abonnement Premium.",
+    "cancelAccess": "Votre acc?s Premium restera disponible jusqu?au {{date}}.\n\nApr?s cette date, votre compte reviendra automatiquement ? la version gratuite.",
+    "cancelAccessUnknown": "Votre acc?s Premium restera disponible jusqu?? la fin de la p?riode en cours. La date de fin n?est pas disponible ici : v?rifiez-la dans {{store}}. Apr?s cette date, votre compte reviendra automatiquement ? la version gratuite.",
+    "keep": "Conserver mon abonnement",
+    "continueToStore": "Continuer vers {{store}}",
+    "cancelledTitle": "Votre abonnement est r?sili?.",
+    "cancelledUnknownDate": "Le renouvellement automatique est d?sactiv?. Votre acc?s Premium est encore actif ; la date de fin est momentan?ment indisponible.",
+    "checkingReturn": "V?rification de votre abonnement?",
+    "unconfirmedReturn": "La r?siliation n?est pas confirm?e. V?rifiez votre abonnement dans {{store}}."
+  },
+  "authentication": {
+    "title": "Connexion n?cessaire",
+    "message": "Pour souscrire un abonnement Premium, vous devez d?abord vous connecter ? votre compte Google.",
+    "restoreMessage": "Pour restaurer vos achats Premium, vous devez d?abord vous connecter ? votre compte Google.",
+    "signIn": "Se connecter",
+    "cancel": "Annuler"
   }
 }

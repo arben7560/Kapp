@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useLocalSearchParams, type Href } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppText } from "../components/app-text";
 import { AppBackButton } from "../components/ui/app-back-button";
+import { AppDialog, DialogActions } from "../components/ui/app-dialog";
 import { PremiumActionButton as ActionButton } from "../components/premium/PremiumActionButton";
 import { useTranslation } from "react-i18next";
 import { PremiumLocalizationProvider } from "../lib/i18n/PremiumLocalizationProvider";
@@ -23,10 +24,13 @@ import {
   PAYWALL_COPY,
   PREMIUM_SUBSCRIPTION_OFFERS,
   PREMIUM_PRICE_FALLBACKS,
+  IS_REVENUECAT_TEST_STORE,
 } from "../lib/paywall/config";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { usePaywall } from "../lib/paywall/PaywallProvider";
 import { calculateAnnualOfferMetrics } from "../lib/paywall/revenueCatLogic";
+import { useAuth } from "../lib/AuthProvider";
+import { clearPurchaseIntent, premiumDestination, savePurchaseIntent } from "../lib/paywall/purchaseIntent";
 
 const COLORS = {
   bg: "#070812",
@@ -57,8 +61,16 @@ const isAnnualOffer = (offer: (typeof PREMIUM_SUBSCRIPTION_OFFERS)[number]) => {
 };
 
 function PremiumScreenContent() {
+  const auth = useAuth();
+  const signInWithOAuth = auth.signInWithOAuth;
+  const params = useLocalSearchParams<{ offerId?: string; returnTo?: string; action?: string }>();
+  const returnTo = premiumDestination(params.returnTo);
+  const [intentError, setIntentError] = React.useState<string | null>(null);
+  const [isPreparingAuth, setIsPreparingAuth] = React.useState(false);
+  const [authenticationAction, setAuthenticationAction] = React.useState<"purchase" | "restore" | null>(null);
+  const authNavigationRef = React.useRef(false);
   const translate = useVocabularyText();
-  const { i18n } = useTranslation("premium");
+  const { t, i18n } = useTranslation("premium");
   const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
   const locale = isAppLocale(activeLanguage) ? activeLanguage : DEFAULT_LOCALE;
   const responsive = useResponsiveLayout({ maxWidth: 620 });
@@ -73,27 +85,18 @@ function PremiumScreenContent() {
     restorePurchases,
     subscribe,
     subscriptions,
+    refreshEntitlements,
   } = usePaywall();
   const isMountedRef = React.useRef(true);
 
-  const busy = isPurchasing || isRestoring;
+  const busy = isPurchasing || isRestoring || isPreparingAuth;
   const highlightedOfferId =
     PREMIUM_SUBSCRIPTION_OFFERS.find(isAnnualOffer)?.id ??
     PREMIUM_SUBSCRIPTION_OFFERS[1]?.id ??
     PREMIUM_SUBSCRIPTION_OFFERS[0]?.id;
   const [selectedOfferId, setSelectedOfferId] =
-    React.useState(highlightedOfferId);
-  const availableOffer = React.useMemo(
-    () =>
-      PREMIUM_SUBSCRIPTION_OFFERS.find(
-        (offer) => subscriptions[offer.id] !== undefined,
-      ),
-    [subscriptions],
-  );
-  const effectiveSelectedOfferId =
-    isLoading || subscriptions[selectedOfferId]
-      ? selectedOfferId
-      : (availableOffer?.id ?? selectedOfferId);
+    React.useState(params.offerId === "monthly" || params.offerId === "yearly" ? params.offerId : highlightedOfferId);
+  const effectiveSelectedOfferId = selectedOfferId;
   const selectedOffer = React.useMemo(
     () =>
       PREMIUM_SUBSCRIPTION_OFFERS.find(
@@ -110,6 +113,7 @@ function PremiumScreenContent() {
   const canSubscribe =
     !!selectedOffer &&
     !!subscriptions[selectedOffer.id] &&
+    !isLoading && !auth.isLoading &&
     !busy &&
     !hasPremiumAccess;
   const annualMetrics = React.useMemo(() => {
@@ -127,23 +131,53 @@ function PremiumScreenContent() {
   }, []);
 
   const closePaywall = React.useCallback(() => {
+    if (returnTo) {
+      router.replace(returnTo as Href);
+      return;
+    }
     if (router.canGoBack()) {
       router.back();
     } else {
       router.replace("/(tabs)");
     }
-  }, []);
+  }, [returnTo]);
+
+  const requestAuthentication = React.useCallback(async (action: "purchase" | "restore") => {
+    if (authNavigationRef.current) return;
+    authNavigationRef.current = true;
+    setIsPreparingAuth(true);
+    try {
+      setIntentError(null);
+      await savePurchaseIntent({ offerId: selectedOfferId, returnTo, action });
+      setAuthenticationAction(null);
+      const result = await signInWithOAuth("google");
+      if (result !== "success") {
+        await clearPurchaseIntent();
+      } else if (isMountedRef.current) {
+        // Account already owns the guarded, single-consumption resume flow.
+        router.replace({ pathname: "/account", params: { action: "subscribe" } });
+      }
+    } catch {
+      await clearPurchaseIntent().catch(() => undefined);
+      setIntentError("Impossible de préparer la connexion. Réessaie dans quelques instants.");
+    } finally {
+      authNavigationRef.current = false;
+      if (isMountedRef.current) setIsPreparingAuth(false);
+    }
+  }, [signInWithOAuth, returnTo, selectedOfferId]);
 
   const handleSubscribe = React.useCallback(async () => {
     if (!selectedOffer) return;
+    if (!auth.isPermanentAccount) { setAuthenticationAction("purchase"); return; }
     const premiumGranted = await subscribe(selectedOffer.id);
     if (premiumGranted && isMountedRef.current) closePaywall();
-  }, [closePaywall, selectedOffer, subscribe]);
+  }, [auth.isPermanentAccount, closePaywall, selectedOffer, subscribe]);
 
   const handleRestore = React.useCallback(async () => {
+    if (!auth.isPermanentAccount) { setAuthenticationAction("restore"); return; }
     const premiumRestored = await restorePurchases();
     if (premiumRestored && isMountedRef.current) closePaywall();
-  }, [closePaywall, restorePurchases]);
+  }, [auth.isPermanentAccount, closePaywall, restorePurchases]);
 
   return (
     <LinearGradient
@@ -288,22 +322,23 @@ function PremiumScreenContent() {
             ))}
           </View>
 
-          {!!error && (
+          {(error || intentError) && (
             <View style={styles.errorCard}>
               <AppText variant="bodyStrong" style={styles.errorTitle}>Impossible de continuer</AppText>
-              <AppText variant="bodySecondary" style={styles.errorText}>{resolvePremiumError(error.message, locale, i18n)}</AppText>
+              <AppText variant="bodySecondary" style={styles.errorText}>{error ? resolvePremiumError(error.message, locale, i18n) : translate(intentError ?? "")}</AppText>
+              <ActionButton label="Réessayer" variant="ghost" disabled={busy || isLoading} onPress={() => void refreshEntitlements()} />
             </View>
           )}
 
           <ActionButton
-            label={hasPremiumAccess ? "Premium actif" : selectedOffer?.cta ?? PAYWALL_COPY.cta}
+            label={hasPremiumAccess ? "Continuer" : selectedOffer?.cta ?? PAYWALL_COPY.cta}
             size="large"
             accentColor={COLORS.pink}
             labelColor={COLORS.text}
-            disabled={!canSubscribe}
-            loading={isPurchasing}
+            disabled={hasPremiumAccess ? busy : !canSubscribe}
+            loading={isPurchasing || isPreparingAuth}
             loadingIndicatorColor={COLORS.text}
-            onPress={() => void handleSubscribe()}
+            onPress={() => hasPremiumAccess ? closePaywall() : void handleSubscribe()}
             style={styles.primaryAction}
           />
 
@@ -312,6 +347,15 @@ function PremiumScreenContent() {
               {`Offre sélectionnée : ${selectedOffer.title}`}
             </AppText>
           )}
+          {!auth.isPermanentAccount ? (
+            <AppText variant="caption" tone="soft" style={styles.selectedPlanText}>
+              Connecte-toi ou crée un compte pour continuer. Tu confirmeras ton achat après la connexion.
+            </AppText>
+          ) : params.action ? (
+            <AppText variant="caption" tone="soft" style={styles.selectedPlanText}>
+              Ton choix a été conservé. Confirme ton achat ou ta restauration pour continuer.
+            </AppText>
+          ) : null}
 
           <ActionButton
             label={PAYWALL_COPY.restore}
@@ -324,22 +368,40 @@ function PremiumScreenContent() {
             style={styles.secondaryAction}
           />
 
-          <ActionButton
+          {hasPremiumAccess && !IS_REVENUECAT_TEST_STORE ? <ActionButton
             label={PAYWALL_COPY.manage}
             variant="ghost"
             disabled={busy}
             onPress={() => void openSubscriptionManagement()}
             style={styles.manageAction}
-          />
+          /> : null}
 
           <AppText variant="caption" tone="soft" style={styles.legalText}>
-            {Platform.OS === "android"
+            {IS_REVENUECAT_TEST_STORE
+              ? "Achat fictif RevenueCat Test Store. Aucun paiement réel ni abonnement résiliable dans Google Play."
+              : Platform.OS === "android"
               ? "Le paiement est effectué via Google Play. L’abonnement est renouvelé automatiquement sauf résiliation. Vous pouvez le gérer ou l’annuler depuis votre compte Google Play. Les achats peuvent être restaurés avec le même compte."
               : "Le paiement est effectué via l’App Store. L’abonnement est renouvelé automatiquement sauf résiliation. Vous pouvez le gérer ou l’annuler depuis votre compte App Store. Les achats peuvent être restaurés avec le même compte."}
           </AppText>
           </View>
         </ScrollView>
       </SafeAreaView>
+      <AppDialog
+        visible={authenticationAction !== null}
+        onRequestClose={() => setAuthenticationAction(null)}
+        accessibilityLabel={t("authentication.title")}
+      >
+        <AppText variant="cardTitle" accessibilityRole="header">{t("authentication.title")}</AppText>
+        <AppText variant="body" tone="muted" style={styles.subtitle}>
+          {t(authenticationAction === "restore" ? "authentication.restoreMessage" : "authentication.message")}
+        </AppText>
+        <DialogActions>
+          <ActionButton label={t("authentication.signIn")} disabled={busy}
+            onPress={() => authenticationAction && void requestAuthentication(authenticationAction)} />
+          <ActionButton label={t("authentication.cancel")} variant="secondary"
+            onPress={() => setAuthenticationAction(null)} />
+        </DialogActions>
+      </AppDialog>
     </LinearGradient>
   );
 }

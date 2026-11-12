@@ -23,7 +23,7 @@ ni un achat effectué sur appareil. La recette ci-dessous reste à exécuter.
 activé interrompt la résolution de configuration. Le client refuse Test Store
 en JS release, une clé absente ou de mauvais type, sans repli vers Google Play.
 La clé Test Store n'est référencée par aucune expression `EXPO_PUBLIC` du code
-client : elle n'est donc pas injectée dans les bundles des autres profils.
+client : elle n'est donc pas injectée dans les bundles de production.
 Comme toute clé SDK publique, elle reste lisible dans la configuration du build
 de test ; ne pas publier un dump de `expo config` pour ce profil.
 
@@ -63,6 +63,57 @@ client manuellement et saisir l'adresse Metro affichée.
 Le lanceur applique les variables du profil EAS au serveur Metro local et vide
 son cache. Un simple `npm run dev-client` ne sélectionne pas le profil `iapTest`.
 Il ne modifie pas `.env` ni l'environnement des autres terminaux.
+
+### Si le paywall indique que le service n'est pas configuré
+
+L'APK `iapTest` ne sélectionne pas à lui seul l'environnement du JavaScript servi
+par Metro. Un lancement standard peut sélectionner les clés de plateforme, même
+si `.env` contient la clé Test Store. Le service lit la clé de test dans le manifeste
+Expo (`Constants.expoConfig.extra.revenueCatTestStore`). Expo 58 inclut aussi les
+variables `EXPO_PUBLIC_*` dans son bundle de développement ; leur présence ne
+suffit pas à sélectionner Test Store. Un ancien manifeste ou un autre serveur
+Metro peut donc empêcher la configuration du SDK.
+
+Arrêter l'ancien Metro avec Ctrl+C, puis exécuter :
+
+```powershell
+Set-Location D:\k-app
+npm run dev-client:iapTest -- --check
+npm run dev-client:iapTest
+```
+
+Le contrôle doit afficher `store: "test"`, `testKeyPresent: true`, `reason: "ready"`
+et `manifest-key-present`. Le lanceur charge explicitement dotenv avant de résoudre
+la configuration Expo et refuse de démarrer si la clé manque ou si les variables
+client sont désactivées. Le schéma `kapp` est explicite pour contourner la détection
+Expo des activités Android en `singleTop` ; il existe déjà dans l'APK.
+
+Fermer complètement K-App sur le téléphone puis ouvrir le development client avec
+le nouveau QR code. Ne pas réutiliser une ancienne session Metro. La correction
+du lanceur et du diagnostic JavaScript ne demande pas de nouvel APK.
+
+En développement, le log `[RevenueCat]` ne contient que des indicateurs et une
+raison, jamais les valeurs des clés :
+
+| `reason` | Signification |
+| --- | --- |
+| `configured` | Le SDK a accepté la configuration ; cela ne valide pas encore les offres ou un achat |
+| `platform-key-missing-use-iapTest-launcher-for-test-store` | Le bundle est en mode plateforme et aucune clé de plateforme n'est disponible |
+| `test-manifest-missing-restart-iapTest-metro` | Le bundle sélectionne Test Store mais le manifeste ne porte pas le profil `iapTest` |
+| `bundle-manifest-mismatch-restart-iapTest-metro` | Le manifeste et le bundle ne sélectionnent pas le même environnement |
+| `test-key-missing-in-manifest` | Profil correct, mais aucune clé Test Store reçue dans le manifeste |
+| `key-prefix-mismatch` | Le type de clé ne correspond pas au store sélectionné |
+| `sdk-configure-threw` | Échec dans le SDK natif ; aucun détail sensible de l'exception n'est journalisé par ce diagnostic |
+
+Le test automatique de ces diagnostics couvre aussi leur absence en production
+et l'absence de toute valeur de clé dans les messages.
+
+Après cette correction ciblée : 32 tests Premium réussis et lint ciblé réussi.
+Le manifeste Android HTTP servi par Metro a été vérifié avec la clé locale sans
+l'afficher ; le bundle de développement contient bien cette clé et la sélection
+Test Store. La vérification locale du serveur a utilisé le mode hors ligne Expo
+pour contourner les restrictions réseau de l'environnement d'exécution ; elle
+ne constitue pas un achat RevenueCat ni un test sur le Samsung.
 
 L'identifiant Android reste `com.arben60.kapp`. Une application déjà installée
 avec une autre signature peut empêcher `adb install -r` ; ne pas la désinstaller

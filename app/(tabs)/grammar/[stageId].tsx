@@ -57,6 +57,7 @@ import {
   setGrammarPracticeDraft,
 } from "../../../lib/grammar";
 import { usePaywall } from "../../../lib/paywall/PaywallProvider";
+import { premiumRoute } from "../../../lib/paywall/purchaseIntent";
 import { buildProgressId } from "../../../lib/progressIds";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vowelbasic.jpg");
@@ -468,8 +469,8 @@ export default function GrammarLessonScreen() {
 
   React.useEffect(() => {
     if (isPaywallLoading || !premiumLocked) return;
-    router.replace("/premium");
-  }, [isPaywallLoading, premiumLocked]);
+    router.replace(premiumRoute(`/grammar/${stageId}`, theoryEntryRequested ? { theory: "open" } : undefined));
+  }, [isPaywallLoading, premiumLocked, stageId, theoryEntryRequested]);
 
   React.useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
@@ -533,7 +534,7 @@ export default function GrammarLessonScreen() {
   const startPractice = React.useCallback(() => {
     if (!isHydrated) return;
     if (!canRepeatGrammarPractice(stage, isPremium)) {
-      router.push("/premium");
+      router.push(premiumRoute(`/grammar/${stageId}`));
       return;
     }
     const attemptNumber = (stageProgress?.attempts ?? 0) + 1;
@@ -577,7 +578,7 @@ export default function GrammarLessonScreen() {
     (nextStageId: GrammarStageId) => {
       const nextStage = GRAMMAR_STAGE_BY_ID[nextStageId];
       if (!canAccessGrammarStage(nextStage, isPremium)) {
-        router.push("/premium");
+        router.push(premiumRoute(`/grammar/${nextStageId}`));
         return;
       }
       router.replace({
@@ -759,7 +760,7 @@ export default function GrammarLessonScreen() {
           <GrammarLessonTheory
             stageId={stageId}
             isPremium={isPremium}
-            onOpenPremium={() => router.push("/premium")}
+            onOpenPremium={() => router.push(premiumRoute(`/grammar/${stageId}`))}
           />
         ) : null}
       </GrammarLessonGuideModal>
@@ -1608,7 +1609,7 @@ function PremiumLockedLesson({ stageId }: { stageId: GrammarStageId }) {
       </AppText>
       <PrimaryButton
         label="DÉCOUVRIR PREMIUM"
-        onPress={() => router.replace("/premium")}
+        onPress={() => router.replace(premiumRoute(`/grammar/${stage.id}`))}
         premium
       />
     </BlurView>

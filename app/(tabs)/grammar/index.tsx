@@ -47,6 +47,7 @@ import {
   getGrammarStageState,
 } from "../../../lib/grammar";
 import { usePaywall } from "../../../lib/paywall/PaywallProvider";
+import { premiumRoute } from "../../../lib/paywall/purchaseIntent";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/grammar.jpg");
 
@@ -171,7 +172,7 @@ export default function GrammarHubScreen() {
   const openStage = React.useCallback(
     (stageId: GrammarStageId, openTheory = false) => {
       if (!canAccessGrammarStage(GRAMMAR_STAGE_BY_ID[stageId], isPremium)) {
-        router.push("/premium");
+        router.push(premiumRoute(`/grammar/${stageId}`, openTheory ? { theory: "open" } : undefined));
         return;
       }
       const access = getGrammarStageAccess(

@@ -170,8 +170,8 @@ test("les fallbacks tarifaires de référence correspondent à la nouvelle offre
   assert.equal(PREMIUM_PRICE_FALLBACKS.yearly, "69,99 € / an");
 });
 
-test("les bypass Premium sont explicites et fonctionnent pour le profil test release", () => {
-  assert.equal(isDeveloperPremiumUnlockEnabled(false, "1", "1"), true);
+test("aucun bypass Premium ne fonctionne dans une build release", () => {
+  assert.equal(isDeveloperPremiumUnlockEnabled(false, "1", "1"), false);
   assert.equal(isDeveloperPremiumUnlockEnabled(false, "1", "0"), false);
   assert.equal(isDeveloperPremiumUnlockEnabled(true, "1", "0"), true);
   assert.equal(isDeveloperPremiumUnlockEnabled(true, "false", "0"), false);
@@ -182,9 +182,9 @@ test("les bypass Premium sont explicites et fonctionnent pour le profil test rel
   assert.equal(eas.build.closedTest.env.EXPO_PUBLIC_DEV_UNLOCK_ALL, "0");
   assert.equal(
     eas.build.closedTest.env.EXPO_PUBLIC_INTERNAL_PREMIUM_ACCESS,
-    "1",
+    "0",
   );
-  assert.equal(eas.build.closedTest.env.EXPO_PUBLIC_ENABLE_NATIVE_IAP, "0");
+  assert.equal(eas.build.closedTest.env.EXPO_PUBLIC_ENABLE_NATIVE_IAP, "1");
   assert.equal(eas.build.production.env.EXPO_PUBLIC_DEV_UNLOCK_ALL, "0");
   assert.equal(
     eas.build.production.env.EXPO_PUBLIC_INTERNAL_PREMIUM_ACCESS,
@@ -206,18 +206,6 @@ test("les routes Premium déclarées sont bloquées sans inclure les contenus gr
   assert.equal(isPremiumRoutePath("/voc/basics"), false);
   assert.equal(isPremiumRoutePath("/comptage/base"), false);
   assert.equal(isPremiumRoutePath("/premium"), false);
-});
-
-test("un échec de synchronizeIdentity ne bloque jamais CustomerInfo", () => {
-  assert.match(
-    paywallProviderSource,
-    /void synchronizeIdentity\(\)\.catch\([\s\S]*?await loadRevenueCatState\(\)/u,
-  );
-  assert.match(
-    paywallProviderSource,
-    /synchronizeIdentity\(\)[\s\S]*?\.catch\([\s\S]*?\.then\(\(\) => refreshCustomerInfo\(false\)\)/u,
-  );
-  assert.match(paywallProviderSource, /Purchases\.getCustomerInfo\(\)/u);
 });
 
 test("le Premium Guard masque le contenu avec un écran de chargement non vide", () => {

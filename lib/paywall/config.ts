@@ -1,5 +1,4 @@
-// Premium bypasses are opt-in: local development uses DEV_UNLOCK_ALL, while a
-// dedicated EAS test profile can grant internal access in a release build.
+// No build running release JavaScript can grant development entitlements.
 const IS_DEVELOPMENT =
   typeof __DEV__ === "boolean"
     ? __DEV__
@@ -11,13 +10,17 @@ export function isDeveloperPremiumUnlockEnabled(
   internalAccessValue: string | undefined,
 ) {
   return (
-    (isDevelopment && devUnlockValue === "1") ||
-    internalAccessValue === "1"
+    isDevelopment && (devUnlockValue === "1" || internalAccessValue === "1")
   );
 }
 
 export const IS_REVENUECAT_TEST_STORE =
   process.env.EXPO_PUBLIC_REVENUECAT_STORE === "test";
+
+// Deployment attestation, not a server-side policy change. Set only after
+// auditing legacy anonymous purchases and the project's actual restore policy.
+export const ACCOUNT_PURCHASE_POLICY_VERIFIED = IS_REVENUECAT_TEST_STORE ||
+  process.env.EXPO_PUBLIC_REVENUECAT_ACCOUNT_POLICY === "keep-original-verified";
 
 export const DEV_UNLOCK_ALL =
   !IS_REVENUECAT_TEST_STORE && isDeveloperPremiumUnlockEnabled(
@@ -46,19 +49,23 @@ export type PremiumSubscriptionOffer = {
 export const PREMIUM_SUBSCRIPTION_OFFERS = [
   {
     id: "monthly",
-    productId: IS_REVENUECAT_TEST_STORE ? "monthly" : "kapp_premium_monthly",
+    productId: IS_REVENUECAT_TEST_STORE ? "monthly" :
+      process.env.EXPO_PUBLIC_REVENUECAT_MONTHLY_PRODUCT_ID || "kapp_premium_monthly",
     title: "Premium mensuel",
     cta: "Choisir l’abonnement mensuel",
     fallbackPrice: "7,99 € / mois",
-    caption: "Abonnement mensuel, résiliable depuis l’App Store ou Google Play.",
+    caption: IS_REVENUECAT_TEST_STORE ? "Formule de test RevenueCat, sans paiement réel." :
+      "Abonnement mensuel, résiliable depuis l’App Store ou Google Play.",
   },
   {
     id: "yearly",
-    productId: IS_REVENUECAT_TEST_STORE ? "yearly" : "kapp_premium_yearly",
+    productId: IS_REVENUECAT_TEST_STORE ? "yearly" :
+      process.env.EXPO_PUBLIC_REVENUECAT_YEARLY_PRODUCT_ID || "kapp_premium_yearly",
     title: "Premium annuel",
     cta: "Choisir l’abonnement annuel",
     fallbackPrice: "69,99 € / an",
-    caption: "Abonnement annuel, résiliable depuis l’App Store ou Google Play.",
+    caption: IS_REVENUECAT_TEST_STORE ? "Formule de test RevenueCat, sans paiement réel." :
+      "Abonnement annuel, résiliable depuis l’App Store ou Google Play.",
   },
 ] as const satisfies readonly PremiumSubscriptionOffer[];
 
@@ -90,7 +97,7 @@ export const PAYWALL_COPY = {
     "Débloque les parcours et missions Premium disponibles.",
   cta: "S’abonner",
   restore: "Restaurer mes achats",
-  manage: "Gérer mon abonnement",
+  manage: "Gérer ou résilier mon abonnement",
 };
 
 export const PREMIUM_ROUTE_PATHS = new Set([

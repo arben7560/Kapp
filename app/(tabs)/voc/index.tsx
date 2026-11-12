@@ -38,6 +38,7 @@ import {
   type HomeResumeContext,
 } from "../../../lib/homeResume";
 import { usePaywall } from "../../../lib/paywall/PaywallProvider";
+import { premiumRoute } from "../../../lib/paywall/purchaseIntent";
 import { useVocabularyText } from "../../../lib/i18n/VocabularyTextContext.ts";
 
 const BACKGROUND_SOURCE = require("../../../assets/images/vocabulaire.jpg");
@@ -216,7 +217,7 @@ export default function VocabHub() {
 
   const openTheme = async (theme: VocabularyTheme) => {
     if (theme.isLocked && !hasPremiumAccess) {
-      router.push("/premium");
+      router.push(premiumRoute(theme.route));
       return;
     }
 

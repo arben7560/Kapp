@@ -28,6 +28,7 @@ import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { saveHomeResumeContext } from "../../lib/homeResume";
 import { canOpenImmersionMission } from "../../lib/immersion/missions";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
+import { premiumRoute } from "../../lib/paywall/purchaseIntent";
 
 const airportBackground = require("../../assets/images/airport.jpg");
 
@@ -81,12 +82,20 @@ function AeroportMissionsContent() {
 
   const openMission = (mission: AeroportMission) => {
     if (!canOpenImmersionMission(mission, hasPremiumAccess)) {
-      router.push("/premium");
+      router.push(premiumRoute("/lesson/aeroportMissions", { mode, premiumMission: mission.id }));
       return;
     }
 
     setSelectedMission(mission);
   };
+
+  React.useEffect(() => {
+    if (!hasPremiumAccess || typeof params.premiumMission !== "string") return;
+    const mission = aeroportMissions.find((item) => item.id === params.premiumMission);
+    if (!mission || !canOpenImmersionMission(mission, hasPremiumAccess)) return;
+    const timer = setTimeout(() => setSelectedMission(mission), 0);
+    return () => clearTimeout(timer);
+  }, [hasPremiumAccess, params.premiumMission]);
 
   const startSelectedMission = async () => {
     if (!selectedMission) return;
