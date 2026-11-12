@@ -100,7 +100,7 @@ test("Sign-in, recovery, OTP confirmation, statuses and account deletion use sit
     translate("Google • Email + mot de passe"),
     "Google • メールアドレスとパスワード",
   );
-  assert.equal(resolveAccountText("  Compte protégé  ", "ja", instance), "  保護済みアカウント  ");
+  assert.equal(resolveAccountText("  Compte protégé  ", "ja", instance), "  アカウントは保護されています  ");
   assert.equal(resolveAccountText("Google", "ja", instance), "Google", "Provider brand must stay unchanged");
 });
 
@@ -140,4 +140,38 @@ test("Native confirmation alerts and raw service errors never bypass Japanese UI
   assert.match(account, /\{resolvePremiumError\(paywall\.error\.message, locale, i18n\)\}/u);
   assert.match(account, /friendlyError\(caught\)/u);
   assert.match(callback, /resolveAccountError\(error, locale, i18n\)/u);
+});
+
+test("Japanese Account covers the subscription management action and all Premium modal states", () => {
+  const account = read("../app/account/index.tsx");
+  const subscription = read("../components/premium/SubscriptionDetails.tsx");
+  const purchase = read("../components/premium/PurchaseSuccessNotice.tsx");
+  const frPremium = JSON.parse(read("../locales/fr/premium.json"));
+  const jaPremium = JSON.parse(read("../locales/ja/premium.json"));
+  assert.deepEqual(validateCataloguePair(resources.fr.premium, resources.ja.premium), []);
+  const translated = (key, vars = {}) => instance.t(`premium:subscription.${key}`, vars);
+  for (const key of [
+    "manage", "cancel", "planLabel", "statusLabel", "planUnknown", "noPlan",
+    "checking", "close", "purchaseDateUnknown", "autoRenewUnknown", "autoRenewOn",
+    "autoRenewOff", "testNotice", "internalNotice", "keep", "cancelIntro",
+    "cancelledTitle", "cancelledUnknownDate", "checkingReturn", "unconfirmedReturn",
+  ]) {
+    assert.notEqual(translated(key), frPremium.subscription[key], key);
+    assert.equal(translated(key), jaPremium.subscription[key], key);
+  }
+  assert.equal(translated("purchaseDate", { date: "2026年11月12日" }),
+    "初回購入日：2026年11月12日");
+  assert.equal(translated("periodEnd", { date: "2026年12月12日" }),
+    "現在の利用期間の終了日：2026年12月12日");
+  assert.equal(translated("continueToStore", { store: "Google Play" }),
+    "Google Playへ進む");
+  assert.match(account, /label=\{subscriptionText\("manage"\)\}/u);
+  assert.match(account, /<SubscriptionDetails details=\{details\} \/>/u);
+  assert.match(account, /subscriptionText\(canCancelSubscription \? "cancel" : "manage"\)/u);
+  assert.match(account, /subscriptionText\("keep"\)/u);
+  assert.match(account, /subscriptionText\(endDate \? "cancelAccess" : "cancelAccessUnknown"/u);
+  assert.match(subscription, /useTranslation\("premium"\)/u);
+  assert.match(purchase, /useTranslation\("premium"\)/u);
+  assert.equal(instance.t("premium:purchaseSuccess.title"), jaPremium.purchaseSuccess.title);
+  assert.equal(instance.t("premium:purchaseSuccess.message"), jaPremium.purchaseSuccess.message);
 });

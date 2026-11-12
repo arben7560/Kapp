@@ -22,7 +22,7 @@
       "Cr%C3%A9er%20un%20compte%20avec%20mon%20email": "メールアドレスでアカウントを作成",
       "J%E2%80%99ai%20d%C3%A9j%C3%A0%20un%20compte": "すでにアカウントをお持ちの方",
       "La%20session%20invit%C3%A9e%20sauvegarde%20dans%20le%20cloud%20quand%20le%20r%C3%A9seau%20est%20disponible%2C%20mais%20elle%20ne%20peut%20pas%20%C3%AAtre%20r%C3%A9cup%C3%A9r%C3%A9e%20apr%C3%A8s%20suppression%20des%20donn%C3%A9es%20locales%2E": "ゲストセッションの進捗は通信可能なときにクラウドへ保存されますが、端末内のデータを削除すると復元できません。",
-      "Compte%20prot%C3%A9g%C3%A9": "保護済みアカウント",
+      "Compte%20prot%C3%A9g%C3%A9": "アカウントは保護されています",
       "CONNEXION": "ログイン方法",
       "EMAIL": "メールアドレス",
       "Email%20%2B%20mot%20de%20passe": "メールアドレスとパスワード",
@@ -46,7 +46,7 @@
     "security": {
       "S%C3%89CURIT%C3%89": "セキュリティ",
       "Modifier%20le%20mot%20de%20passe": "パスワードを変更",
-      "S%C3%A9curiser%20l%E2%80%99acc%C3%A8s%20%C3%A0%20votre%20compte": "アカウントの安全性を高めます",
+      "S%C3%A9curiser%20l%E2%80%99acc%C3%A8s%20%C3%A0%20votre%20compte": "アカウントを安全に保つ",
       "Email%20de%20r%C3%A9cup%C3%A9ration": "パスワード再設定メール",
       "Recevoir%20un%20lien%20de%20r%C3%A9initialisation": "再設定用リンクを受け取る",
       "Se%20d%C3%A9connecter": "ログアウト",
@@ -68,7 +68,7 @@
       "D%C3%A9couvrir%20Premium": "Premiumについて見る",
       "G%C3%A9rer%20ou%20r%C3%A9silier%20mon%20abonnement": "サブスクリプションの管理・解約",
       "Restaurer%20mes%20achats": "購入情報を復元",
-      "Impossible%20de%20retrouver%20la%20formule%20s%C3%A9lectionn%C3%A9e%2E%20Rouvre%20Premium%20pour%20continuer%2E": "選択したプランを取得できませんでした。Premiumを開き直してください。"
+      "Impossible%20de%20retrouver%20la%20formule%20s%C3%A9lectionn%C3%A9e%2E%20Rouvre%20Premium%20pour%20continuer%2E": "選択したプランを復元できませんでした。Premium画面をもう一度開いてください。"
     },
     "dialogs": {
       "Prot%C3%A9ger%20ma%20progression": "学習の進捗を保護する",

@@ -138,3 +138,20 @@ test("Error mapping retains RevenueCat operational codes while displaying Japane
   assert.equal(resolvePremiumError("", "ja", instance), "");
   assert.equal(resolvePremiumText("Restaurer mes achats", "fr", instance), "Restaurer mes achats");
 });
+
+test("Subscription management Japanese translations are complete and natural", () => {
+  assert.equal(instance.t("subscription.manage", { ns: "premium", lng: "ja" }),
+    "サブスクリプションを管理");
+  assert.equal(instance.t("subscription.cancel", { ns: "premium", lng: "ja" }),
+    "サブスクリプションを解約する");
+  assert.equal(instance.t("subscription.planLabel", { ns: "premium", lng: "ja" }),
+    "契約プラン");
+  assert.equal(instance.t("subscription.statusLabel", { ns: "premium", lng: "ja" }),
+    "契約状況");
+  assert.equal(instance.t("subscription.states.active", { ns: "premium", lng: "ja" }),
+    "Premium利用中");
+  assert.equal(instance.t("subscription.autoRenewOff", { ns: "premium", lng: "ja" }),
+    "自動更新：無効");
+  assert.equal(instance.t("subscription.testNotice", { ns: "premium", lng: "ja" }),
+    ja.subscription.testNotice);
+});
