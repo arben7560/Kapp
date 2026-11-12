@@ -169,7 +169,7 @@ test("Japanese Account covers the subscription management action and all Premium
   assert.match(account, /<SubscriptionDetails details=\{details\} \/>/u);
   assert.match(account, /subscriptionText\(canCancelSubscription \? "cancel" : "manage"\)/u);
   assert.match(account, /subscriptionText\("keep"\)/u);
-  assert.match(account, /subscriptionText\("cancelAccess" : "cancelAccessUnknown"/u);
+  assert.match(account, /subscriptionText\(endDate \? "cancelAccess" : "cancelAccessUnknown"/u);
   assert.match(subscription, /useTranslation\("premium"\)/u);
   assert.match(purchase, /useTranslation\("premium"\)/u);
   assert.equal(instance.t("premium:purchaseSuccess.title"), jaPremium.purchaseSuccess.title);
