@@ -124,7 +124,17 @@
     "cancelledTitle": "サブスクリプションは解約済みです。",
     "cancelledUnknownDate": "自動更新は無効です。Premiumは引き続き利用可能ですが、終了日は現在取得できません。",
     "checkingReturn": "サブスクリプションを確認中…",
-    "unconfirmedReturn": "解約を確認できませんでした。{{store}}でサブスクリプションをご確認ください。"
+    "unconfirmedReturn": "解約を確認できませんでした。{{store}}でサブスクリプションをご確認ください。",
+    "planLabel": "選択中のプラン",
+    "statusLabel": "サブスクリプションの状態",
+    "planUnknown": "Premiumプランを確認できません",
+    "noPlan": "有効なプランはありません",
+    "checking": "サブスクリプションを確認中…",
+    "close": "閉じる",
+    "purchaseDate": "初回購入日：{{date}}",
+    "purchaseDateUnknown": "初回購入日を取得できません",
+    "periodEnd": "現在の契約期間の終了日：{{date}}",
+    "autoRenewUnknown": "自動更新の状態を確認できません"
   },
   "authentication": {
     "title": "ログインが必要です",
