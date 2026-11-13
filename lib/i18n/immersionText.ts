@@ -221,8 +221,12 @@ export function resolveImmersionText(module: string, source: string, locale: App
     // Composed feedback uses a contextual explanation followed by a fixed
     // pedagogical instruction. The context is already mapped by source.
     r = m1(/^(.+?)\. (.+)$/u);
-    if (r && exact(r[1] + ".") && exact(r[2])) {
-      return exact(r[1] + ".") + exact(r[2]);
+    if (r) {
+      const context = exact(r[1] + ".");
+      if (context) {
+        const instruction = exact(r[2]);
+        if (instruction) return context + instruction;
+      }
     }
   }
   // Metro voice feedback is assembled at runtime from selected intents, suggested

@@ -244,7 +244,7 @@ test("Aéroport réinitialise toute la session quand la mission change", () => {
   );
 
   assert.ok(resetEffect);
-  assert.match(screen, /accessibilityLabel="Retour aux missions"[\s\S]*?onPress=\{handleExit\}/u);
+  assert.match(screen, /<Pressable\s+accessibilityRole="button"\s+accessibilityLabel=\{translate\("Retour aux missions"\)\}[^>]*\bonPress=\{handleExit\}/u);
 });
 
 test("le lancement d’une mission ignore un second appui immédiat", () => {
