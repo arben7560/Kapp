@@ -404,6 +404,7 @@ export default function HangulHub() {
                 subtitle={continueSubtitle}
                 progress={continueProgress}
                 completed={journeyCompleted}
+                compact={responsive.isCompact}
                 landscape={isLandscape}
                 onPress={() =>
                   openModule(continueModule, continueState.requirement)
@@ -607,6 +608,7 @@ function ContinueCard({
   subtitle,
   progress,
   completed,
+  compact,
   landscape,
   onPress,
 }: {
@@ -614,6 +616,7 @@ function ContinueCard({
   subtitle: string;
   progress: number;
   completed: boolean;
+  compact: boolean;
   landscape: boolean;
   onPress: () => void;
 }) {
@@ -645,6 +648,7 @@ function ContinueCard({
         tint="dark"
         style={[
           styles.continueCard,
+          compact && styles.continueCardCompact,
           landscape && styles.continueCardLandscape,
         ]}
       >
@@ -690,7 +694,7 @@ function ContinueCard({
         </View>
 
         <View style={styles.continueContent}>
-          <AppText script={uiScript} variant="featureTitle" style={styles.continueTitle}>
+          <AppText script={uiScript} variant={compact ? "sectionTitle" : "featureTitle"} style={styles.continueTitle}>
             {title}
           </AppText>
 
@@ -1435,6 +1439,8 @@ const styles = StyleSheet.create({
 
     flexDirection: "row",
 
+    flexWrap: "wrap",
+
     alignItems: "center",
 
     justifyContent: "space-between",
@@ -1481,6 +1487,8 @@ const styles = StyleSheet.create({
 
   heroCompletion: {
     color: SOFT,
+
+    flexShrink: 1,
   },
 
   heroProgress: {
@@ -1550,6 +1558,8 @@ const styles = StyleSheet.create({
 
     overflow: "hidden",
   },
+
+  continueCardCompact: { paddingHorizontal: 12 },
 
   continueCardLandscape: {
     minHeight: 180,

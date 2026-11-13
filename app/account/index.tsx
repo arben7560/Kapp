@@ -677,7 +677,7 @@ function AccountScreenContent() {
                 <AppText variant="sectionLabel" tone="soft">
                   COMPTE K-APP
                 </AppText>
-                <AppText accessibilityRole="header" variant="screenTitle">
+                <AppText accessibilityRole="header" variant={responsive.isCompact ? "featureTitle" : "screenTitle"}>
                   Mon profil
                 </AppText>
               </View>
@@ -714,7 +714,7 @@ function AccountScreenContent() {
                   icon={auth.isAuthenticated ? "phone-portrait-outline" : "cloud-offline-outline"}
                   label={auth.isLoading ? "Initialisation" : "SUR CET APPAREIL"}
                 />
-                <AppText variant="featureTitle" style={styles.cardTitle}>
+                <AppText variant={responsive.isCompact ? "sectionTitle" : "featureTitle"} style={styles.cardTitle}>
                   Progression enregistrée sur cet appareil
                 </AppText>
                 <AppText variant="body" tone="muted" style={styles.cardBody}>
@@ -770,7 +770,7 @@ function AccountScreenContent() {
                     icon={syncPresentation.icon}
                     label={syncPresentation.label}
                   />
-                  <AppText variant="featureTitle" style={styles.cardTitle}>
+                  <AppText variant={responsive.isCompact ? "sectionTitle" : "featureTitle"} style={styles.cardTitle}>
                     Compte protégé
                   </AppText>
                   {sync.errorMessage ? (

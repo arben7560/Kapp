@@ -933,6 +933,7 @@ const styles = StyleSheet.create({
   },
   featuredTopRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 10,
@@ -957,7 +958,7 @@ const styles = StyleSheet.create({
     backgroundColor: GRAMMAR_ACCENT,
   },
   kickerText: { color: "rgba(241,245,249,0.64)" },
-  actions: { flexDirection: "row", alignItems: "center", gap: 8 },
+  actions: { flexDirection: "row", alignItems: "center", gap: 8, marginLeft: "auto" },
   accessPill: {
     minHeight: 30,
     flexDirection: "row",

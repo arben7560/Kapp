@@ -1147,6 +1147,7 @@ const styles = StyleSheet.create({
   heroMetaRow: {
     marginTop: 20,
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 14,
@@ -1170,6 +1171,7 @@ const styles = StyleSheet.create({
   },
   heroCollectionCount: {
     color: SOFT,
+    flexShrink: 1,
     textAlign: "right",
   },
   featuredWrap: {

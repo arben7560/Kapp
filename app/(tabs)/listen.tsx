@@ -1262,11 +1262,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    gap: 12,
+    gap: 8,
   },
   cardTopTitleWrap: {
     flex: 1,
-    paddingRight: 10,
+    minWidth: 0,
   },
   theme: {
     color: LISTEN_ACCENT.base,
@@ -1278,7 +1278,7 @@ const styles = StyleSheet.create({
   counter: {
     color: COLORS.faint,
     paddingTop: 4,
-    minWidth: 48,
+    minWidth: 40,
     textAlign: "right",
   },
   skillRow: {
