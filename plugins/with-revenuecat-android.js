@@ -15,6 +15,15 @@ module.exports = function withRevenueCatAndroid(config) {
       mainActivity.$["android:launchMode"] = nativeIapEnabled
         ? "singleTop"
         : "singleTask";
+
+      // The responsive audit changes the emulator's display density at runtime.
+      // Keep the existing React root while React Native handles the new metrics.
+      const configChanges = mainActivity.$["android:configChanges"] ?? "";
+      if (!configChanges.split("|").includes("density")) {
+        mainActivity.$["android:configChanges"] = [configChanges, "density"]
+          .filter(Boolean)
+          .join("|");
+      }
     }
 
     return androidConfig;
