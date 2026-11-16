@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Speech from "@/lib/speechPlayback";
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
 import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
@@ -46,9 +46,11 @@ export function AeroportConversationSummaryModal({
       transparent
       visible={visible}
       onRequestClose={handleClose}
+      statusBarTranslucent
+      navigationBarTranslucent
     >
-      <View style={styles.backdrop}>
-        <SafeAreaView style={styles.sheet} edges={["top", "bottom"]}>
+      <SafeAreaProvider style={styles.backdrop}>
+        <SafeAreaView style={styles.sheet}>
           <View style={styles.header}>
             <View>
               <AppText variant="caption" tone="premium" script="latin">
@@ -142,7 +144,7 @@ export function AeroportConversationSummaryModal({
             </View>
           </ScrollView>
         </SafeAreaView>
-      </View>
+      </SafeAreaProvider>
     </Modal>
   );
 }

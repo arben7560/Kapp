@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useTranslation } from "react-i18next";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
 import { EXERCISES_BY_KIND, type ExerciseKind } from "../../data/listen/activeExercises";
@@ -57,9 +57,11 @@ export function ListenTrainingCompletionModal({
       transparent
       visible={visible}
       onRequestClose={onClose}
+      statusBarTranslucent
+      navigationBarTranslucent
     >
-      <View style={styles.backdrop}>
-        <SafeAreaView style={styles.sheet} edges={["bottom"]}>
+      <SafeAreaProvider style={styles.backdrop}>
+        <SafeAreaView style={styles.sheet}>
           <View style={styles.header}>
             <View style={styles.headerText}>
               <AppText script={uiScript} variant="caption" tone="premium" style={styles.eyebrow}>
@@ -184,7 +186,7 @@ export function ListenTrainingCompletionModal({
             </Pressable>
           </View>
         </SafeAreaView>
-      </View>
+      </SafeAreaProvider>
     </Modal>
   );
 }

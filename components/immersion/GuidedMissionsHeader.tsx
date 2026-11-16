@@ -14,7 +14,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
 import {
@@ -405,54 +405,57 @@ function MissionMasteryCelebrationModal({
     <Modal
       animationType="fade"
       statusBarTranslucent
+      navigationBarTranslucent
       transparent
       visible
       onRequestClose={onContinue}
     >
-      <ImageBackground
-        source={background}
-        resizeMode="cover"
-        style={styles.celebrationBackground}
-      >
-        <BlurView
-          intensity={22}
-          tint="dark"
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-        <LinearGradient
-          colors={[
-            "rgba(2,3,8,0.44)",
-            "rgba(2,3,8,0.78)",
-            "rgba(2,3,8,0.96)",
-          ]}
-          locations={[0, 0.48, 1]}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-        <View
-          pointerEvents="none"
-          style={[
-            styles.celebrationGlow,
-            isLandscape && styles.celebrationGlowLandscape,
-            { backgroundColor: accent },
-          ]}
-        />
+      <SafeAreaProvider>
+        <ImageBackground
+          source={background}
+          resizeMode="cover"
+          style={styles.celebrationBackground}
+        >
+          <BlurView
+            intensity={22}
+            tint="dark"
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
+          <LinearGradient
+            colors={[
+              "rgba(2,3,8,0.44)",
+              "rgba(2,3,8,0.78)",
+              "rgba(2,3,8,0.96)",
+            ]}
+            locations={[0, 0.48, 1]}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
+          <View
+            pointerEvents="none"
+            style={[
+              styles.celebrationGlow,
+              isLandscape && styles.celebrationGlowLandscape,
+              { backgroundColor: accent },
+            ]}
+          />
 
-        <SafeAreaView style={styles.celebrationSafe}>
-          {isLandscape ? (
-            <ScrollView
-              bounces={false}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.celebrationLandscapeScroll}
-            >
-              {landscapeContent}
-            </ScrollView>
-          ) : (
-            landscapeContent
-          )}
-        </SafeAreaView>
-      </ImageBackground>
+          <SafeAreaView style={styles.celebrationSafe}>
+            {isLandscape ? (
+              <ScrollView
+                bounces={false}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.celebrationLandscapeScroll}
+              >
+                {landscapeContent}
+              </ScrollView>
+            ) : (
+              landscapeContent
+            )}
+          </SafeAreaView>
+        </ImageBackground>
+      </SafeAreaProvider>
     </Modal>
   );
 }

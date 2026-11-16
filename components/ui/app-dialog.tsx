@@ -39,7 +39,7 @@ export function AppDialog({
   maxWidth = 460,
   maxHeight,
   fillAvailableHeight = false,
-  respectHorizontalSafeArea = false,
+  respectHorizontalSafeArea = true,
   scrollable = true,
   cardStyle,
   contentContainerStyle,

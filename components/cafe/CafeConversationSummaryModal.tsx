@@ -1,8 +1,9 @@
 import * as Speech from "@/lib/speechPlayback";
 import { useEffect, useMemo, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+
 import { useTranslation } from "react-i18next";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
 import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
@@ -11,9 +12,9 @@ import {
   type CafeConversationMemory,
   type CafeGroupedImperfection,
 } from "../../lib/cafeConversationMemory";
-import { AppText } from "../app-text";
 import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import { resolveImmersionSpeechDisplay } from "../../lib/i18n/immersionSpeechDisplay";
+import { AppText } from "../app-text";
 
 type CafeConversationSummaryModalProps = Readonly<{
   memory: CafeConversationMemory;
@@ -35,12 +36,12 @@ function ImperfectionCard({
   const { i18n } = useTranslation("immersion");
   const japanese = (i18n.resolvedLanguage ?? i18n.language).startsWith("ja");
   const explanation = japanese
-    ? resolveImmersionSpeechDisplay(
+    ? (resolveImmersionSpeechDisplay(
         item.explanation,
         translate(item.explanation),
         "ja",
         "feedback",
-      ) ?? item.explanation
+      ) ?? item.explanation)
     : item.explanation;
   const recordedTranscript =
     item.recordedTranscripts.join(" · ") || "Aucune transcription";
@@ -157,9 +158,11 @@ export function CafeConversationSummaryModal({
       transparent
       visible={visible}
       onRequestClose={handleClose}
+      statusBarTranslucent
+      navigationBarTranslucent
     >
-      <View style={styles.backdrop}>
-        <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+      <SafeAreaProvider style={styles.backdrop}>
+        <SafeAreaView style={styles.safeArea}>
           <View style={styles.sheet}>
             <View style={styles.header}>
               <AppText
@@ -211,7 +214,9 @@ export function CafeConversationSummaryModal({
                         </AppText>
                         <Pressable
                           accessibilityRole="button"
-                          accessibilityLabel={translate(`${listenedPhrases[phrase] ? "Réécouter" : "Écouter"} ${phrase}`)}
+                          accessibilityLabel={translate(
+                            `${listenedPhrases[phrase] ? "Réécouter" : "Écouter"} ${phrase}`,
+                          )}
                           hitSlop={6}
                           onPress={() => speak(phrase)}
                           style={styles.listenButton}
@@ -363,7 +368,9 @@ export function CafeConversationSummaryModal({
                         </AppText>
                         <Pressable
                           accessibilityRole="button"
-                          accessibilityLabel={translate(`${listenedPhrases[phraseToRemember] ? "Réécouter" : "Écouter"} ${phraseToRemember}`)}
+                          accessibilityLabel={translate(
+                            `${listenedPhrases[phraseToRemember] ? "Réécouter" : "Écouter"} ${phraseToRemember}`,
+                          )}
                           hitSlop={6}
                           onPress={() => speak(phraseToRemember)}
                           style={styles.listenButton}
@@ -388,7 +395,9 @@ export function CafeConversationSummaryModal({
             <View style={styles.actions}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={translate(isReviewing ? "Retour au bilan" : "Ouvrir les phrases")}
+                accessibilityLabel={translate(
+                  isReviewing ? "Retour au bilan" : "Ouvrir les phrases",
+                )}
                 hitSlop={6}
                 onPress={() => setIsReviewing((current) => !current)}
                 style={styles.secondaryAction}
@@ -421,7 +430,7 @@ export function CafeConversationSummaryModal({
             </View>
           </View>
         </SafeAreaView>
-      </View>
+      </SafeAreaProvider>
     </Modal>
   );
 }

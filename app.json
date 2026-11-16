@@ -3,7 +3,6 @@
     "name": "K-App",
     "slug": "k-app",
     "version": "1.0.0",
-    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "kapp",
     "userInterfaceStyle": "automatic",
@@ -91,7 +90,8 @@
         }
       ],
       "expo-status-bar",
-      "expo-asset"
+      "expo-asset",
+      "./plugins/with-android-edge-to-edge"
     ],
     "experiments": {
       "typedRoutes": true,
