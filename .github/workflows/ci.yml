@@ -79,6 +79,9 @@ jobs:
       - name: Restaurant Japanese feedback and lesson copy
         run: npm run test:restaurant-localization
 
+      - name: Aéroport Japanese feedback and dialogue
+        run: npm run test:aeroport-localization
+
       - name: Daily streak
         run: npm run test:streak
 

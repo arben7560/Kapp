@@ -112,3 +112,40 @@ test("Contextual spoken feedback translates at display time while retaining Kore
     }
   }
 });
+
+test("Aéroport instructions use polite and natural spoken Japanese", () => {
+  for (const [source, japanese] of [
+    ["Répétez, s’il vous plaît", "もう一度言っていただけますか？"],
+    ["Je suis perdu(e)", "道に迷ってしまいました"],
+    ["Arrivée guidée à Incheon", "仁川空港到着後の会話練習"],
+    ["Merci beaucoup !", "どうもありがとうございます！"],
+  ]) {
+    assert.equal(resolveImmersionText("aeroport", source, "ja"), japanese);
+    assert.equal(resolveImmersionText("aeroport", source, "fr"), source);
+  }
+});
+
+test("Aéroport dynamic speech feedback stays fully Japanese and retains Korean examples", () => {
+  const messages = [
+    [
+      "Ta phrase peut être comprise de plusieurs façons. Ici, l’agent vient de présenter les trains AREX. Tu peux lui demander lequel il te conseille ou lui demander de répéter. Réécoute l’agent et concentre-toi sur une seule intention. — réponses proposées : « Quel train me conseillez-vous ? » · « Pouvez-vous répéter plus simplement ? ».",
+      "返答には複数の解釈が考えられます。係員がAREXの列車について説明しました。どちらがおすすめか尋ねるか、もう一度説明してもらいましょう。係員の説明をもう一度聞き、一度に伝える内容を一つに絞りましょう。選べる返答：「どの列車がおすすめですか？」／「もっと簡単に説明してもらえますか？」",
+    ],
+    [
+      "J’ai compris : tu veux aller à Seoul Station. Ici, l’agent vient de présenter les trains AREX. Tu peux lui demander lequel il te conseille ou lui demander de répéter. La destination est claire, mais tu n’as pas encore demandé le chemin. Tu peux transformer l’idée en question : « 서울역까지 어떻게 가요? »",
+      "「ソウル駅へ行きたい」という意図が伝わりました。係員がAREXの列車について説明しました。どちらがおすすめか尋ねるか、もう一度説明してもらいましょう。目的地は伝わっていますが、まだ行き方を尋ねていません。「서울역까지 어떻게 가요?」のように質問にしてみましょう。",
+    ],
+    [
+      "La transcription semble avoir déformé un mot (« 카기 » → « 가기 »). L’intention reste suffisamment claire, donc je ne le compte pas comme une faute certaine de ta part. Oui, cette réponse convient naturellement à cette étape.",
+      "音声認識が単語を聞き違えた可能性があります（「카기」 → 「가기」）。意図は十分に伝わっているので、発音ミスと断定しません。はい、この場面に合った自然な返答です。",
+    ],
+  ];
+  for (const [source, expected] of messages) {
+    const actual = resolveImmersionText("aeroport", source, "ja");
+    assert.equal(actual, expected, source);
+    assert.doesNotMatch(actual, /«|»| — |\b(?:Ici|Tu|Ta|Je|l’agent|réponses proposées)\b/iu);
+    for (const [hangul] of source.matchAll(/[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]+/gu)) {
+      assert.ok(actual.includes(hangul), "Korean lost: " + hangul);
+    }
+  }
+});

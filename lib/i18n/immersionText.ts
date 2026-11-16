@@ -24,6 +24,8 @@ export function resolveImmersionText(module: string, source: string, locale: App
   // Incheon → Seoul Station spoken feedback: translate only the displayed
   // diagnostic, never the Korean transcript, its examples or recognition rules.
   if (module === "aeroport") {
+    const joinJapanese = (...parts: string[]): string =>
+      parts.filter((part) => part.trim().length > 0).map((part) => part.trim()).join("");
     const translatePart = (part: string) => {
       const clean = part.trim();
       return exact(clean) ?? (!clean.endsWith(".") ? exact(clean + ".") : undefined) ?? clean;
@@ -37,7 +39,7 @@ export function resolveImmersionText(module: string, source: string, locale: App
         const rest = text.slice(split + 1);
         const f = translatePart(first);
         const r = translatePart(rest);
-        if (f !== first || r !== rest) return f + " " + r;
+        if (f !== first && r !== rest) return joinJapanese(f, r);
       }
       return text;
     };
@@ -51,10 +53,13 @@ export function resolveImmersionText(module: string, source: string, locale: App
         .replace(/[.]$/u, "")
         .split(" · ")
         .map((option) => {
-          const label = option.match(/^« (.+) »$/u);
+          const label = option.match(/^«\s*(.+?)\s*»$/u);
           return label ? "「" + translatePart(label[1]) + "」" : translatePart(option);
-        }).join("・");
-      return resolveImmersionText(module, message, locale, instance) + " — 選べる返答：" + options;
+        }).join("／");
+      return joinJapanese(
+        resolveImmersionText(module, message, locale, instance),
+        "選べる返答：" + options,
+      );
     }
 
     // Repetition attempts append one of two fixed hints to the analysis.
@@ -64,15 +69,20 @@ export function resolveImmersionText(module: string, source: string, locale: App
     ]) {
       const index = source.lastIndexOf(help);
       if (index >= 0 && index + help.length === source.length) {
-        return resolveImmersionText(module, source.slice(0, index), locale, instance) + " " + translatePart(help);
+        return joinJapanese(
+          resolveImmersionText(module, source.slice(0, index), locale, instance),
+          translatePart(help),
+        );
       }
     }
 
     let m: RegExpMatchArray | null;
     m = source.match(/^La transcription semble avoir déformé un mot \((.+?)\)\. L’intention reste suffisamment claire, donc je ne le compte pas comme une faute certaine de ta part\.(?: (.+))?$/u);
-    if (m) return "音声認識が単語を聞き違えた可能性があります（" + m[1] +
-      "）。意図は十分に伝わっているので、発音ミスと断定しません。" +
-      (m[2] ? " " + resolveImmersionText(module, m[2], locale, instance) : "");
+    if (m) return joinJapanese(
+      "音声認識が単語を聞き違えた可能性があります（" + m[1] + "）。",
+      "意図は十分に伝わっているので、発音ミスと断定しません。",
+      m[2] ? resolveImmersionText(module, m[2], locale, instance) : "",
+    );
 
     // The voice engine combines the understood intent, current step and
     // pedagogical guidance. All fragments have their own native-Japanese copy.
@@ -87,11 +97,15 @@ export function resolveImmersionText(module: string, source: string, locale: App
         "Ici, réponds simplement à ce que l’agent vient de te demander.",
       ].find((part) => m![2].startsWith(part));
       const rest = expectation ? m[2].slice(expectation.length).trim() : "";
+      const intent = translatePart(m[1]);
+      const expected = expectation ? translatePart(expectation) : translatePart(m[2]);
       const guidance = rest ? translatePart(rest) : "";
-      if (translatePart(m[1]) !== m[1] && (expectation || translatePart(m[2]) !== m[2])) {
-        return "「" + translatePart(m[1]) + "」という意図が伝わりました。" +
-          (expectation ? translatePart(expectation) : translatePart(m[2])) +
-          (guidance ? " " + guidance : "");
+      if (
+        intent !== m[1] &&
+        expected !== (expectation ?? m[2]) &&
+        (!rest || guidance !== rest)
+      ) {
+        return joinJapanese("「" + intent + "」という意図が伝わりました。", expected, guidance);
       }
     }
 
@@ -131,14 +145,14 @@ export function resolveImmersionText(module: string, source: string, locale: App
       if (!source.endsWith(" " + expectation)) continue;
       const prefix = source.slice(0, source.length - expectation.length - 1);
       const translated = translateComposed(prefix);
-      if (translated !== prefix) return translated + " " + translatePart(expectation);
+      if (translated !== prefix) return joinJapanese(translated, translatePart(expectation));
     }
 
     m = source.match(/^(.+?)\. (.+)$/u);
     if (m) {
       const first = translatePart(m[1] + ".");
       const second = translatePart(m[2]);
-      if (first !== m[1] + "." && second !== m[2]) return first + second;
+      if (first !== m[1] + "." && second !== m[2]) return joinJapanese(first, second);
     }
   }
   // Restaurant feedback is produced by the Korean-only intent engine.
