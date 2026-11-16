@@ -41,7 +41,7 @@ test("Métro route, mission, and useful-expression copy is idiomatic Japanese", 
     ["Correspondance", "乗り換え"],
     ["Où est-ce que je change ?", "どこで乗り換えますか？"],
     ["Quelle sortie dois-je prendre à Itaewon ?", "梨泰院では何番出口を使えばいいですか？"],
-    ["Vous êtes à Hongik University et cherchez le quai vers Gangnam. Demandez de quel côté prendre le train.", "弘大入口駅で江南方面のホームを探しています。どちら側から乗るか尋ねてください。"],
+    ["Vous êtes à Hongik University et cherchez le quai vers Gangnam. Demandez de quel côté prendre le train.", "弘大入口駅で江南方面行きのホームを探しています。電車に乗るホームがどちらか尋ねてください。"],
     ["Réussi", "できたこと"],
     ["Fiche vocabulaire", "単語・表現一覧"],
   ];
@@ -113,7 +113,7 @@ test("Métro Japanese dynamic feedback uses native sentence and option punctuati
     ],
     [
       "Tu as bien donné Gangnam, mais pas encore une demande de trajet ou de direction. La destination seule ne suffit pas à déterminer l’intention — Mots utiles : 강남 · 방향 · 어느 쪽.",
-      "江南という目的地は伝わっていますが、まだ行き方や方面を尋ねていません。目的地だけでは意図を判断できません。役立つ単語：강남 · 방향 · 어느 쪽。",
+      "江南という目的地は伝わっていますが、まだ行き方や方面を尋ねていません。目的地だけでは意図を判断できません。役立つ単語：강남 · 방향 · 어느 쪽",
     ],
     [
       "Ta phrase peut vouloir dire plusieurs choses ici. Ici, les choix proposés te permettent de demander la durée. — réponses proposées : « Combien de temps dure le trajet ? ».",

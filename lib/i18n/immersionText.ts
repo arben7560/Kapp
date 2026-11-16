@@ -78,11 +78,18 @@ export function resolveImmersionText(module: string, source: string, locale: App
 
     let m: RegExpMatchArray | null;
     m = source.match(/^La transcription semble avoir déformé un mot \((.+?)\)\. L’intention reste suffisamment claire, donc je ne le compte pas comme une faute certaine de ta part\.(?: (.+))?$/u);
-    if (m) return joinJapanese(
-      "音声認識が単語を聞き違えた可能性があります（" + m[1] + "）。",
-      "意図は十分に伝わっているので、発音ミスと断定しません。",
-      m[2] ? resolveImmersionText(module, m[2], locale, instance) : "",
-    );
+    if (m) {
+      // Keep Korean recognition candidates verbatim, but show Japanese quotes.
+      const recoveryDetail = m[1].replace(
+        /«\s*([^»]*?)\s*»/gu,
+        (_match, candidate: string) => "「" + candidate.trim() + "」",
+      );
+      return joinJapanese(
+        "音声認識が単語を聞き違えた可能性があります（" + recoveryDetail + "）。",
+        "意図は十分に伝わっているので、発音ミスと断定しません。",
+        m[2] ? resolveImmersionText(module, m[2], locale, instance) : "",
+      );
+    }
 
     // The voice engine combines the understood intent, current step and
     // pedagogical guidance. All fragments have their own native-Japanese copy.
