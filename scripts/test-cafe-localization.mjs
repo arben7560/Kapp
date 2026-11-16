@@ -93,3 +93,12 @@ test("Café dynamic feedback uses Japanese punctuation and natural scene framing
   );
   assert.equal(resolveImmersionText("cafe", "Avez-vous besoin du reçu ?", "ja"), "レシートは必要ですか？");
 });
+
+test("Café out-of-scope responses are explicitly translated into Japanese", () => {
+  const source = "« 보청기 주세요 » demande qu’on te donne un appareil auditif. C’est compréhensible, mais ce n’est pas ce que le serveur te demande ici. Tu peux répondre « 아메리카노 한 잔 주세요. » ou « 라떼 한 잔 주세요. ».";
+  const translated = resolveImmersionText("cafe", source, "ja");
+  assert.equal(
+    translated,
+    "「보청기 주세요」は補聴器を求める表現です。意味は伝わりますが、店員が今尋ねていることとは違います。「아메리카노 한 잔 주세요.」または「라떼 한 잔 주세요.」のように答えましょう。",
+  );
+});

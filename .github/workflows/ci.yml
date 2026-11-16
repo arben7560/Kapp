@@ -67,6 +67,12 @@ jobs:
       - name: Immersion runtime
         run: npm run test:immersion
 
+      - name: Café Japanese feedback localization
+        run: npm run test:cafe-localization
+
+      - name: Café conversation summary pedagogy
+        run: npm run test:cafe-summary
+
       - name: Daily streak
         run: npm run test:streak
 
