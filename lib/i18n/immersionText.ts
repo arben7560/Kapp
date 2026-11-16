@@ -244,6 +244,15 @@ export function resolveImmersionText(module: string, source: string, locale: App
       return part;
     };
 
+    // Keep the display copy idiomatic in Japanese; leave Korean examples intact.
+    const joinJapanese = (first: string, second: string): string => {
+      const head = first.trimEnd();
+      const tail = second.trimStart();
+      if (!head) return tail;
+      if (!tail) return head;
+      return head + (/[。！？：]$/u.test(head) ? "" : "。") + tail;
+    };
+
     const answerSeparator = " — réponses proposées : ";
     const answerIndex = source.lastIndexOf(answerSeparator);
     if (answerIndex >= 0) {
@@ -252,24 +261,29 @@ export function resolveImmersionText(module: string, source: string, locale: App
         .replace(/[.]$/u, "")
         .split(" · ")
         .map((option) => {
-          const choice = option.match(/^« (.+) »$/u);
+          const choice = option.match(/^«\s*(.+?)\s*»$/u);
           return choice ? "「" + translatePart(choice[1]) + "」" : translatePart(option);
         })
-        .join("・");
-      return translatePart(feedback) + " — 選べる返答：" + options;
+        .join("／");
+      return joinJapanese(translatePart(feedback), "選べる返答：" + options);
     }
 
     const guidanceSeparator = " — ";
     const guidanceIndex = source.lastIndexOf(guidanceSeparator);
     if (guidanceIndex >= 0) {
-      return translatePart(source.slice(0, guidanceIndex)) + " — " +
-        translatePart(source.slice(guidanceIndex + guidanceSeparator.length));
+      return joinJapanese(
+        translatePart(source.slice(0, guidanceIndex)),
+        translatePart(source.slice(guidanceIndex + guidanceSeparator.length)),
+      );
     }
 
     let metroMatch = source.match(/^Ici, les choix proposés te permettent de (.+)\.$/u);
     if (metroMatch) {
-      const options = metroMatch[1].split(", ").map(translatePart).join("、");
-      return "この場面では、次の行動から選べます：" + options + "。";
+      const options = metroMatch[1].split(", ").map((option) => "「" + translatePart(option) + "」");
+      const alternatives = options.length > 1
+        ? options.slice(0, -1).join("、") + "や" + options[options.length - 1]
+        : options[0] ?? "";
+      return "この場面では、" + alternatives + "といった行動を選べます。";
     }
 
     metroMatch = source.match(/^J’ai compris : (.+?)\. (Ici, .+)$/u);
@@ -280,9 +294,17 @@ export function resolveImmersionText(module: string, source: string, locale: App
       );
       if (expectation) {
         const guidance = rest.slice(expectation[0].length).trim();
-        return "「" + translatePart(metroMatch[1]) + "」という意図が伝わりました。" +
-          translatePart(expectation[0]) + (guidance ? " " + translatePart(guidance) : "");
+        const understood = "「" + translatePart(metroMatch[1]) + "」という意図が伝わりました。";
+        return understood + joinJapanese(
+          translatePart(expectation[0]),
+          guidance ? translatePart(guidance) : "",
+        );
       }
+    }
+
+    metroMatch = source.match(/^Ta phrase peut vouloir dire plusieurs choses ici\. (Ici, .+)$/u);
+    if (metroMatch) {
+      return joinJapanese("この返答は複数の意味に取れます。", translatePart(metroMatch[1]));
     }
 
     const expectationIndex = source.indexOf(" Ici, ");
@@ -292,14 +314,11 @@ export function resolveImmersionText(module: string, source: string, locale: App
       const translatedPreceding = translatePart(preceding);
       const translatedExpectation = translatePart(expectation);
       if (translatedPreceding !== preceding || translatedExpectation !== expectation) {
-        return translatedPreceding + " " + translatedExpectation;
+        return joinJapanese(translatedPreceding, translatedExpectation);
       }
     }
 
-    metroMatch = source.match(/^Ta phrase peut vouloir dire plusieurs choses ici\. (Ici, .+)$/u);
-    if (metroMatch) return "この場面では複数の意味に取れる返答です。" + translatePart(metroMatch[1]);
-
-    metroMatch = source.match(/^Tu as cité plusieurs lignes \((.+)\)\. Pour aller vers Gangnam dans cette scène, c’est la ligne 2\.$/u);
+     metroMatch = source.match(/^Tu as cité plusieurs lignes \((.+)\)\. Pour aller vers Gangnam dans cette scène, c’est la ligne 2\.$/u);
     if (metroMatch) return "「" + metroMatch[1].replaceAll(" et ", "」「") +
       "」という複数の路線を挙げていますが、この場面で江南へ向かうのは２号線です。";
 

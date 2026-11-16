@@ -108,19 +108,9 @@ export function buildMetroConversationSummary(
   const achievements: string[] = [];
   const vocabularyToReview = new Set<string>();
 
-  if (
-    successfulInterpretedIntents.has("direction") ||
-    [...successfulCategories].some((category) =>
-      [
-        "natural",
-        "minor-imperfection",
-        "particle-imperfection",
-        "word-order",
-        "go-come-confusion",
-        "mixed-language",
-      ].includes(category),
-    )
-  ) {
+  // "natural" also includes thanks and acknowledgements: only award a
+  // Gangnam-direction success for an explicitly recognised direction intent.
+  if (successfulInterpretedIntents.has("direction")) {
     achievements.push("Demande vers Gangnam comprise");
   }
   if (

@@ -104,3 +104,67 @@ test("Composed Métro voice feedback retains Korean, intent and translated help 
   }
   assert.ok(resolveImmersionText("metro", dynamic[5], "ja").includes("選べる返答"));
 });
+
+test("Métro Japanese dynamic feedback uses native sentence and option punctuation", () => {
+  const examples = [
+    [
+      "Ici, les choix proposés te permettent de demander la durée, demander s’il faut changer de ligne.",
+      "この場面では、「所要時間を尋ねる」や「乗り換えが必要か尋ねる」といった行動を選べます。",
+    ],
+    [
+      "Tu as bien donné Gangnam, mais pas encore une demande de trajet ou de direction. La destination seule ne suffit pas à déterminer l’intention — Mots utiles : 강남 · 방향 · 어느 쪽.",
+      "江南という目的地は伝わっていますが、まだ行き方や方面を尋ねていません。目的地だけでは意図を判断できません。役立つ単語：강남 · 방향 · 어느 쪽。",
+    ],
+    [
+      "Ta phrase peut vouloir dire plusieurs choses ici. Ici, les choix proposés te permettent de demander la durée. — réponses proposées : « Combien de temps dure le trajet ? ».",
+      "この返答は複数の意味に取れます。この場面では、「所要時間を尋ねる」といった行動を選べます。選べる返答：「所要時間はどれくらいですか？」",
+    ],
+  ];
+  for (const [french, expected] of examples) {
+    const japanese = resolveImmersionText("metro", french, "ja");
+    assert.equal(japanese, expected, french);
+    assert.doesNotMatch(japanese, /«|»| — |\b(?:Ici|Mots utiles|réponses proposées)\b/iu);
+  }
+
+  const lineError = resolveImmersionText(
+    "metro",
+    "Tu as cité la ligne 3. Pour aller vers Gangnam dans cette scène, c’est la ligne 2 : demande où prendre « 2호선 » vers Gangnam.",
+    "ja",
+  );
+  assert.ok(lineError.includes("2호선"));
+  assert.doesNotMatch(lineError, /«|»|réponses proposées/u);
+});
+
+test("Métro service and immersion labels use natural Japanese", () => {
+  assert.equal(resolveImmersionText("metro", "Agent", "ja"), "案内役");
+  assert.equal(resolveImmersionText("metro", "Côté agent", "ja"), "案内役の表現");
+  assert.equal(resolveImmersionText("metro", "IMMERSION RÉELLE", "ja"), "実践会話モード");
+  assert.equal(resolveImmersionText("metro", "Répétez, s'il vous plaît", "ja"), "もう一度言っていただけますか？");
+});
+
+test("Métro summary credits directions only for the correctly understood intent", async () => {
+  const { buildMetroConversationSummary } = await import("../lib/metroConversationMemory.ts");
+  const attempt = (interpretedIntent, category) => ({
+    id: "start-1",
+    nodeId: "start",
+    transcript: "감사합니다.",
+    category,
+    feedback: "",
+    matched: true,
+    understoodWithCorrection: false,
+    interpretedIntent,
+  });
+  const emptyCounters = { helpRequests: 0, audioReplays: 0 };
+  const thanks = buildMetroConversationSummary({
+    ...emptyCounters,
+    attempts: [attempt("thanks", "natural")],
+  });
+  assert.ok(thanks.achievements.includes("Échange terminé naturellement"));
+  assert.ok(!thanks.achievements.includes("Demande vers Gangnam comprise"));
+
+  const direction = buildMetroConversationSummary({
+    ...emptyCounters,
+    attempts: [attempt("direction", "natural")],
+  });
+  assert.ok(direction.achievements.includes("Demande vers Gangnam comprise"));
+});

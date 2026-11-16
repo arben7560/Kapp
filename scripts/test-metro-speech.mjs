@@ -1262,3 +1262,15 @@ test("les remerciements de Hongik concluent le dialogue sans relancer un résum�
     "Le résumé ne doit pas être injecté après un remerciement final",
   );
 });
+
+test("le bilan ne confond pas un remerciement naturel avec une demande de direction", () => {
+  let memory = createMetroConversationMemory();
+  memory = recordMetroSpeechAttempt(memory, {
+    nodeId: "closing",
+    transcript: "감사합니다.",
+    result: matchMetroSpeechIntent("감사합니다.", [repeat, thanks]),
+  });
+  const summary = buildMetroConversationSummary(memory);
+  assert.ok(summary.achievements.includes("Échange terminé naturellement"));
+  assert.ok(!summary.achievements.includes("Demande vers Gangnam comprise"));
+});

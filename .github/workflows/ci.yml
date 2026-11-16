@@ -73,6 +73,9 @@ jobs:
       - name: Café conversation summary pedagogy
         run: npm run test:cafe-summary
 
+      - name: Métro Japanese feedback and summary
+        run: npm run test:metro-localization
+
       - name: Daily streak
         run: npm run test:streak
 
