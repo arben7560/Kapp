@@ -76,6 +76,9 @@ jobs:
       - name: Métro Japanese feedback and summary
         run: npm run test:metro-localization
 
+      - name: Restaurant Japanese feedback and lesson copy
+        run: npm run test:restaurant-localization
+
       - name: Daily streak
         run: npm run test:streak
 

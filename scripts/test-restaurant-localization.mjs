@@ -106,3 +106,65 @@ test("Restaurant feedback dynamically translates ASR corrections and contextual 
   }
   assert.ok(resolveImmersionText("restaurant", dynamic.at(-1), "ja").includes("サムギョプサル"));
 });
+
+test("Restaurant Japanese service copy preserves the context and polite wording", () => {
+  for (const [french, japanese] of [
+    ["Voulez-vous que je vous le fasse ?", "こちらでお焼きしましょうか？"],
+    ["Pour le ragoût, vous le voulez épicé ou moins épicé ?", "チゲは辛めと辛さ控えめ、どちらになさいますか？"],
+    ["Très bien, en espèces. Avez-vous besoin du reçu ?", "かしこまりました。現金でのお支払いですね。レシートは必要ですか？"],
+    ["Très bien, je lance le paiement par carte. Avez-vous besoin du reçu ?", "かしこまりました。カードでのお支払いですね。レシートは必要ですか？"],
+  ]) {
+    assert.equal(resolveImmersionText("restaurant", french, "ja"), japanese);
+  }
+});
+
+test("Restaurant contextual feedback is fully Japanese and preserves the original Korean", () => {
+  for (const [source, expected] of [
+    [
+      "J’ai compris : tu demandes quel plat choisir. Ta question fonctionne très bien. Une autre façon simple de demander une recommandation est : « 추천 메뉴가 있어요? » À ce moment-là, la serveuse attend ton choix de viande ou une demande de recommandation.",
+      "「どの料理がおすすめか尋ねている」という意図は伝わりました。自然な質問です。おすすめを尋ねるなら「추천 메뉴가 있어요?」とも言えます。今は、お肉を注文するか、おすすめを尋ねるかを選ぶ場面です。",
+    ],
+    [
+      "J’ai compris : tu veux demander une recommandation. À ce moment-là, la serveuse attend ton choix de viande ou une demande de recommandation.",
+      "「おすすめを尋ねる」という意図は伝わりました。今は、お肉を注文するか、おすすめを尋ねるかを選ぶ場面です。",
+    ],
+  ]) {
+    const japanese = resolveImmersionText("restaurant", source, "ja");
+    assert.equal(japanese, expected);
+    assert.doesNotMatch(japanese, /«|»| — |\b(?:Je|Tu|Ta|Elle|Pour|Ici)\b/iu);
+  }
+  assert.equal(
+    resolveImmersionText("restaurant", "Le plat est clair. Il manque seulement la quantité : « 삼겹살 2인분 주세요. »", "ja"),
+    "料理名はきちんと伝わっています。今回のミッションでは２人前の注文が目標なので、「삼겹살 2인분 주세요.」のように数量も伝えてみましょう。",
+  );
+});
+
+test("Restaurant progressive feedback translates models, word hints and choices", () => {
+  const model = resolveImmersionText(
+    "restaurant",
+    "Ta phrase nie le choix que tu es en train d’exprimer. Reformule en disant directement ce que tu veux — phrase modèle : « 삼겹살 2인분 주세요. » ou « 갈비 2인분 주세요. ».",
+    "ja",
+  );
+  assert.match(model, /お手本のフレーズ：「삼겹살 2인분 주세요\.」／「갈비 2인분 주세요\.」/u);
+  assert.doesNotMatch(model, /«|»| — |phrase modèle/u);
+  const words = resolveImmersionText(
+    "restaurant",
+    "Je ne retrouve pas encore une réponse adaptée à ce que la serveuse vient de demander — mots utiles : 삼겹살 · 갈비.",
+    "ja",
+  );
+  assert.match(words, /単語のヒント：삼겹살・갈비/u);
+  const choices = resolveImmersionText(
+    "restaurant",
+    "Je ne retrouve pas encore une réponse adaptée à ce que la serveuse vient de demander — tu peux répondre : « Commander du samgyeopsal pour deux personnes. » · « Demander une recommandation. ».",
+    "ja",
+  );
+  assert.match(choices, /選べる返答：「サムギョプサルを２人前注文する」／「おすすめを尋ねる」/u);
+  assert.doesNotMatch(choices, /«|»| — |tu peux répondre/u);
+  const combined = resolveImmersionText(
+    "restaurant",
+    "Je ne retrouve pas encore une réponse adaptée à ce que la serveuse vient de demander — mots utiles : 삼겹살 · 갈비 — tu peux répondre : « Commander du samgyeopsal pour deux personnes. » · « Demander une recommandation. ».",
+    "ja",
+  );
+  assert.match(combined, /単語のヒント：삼겹살・갈비/u);
+  assert.match(combined, /選べる返答：「サムギョプサルを２人前注文する」／「おすすめを尋ねる」/u);
+});

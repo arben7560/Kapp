@@ -148,19 +148,77 @@ export function resolveImmersionText(module: string, source: string, locale: App
       const key = value.trim();
       return exact(key) ?? exact(key + ".") ?? value;
     };
+    // Construct Japanese feedback only from known translated fragments.
+    // The speech evaluator, Korean examples and intent decisions stay untouched.
+    const joinJapanese = (...parts: string[]) =>
+      parts.filter(Boolean).map((part) => part.trim()).join("");
+    const modelPhrase = (value: string): string => {
+      const phrase = value.trim().match(/^«\s*(.*?)\s*»$/u);
+      return phrase ? "「" + phrase[1] + "」" : value.trim();
+    };
+    const questionExplanations = [
+      "À ce moment-là, la serveuse attend ton choix de viande ou une demande de recommandation.",
+      "Elle te demande maintenant qui va griller la viande : le personnel ou vous-mêmes.",
+      "Elle te propose maintenant un doenjang jjigae, des œufs vapeur, ou aucun accompagnement supplémentaire.",
+      "Elle te demande maintenant de choisir un seul niveau de piquant : épicé, moins épicé ou non épicé.",
+      "Elle te demande maintenant si tu veux davantage de salade, davantage d’accompagnements, ou rien d’autre.",
+      "Elle te demande maintenant comment tu souhaites payer : par carte ou en espèces.",
+      "Elle te demande maintenant si tu veux le reçu.",
+      "Ta phrase reste liée au restaurant, mais elle ne répond pas encore à ce que la serveuse vient de demander.",
+    ] as const;
+    const jaContext = (value: string): string | null => {
+      const full = exact(value) ?? exact(value + ".");
+      if (full) return full;
+      const question = questionExplanations.find((item) => value.endsWith(" " + item));
+      if (!question) return null;
+      const guidance = value.slice(0, -(question.length + 1)).trim();
+      const translatedGuidance = exact(guidance);
+      const translatedQuestion = exact(question);
+      return translatedGuidance && translatedQuestion
+        ? joinJapanese(translatedGuidance, translatedQuestion)
+        : null;
+    };
+    const translateFeedback = (text: string) => {
+      const trimmed = text.trim();
+      return resolveImmersionText(
+        module,
+        /[.!?。！？]$/u.test(trimmed) ? trimmed : trimmed + ".",
+        locale,
+        instance,
+      );
+    };
     const m1 = (re: RegExp) => source.match(re);
     let r: RegExpMatchArray | null;
 
     r = m1(/^(.*) — tu peux répondre : (.+)\.$/u);
-    if (r) return resolveImmersionText(module, r[1] + ".", locale, instance) +
-      " — 例えば " + r[2].split(" · ").map((p) => {
-        const label = p.match(/^« (.+) »$/u);
-        return label ? "「" + ja(label[1]) + "」" : ja(p);
-      }).join("・") + " と答えられます。";
+    if (r) {
+      const prefix = translateFeedback(r[1]);
+      const options = r[2].split(" · ").map((part) => {
+        const label = part.match(/^«\s*(.+?)\s*»$/u);
+        const localized = label ? exact(label[1]) : exact(part);
+        return localized ? "「" + localized.replace(/[。！？]$/u, "") + "」" : "";
+      });
+      if (prefix !== r[1] + "." && options.every(Boolean)) {
+        return joinJapanese(prefix, "選べる返答：" + options.join("／"));
+      }
+    }
 
     r = m1(/^(.*) — phrase modèle : (.+)\.$/u);
-    if (r) return resolveImmersionText(module, r[1] + ".", locale, instance) +
-      " — お手本のフレーズ：" + r[2].replaceAll(" ou ", " または ") + "。";
+    if (r) {
+      const prefix = translateFeedback(r[1]);
+      if (prefix !== r[1] + ".") {
+        const models = r[2].split(" ou ").map(modelPhrase);
+        return joinJapanese(prefix, "お手本のフレーズ：" + models.join("／") + "。");
+      }
+    }
+
+    r = m1(/^(.*) — mots utiles : (.+)\.$/u);
+    if (r) {
+      const prefix = translateFeedback(r[1]);
+      if (prefix !== r[1] + ".") {
+        return joinJapanese(prefix, "単語のヒント：" + r[2].split(" · ").join("・") + "。");
+      }
+    }
 
     r = m1(/^Je t’ai compris malgré le mélange de langues\. Pour rester en coréen : (.+)\.$/u);
     if (r) return "複数の言語が混ざっていますが、意図は伝わりました。韓国語だけで言うなら「" + r[1] + "」です。";
@@ -172,7 +230,7 @@ export function resolveImmersionText(module: string, source: string, locale: App
     if (r) return "意図は伝わりますが、語順が逆になっています。料理名や選択を先に置いて、「" + r[1] + "」のように言いましょう。";
 
     r = m1(/^Le plat est clair\. Il manque seulement la quantité : « (.+?) »$/u);
-    if (r) return "料理は分かりますが、数量がまだ指定されていません。「" + r[1] + "」と言いましょう。";
+    if (r) return "料理名はきちんと伝わっています。今回のミッションでは２人前の注文が目標なので、「" + r[1] + "」のように数量も伝えてみましょう。";
 
     r = m1(/^Je t’ai compris : la reconnaissance a probablement accroché sur un mot\. La phrase visée est « (.+?) »$/u);
     if (r) return "意図は伝わりますが、音声認識が一部の単語を聞き違えた可能性があります。お手本は「" + r[1] + "」です。";
@@ -196,10 +254,21 @@ export function resolveImmersionText(module: string, source: string, locale: App
     if (r) return "韓国語としては正しいですが、今回の注文で必要な数量と違います。ここでは" + r[1] + "人前なので「" + r[2] + "」と言いましょう。";
 
     r = m1(/^Ta phrase peut correspondre à plusieurs réponses\. (.+?) Garde une seule intention\.$/u);
-    if (r) return "返答が複数の選択肢に当てはまる可能性があります。" + ja(r[1]) + " 伝えたいことを一つに絞りましょう。";
+    if (r) return joinJapanese("返答が複数の選択肢に当てはまる可能性があります。", ja(r[1]), "伝えたいことを一つに絞りましょう。");
 
     r = m1(/^J’ai compris : tu veux (.+?)\. (.+)$/u);
-    if (r) return "「" + ja(r[1]) + "」という意図は伝わりました。" + ja(r[2]);
+    if (r) {
+      const intent = exact(r[1]);
+      const context = jaContext(r[2]);
+      if (intent && context) return "「" + intent + "」という意図は伝わりました。" + context;
+    }
+
+    r = m1(/^J’ai compris : (.+?)\. (.+)$/u);
+    if (r) {
+      const intent = exact(r[1]);
+      const context = jaContext(r[2]);
+      if (intent && context) return "「" + intent + "」という意図は伝わりました。" + context;
+    }
 
     r = m1(/^Tu veux bien commander de la viande, mais on ne sait pas encore laquelle\. (.+)$/u);
     if (r) return "肉を注文したいことは伝わりますが、どの肉かまだ分かりません。" + ja(r[1]);
@@ -214,7 +283,7 @@ export function resolveImmersionText(module: string, source: string, locale: App
     };
     for (const [prefix, japanese] of Object.entries(incompletePrefixes)) {
       if (source.startsWith(prefix + " ")) {
-        return japanese + ja(source.slice(prefix.length + 1));
+        return joinJapanese(japanese, ja(source.slice(prefix.length + 1)));
       }
     }
 
