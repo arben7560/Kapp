@@ -2,6 +2,7 @@ import * as Speech from "@/lib/speechPlayback";
 import { useEffect, useMemo, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
 import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
@@ -12,6 +13,7 @@ import {
 } from "../../lib/cafeConversationMemory";
 import { AppText } from "../app-text";
 import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
+import { resolveImmersionSpeechDisplay } from "../../lib/i18n/immersionSpeechDisplay";
 
 type CafeConversationSummaryModalProps = Readonly<{
   memory: CafeConversationMemory;
@@ -29,6 +31,17 @@ function ImperfectionCard({
   item: CafeGroupedImperfection;
   kind?: ReviewCardKind;
 }>) {
+  const translate = useVocabularyText();
+  const { i18n } = useTranslation("immersion");
+  const japanese = (i18n.resolvedLanguage ?? i18n.language).startsWith("ja");
+  const explanation = japanese
+    ? resolveImmersionSpeechDisplay(
+        item.explanation,
+        translate(item.explanation),
+        "ja",
+        "feedback",
+      ) ?? item.explanation
+    : item.explanation;
   const recordedTranscript =
     item.recordedTranscripts.join(" · ") || "Aucune transcription";
   const caption =
@@ -65,7 +78,7 @@ function ImperfectionCard({
         script="latin"
         style={styles.explanation}
       >
-        {item.explanation}
+        {explanation}
       </AppText>
 
       <AppText variant="caption" tone="soft" script="latin">

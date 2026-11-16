@@ -334,9 +334,23 @@ export function resolveImmersionText(module: string, source: string, locale: App
   if (m && /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]/u.test(m[2])) return (exact(m[1]) ?? m[1]) + "：" + m[2];
   // Dynamic teaching feedback is translated only at display time. Korean examples are interpolated verbatim.
   const jaTerm = (value: string) => exact(value) ?? value;
-  const jaExamples = (value: string) => value.split(/( ou |, )/gu).map((part) =>
-    part === " ou " ? " または " : part === ", " ? "、" : jaTerm(part),
-  ).join("");
+  // Example phrases originate in French guillemets; show Japanese brackets.
+  const jaExamples = (value: string) => value.split(/( ou |, )/gu).map((part) => {
+    if (part === " ou ") return "または";
+    if (part === ", ") return "、";
+    return jaTerm(part)
+      .replace(/«\s*([^»]*?)\s*»/gu, (_match, phrase: string) => "「" + phrase.trim() + "」")
+      .replace(/“\s*([^”]*?)\s*”/gu, (_match, phrase: string) => "「" + phrase.trim() + "」");
+  }).join("");
+  // Avoid unnatural combinations like "今は店員は..." in composed feedback.
+  const jaCafeSceneExpectation = (value: string) => {
+    const translated = jaTerm(value);
+    if (translated === value && value.startsWith("le serveur attend que tu ")) {
+      return "店員が返答を待っています";
+    }
+    return translated.replace(/^店員はこの場面で、/u, "店員が")
+      .replace(/^店員は/u, "店員が");
+  };
   m = source.match(/^Je t’ai compris malgré le mélange de langues \((.+)\)\. Pour rester en coréen : “(.+?)”(?: (.+))?$/u);
   if (m) return "複数の言語が混ざっていましたが、意味は伝わりました（" + m[1] + "）。韓国語だけで言うなら「" + m[2] + "」です。" + (m[3] ? " " + resolveImmersionText(module, m[3], locale, instance) : "");
   m = source.match(/^Je t’ai compris : (.+?)\. Pour compter ce produit, utilise ([^ ]+) plutôt que ([^ ]+) : “(.+?)”$/u);
@@ -366,9 +380,14 @@ export function resolveImmersionText(module: string, source: string, locale: App
   m = source.match(/^L’intention est compréhensible, mais ta phrase se termine à une forme de dictionnaire ou à une forme neutre\. Dans un échange avec le personnel, transforme-la en réponse polie et conversationnelle\. Par exemple : « (.+?) »$/u);
   if (m) return "言いたいことは伝わりますが、文末が辞書形または普通体になっています。店員との会話では丁寧な文末を使いましょう。例えば「" + m[1] + "」です。";
   m = source.match(/^Ta commande est comprise, mais tu n’as pas précisé la quantité\. Au café, pense à indiquer combien tu en veux avec le compteur adapté\.(.*)$/u);
-  if (m) return "注文の内容は伝わりますが、数量が指定されていません。カフェでは適切な助数詞を使って、いくつ欲しいかを伝えましょう。" + (m[1] ? " " + m[1] : "");
+  if (m) {
+    // Legacy diagnosis: the quantity is optional; never leave a French example.
+    const example = m[1]?.trim().match(/^Par exemple : «\s*(.+?)\s*»\.$/u);
+    return "注文内容は伝わっています。数量をはっきり伝えたい場合は、助数詞を添えることもできます。" +
+      (example ? "例えば「" + example[1].trim() + "」とも言えます。" : "");
+  }
   m = source.match(/^Ta phrase peut correspondre à plusieurs réponses\. Ici, (.+?)\. Garde une seule intention\.$/u);
-  if (m) return "返答が複数の選択肢に当てはまります。この場面では" + jaTerm(m[1]) + "。１つの意図に絞りましょう。";
+  if (m) return "返答が複数の選択肢に当てはまります。今の場面では、" + jaCafeSceneExpectation(m[1]) + "。伝えたいことを１つに絞りましょう。";
   m = source.match(/^Je vois que tu veux (.+?), mais il manque le produit précis\. (.+?)\. Tu peux dire (.+?)\.$/u);
   if (m) return jaTerm(m[1]) + "を頼みたいことは伝わりますが、具体的な商品が分かりません。" + jaTerm(m[2]) + "。例えば" + jaExamples(m[3]) + "と言えます。";
   m = source.match(/^Je comprends que tu vas consommer la commande, mais il manque l’information essentielle : sur place ou à emporter\. Tu peux répondre (.+?)\.$/u);
@@ -380,17 +399,17 @@ export function resolveImmersionText(module: string, source: string, locale: App
   m = source.match(/^Je comprends ce que tu veux dire, mais la formulation ne permet pas encore de valider l’étape sans ambiguïté\. Tu peux répondre (.+?)\.$/u);
   if (m) return "言いたいことは伝わりますが、この言い方ではまだ判定しきれません。" + jaExamples(m[1]) + "のように答えてみましょう。";
   m = source.match(/^Cette réponse correspond à une autre étape\. Ici, (.+?)\. Tu peux répondre (.+?)\.$/u);
-  if (m) return "その返答は別の場面に合っています。今は" + jaTerm(m[1]) + "。" + jaExamples(m[2]) + "のように答えましょう。";
+  if (m) return "その返答は別の場面に合っています。今の場面では、" + jaCafeSceneExpectation(m[1]) + "。" + jaExamples(m[2]) + "のように答えましょう。";
   m = source.match(/^Je pense que (.+?), mais je préfère vérifier\. (.+)$/u);
   if (m) return "「" + jaTerm(m[1]) + "」という意味だと思いますが、念のため確認しましょう。" + jaTerm(m[2]);
   m = source.match(/^Je vois ce que tu veux dire : (.+?), mais ce n’est pas la question actuelle\. (.+?)\. Tu peux répondre (.+?)\.$/u);
-  if (m) return "「" + jaTerm(m[1]) + "」という意味ですね。ただ、今の質問への返答ではありません。" + jaTerm(m[2]) + "。" + jaExamples(m[3]) + "のように答えましょう。";
+  if (m) return "「" + jaTerm(m[1]) + "」という意味ですね。ただ、今の質問への返答ではありません。今の場面では、" + jaCafeSceneExpectation(m[2]) + "。" + jaExamples(m[3]) + "のように答えましょう。";
   m = source.match(/^(.+?)\. C’est compréhensible, mais ce n’est pas ce que le serveur te demande ici\. Tu peux répondre (.+?)\.$/u);
   if (m && exact(m[1])) return jaTerm(m[1]) + "。意味は伝わりますが、店員が今尋ねていることとは違います。" + jaExamples(m[2]) + "のように答えましょう。";
   m = source.match(/^Ta négation change le sens de la réponse, donc je ne peux pas valider ce choix\. Ici, (.+?)\. Tu peux dire (.+?)\.$/u);
-  if (m) return "否定が入ると意味が変わるため、この選択肢としては判定できません。今は" + jaTerm(m[1]) + "。" + jaExamples(m[2]) + "と言ってみましょう。";
+  if (m) return "否定が入ると意味が変わるため、この選択肢としては判定できません。今の場面では、" + jaCafeSceneExpectation(m[1]) + "。" + jaExamples(m[2]) + "と言ってみましょう。";
   m = source.match(/^Tu demandes « (.+?) »\. La phrase se comprend, mais elle ne répond pas à la question actuelle\. Ici, (.+?)\. Tu peux répondre (.+?)\.$/u);
-  if (m) return "「" + m[1] + "」を求めていますね。表現としては伝わりますが、今の質問への返答ではありません。今は" + jaTerm(m[2]) + "。" + jaExamples(m[3]) + "のように答えましょう。";
+  if (m) return "「" + m[1] + "」を求めていますね。意味は伝わりますが、今の質問への返答ではありません。今の場面では、" + jaCafeSceneExpectation(m[2]) + "。" + jaExamples(m[3]) + "のように答えましょう。";
   m = source.match(/^Je ne vois pas encore (.+?) dans ta réponse\. Tu peux dire (.+?)\.$/u);
   if (m) return "まだ" + jaTerm(m[1]) + "が返答から読み取れません。" + jaExamples(m[2]) + "のように答えましょう。";
   m = source.match(/^Cette réponse correspond à autre chose\. Ici, tu peux (.+?)\.$/u);

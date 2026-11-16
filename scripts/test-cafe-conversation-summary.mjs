@@ -265,3 +265,21 @@ test("la modale expose les trois niveaux pédagogiques et la phrase recommandée
   assert.match(source, /Résolu pendant la scène/u);
   assert.match(source, /Formulation de référence/u);
 });
+
+test("natural café orders without quantity counters are successful, not mistakes", () => {
+  for (const transcript of ["아메리카노 주세요.", "오렌지 주스 주세요.", "라떼 주세요.", "치즈케이크 주세요."]) {
+    const memory = remember(createCafeConversationMemory(), {
+      nodeId: "ped_choice1",
+      stepIndex: 1,
+      stepLabel: "Choix",
+      transcript,
+      choices: orderChoices,
+    });
+    const summary = buildCafeConversationSummary(memory);
+    assert.equal(memory.attempts[0].resultType, "correct", transcript);
+    assert.equal(memory.attempts[0].feedback, null, transcript);
+    assert.equal(summary.improvements.length, 0, transcript);
+    assert.equal(summary.directSuccesses, 1, transcript);
+    assert.ok(summary.successfulPoints.includes("Produit correctement commandé"), transcript);
+  }
+});

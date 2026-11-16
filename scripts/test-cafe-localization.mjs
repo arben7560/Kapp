@@ -71,3 +71,25 @@ test("Dynamic indicators are localized without touching machine-readable values"
   assert.equal(resolveImmersionText("cafe", "Réécouter 먹고 갈게요.", "ja"), "もう一度聞く：먹고 갈게요.");
   assert.ok(immersionCopyId("cafe", "Sur place.").startsWith("cafe__"));
 });
+
+test("Café dynamic feedback uses Japanese punctuation and natural scene framing", () => {
+  const feedback = resolveImmersionText(
+    "cafe",
+    "Cette réponse correspond à une autre étape. Ici, le serveur te demande si c’est sur place ou à emporter. Tu peux répondre « 먹고 갈게요. » ou « 포장해 주세요. ».",
+    "ja",
+  );
+  assert.equal(
+    feedback,
+    "その返答は別の場面に合っています。今の場面では、店員が店内利用か持ち帰りかを尋ねています。「먹고 갈게요.」または「포장해 주세요.」のように答えましょう。",
+  );
+  assert.doesNotMatch(feedback, /«|»|今は店員は|\b(?:Ici|Par exemple|Tu peux)\b/u);
+  assert.equal(
+    resolveImmersionText(
+      "cafe",
+      "Ta commande est comprise, mais tu n’as pas précisé la quantité. Au café, pense à indiquer combien tu en veux avec le compteur adapté. Par exemple : « 아메리카노 한 잔 주세요 ».",
+      "ja",
+    ),
+    "注文内容は伝わっています。数量をはっきり伝えたい場合は、助数詞を添えることもできます。例えば「아메리카노 한 잔 주세요」とも言えます。",
+  );
+  assert.equal(resolveImmersionText("cafe", "Avez-vous besoin du reçu ?", "ja"), "レシートは必要ですか？");
+});

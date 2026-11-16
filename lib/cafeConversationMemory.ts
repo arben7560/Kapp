@@ -101,46 +101,6 @@ function classifyResult(
   }
 }
 
-const CAFE_PRODUCT_ORDER_INTENT_IDS = new Set([
-  "americano-order",
-  "orange-juice-order",
-  "latte-order",
-  "cheesecake-order",
-]);
-
-function getMissingProductQuantityFeedback(
-  intentId: string | null,
-  transcript: string,
-  canonicalFormulation: string | null,
-  result: CafeSpeechIntentMatch,
-) {
-  if (
-    result.reason !== "matched" ||
-    result.feedback ||
-    !intentId ||
-    !CAFE_PRODUCT_ORDER_INTENT_IDS.has(intentId)
-  ) {
-    return null;
-  }
-
-  const normalized = transcript
-    .normalize("NFKC")
-    .toLocaleLowerCase("ko-KR")
-    .replace(/[\s\p{P}\p{S}]+/gu, "");
-  const hasExplicitQuantity =
-    /(?:한|두|세|네)(?:잔|조각|개)/u.test(normalized) ||
-    /(?:하나|둘|셋|넷)(?:주세요|줘요|줘|잔|조각|개|요)/u.test(normalized) ||
-    /[1-9](?:잔|조각|개)/u.test(normalized);
-
-  if (hasExplicitQuantity) return null;
-
-  const model = canonicalFormulation
-    ? ` Par exemple : « ${canonicalFormulation.replace(/[.!?…]+$/u, "")} ».`
-    : "";
-
-  return `Ta commande est comprise, mais tu n’as pas précisé la quantité. Au café, pense à indiquer combien tu en veux avec le compteur adapté.${model}`;
-}
-
 function normalizeDuplicateKey(value: string) {
   return value
     .normalize("NFKC")
@@ -170,16 +130,10 @@ export function recordCafeSpeechAttempt(
   const inputIntentId = input.intent?.intentId ?? null;
   const canonicalFormulation =
     input.intent?.canonicalFormulation ?? choice?.korean ?? null;
-  const missingQuantityFeedback = getMissingProductQuantityFeedback(
-    inputIntentId,
-    input.recordedTranscript,
-    canonicalFormulation,
-    input.result,
-  );
-  const feedback = missingQuantityFeedback ?? input.result.feedback;
-  const resultType = missingQuantityFeedback
-    ? "understood-with-grammar-correction"
-    : classifyResult(input.result);
+  // A polite one-item order is valid without an explicit quantity or counter.
+  // Do not turn an optional example into an error in the learner's summary.
+  const feedback = input.result.feedback;
+  const resultType = classifyResult(input.result);
   const attemptNumber =
     memory.attempts.filter(({ nodeId }) => nodeId === input.nodeId).length + 1;
   const id = `${input.nodeId}:${attemptNumber}`;
