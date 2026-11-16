@@ -122,12 +122,15 @@ jobs:
           npm run test:cafe-summary
 
       - name: Métro Japanese
+        if: always()
         run: npm run test:metro-localization
 
       - name: Restaurant Japanese
+        if: always()
         run: npm run test:restaurant-localization
 
       - name: Aéroport Japanese
+        if: always()
         run: npm run test:aeroport-localization
 
   known-debt:

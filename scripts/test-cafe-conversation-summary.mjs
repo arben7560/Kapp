@@ -1,17 +1,19 @@
+import "./i18n-node-loader.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import {
+// Import after the loader registers the extensionless .ts resolution hook.
+const {
   buildCafeConversationSummary,
   createCafeConversationMemory,
   groupCafeImperfections,
   recordCafeSpeechAttempt,
-} from "../lib/cafeConversationMemory.ts";
-import {
+} = await import("../lib/cafeConversationMemory.ts");
+const {
   getCafeSpeechAttemptPedagogy,
   matchCafeSpeechIntent,
-} from "../lib/cafeSpeechDiagnostics.ts";
+} = await import("../lib/cafeSpeechDiagnostics.ts");
 
 const americano = {
   id: "ped_order_americano",
