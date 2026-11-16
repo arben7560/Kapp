@@ -53,7 +53,7 @@ export const PREMIUM_SUBSCRIPTION_OFFERS = [
       process.env.EXPO_PUBLIC_REVENUECAT_MONTHLY_PRODUCT_ID || "kapp_premium_monthly",
     title: "Premium mensuel",
     cta: "Choisir l’abonnement mensuel",
-    fallbackPrice: "7,99 € / mois",
+    fallbackPrice: "8,99 € / mois",
     caption: IS_REVENUECAT_TEST_STORE ? "Formule de test RevenueCat, sans paiement réel." :
       "Abonnement mensuel, résiliable depuis l’App Store ou Google Play.",
   },

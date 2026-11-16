@@ -6,6 +6,7 @@ import {
   calculateAnnualOfferMetrics,
   createPaywallOperationGuard,
   deriveRevenueCatEntitlement,
+  decideSubscriptionPurchase,
   hasActivePremiumEntitlement,
   mapSubscriptionPackages,
   toRevenueCatError,
@@ -103,6 +104,30 @@ test("un achat réussi ne déverrouille que l’entitlement actif attendu", () =
   );
 });
 
+test("Google Play : nouveau, formule possédée, remplacement et états incertains", () => {
+  const play = (product, active = [product], expiry = Date.now() + 60_000) => ({
+    activeSubscriptions: active,
+    entitlements: { active: { premium_all_access: {
+      isActive: true, store: "PLAY_STORE", productIdentifier: product,
+      expirationDateMillis: expiry,
+    } } },
+  });
+  assert.equal(decideSubscriptionPurchase({ activeSubscriptions: [], entitlements: { active: {} } }, "monthly").kind, "new");
+  assert.equal(decideSubscriptionPurchase(play("kapp_premium_monthly:base"), "monthly").kind, "owned");
+  const change = decideSubscriptionPurchase(play("kapp_premium_monthly:base"), "yearly");
+  assert.equal(change.kind, "change");
+  assert.equal(change.oldProductIdentifier, "kapp_premium_monthly:base");
+  assert.equal(decideSubscriptionPurchase(play("kapp_premium_yearly"), "monthly").kind, "change");
+  assert.equal(decideSubscriptionPurchase(play("kapp_premium_monthly", ["kapp_premium_monthly", "kapp_premium_yearly"]), "yearly").kind, "blocked");
+  assert.equal(decideSubscriptionPurchase(play("kapp_premium_monthly", ["unknown"]), "yearly").kind, "blocked");
+  assert.equal(decideSubscriptionPurchase(play("kapp_premium_monthly", []), "yearly").kind, "blocked");
+  assert.equal(decideSubscriptionPurchase({ activeSubscriptions: ["unknown"], entitlements: { active: {} } }, "yearly").kind, "blocked");
+  assert.equal(decideSubscriptionPurchase(play("kapp_premium_monthly", [], Date.now() - 1), "yearly").kind, "blocked");
+  const expired = play("kapp_premium_monthly", [], Date.now() - 1);
+  expired.entitlements.active = {};
+  assert.equal(decideSubscriptionPurchase(expired, "yearly").kind, "new");
+});
+
 test("restauration, expiration et CustomerInfo Premium vers Free sont réconciliées", () => {
   const restored = deriveRevenueCatEntitlement(customerInfo(entitlement()));
   assert.equal(restored.hasAccess, true);
@@ -166,7 +191,7 @@ test("les métriques annuelles utilisent les prix numériques et localisés du S
 });
 
 test("les fallbacks tarifaires de référence correspondent à la nouvelle offre", () => {
-  assert.equal(PREMIUM_PRICE_FALLBACKS.monthly, "7,99 € / mois");
+  assert.equal(PREMIUM_PRICE_FALLBACKS.monthly, "8,99 € / mois");
   assert.equal(PREMIUM_PRICE_FALLBACKS.yearly, "69,99 € / an");
 });
 

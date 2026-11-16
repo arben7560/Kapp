@@ -301,6 +301,7 @@ for (const offerId of ["monthly", "yearly"]) {
     const active = purchasedInfo.entitlements.active.premium_all_access;
     active.store = "PLAY_STORE";
     active.productIdentifier = `kapp_premium_${offerId}`;
+    purchasedInfo.activeSubscriptions = [`kapp_premium_${offerId}`];
     active.willRenew = true;
     try {
       assert.equal(p.render().takePurchaseNotice(), null);
@@ -314,7 +315,7 @@ for (const offerId of ["monthly", "yearly"]) {
       assert.equal(p.calls.purchases[0].product.identifier, `kapp_premium_${offerId}`);
       assert.equal(p.render().hasPremiumAccess, true);
       await p.render().refreshSubscription();
-      assert.equal(p.calls.invalidations, beforePurchase, "Account reuses the purchase response");
+      assert.equal(p.calls.invalidations, beforePurchase + 1, "purchase checks a fresh CustomerInfo; Account reuses the response");
       assert.equal(p.render().takePurchaseNotice().userId, "account-a");
       assert.equal(p.render().takePurchaseNotice(), null);
       assert.equal(await p.render().subscribe(offerId), true);
@@ -543,12 +544,13 @@ async function provider({ initial = info(), offerings = { current: offering, all
   let appStateListener;
   const sdk = {
     async getCustomerInfo() { return currentInfo; },
+    STORE_REPLACEMENT_MODE: { WITH_TIME_PRORATION: "WITH_TIME_PRORATION", DEFERRED: "DEFERRED" },
     async getAppUserID() { return sdkUserId; },
     async logIn(id) { calls.logins.push(id); sdkUserId = id; return { customerInfo: currentInfo }; },
     async logOut() { calls.logouts++; sdkUserId = "$RCAnonymousID:guest"; return info(); },
     async getOfferings() { return offerings; },
     async invalidateCustomerInfoCache() { calls.invalidations++; },
-    async purchasePackage(selected) { calls.purchases.push(selected); return { customerInfo: currentInfo }; },
+    async purchasePackage(selected, upgradeInfo, changeInfo) { calls.purchases.push({ selected, upgradeInfo, changeInfo }); return { customerInfo: currentInfo }; },
     async restorePurchases() { calls.restores++; return currentInfo; },
     addCustomerInfoUpdateListener(callback) { listener = callback; },
     removeCustomerInfoUpdateListener(callback) { assert.equal(callback, listener); listener = undefined; },
@@ -557,7 +559,7 @@ async function provider({ initial = info(), offerings = { current: offering, all
   configuration.ACCOUNT_PURCHASE_POLICY_VERIFIED = policyVerified;
   const loaded = load("lib/paywall/PaywallProvider.tsx", {
     react: hook.react,
-    "react-native": { Linking: { async openURL(url) { calls.management.push(url); } }, AppState: { currentState: "active", addEventListener(_event, callback) { appStateListener = callback; return { remove() {} }; } } },
+    "react-native": { Platform: { OS: "android" }, Linking: { async openURL(url) { calls.management.push(url); } }, AppState: { currentState: "active", addEventListener(_event, callback) { appStateListener = callback; return { remove() {} }; } } },
     "react-native-purchases": sdk,
     "../../services/revenueCat": { configureRevenueCat: () => configured },
     "../../services/revenueCatIdentity": load("services/revenueCatIdentity.ts", { "react-native-purchases": sdk }),
@@ -586,6 +588,103 @@ async function provider({ initial = info(), offerings = { current: offering, all
     cleanup() { hook.cleanup(); assert.equal(timers.size, 0); },
   };
 }
+
+function playInfo(offerId, activeSubscriptions = [`kapp_premium_${offerId}:base`], expiration = Date.now() + 300_000) {
+  const entitlement = {
+    isActive: expiration > Date.now(), store: "PLAY_STORE",
+    productIdentifier: `kapp_premium_${offerId}:base`,
+    expirationDateMillis: expiration, willRenew: true,
+  };
+  return {
+    activeSubscriptions,
+    entitlements: {
+      active: entitlement.isActive ? { premium_all_access: entitlement } : {},
+      all: { premium_all_access: entitlement },
+    },
+  };
+}
+
+const playOfferings = { current: { availablePackages: [
+  storePackage("kapp_premium_monthly:base"), storePackage("kapp_premium_yearly:base"),
+] } };
+
+test("Google Play : mensuel vers annuel transmet le SKU exact et la proratisation", async () => {
+  const p = await provider({ platformStore: true, initial: playInfo("monthly"), offerings: playOfferings });
+  try {
+    p.sdk.purchasePackage = async (selected, upgradeInfo, changeInfo) => {
+      p.calls.purchases.push({ selected, upgradeInfo, changeInfo });
+      const result = playInfo("yearly");
+      p.setInfo(result);
+      return { customerInfo: result };
+    };
+    assert.equal(await p.render().subscribeYearly(), true);
+    assert.equal(p.calls.purchases.length, 1);
+    assert.equal(p.calls.purchases[0].selected.product.identifier, "kapp_premium_yearly:base");
+    assert.equal(p.calls.purchases[0].upgradeInfo, null);
+    assert.equal(p.calls.purchases[0].changeInfo.oldProductIdentifier, "kapp_premium_monthly:base");
+    assert.equal(p.calls.purchases[0].changeInfo.replacementMode, "WITH_TIME_PRORATION");
+    assert.equal(p.render().hasPremiumAccess, true);
+    assert.equal(p.render().takePurchaseNotice(), null);
+  } finally { p.cleanup(); }
+});
+
+test("Google Play : annuel vers mensuel différé conserve l’accès et actualise ensuite", async () => {
+  const old = playInfo("yearly");
+  const p = await provider({ platformStore: true, initial: old, offerings: playOfferings });
+  try {
+    p.sdk.purchasePackage = async (selected, upgradeInfo, changeInfo) => {
+      p.calls.purchases.push({ selected, upgradeInfo, changeInfo });
+      return { customerInfo: old };
+    };
+    assert.equal(await p.render().subscribeMonthly(), true);
+    assert.equal(p.calls.purchases[0].changeInfo.oldProductIdentifier, "kapp_premium_yearly:base");
+    assert.equal(p.calls.purchases[0].changeInfo.replacementMode, "DEFERRED");
+    assert.equal(p.render().hasPremiumAccess, true);
+    assert.equal(p.render().entitlement.productId, "kapp_premium_yearly:base");
+    assert.equal(p.render().takePurchaseNotice(), null);
+    p.setInfo(playInfo("monthly"));
+    await p.render().refreshEntitlements();
+    assert.equal(p.render().entitlement.productId, "kapp_premium_monthly:base");
+  } finally { p.cleanup(); }
+});
+
+test("Google Play : SKU ambigu ou multiple interdit toute nouvelle transaction", async () => {
+  for (const initial of [
+    playInfo("monthly", []),
+    playInfo("monthly", ["kapp_premium_monthly:base", "kapp_premium_yearly:base"]),
+    playInfo("monthly", ["other_product"]),
+  ]) {
+    const p = await provider({ platformStore: true, initial, offerings: playOfferings });
+    try {
+      assert.equal(await p.render().subscribeYearly(), false);
+      assert.equal(p.render().error.code, "subscription-change-unavailable");
+      assert.equal(p.calls.purchases.length, 0);
+      assert.equal(p.render().hasPremiumAccess, true);
+    } finally { p.cleanup(); }
+  }
+});
+
+test("Google Play : abonnement expiré achète normalement, annulation du remplacement conserve Premium", async () => {
+  const expired = playInfo("monthly", [], Date.now() - 1);
+  const fresh = await provider({ platformStore: true, initial: expired, offerings: playOfferings });
+  try {
+    fresh.sdk.purchasePackage = async (selected, upgradeInfo, changeInfo) => {
+      fresh.calls.purchases.push({ selected, upgradeInfo, changeInfo });
+      return { customerInfo: playInfo("yearly") };
+    };
+    assert.equal(await fresh.render().subscribeYearly(), true);
+    assert.equal(fresh.calls.purchases[0].changeInfo, undefined);
+  } finally { fresh.cleanup(); }
+
+  const active = await provider({ platformStore: true, initial: playInfo("yearly"), offerings: playOfferings });
+  try {
+    active.sdk.purchasePackage = async () => { throw { code: "1", userCancelled: true }; };
+    assert.equal(await active.render().subscribeMonthly(), false);
+    assert.equal(active.render().error, null);
+    assert.equal(active.render().hasPremiumAccess, true);
+    assert.equal(active.render().entitlement.productId, "kapp_premium_yearly:base");
+  } finally { active.cleanup(); }
+});
 
 test("Google Play : ouverture sans résiliation locale, retour vérifié, cache ancien et réseau sans confirmation", async () => {
   const startedAt = Date.now();

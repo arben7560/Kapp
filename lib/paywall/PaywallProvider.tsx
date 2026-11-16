@@ -1,5 +1,5 @@
 import React from "react";
-import { AppState, Linking } from "react-native";
+import { AppState, Linking, Platform } from "react-native";
 import type {
   CustomerInfo,
   PurchasesPackage,
@@ -13,6 +13,7 @@ import {
   DEV_UNLOCK_ALL,
   ENABLE_NATIVE_IAP,
   ACCOUNT_PURCHASE_POLICY_VERIFIED,
+  IS_REVENUECAT_TEST_STORE,
   PREMIUM_PRICE_FALLBACKS,
   PREMIUM_ENTITLEMENT_ID,
   type SubscriptionOfferId,
@@ -20,6 +21,7 @@ import {
 import { createDeveloperEntitlement } from "./entitlements";
 import {
   createPaywallOperationGuard,
+  decideSubscriptionPurchase,
   deriveRevenueCatEntitlement,
   hasActivePremiumEntitlement,
   mapSubscriptionPackages,
@@ -404,10 +406,19 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
     else setIsRestoring(true);
     try {
       return await withIdentity(snapshot, async () => {
+        if (operation === "purchase") await Purchases.invalidateCustomerInfoCache();
         const existing = await Purchases.getCustomerInfo();
         if (!isCurrent(snapshot)) return false;
         updateCustomerInfo(existing, snapshot);
-        if (operation === "purchase" && hasActivePremiumEntitlement(existing)) return true;
+        const isGooglePlay = operation === "purchase" && Platform.OS === "android" && !IS_REVENUECAT_TEST_STORE;
+        const decision = isGooglePlay && offerId
+          ? decideSubscriptionPurchase(existing, offerId) : null;
+        if (decision?.kind === "blocked") {
+          setError({ code: "subscription-change-unavailable", message: "Impossible de déterminer avec certitude l’abonnement Google Play à remplacer. Vérifie tes abonnements dans Google Play ou réessaie après actualisation." });
+          return false;
+        }
+        if (decision?.kind === "owned") return true;
+        if (operation === "purchase" && !isGooglePlay && hasActivePremiumEntitlement(existing)) return true;
         const selectedPackage = offerId ? subscriptions[offerId] : undefined;
         if (operation === "purchase" && !selectedPackage) {
           setError({ code: "package-unavailable", message: "Cette formule d’abonnement est momentanément indisponible." });
@@ -415,13 +426,36 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
         }
         // No await between the final identity check and native billing.
         if (!isCurrent(snapshot)) return false;
+        const changeInfo = decision?.kind === "change" ? {
+          oldProductIdentifier: decision.oldProductIdentifier,
+          replacementMode: decision.current === "monthly"
+            ? Purchases.STORE_REPLACEMENT_MODE.WITH_TIME_PRORATION
+            : Purchases.STORE_REPLACEMENT_MODE.DEFERRED,
+        } : undefined;
         const info = operation === "restore"
           ? await Purchases.restorePurchases()
-          : (await Purchases.purchasePackage(selectedPackage!)).customerInfo;
+          : (await (changeInfo
+            ? Purchases.purchasePackage(selectedPackage!, null, changeInfo)
+            : Purchases.purchasePackage(selectedPackage!))).customerInfo;
         if (!isCurrent(snapshot)) return false;
-        updateCustomerInfo(info, snapshot);
-        const hasPremium = hasActivePremiumEntitlement(info);
-        if (operation === "purchase" && hasPremium) {
+        // Deferred changes can still report the old plan. Keep its verified
+        // entitlement until RevenueCat reports the new plan or it expires.
+        const change = decision?.kind === "change";
+        const initialInfo = change && !hasActivePremiumEntitlement(info) ? existing : info;
+        updateCustomerInfo(initialInfo, snapshot);
+        if (operation === "purchase" && change) {
+          try {
+            await Purchases.invalidateCustomerInfoCache();
+            const refreshed = await Purchases.getCustomerInfo();
+            if (isCurrent(snapshot) && hasActivePremiumEntitlement(refreshed)) {
+              updateCustomerInfo(refreshed, snapshot);
+            }
+          } catch {
+            // The purchase result and the previously verified entitlement remain usable.
+          }
+        }
+        const hasPremium = hasActivePremiumEntitlement(initialInfo);
+        if (operation === "purchase" && hasPremium && !change) {
           purchaseNoticeRef.current = { snapshot, purchasedAt: Date.now() };
         }
         if (!hasPremium) {

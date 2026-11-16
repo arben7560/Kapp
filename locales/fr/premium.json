@@ -19,7 +19,7 @@
       "Premium%20annuel": "Premium annuel",
       "Choisir%20l%E2%80%99abonnement%20mensuel": "Choisir l’abonnement mensuel",
       "Choisir%20l%E2%80%99abonnement%20annuel": "Choisir l’abonnement annuel",
-      "7%2C99%20%E2%82%AC%20%2F%20mois": "7,99 € / mois",
+      "8%2C99%20%E2%82%AC%20%2F%20mois": "8,99 € / mois",
       "69%2C99%20%E2%82%AC%20%2F%20an": "69,99 € / an",
       "Abonnement%20mensuel%2C%20r%C3%A9siliable%20depuis%20l%E2%80%99App%20Store%20ou%20Google%20Play%2E": "Abonnement mensuel, résiliable depuis l’App Store ou Google Play.",
       "Abonnement%20annuel%2C%20r%C3%A9siliable%20depuis%20l%E2%80%99App%20Store%20ou%20Google%20Play%2E": "Abonnement annuel, résiliable depuis l’App Store ou Google Play.",
@@ -75,7 +75,8 @@
       "Le%20paiement%20est%20en%20attente%20de%20validation%2E%20Premium%20sera%20activ%C3%A9%20d%C3%A8s%20sa%20confirmation%20par%20le%20Store%2E": "Le paiement est en attente de validation. Premium sera activé dès sa confirmation par le Store.",
       "Une%20op%C3%A9ration%20d%E2%80%99achat%20est%20d%C3%A9j%C3%A0%20en%20cours%2E": "Une opération d’achat est déjà en cours.",
       "Le%20service%20d%E2%80%99abonnement%20n%E2%80%99est%20pas%20correctement%20configur%C3%A9%2E": "Le service d’abonnement n’est pas correctement configuré.",
-      "Une%20erreur%20est%20survenue%20pendant%20la%20gestion%20de%20l%E2%80%99abonnement%2E%20R%C3%A9essaie%20dans%20quelques%20instants%2E": "Une erreur est survenue pendant la gestion de l’abonnement. Réessaie dans quelques instants."
+      "Une%20erreur%20est%20survenue%20pendant%20la%20gestion%20de%20l%E2%80%99abonnement%2E%20R%C3%A9essaie%20dans%20quelques%20instants%2E": "Une erreur est survenue pendant la gestion de l’abonnement. Réessaie dans quelques instants.",
+      "Impossible%20de%20d%C3%A9terminer%20avec%20certitude%20l%E2%80%99abonnement%20Google%20Play%20%C3%A0%20remplacer%2E%20V%C3%A9rifie%20tes%20abonnements%20dans%20Google%20Play%20ou%20r%C3%A9essaie%20apr%C3%A8s%20actualisation%2E": "Impossible de déterminer avec certitude l’abonnement Google Play à remplacer. Vérifie tes abonnements dans Google Play ou réessaie après actualisation."
     }
   },
   "subscription": {
@@ -142,6 +143,16 @@
     "restoreMessage": "Pour restaurer vos achats Premium, vous devez d’abord vous connecter à votre compte Google.",
     "signIn": "Se connecter",
     "cancel": "Annuler"
+  },
+  "change": {
+    "ctaMonthly": "Passer à l’abonnement mensuel",
+    "ctaYearly": "Passer à l’abonnement annuel",
+    "blocked": "Le changement de formule est indisponible tant que l’abonnement Google Play actif n’est pas identifié avec certitude.",
+    "confirmationTitle": "Confirmer le changement de formule",
+    "monthlyNotice": "Tu remplaces ton abonnement annuel par le mensuel dans Google Play. Ton accès annuel reste actif jusqu’à son échéance ; le mensuel commencera ensuite.",
+    "yearlyNotice": "Tu remplaces ton abonnement mensuel par l’annuel dans Google Play. Le temps déjà payé sera pris en compte ; Google Play confirmera la date du prochain paiement.",
+    "monthlySubmitted": "Changement demandé dans Google Play. L’abonnement annuel reste actif jusqu’à son échéance ; le mensuel prendra ensuite le relais.",
+    "yearlySubmitted": "Changement demandé dans Google Play. Le temps mensuel déjà payé est pris en compte dans la transition vers l’annuel."
   },
   "confirmation": {
     "title": "Confirmer mon abonnement",

@@ -28,7 +28,7 @@ import {
 } from "../lib/paywall/config";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { usePaywall } from "../lib/paywall/PaywallProvider";
-import { calculateAnnualOfferMetrics } from "../lib/paywall/revenueCatLogic";
+import { calculateAnnualOfferMetrics, decideSubscriptionPurchase } from "../lib/paywall/revenueCatLogic";
 import { useAuth } from "../lib/AuthProvider";
 import { clearPurchaseIntent, premiumDestination, savePurchaseIntent } from "../lib/paywall/purchaseIntent";
 
@@ -69,6 +69,7 @@ function PremiumScreenContent() {
   const [isPreparingAuth, setIsPreparingAuth] = React.useState(false);
   const [authenticationAction, setAuthenticationAction] = React.useState<"purchase" | "restore" | null>(null);
   const [confirmationUserId, setConfirmationUserId] = React.useState<string | null>(null);
+  const [submittedChange, setSubmittedChange] = React.useState<"monthly" | "yearly" | null>(null);
   const authNavigationRef = React.useRef(false);
   const translate = useVocabularyText();
   const { t, i18n } = useTranslation("premium");
@@ -77,6 +78,7 @@ function PremiumScreenContent() {
   const responsive = useResponsiveLayout({ maxWidth: 620 });
   const {
     displayPrices,
+    customerInfo,
     error,
     hasPremiumAccess,
     isLoading,
@@ -111,12 +113,19 @@ function PremiumScreenContent() {
     // by App Store / Google Play remain exactly as provided by the store.
     return price === PREMIUM_PRICE_FALLBACKS[offerId] ? translate(price) : price;
   };
+  const playDecision = Platform.OS === "android" && !IS_REVENUECAT_TEST_STORE && auth.isPermanentAccount
+    ? decideSubscriptionPurchase(customerInfo, selectedOffer.id) : null;
+  const isChange = playDecision?.kind === "change";
+  const canChooseOffers = !hasPremiumAccess ||
+    (Platform.OS === "android" && !IS_REVENUECAT_TEST_STORE &&
+      playDecision?.kind !== "blocked" && !submittedChange);
   const canSubscribe =
     !!selectedOffer &&
     !!subscriptions[selectedOffer.id] &&
     !isLoading && !auth.isLoading &&
     !busy &&
-    !hasPremiumAccess;
+    (!hasPremiumAccess || isChange) &&
+    playDecision?.kind !== "blocked" && !submittedChange;
   const annualMetrics = React.useMemo(() => {
     return calculateAnnualOfferMetrics(
       subscriptions.monthly?.product ?? null,
@@ -177,8 +186,11 @@ function PremiumScreenContent() {
     if (!canSubscribe || !confirmationUserId || confirmationUserId !== auth.user?.id) return;
     setConfirmationUserId(null);
     const premiumGranted = await subscribe(selectedOffer.id);
-    if (premiumGranted && isMountedRef.current) router.replace("/account");
-  }, [auth.user?.id, canSubscribe, confirmationUserId, selectedOffer.id, subscribe]);
+    if (premiumGranted && isMountedRef.current) {
+      if (isChange) setSubmittedChange(selectedOffer.id);
+      else router.replace("/account");
+    }
+  }, [auth.user?.id, canSubscribe, confirmationUserId, isChange, selectedOffer.id, subscribe]);
 
   const handleRestore = React.useCallback(async () => {
     if (!auth.isPermanentAccount) { setAuthenticationAction("restore"); return; }
@@ -234,10 +246,10 @@ function PremiumScreenContent() {
                   key={offer.id}
                   accessibilityRole="radio"
                   accessibilityLabel={`${translate(offer.title)}. ${displayedPrice(offer.id)}`}
-                  accessibilityState={{ selected: offer.id === effectiveSelectedOfferId, disabled: busy || hasPremiumAccess || (!isLoading && !subscriptions[offer.id]) }}
+                  accessibilityState={{ selected: offer.id === effectiveSelectedOfferId, disabled: busy || !canChooseOffers || (!isLoading && !subscriptions[offer.id]) }}
                   disabled={
                     busy ||
-                    hasPremiumAccess ||
+                    !canChooseOffers ||
                     (!isLoading && !subscriptions[offer.id])
                   }
                   onPress={() => setSelectedOfferId(offer.id)}
@@ -247,7 +259,7 @@ function PremiumScreenContent() {
                     offer.id === highlightedOfferId && styles.priceBoxFeatured,
                     offer.id === effectiveSelectedOfferId &&
                       styles.priceBoxSelected,
-                    pressed && !busy && !hasPremiumAccess && styles.planPressed,
+                    pressed && !busy && canChooseOffers && styles.planPressed,
                   ]}
                 >
                   {isLoading ? (
@@ -318,6 +330,16 @@ function PremiumScreenContent() {
                 </AppText>
               </View>
             )}
+            {submittedChange && (
+              <AppText variant="bodySecondary" tone="muted" style={styles.selectedPlanText}>
+                {t(submittedChange === "monthly" ? "change.monthlySubmitted" : "change.yearlySubmitted")}
+              </AppText>
+            )}
+            {hasPremiumAccess && playDecision?.kind === "blocked" && !submittedChange && (
+              <AppText variant="bodySecondary" tone="muted" style={styles.selectedPlanText}>
+                {t("change.blocked")}
+              </AppText>
+            )}
           </View>
 
           <View style={styles.featuresCard}>
@@ -338,14 +360,14 @@ function PremiumScreenContent() {
           )}
 
           <ActionButton
-            label={hasPremiumAccess ? "Continuer" : selectedOffer?.cta ?? PAYWALL_COPY.cta}
+            label={isChange && !submittedChange ? t(selectedOffer.id === "yearly" ? "change.ctaYearly" : "change.ctaMonthly") : hasPremiumAccess ? "Continuer" : selectedOffer?.cta ?? PAYWALL_COPY.cta}
             size="large"
             accentColor={COLORS.pink}
             labelColor={COLORS.text}
-            disabled={hasPremiumAccess ? busy : !canSubscribe}
+            disabled={isChange && !submittedChange ? !canSubscribe : hasPremiumAccess ? busy : !canSubscribe}
             loading={isPurchasing || isPreparingAuth}
             loadingIndicatorColor={COLORS.text}
-            onPress={() => hasPremiumAccess ? closePaywall() : void handleSubscribe()}
+            onPress={() => isChange && !submittedChange ? void handleSubscribe() : hasPremiumAccess ? closePaywall() : void handleSubscribe()}
             style={styles.primaryAction}
           />
 
@@ -410,19 +432,23 @@ function PremiumScreenContent() {
         </DialogActions>
       </AppDialog>
       <AppDialog
-        visible={confirmationUserId !== null && confirmationUserId === auth.user?.id && auth.isPermanentAccount && !hasPremiumAccess}
+        visible={confirmationUserId !== null && confirmationUserId === auth.user?.id && auth.isPermanentAccount && (!hasPremiumAccess || isChange)}
         onRequestClose={() => setConfirmationUserId(null)}
-        accessibilityLabel={t("confirmation.title")}
+        accessibilityLabel={t(isChange ? "change.confirmationTitle" : "confirmation.title")}
         accentColor={COLORS.cyan}
       >
-        <AppText variant="cardTitle" accessibilityRole="header">{t("confirmation.title")}</AppText>
+        <AppText variant="cardTitle" accessibilityRole="header">{t(isChange ? "change.confirmationTitle" : "confirmation.title")}</AppText>
         <View style={styles.confirmationSummary}>
           <AppText variant="bodyStrong">{t(`subscription.plan.${selectedOffer.id}`)}</AppText>
           <AppText variant="cardTitle">{subscriptions[selectedOffer.id]?.product.priceString}</AppText>
           <AppText variant="bodySecondary" tone="muted">{t(`confirmation.${selectedOffer.id}`)}</AppText>
         </View>
         <AppText variant="bodySecondary" tone="muted" style={styles.confirmationNotice}>
-          {t(IS_REVENUECAT_TEST_STORE ? "subscription.testNotice" : "confirmation.autoRenew")}
+          {isChange
+            ? selectedOffer.id === "yearly"
+              ? t("change.yearlyNotice")
+              : t("change.monthlyNotice")
+            : t(IS_REVENUECAT_TEST_STORE ? "subscription.testNotice" : "confirmation.autoRenew")}
         </AppText>
         <DialogActions>
           <ActionButton

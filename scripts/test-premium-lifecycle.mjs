@@ -5,7 +5,7 @@ import vm from "node:vm";
 import ts from "typescript";
 import { createHookHarness } from "./helpers/hook-harness.mjs";
 import { subscriptionDetails } from "../lib/paywall/subscriptionDetails.ts";
-import { hasActivePremiumEntitlement, mapSubscriptionPackages, subscriptionManagementURL, calculateAnnualOfferMetrics } from "../lib/paywall/revenueCatLogic.ts";
+import { hasActivePremiumEntitlement, mapSubscriptionPackages, subscriptionManagementURL, calculateAnnualOfferMetrics, decideSubscriptionPurchase } from "../lib/paywall/revenueCatLogic.ts";
 import * as config from "../lib/paywall/config.ts";
 
 const now = Date.now();
@@ -177,6 +177,8 @@ for (const [offerId, index, label] of [["monthly", 0, "Choisir l’abonnement me
 test(`invité → modale → Google → confirmation explicite : ${offerId}, annulation sans achat ni navigation`, async () => {
   const { api } = intentStorage();
   let permanent = false;
+  let premiumAccess = false;
+  let paywallCustomerInfo = { activeSubscriptions: [], entitlements: { active: {} } };
   let params = { returnTo: "/voc/kdrama" };
   const pushes = [], replacements = [], purchased = [];
   let authResult = "cancelled", authCalls = 0;
@@ -197,7 +199,8 @@ test(`invité → modale → Google → confirmation explicite : ${offerId}, ann
       "../lib/i18n/premiumText": { resolvePremiumError: (x) => x }, "../lib/i18n/config": { DEFAULT_LOCALE: "fr", isAppLocale: () => true },
       "../lib/paywall/config": config, "../hooks/useResponsiveLayout": { useResponsiveLayout: () => ({ maxWidth: 620 }) },
       "../lib/paywall/PaywallProvider": { usePaywall: () => ({
-        displayPrices: { monthly: "8,99 €", yearly: "79,99 €" }, error: null, hasPremiumAccess: false,
+        customerInfo: paywallCustomerInfo,
+        displayPrices: { monthly: "8,99 €", yearly: "79,99 €" }, error: null, hasPremiumAccess: premiumAccess,
         isLoading: false, isPurchasing: false, isRestoring: false,
         subscriptions: {
           monthly: { product: { priceString: "8,99 €", price: 8.99, currencyCode: "EUR" } },
@@ -205,7 +208,7 @@ test(`invité → modale → Google → confirmation explicite : ${offerId}, ann
         },
         subscribe: async (offerId) => { purchased.push(offerId); return true; },
       }) },
-      "../lib/paywall/revenueCatLogic": { calculateAnnualOfferMetrics },
+      "../lib/paywall/revenueCatLogic": { calculateAnnualOfferMetrics, decideSubscriptionPurchase },
       "../lib/AuthProvider": { useAuth: () => ({ isPermanentAccount: permanent, isLoading: false,
         user: permanent ? { id: "account-a" } : null,
         signInWithOAuth: async (provider) => { assert.equal(provider, "google"); authCalls++; return authResult; },
@@ -260,6 +263,17 @@ test(`invité → modale → Google → confirmation explicite : ${offerId}, ann
   await new Promise(setImmediate);
   assert.deepEqual(purchased, [offerId]);
   assert.equal(replacements.at(-1), "/account");
+  premiumAccess = true;
+  paywallCustomerInfo = info({ productIdentifier: `kapp_premium_${offerId}`, store: "PLAY_STORE" });
+  paywallCustomerInfo.activeSubscriptions = [`kapp_premium_${offerId}`];
+  const otherIndex = index === 0 ? 1 : 0;
+  const target = index === 0 ? "yearly" : "monthly";
+  after.render().filter((n) => n.props.accessibilityRole === "radio")[otherIndex].props.onPress();
+  assert.equal(after.render().find((n) => n.props.label === `change.cta${target === "yearly" ? "Yearly" : "Monthly"}`).props.disabled, false);
+  after.render().find((n) => n.props.label === `change.cta${target === "yearly" ? "Yearly" : "Monthly"}`).props.onPress();
+  const changeDialog = after.render().find((n) => n.type === "Dialog" && n.props.accessibilityLabel === "change.confirmationTitle");
+  assert.equal(changeDialog.props.visible, true);
+  assert.ok(after.render().some((n) => n.type === "Text" && n.children.includes(`change.${target}Notice`)));
   after.hook.cleanup();
 });
 }

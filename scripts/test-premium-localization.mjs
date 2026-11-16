@@ -67,9 +67,9 @@ test("Offers and the paywall retain their original IDs and currency amounts", ()
     ["kapp_premium_monthly", "kapp_premium_yearly"]);
   assert.deepEqual(PREMIUM_SUBSCRIPTION_OFFERS.map(o => o.title),
     ["Premium mensuel", "Premium annuel"]);
-  assert.equal(PREMIUM_PRICE_FALLBACKS.monthly, "7,99 € / mois");
+  assert.equal(PREMIUM_PRICE_FALLBACKS.monthly, "8,99 € / mois");
   assert.equal(PREMIUM_PRICE_FALLBACKS.yearly, "69,99 € / an");
-  assert.equal(translate("7,99 € / mois"), "7,99 €／月");
+  assert.equal(translate("8,99 € / mois"), "8,99 €／月");
   assert.equal(translate("69,99 € / an"), "69,99 €／年");
   assert.equal(translate(PAYWALL_COPY.restore), "購入情報を復元");
   assert.equal(translate(PAYWALL_COPY.manage), "サブスクリプションの管理・解約");

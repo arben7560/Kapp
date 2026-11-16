@@ -19,7 +19,7 @@
       "Premium%20annuel": "年額Premiumプラン",
       "Choisir%20l%E2%80%99abonnement%20mensuel": "月額プランに申し込む",
       "Choisir%20l%E2%80%99abonnement%20annuel": "年額プランに申し込む",
-      "7%2C99%20%E2%82%AC%20%2F%20mois": "7,99 €／月",
+      "8%2C99%20%E2%82%AC%20%2F%20mois": "8,99 €／月",
       "69%2C99%20%E2%82%AC%20%2F%20an": "69,99 €／年",
       "Abonnement%20mensuel%2C%20r%C3%A9siliable%20depuis%20l%E2%80%99App%20Store%20ou%20Google%20Play%2E": "月額サブスクリプションです。App StoreまたはGoogle Playから解約できます。",
       "Abonnement%20annuel%2C%20r%C3%A9siliable%20depuis%20l%E2%80%99App%20Store%20ou%20Google%20Play%2E": "年額サブスクリプションです。App StoreまたはGoogle Playから解約できます。",
@@ -75,7 +75,8 @@
       "Le%20paiement%20est%20en%20attente%20de%20validation%2E%20Premium%20sera%20activ%C3%A9%20d%C3%A8s%20sa%20confirmation%20par%20le%20Store%2E": "決済の確認待ちです。ストアで承認されるとPremiumが有効になります。",
       "Une%20op%C3%A9ration%20d%E2%80%99achat%20est%20d%C3%A9j%C3%A0%20en%20cours%2E": "すでに購入処理が進行中です。",
       "Le%20service%20d%E2%80%99abonnement%20n%E2%80%99est%20pas%20correctement%20configur%C3%A9%2E": "サブスクリプションサービスが正しく設定されていません。",
-      "Une%20erreur%20est%20survenue%20pendant%20la%20gestion%20de%20l%E2%80%99abonnement%2E%20R%C3%A9essaie%20dans%20quelques%20instants%2E": "サブスクリプションの処理中にエラーが発生しました。しばらくしてからもう一度お試しください。"
+      "Une%20erreur%20est%20survenue%20pendant%20la%20gestion%20de%20l%E2%80%99abonnement%2E%20R%C3%A9essaie%20dans%20quelques%20instants%2E": "サブスクリプションの処理中にエラーが発生しました。しばらくしてからもう一度お試しください。",
+      "Impossible%20de%20d%C3%A9terminer%20avec%20certitude%20l%E2%80%99abonnement%20Google%20Play%20%C3%A0%20remplacer%2E%20V%C3%A9rifie%20tes%20abonnements%20dans%20Google%20Play%20ou%20r%C3%A9essaie%20apr%C3%A8s%20actualisation%2E": "置き換えるGoogle Playサブスクリプションを特定できません。Google Playで契約状況を確認するか、更新後にもう一度お試しください。"
     }
   },
   "subscription": {
@@ -142,6 +143,16 @@
     "restoreMessage": "Premiumの購入を復元するには、まずGoogleアカウントでログインしてください。",
     "signIn": "ログイン",
     "cancel": "キャンセル"
+  },
+  "change": {
+    "ctaMonthly": "月額プランに変更",
+    "ctaYearly": "年額プランに変更",
+    "blocked": "有効なGoogle Playサブスクリプションを特定できないため、プランを変更できません。",
+    "confirmationTitle": "プラン変更の確認",
+    "monthlyNotice": "Google Playで年額プランを月額プランに変更します。年額プランは現在の利用期間が終わるまで有効で、その後に月額プランが始まります。",
+    "yearlyNotice": "Google Playで月額プランを年額プランに変更します。支払い済みの残り期間が考慮されます。次回のお支払い日はGoogle Playでご確認ください。",
+    "monthlySubmitted": "Google Playに変更を依頼しました。年額プランは現在の利用期間が終わるまで有効で、その後に月額プランが始まります。",
+    "yearlySubmitted": "Google Playに変更を依頼しました。支払い済みの月額プランの残り期間は、年額プランへの変更時に考慮されます。"
   },
   "confirmation": {
     "title": "サブスクリプションの確認",

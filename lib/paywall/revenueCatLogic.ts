@@ -122,6 +122,43 @@ export function hasActivePremiumEntitlement(customerInfo: CustomerInfo, now = Da
   return deadline === null || deadline > now;
 }
 
+export type SubscriptionPurchaseDecision =
+  | { kind: "new" }
+  | { kind: "owned"; current: SubscriptionOfferId }
+  | { kind: "change"; current: SubscriptionOfferId; oldProductIdentifier: string }
+  | { kind: "blocked" };
+
+// CustomerInfo.activeSubscriptions is the current Store SKU set. Historical
+// purchases and the entitlement alone cannot prove which Play SKU to replace.
+export function decideSubscriptionPurchase(
+  info: CustomerInfo | null,
+  target: SubscriptionOfferId,
+  now = Date.now(),
+): SubscriptionPurchaseDecision {
+  if (!info) return { kind: "blocked" };
+  const active = info.activeSubscriptions;
+  if (!Array.isArray(active)) return { kind: "blocked" };
+  const premium = hasActivePremiumEntitlement(info, now);
+  if (!premium) return active.length === 0 && !getPremiumEntitlementInfo(info)
+    ? { kind: "new" } : { kind: "blocked" };
+
+  const entitlement = getPremiumEntitlementInfo(info);
+  if (entitlement?.store !== "PLAY_STORE" || active.length !== 1) return { kind: "blocked" };
+  const oldProductIdentifier = active[0];
+  if (!oldProductIdentifier ||
+      oldProductIdentifier.split(":")[0] !== entitlement.productIdentifier.split(":")[0]) {
+    return { kind: "blocked" };
+  }
+  const matches = (Object.entries(SUBSCRIPTION_PRODUCT_IDS) as [SubscriptionOfferId, string][])
+    .filter(([, configured]) => configured.split(":")[0] === oldProductIdentifier.split(":")[0] &&
+      (!configured.includes(":") || configured === oldProductIdentifier));
+  if (matches.length !== 1) return { kind: "blocked" };
+  const current = matches[0][0];
+  return current === target
+    ? { kind: "owned", current }
+    : { kind: "change", current, oldProductIdentifier };
+}
+
 export function getPremiumSubscription(customerInfo: CustomerInfo | null) {
   const entitlement = customerInfo?.entitlements.all?.[PREMIUM_ENTITLEMENT_ID] ??
     customerInfo?.entitlements.active[PREMIUM_ENTITLEMENT_ID];
