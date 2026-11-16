@@ -2,6 +2,9 @@
 .git/
 .github/
 
+# EAS must run Expo prebuild so the versioned Android config plugins apply.
+/android
+
 # Dépendances réinstallées par EAS
 node_modules/
 
