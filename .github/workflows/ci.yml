@@ -94,6 +94,42 @@ jobs:
             git diff --check
           fi
 
+  immersion-japanese:
+    name: Immersion Japanese corrections (blocking)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript and catalogue integrity
+        run: |
+          npx tsc --noEmit
+          npm run validate:i18n
+
+      - name: Café Japanese and summary
+        run: |
+          npm run test:cafe-localization
+          npm run test:cafe-summary
+
+      - name: Métro Japanese
+        run: npm run test:metro-localization
+
+      - name: Restaurant Japanese
+        run: npm run test:restaurant-localization
+
+      - name: Aéroport Japanese
+        run: npm run test:aeroport-localization
+
   known-debt:
     name: Known pre-existing debt (informational)
     runs-on: ubuntu-latest
