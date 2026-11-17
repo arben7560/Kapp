@@ -23,6 +23,7 @@ import {
   createPaywallOperationGuard,
   decideSubscriptionPurchase,
   deriveRevenueCatEntitlement,
+  getPremiumAccessDeadline,
   hasActivePremiumEntitlement,
   mapSubscriptionPackages,
   selectSubscriptionOffering,
@@ -524,19 +525,19 @@ function StorePaywallProvider({ children }: { children: React.ReactNode }) {
   );
 
   React.useEffect(() => {
-    if (!customerInfo || (!customerInfo.entitlements.all?.[PREMIUM_ENTITLEMENT_ID] &&
-        !customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID])) return;
-    // Poll only identified subscribers/history. Expiration is a real SDK date,
-    // including a reported grace period; no invented 30-day extension.
-    const expiry = entitlement.expiresAt;
-    const delay = expiry && expiry > Date.now()
-      ? Math.min(expiry - Date.now() + 1, 60_000) : 60_000;
+    if (!customerInfo?.entitlements.active[PREMIUM_ENTITLEMENT_ID]) return;
+    // Retry an active SDK entitlement at its reported deadline until RevenueCat
+    // confirms renewal or expiry. Historical subscriptions need no polling.
+    const expiry = getPremiumAccessDeadline(customerInfo);
+    if (expiry === null) return;
+    const delay = expiry > Date.now()
+      ? Math.min(expiry - Date.now() + 1, 2_147_000_000) : 60_000;
     const timer = setTimeout(() => {
       setEntitlementCheckedAt(Date.now());
-      void refreshCustomerInfo(Boolean(expiry && expiry <= Date.now()));
+      void refreshCustomerInfo(expiry <= Date.now());
     }, delay);
     return () => clearTimeout(timer);
-  }, [customerInfo, entitlement.expiresAt, entitlementCheckedAt, refreshCustomerInfo]);
+  }, [customerInfo, entitlementCheckedAt, refreshCustomerInfo]);
 
   const value = React.useMemo<PaywallContextValue>(() => ({
     activeSubscriptions: customerInfo?.activeSubscriptions ?? [],

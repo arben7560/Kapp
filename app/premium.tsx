@@ -15,6 +15,7 @@ import { AppText } from "../components/app-text";
 import { AppBackButton } from "../components/ui/app-back-button";
 import { AppDialog, DialogActions } from "../components/ui/app-dialog";
 import { PremiumActionButton as ActionButton } from "../components/premium/PremiumActionButton";
+import { SubscriptionDetails } from "../components/premium/SubscriptionDetails";
 import { useTranslation } from "react-i18next";
 import { PremiumLocalizationProvider } from "../lib/i18n/PremiumLocalizationProvider";
 import { useVocabularyText } from "../lib/i18n/VocabularyTextContext";
@@ -28,6 +29,7 @@ import {
 } from "../lib/paywall/config";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { usePaywall } from "../lib/paywall/PaywallProvider";
+import { subscriptionDetails } from "../lib/paywall/subscriptionDetails";
 import { calculateAnnualOfferMetrics, decideSubscriptionPurchase } from "../lib/paywall/revenueCatLogic";
 import { useAuth } from "../lib/AuthProvider";
 import { clearPurchaseIntent, premiumDestination, savePurchaseIntent } from "../lib/paywall/purchaseIntent";
@@ -99,7 +101,14 @@ function PremiumScreenContent() {
     PREMIUM_SUBSCRIPTION_OFFERS[0]?.id;
   const [selectedOfferId, setSelectedOfferId] =
     React.useState(params.offerId === "monthly" || params.offerId === "yearly" ? params.offerId : highlightedOfferId);
-  const effectiveSelectedOfferId = selectedOfferId;
+  const details = subscriptionDetails(customerInfo, subscriptions);
+  const effectiveSelectedOfferId = hasPremiumAccess && details.plan
+    ? details.plan === "monthly" ? "yearly" : "monthly"
+    : selectedOfferId;
+  const statusUnknown = auth.isPermanentAccount && !isLoading &&
+    (!customerInfo || details.state === "verifying");
+  const showPurchaseOffers = !hasPremiumAccess && !statusUnknown &&
+    !(auth.isPermanentAccount && isLoading);
   const selectedOffer = React.useMemo(
     () =>
       PREMIUM_SUBSCRIPTION_OFFERS.find(
@@ -115,14 +124,16 @@ function PremiumScreenContent() {
   };
   const playDecision = Platform.OS === "android" && !IS_REVENUECAT_TEST_STORE && auth.isPermanentAccount
     ? decideSubscriptionPurchase(customerInfo, selectedOffer.id) : null;
-  const isChange = playDecision?.kind === "change";
-  const canChooseOffers = !hasPremiumAccess ||
-    (Platform.OS === "android" && !IS_REVENUECAT_TEST_STORE &&
-      playDecision?.kind !== "blocked" && !submittedChange);
+  const isChange = hasPremiumAccess && !!details.plan &&
+    selectedOffer.id !== details.plan && playDecision?.kind === "change" &&
+    playDecision.current === details.plan;
+  const canChooseOffers = !hasPremiumAccess;
   const canSubscribe =
     !!selectedOffer &&
     !!subscriptions[selectedOffer.id] &&
     !isLoading && !auth.isLoading &&
+    !statusUnknown &&
+    (!auth.isPermanentAccount || !!customerInfo) &&
     !busy &&
     (!hasPremiumAccess || isChange) &&
     playDecision?.kind !== "blocked" && !submittedChange;
@@ -150,6 +161,10 @@ function PremiumScreenContent() {
     } else {
       router.replace("/(tabs)");
     }
+  }, [returnTo]);
+
+  const openPremiumContent = React.useCallback(() => {
+    router.replace((returnTo && returnTo !== "/account" ? returnTo : "/(tabs)") as Href);
   }, [returnTo]);
 
   const requestAuthentication = React.useCallback(async (action: "purchase" | "restore") => {
@@ -185,12 +200,12 @@ function PremiumScreenContent() {
   const confirmSubscription = React.useCallback(async () => {
     if (!canSubscribe || !confirmationUserId || confirmationUserId !== auth.user?.id) return;
     setConfirmationUserId(null);
-    const premiumGranted = await subscribe(selectedOffer.id);
+    const premiumGranted = await subscribe(effectiveSelectedOfferId);
     if (premiumGranted && isMountedRef.current) {
-      if (isChange) setSubmittedChange(selectedOffer.id);
+      if (isChange) setSubmittedChange(effectiveSelectedOfferId);
       else router.replace("/account");
     }
-  }, [auth.user?.id, canSubscribe, confirmationUserId, isChange, selectedOffer.id, subscribe]);
+  }, [auth.user?.id, canSubscribe, confirmationUserId, effectiveSelectedOfferId, isChange, subscribe]);
 
   const handleRestore = React.useCallback(async () => {
     if (!auth.isPermanentAccount) { setAuthenticationAction("restore"); return; }
@@ -237,10 +252,21 @@ function PremiumScreenContent() {
               <AppText variant="label" style={styles.badgeText}>ACCÈS TOTAL</AppText>
             </View>
 
-            <AppText accessibilityRole="header" variant="screenTitle" style={styles.title}>{PAYWALL_COPY.title}</AppText>
-            <AppText variant="subtitle" tone="muted" style={styles.subtitle}>{PAYWALL_COPY.subtitle}</AppText>
+            <AppText accessibilityRole="header" variant="screenTitle" style={styles.title}>
+              {hasPremiumAccess ? t("subscription.activeTitle") : PAYWALL_COPY.title}
+            </AppText>
+            <AppText variant="subtitle" tone="muted" style={styles.subtitle}>
+              {hasPremiumAccess ? t("subscription.activeSubtitle") : PAYWALL_COPY.subtitle}
+            </AppText>
 
-            <View style={styles.offers}>
+            {isLoading && auth.isPermanentAccount ? (
+              <View style={styles.statusBox} accessibilityRole="progressbar">
+                <ActivityIndicator color={COLORS.cyan} />
+                <AppText variant="bodySecondary" tone="muted">{t("subscription.checking")}</AppText>
+              </View>
+            ) : null}
+
+            {showPurchaseOffers ? <View style={styles.offers}>
               {PREMIUM_SUBSCRIPTION_OFFERS.map((offer) => (
                 <Pressable
                   key={offer.id}
@@ -316,18 +342,24 @@ function PremiumScreenContent() {
                   )}
                 </Pressable>
               ))}
-            </View>
+            </View> : null}
 
-            {hasPremiumAccess && (
-              <View style={styles.activeBox}>
-                <Ionicons
-                  name="checkmark-circle"
-                  size={18}
-                  color={COLORS.cyan}
-                />
-                <AppText variant="bodyStrong" style={styles.activeText}>
-                  L’accès Premium est actif.
+            {hasPremiumAccess && !isLoading && (
+              <View style={styles.subscriberCard}>
+                <View style={styles.activeBox}>
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={18}
+                    color={COLORS.cyan}
+                  />
+                  <AppText variant="bodyStrong" style={styles.activeText}>
+                    {details.plan ? t(`subscription.plan.${details.plan}`) : t("subscription.planUnknown")}
+                  </AppText>
+                </View>
+                <AppText variant="bodySecondary" tone="muted" style={styles.subscriberStatus}>
+                  {t(`subscription.states.${details.state}`)}
                 </AppText>
+                <SubscriptionDetails details={details} />
               </View>
             )}
             {submittedChange && (
@@ -335,43 +367,68 @@ function PremiumScreenContent() {
                 {t(submittedChange === "monthly" ? "change.monthlySubmitted" : "change.yearlySubmitted")}
               </AppText>
             )}
-            {hasPremiumAccess && playDecision?.kind === "blocked" && !submittedChange && (
+            {hasPremiumAccess && details.plan && playDecision?.kind === "blocked" && !submittedChange && (
               <AppText variant="bodySecondary" tone="muted" style={styles.selectedPlanText}>
                 {t("change.blocked")}
               </AppText>
             )}
           </View>
 
-          <View style={styles.featuresCard}>
+          {!hasPremiumAccess && !statusUnknown ? <View style={styles.featuresCard}>
             {FEATURES.map((feature) => (
               <View key={feature} style={styles.featureRow}>
                 <Ionicons name="checkmark" size={18} color={COLORS.cyan} />
                 <AppText variant="body" style={styles.featureText}>{feature}</AppText>
               </View>
             ))}
-          </View>
+          </View> : null}
 
-          {(error || intentError) && (
+          {(error || intentError || statusUnknown) && (
             <View style={styles.errorCard}>
-              <AppText variant="bodyStrong" style={styles.errorTitle}>Impossible de continuer</AppText>
-              <AppText variant="bodySecondary" style={styles.errorText}>{error ? resolvePremiumError(error.message, locale, i18n) : translate(intentError ?? "")}</AppText>
+              <AppText variant="bodyStrong" style={styles.errorTitle}>
+                {statusUnknown ? t("subscription.statusUnknown") : "Impossible de continuer"}
+              </AppText>
+              <AppText variant="bodySecondary" style={styles.errorText}>
+                {error ? resolvePremiumError(error.message, locale, i18n)
+                  : statusUnknown ? t("subscription.retryStatus") : translate(intentError ?? "")}
+              </AppText>
               <ActionButton label="Réessayer" variant="ghost" disabled={busy || isLoading} onPress={() => void refreshEntitlements()} />
             </View>
           )}
 
-          <ActionButton
-            label={isChange && !submittedChange ? t(selectedOffer.id === "yearly" ? "change.ctaYearly" : "change.ctaMonthly") : hasPremiumAccess ? "Continuer" : selectedOffer?.cta ?? PAYWALL_COPY.cta}
+          {hasPremiumAccess && !isLoading ? <ActionButton
+            label={t("subscription.openContent")}
             size="large"
             accentColor={COLORS.pink}
             labelColor={COLORS.text}
-            disabled={isChange && !submittedChange ? !canSubscribe : hasPremiumAccess ? busy : !canSubscribe}
+            disabled={busy}
+            onPress={openPremiumContent}
+            style={styles.primaryAction}
+          /> : null}
+
+          {isChange && !submittedChange && !isLoading ? <ActionButton
+            label={t(selectedOffer.id === "yearly" ? "change.ctaYearly" : "change.ctaMonthly")}
+            variant="secondary"
+            disabled={!canSubscribe}
+            loading={isPurchasing}
+            loadingIndicatorColor={COLORS.text}
+            onPress={handleSubscribe}
+            style={styles.secondaryAction}
+          /> : null}
+
+          {!hasPremiumAccess && !statusUnknown ? <ActionButton
+            label={selectedOffer?.cta ?? PAYWALL_COPY.cta}
+            size="large"
+            accentColor={COLORS.pink}
+            labelColor={COLORS.text}
+            disabled={!canSubscribe}
             loading={isPurchasing || isPreparingAuth}
             loadingIndicatorColor={COLORS.text}
-            onPress={() => isChange && !submittedChange ? void handleSubscribe() : hasPremiumAccess ? closePaywall() : void handleSubscribe()}
+            onPress={handleSubscribe}
             style={styles.primaryAction}
-          />
+          /> : null}
 
-          {!hasPremiumAccess && selectedOffer && (
+          {showPurchaseOffers && selectedOffer && (
             <AppText variant="caption" style={styles.selectedPlanText}>
               {`Offre sélectionnée : ${selectedOffer.title}`}
             </AppText>
@@ -380,13 +437,13 @@ function PremiumScreenContent() {
             <AppText variant="caption" tone="soft" style={styles.selectedPlanText}>
               Connecte-toi ou crée un compte pour continuer. Tu confirmeras ton achat après la connexion.
             </AppText>
-          ) : params.action ? (
+          ) : params.action && !hasPremiumAccess && !statusUnknown ? (
             <AppText variant="caption" tone="soft" style={styles.selectedPlanText}>
               Ton choix a été conservé. Confirme ton achat ou ta restauration pour continuer.
             </AppText>
           ) : null}
 
-          <ActionButton
+          {!hasPremiumAccess ? <ActionButton
             label={PAYWALL_COPY.restore}
             variant="secondary"
             size="large"
@@ -395,12 +452,12 @@ function PremiumScreenContent() {
             loadingIndicatorColor={COLORS.text}
             onPress={() => void handleRestore()}
             style={styles.secondaryAction}
-          />
+          /> : null}
 
           {hasPremiumAccess && !IS_REVENUECAT_TEST_STORE ? <ActionButton
             label={PAYWALL_COPY.manage}
             variant="ghost"
-            disabled={busy}
+            disabled={busy || isLoading}
             onPress={() => void openSubscriptionManagement()}
             style={styles.manageAction}
           /> : null}
@@ -611,7 +668,6 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   activeBox: {
-    marginTop: 14,
     flexDirection: "row",
     alignItems: "center",
     gap: 9,
@@ -619,6 +675,23 @@ const styles = StyleSheet.create({
   activeText: {
     flex: 1,
     color: COLORS.text,
+  },
+  statusBox: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 20,
+  },
+  subscriberCard: {
+    marginTop: 20,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    backgroundColor: "rgba(0,0,0,0.22)",
+    padding: 16,
+  },
+  subscriberStatus: {
+    marginTop: 8,
   },
   featuresCard: {
     marginTop: 16,

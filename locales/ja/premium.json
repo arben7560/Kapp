@@ -80,6 +80,11 @@
     }
   },
   "subscription": {
+    "activeTitle": "Premiumアクセス",
+    "activeSubtitle": "このアカウントにはすでにサブスクリプションが登録されています。",
+    "openContent": "Premiumコンテンツを開く",
+    "statusUnknown": "サブスクリプションを確認できません",
+    "retryStatus": "現在、サブスクリプションを確認できません。接続が回復したら更新してください。",
     "states": {
       "unavailable": "状態を取得できません",
       "free": "K-App Premium",

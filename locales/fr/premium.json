@@ -80,6 +80,11 @@
     }
   },
   "subscription": {
+    "activeTitle": "Votre accès Premium",
+    "activeSubtitle": "Votre abonnement est déjà associé à ce compte.",
+    "openContent": "Accéder aux contenus Premium",
+    "statusUnknown": "Abonnement à vérifier",
+    "retryStatus": "Impossible de confirmer votre abonnement pour le moment. Actualisez le statut lorsque la connexion est rétablie.",
     "states": {
       "unavailable": "Statut indisponible",
       "free": "K-App Premium",

@@ -803,6 +803,28 @@ test("expiration au premier plan : accès retiré même si le rafraîchissement 
     await p.flush();
     assert.equal(p.render().hasPremiumAccess, false);
     assert.ok(p.calls.invalidations >= 1);
+    assert.equal(p.timers.size, 1);
+  } finally { p.cleanup(); }
+});
+
+test("une expiration confirmée arrête les lectures périodiques, le retour au premier plan reste synchronisé", async () => {
+  const p = await provider({ initial: info(true, Date.now() + 1_000) });
+  try {
+    assert.equal(p.timers.size, 1);
+    const expired = info();
+    expired.entitlements.all.premium_all_access = {
+      isActive: false, store: "TEST_STORE", productIdentifier: "monthly",
+      expirationDateMillis: Date.now() - 1,
+    };
+    p.emit(expired);
+    await p.flush();
+    assert.equal(p.render().hasPremiumAccess, false);
+    assert.equal(p.timers.size, 0);
+    const reads = p.calls.invalidations;
+    p.appState("background");
+    p.appState("active");
+    await p.flush();
+    assert.ok(p.calls.invalidations > reads);
   } finally { p.cleanup(); }
 });
 

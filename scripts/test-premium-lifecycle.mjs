@@ -193,6 +193,7 @@ test(`invité → modale → Google → confirmation explicite : ${offerId}, ann
       "react-native-safe-area-context": { SafeAreaView: "Safe" },
       "../components/app-text": { AppText: "Text" }, "../components/ui/app-back-button": { AppBackButton: "Back" },
       "../components/premium/PremiumActionButton": { PremiumActionButton: "Button" },
+      "../components/premium/SubscriptionDetails": { SubscriptionDetails: "Details" },
       "../components/ui/app-dialog": { AppDialog: "Dialog", DialogActions: "Actions" },
       "react-i18next": { useTranslation: () => ({ t: (key) => key, i18n: { language: "fr" } }) },
       "../lib/i18n/PremiumLocalizationProvider": {}, "../lib/i18n/VocabularyTextContext": { useVocabularyText: () => (x) => x },
@@ -203,12 +204,13 @@ test(`invité → modale → Google → confirmation explicite : ${offerId}, ann
         displayPrices: { monthly: "8,99 €", yearly: "79,99 €" }, error: null, hasPremiumAccess: premiumAccess,
         isLoading: false, isPurchasing: false, isRestoring: false,
         subscriptions: {
-          monthly: { product: { priceString: "8,99 €", price: 8.99, currencyCode: "EUR" } },
-          yearly: { product: { priceString: "79,99 €", price: 79.99, currencyCode: "EUR" } },
+          monthly: { product: { identifier: "kapp_premium_monthly", subscriptionPeriod: "P1M", priceString: "8,99 €", price: 8.99, currencyCode: "EUR" } },
+          yearly: { product: { identifier: "kapp_premium_yearly", subscriptionPeriod: "P1Y", priceString: "79,99 €", price: 79.99, currencyCode: "EUR" } },
         },
         subscribe: async (offerId) => { purchased.push(offerId); return true; },
       }) },
       "../lib/paywall/revenueCatLogic": { calculateAnnualOfferMetrics, decideSubscriptionPurchase },
+      "../lib/paywall/subscriptionDetails": { subscriptionDetails },
       "../lib/AuthProvider": { useAuth: () => ({ isPermanentAccount: permanent, isLoading: false,
         user: permanent ? { id: "account-a" } : null,
         signInWithOAuth: async (provider) => { assert.equal(provider, "google"); authCalls++; return authResult; },
@@ -264,16 +266,32 @@ test(`invité → modale → Google → confirmation explicite : ${offerId}, ann
   assert.deepEqual(purchased, [offerId]);
   assert.equal(replacements.at(-1), "/account");
   premiumAccess = true;
-  paywallCustomerInfo = info({ productIdentifier: `kapp_premium_${offerId}`, store: "PLAY_STORE" });
+  paywallCustomerInfo = info({ productIdentifier: `kapp_premium_${offerId}`, productPlanIdentifier: `${offerId}-plan`, store: "PLAY_STORE" });
   paywallCustomerInfo.activeSubscriptions = [`kapp_premium_${offerId}`];
-  const otherIndex = index === 0 ? 1 : 0;
-  const target = index === 0 ? "yearly" : "monthly";
-  after.render().filter((n) => n.props.accessibilityRole === "radio")[otherIndex].props.onPress();
-  assert.equal(after.render().find((n) => n.props.label === `change.cta${target === "yearly" ? "Yearly" : "Monthly"}`).props.disabled, false);
-  after.render().find((n) => n.props.label === `change.cta${target === "yearly" ? "Yearly" : "Monthly"}`).props.onPress();
+  assert.equal(after.render().filter((n) => n.props.accessibilityRole === "radio").length, 0);
+  assert.ok(after.render().some((n) => n.type === "Text" && n.children.includes(`subscription.plan.${offerId}`)));
+  assert.ok(after.render().some((n) => n.type === "Details"));
+  const openContent = after.render().find((n) => n.props.label === "subscription.openContent");
+  assert.ok(openContent);
+  const target = offerId === "monthly" ? "yearly" : "monthly";
+  const change = after.render().find((n) => n.props.label === `change.cta${target === "yearly" ? "Yearly" : "Monthly"}`);
+  assert.equal(change.props.disabled, false);
+  change.props.onPress();
   const changeDialog = after.render().find((n) => n.type === "Dialog" && n.props.accessibilityLabel === "change.confirmationTitle");
   assert.equal(changeDialog.props.visible, true);
   assert.ok(after.render().some((n) => n.type === "Text" && n.children.includes(`change.${target}Notice`)));
+  openContent.props.onPress();
+  assert.equal(replacements.at(-1), "/voc/kdrama");
+  paywallCustomerInfo = null;
+  premiumAccess = false;
+  const unknown = after.render();
+  assert.equal(unknown.filter((n) => n.props.accessibilityRole === "radio").length, 0);
+  assert.equal(unknown.some((n) => n.props.label === label), false);
+  assert.ok(unknown.some((n) => n.type === "Text" && n.children.includes("subscription.statusUnknown")));
+  paywallCustomerInfo = info({ expirationDateMillis: now - 1 });
+  const stale = after.render();
+  assert.equal(stale.filter((n) => n.props.accessibilityRole === "radio").length, 0);
+  assert.equal(stale.some((n) => n.props.label === label), false);
   after.hook.cleanup();
 });
 }
@@ -283,10 +301,12 @@ test("Account : actions actives, confirmation native, résiliation vérifiée et
   const react = { ...hook.react, createElement: (type, props, ...children) => ({ type, props: props ?? {}, children: children.flat() }) };
   let customer = info();
   let managementReturnStatus = "idle", error = null, opened = 0, refreshed = 0;
+  let paywallLoading = true, resumed = 0;
   const pushes = [];
   const auth = { user: { id: "account-a", email: "test@example.com" }, isPermanentAccount: true, providers: ["google"], clearError() {}, clearAccountProtectionSuccess() {} };
   const refreshSubscription = async () => { refreshed++; };
   const paywall = () => ({ customerInfo: customer, subscriptions: packages, refreshSubscription,
+    isLoading: paywallLoading,
     hasPremiumAccess: !!customer && hasActivePremiumEntitlement(customer),
     managementReturnStatus, error, clearError() {}, openSubscriptionManagement: async () => { opened++; },
   });
@@ -318,7 +338,7 @@ test("Account : actions actives, confirmation native, résiliation vérifiée et
     "../../lib/authErrors": {}, "../../lib/ProgressSyncProvider": { useProgressSync: () => ({ status: "synced" }) },
     "../../lib/paywall/PaywallProvider": { usePaywall: paywall },
     "../../lib/paywall/subscriptionDetails": { subscriptionDetails },
-    "../../lib/paywall/purchaseIntent": { resumePurchaseIntent: async () => {} },
+    "../../lib/paywall/purchaseIntent": { resumePurchaseIntent: async () => { resumed++; } },
     "../../services/progressSync": {},
   }, { setTimeout, clearTimeout }, "\nexports.Screen = AccountScreenContent;");
   const nodes = (root) => root && typeof root === "object" ? [root, ...root.children.flatMap(nodes)] : [];
@@ -328,6 +348,11 @@ test("Account : actions actives, confirmation native, résiliation vérifiée et
   try {
     assert.equal(button("Restaurer mes achats"), undefined);
     assert.equal(refreshed, 1);
+    assert.equal(resumed, 0);
+    paywallLoading = false;
+    render();
+    await new Promise(setImmediate);
+    assert.equal(resumed, 1);
     assert.equal(button("premium:subscription.refresh"), undefined);
     button("premium:subscription.manage").props.onPress();
     assert.equal(render().find((node) => node.type === "Dialog").props.visible, true);

@@ -330,7 +330,7 @@ function AccountScreenContent() {
     ? params.action[0]
     : params.action;
 
-  const canResumePurchase = auth.isPermanentAccount && !auth.isLoading &&
+  const canResumePurchase = auth.isPermanentAccount && !auth.isLoading && !paywall.isLoading &&
     !auth.isHandlingDeepLink && !auth.needsPasswordSetup && !auth.isPasswordRecovery;
   const refreshSubscription = paywall.refreshSubscription;
   useFocusEffect(React.useCallback(() => {
