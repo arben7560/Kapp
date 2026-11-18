@@ -34,7 +34,7 @@ const translatedChoiceLabels: Record<string, string> = {
   "ㅐ est muet": "ㅐ は発音しない",
   "Reconnaître l’orthographe": "つづりの違いを見分ける",
   "Deviner uniquement à l’oreille": "音だけで推測する",
-  "Les ignorer": "区別せずに覚えない",
+  "Les ignorer": "無視する",
   "Sa prononciation varie selon la position": "位置によって発音が変わる",
   "Il se prononce toujours eu-i": "いつも eu-i と発音する",
   "Il est muet": "発音しない",
@@ -65,9 +65,14 @@ function generatedRecognitionQuestion(
     : consonant
       ? "子音は ㅏ と組み合わせて再生されます。聞こえた子音を選ぼう。"
       : "音声を聞いて、合う文字を選ぼう。";
+  const audioExplanation = question.audio
+    ? consonant
+      ? `音声の「${question.audio}」は、子音 ${question.answer} で始まります。`
+      : `音声の「${question.audio}」に含まれる母音は ${question.answer} です。`
+    : `正解は ${question.answer} です。`;
   const explanation = isVisual
     ? `${question.answer}：${cardCopy[1]}`
-    : `聞こえたのは ${question.answer}。${cardCopy[1]}`;
+    : `${audioExplanation}${cardCopy[1]}`;
   return [prompt, explanation];
 }
 
