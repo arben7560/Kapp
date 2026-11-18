@@ -1,4 +1,7 @@
 {
+  "navigation": {
+    "back": "RETOUR"
+  },
   "language": {
     "french": "Français",
     "japanese": "日本語",

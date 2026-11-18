@@ -41,6 +41,15 @@ test('detects supported phone languages in order and falls back to French', () =
   assert.equal(detectDeviceLocale([]), 'fr');
 });
 
+test('shared back label follows the active interface language without remounting', async () => {
+  const instance = createAppI18n('fr');
+  assert.equal(instance.t('navigation.back', { ns: 'common' }), 'RETOUR');
+  await instance.changeLanguage('ja');
+  assert.equal(instance.t('navigation.back', { ns: 'common' }), '戻る');
+  await instance.changeLanguage('fr');
+  assert.equal(instance.t('navigation.back', { ns: 'common' }), 'RETOUR');
+});
+
 test('hydrates once and resolves the device language before declaring readiness', async () => {
   const { controller, instance, calls, entries } = setup();
   let updates = 0;

@@ -98,6 +98,7 @@ export const RESTAURANT_IMMERSION_COPY: Readonly<Record<string, string>> = {
   "Commander oralement dans un BBQ coréen, de la viande jusqu’au reçu.": "韓国の焼肉店で、肉の注文からレシートを受け取るまで声に出して練習しましょう。",
   "Cuisson": "焼き方",
   "Accompagnements": "おかず",
+  "Accomp.": "サイド",
   "Paiement": "お会計",
   "3-4 min": "３～４分",
   "4-6 min": "４～６分",

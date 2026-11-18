@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, type Href, usePathname } from "expo-router";
+import { useTranslation } from "react-i18next";
 import {
   Pressable,
   StyleSheet,
@@ -33,7 +34,7 @@ type AppBackButtonProps = {
 export function AppBackButton({
   accessibilityLabel = "Retour à l’écran précédent",
   accessibilityHint = "Revient à l’écran précédent",
-  label = "RETOUR",
+  label,
   labelScript,
   fallbackHref = "/(tabs)",
   iconColor = "#FFFFFF",
@@ -42,6 +43,7 @@ export function AppBackButton({
 }: AppBackButtonProps) {
   const pathname = usePathname();
   const translate = useVocabularyText();
+  const { t } = useTranslation("common");
 
   const handlePress = () => {
     if (pathname === "/speak") {
@@ -86,7 +88,7 @@ export function AppBackButton({
         lineContract="singleLine"
         style={styles.label}
       >
-        {label}
+        {label ?? t("navigation.back")}
       </AppText>
     </View>
   );
