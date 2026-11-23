@@ -115,9 +115,12 @@ export function getPremiumEntitlementInfo(customerInfo: CustomerInfo) {
 export function hasActivePremiumEntitlement(customerInfo: CustomerInfo, now = Date.now()) {
   const entitlement = getPremiumEntitlementInfo(customerInfo);
   if (entitlement?.isActive !== true) return false;
-  if (IS_REVENUECAT_TEST_STORE
-    ? entitlement.store !== "TEST_STORE"
-    : entitlement.store === "TEST_STORE") return false;
+  if (IS_REVENUECAT_TEST_STORE) {
+    if (entitlement.store !== "TEST_STORE") return false;
+  } else {
+    if (entitlement.store !== "PLAY_STORE" ||
+        !Number.isFinite(entitlement.expirationDateMillis)) return false;
+  }
   const deadline = getPremiumAccessDeadline(customerInfo);
   return deadline === null || deadline > now;
 }

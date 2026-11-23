@@ -19,6 +19,7 @@ import {
 
 const entitlement = (isActive = true) => ({
   isActive,
+  store: "PLAY_STORE",
   productIdentifier: "kapp_premium_monthly",
   expirationDateMillis: 1_800_000_000_000,
   willRenew: false,

@@ -71,6 +71,20 @@ test("la grâce ne dépasse jamais la date fournie par RevenueCat", () => {
   assert.equal(hasActivePremiumEntitlement(info({ isActive: false }, { gracePeriodExpiresDate: iso(30_000) }), now), false);
 });
 
+test("seul un abonnement Google Play actif et daté ouvre Premium en mode plateforme", () => {
+  const renewed = info({ expirationDateMillis: now + 120_000 });
+  const cancelled = info({ willRenew: false, unsubscribeDetectedAt: iso(-1000) });
+  assert.equal(hasActivePremiumEntitlement(renewed, now), true);
+  assert.equal(hasActivePremiumEntitlement(cancelled, now), true);
+  assert.equal(hasActivePremiumEntitlement(cancelled, now + 60_000), false);
+  for (const store of ["PROMOTIONAL", "TEST_STORE", "APP_STORE", "STRIPE", "UNKNOWN_STORE"]) {
+    assert.equal(hasActivePremiumEntitlement(info({ store }), now), false, store);
+  }
+  assert.equal(hasActivePremiumEntitlement(info({ expirationDateMillis: null }), now), false);
+  assert.equal(hasActivePremiumEntitlement(info({ expirationDateMillis: now - 1 }), now), false);
+  assert.equal(hasActivePremiumEntitlement(info({ isActive: false }), now), false);
+});
+
 test("dates absentes ou invalides et prépaiement ne deviennent pas une résiliation inventée", () => {
   const prepaid = subscriptionDetails(info({ willRenew: false, unsubscribeDetectedAt: null }), packages, now);
   assert.equal(prepaid.state, "active");
@@ -110,13 +124,13 @@ test("gestion : priorité au lien RevenueCat, repli Google ciblé, aucun lien fi
   assert.equal(subscriptionManagementURL(info({ store: "APP_STORE" })), "https://apps.apple.com/account/subscriptions");
 });
 
-test("résiliation réservée aux abonnements Store actifs et renouvelables, même en sandbox Google", () => {
-  for (const store of ["PLAY_STORE", "APP_STORE"]) {
+test("résiliation réservée aux abonnements Play actifs et renouvelables, même en sandbox Google", () => {
+  for (const store of ["PLAY_STORE"]) {
     assert.equal(subscriptionDetails(info({ store, isSandbox: true }), {}, now).canCancel, true);
     assert.equal(subscriptionDetails(info({ store, willRenew: false }), {}, now).canCancel, false);
     assert.equal(subscriptionDetails(info({ store, isActive: false }), {}, now).canCancel, false);
   }
-  for (const store of ["TEST_STORE", "PROMOTIONAL", "UNKNOWN_STORE"]) {
+  for (const store of ["TEST_STORE", "PROMOTIONAL", "UNKNOWN_STORE", "APP_STORE"]) {
     assert.equal(subscriptionDetails(info({ store }), {}, now).canCancel, false);
   }
 });
