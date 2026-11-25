@@ -89,20 +89,22 @@ export function createAccountProtectionPromptSessionGuard() {
   };
 }
 
-/** Inline Hub reminder: derived from actual learning, not visit/dismissal history. */
+/** Inline Hub reminder: new activity in this runtime session plus saved progress. */
 export function shouldShowGuestProgressSave({
   isPermanentAccount,
   isAuthLoading,
   isHydrated,
+  hasLearningActivityThisSession,
   meaningfulProgressCount,
   completedDays,
 }: {
   isPermanentAccount: boolean;
   isAuthLoading: boolean;
   isHydrated: boolean;
+  hasLearningActivityThisSession: boolean;
   meaningfulProgressCount: number;
   completedDays: number;
 }) {
   return !isPermanentAccount && !isAuthLoading && isHydrated &&
-    (meaningfulProgressCount > 0 || completedDays > 0);
+    hasLearningActivityThisSession && (meaningfulProgressCount > 0 || completedDays > 0);
 }
