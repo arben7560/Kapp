@@ -48,6 +48,8 @@ import {
   getRestaurantMissionScenario,
 } from "../../data/lesson/restaurant/restaurantMissions";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
+import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
+import { playKoreanReviewPhrase } from "../../lib/koreanReviewPlayback";
 import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
 import {
   useKoreanSpeechRecognition,
@@ -101,6 +103,30 @@ const RESTAURANT_MISSION_PHRASES: Record<
     french: "Merci, j’ai bien mangé.",
   },
 };
+
+function RestaurantReviewListenButton({ phrase }: Readonly<{ phrase: string }>) {
+  const translate = useVocabularyText();
+  const [hasListened, setHasListened] = useState(false);
+  useSpeechLifecycle();
+  const label = hasListened ? "Réécouter" : "Écouter";
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={translate(label + " la phrase à retenir")}
+      hitSlop={6}
+      onPress={() => playKoreanReviewPhrase(phrase, () => setHasListened(true), translate)}
+      style={({ pressed }) => [
+        styles.endActionSecondary,
+        { opacity: pressed ? 0.9 : 1 },
+      ]}
+    >
+      <AppText variant="button" tone="strong" script="latin" align="center" style={styles.endActionSecondaryText}>
+        {label}
+      </AppText>
+    </Pressable>
+  );
+}
 
 // ==================== VIDEOS ====================
 const pedWelcome = require("../../assets/ai/restaurant/ped_welcome.mp4");
@@ -1180,6 +1206,10 @@ function RestaurantIaContent() {
                   >
                     {missionPhrase.french}
                   </AppText>
+
+                  {isRestaurantSpeechEnabled ? (
+                    <RestaurantReviewListenButton key={missionPhrase.korean} phrase={missionPhrase.korean} />
+                  ) : null}
 
                   <View style={styles.endActions}>
                     <Pressable

@@ -1,4 +1,5 @@
 import * as Speech from "@/lib/speechPlayback";
+import { playKoreanReviewPhrase } from "@/lib/koreanReviewPlayback";
 import { useEffect, useMemo, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
@@ -147,9 +148,11 @@ export function CafeConversationSummaryModal({
   };
 
   const speak = (phrase: string) => {
-    void Speech.stop();
-    setListenedPhrases((current) => ({ ...current, [phrase]: true }));
-    Speech.speak(phrase, { language: "ko-KR", rate: 0.88 });
+    playKoreanReviewPhrase(
+      phrase,
+      () => setListenedPhrases((current) => ({ ...current, [phrase]: true })),
+      translate,
+    );
   };
 
   return (

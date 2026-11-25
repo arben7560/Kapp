@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Speech from "@/lib/speechPlayback";
+import { playKoreanReviewPhrase } from "@/lib/koreanReviewPlayback";
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
@@ -158,12 +159,11 @@ export function MetroConversationSummaryModal({
                 accessibilityRole="button"
                 accessibilityLabel={translate(`${hasListened ? "Réécouter" : "Écouter"} la phrase à retenir`)}
                 onPress={() => {
-                  Speech.stop();
-                  setHasListened(true);
-                  Speech.speak(referencePhrase.korean, {
-                    language: "ko-KR",
-                    rate: 0.82,
-                  });
+                  playKoreanReviewPhrase(
+                    referencePhrase.korean,
+                    () => setHasListened(true),
+                    translate,
+                  );
                 }}
                 style={styles.listenButton}
               >
