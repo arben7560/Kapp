@@ -686,6 +686,51 @@ test("Google Play : abonnement expiré achète normalement, annulation du rempla
   } finally { active.cleanup(); }
 });
 
+test("Google Play : A conserve l’annuel, B ne récupère pas A et achète le mensuel séparément", async () => {
+  const annualA = playInfo("yearly");
+  annualA.entitlements.active.premium_all_access.willRenew = false;
+  const p = await provider({ platformStore: true, initial: annualA, offerings: playOfferings });
+  try {
+    assert.equal(p.render().hasPremiumAccess, true, "la résiliation ne retire pas l’accès avant expiration");
+    p.setUser({ id: "account-b", is_anonymous: false });
+    p.setInfo(info());
+    assert.equal(p.render().hasPremiumAccess, false);
+    assert.equal(p.render().isLoading, true);
+    await p.flush();
+    assert.equal(p.sdkIdentity(), "account-b");
+    assert.equal(p.render().hasPremiumAccess, false);
+
+    p.sdk.restorePurchases = async () => { p.calls.restores++; throw { code: "7" }; };
+    assert.equal(await p.render().restorePurchases(), false);
+    assert.equal(p.render().error.code, "purchase-owned-by-another-account");
+    assert.equal(p.render().hasPremiumAccess, false);
+
+    p.sdk.purchasePackage = async (selected, upgradeInfo, changeInfo) => {
+      p.calls.purchases.push({ selected, upgradeInfo, changeInfo });
+      if (selected.product.identifier.startsWith("kapp_premium_yearly")) throw { code: "6" };
+      return { customerInfo: playInfo("monthly") };
+    };
+    assert.equal(await p.render().subscribeYearly(), false);
+    assert.equal(p.calls.purchases[0].changeInfo, undefined, "B n’envoie pas le SKU de A pour un remplacement");
+    assert.equal(p.render().error.code, "product-already-purchased");
+    assert.equal(p.render().hasPremiumAccess, false);
+
+    assert.equal(await p.render().subscribeMonthly(), true);
+    assert.equal(p.calls.purchases[1].changeInfo, undefined);
+    assert.equal(p.render().hasPremiumAccess, true);
+    assert.equal(p.render().entitlement.productId, "kapp_premium_monthly:base");
+
+    p.setUser({ id: "account-a", is_anonymous: false });
+    p.setInfo(annualA);
+    assert.equal(p.render().hasPremiumAccess, false, "B ne reste pas visible pendant la reconnexion de A");
+    await p.flush();
+    assert.equal(p.sdkIdentity(), "account-a");
+    assert.equal(p.render().entitlement.productId, "kapp_premium_yearly:base");
+    assert.equal(p.render().entitlement.willAutoRenew, false);
+    assert.equal(p.calls.restores, 1, "seule la restauration demandée pour B a eu lieu");
+  } finally { p.cleanup(); }
+});
+
 test("Google Play : ouverture sans résiliation locale, retour vérifié, cache ancien et réseau sans confirmation", async () => {
   const startedAt = Date.now();
   const customer = (cancelled = false, requestOffset = 0) => {

@@ -22,6 +22,7 @@ const REVENUECAT_ERROR_CODES = {
   offline: "35",
   operationInProgress: "15",
   paymentPending: "20",
+  productAlreadyPurchased: "6",
   productUnavailable: "5",
   purchaseCancelled: "1",
   purchaseNotAllowed: "3",
@@ -52,6 +53,8 @@ export function toRevenueCatError(error: unknown): PaywallError {
     case "7":
     case "13":
       return { code: "purchase-owned-by-another-account", message: "Cet achat est associé à un autre compte K-App. Connecte-toi au compte utilisé lors de l’achat." };
+    case REVENUECAT_ERROR_CODES.productAlreadyPurchased:
+      return { code: "product-already-purchased", message: "Cet abonnement est déjà détenu par ton compte Google Play. Vérifie tes abonnements dans Google Play. Si tu l’as acheté avec un autre compte K-App, reconnecte-toi à ce compte." };
     case "authentication-required":
     case "identity-changed":
       return { code, message: "Connecte-toi à ton compte K-App pour continuer." };
