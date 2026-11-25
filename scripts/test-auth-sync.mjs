@@ -18,6 +18,7 @@ import {
   validatePassword,
 } from "../lib/authErrors.ts";
 import { mergeProgressSnapshots } from "../lib/progressMerge.ts";
+import { shouldShowGuestProgressSave } from "../lib/accountProtectionPrompt.ts";
 
 const rootLayoutSource = await readFile(
   new URL("../app/_layout.tsx", import.meta.url),
@@ -125,7 +126,7 @@ test("cloud and local snapshots keep both sets of completed learning", () => {
 test("the Hub exposes profile access and keeps protection in the account route", () => {
   assert.match(hubSource, /accessibilityLabel=\{translate\("Ouvrir mon profil"\)\}/u);
   assert.match(hubSource, /onOpenProfile=\{\(\) => router\.push\("\/account"\)\}/u);
-  assert.match(hubSource, /pathname: "\/account",[\s\S]*?action: "protect"/u);
+  assert.match(hubSource, /onSaveProgress=\{showGuestProgressSave \? \(\) => router\.push\("\/account"\) : undefined\}/u);
   assert.match(hubSource, /useAuth\(\)/u);
   assert.doesNotMatch(hubSource, /protectProgress\(/u);
 });
@@ -135,14 +136,10 @@ test("profile and protection controls keep compact responsive contracts", () => 
     hubSource,
     /profileButton:\s*\{[\s\S]*?width: 44,[\s\S]*?height: 44,/u,
   );
-  assert.match(
-    hubSource,
-    /compact && styles\.protectionActionsCompact/u,
-  );
-  assert.match(
-    hubSource,
-    /protectionActionsCompact:\s*\{[\s\S]*?flexDirection: "column"/u,
-  );
+  assert.match(hubSource, /compact && styles\.protectionCardCompact/u);
+  assert.match(hubSource, /protectionTitle:\s*\{[\s\S]*?flex: 1,[\s\S]*?minWidth: 0/u);
+  assert.match(hubSource, /<\/Pressable>\s*\{onSaveProgress \? \([\s\S]*?<AccountProtectionCard compact=\{compact\} onProtect=\{onSaveProgress\}/u);
+  assert.doesNotMatch(hubSource, /accountProtectionPromptSessionGuard|showProtectionPrompt/u);
 });
 
 test("the real sync provider merges a Google UID, isolates logout and restores reconnection without touching locale/navigation", async () => {
@@ -242,4 +239,20 @@ test("the real sync provider merges a Google UID, isolates logout and restores r
   } finally {
     hook.cleanup();
   }
+});
+
+test("guest save CTA follows meaningful hydrated progress and permanent account status", () => {
+  const guest = {
+    isPermanentAccount: false, isAuthLoading: false, isHydrated: true,
+    meaningfulProgressCount: 0, completedDays: 0,
+  };
+  assert.equal(shouldShowGuestProgressSave(guest), false);
+  assert.equal(shouldShowGuestProgressSave({ ...guest, meaningfulProgressCount: 1 }), true);
+  assert.equal(shouldShowGuestProgressSave({ ...guest, completedDays: 1 }), true);
+  const progressed = { ...guest, completedDays: 1, meaningfulProgressCount: 1 };
+  assert.equal(shouldShowGuestProgressSave({ ...progressed, isPermanentAccount: true }), false);
+  assert.equal(shouldShowGuestProgressSave({ ...progressed, isAuthLoading: true }), false);
+  assert.equal(shouldShowGuestProgressSave({ ...progressed, isHydrated: false }), false);
+  // Cancelled or failed login leaves the guest and local progress unchanged.
+  assert.equal(shouldShowGuestProgressSave(progressed), true);
 });
