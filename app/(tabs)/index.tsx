@@ -68,7 +68,11 @@ import {
   readHomeResumeContext,
   type HomeResumeContext,
 } from "../../lib/homeResume";
-import { subscribeToProgressHydration } from "../../lib/progressSyncEvents";
+import {
+  hasSessionLearningActivity,
+  subscribeToProgressHydration,
+  subscribeToSessionLearningActivity,
+} from "../../lib/progressSyncEvents";
 import { resolveDisplayMessage, type DisplayMessage } from "../../lib/i18n/displayText";
 import { resolveAccountText } from "../../lib/i18n/accountText";
 import { HomeLocalizationProvider } from "../../lib/i18n/HomeLocalizationProvider";
@@ -728,10 +732,13 @@ function HomeContent() {
 
   const [seoulTime, setSeoulTime] = useState(formatSeoulTime);
 
+  const [hasLearningActivityThisSession, setHasLearningActivityThisSession] = useState(false);
+
   const showGuestProgressSave = shouldShowGuestProgressSave({
     isPermanentAccount: auth.isPermanentAccount,
     isAuthLoading: auth.isLoading,
     isHydrated,
+    hasLearningActivityThisSession,
     meaningfulProgressCount: getMeaningfulProgressCount(progress),
     completedDays: streak?.totalCompletedDays ?? 0,
   });
@@ -869,6 +876,17 @@ function HomeContent() {
       }
     };
   }, []);
+
+  // Re-evaluate on Hub focus, not when a saved snapshot is restored at launch.
+  // The subscription also handles an activity write finishing during navigation.
+  useFocusEffect(
+    useCallback(() => {
+      const refresh = () => setHasLearningActivityThisSession(hasSessionLearningActivity());
+      const unsubscribe = subscribeToSessionLearningActivity(refresh);
+      refresh();
+      return unsubscribe;
+    }, []),
+  );
 
   // Refresh streak
   useFocusEffect(
