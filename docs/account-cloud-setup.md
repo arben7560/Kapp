@@ -67,25 +67,25 @@ K-App.
    `supabase/migrations/202608170001_user_progress.sql` avec la CLI ou le SQL
    Editor.
 3. Dans **Authentication > Providers** :
-   - activer Email ;
    - activer Anonymous Sign-Ins ;
-   - activer Manual Linking, requis pour convertir le même utilisateur
-     anonyme ;
-   - conserver Confirm Email activé en production.
+   - conserver Google et activer Azure (Microsoft) selon la section ci-dessous ;
+   - conserver Email temporairement si des comptes historiques utilisent encore
+     cette méthode. Après migration de ces comptes, le désactiver côté Supabase
+     pour empêcher aussi les inscriptions par API.
 4. Dans **Authentication > URL Configuration**, autoriser au minimum :
-   - `kapp://account/callback` ;
-   - les URL `exp://.../--/account/callback` propres aux appareils de test si
-     Expo Go est utilisé ;
+   - `kapp://account` ;
+   - `kapp://account?action=oauth-login-google` ;
+   - `kapp://account?action=oauth-login-azure` ;
    - l’URL HTTPS de preview éventuelle.
-5. Vérifier que les templates de confirmation/changement d’email et de
-   récupération respectent `RedirectTo`/`ConfirmationURL` afin de revenir vers
-   le callback autorisé.
-6. Déployer manuellement la fonction avec
+   L’ancien écran `/account/callback` reste présent comme redirection de
+   compatibilité pour les liens déjà distribués ; il n’est plus une URL de
+   connexion ou d’inscription configurée pour les nouveaux parcours.
+5. Déployer manuellement la fonction avec
    `supabase functions deploy delete-account`. Ne pas utiliser
    `--no-verify-jwt`.
-7. Activer CAPTCHA/Turnstile pour la création anonyme en production et régler
+6. Activer CAPTCHA/Turnstile pour la création anonyme en production et régler
    les limites Auth pour éviter la création automatisée de comptes anonymes.
-8. Prévoir une politique de purge serveur des utilisateurs anonymes anciens
+7. Prévoir une politique de purge serveur des utilisateurs anonymes anciens
    si nécessaire ; ne jamais supprimer ceux qui ont une activité à conserver
    sans politique produit explicite.
 
@@ -96,24 +96,47 @@ EXPO_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_public_key
 ```
 
-`EXPO_PUBLIC_SUPABASE_ANON_KEY` reste accepté comme nom de transition. Aucune
-clé `service_role` ne doit être ajoutée à Expo/EAS ; elle n’est utilisée que par
+Aucune clé `service_role` ne doit être ajoutée à Expo/EAS ; elle n’est utilisée que par
 l’environnement sécurisé de l’Edge Function.
 
-## Confirmation email et mot de passe
+## Connexion Microsoft : configuration manuelle
 
-K-App transmet l’email et le mot de passe choisi dans le même appel `updateUser`.
-Supabase envoie ensuite le changement d’email avec le callback de protection.
-Après validation, K-App finalise la session et affiche la réussite sans demander
-une seconde saisie. Aucun mot de passe en attente n’est stocké localement.
+1. Dans **Microsoft Entra ID > App registrations**, enregistrer une application
+   dont les types de comptes pris en charge incluent **les comptes Microsoft
+   personnels** : « Accounts in any organizational directory and personal
+   Microsoft accounts » pour les deux catégories, ou « Personal Microsoft
+   accounts only » pour Outlook, Hotmail et Live uniquement.
+2. Dans **Authentication**, ajouter une plateforme **Web** et son URI de
+   redirection exact : `https://<project-ref>.supabase.co/auth/v1/callback`.
+   Si le projet Supabase utilise un domaine Auth personnalisé, prendre l’URI
+   affiché par Supabase. Le deep link `kapp://account` ne se configure pas dans
+   Entra : Microsoft renvoie d’abord vers Supabase.
+3. Dans **Certificates & secrets**, créer un Client Secret et copier sa **Value**
+   dans un gestionnaire de secrets. Copier aussi l’**Application (client) ID**.
+   Ne mettre le secret ni dans le dépôt, ni dans `EXPO_PUBLIC_*`, ni dans EAS.
+4. Dans **Supabase > Authentication > Providers > Azure (Microsoft)**, activer
+   le fournisseur, saisir le Client ID et le Client Secret, puis saisir l’URL
+   de tenant `https://login.microsoftonline.com/common` pour les comptes
+   personnels et professionnels, ou `https://login.microsoftonline.com/consumers`
+   si l’enregistrement Entra est réservé aux comptes personnels. Laisser
+   Supabase créer les utilisateurs au premier OAuth ; K-App demande le scope
+   `email`, nécessaire à l’identité Supabase. Aucun formulaire ni e-mail de
+   confirmation K-App n’est envoyé dans ce parcours.
+5. Dans **Supabase > Authentication > URL Configuration**, autoriser les deux
+   redirections mobiles `kapp://account?action=oauth-login-google` et
+   `kapp://account?action=oauth-login-azure`, avec `kapp://account` comme URL
+   de base si nécessaire. Ajouter séparément les URL HTTPS du site web/preview.
+6. Sur une build Android installée avec le schéma `kapp`, tester compte Microsoft
+   personnel neuf puis existant, annulation, erreur, fermeture et relance de
+   l’application, déconnexion/reconnexion, sauvegarde de progression et accès
+   Premium. Vérifier dans Supabase que l’identité `azure` et l’UID attendu sont
+   associés, et dans RevenueCat que l’entitlement reste lié au même UID.
 
-Si Confirm Email est désactivé dans un environnement de test, `updateUser`
-convertit immédiatement l’utilisateur et K-App affiche directement la réussite.
-Cette configuration ne doit pas être reproduite silencieusement en production.
-
-La récupération utilise le même callback avec `intent=recovery`, échange le
-code PKCE (ou les jetons legacy), puis appelle `updateUser({ password })` depuis
-une session de récupération valide.
+Les sessions déjà actives des comptes historiques restent lisibles. Avant de
+désactiver Email ou Apple côté Supabase, prévoir la migration des comptes qui
+n’ont que cette identité : une reconnexion OAuth peut lier automatiquement une
+identité de même adresse e-mail vérifiée, mais il faut confirmer l’UID et les
+droits Premium sur un échantillon réel avant une coupure serveur.
 
 ## RevenueCat
 

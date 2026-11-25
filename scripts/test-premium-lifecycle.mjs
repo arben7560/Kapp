@@ -336,6 +336,7 @@ test("Account : actions actives, confirmation native, résiliation vérifiée et
     "../../components/application-language-settings": {}, "../../components/language-selection-screen": {},
     "../../components/app-text": { AppText: "Text", AppTextInput: "Input" },
     "../../components/account/AccountActionButton": { AccountActionButton: "Button" },
+    "../../components/account/MicrosoftLogo": { MicrosoftLogo: "MicrosoftLogo" },
     "../../components/ui/app-back-button": { AppBackButton: "Back" },
     "../../components/ui/app-dialog": { AppDialog: "Dialog", DialogActions: "Actions" },
     "../../components/premium/SubscriptionDetails": { SubscriptionDetails: "Details" },

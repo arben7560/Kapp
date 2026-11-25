@@ -1116,10 +1116,7 @@ function HomeContent() {
                   compact={responsive.isCompact}
                   onProtect={() => {
                     setShowProtectionPrompt(false);
-                    router.push({
-                      pathname: "/account",
-                      params: { action: "protect" },
-                    });
+                    router.push("/account");
                   }}
                   onDismiss={dismissProtectionPrompt}
                 />

@@ -3,7 +3,6 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import {
-  assertLinkedUserId,
   authProvidersFromUser,
   parseAuthCallbackUrl,
 } from "../lib/authCallback.ts";
@@ -84,82 +83,34 @@ test("2. user_progress is read and upserted only for the active UID", () => {
   assert.match(migration, /auth\.uid\(\)\) = user_id/iu);
 });
 
-test("3. anonymous to email keeps the chosen password through confirmation", () => {
-  assert.match(authSource, /auth\.updateUser\([\s\S]*?\{ email, password \}/u);
-  assert.match(accountSource, /auth\.protectProgress\(email,\s*password\)/u);
-  assert.match(accountSource, /Compte créé avec succès/u);
-  assert.match(authSource, /setDidCompleteAccountProtection\(true\)/u);
-  assert.match(authSource, /PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY/u);
-  assert.match(
-    authSource,
-    /const completeAccountProtection[\s\S]*?auth\.updateUser\(\{[\s\S]*?password[\s\S]*?clearPendingProtectionState\(\)/u,
-  );
+test("3. only Google and Microsoft OAuth are offered; manual credentials are absent", () => {
+  assert.match(accountSource, /provider="google"[\s\S]*?provider="azure"/u);
+  assert.match(accountSource, /Se connecter avec Microsoft/u);
+  assert.match(authSource, /provider === "azure" \? \{ scopes: "email" \}/u);
+  for (const source of [accountSource, authSource]) {
+    assert.doesNotMatch(source, /signInWithPassword|resetPasswordForEmail|protectProgress|linkIdentity|updateUser\(/u);
+  }
+  assert.doesNotMatch(accountSource, /provider="apple"|Mot de passe oublié|Créer un compte avec mon email/u);
 });
 
-test("3b. stale legacy account-protection state cannot reopen password setup", () => {
-  assert.match(
-    authSource,
-    /if \(legacyPendingEmail\)[\s\S]*?removeItem\(PENDING_PROTECTION_EMAIL_KEY\)/u,
-  );
-  assert.doesNotMatch(
-    authSource,
-    /setNeedsPasswordSetup\(Boolean\(legacyPendingEmail/u,
-  );
-  assert.match(
-    authSource,
-    /pendingEmailMatchesUser\([\s\S]*?PENDING_PROTECTION_WITH_PASSWORD_EMAIL_KEY/u,
-  );
-});
-
-test("4. new and existing Google identities use the same OAuth sign-in", () => {
-  assert.match(
-    accountSource,
-    /provider === "google" \|\| existingAccount[\s\S]*?auth\.signInWithOAuth\(provider\)/u,
-  );
-  assert.match(
-    accountSource,
-    /provider="google"[\s\S]*?continueWithProvider\("google"\)/u,
-  );
+test("4. both providers use the existing PKCE callback and verify Supabase identity", () => {
   assert.match(authSource, /auth\.signInWithOAuth\(credentials\)/u);
+  assert.match(authSource, /exchangeCodeForSession/u);
+  assert.match(authSource, /auth\.getUser\(\)/u);
+  assert.match(authSource, /authProvidersFromUser\(userResult\.user\)\.includes\(provider\)/u);
+  assert.match(authSource, /synchronizeProgressNow\(\)[\s\S]*?auth\.signInWithOAuth\(credentials\)/u);
+  assert.match(accountSource, /if \(provider === "azure"\) return "Microsoft"/u);
+  assert.doesNotMatch(authSource, /EXPO_PUBLIC_.*SECRET|client_secret/u);
 });
 
-test("4b. Google sign-in keeps guest progress available for the target UID merge", () => {
-  const oauthImplementation = authSource.slice(
-    authSource.indexOf("const runOAuth"),
-    authSource.indexOf("const signOut"),
-  );
-  assert.match(
-    oauthImplementation,
-    /intent === "login"[\s\S]*?synchronizeProgressNow\(\)[\s\S]*?auth\.signInWithOAuth\(credentials\)/u,
-  );
-  assert.match(
-    syncProviderSource,
-    /userIdRef\.current !== nextUserId[\s\S]*?lastSyncedFingerprintRef\.current = null/u,
-  );
-});
-
-test("5. anonymous to Apple uses linking and is exposed only on iOS", () => {
-  assert.match(authSource, /intent === "link"/u);
-  assert.match(accountSource, /Platform\.OS === "ios"[\s\S]*?provider="apple"/u);
-});
-
-test("6. linking rejects any unexpected UID change", () => {
-  assert.doesNotThrow(() => assertLinkedUserId(USER_ID, USER_ID));
-  assert.throws(() => assertLinkedUserId(USER_ID, "other-user"));
-  assert.match(authSource, /assertLinkedUserId\(attempt\.expectedUserId, userResult\.user\.id\)/u);
-});
-
-test("7. identity linking keeps the same user_progress ownership", () => {
+test("5. existing OAuth identity metadata remains available for progress ownership", () => {
   const providers = authProvidersFromUser({
-    app_metadata: { providers: ["anonymous", "google"] },
-    identities: [{ provider: "google" }],
+    app_metadata: { providers: ["anonymous", "google", "azure"] },
+    identities: [{ provider: "azure" }],
   });
   assert.ok(providers.includes("google"));
-  const oauthImplementation = authSource.slice(
-    authSource.indexOf("const runOAuth"),
-    authSource.indexOf("const signOut"),
-  );
-  assert.doesNotMatch(oauthImplementation, /auth\.signOut\(/u);
+  assert.ok(providers.includes("azure"));
+  assert.doesNotMatch(authSource.slice(authSource.indexOf("const runOAuth"), authSource.indexOf("const signOut")), /auth\.signOut\(/u);
 });
 
 test("8. a blank device restores the permanent account cloud snapshot", async () => {
@@ -190,44 +141,10 @@ test("10. logout synchronizes first and then creates a new guest session", () =>
   assert.match(authSource, /scope: "local"/u);
 });
 
-test("11. classic reconnection supports password and OAuth accounts", () => {
-  assert.match(authSource, /signInWithPassword/u);
+test("11. OAuth reconnection keeps password routes unavailable", () => {
   assert.match(authSource, /auth\.signInWithOAuth\(credentials\)/u);
-  assert.match(accountSource, /J’ai déjà un compte/u);
-});
-
-test("11b. explicit reconnection clears abandoned creation state first", () => {
-  const passwordSignIn = authSource.slice(
-    authSource.indexOf("const signIn ="),
-    authSource.indexOf("const runOAuth"),
-  );
-  assert.match(
-    passwordSignIn,
-    /clearPendingProtectionState\(\)[\s\S]*?signInWithPassword/u,
-  );
-
-  const oauthImplementation = authSource.slice(
-    authSource.indexOf("const runOAuth"),
-    authSource.indexOf("const signOut"),
-  );
-  assert.match(
-    oauthImplementation,
-    /intent === "login"[\s\S]*?clearPendingProtectionState\(\)[\s\S]*?signInWithOAuth/u,
-  );
-});
-
-test("12. password reset uses the K-App recovery callback", () => {
-  assert.match(authSource, /resetPasswordForEmail[\s\S]*?createAuthRedirectUrl\("recovery"\)/u);
-  assert.match(authSource, /event === "PASSWORD_RECOVERY"/u);
-  assert.match(
-    authSource,
-    /const resetPassword[\s\S]*?clearPendingProtectionState\(\)[\s\S]*?resetPasswordForEmail/u,
-  );
-  assert.match(
-    accountSource,
-    /await auth\.updatePassword\(password\);[\s\S]*?setMode\("password-success"\)/u,
-  );
-  assert.match(accountSource, /Votre mot de passe a été mis à jour avec succès/u);
+  assert.doesNotMatch(authSource, /signInWithPassword|resetPasswordForEmail|PASSWORD_RECOVERY/u);
+  assert.doesNotMatch(accountSource, /Mot de passe oublié|Email de récupération/u);
 });
 
 test("13. PKCE and token callbacks parse safely without a native localhost fallback", () => {
@@ -286,12 +203,8 @@ test("a stale UID synchronization cannot overwrite the newly signed-in user", ()
 
 test("auth deep links bypass only the initial onboarding redirect", () => {
   for (const action of [
-    "recovery",
-    "protect",
-    "oauth-link-google",
-    "oauth-link-apple",
     "oauth-login-google",
-    "oauth-login-apple",
+    "oauth-login-azure",
   ]) {
     assert.match(rootLayoutSource, new RegExp(`"${action}"`, "u"));
   }

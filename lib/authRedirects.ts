@@ -4,12 +4,8 @@ import { Platform } from "react-native";
 const NATIVE_SCHEME = "kapp";
 
 export type AuthRedirectAction =
-  | "protect"
-  | "recovery"
-  | "oauth-link-google"
-  | "oauth-link-apple"
   | "oauth-login-google"
-  | "oauth-login-apple";
+  | "oauth-login-azure";
 
 export function createAuthRedirectUrl(action?: AuthRedirectAction) {
   const url = Linking.createURL("/account", {

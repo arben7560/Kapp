@@ -43,12 +43,8 @@ export const unstable_settings = { anchor: "index" };
 
 const ONBOARDING_KEY = "kapp_onboarding_completed";
 const AUTH_ONBOARDING_BYPASS_ACTIONS = new Set([
-  "recovery",
-  "protect",
-  "oauth-link-google",
-  "oauth-link-apple",
   "oauth-login-google",
-  "oauth-login-apple",
+  "oauth-login-azure",
 ]);
 
 const KAPP_NAVIGATION_THEME = {

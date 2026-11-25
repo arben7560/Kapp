@@ -1,4 +1,4 @@
-export type KappOAuthProvider = "google" | "apple";
+export type KappOAuthProvider = "google" | "azure";
 
 export type ParsedAuthCallback = {
   code: string | null;
@@ -35,8 +35,8 @@ export function parseAuthCallbackUrl(url: string): ParsedAuthCallback {
   };
 }
 
-// Compare destinations, not query-string order. An explicit different action
-// (for example password recovery) must not complete an active OAuth attempt.
+// Compare destinations, not query-string order. An explicit different OAuth
+// action must not complete an active attempt.
 export function matchesAuthCallbackUrl(url: string, redirectTo: string) {
   try {
     const actual = new URL(url);
@@ -69,9 +69,9 @@ export function oauthProviderFromCallback(
 ): KappOAuthProvider | null {
   const action = new URL(url).searchParams.get("action");
   const candidate = action
-    ? action.match(/^oauth-(?:login|link)-(google|apple)$/u)?.[1]
-    : authProvidersFromUser(user).find((provider) => provider === "google" || provider === "apple");
-  return candidate === "google" || candidate === "apple" ? candidate : null;
+    ? action.match(/^oauth-login-(google|azure)$/u)?.[1]
+    : authProvidersFromUser(user).find((provider) => provider === "google" || provider === "azure");
+  return candidate === "google" || candidate === "azure" ? candidate : null;
 }
 
 export function authProvidersFromUser(
@@ -99,10 +99,4 @@ export function authProvidersFromUser(
   }
 
   return [...providers];
-}
-
-export function assertLinkedUserId(expectedUserId: string, actualUserId: string) {
-  if (expectedUserId !== actualUserId) {
-    throw new Error("linked identity changed the authenticated user id");
-  }
 }

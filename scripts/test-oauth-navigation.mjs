@@ -65,8 +65,11 @@ test("warm OAuth, recovery and duplicate callbacks leave the navigator state unt
 });
 
 test("cold callbacks keep the auth action but remove all credentials from route state", () => {
-  for (const action of ["oauth-login-google", "oauth-link-apple", "protect", "recovery"]) {
+  for (const action of ["oauth-login-google", "oauth-login-azure"]) {
     assert.equal(nativeIntent.redirectSystemPath({ path: `kapp://account?code=SECRET_CODE&action=${action}#access_token=SECRET_TOKEN`, initial: true }), `/account?action=${action}`);
+  }
+  for (const action of ["oauth-link-apple", "protect", "recovery"]) {
+    assert.equal(nativeIntent.redirectSystemPath({ path: `kapp://account?code=SECRET_CODE&action=${action}`, initial: true }), "/account");
   }
   assert.equal(nativeIntent.redirectSystemPath({ path: "kapp://account?code=SECRET_CODE&action=unknown", initial: true }), "/account");
 });

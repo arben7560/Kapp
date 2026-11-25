@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
@@ -18,8 +18,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "../../_store";
 import { ApplicationLanguageSettings } from "../../components/application-language-settings";
 import { LanguageSelectionScreen } from "../../components/language-selection-screen";
-import { AppText, AppTextInput } from "../../components/app-text";
+import { AppText } from "../../components/app-text";
 import { AccountActionButton as ActionButton } from "../../components/account/AccountActionButton";
+import { MicrosoftLogo } from "../../components/account/MicrosoftLogo";
 import { AppBackButton } from "../../components/ui/app-back-button";
 import { useTranslation } from "react-i18next";
 import { AccountLocalizationProvider } from "../../lib/i18n/AccountLocalizationProvider";
@@ -32,14 +33,10 @@ import { SeoulMidnightGlass } from "../../constants/theme";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useAuth } from "../../lib/AuthProvider";
 import type { KappOAuthProvider } from "../../lib/authCallback";
+import { KappAuthError } from "../../lib/authErrors";
 import {
   suppressAccountProtectionPromptAfterLogout,
 } from "../../lib/accountProtectionPromptStorage";
-import {
-  KappAuthError,
-  validateEmail,
-  validatePassword,
-} from "../../lib/authErrors";
 import { useProgressSync } from "../../lib/ProgressSyncProvider";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { subscriptionDetails } from "../../lib/paywall/subscriptionDetails";
@@ -47,17 +44,6 @@ import { resumePurchaseIntent } from "../../lib/paywall/purchaseIntent";
 import { SubscriptionDetails } from "../../components/premium/SubscriptionDetails";
 import { PurchaseSuccessNotice } from "../../components/premium/PurchaseSuccessNotice";
 import { synchronizeProgressNow } from "../../services/progressSync";
-
-type FormMode =
-  | "protect"
-  | "sign-in"
-  | "reset"
-  | "confirmation"
-  | "protection-success"
-  | "password-success"
-  | "set-password"
-  | "change-password"
-  | null;
 
 const COLORS = {
   cyan: SeoulMidnightGlass.colors.cyan,
@@ -133,7 +119,7 @@ function ProviderButton({
   onPress: () => void;
 }) {
   const translate = useVocabularyText();
-  const label = provider === "google" ? "Continuer avec Google" : "Continuer avec Apple";
+  const label = provider === "google" ? "Continuer avec Google" : "Se connecter avec Microsoft";
   return (
     <Pressable
       accessibilityRole="button"
@@ -149,11 +135,9 @@ function ProviderButton({
       {loading ? (
         <ActivityIndicator color={COLORS.text} size="small" />
       ) : (
-        <Ionicons
-          name={provider === "google" ? "logo-google" : "logo-apple"}
-          color={COLORS.text}
-          size={20}
-        />
+        provider === "azure" ? <MicrosoftLogo /> : (
+          <Ionicons name="logo-google" color={COLORS.text} size={20} />
+        )
       )}
       <AppText variant="button" style={styles.providerButtonLabel}>
         {label}
@@ -167,70 +151,12 @@ function providerSummary(providers: string[]) {
     .filter((provider) => provider !== "anonymous")
     .map((provider) => {
       if (provider === "google") return "Google";
+      if (provider === "azure") return "Microsoft";
       if (provider === "apple") return "Apple";
       if (provider === "email") return "Email + mot de passe";
       return provider;
     });
   return labels.length > 0 ? labels.join(" • ") : "Compte K-App";
-}
-
-function Field({
-  label,
-  value,
-  onChangeText,
-  placeholder,
-  secureTextEntry,
-  autoComplete,
-}: {
-  label: string;
-  value: string;
-  onChangeText: (value: string) => void;
-  placeholder: string;
-  secureTextEntry?: boolean;
-  autoComplete?: React.ComponentProps<typeof AppTextInput>["autoComplete"];
-}) {
-  const [isSecureTextVisible, setIsSecureTextVisible] = React.useState(false);
-  const translate = useVocabularyText();
-
-  return (
-    <View style={styles.fieldGroup}>
-      <AppText variant="label" tone="soft">
-        {label}
-      </AppText>
-      <View style={styles.inputShell}>
-        <AppTextInput
-          accessibilityLabel={label}
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoComplete={autoComplete}
-          keyboardType={label === "EMAIL" ? "email-address" : "default"}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor="rgba(255,255,255,0.30)"
-          secureTextEntry={secureTextEntry && !isSecureTextVisible}
-          variant="bodyStrong"
-          style={[styles.input, secureTextEntry && styles.inputWithToggle]}
-          value={value}
-        />
-        {secureTextEntry ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={translate(isSecureTextVisible ? "Masquer le mot de passe" : "Afficher le mot de passe")}
-            accessibilityState={{ checked: isSecureTextVisible }}
-            hitSlop={8}
-            onPress={() => setIsSecureTextVisible((visible) => !visible)}
-            style={styles.passwordToggle}
-          >
-            <Ionicons
-              name={isSecureTextVisible ? "eye-off-outline" : "eye-outline"}
-              size={21}
-              color={COLORS.soft}
-            />
-          </Pressable>
-        ) : null}
-      </View>
-    </View>
-  );
 }
 
 function AccountScreenContent() {
@@ -250,88 +176,28 @@ function AccountScreenContent() {
   const paywall = usePaywall();
   const sync = useProgressSync();
   const { resetProgress } = useStore();
-  const params = useLocalSearchParams<{ action?: string | string[] }>();
   const responsive = useResponsiveLayout({ maxWidth: 760 });
-  const [mode, setMode] = React.useState<FormMode>(null);
   const [showLanguagePreview, setShowLanguagePreview] = React.useState(false);
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [passwordConfirmation, setPasswordConfirmation] = React.useState("");
-  const [formError, setFormError] = React.useState<string | null>(null);
-  const [formSuccess, setFormSuccess] = React.useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const oauthNotice = auth.oauthOutcome?.result === "cancelled"
     ? "Connexion annulée. Aucun changement de compte."
     : auth.isPermanentAccount && auth.oauthOutcome?.result === "success"
-      ? `Connexion ${auth.oauthOutcome.provider === "google" ? "Google" : "Apple"} réussie.`
+      ? `Connexion ${auth.oauthOutcome.provider === "google" ? "Google" : "Microsoft"} réussie.`
       : null;
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const didHandleProtectAction = React.useRef(false);
-  const mountedRef = React.useRef(true);
-  React.useEffect(() => {
-    mountedRef.current = true;
-    return () => { mountedRef.current = false; };
-  }, []);
-  const clearAuthError = auth.clearError;
-  const clearAccountProtectionSuccess = auth.clearAccountProtectionSuccess;
-
-  const resetForm = React.useCallback(() => {
-    setEmail("");
-    setPassword("");
-    setPasswordConfirmation("");
-    setFormError(null);
-    setFormSuccess(null);
-    clearAuthError();
-  }, [clearAuthError]);
-
-  const openMode = React.useCallback(
-    (nextMode: FormMode) => {
-      resetForm();
-      if ((nextMode === "sign-in" || nextMode === "reset") && auth.user?.email) {
-        setEmail(auth.user.email);
-      }
-      setMode(nextMode);
-    },
-    [auth.user, resetForm],
-  );
-
-  const closeDialog = React.useCallback(() => {
-    if (isSubmitting || auth.activeOAuthProvider) return;
-    if (mode === "protection-success") {
-      clearAccountProtectionSuccess();
-    }
-    setMode(null);
-    resetForm();
-  }, [
-    auth.activeOAuthProvider,
-    clearAccountProtectionSuccess,
-    isSubmitting,
-    mode,
-    resetForm,
-  ]);
-
   const continueWithProvider = React.useCallback(
-    async (provider: KappOAuthProvider, existingAccount = false) => {
-      setFormError(null);
+    async (provider: KappOAuthProvider) => {
       try {
-        const result = provider === "google" || existingAccount
-          ? await auth.signInWithOAuth(provider)
-          : await auth.linkOAuthIdentity(provider);
-        if (mountedRef.current && result === "success") {
-          if (existingAccount) setMode(null);
-        }
-      } catch (caught) {
-        if (mountedRef.current) setFormError(friendlyError(caught));
+        await auth.signInWithOAuth(provider);
+      } catch {
+        // AuthProvider publishes a localized error on Account.
       }
     },
-    [auth, friendlyError],
+    [auth],
   );
-
-  const requestedAction = Array.isArray(params.action)
-    ? params.action[0]
-    : params.action;
 
   const canResumePurchase = auth.isPermanentAccount && !auth.isLoading && !paywall.isLoading &&
-    !auth.isHandlingDeepLink && !auth.needsPasswordSetup && !auth.isPasswordRecovery;
+    !auth.isHandlingDeepLink;
+  const purchaseResumeError = translate("Impossible de retrouver la formule sélectionnée. Rouvre Premium pour continuer.");
   const refreshSubscription = paywall.refreshSubscription;
   useFocusEffect(React.useCallback(() => {
     if (auth.isPermanentAccount && auth.user?.id && !auth.isLoading) void refreshSubscription();
@@ -341,122 +207,15 @@ function AccountScreenContent() {
     let active = true;
     void resumePurchaseIntent((intent) => {
       if (!active) return false;
-      setMode(null);
-      clearAccountProtectionSuccess();
       router.replace({ pathname: "/premium", params: {
         offerId: intent.offerId, returnTo: intent.returnTo ?? "", action: intent.action,
       } });
       return true;
     }).catch(() => {
-      if (active) setFormError("Impossible de retrouver la formule sélectionnée. Rouvre Premium pour continuer.");
+      if (active) Alert.alert(purchaseResumeError);
     });
     return () => { active = false; };
-  }, [canResumePurchase, clearAccountProtectionSuccess]));
-
-  React.useEffect(() => {
-    if (
-      didHandleProtectAction.current ||
-      requestedAction !== "protect" ||
-      auth.isLoading ||
-      !auth.isAnonymous
-    ) {
-      return;
-    }
-
-    didHandleProtectAction.current = true;
-    const timer = setTimeout(() => openMode("protect"), 0);
-    return () => clearTimeout(timer);
-  }, [auth.isAnonymous, auth.isLoading, openMode, requestedAction]);
-
-  React.useEffect(() => {
-    if (!auth.needsPasswordSetup) return;
-    const timer = setTimeout(() => openMode("set-password"), 0);
-    return () => clearTimeout(timer);
-  }, [auth.needsPasswordSetup, openMode]);
-
-  React.useEffect(() => {
-    if (!auth.didCompleteAccountProtection) return;
-    const timer = setTimeout(() => {
-      setEmail("");
-      setPassword("");
-      setPasswordConfirmation("");
-      setFormError(null);
-      setFormSuccess(null);
-      setMode("protection-success");
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [auth.didCompleteAccountProtection]);
-
-  React.useEffect(() => {
-    if (!auth.isPasswordRecovery) return;
-    const timer = setTimeout(() => openMode("change-password"), 0);
-    return () => clearTimeout(timer);
-  }, [auth.isPasswordRecovery, openMode]);
-
-  const ensureMatchingPasswords = React.useCallback(() => {
-    if (password !== passwordConfirmation) {
-      throw new KappAuthError(
-        "password-mismatch",
-        "Les deux mots de passe ne correspondent pas.",
-      );
-    }
-  }, [password, passwordConfirmation]);
-
-  const submit = React.useCallback(async () => {
-    if (!mode) return;
-    setIsSubmitting(true);
-    setFormError(null);
-    setFormSuccess(null);
-    try {
-      if (mode === "protect") {
-        if (!email.trim()) {
-          throw new KappAuthError(
-            "invalid-email",
-            "Renseignez votre adresse email.",
-          );
-        }
-        if (!password) {
-          throw new KappAuthError(
-            "password-too-short",
-            "Renseignez un mot de passe.",
-          );
-        }
-        ensureMatchingPasswords();
-        validateEmail(email);
-        validatePassword(password);
-        const result = await auth.protectProgress(email, password);
-        setPassword("");
-        setPasswordConfirmation("");
-        if (result === "confirmation-required") {
-          setMode("confirmation");
-        } else {
-          setMode("protection-success");
-        }
-      } else if (mode === "sign-in") {
-        await auth.signIn(email, password);
-        setMode(null);
-      } else if (mode === "reset") {
-        await auth.resetPassword(email);
-        setFormSuccess(
-          "Email envoyé. Ouvrez le lien sur cet appareil pour choisir un nouveau mot de passe.",
-        );
-      } else if (mode === "set-password") {
-        ensureMatchingPasswords();
-        await auth.completeAccountProtection(password);
-        setMode(null);
-      } else if (mode === "change-password") {
-        ensureMatchingPasswords();
-        await auth.updatePassword(password);
-        setPassword("");
-        setPasswordConfirmation("");
-        setMode("password-success");
-      }
-    } catch (caught) {
-      setFormError(friendlyError(caught));
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [auth, email, ensureMatchingPasswords, friendlyError, mode, password]);
+  }, [canResumePurchase, purchaseResumeError]));
 
   const requestSignOut = () => {
     Alert.alert(
@@ -539,31 +298,6 @@ function AccountScreenContent() {
     }
   }, [sync.status]);
 
-  const dialogTitle =
-    mode === "protect"
-      ? "Protéger ma progression"
-      : mode === "sign-in"
-        ? "J’ai déjà un compte"
-        : mode === "reset"
-          ? "Email de récupération"
-          : mode === "confirmation"
-            ? "Confirmez votre email"
-            : mode === "protection-success"
-              ? "Compte créé avec succès"
-            : mode === "password-success"
-              ? "Mot de passe modifié"
-            : mode === "set-password"
-              ? "Finaliser votre compte"
-              : "Nouveau mot de passe";
-
-  const requiresEmail = mode === "protect" || mode === "sign-in" || mode === "reset";
-  const requiresPassword =
-    mode === "protect" ||
-    mode === "sign-in" ||
-    mode === "set-password" ||
-    mode === "change-password";
-  const requiresConfirmation =
-    mode === "protect" || mode === "set-password" || mode === "change-password";
   const details = subscriptionDetails(paywall.customerInfo, paywall.subscriptions);
   const activePlanLabel = details.plan ? i18n.t(`premium:subscription.plan.${details.plan}`) : null;
   const isTestStoreSubscription = details.isTestStore;
@@ -587,7 +321,7 @@ function AccountScreenContent() {
   const [restoredUserId, setRestoredUserId] = React.useState<string | null>(null);
   const handleRestore = async () => {
     setRestoredUserId(null);
-    if (!auth.isPermanentAccount) { setSubscriptionDialogOpen(false); openMode("sign-in"); return; }
+    if (!auth.isPermanentAccount) { setSubscriptionDialogOpen(false); return; }
     if (await paywall.restorePurchases()) setRestoredUserId(auth.user?.id ?? null);
   };
 
@@ -718,7 +452,7 @@ function AccountScreenContent() {
                   Progression enregistrée sur cet appareil
                 </AppText>
                 <AppText variant="body" tone="muted" style={styles.cardBody}>
-                  Créez un compte ou connectez-vous pour retrouver votre progression après une réinstallation ou sur un autre appareil.
+                  Connectez-vous avec Google ou Microsoft pour retrouver votre progression après une réinstallation ou sur un autre appareil.
                 </AppText>
                 <View style={styles.primaryActions}>
                   <ProviderButton
@@ -727,32 +461,11 @@ function AccountScreenContent() {
                     disabled={!auth.isConfigured || auth.isLoading || auth.isHandlingDeepLink || Boolean(auth.activeOAuthProvider)}
                     onPress={() => void continueWithProvider("google")}
                   />
-                  {Platform.OS === "ios" ? (
-                    <ProviderButton
-                      provider="apple"
-                      loading={auth.activeOAuthProvider === "apple"}
-                      disabled={!auth.isConfigured || auth.isLoading || auth.isHandlingDeepLink || Boolean(auth.activeOAuthProvider)}
-                      onPress={() => void continueWithProvider("apple")}
-                    />
-                  ) : null}
-                  <View style={styles.orRow}>
-                    <View style={styles.orLine} />
-                    <AppText variant="caption" tone="soft">OU</AppText>
-                    <View style={styles.orLine} />
-                  </View>
-                  <ActionButton
-                    label="Créer un compte avec mon email"
-                    size="large"
-                    accentColor={COLORS.cyan}
-                    disabled={!auth.isConfigured || auth.isLoading}
-                    onPress={() => openMode("protect")}
-                  />
-                  <ActionButton
-                    label="J’ai déjà un compte"
-                    variant="secondary"
-                    size="large"
-                    disabled={!auth.isConfigured || auth.isLoading}
-                    onPress={() => openMode("sign-in")}
+                  <ProviderButton
+                    provider="azure"
+                    loading={auth.activeOAuthProvider === "azure"}
+                    disabled={!auth.isConfigured || auth.isLoading || auth.isHandlingDeepLink || Boolean(auth.activeOAuthProvider)}
+                    onPress={() => void continueWithProvider("azure")}
                   />
                 </View>
                 <View style={styles.securityNote}>
@@ -823,33 +536,6 @@ function AccountScreenContent() {
                     style={styles.retryButton}
                   />
                 </GlassCard>
-
-                {auth.hasEmailIdentity ? (
-                  <View style={styles.sectionCard}>
-                  <AppText variant="sectionLabel" tone="soft">SÉCURITÉ</AppText>
-                  <Pressable style={styles.settingsRow} onPress={() => openMode("change-password")}>
-                    <View style={styles.settingsIcon}>
-                      <Ionicons name="key-outline" size={19} color={COLORS.text} />
-                    </View>
-                    <View style={styles.settingsCopy}>
-                      <AppText variant="bodyStrong">Modifier le mot de passe</AppText>
-                      <AppText variant="caption" tone="soft">Sécuriser l’accès à votre compte</AppText>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color={COLORS.soft} />
-                  </Pressable>
-                  <View style={styles.rowDivider} />
-                  <Pressable style={styles.settingsRow} onPress={() => openMode("reset")}>
-                    <View style={styles.settingsIcon}>
-                      <Ionicons name="mail-unread-outline" size={19} color={COLORS.text} />
-                    </View>
-                    <View style={styles.settingsCopy}>
-                      <AppText variant="bodyStrong">Email de récupération</AppText>
-                      <AppText variant="caption" tone="soft">Recevoir un lien de réinitialisation</AppText>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color={COLORS.soft} />
-                  </Pressable>
-                  </View>
-                ) : null}
 
                 <View style={styles.secondaryActions}>
                   <ActionButton
@@ -1001,206 +687,6 @@ function AccountScreenContent() {
         )}
       </AppDialog>
 
-      <AppDialog
-        visible={mode !== null}
-        onRequestClose={closeDialog}
-        accessibilityLabel={translate(dialogTitle)}
-        accentColor={
-          mode === "confirmation"
-            ? COLORS.amber
-            : mode === "protection-success" || mode === "password-success"
-              ? COLORS.green
-              : COLORS.cyan
-        }
-      >
-        <View style={styles.dialogHeader}>
-          <View style={styles.dialogIcon}>
-            <Ionicons
-              name={
-                mode === "confirmation"
-                  ? "mail-outline"
-                  : mode === "protection-success" || mode === "password-success"
-                    ? "checkmark-circle-outline"
-                  : mode === "sign-in"
-                    ? "log-in-outline"
-                    : "shield-checkmark-outline"
-              }
-              size={22}
-              color={
-                mode === "confirmation"
-                  ? COLORS.amber
-                  : mode === "protection-success" || mode === "password-success"
-                    ? COLORS.green
-                    : COLORS.cyan
-              }
-            />
-          </View>
-          <View style={styles.dialogHeadingCopy}>
-            <AppText variant="sectionTitle">{dialogTitle}</AppText>
-            <AppText variant="bodySecondary" tone="muted" style={styles.dialogSubtitle}>
-              {mode === "confirmation"
-                ? `Un lien a été envoyé à ${auth.confirmationEmail ?? "votre adresse"}.`
-                : mode === "protection-success"
-                  ? "Votre progression est maintenant protégée et synchronisée avec votre compte."
-                : mode === "password-success"
-                  ? "Votre nouveau mot de passe est enregistré et immédiatement actif."
-                : mode === "reset"
-                  ? "Nous vous enverrons un lien sécurisé, sans révéler si le compte existe."
-                  : mode === "set-password"
-                    ? "Votre email est confirmé. Choisissez maintenant votre mot de passe."
-                    : "Vos données locales restent disponibles pendant cette opération."}
-            </AppText>
-          </View>
-        </View>
-
-        {mode === "confirmation" ? (
-          <View style={styles.confirmationPanel}>
-            <AppText variant="body" tone="muted">
-              Ouvrez le lien sur cet appareil. K-App conservera le même identifiant utilisateur et finalisera automatiquement votre compte.
-            </AppText>
-          </View>
-        ) : mode === "protection-success" ? (
-          <View style={[styles.confirmationPanel, styles.protectionSuccessPanel]}>
-            <AppText variant="body" tone="muted">
-              Votre adresse email est confirmée. Vous pouvez désormais vous connecter avec le mot de passe choisi lors de la création du compte.
-            </AppText>
-          </View>
-        ) : mode === "password-success" ? (
-          <View style={[styles.confirmationPanel, styles.protectionSuccessPanel]}>
-            <AppText variant="body" tone="muted">
-              Votre mot de passe a été mis à jour avec succès. Vous pourrez l’utiliser lors de votre prochaine connexion.
-            </AppText>
-          </View>
-        ) : (
-          <View>
-            {mode === "sign-in" ? (
-              <View style={styles.dialogProviders}>
-                <ProviderButton
-                  provider="google"
-                  loading={auth.activeOAuthProvider === "google"}
-                  disabled={auth.isHandlingDeepLink || Boolean(auth.activeOAuthProvider)}
-                  onPress={() => void continueWithProvider("google", true)}
-                />
-                {Platform.OS === "ios" ? (
-                  <ProviderButton
-                    provider="apple"
-                    loading={auth.activeOAuthProvider === "apple"}
-                    disabled={auth.isHandlingDeepLink || Boolean(auth.activeOAuthProvider)}
-                    onPress={() => void continueWithProvider("apple", true)}
-                  />
-                ) : null}
-                <View style={styles.orRow}>
-                  <View style={styles.orLine} />
-                  <AppText variant="caption" tone="soft">EMAIL</AppText>
-                  <View style={styles.orLine} />
-                </View>
-              </View>
-            ) : null}
-            <View style={styles.fields}>
-            {requiresEmail ? (
-              <Field
-                label="EMAIL"
-                value={email}
-                onChangeText={setEmail}
-                placeholder="vous@exemple.com"
-                autoComplete="email"
-              />
-            ) : null}
-            {requiresPassword ? (
-              <Field
-                label={mode === "sign-in" || mode === "protect" ? "MOT DE PASSE" : "NOUVEAU MOT DE PASSE"}
-                value={password}
-                onChangeText={setPassword}
-                placeholder={mode === "protect" ? "Créez votre mot de passe" : "8 caractères minimum"}
-                secureTextEntry
-                autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
-              />
-            ) : null}
-            {requiresConfirmation ? (
-              <Field
-                label={mode === "protect" ? "CONFIRMER LE MOT DE PASSE" : "CONFIRMATION"}
-                value={passwordConfirmation}
-                onChangeText={setPasswordConfirmation}
-                placeholder={mode === "protect" ? "Répétez votre mot de passe" : "Répétez le mot de passe"}
-                secureTextEntry
-                autoComplete="new-password"
-              />
-            ) : null}
-            </View>
-          </View>
-        )}
-
-        {formError || auth.error ? (
-          <View style={styles.formMessage}>
-            <Ionicons name="alert-circle-outline" size={17} color={COLORS.red} />
-            <AppText variant="bodySecondary" style={styles.formMessageCopy}>
-              {localizeError(formError ?? auth.error ?? "")}
-            </AppText>
-          </View>
-        ) : null}
-        {formSuccess ? (
-          <View style={[styles.formMessage, styles.successMessage]}>
-            <Ionicons name="checkmark-circle-outline" size={17} color={COLORS.green} />
-            <AppText variant="bodySecondary" style={styles.formMessageCopy}>
-              {formSuccess}
-            </AppText>
-          </View>
-        ) : null}
-
-        <DialogActions style={styles.dialogActions}>
-          {mode === "confirmation" ? (
-            <ActionButton
-              label="Renvoyer l’email"
-              variant="secondary"
-              loading={isSubmitting}
-              onPress={() => {
-                setIsSubmitting(true);
-                setFormError(null);
-                void auth
-                  .resendProtectionEmail()
-                  .then(() => setFormSuccess("Un nouvel email vient d’être envoyé."))
-                  .catch((caught) => setFormError(friendlyError(caught)))
-                  .finally(() => setIsSubmitting(false));
-              }}
-            />
-          ) : mode === "protection-success" || mode === "password-success" ? null : (
-            <ActionButton
-              label={
-                mode === "protect"
-                  ? "Envoyer l’email de confirmation"
-                  : mode === "sign-in"
-                    ? "Se connecter"
-                    : mode === "reset"
-                      ? "Envoyer le lien"
-                      : "Enregistrer le mot de passe"
-              }
-              loading={isSubmitting}
-              onPress={() => void submit()}
-            />
-          )}
-          {mode === "sign-in" ? (
-            <ActionButton
-              label="Mot de passe oublié"
-              variant="ghost"
-              onPress={() => {
-                setPassword("");
-                setFormError(null);
-                setMode("reset");
-              }}
-            />
-          ) : null}
-          <ActionButton
-            label={
-              mode === "protection-success" || mode === "password-success"
-                ? "Continuer"
-                : "Fermer"
-            }
-            variant="ghost"
-            disabled={isSubmitting || Boolean(auth.activeOAuthProvider)}
-            onPress={closeDialog}
-          />
-        </DialogActions>
-      </AppDialog>
     </LinearGradient>
   );
 }
@@ -1318,14 +804,6 @@ const styles = StyleSheet.create({
   providerButtonPressed: { backgroundColor: "rgba(255,255,255,0.12)" },
   providerButtonDisabled: { opacity: 0.48 },
   providerButtonLabel: { color: COLORS.text },
-  orRow: {
-    minHeight: 24,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 2,
-  },
-  orLine: { flex: 1, height: 1, backgroundColor: SeoulMidnightGlass.colors.lineSoft },
   securityNote: {
     marginTop: 18,
     flexDirection: "row",
@@ -1415,65 +893,5 @@ const styles = StyleSheet.create({
   secondaryActions: { marginTop: 22, gap: 8 },
   deleteButton: { minHeight: 48, alignItems: "center", justifyContent: "center" },
   subscriptionWarning: { maxWidth: 460, alignSelf: "center", marginTop: 2 },
-  dialogHeader: { flexDirection: "row", alignItems: "flex-start", gap: 13 },
-  dialogIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(34,211,238,0.09)",
-    borderWidth: 1,
-    borderColor: "rgba(34,211,238,0.20)",
-  },
-  dialogHeadingCopy: { flex: 1 },
-  dialogSubtitle: { marginTop: 5 },
-  fields: { gap: 14, marginTop: 22 },
-  dialogProviders: { gap: 10, marginTop: 22 },
-  fieldGroup: { gap: 7 },
-  inputShell: { position: "relative" },
-  input: {
-    minHeight: 52,
-    borderRadius: 17,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    backgroundColor: "rgba(255,255,255,0.055)",
-    color: "#FFFFFF",
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-  },
-  inputWithToggle: { paddingRight: 52 },
-  passwordToggle: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    width: 48,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  confirmationPanel: {
-    marginTop: 20,
-    padding: 14,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "rgba(247,200,115,0.20)",
-    backgroundColor: "rgba(247,200,115,0.06)",
-  },
-  protectionSuccessPanel: {
-    borderColor: "rgba(103,232,168,0.20)",
-    backgroundColor: "rgba(103,232,168,0.06)",
-  },
-  formMessage: {
-    marginTop: 14,
-    padding: 11,
-    borderRadius: 14,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-    backgroundColor: "rgba(251,113,133,0.08)",
-  },
-  successMessage: { backgroundColor: "rgba(103,232,168,0.08)" },
-  formMessageCopy: { flex: 1 },
   dialogActions: { marginTop: 20 },
 });

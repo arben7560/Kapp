@@ -69,12 +69,11 @@ test("Auth and Sync providers are mounted inside the persisted store", () => {
   );
 });
 
-test("anonymous auth, account conversion and password recovery stay centralized", () => {
+test("anonymous auth and OAuth account conversion stay centralized", () => {
   assert.match(authProviderSource, /signInAnonymously\(\)/u);
-  assert.match(authProviderSource, /auth\.updateUser\([\s\S]*?email/u);
-  assert.match(authProviderSource, /resetPasswordForEmail/u);
-  assert.match(authProviderSource, /PASSWORD_RECOVERY/u);
+  assert.match(authProviderSource, /auth\.signInWithOAuth\(credentials\)/u);
   assert.match(authProviderSource, /exchangeCodeForSession/u);
+  assert.doesNotMatch(authProviderSource, /signInWithPassword|resetPasswordForEmail|auth\.updateUser\(/u);
 });
 
 test("sync remains local-first and exposes the account retry contract", () => {
@@ -125,7 +124,7 @@ test("cloud and local snapshots keep both sets of completed learning", () => {
 test("the Hub exposes profile access and keeps protection in the account route", () => {
   assert.match(hubSource, /accessibilityLabel=\{translate\("Ouvrir mon profil"\)\}/u);
   assert.match(hubSource, /onOpenProfile=\{\(\) => router\.push\("\/account"\)\}/u);
-  assert.match(hubSource, /pathname: "\/account",[\s\S]*?action: "protect"/u);
+  assert.match(hubSource, /onProtect=\{\(\) => \{[\s\S]*?router\.push\("\/account"\)/u);
   assert.match(hubSource, /useAuth\(\)/u);
   assert.doesNotMatch(hubSource, /protectProgress\(/u);
 });

@@ -348,28 +348,43 @@ test("a double press cannot start or clear another active OAuth operation", asyn
   assertIdle(app);
 });
 
-test("Apple linking preserves its UID check", async () => {
-  for (const id of ["guest-id", "unexpected-id"]) {
-    const apple = { user: { id, is_anonymous: false, identities: [{ provider: "apple" }] } };
-    const app = await mount({ callbackSession: apple, browser: async () => ({ type: "success", url: "kapp://account?code=SECRET_APPLE&action=oauth-link-apple" }) });
-    const operation = app.render().linkOAuthIdentity("apple");
-    if (id === "guest-id") assert.equal(await operation, "success");
-    else await assert.rejects(operation, authErrors.KappAuthError);
-    assertIdle(app);
-  }
+test("Microsoft uses Azure OAuth with email scope and verifies the returned identity", async () => {
+  const azure = { user: { id: "microsoft-id", email: "learner@outlook.com", is_anonymous: false, app_metadata: { providers: ["azure"] } } };
+  const url = "kapp://account?action=oauth-login-azure&code=SECRET_AZURE";
+  const app = await mount({ callbackSession: azure, browser: async () => ({ type: "success", url }) });
+  assert.equal(await app.render().signInWithOAuth("azure"), "success");
+  assert.deepEqual(app.calls.credentials, {
+    provider: "azure",
+    options: { redirectTo: "kapp://account?action=oauth-login-azure", skipBrowserRedirect: true, scopes: "email" },
+  });
+  assert.equal(app.render().user.id, "microsoft-id");
+  assert.deepEqual(app.render().oauthOutcome, { provider: "azure", result: "success" });
+  assertIdle(app);
 });
 
-test("cold-start recovery, protection and existing OAuth links still reach auth", async () => {
-  for (const action of ["recovery", "protect", "oauth-login-google"]) {
-    const app = await mount({ initialUrl: `kapp://account?action=${action}&code=SECRET_INITIAL`, authEvent: action === "recovery" ? "PASSWORD_RECOVERY" : "SIGNED_IN" });
+test("Microsoft cancellation retains the guest, and a mismatched identity is rejected", async () => {
+  const cancelled = await mount({ browser: async () => ({ type: "cancel" }) });
+  assert.equal(await cancelled.render().signInWithOAuth("azure"), "cancelled");
+  assert.equal(cancelled.render().user.id, "guest-id");
+  assertIdle(cancelled);
+
+  const wrong = await mount({ browser: async () => ({ type: "success", url: "kapp://account?action=oauth-login-azure&code=SECRET_AZURE" }) });
+  await assert.rejects(wrong.render().signInWithOAuth("azure"), authErrors.KappAuthError);
+  assertIdle(wrong);
+});
+
+test("cold-start Google and Microsoft callbacks exchange their PKCE code", async () => {
+  for (const [provider, callbackSession] of [
+    ["google", google],
+    ["azure", { user: { id: "microsoft-id", email: "learner@outlook.com", is_anonymous: false, app_metadata: { providers: ["azure"] } } }],
+  ]) {
+    const action = `oauth-login-${provider}`;
+    const app = await mount({ initialUrl: `kapp://account?action=${action}&code=SECRET_INITIAL`, callbackSession });
     assert.equal(app.calls.exchange, 1);
-    assert.equal(app.render().isPasswordRecovery, action === "recovery");
+    assert.equal(app.render().user.id, callbackSession.user.id);
     assert.equal(app.redirects.createAuthRedirectUrl(action), `kapp://account?action=${action}`);
     assertIdle(app);
   }
-  const web = await mount({ platform: "web" });
-  assert.equal(web.redirects.createAuthRedirectUrl("recovery"), "https://k-app.test/account?action=recovery");
-  assertIdle(web);
 });
 
 test("diagnostics contain only safe labels/flags and are disabled in release", async () => {

@@ -15,7 +15,7 @@ export function redirectSystemPath({ path, initial }: { path: string; initial: b
 
     // Cold starts still open Account, but credentials never enter router state.
     const action = url.searchParams.get("action");
-    const knownAction = action && /^(recovery|protect|oauth-(login|link)-(google|apple))$/u.test(action);
+    const knownAction = action && /^oauth-login-(google|azure)$/u.test(action);
     return knownAction ? `/account?action=${action}` : "/account";
   } catch {
     return path;
