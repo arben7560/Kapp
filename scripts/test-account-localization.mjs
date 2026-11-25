@@ -44,9 +44,9 @@ test("Account page, callback and auth prompt are attached to Japanese display lo
   assert.match(account, /locale === "ja" \? "ja-JP" : "fr-FR"/u);
   assert.match(account, /accessibilityLabel=\{translate\(dialogTitle\)\}/u);
   assert.match(account, /accessibilityLabel=\{translate\("Tester l'écran de sélection de langue"\)\}/u);
-  assert.match(home, /translate\("Protégez votre progression"\)/u);
-  assert.match(home, /translate\("Protéger maintenant"\)/u);
-  assert.match(home, /translate\("Me le rappeler plus tard"\)/u);
+  assert.match(home, /translate\("Sauvegarde ta progression"\)/u);
+  assert.match(home, /translate\("Se connecter"\)/u);
+  assert.match(home, /translate\("Connecte-toi pour conserver tes progrès et reprendre ton aventure à tout moment\."\)/u);
   assert.equal(JSON.parse(read("../locales/ja/common.json")).language.title, "表示言語を選択");
 });
 
@@ -174,4 +174,16 @@ test("Japanese Account covers the subscription management action and all Premium
   assert.match(purchase, /useTranslation\("premium"\)/u);
   assert.equal(instance.t("premium:purchaseSuccess.title"), jaPremium.purchaseSuccess.title);
   assert.equal(instance.t("premium:purchaseSuccess.message"), jaPremium.purchaseSuccess.message);
+});
+
+test("Inline guest save invitation is available in French and Japanese", () => {
+  const messages = [
+    ["Sauvegarde ta progression", "学習の進捗を保存しよう"],
+    ["Connecte-toi pour conserver tes progrès et reprendre ton aventure à tout moment.", "ログインして学習の進捗を保存し、いつでも続きを始めよう。"],
+    ["Se connecter", "ログイン"],
+  ];
+  for (const [fr, ja] of messages) {
+    assert.equal(translate(fr), ja);
+    assert.equal(resolveAccountText(fr, "fr", instance), fr);
+  }
 });
