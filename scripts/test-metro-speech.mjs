@@ -1237,10 +1237,8 @@ test("les remerciements de Hongik concluent le dialogue sans relancer un rÃ©sumÃ
   assert.ok(lesson);
 
   for (const [stepId, choiceId] of [
-    ["ia_exit_info", "thank_final"],
-    ["ia_repeat_exit_info", "thank_after_exit_repeat"],
-    ["ia_exit_landmark_info", "thank_after_landmark"],
-    ["ia_repeat_exit_landmark_info", "thank_after_landmark_repeat"],
+    ["ia_intro_route", "thank_after_intro"],
+    ["ia_repeat_intro_route", "thank_after_intro_repeat"],
   ]) {
     const step = lesson.steps.find((item) => item.id === stepId);
 

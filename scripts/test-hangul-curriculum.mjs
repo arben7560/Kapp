@@ -19,6 +19,7 @@ import {
   validateHangulCurriculum,
 } from "../data/hangul/curriculum.ts";
 import { createEmptyHangulProgress } from "../data/hangul/types.ts";
+import { applyHangulEditorialOverrides } from "../data/hangul/editorialOverrides.ts";
 import { buildHangulFrenchCopy, hangulCopyId, needsHangulOptionTranslation, originalHangulOptionIndex } from "../data/localized/hangulRegistry.ts";
 import { japaneseHangulContent } from "../data/localized/ja/hangul.ts";
 import {
@@ -30,6 +31,8 @@ import {
 } from "../lib/hangulQuiz.ts";
 import { PREMIUM_ROUTE_PATHS } from "../lib/paywall/config.ts";
 import { createRestartableSpeechController } from "../lib/restartableSpeech.ts";
+
+applyHangulEditorialOverrides();
 
 const QUIZ_TEST_QUESTIONS = ["q1", "q2", "q3"].map((id) => ({
   id,
@@ -119,8 +122,13 @@ test("every consonant discovery explains the model vowel sound", () => {
 
   assert.ok(consonantScenes.length >= 4);
   for (const scene of consonantScenes) {
-    assert.match(scene.instruction, /ㅏ/u, scene.id);
-    assert.match(scene.instruction, /consonne isolée/u, scene.id);
+    const soundQuestions = scene.questions.filter(
+      (question) => question.type === "character-to-sound" || question.type === "audio-to-character",
+    );
+    assert.ok(soundQuestions.length > 0, scene.id);
+    for (const question of soundQuestions) {
+      assert.match(question.prompt, /consonne.*ㅏ|ㅏ.*consonne/u, `${scene.id}.${question.id}`);
+    }
   }
 });
 

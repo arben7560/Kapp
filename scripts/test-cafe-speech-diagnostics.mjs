@@ -1,10 +1,28 @@
 import assert from "node:assert/strict";
+import { registerHooks } from "node:module";
 import test from "node:test";
 
-import {
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    try {
+      return nextResolve(specifier, context);
+    } catch (error) {
+      if (
+        error?.code === "ERR_MODULE_NOT_FOUND" &&
+        /^\.{1,2}\//u.test(specifier) &&
+        !/\.[a-z]+$/iu.test(specifier)
+      ) {
+        return nextResolve(`${specifier}.ts`, context);
+      }
+      throw error;
+    }
+  },
+});
+
+const {
   getCafeSpeechContextualStrings,
   matchCafeSpeechIntent,
-} from "../lib/cafeSpeechDiagnostics.ts";
+} = await import("../lib/cafeSpeechDiagnostics.ts");
 
 const americano = {
   id: "ped_order_americano",

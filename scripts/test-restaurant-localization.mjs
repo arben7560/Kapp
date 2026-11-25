@@ -128,6 +128,14 @@ test("Restaurant contextual feedback is fully Japanese and preserves the origina
       "J’ai compris : tu veux demander une recommandation. À ce moment-là, la serveuse attend ton choix de viande ou une demande de recommandation.",
       "「おすすめを尋ねる」という意図は伝わりました。今は、お肉を注文するか、おすすめを尋ねるかを選ぶ場面です。",
     ],
+    [
+      "Tu demandes d’ajouter des légumes, mais cela ne précise pas si tu veux plus de feuilles de salade pour les ssam. Elle te demande maintenant si tu veux davantage de salade, davantage d’accompagnements, ou rien d’autre. Si c’est bien ton choix, dis : « 상추 좀 더 주세요. »",
+      "野菜を加えてほしいという意図は伝わりますが、サム用のサンチュをもっと欲しいのかはまだ分かりません。今は、サンチュやおかずをおかわりするか、それとも追加は不要かを聞かれています。サンチュが欲しいなら「상추 좀 더 주세요.」と言いましょう。",
+    ],
+    [
+      "Tu demandes d’ajouter des légumes. À ce moment-là, la serveuse attend ton choix de viande ou une demande de recommandation.",
+      "野菜を加えてほしいと頼んでいます。今は、お肉を注文するか、おすすめを尋ねるかを選ぶ場面です。",
+    ],
   ]) {
     const japanese = resolveImmersionText("restaurant", source, "ja");
     assert.equal(japanese, expected);

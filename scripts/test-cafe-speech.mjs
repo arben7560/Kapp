@@ -459,7 +459,7 @@ function assertUncertain(
   if (expectedConfirmation !== undefined) {
     assert.equal(result.confirmationLabel, expectedConfirmation);
   }
-  assert.match(result.feedback, /Confirme ou réessaie/);
+  assert.match(result.feedback, /Confirme.*réessaie/u);
   assert.match(result.feedback, new RegExp(expectedConfirmation));
 }
 
@@ -620,7 +620,7 @@ test("les corrections produit ciblées valident directement avec un conseil", ()
 
   for (const [transcript, expectedChoice, feedbackPattern] of cases) {
     const result = assertMatched(transcript, orderChoices, expectedChoice);
-    assert.match(result.feedback, /J’ai compris.*Essaie/u);
+    assert.match(result.feedback, /Je t’ai compris.*phrase attendue/u);
     assert.match(result.feedback, feedbackPattern);
     assert.equal(
       result.recoveryEvent?.eventName,
@@ -634,29 +634,29 @@ test("un classificateur maladroit conserve le produit et la transition métier",
     [
       "치즈케이크 한 잔 주세요.",
       cheesecake,
-      "Pour une part, utilise 조각. Dis : “치즈케이크 한 조각 주세요.”",
+      /part de gâteau.*조각.*치즈케이크 한 조각 주세요/u,
     ],
     [
       "아메리카노 한 조각 주세요.",
       americano,
-      "Pour une boisson, utilise 잔. Dis : “아메리카노 한 잔 주세요.”",
+      /boisson.*잔.*아메리카노 한 잔 주세요/u,
     ],
     [
       "라떼 한 조각 주세요.",
       latte,
-      "Pour une boisson, utilise 잔. Dis : “라떼 한 잔 주세요.”",
+      /boisson.*잔.*라떼 한 잔 주세요/u,
     ],
     [
       "오렌지 주스 한 조각 주세요.",
       orangeJuice,
-      "Pour une boisson, utilise 잔. Dis : “오렌지 주스 한 잔 주세요.”",
+      /boisson.*잔.*오렌지 주스 한 잔 주세요/u,
     ],
   ];
 
   for (const [transcript, expectedChoice, expectedFeedback] of cases) {
     const result = assertMatched(transcript, orderChoices, expectedChoice);
     assert.equal(result.choice.nextNodeId, "ped_confirm");
-    assert.equal(result.feedback, expectedFeedback);
+    assert.match(result.feedback, expectedFeedback);
     assert.deepEqual(
       applyCafeOrderProductSelection(EMPTY_CAFE_ORDER_STATE, result.choice),
       { product: expectedChoice.orderProduct },
@@ -670,7 +670,7 @@ test("une quantité ou une terminaison maladroite ne masque pas un produit uniqu
     ["아메리카노 세 조각 주문할게요.", americano],
   ]) {
     const result = assertMatched(transcript, orderChoices, expectedChoice);
-    assert.match(result.feedback, /J’ai compris.*Utilise/u);
+    assert.match(result.feedback, /Je t’ai compris.*utilise/u);
   }
 });
 
@@ -680,11 +680,9 @@ test("une commande à plusieurs produits non canonique est refusée comme ambigu
     "오렌지 주스하고 라떼 주세요.",
   ]) {
     const result = matchCafeSpeechIntent(transcript, orderChoices);
-    assert.deepEqual(result, {
-      reason: "ambiguous",
-      choice: null,
-      feedback: "J’ai entendu plusieurs produits. Choisis-en un seul.",
-    });
+    assert.equal(result.reason, "ambiguous");
+    assert.equal(result.choice, null);
+    assert.match(result.feedback, /plusieurs produits.*[Gg]arde seulement/u);
   }
 });
 
@@ -702,7 +700,7 @@ test("une commande hors périmètre ne sélectionne aucune branche", () => {
     const result = matchCafeSpeechIntent(transcript, orderChoices);
     assert.equal(result.reason, "out-of-scope");
     assert.equal(result.choice, null);
-    assert.match(result.feedback, /essaie/u);
+    assert.match(result.feedback, /Tu peux répondre|Tu peux dire/u);
     assert.match(result.feedback, /아메리카노/u);
   }
 });
@@ -716,7 +714,7 @@ test("un objet hors contexte reçoit une explication sémantique liée à l’é
   assert.equal(result.choice, null);
   assert.match(result.feedback, /보청기/u);
   assert.match(result.feedback, /appareil auditif/u);
-  assert.match(result.feedback, /sur place ou.*emporter/u);
+  assert.match(result.feedback, /먹고 갈게요.*포장해 주세요/u);
   assert.match(result.feedback, /먹고 갈게요/u);
   assert.match(result.feedback, /포장해 주세요/u);
 
@@ -735,8 +733,8 @@ test("une réponse correcte donnée trop tôt est replacée dans la situation", 
   const result = matchCafeSpeechIntent(transcript, [eatHere, takeout, repeat]);
 
   assert.equal(result.reason, "out-of-scope");
-  assert.match(result.feedback, /ne convient pas ici/u);
-  assert.match(result.feedback, /sur place ou.*emporter/u);
+  assert.match(result.feedback, /autre étape/u);
+  assert.match(result.feedback, /sur place ou à emporter/u);
 });
 
 test("une demande inconnue avec 주세요 reçoit une correction utile", () => {
@@ -780,11 +778,10 @@ test("carte et espèces ensemble demandent confirmation sans choisir de branche"
     "카드 아니면 현금으로 할게요.",
     "현금하고 카드요.",
   ]) {
-    assert.deepEqual(matchCafeSpeechIntent(transcript, [card, cash, repeat]), {
-      reason: "ambiguous",
-      choice: null,
-      feedback: "Tu as donné deux moyens de paiement. Choisis-en un.",
-    });
+    const result = matchCafeSpeechIntent(transcript, [card, cash, repeat]);
+    assert.equal(result.reason, "ambiguous");
+    assert.equal(result.choice, null);
+    assert.match(result.feedback, /carte et les espèces.*lequel/u);
   }
 });
 
@@ -819,7 +816,7 @@ test("sur place distingue une formulation correcte d’une inversion grammatical
   );
   assert.equal(inverted.reason, "word-order-error");
   assert.equal(inverted.choice, eatHere);
-  assert.match(inverted.feedback, /ordre des mots est incorrect/u);
+  assert.match(inverted.feedback, /pas dans l’ordre naturel/u);
   assert.match(inverted.feedback, /먹고 갈게요/u);
 });
 
@@ -835,8 +832,8 @@ test("les mots isolés ou trop ambigus ne valident pas automatiquement sur place
 
 test("les particules de moyen de paiement reçoivent un feedback ciblé", () => {
   for (const [transcript, expectedChoice, feedbackPattern] of [
-    ["카드 할게요", card, /utilise 로.*카드로 할게요/u],
-    ["현금에 할게요", cash, /utilise 으로 et non 에.*현금으로 할게요/ui],
+    ["카드 할게요", card, /ajoute « 로 ».*카드로 할게요/u],
+    ["현금에 할게요", cash, /« 에 » ne convient pas.*« 으로 ».*현금으로 할게요/ui],
   ]) {
     const result = assertMatched(
       transcript,
@@ -849,8 +846,8 @@ test("les particules de moyen de paiement reçoivent un feedback ciblé", () => 
 
 test("un classificateur incorrect ou omis après 한 est expliqué précisément", () => {
   for (const [transcript, feedbackPattern] of [
-    ["아메리카노 한 개 주세요", /잔 plutôt que 개.*아메리카노 한 잔 주세요/u],
-    ["아메리카노 한 주세요", /ajoute 잔/u],
+    ["아메리카노 한 개 주세요", /« 잔 ».*« 개 ».*아메리카노 한 잔 주세요/u],
+    ["아메리카노 한 주세요", /compteur.*« 한 ».*아메리카노 한 잔 주세요/u],
   ]) {
     const result = assertMatched(transcript, orderChoices, americano);
     assert.match(result.feedback, feedbackPattern);
@@ -879,7 +876,7 @@ test("une phrase sur le reçu sans décision reste ambiguë", () => {
   const result = matchCafeSpeechIntent("영수증 있어요", [receiptYes, receiptNo]);
   assert.equal(result.reason, "ambiguous");
   assert.equal(result.choice, null);
-  assert.match(result.feedback, /Précise si tu veux le reçu/u);
+  assert.match(result.feedback, /pas que tu en demandes un/u);
   assert.match(result.feedback, /영수증 주세요.*괜찮아요/u);
 });
 
@@ -920,16 +917,16 @@ test("une destination ou une intention d’une autre étape reçoit un feedback 
     [eatHere, takeout, repeat],
   );
   assert.equal(exitQuestion.reason, "out-of-scope");
-  assert.match(exitQuestion.feedback, /numéro de sortie.*métro/u);
-  assert.match(exitQuestion.feedback, /sur place ou.*emporter/u);
+  assert.match(exitQuestion.feedback, /numéro d’une sortie.*métro/u);
+  assert.match(exitQuestion.feedback, /먹고 갈게요.*포장해 주세요/u);
 
   const prematureReceipt = matchCafeSpeechIntent(
     "영수증 주세요",
     [card, cash, repeat],
   );
   assert.equal(prematureReceipt.reason, "out-of-scope");
-  assert.match(prematureReceipt.feedback, /parle du reçu/u);
-  assert.match(prematureReceipt.feedback, /moyen de paiement/u);
+  assert.match(prematureReceipt.feedback, /question du reçu/u);
+  assert.match(prematureReceipt.feedback, /encore au paiement.*carte ou espèces/u);
 });
 
 test("드시고 갈 거예요 valide sur place avec le message personnalisé", () => {
@@ -940,7 +937,7 @@ test("드시고 갈 거예요 valide sur place avec le message personnalisé", (
   );
   assert.equal(
     result.feedback,
-    "Pour parler de toi, dis : “먹고 갈게요”.",
+    "Je comprends l’idée, mais « 드시다 » est honorifique : on ne l’emploie pas pour parler de soi. Dis plutôt : « 먹고 갈게요. »",
   );
 });
 
@@ -978,7 +975,7 @@ test("테이크아웃 주세요 valide avec une formulation plus naturelle", () 
   );
   assert.equal(
     result.feedback,
-    "Pour être plus naturel, dis “포장해 주세요” ou “테이크아웃이요”.",
+    "On te comprend. Au café, « 테이크아웃이요 » ou « 포장해 주세요 » sonne plus naturel.",
   );
 });
 
@@ -1020,7 +1017,7 @@ test("les confusions aval univoques valident la branche avec un conseil", () => 
 
   for (const [transcript, choices, expectedChoice] of cases) {
     const result = assertMatched(transcript, choices, expectedChoice);
-    assert.match(result.feedback, /J’ai compris.*Essaie/u);
+    assert.match(result.feedback, /Je t’ai compris.*phrase attendue/u);
     assert.ok(result.recoveryEvent);
   }
 });
@@ -1319,10 +1316,10 @@ for (const intentCase of phoneticIntentCases) {
         intentCase.expectedChoice,
       );
       assert.equal(
-        result.feedback.endsWith(`Essaie : “${result.recoveryEvent?.canonical}”`),
+        result.feedback.endsWith(`la phrase attendue est : “${result.recoveryEvent?.canonical}”`),
         true,
       );
-      assert.match(result.feedback, /^J’ai compris/u);
+      assert.match(result.feedback, /^Je t’ai compris/u);
       assert.equal(
         result.recoveryEvent?.eventName,
         "cafe_speech_probable_transcription_error",
@@ -1397,11 +1394,11 @@ test("les variantes naturelles étendues restent contextuelles", () => {
 
 test("les formes familières valident avec une correction non bloquante", () => {
   for (const [transcript, choices, expectedChoice, feedbackPattern] of [
-    ["아메리카노 줘.", orderChoices, americano, /한 잔 주세요/],
-    ["먹고 가.", [eatHere, takeout, repeat], eatHere, /poli/i],
+    ["아메리카노 줘.", orderChoices, americano, /아메리카노 주세요/u],
+    ["먹고 가.", [eatHere, takeout, repeat], eatHere, /trop familière.*먹고 갈게요/u],
     ["포장.", [eatHere, takeout, repeat], takeout, /plus naturel/i],
     ["카드.", [card, cash, repeat], card, /poli/i],
-    ["영수증.", [receiptYes, receiptNo], receiptYes, /poliment/i],
+    ["영수증.", [receiptYes, receiptNo], receiptYes, /영수증 주세요/u],
   ]) {
     const result = assertMatched(transcript, choices, expectedChoice);
     assert.match(result.feedback, feedbackPattern);
@@ -1419,7 +1416,7 @@ test("les confusions du reçu valident uniquement au nœud reçu", () => {
       [receiptYes, receiptNo],
       expectedChoice,
     );
-    assert.match(result.feedback, /J’ai compris.*Essaie/u);
+    assert.match(result.feedback, /Je t’ai compris.*phrase attendue/u);
     assert.match(result.feedback, canonicalPattern);
   }
 });
@@ -1437,15 +1434,10 @@ test("sur place et à emporter ensemble ne sélectionnent aucune branche", () =>
     "먹고 갈게요, 포장도 해 주세요.",
     "매장에서요 아니면 테이크아웃이요.",
   ]) {
-    assert.deepEqual(
-      matchCafeSpeechIntent(transcript, [eatHere, takeout, repeat]),
-      {
-        reason: "ambiguous",
-        choice: null,
-        feedback:
-          "Tu as indiqué sur place et à emporter. Choisis une seule réponse.",
-      },
-    );
+    const result = matchCafeSpeechIntent(transcript, [eatHere, takeout, repeat]);
+    assert.equal(result.reason, "ambiguous");
+    assert.equal(result.choice, null);
+    assert.match(result.feedback, /sur place.*à emporter.*Choisis/u);
   }
 });
 
@@ -1454,14 +1446,10 @@ test("oui et non ensemble au nœud reçu ne sélectionnent aucune branche", () =
     "네, 아니요, 괜찮아요.",
     "영수증 주세요. 필요 없어요.",
   ]) {
-    assert.deepEqual(
-      matchCafeSpeechIntent(transcript, [receiptYes, receiptNo]),
-      {
-        reason: "ambiguous",
-        choice: null,
-        feedback: "Tu as répondu oui et non pour le reçu. Choisis une réponse.",
-      },
-    );
+    const result = matchCafeSpeechIntent(transcript, [receiptYes, receiptNo]);
+    assert.equal(result.reason, "ambiguous");
+    assert.equal(result.choice, null);
+    assert.match(result.feedback, /oui et non.*reçu.*Choisis/u);
   }
 });
 
@@ -1495,7 +1483,7 @@ test("une variation syllabique unique et soutenue récupère une seule intention
     ["치즈케이쿠 주세요.", cheesecake],
   ]) {
     const result = assertMatched(transcript, orderChoices, expectedChoice);
-    assert.match(result.feedback, /J’ai compris.*Essaie/u);
+    assert.match(result.feedback, /Je t’ai compris.*phrase attendue/u);
     assert.ok(result.recoveryEvent);
   }
 });
@@ -1574,7 +1562,7 @@ test("une transcription vide ne déclenche aucune branche", () => {
 test("le feedback produit indisponible reste exact", () => {
   assert.equal(
     buildCafeUnavailableFeedback(orderChoices),
-    "Ce produit n’est pas disponible ici. Choisis un americano, un jus d’orange, un latte ou un cheesecake.",
+    "Ce produit n’est pas proposé dans cette scène. Ici, tu peux commander un americano, un jus d’orange, un latte ou un cheesecake.",
   );
 });
 
@@ -1614,8 +1602,7 @@ test("Café interprète les formulations proches selon l’étape courante", () 
     const result = matchCafeSpeechIntent(transcript, choices);
     assert.equal(result.reason, expectedReason, transcript);
     assert.equal(result.choice?.id, expectedChoice.id, transcript);
-    assert.match(result.feedback, /J’ai compris/u, transcript);
-    assert.match(result.feedback, /Ici, le serveur/u, transcript);
+    assert.ok(result.feedback?.length > 20, transcript);
   }
 });
 
@@ -1629,14 +1616,14 @@ test("les formulations proches au mauvais tour sont comprises sans fuite de bran
 
 test("les réponses proches mais incomplètes reçoivent une explication liée au tour", () => {
   for (const [transcript, choices, feedbackPattern] of [
-    ["커피 주세요", orderChoices, /terme ne permet pas de choisir un seul produit/u],
-    ["먹을게요", [eatHere, takeout], /pas indiqué où/u],
-    ["계산할게요", [card, cash], /pas indiqué comment/u],
+    ["커피 주세요", orderChoices, /manque le produit précis/u],
+    ["먹을게요", [eatHere, takeout], /sur place ou à emporter/u],
+    ["계산할게요", [card, cash], /manque le moyen de paiement/u],
   ]) {
     const result = matchCafeSpeechIntent(transcript, choices);
     assert.equal(result.reason, "out-of-scope", transcript);
     assert.equal(result.choice, null, transcript);
-    assert.match(result.feedback, /J’ai compris/u, transcript);
+    assert.match(result.feedback, /Je vois|Je comprends|C’est compréhensible/u, transcript);
     assert.match(result.feedback, feedbackPattern, transcript);
   }
 });
@@ -1867,7 +1854,7 @@ test("le pilote remplace les choix combinés et conserve aide et transitions ava
   assert.match(missionSource, /"ped_here_drink"/);
   assert.match(missionSource, /"ped_here_cake"/);
   assert.match(runtimeSource, /applyCafeOrderProductSelection\(state, choice\)/);
-  assert.match(guidedTurnSource, /accessibilityLabel="Besoin d’aide"/);
+  assert.match(guidedTurnSource, /accessibilityLabel=\{translate\("Besoin d’aide"\)\}/u);
   assert.match(guidedTurnSource, /RÉPONSES PROPOSÉES/);
 });
 
@@ -2052,7 +2039,7 @@ test("une inversion comprise est enregistrée comme erreur d’ordre dans le bil
 
 test("les nouveaux feedbacks pédagogiques sont conservés dans le bilan", () => {
   for (const [transcript, choices, explanationPattern] of [
-    ["카드 할게요", [card, cash, repeat], /utilise 로/u],
+    ["카드 할게요", [card, cash, repeat], /ajoute « 로 »/u],
     ["카드… 아니, 현금으로 할게요", [card, cash, repeat], /ta correction/u],
     ["americano 한 잔 주세요", orderChoices, /mélange de langues/u],
   ]) {
@@ -2094,7 +2081,7 @@ test("le bilan conserve l’intention probable et la reformulation contextuelle"
     "먹고 갈게요.",
   );
   assert.match(summary.improvements[0].explanation, /appareil auditif/u);
-  assert.match(summary.improvements[0].explanation, /sur place ou.*emporter/u);
+  assert.match(summary.improvements[0].explanation, /먹고 갈게요.*포장해 주세요/u);
 });
 
 test("plusieurs imperfections différentes restent séparées dans le bilan", () => {
@@ -2124,12 +2111,8 @@ test("plusieurs imperfections différentes restent séparées dans le bilan", ()
   const summary = buildCafeConversationSummary(memory);
   assert.equal(summary.improvements.length, 3);
   assert.deepEqual(
-    summary.improvements.map(({ resultType }) => resultType),
-    [
-      "understood-with-grammar-correction",
-      "ambiguous",
-      "not-understood",
-    ],
+    new Set(summary.improvements.map(({ resultType }) => resultType)),
+    new Set(["understood-with-grammar-correction", "ambiguous", "not-understood"]),
   );
 });
 

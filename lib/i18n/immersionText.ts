@@ -294,6 +294,22 @@ export function resolveImmersionText(module: string, source: string, locale: App
     r = m1(/^Tu veux bien commander de la viande, mais on ne sait pas encore laquelle\. (.+)$/u);
     if (r) return "肉を注文したいことは伝わりますが、どの肉かまだ分かりません。" + ja(r[1]);
 
+    r = m1(/^Tu demandes d’ajouter des légumes, mais cela ne précise pas si tu veux plus de feuilles de salade pour les ssam\. (.+?) Si c’est bien ton choix, dis : « 상추 좀 더 주세요\. »\.?$/u);
+    if (r) {
+      const question = exact(r[1]);
+      if (question) return joinJapanese(
+        ja("Tu demandes d’ajouter des légumes, mais cela ne précise pas si tu veux plus de feuilles de salade pour les ssam."),
+        question,
+        ja("Si c’est bien ton choix, dis : « 상추 좀 더 주세요. »"),
+      );
+    }
+
+    r = m1(/^Tu demandes d’ajouter des légumes\. (.+)$/u);
+    if (r) {
+      const context = jaContext(r[1]);
+      if (context) return joinJapanese(ja("Tu demandes d’ajouter des légumes."), context);
+    }
+
     const incompletePrefixes: Readonly<Record<string, string>> = {
       "Tu parles bien de la cuisson, mais on ne sait pas clairement qui doit s’en charger.": "焼き方について話していますが、誰が焼くかまだ分かりません。",
       "Tu veux ajouter un accompagnement, mais tu ne l’as pas identifié.": "おかずを追加したいことは伝わりますが、何を追加するかまだ分かりません。",

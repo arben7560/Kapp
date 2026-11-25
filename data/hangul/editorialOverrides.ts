@@ -147,7 +147,7 @@ const CARD_EXPLANATIONS: Record<string, string> = {
     "Décompose d’abord 여 + 우. Une fois les deux blocs reconnus, relis-les d’un seul mouvement : 여우.",
 
   "hangul_consonants_basic:simple-a:g":
-    "Pour ㄱ, le dos de la langue vient toucher le palais. Le résultat reste plus doux que le k fortement aspiré que tu verras avec ㅋ.",
+    "Pour ㄱ, le dos de la langue vient toucher le palais. Écoute ce son doux dans 가 ; tu découvriras les consonnes aspirées plus tard.",
   "hangul_consonants_basic:simple-a:n":
     "Pour ㄴ, la pointe de la langue vient au contact des dents du haut. Le geste est simple et te donne un n très stable à reconnaître.",
   "hangul_consonants_basic:simple-a:d":

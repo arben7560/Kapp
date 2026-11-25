@@ -473,7 +473,8 @@ test("l’écran Aéroport conserve la reconnaissance, l’aide et le bilan uniq
   assert.match(screenSource, /recordAeroportSpeechAttempt/u);
   assert.match(screenSource, /AeroportConversationSummaryModal/u);
   assert.match(screenSource, /"voice_immersion"/u);
-  assert.match(missionsScreenSource, /MissionAccessBadge/u);
+  assert.match(missionsScreenSource, /MissionCollectionCard/u);
+  assert.match(missionsScreenSource, /canOpenImmersionMission\(mission, hasPremiumAccess\)/u);
   assert.match(summarySource, /buildAeroportConversationSummary/u);
   assert.match(summarySource, /Speech\.speak/u);
 });
@@ -486,13 +487,13 @@ test("la liste Aéroport affiche toujours une carte VOCAL et ouvre le mode guid�
 
   assert.match(
     missionsSource,
-    /mission\.id === AEROPORT_SPEECH_PILOT_MISSION_ID/u,
+    /mission\.id === AEROPORT_VOCAL_MISSION_ID/u,
   );
-  assert.match(missionsSource, /variant=\{isVocal \? "vocal" : "access"\}/u);
-  assert.match(missionsSource, /accent=\{isVocal \? VOCAL_VIOLET : CYAN\}/u);
+  assert.match(missionsSource, /isVocal=\{mission\.id === AEROPORT_VOCAL_MISSION_ID\}/u);
+  assert.match(missionsSource, /accent=\{CYAN\}/u);
   assert.match(
     missionsSource,
-    /mission\.id === AEROPORT_SPEECH_PILOT_MISSION_ID[\s\S]*?\? "guided"[\s\S]*?: mode/u,
+    /const resolvedMode = isVocal \? "guided" : mode/u,
   );
   assert.match(missionsSource, /mission: mission\.id/u);
 });

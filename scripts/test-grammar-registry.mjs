@@ -130,7 +130,7 @@ test("content availability matches the release route guard", () => {
       `${contentRef.id} route ${contentRef.route} is not covered by the release guard`,
     );
   }
-  assert.match(rootLayout, /if \(isHidden\)[\s\S]*?<Redirect href="\/"/u);
+  assert.match(rootLayout, /if \(!enableHiddenRoutesQa && isHidden\)[\s\S]*?<Redirect href="\/"/u);
 
   const speak = readFileSync(join(projectRoot, "app/(tabs)/speak.tsx"), "utf8");
   const publicThemes = speak.match(

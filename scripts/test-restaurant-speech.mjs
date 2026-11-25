@@ -521,7 +521,7 @@ test("les formulations proches sont interprétées selon la question courante", 
     ["된장국 하나 주세요", sideChoices, "ped_add_doenjang", "uncertain"],
     ["달걀 요리 주세요", sideChoices, "ped_add_egg", "uncertain"],
     ["순한 맛으로 해 주세요", spiceChoices, "ped_not_spicy", "matched"],
-    ["야채 넣어 주세요", extraChoices, "ped_more_lettuce", "uncertain"],
+    ["깻잎 더 주세요", extraChoices, "ped_more_lettuce", "uncertain"],
     ["김치 좀 가져다 주세요", extraChoices, "ped_more_banchan", "uncertain"],
     ["현찰로 낼게요", paymentChoices, "ped_pay_cash", "matched"],
     ["삼성페이로 할게요", paymentChoices, "ped_pay_card", "uncertain"],
@@ -541,11 +541,11 @@ test("les formulations proches sont interprétées selon la question courante", 
 
 test("la demande de légumes reçoit une analyse fidèle et une reformulation ciblée", () => {
   const result = matchRestaurantSpeechIntent("야채 넣어 주세요", extraChoices);
-  assert.equal(result.reason, "uncertain");
-  assert.equal(result.choice?.id, "ped_more_lettuce");
+  assert.equal(result.reason, "needs-help");
+  assert.equal(result.category, "ambiguous");
+  assert.equal(result.choice, null);
   assert.match(result.feedback, /ajouter des légumes/u);
-  assert.match(result.feedback, /salade/u);
-  assert.match(result.feedback, /accompagnements/u);
+  assert.match(result.feedback, /feuilles de salade/u);
   assert.match(result.feedback, /상추 좀 더 주세요/u);
 });
 
@@ -555,12 +555,12 @@ test("une intention proche au mauvais moment est comprise sans changer de branch
   assert.equal(result.category, "wrong-concept");
   assert.equal(result.choice, null);
   assert.match(result.feedback, /ajouter des légumes/u);
-  assert.match(result.feedback, /quelle viande/u);
+  assert.match(result.feedback, /choix de viande/u);
 });
 
 test("les intentions proches mais incomplètes obtiennent une aide liée au tour", () => {
   for (const [transcript, nodeChoices, expectedFeedback] of [
-    ["고기 주세요", meatChoices, /quelle viande/u],
+    ["고기 주세요", meatChoices, /choix de viande/u],
     ["더 주세요", extraChoices, /davantage.*précisé quoi/u],
     ["계산할게요", paymentChoices, /moyen de paiement/u],
     ["보통 맛으로 해 주세요", spiceChoices, /niveau de piquant/u],
@@ -575,7 +575,8 @@ test("les intentions proches mais incomplètes obtiennent une aide liée au tour
 
 test("les nouveaux exemples contextuels sont transmis à la reconnaissance du bon tour", () => {
   const extraContext = getRestaurantSpeechContextualStrings(extraChoices);
-  assert.ok(extraContext.includes("야채 넣어 주세요."));
+  assert.ok(extraContext.includes("야채 좀 더 주세요."));
+  assert.ok(!extraContext.includes("야채 넣어 주세요."));
   assert.ok(extraContext.includes("김치 좀 가져다 주세요."));
 
   const meatContext = getRestaurantSpeechContextualStrings(meatChoices);
@@ -673,14 +674,13 @@ test("le listing Restaurant rend la carte VOCAL violette et ouvre la mission gui
     new URL("../app/lesson/restaurantMissions.tsx", import.meta.url),
     "utf8",
   );
-  assert.match(source, /const VOCAL_VIOLET = "#A78BFA"/);
-  assert.match(source, /Mini-missions ciblées/);
-  assert.match(source, /mission\.missionKind === "mini"/);
+  assert.match(source, /MissionCollectionCard/u);
+  assert.match(source, /RESTAURANT_SPEECH_MISSION_ID/u);
   assert.match(
     source,
     /mission\.id === RESTAURANT_SPEECH_MISSION_ID \? "guided" : mode/,
   );
-  assert.match(source, /variant=\{isVocal \? "vocal" : "access"\}/);
+  assert.match(source, /isVocal=\{mission\.id === RESTAURANT_SPEECH_MISSION_ID\}/u);
   assert.match(source, /pathname: "\/lesson\/restaurantIA"/);
   assert.match(source, /canOpenImmersionMission\(mission, hasPremiumAccess\)/);
 });

@@ -3209,13 +3209,13 @@ test("grammar screens guard premium navigation at the hub and lesson route", () 
 
   assert.match(hub, /hasPremiumAccess:\s*isPremium/u);
   assert.match(hub, /canAccessGrammarStage\(GRAMMAR_STAGE_BY_ID\[stageId\], isPremium\)/u);
-  assert.match(hub, /router\.push\("\/premium"\)/u);
+  assert.match(hub, /router\.push\(premiumRoute\(`/u);
   assert.match(hub, /isPremiumStage \? \(/u);
   assert.match(hub, /styles\.premiumMicro/u);
   assert.match(hub, /const premiumLocked = !canAccessGrammarStage\(/u);
 
   assert.match(lesson, /const premiumLocked = !canAccessGrammarStage\(stage, isPremium\)/u);
-  assert.match(lesson, /router\.replace\("\/premium"\)/u);
+  assert.match(lesson, /router\.replace\(premiumRoute\(`/u);
   assert.match(lesson, /canRepeatGrammarPractice/u);
   assert.match(lesson, /label=\{stage\.access === "premium" \? "PREMIUM" : "GRATUIT"\}/u);
 });

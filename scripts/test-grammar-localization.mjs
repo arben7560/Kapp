@@ -214,7 +214,7 @@ test("Japanese UI translates assembled labels, score and screen-reader descripti
   const guide = read("../components/grammar/GrammarLessonGuide.tsx");
   assert.match(lesson, /\{\x60NIVEAU \$\{stage\.status/u);
   assert.match(lesson, /\{\x60\$\{scoreLabel\(session\.score\)\} sur/u);
-  assert.match(lesson, /response\.correct && !localizedLead/u);
+  assert.match(lesson, /response\.correct && !japanese/u);
   assert.match(hub, /\{\x60\$\{completedStages\} \/ \$\{GRAMMAR_STAGE_IDS\.length\} étapes\x60\}/u);
   assert.match(modal, /accessibilityLabel=\{translate\(\x60Explication de la leçon/u);
   assert.match(guide, /accessibilityLabel=\{translate\(/u);

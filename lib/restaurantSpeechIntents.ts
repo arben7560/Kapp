@@ -1368,6 +1368,15 @@ function getIncompleteContextualFeedback(
   const questionExplanation = getCurrentQuestionExplanation(definitions);
 
   if (
+    ids.has("more-lettuce") &&
+    includesAny(value, ["야채", "채소", "쌈채소", "샐러드"]) &&
+    includesAny(value, ["넣어", "추가"]) &&
+    hasRequestSpeechAct(value)
+  ) {
+    return `Tu demandes d’ajouter des légumes, mais cela ne précise pas si tu veux plus de feuilles de salade pour les ssam. ${questionExplanation} Si c’est bien ton choix, dis : « 상추 좀 더 주세요. »`;
+  }
+
+  if (
     (ids.has("samgyeopsal-order") || ids.has("galbi-order")) &&
     includesAny(value, ["고기", "육류"]) &&
     hasRequestSpeechAct(value)
@@ -1981,6 +1990,21 @@ export function matchRestaurantSpeechIntent(
       "ambiguous",
       "major",
       incompleteContextualFeedback,
+      choices,
+      attemptNumber,
+    );
+  }
+
+  if (
+    !availableDefinitions.some(({ id }) => id === "more-lettuce") &&
+    includesAny(corrected, ["야채", "채소", "쌈채소", "샐러드"]) &&
+    includesAny(corrected, ["넣어", "추가"]) &&
+    hasRequestSpeechAct(corrected)
+  ) {
+    return needsHelp(
+      "wrong-concept",
+      "major",
+      `Tu demandes d’ajouter des légumes. ${getCurrentQuestionExplanation(availableDefinitions)}`,
       choices,
       attemptNumber,
     );

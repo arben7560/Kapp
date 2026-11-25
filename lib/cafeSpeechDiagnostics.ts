@@ -209,7 +209,7 @@ function refineContextualConfidence(
   if (
     definition.id === "eat-here" &&
     result.reason === "uncertain" &&
-    /(?:안에서|카페에서)(?:먹|마시)/u.test(normalizedTranscript)
+    /(?:안에서|카페에서)(?:먹|마시|마실)/u.test(normalizedTranscript)
   ) {
     return {
       reason: "matched",

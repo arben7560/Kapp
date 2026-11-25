@@ -86,7 +86,7 @@ test("the grammar modal keeps controls fixed around one scroll region", () => {
   assert.doesNotMatch(modal, /setIsHeaderCompact/u);
 
   const scrollEnd = modal.indexOf("</Animated.ScrollView>");
-  const closeButton = modal.indexOf('accessibilityLabel="Fermer l’explication"');
+  const closeButton = modal.indexOf('accessibilityLabel={translate("Fermer l’explication")}');
   const exerciseButton = modal.indexOf('label="Accéder aux exercices"');
   assert.ok(closeButton >= 0 && closeButton < scrollEnd);
   assert.ok(exerciseButton > scrollEnd);
