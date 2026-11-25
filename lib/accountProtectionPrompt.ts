@@ -88,3 +88,21 @@ export function createAccountProtectionPromptSessionGuard() {
     },
   };
 }
+
+/** Inline Hub reminder: derived from actual learning, not visit/dismissal history. */
+export function shouldShowGuestProgressSave({
+  isPermanentAccount,
+  isAuthLoading,
+  isHydrated,
+  meaningfulProgressCount,
+  completedDays,
+}: {
+  isPermanentAccount: boolean;
+  isAuthLoading: boolean;
+  isHydrated: boolean;
+  meaningfulProgressCount: number;
+  completedDays: number;
+}) {
+  return !isPermanentAccount && !isAuthLoading && isHydrated &&
+    (meaningfulProgressCount > 0 || completedDays > 0);
+}
