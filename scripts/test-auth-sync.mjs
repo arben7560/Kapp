@@ -9,7 +9,7 @@ import * as progressCore from "../lib/progressSyncCore.ts";
 import * as progressSnapshot from "../lib/progressSnapshot.ts";
 import * as pedagogical from "../lib/pedagogicalProgress.ts";
 import * as syncEvents from "../lib/progressSyncEvents.ts";
-import { createDailyStreakState } from "../lib/dailyStreak.ts";
+import { createDailyStreakState, completeDailyStreakState } from "../lib/dailyStreak.ts";
 
 import {
   KappAuthError,
@@ -18,6 +18,7 @@ import {
   validatePassword,
 } from "../lib/authErrors.ts";
 import { mergeProgressSnapshots } from "../lib/progressMerge.ts";
+import { shouldShowGuestProgressSave } from "../lib/accountProtectionPrompt.ts";
 
 const rootLayoutSource = await readFile(
   new URL("../app/_layout.tsx", import.meta.url),
@@ -125,7 +126,7 @@ test("cloud and local snapshots keep both sets of completed learning", () => {
 test("the Hub exposes profile access and keeps protection in the account route", () => {
   assert.match(hubSource, /accessibilityLabel=\{translate\("Ouvrir mon profil"\)\}/u);
   assert.match(hubSource, /onOpenProfile=\{\(\) => router\.push\("\/account"\)\}/u);
-  assert.match(hubSource, /pathname: "\/account",[\s\S]*?action: "protect"/u);
+  assert.match(hubSource, /onSaveProgress=\{showGuestProgressSave \? \(\) => router\.push\("\/account"\) : undefined\}/u);
   assert.match(hubSource, /useAuth\(\)/u);
   assert.doesNotMatch(hubSource, /protectProgress\(/u);
 });
@@ -135,14 +136,11 @@ test("profile and protection controls keep compact responsive contracts", () => 
     hubSource,
     /profileButton:\s*\{[\s\S]*?width: 44,[\s\S]*?height: 44,/u,
   );
-  assert.match(
-    hubSource,
-    /compact && styles\.protectionActionsCompact/u,
-  );
-  assert.match(
-    hubSource,
-    /protectionActionsCompact:\s*\{[\s\S]*?flexDirection: "column"/u,
-  );
+  assert.match(hubSource, /compact && styles\.protectionCardCompact/u);
+  assert.match(hubSource, /protectionTitle:\s*\{[\s\S]*?flex: 1,[\s\S]*?minWidth: 0/u);
+  assert.match(hubSource, /<\/Pressable>\s*\{onSaveProgress \? \([\s\S]*?<AccountProtectionCard compact=\{compact\} onProtect=\{onSaveProgress\}/u);
+  assert.doesNotMatch(hubSource, /accountProtectionPromptSessionGuard|showProtectionPrompt/u);
+  assert.match(hubSource, /useFocusEffect\([\s\S]*?setHasLearningActivityThisSession\(hasSessionLearningActivity\(\)\)/u);
 });
 
 test("the real sync provider merges a Google UID, isolates logout and restores reconnection without touching locale/navigation", async () => {
@@ -170,7 +168,7 @@ test("the real sync provider merges a Google UID, isolates logout and restores r
     progress: { ...pedagogical.createInitialPedagogicalProgress(), xp: 100, completed: { guest_lesson: true } },
     setProgress: async (next) => { store.progress = next; },
   };
-  const auth = { isConfigured: true, user: { id: "guest-id" } };
+  const auth = { isConfigured: true, isPermanentAccount: false, user: { id: "guest-id" } };
   cloud.set("google-id", { user_id: "google-id", schema_version: 2, progress_data: snapshot({ ...pedagogical.createInitialPedagogicalProgress(), xp: 420, completed: { google_lesson: true } }), created_at: "2026-11-06T10:00:00.000Z", updated_at: "2026-11-06T10:00:00.000Z" });
   const service = load(serviceCode, {
     "../lib/progressSyncCore": progressCore,
@@ -185,8 +183,13 @@ test("the real sync provider merges a Google UID, isolates logout and restores r
       } }) }),
     }) }) },
   });
-  const daily = { createDailyStreakState, readDailyStreakSnapshot: async () => createDailyStreakState(), persistDailyStreakSnapshot: async () => {} };
-  const resume = { readHomeResumeContext: async () => null, replaceHomeResumeContext: async () => {} };
+  const guestDate = new Date("2026-11-06T11:00:00.000Z");
+  const guestStreak = completeDailyStreakState(createDailyStreakState(), "voice_immersion", guestDate);
+  const guestResume = { track: "cafe_ia", title: "Commander un café", detail: "Simulation guidée", route: "/lesson/cafeIA", routeParams: { missionId: "guest-cafe" }, updatedAt: guestDate.toISOString() };
+  let localStreak = guestStreak;
+  let localResume = guestResume;
+  const daily = { createDailyStreakState, readDailyStreakSnapshot: async () => localStreak, persistDailyStreakSnapshot: async (value) => { localStreak = value; } };
+  const resume = { readHomeResumeContext: async () => localResume, replaceHomeResumeContext: async (value) => { localResume = value; } };
   const storage = load(storageCode, {
     "@react-native-async-storage/async-storage": {
       getItem: async (key) => entries.get(key) ?? null,
@@ -220,18 +223,25 @@ test("the real sync provider merges a Google UID, isolates logout and restores r
     await service.synchronizeProgressNow();
     assert.equal(cloud.get("guest-id").progress_data.pedagogicalProgress.xp, 100);
     auth.user = { id: "google-id" };
+    auth.isPermanentAccount = true;
     verify();
     await service.synchronizeProgressNow();
     assert.equal(store.progress.xp, 420);
     assert.deepEqual(store.progress.completed, { google_lesson: true, guest_lesson: true });
+    assert.deepEqual(cloud.get("google-id").progress_data.homeResume, guestResume);
+    assert.deepEqual(localResume, guestResume);
+    assert.deepEqual(cloud.get("google-id").progress_data.dailyStreak.completedDates, guestStreak.completedDates);
+    assert.deepEqual(localStreak.completedDates, guestStreak.completedDates);
     verify();
     await service.isolateProgressAfterSignOut("google-id");
     assert.equal(store.progress.xp, pedagogical.createInitialPedagogicalProgress().xp);
+    auth.isPermanentAccount = false;
     auth.user = { id: "new-guest-id" };
     verify();
     await service.synchronizeProgressNow();
     assert.deepEqual(cloud.get("new-guest-id").progress_data.pedagogicalProgress.completed, {});
     auth.user = { id: "google-id" };
+    auth.isPermanentAccount = true;
     verify();
     await service.synchronizeProgressNow();
     assert.equal(store.progress.xp, 420);
@@ -241,5 +251,76 @@ test("the real sync provider merges a Google UID, isolates logout and restores r
     verify();
   } finally {
     hook.cleanup();
+    syncEvents.setSessionLearningAccountProtected(false);
+    syncEvents.resetSessionLearningActivity();
+  }
+});
+
+test("guest save CTA follows meaningful hydrated progress and permanent account status", () => {
+  const guest = {
+    isPermanentAccount: false, isAuthLoading: false, isHydrated: true,
+    hasLearningActivityThisSession: true, meaningfulProgressCount: 0, completedDays: 0,
+  };
+  assert.equal(shouldShowGuestProgressSave(guest), false);
+  assert.equal(shouldShowGuestProgressSave({ ...guest, meaningfulProgressCount: 1 }), true);
+  assert.equal(shouldShowGuestProgressSave({ ...guest, completedDays: 1 }), true);
+  const progressed = { ...guest, completedDays: 1, meaningfulProgressCount: 1 };
+  assert.equal(shouldShowGuestProgressSave({ ...progressed, isPermanentAccount: true }), false);
+  assert.equal(shouldShowGuestProgressSave({ ...progressed, isAuthLoading: true }), false);
+  assert.equal(shouldShowGuestProgressSave({ ...progressed, isHydrated: false }), false);
+  // Cancelled or failed login leaves the guest and local progress unchanged.
+  assert.equal(shouldShowGuestProgressSave(progressed), true);
+  // Cold start with the very same persisted day and activities must be silent.
+  assert.equal(shouldShowGuestProgressSave({ ...progressed, hasLearningActivityThisSession: false }), false);
+});
+
+test("account conversion keeps completed activities on both sides and remains idempotent", () => {
+  const initial = pedagogical.createInitialPedagogicalProgress();
+  const remote = { ...initial, completed: { shared_remote: true, shared_local: false, remote_only: true, pending: false }, xp: 420 };
+  const local = { ...initial, completed: { shared_remote: false, shared_local: true, guest_only: true, pending: false }, xp: 200 };
+  const merged = mergeProgressSnapshots(remote, local);
+  assert.deepEqual(merged.completed, {
+    shared_remote: true, shared_local: true, remote_only: true, guest_only: true, pending: false,
+  });
+  assert.equal(merged.xp, 420);
+  assert.deepEqual(mergeProgressSnapshots(merged, local).completed, merged.completed);
+  assert.deepEqual(mergeProgressSnapshots(local, remote).completed, merged.completed);
+});
+
+test("only explicit runtime learning unlocks the guest invitation, not generic writes or cloud hydration", async () => {
+  const gate = () => shouldShowGuestProgressSave({
+    isPermanentAccount: false, isAuthLoading: false, isHydrated: true,
+    hasLearningActivityThisSession: syncEvents.hasSessionLearningActivity(),
+    meaningfulProgressCount: 3, completedDays: 1,
+  });
+  syncEvents.setSessionLearningAccountProtected(false);
+  syncEvents.resetSessionLearningActivity();
+  let changes = 0;
+  const unsubscribe = syncEvents.subscribeToSessionLearningActivity(() => changes++);
+  try {
+    assert.equal(gate(), false);
+    syncEvents.notifyLocalProgressMutation("pedagogical"); // Selecting a learning track.
+    syncEvents.notifyLocalProgressMutation("resume");
+    syncEvents.notifyLocalProgressMutation("streak"); // Reading/normalizing an old streak.
+    syncEvents.notifyProgressHydration();
+    await syncEvents.withoutProgressMutationTracking(async () => syncEvents.recordSessionLearningActivity());
+    assert.equal(gate(), false);
+    syncEvents.recordSessionLearningActivity();
+    assert.equal(gate(), true);
+    assert.equal(changes, 1);
+    // Returning from a cancelled sign-in leaves the guest activity intact.
+    assert.equal(gate(), true);
+    syncEvents.setSessionLearningAccountProtected(true);
+    assert.equal(gate(), false);
+    syncEvents.recordSessionLearningActivity();
+    assert.equal(gate(), false);
+    syncEvents.setSessionLearningAccountProtected(false);
+    assert.equal(gate(), false);
+    syncEvents.recordSessionLearningActivity();
+    assert.equal(gate(), true);
+  } finally {
+    unsubscribe();
+    syncEvents.setSessionLearningAccountProtected(false);
+    syncEvents.resetSessionLearningActivity();
   }
 });

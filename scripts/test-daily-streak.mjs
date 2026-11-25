@@ -21,7 +21,9 @@ const {
   resetDailyStreak,
 } = await import("../lib/dailyStreak.ts");
 const { saveHomeResumeContext } = await import("../lib/homeResume.ts");
-const { subscribeToLocalProgressMutations } = await import(
+const { subscribeToLocalProgressMutations, hasSessionLearningActivity,
+  resetSessionLearningActivity, setSessionLearningAccountProtected,
+} = await import(
   "../lib/progressSyncEvents.ts"
 );
 
@@ -171,4 +173,25 @@ test("les mutations streak et Home Resume déclenchent l’auto-sync cloud", asy
 
   assert.ok(areas.includes("streak"));
   assert.ok(areas.includes("resume"));
+});
+
+test("restoring an existing streak is silent, but repeating a real exercise unlocks the guest CTA", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: JULY_21 });
+  setSessionLearningAccountProtected(false);
+  resetSessionLearningActivity();
+  try {
+    await completeDailyActivity("grammar_exercise");
+    assert.equal(hasSessionLearningActivity(), true);
+    // Simulate a fresh runtime while retaining persisted data.
+    resetSessionLearningActivity();
+    const restored = await getDailyStreakState();
+    assert.equal(restored.isTodayCompleted, true);
+    assert.equal(hasSessionLearningActivity(), false);
+    const repeated = await completeDailyActivity("grammar_exercise");
+    assert.equal(repeated.lastCompletionResult, "already_completed");
+    assert.equal(repeated.totalCompletedDays, 1);
+    assert.equal(hasSessionLearningActivity(), true);
+  } finally {
+    resetSessionLearningActivity();
+  }
 });

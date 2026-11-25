@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { notifyLocalProgressMutation } from "./progressSyncEvents.ts";
+import { notifyLocalProgressMutation, recordSessionLearningActivity } from "./progressSyncEvents.ts";
 
 export const DAILY_STREAK_STORAGE_KEY = "kapp:daily-streak:v1";
 export const LEGACY_STREAK_STORAGE_KEY = "kapp:immersion-streak:v1";
@@ -349,9 +349,12 @@ export function completeDailyStreakState(
 export async function completeDailyActivity(
   activityType: DailyActivityType = "pedagogical_activity",
 ): Promise<DailyStreakState> {
-  return updateState((state) =>
+  const completed = await updateState((state) =>
     completeDailyStreakState(state, activityType, new Date()),
   );
+  // Only a successfully persisted learning action qualifies, even on a repeated day.
+  recordSessionLearningActivity();
+  return completed;
 }
 
 export async function applyStreakFreeze(dateToRepair?: string) {

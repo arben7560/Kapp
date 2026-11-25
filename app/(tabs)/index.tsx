@@ -5,6 +5,7 @@ import { router, useFocusEffect } from "expo-router";
 import {
   ChevronRight,
   Compass,
+  CloudUpload,
   Flame,
   Headphones,
   MessageCircleMore,
@@ -55,14 +56,9 @@ import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useAuth } from "../../lib/AuthProvider";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import {
-  createAccountProtectionPromptSessionGuard,
   getMeaningfulProgressCount,
-  shouldShowAccountProtectionPrompt,
+  shouldShowGuestProgressSave,
 } from "../../lib/accountProtectionPrompt";
-import {
-  dismissAccountProtectionPrompt,
-  readAccountProtectionPromptState,
-} from "../../lib/accountProtectionPromptStorage";
 import type { DailyStreakState } from "../../lib/dailyStreak";
 import {
   getGrammarJourneyCompletion,
@@ -72,7 +68,11 @@ import {
   readHomeResumeContext,
   type HomeResumeContext,
 } from "../../lib/homeResume";
-import { subscribeToProgressHydration } from "../../lib/progressSyncEvents";
+import {
+  hasSessionLearningActivity,
+  subscribeToProgressHydration,
+  subscribeToSessionLearningActivity,
+} from "../../lib/progressSyncEvents";
 import { resolveDisplayMessage, type DisplayMessage } from "../../lib/i18n/displayText";
 import { resolveAccountText } from "../../lib/i18n/accountText";
 import { HomeLocalizationProvider } from "../../lib/i18n/HomeLocalizationProvider";
@@ -107,9 +107,6 @@ const TEAL = "#5EEAD4";
 const STREAK_ACCENT = HubModuleAccents.streak;
 
 const HUB_BACKGROUND_DARKNESS = 0.54;
-
-const accountProtectionPromptSessionGuard =
-  createAccountProtectionPromptSessionGuard();
 
 const SEOUL_TIME_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
   hour: "2-digit",
@@ -735,23 +732,16 @@ function HomeContent() {
 
   const [seoulTime, setSeoulTime] = useState(formatSeoulTime);
 
-  const [showProtectionPrompt, setShowProtectionPrompt] = useState(false);
+  const [hasLearningActivityThisSession, setHasLearningActivityThisSession] = useState(false);
 
-  const meaningfulProgressCount = getMeaningfulProgressCount(progress);
-
-  const promptContextRef = useRef({
-    isAnonymous: auth.isAnonymous,
+  const showGuestProgressSave = shouldShowGuestProgressSave({
+    isPermanentAccount: auth.isPermanentAccount,
+    isAuthLoading: auth.isLoading,
     isHydrated,
-    meaningfulProgressCount,
+    hasLearningActivityThisSession,
+    meaningfulProgressCount: getMeaningfulProgressCount(progress),
+    completedDays: streak?.totalCompletedDays ?? 0,
   });
-
-  useEffect(() => {
-    promptContextRef.current = {
-      isAnonymous: auth.isAnonymous,
-      isHydrated,
-      meaningfulProgressCount,
-    };
-  }, [auth.isAnonymous, isHydrated, meaningfulProgressCount]);
 
   const currentTrack = progress.learningTrack;
 
@@ -887,6 +877,17 @@ function HomeContent() {
     };
   }, []);
 
+  // Re-evaluate on Hub focus, not when a saved snapshot is restored at launch.
+  // The subscription also handles an activity write finishing during navigation.
+  useFocusEffect(
+    useCallback(() => {
+      const refresh = () => setHasLearningActivityThisSession(hasSessionLearningActivity());
+      const unsubscribe = subscribeToSessionLearningActivity(refresh);
+      refresh();
+      return unsubscribe;
+    }, []),
+  );
+
   // Refresh streak
   useFocusEffect(
     useCallback(() => {
@@ -935,60 +936,6 @@ function HomeContent() {
     }, []),
   );
 
-  // The first Hub visit of an app session is intentionally quiet. On later
-  // visits, eligibility is read from local storage and evaluated once.
-  useFocusEffect(
-    useCallback(() => {
-      let isMounted = true;
-
-      if (!accountProtectionPromptSessionGuard.beginHubVisit()) {
-        setShowProtectionPrompt(false);
-        return () => {
-          isMounted = false;
-        };
-      }
-
-      const context = promptContextRef.current;
-      if (
-        !context.isHydrated ||
-        !context.isAnonymous ||
-        context.meaningfulProgressCount <= 0
-      ) {
-        setShowProtectionPrompt(false);
-        return () => {
-          isMounted = false;
-        };
-      }
-
-      void readAccountProtectionPromptState()
-        .then((promptState) => {
-          if (!isMounted) return;
-
-          const shouldShow = shouldShowAccountProtectionPrompt({
-            isAnonymous: context.isAnonymous,
-            meaningfulProgressCount: context.meaningfulProgressCount,
-            promptState,
-          });
-
-          setShowProtectionPrompt(shouldShow);
-          if (shouldShow) {
-            accountProtectionPromptSessionGuard.markPromptShown();
-          }
-        })
-        .catch((error) => {
-          console.warn(
-            "Impossible de lire la préférence de protection du compte:",
-            error,
-          );
-          if (isMounted) setShowProtectionPrompt(false);
-        });
-
-      return () => {
-        isMounted = false;
-      };
-    }, []),
-  );
-
   const openSequence = (sequence: any) => {
     if (__DEV__ && process.env.EXPO_PUBLIC_DEBUG_OAUTH_NAV === "1") {
       console.info("[kapp:oauth-nav]", "hub.openSequence", {
@@ -1010,18 +957,6 @@ function HomeContent() {
 
     router.push(sequence.route);
   };
-
-  const dismissProtectionPrompt = useCallback(() => {
-    setShowProtectionPrompt(false);
-    void dismissAccountProtectionPrompt(meaningfulProgressCount).catch(
-      (error) => {
-        console.warn(
-          "Impossible d’enregistrer le rappel de protection du compte:",
-          error,
-        );
-      },
-    );
-  }, [meaningfulProgressCount]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -1095,6 +1030,7 @@ function HomeContent() {
                 landscape={isLandscape}
                 streak={streak}
                 onPress={() => router.push("/streak")}
+                onSaveProgress={showGuestProgressSave ? () => router.push("/account") : undefined}
               />
             </AnimatedFragment>
 
@@ -1109,22 +1045,6 @@ function HomeContent() {
                 onPress={() => openSequence(activeSeq)}
               />
             </AnimatedFragment>
-
-            {showProtectionPrompt && auth.isAnonymous ? (
-              <AnimatedFragment index={0}>
-                <AccountProtectionCard
-                  compact={responsive.isCompact}
-                  onProtect={() => {
-                    setShowProtectionPrompt(false);
-                    router.push({
-                      pathname: "/account",
-                      params: { action: "protect" },
-                    });
-                  }}
-                  onDismiss={dismissProtectionPrompt}
-                />
-              </AnimatedFragment>
-            ) : null}
 
             {/* PEDAGOGICAL */}
 
@@ -1344,72 +1264,35 @@ function GlassHeader({
 function AccountProtectionCard({
   compact,
   onProtect,
-  onDismiss,
 }: {
   compact: boolean;
   onProtect: () => void;
-  onDismiss: () => void;
 }) {
   const { i18n } = useTranslation("account");
   const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
   const locale = isAppLocale(activeLanguage) ? activeLanguage : DEFAULT_LOCALE;
   const translate = (source: string) => resolveAccountText(source, locale, i18n);
+  const signInLabel = translate("Se connecter");
+
   return (
-    <View style={styles.protectionCardShell}>
-      <BlurView intensity={56} tint="dark" style={styles.protectionCard}>
-        <LinearGradient
-          colors={[
-            "rgba(103,232,249,0.11)",
-            "rgba(9,13,20,0.76)",
-            "rgba(2,3,6,0.84)",
-          ]}
-          locations={[0, 0.48, 1]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={styles.glassTopHairline} />
-        <View style={styles.protectionContent}>
-          <View style={styles.protectionIcon}>
-            <ShieldCheck size={20} strokeWidth={2} color={CYAN} />
-          </View>
-          <View style={styles.protectionCopy}>
-            <AppText variant="sectionTitle" style={styles.protectionTitle}>
-              {translate("Protégez votre progression")}
-            </AppText>
-            <AppText
-              variant="bodySecondary"
-              tone="muted"
-              style={styles.protectionBody}
-            >
-              {translate("Retrouvez votre apprentissage après une réinstallation ou sur un autre appareil.")}
-            </AppText>
-          </View>
-        </View>
-        <View
-          style={[
-            styles.protectionActions,
-            compact && styles.protectionActionsCompact,
-          ]}
-        >
-          <ActionButton
-            accessibilityLabel={translate("Protéger ma progression maintenant")}
-            label={translate("Protéger maintenant")}
-            accentColor={CYAN}
-            fullWidth={compact}
-            onPress={onProtect}
-            style={compact ? undefined : styles.protectionPrimaryAction}
-          />
-          <ActionButton
-            accessibilityLabel={translate("Me le rappeler plus tard")}
-            label={translate("Plus tard")}
-            variant="secondary"
-            fullWidth={compact}
-            onPress={onDismiss}
-            style={compact ? undefined : styles.protectionSecondaryAction}
-          />
-        </View>
-      </BlurView>
+    <View style={[styles.protectionCard, compact && styles.protectionCardCompact]}>
+      <View style={styles.protectionContent}>
+        <CloudUpload size={22} strokeWidth={1.9} color={CYAN} />
+        <AppText variant="bodyStrong" style={styles.protectionTitle}>
+          {translate("Sauvegarde ta progression")}
+        </AppText>
+      </View>
+      <AppText variant="bodySecondary" tone="muted" style={styles.protectionBody}>
+        {translate("Connecte-toi pour conserver tes progrès et reprendre ton aventure à tout moment.")}
+      </AppText>
+      <ActionButton
+        accessibilityLabel={signInLabel}
+        label={signInLabel + "  →"}
+        variant="ghost"
+        labelColor={CYAN}
+        style={styles.protectionButton}
+        onPress={onProtect}
+      />
     </View>
   );
 }
@@ -1427,11 +1310,13 @@ function DailyMomentumCard({
   landscape,
   streak,
   onPress,
+  onSaveProgress,
 }: {
   compact: boolean;
   landscape: boolean;
   streak: DailyStreakState | null;
   onPress: () => void;
+  onSaveProgress?: () => void;
 }) {
   const translate = useVocabularyText();
   const currentStreak = streak?.currentStreak ?? 0;
@@ -1448,16 +1333,7 @@ function DailyMomentumCard({
     .replace("{{protections}}", translate(protectionLabel));
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={dailySummary}
-      accessibilityHint={translate("Ouvre le détail de la série quotidienne")}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.dailyCardWrap,
-        pressed && styles.pressablePressed,
-      ]}
-    >
+    <View style={styles.dailyCardWrap}>
       <BlurView
         intensity={58}
         tint="dark"
@@ -1491,8 +1367,14 @@ function DailyMomentumCard({
 
         <View style={styles.glassTopHairline} />
 
-        {/* HEADER */}
-
+        {/* Header and main summary remain a single accessible streak action. */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={dailySummary}
+          accessibilityHint={translate("Ouvre le détail de la série quotidienne")}
+          onPress={onPress}
+          style={({ pressed }) => pressed && styles.pressablePressed}
+        >
         <View
           style={[
             styles.dailyHeader,
@@ -1539,9 +1421,18 @@ function DailyMomentumCard({
           </AppText>
         </View>
 
-        {/* STATISTIQUES */}
+        </Pressable>
 
-        <View style={styles.dailyStats}>
+        {onSaveProgress ? (
+          <AccountProtectionCard compact={compact} onProtect={onSaveProgress} />
+        ) : null}
+
+        {/* STATISTIQUES — also open the streak, without nesting the account CTA. */}
+        <Pressable
+          accessible={false}
+          onPress={onPress}
+          style={({ pressed }) => [styles.dailyStats, pressed && styles.pressablePressed]}
+        >
           <View style={styles.dailyStat}>
             <View
               style={[
@@ -1603,9 +1494,9 @@ function DailyMomentumCard({
               </AppText>
             </View>
           </View>
-        </View>
+        </Pressable>
       </BlurView>
-    </Pressable>
+    </View>
   );
 }
 
@@ -2979,89 +2870,38 @@ const styles = StyleSheet.create({
   // SECTIONS
   // ─────────────────────────────
 
-  protectionCardShell: {
-    marginTop: 14,
-
-    borderRadius: 24,
-
-    overflow: "hidden",
-
-    borderWidth: 1,
-    borderColor: "rgba(103,232,249,0.16)",
-
-    backgroundColor: "rgba(2,3,6,0.34)",
-
-    boxShadow: "0px 10px 26px rgba(0,0,0,0.24)",
+  protectionCard: {
+    backgroundColor: "rgba(103,232,249,0.085)",
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 18,
+    gap: 10,
   },
 
-  protectionCard: {
-    padding: 18,
-
-    position: "relative",
-
-    overflow: "hidden",
+  protectionCardCompact: {
+    padding: 12,
+    gap: 8,
   },
 
   protectionContent: {
     flexDirection: "row",
-    alignItems: "flex-start",
-
-    gap: 13,
-  },
-
-  protectionIcon: {
-    width: 42,
-    height: 42,
-
-    borderRadius: 16,
-
     alignItems: "center",
-    justifyContent: "center",
-
-    flexShrink: 0,
-
-    borderWidth: 1,
-    borderColor: "rgba(103,232,249,0.18)",
-
-    backgroundColor: "rgba(103,232,249,0.075)",
-  },
-
-  protectionCopy: {
-    flex: 1,
-    minWidth: 0,
+    gap: 9,
   },
 
   protectionTitle: {
+    flex: 1,
+    minWidth: 0,
     color: TXT,
   },
 
   protectionBody: {
-    maxWidth: 600,
-
-    marginTop: 5,
-
     color: MUTED,
   },
 
-  protectionActions: {
-    marginTop: 16,
-
-    flexDirection: "row",
-    justifyContent: "flex-end",
-
-    gap: 10,
-  },
-
-  protectionActionsCompact: {
-    flexDirection: "column",
-  },
-
-  protectionPrimaryAction: {
-    minWidth: 176,
-  },
-
-  protectionSecondaryAction: {
-    minWidth: 112,
+  protectionButton: {
+    backgroundColor: "rgba(103,232,249,0.12)",
+    borderRadius: 12,
   },
 
   sectionHeader: {

@@ -18,6 +18,8 @@ import {
 } from "./progressSnapshotStorage";
 import {
   notifyProgressHydration,
+  resetSessionLearningActivity,
+  setSessionLearningAccountProtected,
   subscribeToLocalProgressMutations,
   withoutProgressMutationTracking,
 } from "./progressSyncEvents";
@@ -100,6 +102,7 @@ export function ProgressSyncProvider({
   }, [setProgress]);
 
   const isolateAfterSignOut = React.useCallback(async (userId: string) => {
+    resetSessionLearningActivity();
     const snapshot = await readLocalUserProgressSnapshot(progressRef.current);
     await archiveUserProgressSnapshot(userId, snapshot);
     await applyLocalSnapshot(createEmptyUserProgressSnapshot());
@@ -108,6 +111,10 @@ export function ProgressSyncProvider({
     setLastSyncedAt(null);
     setStatus("pending");
   }, [applyLocalSnapshot]);
+
+  React.useEffect(() => {
+    setSessionLearningAccountProtected(Boolean(auth.isPermanentAccount));
+  }, [auth.isPermanentAccount]);
 
   React.useEffect(() => {
     const nextUserId = auth.user?.id ?? null;

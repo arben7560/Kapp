@@ -239,6 +239,18 @@ function mergeGrammarProgress(
   };
 }
 
+// A completed lesson remains completed across devices and account conversion.
+function mergeCompletedActivities(
+  remote: Progress["completed"],
+  local: Progress["completed"],
+): Progress["completed"] {
+  const result = { ...remote };
+  for (const [id, completed] of Object.entries(local)) {
+    result[id] = result[id] === true || completed === true;
+  }
+  return result;
+}
+
 export function mergeProgressSnapshots(
   remote: Progress,
   local: Progress,
@@ -247,7 +259,7 @@ export function mergeProgressSnapshots(
     learningTrack: local.learningTrack ?? remote.learningTrack,
     xp: Math.max(remote.xp, local.xp),
     streak: Math.max(remote.streak, local.streak),
-    completed: { ...remote.completed, ...local.completed },
+    completed: mergeCompletedActivities(remote.completed, local.completed),
     hangulLevel: Math.max(remote.hangulLevel, local.hangulLevel),
     hangulProgress: mergeHangulProgress(
       remote.hangulProgress,

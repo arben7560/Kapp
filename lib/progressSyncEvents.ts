@@ -42,3 +42,34 @@ export function subscribeToProgressHydration(listener: HydrationListener) {
     hydrationListeners.delete(listener);
   };
 }
+
+/** Runtime only: persisted or cloud-hydrated progress must never trigger the Hub CTA. */
+const learningActivityListeners = new Set<() => void>();
+let sessionLearningActivity = false;
+let permanentLearningAccount = false;
+
+export function hasSessionLearningActivity() {
+  return sessionLearningActivity;
+}
+
+export function recordSessionLearningActivity() {
+  if (suppressedMutationDepth > 0 || permanentLearningAccount || sessionLearningActivity) return;
+  sessionLearningActivity = true;
+  learningActivityListeners.forEach((listener) => listener());
+}
+
+export function resetSessionLearningActivity() {
+  if (!sessionLearningActivity) return;
+  sessionLearningActivity = false;
+  learningActivityListeners.forEach((listener) => listener());
+}
+
+export function setSessionLearningAccountProtected(isPermanentAccount: boolean) {
+  permanentLearningAccount = isPermanentAccount;
+  if (isPermanentAccount) resetSessionLearningActivity();
+}
+
+export function subscribeToSessionLearningActivity(listener: () => void) {
+  learningActivityListeners.add(listener);
+  return () => { learningActivityListeners.delete(listener); };
+}
