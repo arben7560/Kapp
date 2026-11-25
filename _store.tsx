@@ -16,7 +16,8 @@ import {
   persistPedagogicalProgress,
   readPedagogicalProgress,
 } from "./lib/pedagogicalProgressStorage";
-import { subscribeToProgressHydration } from "./lib/progressSyncEvents";
+import { recordSessionLearningActivity, subscribeToProgressHydration } from "./lib/progressSyncEvents";
+import { getMeaningfulProgressCount } from "./lib/accountProtectionPrompt";
 
 export type { LearningTrack, Progress } from "./lib/pedagogicalProgress";
 
@@ -82,9 +83,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const persistProgress = React.useCallback(async (next: Progress) => {
+  const persistProgress = React.useCallback(async (next: Progress, learningActivity = false) => {
     try {
       await persistPedagogicalProgress(next);
+      if (learningActivity) recordSessionLearningActivity();
     } catch (error) {
       console.warn("Impossible de sauvegarder le store pédagogique:", error);
     }
@@ -122,7 +124,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       progressRef.current = next;
       completedRef.current = next.completed;
       setProgressState(next);
-      return persistProgress(next);
+      return persistProgress(next, getMeaningfulProgressCount(next) > getMeaningfulProgressCount(current));
     },
     [persistProgress],
   );
@@ -170,7 +172,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     progressRef.current = next;
     setProgressState(next);
-    await persistProgress(next);
+    await persistProgress(next, true);
 
     return true;
   }, [persistProgress]);
