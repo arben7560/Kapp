@@ -256,3 +256,16 @@ test("guest save CTA follows meaningful hydrated progress and permanent account 
   // Cancelled or failed login leaves the guest and local progress unchanged.
   assert.equal(shouldShowGuestProgressSave(progressed), true);
 });
+
+test("account conversion keeps completed activities on both sides and remains idempotent", () => {
+  const initial = pedagogical.createInitialPedagogicalProgress();
+  const remote = { ...initial, completed: { shared_remote: true, shared_local: false, remote_only: true, pending: false }, xp: 420 };
+  const local = { ...initial, completed: { shared_remote: false, shared_local: true, guest_only: true, pending: false }, xp: 200 };
+  const merged = mergeProgressSnapshots(remote, local);
+  assert.deepEqual(merged.completed, {
+    shared_remote: true, shared_local: true, remote_only: true, guest_only: true, pending: false,
+  });
+  assert.equal(merged.xp, 420);
+  assert.deepEqual(mergeProgressSnapshots(merged, local).completed, merged.completed);
+  assert.deepEqual(mergeProgressSnapshots(local, remote).completed, merged.completed);
+});
