@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { REMOTE_PROGRESS_COLUMNS, synchronizeProgressSnapshotWithRepository } from "../lib/progressSyncCore.ts";
+import { mergeProgressSnapshots, mergeDailyStreakSnapshots } from "../lib/progressMerge.ts";
 import {
   CURRENT_PROGRESS_SCHEMA_VERSION,
   InvalidProgressSnapshotError,
@@ -220,4 +221,147 @@ test("SQL and TypeScript keep the same five-column storage contract", async () =
   assert.match(syncSource, /\.select\(REMOTE_PROGRESS_COLUMNS\)/u);
   assert.match(syncSource, /\.upsert\(payload, \{ onConflict: "user_id" \}\)/u);
   assert.match(migration, /schema_version integer not null check \(schema_version >= 1\)/u);
+});
+
+
+test("XP: distinct completion IDs accumulate, overlaps and repeated sync do not pay twice", async () => {
+  const account = createSnapshot({ pedagogicalProgress: createProgress({
+    xp: 200, completed: { common: true, account: true, guest: false },
+  }) });
+  const guest = createSnapshot({ pedagogicalProgress: createProgress({
+    xp: 200, completed: { common: true, guest: true, account: false },
+  }) });
+  let row = createRemoteRow(account);
+  let writes = 0;
+  const repository = {
+    async read() { return row; },
+    async upsert(payload) { writes++; row = createRemoteRow(payload.progress_data); return row; },
+  };
+  const first = await synchronizeProgressSnapshotWithRepository(repository, USER_ID, guest);
+  assert.equal(first.snapshot.pedagogicalProgress.xp, 240);
+  assert.deepEqual(first.snapshot.pedagogicalProgress.completed, { common: true, account: true, guest: true });
+  const retry = await synchronizeProgressSnapshotWithRepository(repository, USER_ID, guest);
+  assert.equal(retry.snapshot.pedagogicalProgress.xp, 240);
+  const again = await synchronizeProgressSnapshotWithRepository(repository, USER_ID, first.snapshot);
+  assert.equal(again.snapshot.pedagogicalProgress.xp, 240);
+  assert.equal(writes, 1);
+  const next = { ...first.snapshot.pedagogicalProgress, xp: 280,
+    completed: { ...first.snapshot.pedagogicalProgress.completed, next: true } };
+  assert.equal(mergeProgressSnapshots(first.snapshot.pedagogicalProgress, next).xp, 280);
+});
+
+function streakFor(dates, overrides = {}) {
+  return createDailyStreak({
+    currentStreak: dates.length, longestStreak: dates.length,
+    totalCompletedDays: dates.length,
+    lastCompletedDate: dates.at(-1) ?? null,
+    completedDates: Object.fromEntries(dates.map(date => [date, {
+      date, completedAt: date + "T10:00:00Z", activities: ["hangul_exercise"],
+    }])),
+    ...overrides,
+  });
+}
+
+test("streak: consecutive account and guest days rebuild the streak and unlock the badge once", () => {
+  const account = streakFor(["2026-08-17", "2026-08-18"]);
+  const guest = streakFor(["2026-08-19"]);
+  const merged = mergeDailyStreakSnapshots(account, guest);
+  assert.equal(merged.currentStreak, 3);
+  assert.equal(merged.longestStreak, 3);
+  assert.equal(merged.totalCompletedDays, 3);
+  assert.equal(merged.lastCompletedDate, "2026-08-19");
+  assert.equal(merged.badges[3].unlockedAt, "2026-08-19T10:00:00Z");
+  assert.deepEqual(mergeDailyStreakSnapshots(merged, guest), merged);
+  assert.deepEqual(mergeDailyStreakSnapshots(merged, merged), merged);
+});
+
+test("streak: freezes bridge recorded gaps only and stale snapshots cannot restore spent freezes", () => {
+  const account = streakFor(["2026-08-17"], {
+    freezeDates: { "2026-08-18": true }, freezesAvailable: 0, freezesUsed: 1,
+  });
+  const guest = streakFor(["2026-08-19"]);
+  const merged = mergeDailyStreakSnapshots(account, guest);
+  assert.equal(merged.currentStreak, 3);
+  assert.equal(merged.totalCompletedDays, 2);
+  assert.equal(merged.freezesAvailable, 0);
+  assert.equal(merged.freezesUsed, 1);
+  assert.deepEqual(mergeDailyStreakSnapshots(merged, account), merged);
+  const gap = mergeDailyStreakSnapshots(streakFor(["2026-08-17"]), guest);
+  assert.equal(gap.currentStreak, 1);
+  const doubleSpend = mergeDailyStreakSnapshots(account, streakFor(["2026-08-21"], {
+    freezeDates: { "2026-08-20": true }, freezesAvailable: 0, freezesUsed: 1,
+  }));
+  assert.equal(doubleSpend.freezesUsed, 2);
+  assert.equal(doubleSpend.freezesAvailable, 0);
+  assert.equal(doubleSpend.currentStreak, 1);
+});
+
+test("streak: migrated incomplete history retains its known count when new activity is contiguous", () => {
+  const legacy = streakFor(["2026-08-18"], { currentStreak: 5, longestStreak: 5, totalCompletedDays: 10 });
+  const merged = mergeDailyStreakSnapshots(legacy, streakFor(["2026-08-19"]));
+  assert.equal(merged.currentStreak, 6);
+  assert.equal(merged.longestStreak, 6);
+  assert.equal(merged.totalCompletedDays, 11);
+  assert.equal(Object.keys(merged.completedDates).length, 2);
+  assert.deepEqual(mergeDailyStreakSnapshots(merged, merged), merged);
+});
+
+test("grammar: merge phases, atomic criterion evidence and same-cycle review offsets without duplicates", () => {
+  const firstAt = "2026-08-17T10:00:00.000Z";
+  const lastAt = "2026-08-18T10:00:00.000Z";
+  const anchorAt = "2026-08-10T10:00:00.000Z";
+  const concept = (overrides) => ({ schemaVersion: 1, milestones: {}, criteriaEvidence: {},
+    review: { anchorAt, completedOffsets: [], lapses: 0 }, attempts: 1, ...overrides });
+  const remote = concept({
+    milestones: { discovery: { firstAt, lastAt: firstAt, attempts: 2, bestScore: 0.9 } },
+    criteriaEvidence: { R: { correct: 5, total: 5, usesNovelItems: true, evaluatedAt: firstAt } },
+    review: { anchorAt, completedOffsets: [3], lapses: 1 },
+    attempts: 2, lastResult: 0.9,
+  });
+  const local = concept({
+    milestones: {
+      discovery: { firstAt: lastAt, lastAt, attempts: 1, bestScore: 0.8 },
+      manipulation: { firstAt: lastAt, lastAt, attempts: 1, bestScore: 0.8 },
+    },
+    criteriaEvidence: { M: { correct: 4, total: 5, isConstructionOrTransformation: true, evaluatedAt: lastAt } },
+    review: { anchorAt, completedOffsets: [10], lapses: 0 },
+    lastResult: 0.8,
+  });
+  const wrap = (value) => createProgress({
+    grammarProgress: { schemaVersion: 1, concepts: { "sentence-order": value }, stages: {} },
+  });
+  const merged = mergeProgressSnapshots(wrap(remote), wrap(local));
+  const result = merged.grammarProgress.concepts["sentence-order"];
+  assert.deepEqual(result.milestones.discovery, { firstAt, lastAt, attempts: 2, bestScore: 0.9 });
+  assert.ok(result.milestones.manipulation);
+  assert.deepEqual(result.criteriaEvidence.R, remote.criteriaEvidence.R);
+  assert.deepEqual(result.criteriaEvidence.M, local.criteriaEvidence.M);
+  assert.deepEqual(result.review.completedOffsets, [3, 10]);
+  assert.equal(result.review.lapses, 1);
+  assert.equal(result.lastResult, 0.8);
+  assert.equal(result.attempts, 2);
+  assert.deepEqual(mergeProgressSnapshots(merged, merged).grammarProgress, merged.grammarProgress);
+  const newerCycle = concept({ review: { anchorAt: lastAt, completedOffsets: [], lapses: 2 } });
+  const newer = mergeProgressSnapshots(merged, wrap(newerCycle)).grammarProgress.concepts["sentence-order"];
+  assert.equal(newer.review.anchorAt, lastAt);
+  assert.deepEqual(newer.review.completedOffsets, []);
+});
+
+test("grammar: session IDs deduplicate attempts and latest completion retains its actual last score", () => {
+  const stage = (ids, lastCompletedAt, lastScore) => ({
+    attempts: ids.length, bestScore: 0.9, lastScore, lastCompletedAt,
+    completedSessionIds: ids, streakSessionIds: ids,
+  });
+  const wrap = (value) => createProgress({
+    grammarProgress: { schemaVersion: 1, concepts: {}, stages: { "sentence-structure": value } },
+  });
+  const remote = wrap(stage(["a", "common"], "2026-08-19T10:00:00Z", 0.9));
+  const local = wrap(stage(["common", "b"], "2026-08-18T10:00:00Z", 0.7));
+  const merged = mergeProgressSnapshots(remote, local);
+  const result = merged.grammarProgress.stages["sentence-structure"];
+  assert.equal(result.attempts, 3);
+  assert.equal(result.lastScore, 0.9);
+  assert.deepEqual(result.completedSessionIds, ["a", "b", "common"]);
+  assert.deepEqual(result.streakSessionIds, ["a", "b", "common"]);
+  assert.deepEqual(mergeProgressSnapshots(merged, local).grammarProgress, merged.grammarProgress);
 });
