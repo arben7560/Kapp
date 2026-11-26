@@ -181,7 +181,15 @@
       "Prot%C3%A9ger%20ma%20progression%20maintenant": "今すぐ学習の進捗を保護する",
       "Prot%C3%A9ger%20maintenant": "今すぐ保護する",
       "Me%20le%20rappeler%20plus%20tard": "後でもう一度通知する",
-      "Plus%20tard": "あとで"
+      "Plus%20tard": "あとで",
+      "Ton%20aventure%20ne%20fait%20que%20commencer%2E": "あなたの冒険は始まったばかり。",
+      "Ta%20progression%20est%20actuellement%20sauvegard%C3%A9e%20sur%20cet%20appareil%2E%20Connecte-toi%20pour%20conserver%20tes%20acquis%2C%20m%C3%AAme%20si%20tu%20changes%20de%20t%C3%A9l%C3%A9phone%2E": "学習の進捗は現在この端末に保存されています。ログインすると、機種変更後も学習を続けられます。",
+      "Ta%20progression%20conserv%C3%A9e": "学習の進捗を保存",
+      "Ta%20s%C3%A9rie%20de%20jours%20sauvegard%C3%A9e": "連続学習日数を保存",
+      "Ton%20parcours%20sur%20tous%20tes%20appareils": "どの端末でも学習を継続",
+      "Se%20connecter%20et%20sauvegarder": "ログインして保存",
+      "Avec%20Google%20ou%20Microsoft": "GoogleまたはMicrosoftで",
+      "Fermer%20le%20rappel%20de%20sauvegarde": "保存の案内を閉じる"
     }
   }
 }

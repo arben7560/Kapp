@@ -6,6 +6,8 @@ import {
   ACCOUNT_PROTECTION_PROMPT_COOLDOWN_MS,
   createAccountProtectionPromptSessionGuard,
   getMeaningfulProgressCount,
+  getAccountProtectionMilestone,
+  ACCOUNT_PROTECTION_PROMPT_DELAY_MS,
   hasMeaningfulProgress,
   shouldShowAccountProtectionPrompt,
 } from "../lib/accountProtectionPrompt.ts";
@@ -156,4 +158,20 @@ test("the session guard skips the first Hub visit and prevents repeats", () => {
   assert.equal(guard.beginHubVisit(), true);
   guard.markPromptShown();
   assert.equal(guard.beginHubVisit(), false);
+});
+
+ test("modal requires a completed day and only shows guest milestones 1, 3, 7", () => {
+  const base = { isAnonymous: true, isTodayCompleted: true, currentStreak: 1, promptState: emptyPromptState };
+  const next = (overrides) => getAccountProtectionMilestone({ ...base, ...overrides });
+  assert.equal(ACCOUNT_PROTECTION_PROMPT_DELAY_MS, 2000);
+  assert.equal(next({}), 1);
+  assert.equal(next({ isTodayCompleted: false }), null);
+  assert.equal(next({ isAnonymous: false }), null);
+  assert.equal(next({ currentStreak: 0 }), null);
+  assert.equal(next({ currentStreak: 2, promptState: { ...emptyPromptState, lastShownMilestone: 1 } }), null);
+  assert.equal(next({ currentStreak: 3, promptState: { ...emptyPromptState, lastShownMilestone: 1 } }), 3);
+  assert.equal(next({ currentStreak: 7, promptState: { ...emptyPromptState, lastShownMilestone: 3 } }), 7);
+  assert.equal(next({ currentStreak: 40, promptState: { ...emptyPromptState, lastShownMilestone: 7 } }), null);
+  assert.equal(next({ currentStreak: 8 }), 7);
+  assert.equal(next({ promptState: { ...emptyPromptState, suppressedUntil: "2099-01-01T00:00:00.000Z" } }), null);
 });

@@ -4,6 +4,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import {
   ChevronRight,
+  CloudUpload,
+  CircleCheck,
+  Smartphone,
+  X,
   Compass,
   Flame,
   Headphones,
@@ -16,6 +20,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Animated,
+  AppState,
+  Modal,
   Easing,
   ImageBackground,
   Pressable,
@@ -35,7 +41,6 @@ import {
 } from "react-native-safe-area-context";
 import { useStore, type Progress } from "../../_store";
 import { AppText } from "../../components/app-text";
-import { ActionButton } from "../../components/ui/action-button";
 import { HubModuleAccents } from "../../constants/theme";
 import { GRAMMAR_STAGE_BY_ID, GRAMMAR_STAGE_IDS } from "../../data/grammar";
 import {
@@ -55,12 +60,11 @@ import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import { useAuth } from "../../lib/AuthProvider";
 import { useDailyStreak } from "../../lib/DailyStreakProvider";
 import {
-  createAccountProtectionPromptSessionGuard,
-  getMeaningfulProgressCount,
-  shouldShowAccountProtectionPrompt,
+  ACCOUNT_PROTECTION_PROMPT_DELAY_MS,
+  getAccountProtectionMilestone,
 } from "../../lib/accountProtectionPrompt";
 import {
-  dismissAccountProtectionPrompt,
+  markAccountProtectionMilestoneShown,
   readAccountProtectionPromptState,
 } from "../../lib/accountProtectionPromptStorage";
 import type { DailyStreakState } from "../../lib/dailyStreak";
@@ -107,9 +111,6 @@ const TEAL = "#5EEAD4";
 const STREAK_ACCENT = HubModuleAccents.streak;
 
 const HUB_BACKGROUND_DARKNESS = 0.54;
-
-const accountProtectionPromptSessionGuard =
-  createAccountProtectionPromptSessionGuard();
 
 const SEOUL_TIME_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
   hour: "2-digit",
@@ -692,7 +693,7 @@ function HomeContent() {
 
   const auth = useAuth();
 
-  const { refreshStreak, streak } = useDailyStreak();
+  const { refreshStreak, streak, isLoading: isStreakLoading } = useDailyStreak();
 
   const responsive = useResponsiveLayout({
     maxWidth: isLandscape ? 1120 : 900,
@@ -737,21 +738,16 @@ function HomeContent() {
 
   const [showProtectionPrompt, setShowProtectionPrompt] = useState(false);
 
-  const meaningfulProgressCount = getMeaningfulProgressCount(progress);
-
-  const promptContextRef = useRef({
-    isAnonymous: auth.isAnonymous,
-    isHydrated,
-    meaningfulProgressCount,
-  });
+  const [hubFocused, setHubFocused] = useState(false);
+  const [appActive, setAppActive] = useState(AppState.currentState !== "background" && AppState.currentState !== "inactive");
+  const shownMilestoneRef = useRef(0);
 
   useEffect(() => {
-    promptContextRef.current = {
-      isAnonymous: auth.isAnonymous,
-      isHydrated,
-      meaningfulProgressCount,
-    };
-  }, [auth.isAnonymous, isHydrated, meaningfulProgressCount]);
+    const subscription = AppState.addEventListener("change", (state) => {
+      setAppActive(state === "active");
+    });
+    return () => subscription.remove();
+  }, []);
 
   const currentTrack = progress.learningTrack;
 
@@ -935,59 +931,54 @@ function HomeContent() {
     }, []),
   );
 
-  // The first Hub visit of an app session is intentionally quiet. On later
-  // visits, eligibility is read from local storage and evaluated once.
+  // The hub alone owns this modal; exercise completion screens stay untouched.
   useFocusEffect(
     useCallback(() => {
-      let isMounted = true;
-
-      if (!accountProtectionPromptSessionGuard.beginHubVisit()) {
-        setShowProtectionPrompt(false);
-        return () => {
-          isMounted = false;
-        };
-      }
-
-      const context = promptContextRef.current;
-      if (
-        !context.isHydrated ||
-        !context.isAnonymous ||
-        context.meaningfulProgressCount <= 0
-      ) {
-        setShowProtectionPrompt(false);
-        return () => {
-          isMounted = false;
-        };
-      }
-
-      void readAccountProtectionPromptState()
-        .then((promptState) => {
-          if (!isMounted) return;
-
-          const shouldShow = shouldShowAccountProtectionPrompt({
-            isAnonymous: context.isAnonymous,
-            meaningfulProgressCount: context.meaningfulProgressCount,
-            promptState,
-          });
-
-          setShowProtectionPrompt(shouldShow);
-          if (shouldShow) {
-            accountProtectionPromptSessionGuard.markPromptShown();
-          }
-        })
-        .catch((error) => {
-          console.warn(
-            "Impossible de lire la préférence de protection du compte:",
-            error,
-          );
-          if (isMounted) setShowProtectionPrompt(false);
-        });
-
+      setHubFocused(true);
       return () => {
-        isMounted = false;
+        setHubFocused(false);
+        setShowProtectionPrompt(false);
       };
     }, []),
   );
+
+  const currentStreak = streak?.currentStreak ?? 0;
+  const isTodayCompleted = streak?.isTodayCompleted ?? false;
+  useEffect(() => {
+    if (!hubFocused || !appActive || !isHydrated || auth.isLoading ||
+        !auth.isAnonymous || isStreakLoading || !isTodayCompleted) return;
+
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    void readAccountProtectionPromptState().then((promptState) => {
+      if (cancelled) return;
+      const milestone = getAccountProtectionMilestone({
+        isAnonymous: auth.isAnonymous,
+        isTodayCompleted,
+        currentStreak,
+        promptState: {
+          ...promptState,
+          lastShownMilestone: Math.max(promptState.lastShownMilestone ?? 0, shownMilestoneRef.current),
+        },
+      });
+      if (milestone === null) return;
+      timer = setTimeout(() => {
+        if (cancelled || AppState.currentState === "background" || AppState.currentState === "inactive") return;
+        shownMilestoneRef.current = milestone;
+        setShowProtectionPrompt(true);
+        void markAccountProtectionMilestoneShown(milestone).catch((error) => {
+          console.warn("Impossible d’enregistrer le rappel de protection du compte:", error);
+        });
+      }, ACCOUNT_PROTECTION_PROMPT_DELAY_MS);
+    }).catch((error) => {
+      console.warn("Impossible de lire la préférence de protection du compte:", error);
+    });
+
+    return () => {
+      cancelled = true;
+      if (timer !== undefined) clearTimeout(timer);
+    };
+  }, [hubFocused, appActive, isHydrated, auth.isLoading, auth.isAnonymous, isStreakLoading, isTodayCompleted, currentStreak]);
 
   const openSequence = (sequence: any) => {
     if (__DEV__ && process.env.EXPO_PUBLIC_DEBUG_OAUTH_NAV === "1") {
@@ -1013,15 +1004,7 @@ function HomeContent() {
 
   const dismissProtectionPrompt = useCallback(() => {
     setShowProtectionPrompt(false);
-    void dismissAccountProtectionPrompt(meaningfulProgressCount).catch(
-      (error) => {
-        console.warn(
-          "Impossible d’enregistrer le rappel de protection du compte:",
-          error,
-        );
-      },
-    );
-  }, [meaningfulProgressCount]);
+  }, []);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -1110,19 +1093,6 @@ function HomeContent() {
               />
             </AnimatedFragment>
 
-            {showProtectionPrompt && auth.isAnonymous ? (
-              <AnimatedFragment index={0}>
-                <AccountProtectionCard
-                  compact={responsive.isCompact}
-                  onProtect={() => {
-                    setShowProtectionPrompt(false);
-                    router.push("/account");
-                  }}
-                  onDismiss={dismissProtectionPrompt}
-                />
-              </AnimatedFragment>
-            ) : null}
-
             {/* PEDAGOGICAL */}
 
             <SectionHeader
@@ -1209,6 +1179,14 @@ function HomeContent() {
           </View>
         </ScrollView>
       </ImageBackground>
+      <AccountProtectionModal
+        visible={showProtectionPrompt && hubFocused && auth.isAnonymous && !auth.isLoading}
+        onProtect={() => {
+          dismissProtectionPrompt();
+          router.push("/account");
+        }}
+        onDismiss={dismissProtectionPrompt}
+      />
     </SafeAreaView>
   );
 }
@@ -1338,12 +1316,12 @@ function GlassHeader({
   );
 }
 
-function AccountProtectionCard({
-  compact,
+function AccountProtectionModal({
+  visible,
   onProtect,
   onDismiss,
 }: {
-  compact: boolean;
+  visible: boolean;
   onProtect: () => void;
   onDismiss: () => void;
 }) {
@@ -1351,63 +1329,69 @@ function AccountProtectionCard({
   const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
   const locale = isAppLocale(activeLanguage) ? activeLanguage : DEFAULT_LOCALE;
   const translate = (source: string) => resolveAccountText(source, locale, i18n);
+  const script = locale === "ja" ? "japanese" : "latin";
+  const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const benefits = [
+    { Icon: CircleCheck, label: translate("Ta progression conservée") },
+    { Icon: Flame, label: translate("Ta série de jours sauvegardée") },
+    { Icon: Smartphone, label: translate("Ton parcours sur tous tes appareils") },
+  ];
   return (
-    <View style={styles.protectionCardShell}>
-      <BlurView intensity={56} tint="dark" style={styles.protectionCard}>
-        <LinearGradient
-          colors={[
-            "rgba(103,232,249,0.11)",
-            "rgba(9,13,20,0.76)",
-            "rgba(2,3,6,0.84)",
-          ]}
-          locations={[0, 0.48, 1]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={styles.glassTopHairline} />
-        <View style={styles.protectionContent}>
-          <View style={styles.protectionIcon}>
-            <ShieldCheck size={20} strokeWidth={2} color={CYAN} />
-          </View>
-          <View style={styles.protectionCopy}>
-            <AppText variant="sectionTitle" style={styles.protectionTitle}>
-              {translate("Protégez votre progression")}
-            </AppText>
-            <AppText
-              variant="bodySecondary"
-              tone="muted"
-              style={styles.protectionBody}
-            >
-              {translate("Retrouvez votre apprentissage après une réinstallation ou sur un autre appareil.")}
-            </AppText>
-          </View>
-        </View>
+    <Modal
+      transparent
+      animationType="fade"
+      visible={visible}
+      onRequestClose={onDismiss}
+    >
+      <View style={styles.protectionBackdrop}>
         <View
-          style={[
-            styles.protectionActions,
-            compact && styles.protectionActionsCompact,
-          ]}
+          accessibilityViewIsModal
+          style={[styles.protectionDialog, { maxHeight: Math.max(100, height - insets.top - insets.bottom - 32) }]}
         >
-          <ActionButton
-            accessibilityLabel={translate("Protéger ma progression maintenant")}
-            label={translate("Protéger maintenant")}
-            accentColor={CYAN}
-            fullWidth={compact}
-            onPress={onProtect}
-            style={compact ? undefined : styles.protectionPrimaryAction}
-          />
-          <ActionButton
-            accessibilityLabel={translate("Me le rappeler plus tard")}
-            label={translate("Plus tard")}
-            variant="secondary"
-            fullWidth={compact}
-            onPress={onDismiss}
-            style={compact ? undefined : styles.protectionSecondaryAction}
-          />
+          <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={styles.protectionContent}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={translate("Fermer le rappel de sauvegarde")}
+              onPress={onDismiss}
+              style={styles.protectionClose}
+            >
+              <X size={23} color={MUTED} />
+            </Pressable>
+            <View style={styles.protectionIcon}>
+              <CloudUpload size={36} strokeWidth={1.8} color="#C3A1F6" />
+            </View>
+            <AppText script={script} variant="sectionTitle" tone="strong" align="center" style={styles.protectionTitle}>
+              {translate("Ton aventure ne fait que commencer.")}
+            </AppText>
+            <AppText script={script} variant="bodySecondary" align="center" style={styles.protectionBody}>
+              {translate("Ta progression est actuellement sauvegardée sur cet appareil. Connecte-toi pour conserver tes acquis, même si tu changes de téléphone.")}
+            </AppText>
+            <View style={styles.protectionBenefits}>
+              {benefits.map(({ Icon, label }) => (
+                <View key={label} style={styles.protectionBenefit}>
+                  <Icon size={21} color="#8BDCC3" strokeWidth={2} />
+                  <AppText script={script} variant="body" tone="strong" style={styles.protectionBenefitText}>{label}</AppText>
+                </View>
+              ))}
+            </View>
+            <Pressable accessibilityRole="button" onPress={onProtect} style={({ pressed }) => [styles.protectionPrimary, pressed && styles.protectionPressed]}>
+              <AppText script={script} variant="button" align="center" style={styles.protectionPrimaryText}>
+                {translate("Se connecter et sauvegarder")}
+              </AppText>
+            </Pressable>
+            <AppText script={script} variant="caption" align="center" style={styles.protectionBody}>
+              {translate("Avec Google ou Microsoft")}
+            </AppText>
+            <Pressable accessibilityRole="button" onPress={onDismiss} style={styles.protectionLater}>
+              <AppText script={script} variant="bodySecondary" align="center" style={styles.protectionBody}>
+                {translate("Plus tard")}
+              </AppText>
+            </Pressable>
+          </ScrollView>
         </View>
-      </BlurView>
-    </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -2976,90 +2960,69 @@ const styles = StyleSheet.create({
   // SECTIONS
   // ─────────────────────────────
 
-  protectionCardShell: {
-    marginTop: 14,
-
-    borderRadius: 24,
-
-    overflow: "hidden",
-
-    borderWidth: 1,
-    borderColor: "rgba(103,232,249,0.16)",
-
-    backgroundColor: "rgba(2,3,6,0.34)",
-
-    boxShadow: "0px 10px 26px rgba(0,0,0,0.24)",
-  },
-
-  protectionCard: {
-    padding: 18,
-
-    position: "relative",
-
-    overflow: "hidden",
-  },
-
-  protectionContent: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-
-    gap: 13,
-  },
-
-  protectionIcon: {
-    width: 42,
-    height: 42,
-
-    borderRadius: 16,
-
+  protectionBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.72)",
     alignItems: "center",
     justifyContent: "center",
-
-    flexShrink: 0,
-
+    padding: 16,
+  },
+  protectionDialog: {
+    width: "100%",
+    maxWidth: 460,
+    backgroundColor: "#0D111D",
+    borderColor: "rgba(255,255,255,0.12)",
     borderWidth: 1,
-    borderColor: "rgba(103,232,249,0.18)",
-
-    backgroundColor: "rgba(103,232,249,0.075)",
+    borderRadius: 26,
+    overflow: "hidden",
+    flexShrink: 1,
   },
-
-  protectionCopy: {
-    flex: 1,
-    minWidth: 0,
+  protectionContent: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 14,
+    gap: 16,
+    alignItems: "center",
   },
-
-  protectionTitle: {
-    color: TXT,
+  protectionClose: {
+    alignSelf: "flex-end",
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
   },
-
-  protectionBody: {
-    maxWidth: 600,
-
-    marginTop: 5,
-
-    color: MUTED,
+  protectionIcon: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: "#27213F",
+    alignItems: "center",
+    justifyContent: "center",
   },
-
-  protectionActions: {
-    marginTop: 16,
-
-    flexDirection: "row",
-    justifyContent: "flex-end",
-
-    gap: 10,
+  protectionTitle: { color: TXT },
+  protectionBody: { color: MUTED },
+  protectionBenefits: {
+    alignSelf: "stretch",
+    borderRadius: 18,
+    backgroundColor: "#181C29",
+    padding: 15,
+    gap: 14,
   },
-
-  protectionActionsCompact: {
-    flexDirection: "column",
+  protectionBenefit: { flexDirection: "row", alignItems: "center", gap: 12 },
+  protectionBenefitText: { flex: 1, minWidth: 0 },
+  protectionPrimary: {
+    alignSelf: "stretch",
+    minHeight: 54,
+    borderRadius: 16,
+    backgroundColor: "#A855F7",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 12,
   },
-
-  protectionPrimaryAction: {
-    minWidth: 176,
-  },
-
-  protectionSecondaryAction: {
-    minWidth: 112,
-  },
+  protectionPrimaryText: { color: "#100B19" },
+  protectionPressed: { opacity: 0.82 },
+  protectionLater: { alignSelf: "stretch", minHeight: 44, justifyContent: "center" },
 
   sectionHeader: {
     marginTop: 30,

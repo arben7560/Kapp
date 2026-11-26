@@ -39,7 +39,7 @@
     "test:premium": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-premium.mjs ./scripts/test-revenuecat-test-store.mjs ./scripts/test-premium-lifecycle.mjs",
     "test:immersion": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-immersion-scenes.mjs",
     "test:streak": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-daily-streak.mjs",
-    "test:auth-sync": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-auth-sync.mjs",
+    "test:auth-sync": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-auth-sync.mjs ./scripts/test-account-protection-prompt.mjs",
     "test:auth-production": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-auth-production.mjs ./scripts/test-auth-cloud.mjs",
     "test:oauth": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-oauth-flow.mjs",
     "test:progress-cloud": "node --test --test-isolation=none --experimental-strip-types ./scripts/test-progress-cloud-contract.mjs",

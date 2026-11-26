@@ -134,14 +134,10 @@ test("profile and protection controls keep compact responsive contracts", () => 
     hubSource,
     /profileButton:\s*\{[\s\S]*?width: 44,[\s\S]*?height: 44,/u,
   );
-  assert.match(
-    hubSource,
-    /compact && styles\.protectionActionsCompact/u,
-  );
-  assert.match(
-    hubSource,
-    /protectionActionsCompact:\s*\{[\s\S]*?flexDirection: "column"/u,
-  );
+  assert.match(hubSource, /<AccountProtectionModal/u);
+  assert.match(hubSource, /<Modal[\s\S]*?onRequestClose=\{onDismiss\}/u);
+  assert.match(hubSource, /protectionDialog:\s*\{[\s\S]*?maxWidth: 460/u);
+  assert.match(hubSource, /<ScrollView bounces=\{false\}/u);
 });
 
 test("the real sync provider merges a Google UID, isolates logout and restores reconnection without touching locale/navigation", async () => {

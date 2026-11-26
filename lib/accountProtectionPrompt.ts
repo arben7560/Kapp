@@ -8,6 +8,7 @@ export type AccountProtectionPromptState = {
   dismissedAt: string | null;
   dismissedProgressCount: number;
   suppressedUntil: string | null;
+  lastShownMilestone?: number;
 };
 
 type MeaningfulProgress = Pick<
@@ -87,4 +88,31 @@ export function createAccountProtectionPromptSessionGuard() {
       hasShownPrompt = true;
     },
   };
+}
+
+export const ACCOUNT_PROTECTION_PROMPT_DELAY_MS = 2_000;
+export const ACCOUNT_PROTECTION_MILESTONES = [1, 3, 7] as const;
+export type AccountProtectionMilestone = (typeof ACCOUNT_PROTECTION_MILESTONES)[number];
+
+/** Return the highest eligible milestone; skipped milestones are not replayed. */
+export function getAccountProtectionMilestone({
+  isAnonymous,
+  isTodayCompleted,
+  currentStreak,
+  promptState,
+  now = Date.now(),
+}: {
+  isAnonymous: boolean;
+  isTodayCompleted: boolean;
+  currentStreak: number;
+  promptState: AccountProtectionPromptState;
+  now?: number;
+}): AccountProtectionMilestone | null {
+  if (!isAnonymous || !isTodayCompleted || !Number.isFinite(currentStreak)) return null;
+  const suppressedUntil = promptState.suppressedUntil ? Date.parse(promptState.suppressedUntil) : NaN;
+  if (Number.isFinite(suppressedUntil) && now < suppressedUntil) return null;
+  const lastShown = promptState.lastShownMilestone ?? 0;
+  return [...ACCOUNT_PROTECTION_MILESTONES].reverse().find(
+    (milestone) => currentStreak >= milestone && milestone > lastShown,
+  ) ?? null;
 }

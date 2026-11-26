@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   ACCOUNT_PROTECTION_LOGOUT_GUARD_MS,
   type AccountProtectionPromptState,
+  type AccountProtectionMilestone,
 } from "./accountProtectionPrompt";
 
 export const ACCOUNT_PROTECTION_PROMPT_STORAGE_KEY =
@@ -12,6 +13,7 @@ const EMPTY_PROMPT_STATE: AccountProtectionPromptState = {
   dismissedAt: null,
   dismissedProgressCount: 0,
   suppressedUntil: null,
+  lastShownMilestone: 0,
 };
 
 function normalizePromptState(value: unknown): AccountProtectionPromptState {
@@ -28,6 +30,11 @@ function normalizePromptState(value: unknown): AccountProtectionPromptState {
       typeof candidate.dismissedProgressCount === "number" &&
       Number.isFinite(candidate.dismissedProgressCount)
         ? Math.max(0, candidate.dismissedProgressCount)
+        : 0,
+    lastShownMilestone:
+      typeof candidate.lastShownMilestone === "number" &&
+      [1, 3, 7].includes(candidate.lastShownMilestone)
+        ? candidate.lastShownMilestone
         : 0,
     suppressedUntil:
       typeof candidate.suppressedUntil === "string"
@@ -82,4 +89,13 @@ export async function suppressAccountProtectionPromptAfterLogout(
     ACCOUNT_PROTECTION_PROMPT_STORAGE_KEY,
     JSON.stringify(next),
   );
+}
+
+/** Persist presentation (including CTA/close/back) so relaunch cannot repeat it. */
+export async function markAccountProtectionMilestoneShown(milestone: AccountProtectionMilestone) {
+  const current = await readAccountProtectionPromptState();
+  await AsyncStorage.setItem(ACCOUNT_PROTECTION_PROMPT_STORAGE_KEY, JSON.stringify({
+    ...current,
+    lastShownMilestone: Math.max(current.lastShownMilestone ?? 0, milestone),
+  }));
 }

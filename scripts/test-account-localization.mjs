@@ -44,9 +44,9 @@ test("Account page, callback and auth prompt are attached to Japanese display lo
   assert.match(account, /locale === "ja" \? "ja-JP" : "fr-FR"/u);
   assert.match(account, /accessibilityLabel=\{subscriptionText\(cancellationVisible \? "cancel" : "manage"\)\}/u);
   assert.match(account, /accessibilityLabel=\{translate\("Tester l'écran de sélection de langue"\)\}/u);
-  assert.match(home, /translate\("Protégez votre progression"\)/u);
-  assert.match(home, /translate\("Protéger maintenant"\)/u);
-  assert.match(home, /translate\("Me le rappeler plus tard"\)/u);
+  assert.match(home, /translate\("Ton aventure ne fait que commencer\."\)/u);
+  assert.match(home, /translate\("Se connecter et sauvegarder"\)/u);
+  assert.match(home, /translate\("Plus tard"\)/u);
   assert.equal(JSON.parse(read("../locales/ja/common.json")).language.title, "表示言語を選択");
 });
 
