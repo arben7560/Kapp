@@ -64,16 +64,6 @@ function friendlyCaughtMessage(caught: unknown) {
     : "L’opération n’a pas abouti. Réessayez dans quelques instants.";
 }
 
-function formatSyncDate(value: string | null, locale: "fr" | "ja") {
-  if (!value) return "Aucune synchronisation réussie";
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) return "Date indisponible";
-  return new Intl.DateTimeFormat(locale === "ja" ? "ja-JP" : "fr-FR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
-
 function StatusPill({
   color,
   icon,
@@ -163,20 +153,6 @@ function ProviderButton({
       )}
     </Pressable>
   );
-}
-
-function providerSummary(providers: string[]) {
-  const labels = providers
-    .filter((provider) => provider !== "anonymous")
-    .map((provider) => {
-      if (provider === "google") return "Google";
-      if (provider === "azure") return "Microsoft";
-      if (provider === "custom:line") return "LINE";
-      if (provider === "apple") return "Apple";
-      if (provider === "email") return "Email + mot de passe";
-      return provider;
-    });
-  return labels.length > 0 ? labels.join(" • ") : "Compte K-App";
 }
 
 function AccountScreenContent() {
@@ -326,7 +302,8 @@ function AccountScreenContent() {
   const syncPresentation = React.useMemo(() => {
     switch (sync.status) {
       case "synced":
-        return { label: "Progression synchronisée", color: COLORS.green, icon: "checkmark-circle" as const };
+        if (sync.lastSyncedAt) return { label: "Progression sauvegardée", color: COLORS.green, icon: "checkmark-circle" as const };
+        return { label: "Modifications en attente", color: COLORS.amber, icon: "time" as const };
       case "syncing":
         return { label: "Synchronisation", color: COLORS.cyan, icon: "sync" as const };
       case "pending":
@@ -336,7 +313,9 @@ function AccountScreenContent() {
       default:
         return { label: "Erreur de synchronisation", color: COLORS.red, icon: "alert-circle" as const };
     }
-  }, [sync.status]);
+  }, [sync.status, sync.lastSyncedAt]);
+  const isProgressSaved = sync.status === "synced" && Boolean(sync.lastSyncedAt);
+  const canRetrySync = !isProgressSaved && sync.status !== "syncing";
 
   const details = subscriptionDetails(paywall.customerInfo, paywall.subscriptions);
   const activePlanLabel = details.plan ? i18n.t(`premium:subscription.plan.${details.plan}`) : null;
@@ -531,75 +510,44 @@ function AccountScreenContent() {
             ) : (
               <>
                 <GlassCard>
-                  <StatusPill
-                    color={syncPresentation.color}
-                    icon={syncPresentation.icon}
-                    label={syncPresentation.label}
-                  />
-                  <AppText variant={responsive.isCompact ? "sectionTitle" : "featureTitle"} style={styles.cardTitle}>
-                    Compte protégé
+                  <AppText accessibilityRole="header" variant="sectionTitle">
+                    Mon compte
                   </AppText>
-                  {sync.errorMessage ? (
-                    <AppText variant="body" tone="muted" style={styles.cardBody}>
-                      {localizeError(sync.errorMessage)}
-                    </AppText>
-                  ) : null}
-                  <View style={styles.accountLine}>
-                    <View style={styles.lineIcon}>
-                      {profile.avatarUrl ? (
-                        <Image source={{ uri: profile.avatarUrl }} style={styles.profileAvatar} />
-                      ) : (
-                        <Ionicons name="person-circle-outline" size={17} color={COLORS.cyan} />
-                      )}
-                    </View>
-                    <View style={styles.lineCopy}>
-                      <AppText variant="caption" tone="soft">CONNEXION</AppText>
-                      {profile.displayName ? (
-                        <AppText variant="bodyStrong" lineContract="singleLine">{profile.displayName}</AppText>
-                      ) : null}
-                      <AppText variant="bodyStrong">
-                        {providerSummary(auth.providers)}
-                      </AppText>
-                      {auth.providers.includes("custom:line") && !profile.email ? (
-                        <AppText variant="caption" tone="soft">
-                          LINE ne partage pas d’adresse e-mail avec K-App.
-                        </AppText>
-                      ) : null}
-                    </View>
-                  </View>
                   {profile.email ? (
                     <View style={styles.accountLine}>
                       <View style={styles.lineIcon}>
                         <Ionicons name="mail-outline" size={17} color={COLORS.cyan} />
                       </View>
                       <View style={styles.lineCopy}>
-                        <AppText variant="caption" tone="soft">EMAIL</AppText>
-                        <AppText variant="bodyStrong" lineContract="singleLine">
+                        <AppText variant="caption" tone="soft">Adresse e-mail</AppText>
+                        <AppText variant="bodyStrong">
                           {profile.email}
                         </AppText>
                       </View>
                     </View>
                   ) : null}
-                  <View style={styles.accountLine}>
-                    <View style={styles.lineIcon}>
-                      <Ionicons name="cloud-done-outline" size={17} color={syncPresentation.color} />
-                    </View>
-                    <View style={styles.lineCopy}>
-                      <AppText variant="caption" tone="soft">DERNIÈRE SYNCHRONISATION</AppText>
-                      <AppText variant="bodySecondary">
-                        {formatSyncDate(sync.lastSyncedAt, locale)}
-                      </AppText>
-                    </View>
+                  <View style={styles.progressStatus}>
+                    <StatusPill
+                      color={syncPresentation.color}
+                      icon={syncPresentation.icon}
+                      label={syncPresentation.label}
+                    />
                   </View>
-                  <ActionButton
-                    label={sync.status === "error" || sync.status === "offline"
-                      ? "Réessayer la synchronisation"
-                      : "Synchroniser maintenant"}
-                    variant="secondary"
-                    loading={sync.status === "syncing"}
-                    onPress={() => void synchronizeProgressNow().catch(() => undefined)}
-                    style={styles.retryButton}
-                  />
+                  {!isProgressSaved && sync.errorMessage ? (
+                    <AppText variant="body" tone="muted" style={styles.cardBody}>
+                      {localizeError(sync.errorMessage)}
+                    </AppText>
+                  ) : null}
+                  {canRetrySync ? (
+                    <ActionButton
+                      label={sync.status === "error" || sync.status === "offline"
+                        ? "Réessayer la synchronisation"
+                        : "Synchroniser maintenant"}
+                      variant="secondary"
+                      onPress={() => void synchronizeProgressNow().catch(() => undefined)}
+                      style={styles.retryButton}
+                    />
+                  ) : null}
                 </GlassCard>
 
                 <View style={styles.secondaryActions}>
@@ -824,6 +772,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(34,211,238,0.09)",
   },
   glassFrame: {
+    marginBottom: 14,
     borderRadius: 30,
     overflow: "hidden",
     borderWidth: 1,
@@ -878,7 +827,6 @@ const styles = StyleSheet.create({
   lineProviderButtonDisabled: { backgroundColor: "#FFFFFF", borderColor: "#E5E5E5" },
   lineProviderIcon: { width: 40, height: 40 },
   lineProviderLabelDisabled: { color: "rgba(30,30,30,0.20)" },
-  profileAvatar: { width: 24, height: 24, borderRadius: 12 },
   securityNote: {
     marginTop: 18,
     flexDirection: "row",
@@ -903,7 +851,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.045)",
   },
   lineCopy: { flex: 1, minWidth: 0, gap: 2 },
-  retryButton: { marginTop: 20 },
+  progressStatus: { marginTop: 14 },
+  retryButton: { marginTop: 12 },
   sectionCard: {
     marginTop: 14,
     padding: 18,

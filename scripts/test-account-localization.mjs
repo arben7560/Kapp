@@ -40,8 +40,10 @@ test("Account page, callback and auth prompt are attached to Japanese display lo
   assert.match(callback, /<AccountLocalizationProvider>/u);
   assert.match(account, /AccountActionButton as ActionButton/u);
   assert.match(callback, /AccountActionButton as ActionButton/u);
-  assert.match(account, /formatSyncDate\(sync\.lastSyncedAt, locale\)/u);
-  assert.match(account, /locale === "ja" \? "ja-JP" : "fr-FR"/u);
+  assert.doesNotMatch(account, /formatSyncDate|providerSummary|DERNIÈRE SYNCHRONISATION/u);
+  assert.match(account, /sync\.status === "synced" && Boolean\(sync\.lastSyncedAt\)/u);
+  assert.match(account, /canRetrySync = !isProgressSaved && sync\.status !== "syncing"/u);
+  assert.match(account, /\{canRetrySync \? \(/u);
   assert.match(account, /accessibilityLabel=\{subscriptionText\(cancellationVisible \? "cancel" : "manage"\)\}/u);
   assert.match(account, /accessibilityLabel=\{translate\("Tester l'écran de sélection de langue"\)\}/u);
   assert.match(home, /translate\("Ton aventure ne fait que commencer\."\)/u);
@@ -72,6 +74,9 @@ test("Every plain French AppText and input label on Account has a Japanese entry
 
 test("Sign-in, recovery, OTP confirmation, statuses and account deletion use situational Japanese", () => {
   for (const [source, expected] of [
+    ["Mon compte", "マイアカウント"],
+    ["Adresse e-mail", "メールアドレス"],
+    ["Progression sauvegardée", "学習の進捗を保存済み"],
     ["Continuer avec Google", "Googleで続ける"],
     ["Créer un compte avec mon email", "メールアドレスでアカウントを作成"],
     ["J’ai déjà un compte", "すでにアカウントをお持ちの方"],
