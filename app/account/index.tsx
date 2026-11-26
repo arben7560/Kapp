@@ -8,6 +8,7 @@ import {
   Alert,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -57,6 +58,8 @@ const COLORS = {
   soft: SeoulMidnightGlass.colors.soft,
   line: SeoulMidnightGlass.colors.line,
 };
+
+const PRIVACY_POLICY_URL = "https://arben7560.github.io/Kapp/politique-confidentialite/";
 
 function friendlyCaughtMessage(caught: unknown) {
   return caught instanceof KappAuthError
@@ -157,7 +160,7 @@ function ProviderButton({
 
 function AccountScreenContent() {
   const translate = useVocabularyText();
-  const { i18n } = useTranslation("account");
+  const { i18n, t } = useTranslation("account");
   const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
   const locale = isAppLocale(activeLanguage) ? activeLanguage : DEFAULT_LOCALE;
   const localizeError = React.useCallback(
@@ -499,6 +502,23 @@ function AccountScreenContent() {
                     disabled={!auth.isConfigured || auth.isLoading || auth.isHandlingDeepLink || Boolean(auth.activeOAuthProvider)}
                     onPress={() => void continueWithProvider("line")}
                   />
+                  <View style={styles.linePrivacyNotice}>
+                    <AppText variant="caption" tone="soft">
+                      {t("lineEmailNotice")}
+                    </AppText>
+                    <Pressable
+                      accessibilityRole="link"
+                      accessibilityLabel={t("privacyPolicy")}
+                      onPress={() => void Linking.openURL(PRIVACY_POLICY_URL).catch(() =>
+                        Alert.alert(t("privacyPolicyOpenError")),
+                      )}
+                      style={styles.privacyLink}
+                    >
+                      <AppText variant="caption" style={styles.privacyLinkText}>
+                        {t("privacyPolicy")}
+                      </AppText>
+                    </Pressable>
+                  </View>
                 </View>
                 <View style={styles.securityNote}>
                   <Ionicons name="shield-checkmark-outline" size={16} color={COLORS.soft} />
@@ -827,6 +847,9 @@ const styles = StyleSheet.create({
   lineProviderButtonDisabled: { backgroundColor: "#FFFFFF", borderColor: "#E5E5E5" },
   lineProviderIcon: { width: 40, height: 40 },
   lineProviderLabelDisabled: { color: "rgba(30,30,30,0.20)" },
+  linePrivacyNotice: { gap: 4, paddingHorizontal: 2 },
+  privacyLink: { alignSelf: "flex-start", paddingVertical: 4 },
+  privacyLinkText: { color: COLORS.cyan, textDecorationLine: "underline" },
   securityNote: {
     marginTop: 18,
     flexDirection: "row",

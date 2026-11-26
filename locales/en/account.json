@@ -1,0 +1,5 @@
+{
+  "lineEmailNotice": "When access to your LINE email address becomes available, K-App will ask your permission to retrieve it. We will use it to create and identify your account and manage your authentication.",
+  "privacyPolicy": "Privacy Policy",
+  "privacyPolicyOpenError": "Unable to open the Privacy Policy. Please try again shortly."
+}

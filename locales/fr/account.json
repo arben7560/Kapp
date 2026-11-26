@@ -5,6 +5,9 @@
     "saving": "Enregistrement…",
     "saveError": "La langue n’a pas pu être enregistrée. Réessaie."
   },
+  "lineEmailNotice": "Lorsque l’accès à l’adresse e-mail LINE sera activé, K-App vous demandera votre autorisation pour la récupérer. Elle servira à créer et à identifier votre compte utilisateur, ainsi qu’à gérer votre authentification.",
+  "privacyPolicy": "Politique de confidentialité",
+  "privacyPolicyOpenError": "Impossible d’ouvrir la politique de confidentialité. Réessayez dans quelques instants.",
   "copy": {
     "screen": {
       "Progression%20sauvegard%C3%A9e": "Progression sauvegardée",

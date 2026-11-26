@@ -5,6 +5,9 @@
     "saving": "保存中…",
     "saveError": "言語設定を保存できませんでした。もう一度お試しください。"
   },
+  "lineEmailNotice": "LINEのメールアドレスへのアクセスが有効になった際には、取得前に許可を求めます。取得したメールアドレスは、K-Appアカウントの作成・識別と認証の管理に使用します。",
+  "privacyPolicy": "プライバシーポリシー",
+  "privacyPolicyOpenError": "プライバシーポリシーを開けませんでした。しばらくしてからもう一度お試しください。",
   "copy": {
     "screen": {
       "Progression%20sauvegard%C3%A9e": "学習の進捗を保存済み",
