@@ -104,7 +104,7 @@ test("a V1 cloud row merges monotonically and is upgraded to V2", async () => {
   assert.deepEqual(result.snapshot.pedagogicalProgress.completed, {
     grammar_sentence_structure: true, hangul_vowels_basic: true,
   });
-  assert.equal(result.snapshot.pedagogicalProgress.xp, 320);
+  assert.equal(result.snapshot.pedagogicalProgress.xp, 360);
   assert.deepEqual(result.snapshot.dailyStreak, local.dailyStreak);
   assert.equal(payloads[0].schema_version, 2);
 });
@@ -132,22 +132,22 @@ test("cloud full and local full merge without losing any subsystem", async () =>
     }, USER_ID, local,
   );
 
-  assert.equal(result.snapshot.pedagogicalProgress.xp, 500);
+  assert.equal(result.snapshot.pedagogicalProgress.xp, 540);
   assert.equal(result.snapshot.pedagogicalProgress.hangulLevel, 4);
   assert.deepEqual(result.snapshot.pedagogicalProgress.completed, { grammar_a: true, hangul_a: true });
   assert.equal(result.snapshot.dailyStreak.longestStreak, 7);
   assert.equal(result.snapshot.dailyStreak.freezeDates["2026-08-17"], true);
-  assert.equal(result.snapshot.dailyStreak.freezesAvailable, 2);
+  assert.equal(result.snapshot.dailyStreak.freezesAvailable, 1);
   assert.ok(result.snapshot.dailyStreak.badges[3]);
 });
 
 test("an older cloud streak cannot replace a more recent local streak", async () => {
   const oldCloud = createSnapshot({
-    dailyStreak: createDailyStreak({ currentStreak: 20, longestStreak: 20 }),
+    dailyStreak: createDailyStreak({ currentStreak: 20, longestStreak: 20, totalCompletedDays: 20 }),
   });
   const local = createSnapshot({
     dailyStreak: createDailyStreak({
-      currentStreak: 3, longestStreak: 8, lastCompletedDate: "2026-08-20",
+      currentStreak: 1, longestStreak: 8, lastCompletedDate: "2026-08-20",
       completedDates: {
         "2026-08-20": {
           date: "2026-08-20", completedAt: "2026-08-20T08:00:00.000Z",
@@ -163,7 +163,7 @@ test("an older cloud streak cannot replace a more recent local streak", async ()
     }, USER_ID, local,
   );
 
-  assert.equal(result.snapshot.dailyStreak.currentStreak, 3);
+  assert.equal(result.snapshot.dailyStreak.currentStreak, 1);
   assert.equal(result.snapshot.dailyStreak.longestStreak, 20);
   assert.equal(result.snapshot.dailyStreak.lastCompletedDate, "2026-08-20");
   assert.ok(result.snapshot.dailyStreak.completedDates["2026-08-18"]);
