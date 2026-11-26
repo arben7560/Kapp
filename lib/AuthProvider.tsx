@@ -53,6 +53,7 @@ type AuthContextValue = {
   oauthOutcome: OAuthOutcome | null;
   error: string | null;
   clearError: () => void;
+  clearOAuthOutcome: (outcome: OAuthOutcome) => void;
   signInWithOAuth: (provider: KappOAuthProvider) => Promise<OAuthResult>;
   signOut: () => Promise<SignOutResult>;
   deleteAccount: () => Promise<void>;
@@ -351,6 +352,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [captureError, handleAuthUrl]);
 
   const clearError = React.useCallback(() => setError(null), []);
+  const clearOAuthOutcome = React.useCallback((outcome: OAuthOutcome) => {
+    setOAuthOutcome((current) => current === outcome ? null : current);
+  }, []);
   const runOAuth = React.useCallback(
     async (provider: KappOAuthProvider): Promise<OAuthResult> => {
       const client = requireConfiguredAuth();
@@ -570,6 +574,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       oauthOutcome,
       error,
       clearError,
+      clearOAuthOutcome,
       signInWithOAuth,
       signOut,
       deleteAccount,
@@ -585,6 +590,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       oauthOutcome,
       error,
       clearError,
+      clearOAuthOutcome,
       signInWithOAuth,
       signOut,
       deleteAccount,
