@@ -179,7 +179,24 @@ function AccountScreenContent() {
   const responsive = useResponsiveLayout({ maxWidth: 760 });
   const [showLanguagePreview, setShowLanguagePreview] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const oauthNotice = auth.oauthOutcome?.result === "cancelled"
+  const [profileFocused, setProfileFocused] = React.useState(false);
+  const clearOAuthOutcome = auth.clearOAuthOutcome;
+  const latestOAuthOutcome = React.useRef(auth.oauthOutcome);
+  latestOAuthOutcome.current = auth.oauthOutcome;
+  useFocusEffect(React.useCallback(() => {
+    setProfileFocused(true);
+    return () => {
+      setProfileFocused(false);
+      if (latestOAuthOutcome.current) clearOAuthOutcome?.(latestOAuthOutcome.current);
+    };
+  }, [clearOAuthOutcome]));
+  React.useEffect(() => {
+    const outcome = auth.oauthOutcome;
+    if (!profileFocused || !outcome) return;
+    const timer = setTimeout(() => clearOAuthOutcome?.(outcome), 4_000);
+    return () => clearTimeout(timer);
+  }, [profileFocused, auth.oauthOutcome, clearOAuthOutcome]);
+  const oauthNotice = !profileFocused ? null : auth.oauthOutcome?.result === "cancelled"
     ? "Connexion annulée. Aucun changement de compte."
     : auth.isPermanentAccount && auth.oauthOutcome?.result === "success"
       ? `Connexion ${auth.oauthOutcome.provider === "google" ? "Google" : "Microsoft"} réussie.`
@@ -307,6 +324,13 @@ function AccountScreenContent() {
     setSubscriptionDialogOpen(false);
     setCancellationUserId(null);
   }, [auth.user?.id]);
+  const canManageAccountSubscription = auth.isPermanentAccount && Boolean(auth.user?.id) && !auth.isLoading;
+  React.useEffect(() => {
+    if (!canManageAccountSubscription) {
+      setSubscriptionDialogOpen(false);
+      setCancellationUserId(null);
+    }
+  }, [canManageAccountSubscription]);
   const canCancelSubscription = details.canCancel && !paywall.isDeveloperUnlocked;
   const cancellationVisible = canCancelSubscription && cancellationUserId !== null && cancellationUserId === auth.user?.id;
   const subscriptionText = (key: "cancel" | "manage" | "cancelledTitle" | "cancelledNotice" |
@@ -557,6 +581,8 @@ function AccountScreenContent() {
               </>
             )}
 
+            {canManageAccountSubscription ? (
+            <>
             <ActionButton
               label={subscriptionText("manage")}
               variant="secondary"
@@ -581,12 +607,14 @@ function AccountScreenContent() {
                 {subscriptionText(paywall.managementReturnStatus === "checking" ? "checkingReturn" : "unconfirmedReturn", { store: storeName })}
               </AppText>
             ) : null}
+            </>
+            ) : null}
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
 
       <AppDialog
-        visible={subscriptionDialogOpen || cancellationVisible}
+        visible={canManageAccountSubscription && (subscriptionDialogOpen || cancellationVisible)}
         onRequestClose={() => {
           setSubscriptionDialogOpen(false);
           setCancellationUserId(null);
