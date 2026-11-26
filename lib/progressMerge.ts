@@ -6,10 +6,15 @@ import type {
 } from "../data/hangul/types";
 import type {
   GrammarLearningProgress,
+  GrammarProgress,
+  GrammarCriterion,
+  GrammarCriteriaEvidence,
+  GrammarLearningPhase,
   GrammarStagePracticeProgress,
 } from "../data/grammar/types";
 import {
   normalizeDailyStreakState,
+  STREAK_BADGE_MILESTONES,
   type DailyStreakDay,
   type DailyStreakState,
   type StreakBadge,
@@ -17,6 +22,8 @@ import {
 } from "./dailyStreak.ts";
 import type { HomeResumeContext } from "./homeResume.ts";
 import type { UserProgressSnapshot } from "./progressSnapshot.ts";
+import { COMPLETION_XP } from "./progressCompletion.ts";
+import { normalizeGrammarProgress } from "./grammar/progress.ts";
 
 function mergeTrueRecord(
   remote: Record<string, true> | undefined,
@@ -152,51 +159,108 @@ function mergeGrammarStage(
   if (!remote) return local;
   if (!local) return remote;
 
+  const completedSessionIds = [...new Set([...remote.completedSessionIds, ...local.completedSessionIds])].sort();
   const localSessionDate =
     local.activeSession?.completedAt ?? local.activeSession?.startedAt;
   const remoteSessionDate =
     remote.activeSession?.completedAt ?? remote.activeSession?.startedAt;
-  const activeSession =
-    !remote.activeSession ||
-    (local.activeSession &&
-      Date.parse(localSessionDate ?? "") >= Date.parse(remoteSessionDate ?? ""))
-      ? local.activeSession
-      : remote.activeSession;
+  const localSession = local.activeSession;
+  const remoteSession = remote.activeSession;
+  const activeSession = !remoteSession ? localSession : !localSession ? remoteSession :
+    localSession.id === remoteSession.id
+      ? (Boolean(localSession.completedAt) !== Boolean(remoteSession.completedAt)
+        ? (localSession.completedAt ? localSession : remoteSession)
+        : localSession.responses.length !== remoteSession.responses.length
+          ? (localSession.responses.length > remoteSession.responses.length ? localSession : remoteSession)
+          : localSession.questionIndex >= remoteSession.questionIndex ? localSession : remoteSession)
+      : laterDate(localSessionDate, remoteSessionDate) === localSessionDate ? localSession : remoteSession;
+  const latest = laterDate(local.lastCompletedAt, remote.lastCompletedAt) === local.lastCompletedAt
+    ? local : remote;
 
   return {
-    attempts: Math.max(remote.attempts, local.attempts),
+    attempts: completedSessionIds.length + Math.max(0,
+      remote.attempts - new Set(remote.completedSessionIds).size,
+      local.attempts - new Set(local.completedSessionIds).size),
     bestScore: Math.max(remote.bestScore, local.bestScore),
-    lastScore: local.lastScore ?? remote.lastScore,
+    lastScore: latest.lastScore ?? (latest === local ? remote.lastScore : local.lastScore),
     lastCompletedAt: laterDate(
       remote.lastCompletedAt,
       local.lastCompletedAt,
     ),
     activeSession,
-    completedSessionIds: [
-      ...new Set([
-        ...remote.completedSessionIds,
-        ...local.completedSessionIds,
-      ]),
-    ],
-    streakSessionIds: [
-      ...new Set([...remote.streakSessionIds, ...local.streakSessionIds]),
-    ],
+    completedSessionIds,
+    streakSessionIds: [...new Set([...remote.streakSessionIds, ...local.streakSessionIds])].sort(),
   };
 }
 
-function grammarEvidence(value: unknown): number {
-  if (!value || typeof value !== "object") return 0;
+function mergeCriterion<K extends GrammarCriterion>(
+  key: K,
+  remote: GrammarCriteriaEvidence,
+  local: GrammarCriteriaEvidence,
+): GrammarCriteriaEvidence[K] {
+  const left = remote[key];
+  const right = local[key];
+  if (!left) return right;
+  if (!right) return left;
+  // An evaluation is atomic: never mix scores, flags or session IDs from two tests.
+  return Date.parse(right.evaluatedAt) >= Date.parse(left.evaluatedAt) ? right : left;
+}
 
-  return Object.entries(value).reduce((score, [key, entry]) => {
-    if (
-      (key.endsWith("At") && typeof entry === "string") ||
-      (key === "attempts" && typeof entry === "number")
-    ) {
-      return score + 1;
+function mergeGrammarConcept(remote: GrammarProgress, local: GrammarProgress): GrammarProgress {
+  const milestones: GrammarProgress["milestones"] = {};
+  const phases = new Set([
+    ...Object.keys(remote.milestones), ...Object.keys(local.milestones),
+  ] as GrammarLearningPhase[]);
+  phases.forEach((phase) => {
+    const left = remote.milestones[phase];
+    const right = local.milestones[phase];
+    if (!left || !right) {
+      milestones[phase] = left ?? right;
+      return;
     }
-
-    return score + grammarEvidence(entry);
-  }, 0);
+    const bestScore = left.bestScore === undefined ? right.bestScore :
+      right.bestScore === undefined ? left.bestScore : Math.max(left.bestScore, right.bestScore);
+    milestones[phase] = {
+      firstAt: Date.parse(left.firstAt) <= Date.parse(right.firstAt) ? left.firstAt : right.firstAt,
+      lastAt: laterDate(left.lastAt, right.lastAt) ?? left.lastAt,
+      attempts: Math.max(left.attempts, right.attempts),
+      ...(bestScore === undefined ? {} : { bestScore }),
+    };
+  });
+  const leftReview = remote.review;
+  const rightReview = local.review;
+  // Review offsets are only comparable within the same review cycle.
+  const review = leftReview.anchorAt === rightReview.anchorAt
+    ? {
+        ...rightReview,
+        completedOffsets: [...new Set([...leftReview.completedOffsets, ...rightReview.completedOffsets])].sort((a, b) => a - b),
+        lastReviewedAt: laterDate(leftReview.lastReviewedAt, rightReview.lastReviewedAt),
+        lapses: Math.max(leftReview.lapses, rightReview.lapses),
+      }
+    : {
+        ...(laterDate(leftReview.anchorAt, rightReview.anchorAt) === rightReview.anchorAt
+          ? rightReview : leftReview),
+        lapses: Math.max(leftReview.lapses, rightReview.lapses),
+      };
+  const lastAttemptAt = (value: GrammarProgress) => value.milestones.discovery?.lastAt ??
+    Object.values(value.milestones).reduce<string | undefined>(
+      (latest, milestone) => laterDate(latest, milestone?.lastAt), undefined);
+  const latest = laterDate(lastAttemptAt(remote), lastAttemptAt(local)) === lastAttemptAt(local)
+    ? local : remote;
+  return normalizeGrammarProgress({
+    schemaVersion: 1,
+    milestones,
+    criteriaEvidence: {
+      R: mergeCriterion("R", remote.criteriaEvidence, local.criteriaEvidence),
+      M: mergeCriterion("M", remote.criteriaEvidence, local.criteriaEvidence),
+      L: mergeCriterion("L", remote.criteriaEvidence, local.criteriaEvidence),
+      P: mergeCriterion("P", remote.criteriaEvidence, local.criteriaEvidence),
+      D: mergeCriterion("D", remote.criteriaEvidence, local.criteriaEvidence),
+    },
+    review,
+    attempts: Math.max(remote.attempts, local.attempts),
+    lastResult: latest.lastResult ?? (latest === local ? remote.lastResult : local.lastResult),
+  });
 }
 
 function mergeGrammarProgress(
@@ -212,10 +276,9 @@ function mergeGrammarProgress(
   conceptIds.forEach((id) => {
     const remoteConcept = remote.concepts[id as keyof typeof remote.concepts];
     const localConcept = local.concepts[id as keyof typeof local.concepts];
-    const selected =
-      grammarEvidence(localConcept) >= grammarEvidence(remoteConcept)
-        ? localConcept
-        : remoteConcept;
+    const selected = remoteConcept && localConcept
+      ? mergeGrammarConcept(remoteConcept, localConcept)
+      : remoteConcept ?? localConcept;
     if (selected) concepts[id as keyof typeof concepts] = selected;
   });
 
@@ -243,11 +306,23 @@ export function mergeProgressSnapshots(
   remote: Progress,
   local: Progress,
 ): Progress {
+  const completed = { ...remote.completed, ...local.completed };
+  for (const id of Object.keys(completed)) {
+    completed[id] = remote.completed[id] === true || local.completed[id] === true;
+  }
+  // XP are awarded once per completion ID. Preserve the largest historical
+  // balance not explained by those IDs (including the starting balance).
+  // Unlike summing totals, this union is safe to merge repeatedly.
+  const completionCount = (record: Progress["completed"]) => Object.values(record).filter((value) => value === true).length;
+  const baseline = Math.max(
+    remote.xp - completionCount(remote.completed) * COMPLETION_XP,
+    local.xp - completionCount(local.completed) * COMPLETION_XP,
+  );
   return {
     learningTrack: local.learningTrack ?? remote.learningTrack,
-    xp: Math.max(remote.xp, local.xp),
+    xp: baseline + completionCount(completed) * COMPLETION_XP,
     streak: Math.max(remote.streak, local.streak),
-    completed: { ...remote.completed, ...local.completed },
+    completed,
     hangulLevel: Math.max(remote.hangulLevel, local.hangulLevel),
     hangulProgress: mergeHangulProgress(
       remote.hangulProgress,
@@ -286,6 +361,11 @@ function mergeStreakBadge(
   return Date.parse(local.unlockedAt) <= Date.parse(remote.unlockedAt)
     ? local
     : remote;
+}
+
+// Date keys are local calendar days; use UTC arithmetic to avoid DST shifts.
+function streakDayNumber(key: string): number {
+  return /^\d{4}-\d{2}-\d{2}$/.test(key) ? Date.parse(key + "T00:00:00Z") / 86_400_000 : NaN;
 }
 
 function moreRecentStreakState(
@@ -330,28 +410,78 @@ export function mergeDailyStreakSnapshots(
   });
 
   const recent = moreRecentStreakState(remote, local);
-  const sameLastCompletedDate =
-    remote.lastCompletedDate === local.lastCompletedDate;
-
+  const freezeDates = { ...remote.freezeDates, ...local.freezeDates };
+  const days = Object.keys(completedDates).filter((date) => Number.isFinite(streakDayNumber(date))).sort();
+  const covered = [...new Set([...days, ...Object.keys(freezeDates).filter((date) => Number.isFinite(streakDayNumber(date)))])].sort();
+  let run = 0;
+  let previous = NaN;
+  let currentStreak = 0;
+  let currentRunStart = NaN;
+  let runStart = NaN;
+  let longestStreak = Math.max(remote.longestStreak, local.longestStreak);
+  for (const date of covered) {
+    const number = streakDayNumber(date);
+    if (number !== previous + 1) {
+      run = 0;
+      runStart = NaN;
+    }
+    if (completedDates[date]) {
+      if (run === 0) runStart = number;
+      run++;
+      currentStreak = run;
+      currentRunStart = runStart;
+      longestStreak = Math.max(longestStreak, run);
+      for (const milestone of STREAK_BADGE_MILESTONES) {
+        if (run >= milestone && !badges[milestone]) {
+          badges[milestone] = { milestone, unlockedAt: completedDates[date].completedAt };
+        }
+      }
+    } else if (run > 0) {
+      // A recorded freeze bridges a gap, but cannot start a streak by itself.
+      run++;
+    }
+    previous = number;
+  }
+  const lastCompletedDate = days.at(-1) ?? recent.lastCompletedDate;
+  const latestDay = lastCompletedDate ? streakDayNumber(lastCompletedDate) : NaN;
+  const sources = [remote, local];
+  // Old migrated snapshots may have a streak count but no complete date list.
+  // Preserve that known count only when its last day connects to the latest run.
+  // Never synthesize missing dates or award badges on inferred history.
+  const totalCompletedDays = Math.max(days.length, ...sources.map((source) =>
+    source.totalCompletedDays + (source.lastCompletedDate
+      ? days.filter((date) => date > source.lastCompletedDate!).length : 0)));
+  if (totalCompletedDays > days.length) {
+    for (const source of sources) {
+      if (source.totalCompletedDays <= Object.keys(source.completedDates).length || !source.lastCompletedDate) continue;
+      const last = streakDayNumber(source.lastCompletedDate);
+      if (last >= currentRunStart && last <= latestDay) {
+        currentStreak = Math.max(currentStreak, source.currentStreak + latestDay - last);
+      }
+    }
+  }
+  longestStreak = Math.max(longestStreak, currentStreak);
+  // A freeze spent on the same date on two devices is counted once. A stale
+  // snapshot must not restore a spent freeze. Historical untracked grants
+  // cannot be added safely; retain the largest known total allowance.
+  const freezesUsed = Math.max(
+    remote.freezesUsed, local.freezesUsed, Object.keys(freezeDates).length,
+  );
+  const freezeAllowance = Math.max(
+    remote.freezesAvailable + remote.freezesUsed,
+    local.freezesAvailable + local.freezesUsed,
+  );
   return normalizeDailyStreakState({
     ...recent,
     badges,
     completedDates,
-    currentStreak: sameLastCompletedDate
-      ? Math.max(remote.currentStreak, local.currentStreak)
-      : recent.currentStreak,
-    freezeDates: { ...remote.freezeDates, ...local.freezeDates },
-    freezesAvailable: Math.max(
-      remote.freezesAvailable,
-      local.freezesAvailable,
-    ),
-    freezesUsed: Math.max(remote.freezesUsed, local.freezesUsed),
-    longestStreak: Math.max(remote.longestStreak, local.longestStreak),
-    totalCompletedDays: Math.max(
-      remote.totalCompletedDays,
-      local.totalCompletedDays,
-      Object.keys(completedDates).length,
-    ),
+    lastCompletedDate,
+    currentStreak,
+    freezeDates,
+    freezesAvailable: Math.max(0, freezeAllowance - freezesUsed),
+    freezesUsed,
+    longestStreak,
+    totalCompletedDays,
   });
 }
 
