@@ -9,8 +9,10 @@ import {
   matchesAuthCallbackUrl,
   oauthProviderFromCallback,
   parseAuthCallbackUrl,
+  supabaseOAuthProvider,
   type KappOAuthProvider,
 } from "./authCallback";
+import { assertCustomProviderAvailable } from "./authProviderAvailability";
 import {
   KappAuthError,
   toKappAuthError,
@@ -199,7 +201,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Unrelated deep links never enter the auth loading state.
     if (!callback.hasAuthPayload) return null;
     const action = new URL(url).searchParams.get("action");
-    if (action && !/^oauth-login-(google|azure)$/u.test(action)) return null;
+    if (action && !/^oauth-login-(google|azure|line)$/u.test(action)) return null;
     const attempt = activeOAuthAttempt.current;
     // A different auth action must not mutate the session under an active flow.
     if (attempt && !matchesAuthCallbackUrl(url, attempt.redirectTo)) return null;
@@ -225,7 +227,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (userError) throw userError;
           if (!userResult.user || isAnonymousUser(userResult.user) ||
               userResult.user.id !== callbackSession.user.id ||
-              !authProvidersFromUser(userResult.user).includes(provider)) {
+              !authProvidersFromUser(userResult.user).includes(supabaseOAuthProvider(provider))) {
             throw new KappAuthError("oauth-session-unverified", "La connexion à ce compte n’a pas pu être vérifiée. Vérifiez votre connexion puis réessayez.");
           }
           return { ...callbackSession, user: userResult.user };
@@ -234,7 +236,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             sessionRevision.current += 1;
             setSession(nextSession);
             const provider = attempt?.provider ?? oauthProviderFromCallback(url, nextSession.user);
-            if (provider === "google" || provider === "azure") {
+            if (provider) {
               setOAuthOutcome({ provider, result: "success" });
               setError(null);
               logOAuthStep("callback.verified", { provider });
@@ -382,7 +384,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const redirectTo = attempt.redirectTo;
         const credentials = {
-          provider,
+          provider: supabaseOAuthProvider(provider),
           options: {
             redirectTo,
             skipBrowserRedirect: true,
@@ -394,6 +396,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (result.error) throw result.error;
         if (!result.data.url) {
           throw new Error("OAuth provider did not return an authorization URL.");
+        }
+
+        if (provider === "line") {
+          await assertCustomProviderAvailable(result.data.url);
         }
 
         logOAuthStep("browser.open", { provider, intent: "login" });
@@ -419,9 +425,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // that the browser was dismissed on app resume. Await that exchange.
           if (browserResult.type === "success") {
             if (!matchesAuthCallbackUrl(browserResult.url, redirectTo)) {
-              throw new Error("OAuth returned an unexpected callback destination.");
+              throw new KappAuthError("auth-link-invalid", "Ce lien de connexion n’est pas valide. Relancez la connexion depuis K-App.");
             }
             callbackSession = await handleAuthUrl(browserResult.url, "browser");
+            if (!callbackSession) {
+              throw new KappAuthError("auth-link-invalid", "Ce lien de connexion n’est pas valide. Relancez la connexion depuis K-App.");
+            }
           } else if (attempt.callback) {
             callbackSession = await attempt.callback;
           } else {

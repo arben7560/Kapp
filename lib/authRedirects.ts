@@ -5,7 +5,8 @@ const NATIVE_SCHEME = "kapp";
 
 export type AuthRedirectAction =
   | "oauth-login-google"
-  | "oauth-login-azure";
+  | "oauth-login-azure"
+  | "oauth-login-line";
 
 export function createAuthRedirectUrl(action?: AuthRedirectAction) {
   const url = Linking.createURL("/account", {

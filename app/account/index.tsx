@@ -6,6 +6,7 @@ import React from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -21,6 +22,7 @@ import { LanguageSelectionScreen } from "../../components/language-selection-scr
 import { AppText } from "../../components/app-text";
 import { AccountActionButton as ActionButton } from "../../components/account/AccountActionButton";
 import { MicrosoftLogo } from "../../components/account/MicrosoftLogo";
+import { authProfileFromUser } from "../../lib/authProfile";
 import { AppBackButton } from "../../components/ui/app-back-button";
 import { useTranslation } from "react-i18next";
 import { AccountLocalizationProvider } from "../../lib/i18n/AccountLocalizationProvider";
@@ -119,7 +121,10 @@ function ProviderButton({
   onPress: () => void;
 }) {
   const translate = useVocabularyText();
-  const label = provider === "google" ? "Continuer avec Google" : "Se connecter avec Microsoft";
+  const label = provider === "google" ? "Continuer avec Google" :
+    provider === "azure" ? "Se connecter avec Microsoft" : "Continuer avec LINE";
+  const isLine = provider === "line";
+  const lineDisabled = isLine && disabled && !loading;
   return (
     <Pressable
       accessibilityRole="button"
@@ -128,20 +133,34 @@ function ProviderButton({
       onPress={onPress}
       style={({ pressed }) => [
         styles.providerButton,
-        pressed && styles.providerButtonPressed,
-        (disabled || loading) && styles.providerButtonDisabled,
+        isLine && styles.lineProviderButton,
+        pressed && (isLine ? styles.lineProviderButtonPressed : styles.providerButtonPressed),
+        lineDisabled && styles.lineProviderButtonDisabled,
+        !isLine && (disabled || loading) && styles.providerButtonDisabled,
       ]}
     >
-      {loading ? (
-        <ActivityIndicator color={COLORS.text} size="small" />
-      ) : (
-        provider === "azure" ? <MicrosoftLogo /> : (
-          <Ionicons name="logo-google" color={COLORS.text} size={20} />
-        )
+      {({ pressed }) => (
+        <>
+          {loading ? (
+            <ActivityIndicator color={isLine ? "#FFFFFF" : COLORS.text} size="small" />
+          ) : isLine ? (
+            <Image
+              source={lineDisabled ? require("../../assets/images/line-login-disabled.png") :
+                pressed ? require("../../assets/images/line-login-press.png") :
+                  require("../../assets/images/line-login-base.png")}
+              style={styles.lineProviderIcon}
+              accessibilityIgnoresInvertColors
+            />
+          ) : provider === "azure" ? (
+            <MicrosoftLogo />
+          ) : (
+            <Ionicons name="logo-google" color={COLORS.text} size={20} />
+          )}
+          <AppText variant="button" style={[styles.providerButtonLabel, lineDisabled && styles.lineProviderLabelDisabled]}>
+            {label}
+          </AppText>
+        </>
       )}
-      <AppText variant="button" style={styles.providerButtonLabel}>
-        {label}
-      </AppText>
     </Pressable>
   );
 }
@@ -152,6 +171,7 @@ function providerSummary(providers: string[]) {
     .map((provider) => {
       if (provider === "google") return "Google";
       if (provider === "azure") return "Microsoft";
+      if (provider === "custom:line") return "LINE";
       if (provider === "apple") return "Apple";
       if (provider === "email") return "Email + mot de passe";
       return provider;
@@ -173,6 +193,7 @@ function AccountScreenContent() {
     [localizeError],
   );
   const auth = useAuth();
+  const profile = authProfileFromUser(auth.user);
   const paywall = usePaywall();
   const sync = useProgressSync();
   const { resetProgress } = useStore();
@@ -182,7 +203,9 @@ function AccountScreenContent() {
   const [profileFocused, setProfileFocused] = React.useState(false);
   const clearOAuthOutcome = auth.clearOAuthOutcome;
   const latestOAuthOutcome = React.useRef(auth.oauthOutcome);
-  latestOAuthOutcome.current = auth.oauthOutcome;
+  React.useEffect(() => {
+    latestOAuthOutcome.current = auth.oauthOutcome;
+  }, [auth.oauthOutcome]);
   useFocusEffect(React.useCallback(() => {
     setProfileFocused(true);
     return () => {
@@ -199,7 +222,7 @@ function AccountScreenContent() {
   const oauthNotice = !profileFocused ? null : auth.oauthOutcome?.result === "cancelled"
     ? "Connexion annulée. Aucun changement de compte."
     : auth.isPermanentAccount && auth.oauthOutcome?.result === "success"
-      ? `Connexion ${auth.oauthOutcome.provider === "google" ? "Google" : "Microsoft"} réussie.`
+      ? `Connexion ${auth.oauthOutcome.provider === "google" ? "Google" : auth.oauthOutcome.provider === "azure" ? "Microsoft" : "LINE"} réussie.`
       : null;
   const continueWithProvider = React.useCallback(
     async (provider: KappOAuthProvider) => {
@@ -476,7 +499,7 @@ function AccountScreenContent() {
                   Progression enregistrée sur cet appareil
                 </AppText>
                 <AppText variant="body" tone="muted" style={styles.cardBody}>
-                  Connectez-vous avec Google ou Microsoft pour retrouver votre progression après une réinstallation ou sur un autre appareil.
+                  Connectez-vous avec Google, Microsoft ou LINE pour retrouver votre progression après une réinstallation ou sur un autre appareil.
                 </AppText>
                 <View style={styles.primaryActions}>
                   <ProviderButton
@@ -490,6 +513,12 @@ function AccountScreenContent() {
                     loading={auth.activeOAuthProvider === "azure"}
                     disabled={!auth.isConfigured || auth.isLoading || auth.isHandlingDeepLink || Boolean(auth.activeOAuthProvider)}
                     onPress={() => void continueWithProvider("azure")}
+                  />
+                  <ProviderButton
+                    provider="line"
+                    loading={auth.activeOAuthProvider === "line"}
+                    disabled={!auth.isConfigured || auth.isLoading || auth.isHandlingDeepLink || Boolean(auth.activeOAuthProvider)}
+                    onPress={() => void continueWithProvider("line")}
                   />
                 </View>
                 <View style={styles.securityNote}>
@@ -517,16 +546,28 @@ function AccountScreenContent() {
                   ) : null}
                   <View style={styles.accountLine}>
                     <View style={styles.lineIcon}>
-                      <Ionicons name="person-circle-outline" size={17} color={COLORS.cyan} />
+                      {profile.avatarUrl ? (
+                        <Image source={{ uri: profile.avatarUrl }} style={styles.profileAvatar} />
+                      ) : (
+                        <Ionicons name="person-circle-outline" size={17} color={COLORS.cyan} />
+                      )}
                     </View>
                     <View style={styles.lineCopy}>
                       <AppText variant="caption" tone="soft">CONNEXION</AppText>
+                      {profile.displayName ? (
+                        <AppText variant="bodyStrong" lineContract="singleLine">{profile.displayName}</AppText>
+                      ) : null}
                       <AppText variant="bodyStrong">
                         {providerSummary(auth.providers)}
                       </AppText>
+                      {auth.providers.includes("custom:line") && !profile.email ? (
+                        <AppText variant="caption" tone="soft">
+                          LINE ne partage pas d’adresse e-mail avec K-App.
+                        </AppText>
+                      ) : null}
                     </View>
                   </View>
-                  {auth.user?.email ? (
+                  {profile.email ? (
                     <View style={styles.accountLine}>
                       <View style={styles.lineIcon}>
                         <Ionicons name="mail-outline" size={17} color={COLORS.cyan} />
@@ -534,7 +575,7 @@ function AccountScreenContent() {
                       <View style={styles.lineCopy}>
                         <AppText variant="caption" tone="soft">EMAIL</AppText>
                         <AppText variant="bodyStrong" lineContract="singleLine">
-                          {auth.user.email}
+                          {profile.email}
                         </AppText>
                       </View>
                     </View>
@@ -832,6 +873,12 @@ const styles = StyleSheet.create({
   providerButtonPressed: { backgroundColor: "rgba(255,255,255,0.12)" },
   providerButtonDisabled: { opacity: 0.48 },
   providerButtonLabel: { color: COLORS.text },
+  lineProviderButton: { backgroundColor: "#4CC764", borderColor: "#4CC764" },
+  lineProviderButtonPressed: { backgroundColor: "#358B46", borderColor: "#358B46" },
+  lineProviderButtonDisabled: { backgroundColor: "#FFFFFF", borderColor: "#E5E5E5" },
+  lineProviderIcon: { width: 40, height: 40 },
+  lineProviderLabelDisabled: { color: "rgba(30,30,30,0.20)" },
+  profileAvatar: { width: 24, height: 24, borderRadius: 12 },
   securityNote: {
     marginTop: 18,
     flexDirection: "row",

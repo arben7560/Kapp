@@ -83,8 +83,8 @@ test("2. user_progress is read and upserted only for the active UID", () => {
   assert.match(migration, /auth\.uid\(\)\) = user_id/iu);
 });
 
-test("3. only Google and Microsoft OAuth are offered; manual credentials are absent", () => {
-  assert.match(accountSource, /provider="google"[\s\S]*?provider="azure"/u);
+test("3. Google, Microsoft and LINE OAuth are offered; manual credentials are absent", () => {
+  assert.match(accountSource, /provider="google"[\s\S]*?provider="azure"[\s\S]*?provider="line"/u);
   assert.match(accountSource, /Se connecter avec Microsoft/u);
   assert.match(authSource, /provider === "azure" \? \{ scopes: "email" \}/u);
   for (const source of [accountSource, authSource]) {
@@ -93,11 +93,11 @@ test("3. only Google and Microsoft OAuth are offered; manual credentials are abs
   assert.doesNotMatch(accountSource, /provider="apple"|Mot de passe oublié|Créer un compte avec mon email/u);
 });
 
-test("4. both providers use the existing PKCE callback and verify Supabase identity", () => {
+test("4. all providers use the existing PKCE callback and verify Supabase identity", () => {
   assert.match(authSource, /auth\.signInWithOAuth\(credentials\)/u);
   assert.match(authSource, /exchangeCodeForSession/u);
   assert.match(authSource, /auth\.getUser\(\)/u);
-  assert.match(authSource, /authProvidersFromUser\(userResult\.user\)\.includes\(provider\)/u);
+  assert.match(authSource, /authProvidersFromUser\(userResult\.user\)\.includes\(supabaseOAuthProvider\(provider\)\)/u);
   assert.match(authSource, /synchronizeProgressNow\(\)[\s\S]*?auth\.signInWithOAuth\(credentials\)/u);
   assert.match(accountSource, /if \(provider === "azure"\) return "Microsoft"/u);
   assert.doesNotMatch(authSource, /EXPO_PUBLIC_.*SECRET|client_secret/u);
@@ -205,6 +205,7 @@ test("auth deep links bypass only the initial onboarding redirect", () => {
   for (const action of [
     "oauth-login-google",
     "oauth-login-azure",
+    "oauth-login-line",
   ]) {
     assert.match(rootLayoutSource, new RegExp(`"${action}"`, "u"));
   }

@@ -1,4 +1,8 @@
-export type KappOAuthProvider = "google" | "azure";
+export type KappOAuthProvider = "google" | "azure" | "line";
+
+export function supabaseOAuthProvider(provider: KappOAuthProvider) {
+  return provider === "line" ? "custom:line" as const : provider;
+}
 
 export type ParsedAuthCallback = {
   code: string | null;
@@ -69,8 +73,9 @@ export function oauthProviderFromCallback(
 ): KappOAuthProvider | null {
   const action = new URL(url).searchParams.get("action");
   const candidate = action
-    ? action.match(/^oauth-login-(google|azure)$/u)?.[1]
-    : authProvidersFromUser(user).find((provider) => provider === "google" || provider === "azure");
+    ? action.match(/^oauth-login-(google|azure|line)$/u)?.[1]
+    : authProvidersFromUser(user).find((provider) => provider === "google" || provider === "azure" || provider === "custom:line");
+  if (candidate === "custom:line" || candidate === "line") return "line";
   return candidate === "google" || candidate === "azure" ? candidate : null;
 }
 

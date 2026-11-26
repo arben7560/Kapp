@@ -12,6 +12,7 @@ type AuthErrorCode =
   | "oauth-access-denied"
   | "oauth-session-unverified"
   | "oauth-provider-disabled"
+  | "oauth-email-unavailable"
   | "oauth-linking-disabled"
   | "identity-already-used"
   | "auth-link-invalid"
@@ -77,10 +78,21 @@ export function toKappAuthError(error: unknown): KappAuthError {
     );
   }
 
-  if (detail.includes("provider_disabled")) {
+  if (detail.includes("provider_disabled") || detail.includes("provider is not enabled") ||
+      detail.includes("unsupported provider") || detail.includes("provider not found") ||
+      detail.includes("custom_provider_not_found")) {
     return new KappAuthError(
       "oauth-provider-disabled",
       "Ce mode de connexion n’est pas encore activé pour K-App.",
+      { cause: error },
+    );
+  }
+
+  if (detail.includes("email") &&
+      (detail.includes("required") || detail.includes("missing") || detail.includes("not provided"))) {
+    return new KappAuthError(
+      "oauth-email-unavailable",
+      "Ce fournisseur ne transmet pas d’adresse e-mail. Vérifiez que l’adresse e-mail est facultative dans Supabase.",
       { cause: error },
     );
   }
@@ -111,7 +123,9 @@ export function toKappAuthError(error: unknown): KappAuthError {
   if (
     detail.includes("flow_state_not_found") ||
     detail.includes("bad_code_verifier") ||
-    detail.includes("exchange_code_not_found")
+    detail.includes("exchange_code_not_found") ||
+    detail.includes("bad_oauth_callback") ||
+    detail.includes("bad_oauth_state")
   ) {
     return new KappAuthError(
       "auth-link-invalid",

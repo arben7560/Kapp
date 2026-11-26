@@ -45,6 +45,7 @@ const ONBOARDING_KEY = "kapp_onboarding_completed";
 const AUTH_ONBOARDING_BYPASS_ACTIONS = new Set([
   "oauth-login-google",
   "oauth-login-azure",
+  "oauth-login-line",
 ]);
 
 const KAPP_NAVIGATION_THEME = {

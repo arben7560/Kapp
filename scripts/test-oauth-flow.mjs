@@ -7,6 +7,7 @@ import ts from "typescript";
 
 import * as authCallback from "../lib/authCallback.ts";
 import * as authErrors from "../lib/authErrors.ts";
+import { authProfileFromUser } from "../lib/authProfile.ts";
 import { createAuthFetch } from "../lib/authFetch.ts";
 import { createNavigationHarness } from "./helpers/oauth-navigation-harness.mjs";
 
@@ -18,9 +19,10 @@ const compile = async (path) => ts.transpileModule(
   await readFile(new URL(path, import.meta.url), "utf8"),
   { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React, esModuleInterop: true } },
 ).outputText;
-const [providerCode, redirectsCode] = await Promise.all([
+const [providerCode, redirectsCode, availabilityCode] = await Promise.all([
   compile("../lib/AuthProvider.tsx"),
   compile("../lib/authRedirects.ts"),
+  compile("../lib/authProviderAvailability.ts"),
 ]);
 
 function loadModule(code, mocks, logs = [], development = true) {
@@ -35,6 +37,10 @@ function loadModule(code, mocks, logs = [], development = true) {
   );
   return module.exports;
 }
+
+const { assertCustomProviderAvailable } = loadModule(availabilityCode, {
+  "./authErrors": authErrors,
+});
 
 const guest = { user: { id: "guest-id", is_anonymous: true, app_metadata: { providers: ["anonymous"] } } };
 const google = { user: { id: "google-id", email: "learner@example.test", is_anonymous: false, app_metadata: { providers: ["google"] } } };
@@ -69,7 +75,7 @@ async function mount(options = {}) {
   };
   assertModules();
   nav.push("/account");
-  const calls = { exchange: 0, setSession: 0, getUser: 0, getSession: 0, anonymous: 0, sync: 0, unmountedWrites: 0, isolated: [], credentials: null, returnUrl: null };
+  const calls = { exchange: 0, setSession: 0, getUser: 0, getSession: 0, anonymous: 0, sync: 0, preflight: 0, unmountedWrites: 0, isolated: [], credentials: null, returnUrl: null };
   const react = {
     createContext: () => ({ Provider: "AuthContext.Provider" }),
     createElement: (_type, props) => props.value,
@@ -158,6 +164,12 @@ async function mount(options = {}) {
       },
     },
     "./authCallback": authCallback,
+    "./authProviderAvailability": {
+      assertCustomProviderAvailable: async () => {
+        calls.preflight++;
+        if (options.preflightError) throw options.preflightError;
+      },
+    },
     "./authErrors": authErrors,
     "./authRedirects": redirects,
     "./supabase": { isSupabaseConfigured: true, requireSupabaseClient: () => client, supabase: client },
@@ -373,10 +385,72 @@ test("Microsoft cancellation retains the guest, and a mismatched identity is rej
   assertIdle(wrong);
 });
 
-test("cold-start Google and Microsoft callbacks exchange their PKCE code", async () => {
+test("LINE uses the custom OAuth provider and accepts a verified account without email", async () => {
+  const line = { user: {
+    id: "line-supabase-id", is_anonymous: false,
+    app_metadata: { providers: ["custom:line"] },
+    identities: [{ provider: "custom:line", identity_data: {
+      sub: "U123", name: "Minji", picture: "https://profile.line-scdn.net/avatar",
+    } }],
+  } };
+  const url = "kapp://account?action=oauth-login-line&code=SECRET_LINE";
+  const app = await mount({ callbackSession: line, browser: async () => ({ type: "success", url }) });
+  assert.equal(await app.render().signInWithOAuth("line"), "success");
+  assert.deepEqual(app.calls.credentials, {
+    provider: "custom:line",
+    options: { redirectTo: "kapp://account?action=oauth-login-line", skipBrowserRedirect: true },
+  });
+  assert.deepEqual(app.render().oauthOutcome, { provider: "line", result: "success" });
+  assert.equal(app.calls.preflight, 1);
+  assert.deepEqual(authProfileFromUser(app.render().user), {
+    id: "line-supabase-id", lineUserId: "U123", displayName: "Minji",
+    avatarUrl: "https://profile.line-scdn.net/avatar", email: null,
+  });
+  assertIdle(app);
+});
+
+test("LINE cancellation keeps the guest and a wrong returned provider is rejected", async () => {
+  const cancelled = await mount({ browser: async () => ({ type: "cancel" }) });
+  assert.equal(await cancelled.render().signInWithOAuth("line"), "cancelled");
+  assert.equal(cancelled.render().user.id, "guest-id");
+  assertIdle(cancelled);
+
+  const wrong = await mount({ browser: async () => ({
+    type: "success", url: "kapp://account?action=oauth-login-line&code=SECRET_LINE",
+  }) });
+  await assert.rejects(wrong.render().signInWithOAuth("line"), authErrors.KappAuthError);
+  assertIdle(wrong);
+});
+
+test("LINE configuration, missing email and invalid callback errors stay actionable", () => {
+  assert.equal(authErrors.toKappAuthError({ code: "custom_provider_not_found" }).code, "oauth-provider-disabled");
+  assert.equal(authErrors.toKappAuthError(new Error("Email is required")).code, "oauth-email-unavailable");
+  assert.equal(authErrors.toKappAuthError({ code: "bad_oauth_callback" }).code, "auth-link-invalid");
+});
+
+test("LINE checks the Supabase authorize response before opening the browser", async () => {
+  const authorizeUrl = "https://project.test/auth/v1/authorize?provider=custom:line";
+  const unavailable = async () => ({
+    status: 400, url: authorizeUrl,
+    text: async () => JSON.stringify({ error_code: "validation_failed", msg: "Unsupported provider: custom provider custom:line not found" }),
+  });
+  await assert.rejects(assertCustomProviderAvailable(authorizeUrl, unavailable), {
+    code: "oauth-provider-disabled",
+  });
+  await assert.doesNotReject(assertCustomProviderAvailable(authorizeUrl, async () => ({
+    status: 302, url: authorizeUrl,
+  })));
+  const app = await mount({ preflightError: new Error("Unsupported provider: custom provider custom:line not found") });
+  await assert.rejects(app.render().signInWithOAuth("line"), { code: "oauth-provider-disabled" });
+  assert.equal(app.calls.returnUrl, null);
+  assertIdle(app);
+});
+
+test("cold-start Google, Microsoft and LINE callbacks exchange their PKCE code", async () => {
   for (const [provider, callbackSession] of [
     ["google", google],
     ["azure", { user: { id: "microsoft-id", email: "learner@outlook.com", is_anonymous: false, app_metadata: { providers: ["azure"] } } }],
+    ["line", { user: { id: "line-id", is_anonymous: false, app_metadata: { providers: ["custom:line"] } } }],
   ]) {
     const action = `oauth-login-${provider}`;
     const app = await mount({ initialUrl: `kapp://account?action=${action}&code=SECRET_INITIAL`, callbackSession });
