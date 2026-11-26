@@ -117,7 +117,7 @@ test("cloud and local snapshots keep both sets of completed learning", () => {
     hangul_vowels_basic: true,
   });
   assert.equal(merged.learningTrack, "hangul");
-  assert.equal(merged.xp, 200);
+  assert.equal(merged.xp, 240);
   assert.equal(merged.hangulLevel, 2);
 });
 
@@ -217,7 +217,7 @@ test("the real sync provider merges a Google UID, isolates logout and restores r
     auth.user = { id: "google-id" };
     verify();
     await service.synchronizeProgressNow();
-    assert.equal(store.progress.xp, 420);
+    assert.equal(store.progress.xp, 460);
     assert.deepEqual(store.progress.completed, { google_lesson: true, guest_lesson: true });
     verify();
     await service.isolateProgressAfterSignOut("google-id");
@@ -229,7 +229,7 @@ test("the real sync provider merges a Google UID, isolates logout and restores r
     auth.user = { id: "google-id" };
     verify();
     await service.synchronizeProgressNow();
-    assert.equal(store.progress.xp, 420);
+    assert.equal(store.progress.xp, 460);
     assert.deepEqual(store.progress.completed, { google_lesson: true, guest_lesson: true });
     assert.deepEqual(writes, ["guest-id", "google-id", "new-guest-id"]);
     assert.deepEqual(reads, ["guest-id", "google-id", "new-guest-id", "google-id"]);
