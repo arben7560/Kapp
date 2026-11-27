@@ -1,24 +1,18 @@
-import { ResponsiveImmersiveBackground } from "../../components/ui/responsive-immersive-background";
-import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
-import type { ScrollViewInstance } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ScrollViewInstance } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import {
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    View,
-} from "react-native";
-import {
-    SafeAreaView,
-    useSafeAreaInsets,
+  SafeAreaView,
+  useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import { ResponsiveImmersiveBackground } from "../../components/ui/responsive-immersive-background";
+import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
 
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
-import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import { CafeConversationSummaryModal } from "../../components/cafe/CafeConversationSummaryModal";
 import { GuidedSpeechTurn } from "../../components/GuidedSpeechTurn";
 import { ImmersiveMediaStatusOverlay } from "../../components/immersion/ImmersiveMediaStatusOverlay";
@@ -26,51 +20,52 @@ import { ImmersiveStepProgress } from "../../components/immersion/ImmersiveStepP
 import { ImmersiveTranscriptViewport } from "../../components/immersion/ImmersiveTranscriptViewport";
 import { AppBackButton } from "../../components/ui/app-back-button";
 import {
-    getImmersiveBottomPadding,
-    getImmersiveLandscapeLayout,
-    getImmersivePortraitMediaLayout,
-    IMMERSIVE_CONTENT_MAX_WIDTH,
-    IMMERSIVE_MIN_TOUCH_TARGET,
-    IMMERSIVE_TABLET_LANDSCAPE_STYLES,
-    IMMERSIVE_PHONE_LANDSCAPE_STYLES,
-    IMMERSIVE_VIDEO_VIEW_PROPS,
+  getImmersiveBottomPadding,
+  getImmersiveLandscapeLayout,
+  getImmersivePortraitMediaLayout,
+  IMMERSIVE_CONTENT_MAX_WIDTH,
+  IMMERSIVE_MIN_TOUCH_TARGET,
+  IMMERSIVE_PHONE_LANDSCAPE_STYLES,
+  IMMERSIVE_TABLET_LANDSCAPE_STYLES,
+  IMMERSIVE_VIDEO_VIEW_PROPS,
 } from "../../constants/immersive-layout";
 import { ABSOLUTE_FILL } from "../../constants/layout";
 import {
-    cafeDialogueData,
-    type DialogueChoice,
-    type DialogueNode,
-    type DialogueScenario,
+  cafeDialogueData,
+  type DialogueChoice,
+  type DialogueNode,
+  type DialogueScenario,
 } from "../../data/lesson/cafe/cafe";
 import {
-    DEFAULT_CAFE_MISSION_ID,
-    getCafeMissionById,
-    getCafeMissionScenario,
+  DEFAULT_CAFE_MISSION_ID,
+  getCafeMissionById,
+  getCafeMissionScenario,
 } from "../../data/lesson/cafe/cafeMissions";
-import {
-    useKoreanSpeechRecognition,
-    type SpeechTranscriptSession,
-} from "../../hooks/useKoreanSpeechRecognition";
 import { useImmersiveVideoLifecycle } from "../../hooks/useImmersiveVideoLifecycle";
+import {
+  useKoreanSpeechRecognition,
+  type SpeechTranscriptSession,
+} from "../../hooks/useKoreanSpeechRecognition";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import {
-    createCafeConversationMemory,
-    markCafeSpeechNodeCorrected,
-    recordCafeSpeechAttempt,
+  createCafeConversationMemory,
+  markCafeSpeechNodeCorrected,
+  recordCafeSpeechAttempt,
 } from "../../lib/cafeConversationMemory";
 import {
-    applyCafeOrderProductSelection,
-    EMPTY_CAFE_ORDER_STATE,
-    type CafeOrderState,
+  applyCafeOrderProductSelection,
+  EMPTY_CAFE_ORDER_STATE,
+  type CafeOrderState,
 } from "../../lib/cafeOrderState";
 import {
-    CAFE_SPEECH_PILOT_MISSION_ID,
-    getCafeSpeechAttemptPedagogy,
-    getCafeSpeechContextualStrings,
-    matchCafeSpeechIntent,
-    recordCafeSpeechRecoveryEvent,
+  CAFE_SPEECH_PILOT_MISSION_ID,
+  getCafeSpeechAttemptPedagogy,
+  getCafeSpeechContextualStrings,
+  matchCafeSpeechIntent,
+  recordCafeSpeechRecoveryEvent,
 } from "../../lib/cafeSpeechDiagnostics";
 import { completeDailyActivity } from "../../lib/dailyStreak";
+import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import { canAdvanceAfterRequiredVideo } from "../../lib/mediaProgression";
 import { usePaywall } from "../../lib/paywall/PaywallProvider";
 import { premiumRoute } from "../../lib/paywall/purchaseIntent";
@@ -91,7 +86,7 @@ const CAFE_STEPS = ["Accueil", "Choix", "Paiement", "Final"] as const;
 const orderConfirmationJuiceReal = require("../../assets/ai/cafe/orderConfirmationJuiceReal.mp4");
 const orderConfirmationCakeReal = require("../../assets/ai/cafe/orderConfirmationCakeReal.mp4");
 const pricePaimentChooseVideo = require("../../assets/ai/cafe/pricePaimentChoose.mp4");
-const cafeIdleVideo = require("../../assets/ai/cafe/welcomeCafe.mp4");
+const cafeIdleVideo = require("../../assets/ai/cafe/serveuse-cafe.png");
 const cafeBackground = require("../../assets/images/cafe.jpg");
 
 type ModeType = "guided" | "real";
@@ -292,7 +287,9 @@ function CafeIaScreenContent() {
 
   useEffect(() => {
     if (isPaywallLoading || canEnterMission) return;
-    router.replace(premiumRoute("/lesson/cafeIA", { mode, mission: missionId }));
+    router.replace(
+      premiumRoute("/lesson/cafeIA", { mode, mission: missionId }),
+    );
   }, [canEnterMission, isPaywallLoading, missionId, mode]);
 
   const portraitMediaLayout = getImmersivePortraitMediaLayout({
@@ -916,7 +913,9 @@ function CafeIaScreenContent() {
                 activeIndex={progressIndex}
                 accent={mode === "real" ? CYAN : PURPLE}
                 compactLandscapeHeight={
-                  landscapeLayout?.mode === "phone" ? responsive.height : undefined
+                  landscapeLayout?.mode === "phone"
+                    ? responsive.height
+                    : undefined
                 }
               />
 
@@ -947,7 +946,9 @@ function CafeIaScreenContent() {
                 <VideoView
                   accessible
                   accessibilityRole="image"
-                  accessibilityLabel={translate("Vidéo de l’interlocutrice du café")}
+                  accessibilityLabel={translate(
+                    "Vidéo de l’interlocutrice du café",
+                  )}
                   player={player}
                   style={[styles.video, { height: avatarVideoHeight }]}
                   {...IMMERSIVE_VIDEO_VIEW_PROPS}
@@ -1002,47 +1003,47 @@ function CafeIaScreenContent() {
                   shouldCollapseTranscript && styles.aiCardCollapsed,
                 ]}
               >
+                <AppText
+                  variant="koreanSecondary"
+                  tone="strong"
+                  script="korean"
+                  accessibilityLanguage="ko-KR"
+                  align="center"
+                  style={[
+                    styles.aiKr,
+                    isSplitLandscape &&
+                      IMMERSIVE_PHONE_LANDSCAPE_STYLES.transcriptKorean,
+                    shouldCollapseTranscript && styles.aiDotsText,
+                  ]}
+                >
+                  {displayedKoreanText}
+                </AppText>
+
+                {shouldShowFrench ? (
                   <AppText
-                    variant="koreanSecondary"
-                    tone="strong"
-                    script="korean"
-                    accessibilityLanguage="ko-KR"
+                    variant="bodySecondary"
+                    tone="muted"
+                    script="latin"
                     align="center"
-                    style={[
-                      styles.aiKr,
-                      isSplitLandscape &&
-                        IMMERSIVE_PHONE_LANDSCAPE_STYLES.transcriptKorean,
-                      shouldCollapseTranscript && styles.aiDotsText,
-                    ]}
+                    style={styles.aiFr}
                   >
-                    {displayedKoreanText}
+                    {transcriptFrench}
                   </AppText>
+                ) : null}
 
-                  {shouldShowFrench ? (
-                    <AppText
-                      variant="bodySecondary"
-                      tone="muted"
-                      script="latin"
-                      align="center"
-                      style={styles.aiFr}
-                    >
-                      {transcriptFrench}
-                    </AppText>
-                  ) : null}
-
-                  {isReviewableTranscript ? (
-                    <AppText
-                      variant="caption"
-                      tone="soft"
-                      script="latin"
-                      align="center"
-                      style={styles.transcriptHint}
-                    >
-                      {isTranscriptOpen
-                        ? "Appuyer pour refermer"
-                        : "Appuyer pour revoir"}
-                    </AppText>
-                  ) : null}
+                {isReviewableTranscript ? (
+                  <AppText
+                    variant="caption"
+                    tone="soft"
+                    script="latin"
+                    align="center"
+                    style={styles.transcriptHint}
+                  >
+                    {isTranscriptOpen
+                      ? "Appuyer pour refermer"
+                      : "Appuyer pour revoir"}
+                  </AppText>
+                ) : null}
               </ImmersiveTranscriptViewport>
             </View>
           </View>
@@ -1151,7 +1152,9 @@ function CafeIaScreenContent() {
 
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel={translate("Ouvrir la fiche vocabulaire du café")}
+                      accessibilityLabel={translate(
+                        "Ouvrir la fiche vocabulaire du café",
+                      )}
                       hitSlop={6}
                       onPress={handleOpenVocabulary}
                       style={({ pressed }) => [
@@ -1197,7 +1200,14 @@ function CafeIaScreenContent() {
                       accessibilityRole="link"
                       accessibilityLabel={translate("Découvrir Premium")}
                       hitSlop={6}
-                      onPress={() => router.push(premiumRoute("/lesson/cafeIA", { mode, mission: missionId }))}
+                      onPress={() =>
+                        router.push(
+                          premiumRoute("/lesson/cafeIA", {
+                            mode,
+                            mission: missionId,
+                          }),
+                        )
+                      }
                       style={({ pressed }) => [
                         styles.endPremiumLink,
                         { opacity: pressed ? 0.82 : 1 },
