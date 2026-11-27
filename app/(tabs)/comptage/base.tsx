@@ -196,8 +196,8 @@ const SCENES = [
         audio: ENTRAINEMENT_AUDIO.toolbox3,
       },
       {
-        word: "셋만 더",
-        rom: "Set-man deo",
+        word: "셋게만 더",
+        rom: "Set-ge-man deo",
         mean: "Seulement trois de plus",
         context: "Très utile pour motiver ou négocier un dernier effort.",
         audio: ENTRAINEMENT_AUDIO.toolbox4,
