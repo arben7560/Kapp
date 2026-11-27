@@ -50,3 +50,17 @@ export function getHubGrid(contentWidth: number, gap: number, isLandscape: boole
     : getGridColumns(contentWidth, 330, isLandscape ? 3 : 2, gap);
   return { columns, itemWidth: getGridItemWidth(contentWidth, columns, gap) };
 }
+
+/** Shared lesson frame. The width includes its horizontal padding, so the
+ * readable content is capped at 800/880 dp. The parent SafeAreaView owns the
+ * insets; do not subtract them again here. Phones retain their original styles. */
+export function getPedagogicalFrame(isWideViewport: boolean, isLandscape: boolean, horizontalPadding: number) {
+  if (!isWideViewport) return undefined;
+  const contentMaxWidth = isLandscape ? 880 : 800;
+  return {
+    width: "100%" as const,
+    maxWidth: contentMaxWidth + horizontalPadding * 2,
+    alignSelf: "center" as const,
+    paddingHorizontal: horizontalPadding,
+  };
+}

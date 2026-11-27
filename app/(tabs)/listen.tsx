@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { usePedagogicalLayout } from "../../hooks/usePedagogicalLayout";
 import { useStore } from "../../_store";
 import { AppText } from "../../components/app-text";
 import { ListenTrainingCompletionModal } from "../../components/listen/ListenTrainingCompletionModal";
@@ -133,6 +134,7 @@ export default function ListenScreen() {
     requestedExercise,
   );
   const { height, width } = useWindowDimensions();
+  const pedagogicalFrame = usePedagogicalLayout();
   const isLandscape = width > height;
   const isShortLandscape = isLandscape && height <= 430;
   const { complete, isHydrated, setTrack } = useStore();
@@ -625,14 +627,14 @@ export default function ListenScreen() {
       <View style={styles.overlay} />
 
       <SafeAreaView style={styles.safe}>
-        <Animated.View style={[styles.header, landscapeHeaderStyle]}>
+        <Animated.View style={[styles.header, landscapeHeaderStyle, pedagogicalFrame]}>
           <AppBackButton />
         </Animated.View>
 
         <Animated.ScrollView
           ref={scrollRef}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, pedagogicalFrame]}
           scrollEventThrottle={isLandscape ? 16 : undefined}
           onScroll={handleScroll}
         >

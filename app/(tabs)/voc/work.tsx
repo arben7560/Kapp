@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { usePedagogicalLayout } from "../../../hooks/usePedagogicalLayout";
 import { AnimatedAppText, AppText } from "../../../components/app-text";
 import { AppBackButton } from "../../../components/ui/app-back-button";
 import {
@@ -433,6 +434,7 @@ const SCENES = [
 ];
 
 export default function BusinessImmersion() {
+  const pedagogicalFrame = usePedagogicalLayout();
   const [activeScene, setActiveScene] = useState(SCENES[0]);
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);
@@ -593,7 +595,7 @@ export default function BusinessImmersion() {
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[styles.scroll, pedagogicalFrame]}
         >
           <View style={styles.topNav}>
             <AppBackButton />

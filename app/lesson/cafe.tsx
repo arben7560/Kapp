@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { usePedagogicalLayout } from "../../hooks/usePedagogicalLayout";
 import { AppText } from "../../components/app-text";
 import { AppBackButton } from "../../components/ui/app-back-button";
 import { RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../constants/layout";
@@ -267,6 +268,7 @@ const SCENES = [
 ];
 
 function CafeLessonContent() {
+  const pedagogicalFrame = usePedagogicalLayout();
   const [activeScene, setActiveScene] = useState(SCENES[0]);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
@@ -297,7 +299,7 @@ function CafeLessonContent() {
         <View style={styles.backgroundDarkOverlay} pointerEvents="none" />
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[styles.scroll, pedagogicalFrame]}
         >
           <View style={styles.header}>
             <View style={styles.backBtn}>

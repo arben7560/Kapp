@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { usePedagogicalLayout } from "../../hooks/usePedagogicalLayout";
 import { AppText } from "../../components/app-text";
 import { AppBackButton } from "../../components/ui/app-back-button";
 import { useVocAudio } from "../../hooks/useVocAudio";
@@ -240,6 +241,7 @@ const SCENES: Scene[] = [
 ];
 
 function AirportLessonContent() {
+  const pedagogicalFrame = usePedagogicalLayout();
   const [activeScene, setActiveScene] = useState<Scene>(SCENES[0]);
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);
@@ -295,7 +297,7 @@ function AirportLessonContent() {
         ) : null}
         <View style={styles.overlay} />
 
-        <ScrollView contentContainerStyle={styles.scroll}>
+        <ScrollView contentContainerStyle={[styles.scroll, pedagogicalFrame]}>
           <View style={styles.header}>
             <View style={styles.backBtn}>
               <AppBackButton />

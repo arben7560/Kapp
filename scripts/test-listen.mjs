@@ -186,7 +186,7 @@ test("the shared Listen exercise header collapses only in landscape", () => {
   assert.match(listenScreen, /const isShortLandscape = isLandscape && height <= 430/u);
   assert.match(listenScreen, /const landscapeHeaderStyle = useMemo/u);
   assert.match(listenScreen, /if \(!isLandscape\) return undefined/u);
-  assert.match(listenScreen, /<Animated\.View style=\{\[styles\.header, landscapeHeaderStyle\]\}>/u);
+  assert.match(listenScreen, /<Animated\.View style=\{\[styles\.header, landscapeHeaderStyle, pedagogicalFrame\]\}>/u);
   assert.match(listenScreen, /<Animated\.ScrollView/u);
   assert.match(listenScreen, /scrollEventThrottle=\{isLandscape \? 16 : undefined\}/u);
   assert.match(listenScreen, /onScroll=\{handleScroll\}/u);

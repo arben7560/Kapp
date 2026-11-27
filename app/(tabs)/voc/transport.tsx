@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { usePedagogicalLayout } from "../../../hooks/usePedagogicalLayout";
 import { AnimatedAppText, AppText } from "../../../components/app-text";
 import { ABSOLUTE_FILL, RESPONSIVE_AUDIO_COPY_MIN_WIDTH } from "../../../constants/layout";
 import { useVocAudio } from "../../../hooks/useVocAudio";
@@ -433,6 +434,7 @@ const SCENES: Scene[] = [
 ];
 
 export default function TransportCity() {
+  const pedagogicalFrame = usePedagogicalLayout();
   const [activeScene, setActiveScene] = useState<Scene>(SCENES[0]);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
@@ -516,7 +518,7 @@ export default function TransportCity() {
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[styles.scroll, pedagogicalFrame]}
         >
           <View style={styles.topNav}>
             <AppBackButton />

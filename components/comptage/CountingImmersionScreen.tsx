@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { usePedagogicalLayout } from "../../hooks/usePedagogicalLayout";
 import { useStore } from "../../_store";
 import { useVocAudio } from "../../hooks/useVocAudio";
 import { VOC_DIALOGUE_COPY } from "../../hooks/useVocDialogue";
@@ -100,6 +101,7 @@ export default function CountingImmersionScreen({
     initialScene.dialogue.length,
   );
 
+  const pedagogicalFrame = usePedagogicalLayout();
   const [activeScene, setActiveScene] = useState(initialScene);
   const [visibleMessages, setVisibleMessages] = useState(initialVisibleMessages);
   const [isTyping, setIsTyping] = useState(false);
@@ -262,7 +264,7 @@ export default function CountingImmersionScreen({
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[styles.scroll, pedagogicalFrame]}
         >
           <View style={styles.header}>
             <View style={styles.backBtn}>
