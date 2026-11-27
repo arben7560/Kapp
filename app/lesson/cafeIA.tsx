@@ -3,7 +3,7 @@ import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ScrollViewInstance } from "react-native";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -86,7 +86,8 @@ const CAFE_STEPS = ["Accueil", "Choix", "Paiement", "Final"] as const;
 const orderConfirmationJuiceReal = require("../../assets/ai/cafe/orderConfirmationJuiceReal.mp4");
 const orderConfirmationCakeReal = require("../../assets/ai/cafe/orderConfirmationCakeReal.mp4");
 const pricePaimentChooseVideo = require("../../assets/ai/cafe/pricePaimentChoose.mp4");
-const cafeIdleVideo = require("../../assets/ai/cafe/serveuse-cafe.png");
+const cafeIdleImage = require("../../assets/ai/cafe/serveuse-cafe.png");
+const cafeCardReceiptIdleImage = require("../../assets/ai/cafe/serveuse-cafe2.png");
 const cafeBackground = require("../../assets/images/cafe.jpg");
 
 type ModeType = "guided" | "real";
@@ -238,6 +239,7 @@ function CafeIaScreenContent() {
   const [videoRetryKey, setVideoRetryKey] = useState(0);
 
   const [lastIaTranscript, setLastIaTranscript] = useState<{
+    nodeId: string;
     korean: string;
     french?: string;
   } | null>(null);
@@ -266,10 +268,19 @@ function CafeIaScreenContent() {
   const currentVideoSource = videoSources.length > 0 ? videoSources[0] : null;
   const isAvatarSpeaking =
     currentNode?.type === "ia" && Boolean(currentVideoSource) && !isSceneEnded;
-  const displayedVideoSource = isAvatarSpeaking
-    ? currentVideoSource
-    : cafeIdleVideo;
-  const player = useVideoPlayer(cafeIdleVideo, (playerInstance) => {
+  const isCardReceiptChoice =
+    mode === "guided" &&
+    !isSceneEnded &&
+    currentNode?.type === "user_choice" &&
+    ((currentNodeId === "ped_receipt_choice_here" &&
+      lastIaTranscript?.nodeId === "ped_receipt_card_here") ||
+      (currentNodeId === "ped_receipt_choice_takeout" &&
+        lastIaTranscript?.nodeId === "ped_receipt_card_takeout"));
+  const displayedIdleImage = isCardReceiptChoice
+    ? cafeCardReceiptIdleImage
+    : cafeIdleImage;
+  const displayedVideoSource = isAvatarSpeaking ? currentVideoSource : null;
+  const player = useVideoPlayer(null, (playerInstance) => {
     playerInstance.loop = false;
     playerInstance.pause();
   });
@@ -319,6 +330,7 @@ function CafeIaScreenContent() {
 
     if (node.type === "ia") {
       setLastIaTranscript({
+        nodeId: node.id,
         korean: node.korean || "...",
         french: node.french,
       });
@@ -395,7 +407,7 @@ function CafeIaScreenContent() {
 
     async function updateVideoSource() {
       const nextVideoSource = displayedVideoSource;
-      markMediaLoading();
+      if (isAvatarSpeaking) markMediaLoading();
 
       try {
         if (!isAvatarSpeaking) player.pause();
@@ -405,9 +417,6 @@ function CafeIaScreenContent() {
         if (isCancelled || !replaced) return;
         if (isAvatarSpeaking) {
           player.currentTime = 0;
-        } else {
-          player.currentTime = 0;
-          player.pause();
         }
       } catch (error) {
         if (!isCancelled) {
@@ -943,16 +952,27 @@ function CafeIaScreenContent() {
                   style={StyleSheet.absoluteFill}
                 />
 
-                <VideoView
-                  accessible
-                  accessibilityRole="image"
-                  accessibilityLabel={translate(
-                    "Vidéo de l’interlocutrice du café",
-                  )}
-                  player={player}
-                  style={[styles.video, { height: avatarVideoHeight }]}
-                  {...IMMERSIVE_VIDEO_VIEW_PROPS}
-                />
+                {isAvatarSpeaking ? (
+                  <VideoView
+                    accessible
+                    accessibilityRole="image"
+                    accessibilityLabel={translate(
+                      "Vidéo de l’interlocutrice du café",
+                    )}
+                    player={player}
+                    style={[styles.video, { height: avatarVideoHeight }]}
+                    {...IMMERSIVE_VIDEO_VIEW_PROPS}
+                  />
+                ) : (
+                  <Image
+                    accessible
+                    accessibilityRole="image"
+                    accessibilityLabel={translate("Vidéo de l’interlocutrice du café")}
+                    source={displayedIdleImage}
+                    style={[styles.video, { height: avatarVideoHeight }]}
+                    resizeMode="cover"
+                  />
+                )}
 
                 <LinearGradient
                   colors={[
@@ -963,14 +983,16 @@ function CafeIaScreenContent() {
                   locations={[0, 0.62, 1]}
                   style={styles.videoOverlay}
                 />
-                <ImmersiveMediaStatusOverlay
-                  status={mediaStatus}
-                  onExit={handleExit}
-                  onResume={() => {
-                    void resumeVideo();
-                  }}
-                  onRetry={handleRetryVideo}
-                />
+                {isAvatarSpeaking ? (
+                  <ImmersiveMediaStatusOverlay
+                    status={mediaStatus}
+                    onExit={handleExit}
+                    onResume={() => {
+                      void resumeVideo();
+                    }}
+                    onRetry={handleRetryVideo}
+                  />
+                ) : null}
               </View>
 
               <ImmersiveTranscriptViewport
