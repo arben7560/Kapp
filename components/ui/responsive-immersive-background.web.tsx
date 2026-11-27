@@ -26,6 +26,8 @@ export function ResponsiveImmersiveBackground({ children, style, onLayout, ...pr
   const hasExtension = sceneWidth < width;
   // RN Web otherwise renders bundled images at their intrinsic pixel dimensions.
   const imageStyle = [props.imageStyle, styles.imageFill];
+  const sourceOpacity = StyleSheet.flatten(props.imageStyle)?.opacity;
+  const backdropOpacity = 0.45 * (typeof sourceOpacity === "number" ? sourceOpacity : 1);
 
   const handleLayout = (event: LayoutChangeEvent) => {
     const { width: nextWidth, height: nextHeight } = event.nativeEvent.layout;
@@ -64,7 +66,7 @@ export function ResponsiveImmersiveBackground({ children, style, onLayout, ...pr
             {...props}
             blurRadius={16}
             style={styles.fill}
-            imageStyle={[...imageStyle, styles.backdropImage]}
+            imageStyle={[...imageStyle, { opacity: backdropOpacity }]}
           />
         )}
         <div aria-hidden="true" style={sceneStyle}>
@@ -80,5 +82,4 @@ const styles = StyleSheet.create({
   webRoot: { overflow: "hidden", minHeight: 0, minWidth: 0 },
   fill: { ...StyleSheet.absoluteFillObject },
   imageFill: { width: "100%", height: "100%" },
-  backdropImage: { opacity: 0.45 },
 });

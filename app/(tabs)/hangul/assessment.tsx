@@ -1,3 +1,4 @@
+import { ResponsiveImmersiveBackground } from "../../../components/ui/responsive-immersive-background";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -6,7 +7,6 @@ import { ABSOLUTE_FILL } from "../../../constants/layout";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -170,7 +170,7 @@ export default function HangulAssessmentScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground source={BACKGROUND_SOURCE} style={styles.bgImage} resizeMode="cover">
+      <ResponsiveImmersiveBackground source={BACKGROUND_SOURCE} style={styles.bgImage} resizeMode="cover">
         <BlurView intensity={18} tint="dark" style={styles.bgBlur} />
         <View style={styles.vignetteOverlay} />
         <LinearGradient
@@ -285,7 +285,7 @@ export default function HangulAssessmentScreen() {
             </View>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
     </SafeAreaView>
   );
 }

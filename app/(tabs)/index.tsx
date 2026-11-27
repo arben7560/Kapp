@@ -1,3 +1,4 @@
+import { ResponsiveImmersiveBackground } from "../../components/ui/responsive-immersive-background";
 import NativeMaskedView from "@react-native-masked-view/masked-view";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
@@ -23,8 +24,7 @@ import {
   AppState,
   Modal,
   Easing,
-  ImageBackground,
-  Platform,
+    Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -983,7 +983,7 @@ function HomeContent() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground
+      <ResponsiveImmersiveBackground
         source={BACKGROUND_SOURCE}
         style={styles.bgImage}
         resizeMode="cover"
@@ -1153,7 +1153,7 @@ function HomeContent() {
             </View>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
       <AccountProtectionModal
         visible={showProtectionPrompt && hubFocused && auth.isAnonymous && !auth.isLoading}
         onProtect={() => {

@@ -1,6 +1,6 @@
+import { ResponsiveImmersiveImage } from "../components/ui/responsive-immersive-image";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BlurView } from "expo-blur";
-import { Image } from "expo-image";
 import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -229,7 +229,7 @@ function KSymbol({
 function HeroBackground() {
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <Image
+      <ResponsiveImmersiveImage
         source={HERO_IMAGE}
         style={StyleSheet.absoluteFill}
         contentFit="cover"

@@ -1,9 +1,9 @@
+import { ResponsiveImmersiveBackground } from "../components/ui/responsive-immersive-background";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
-  ImageBackground,
-  Pressable,
+    Pressable,
   ScrollView,
   StyleSheet,
   Vibration,
@@ -54,7 +54,7 @@ function StreakScreenContent() {
   const isTodayCompleted = streak?.isTodayCompleted ?? false;
 
   return (
-    <ImageBackground
+    <ResponsiveImmersiveBackground
       source={BACKGROUND_SOURCE}
       style={styles.screen}
       resizeMode="cover"
@@ -262,7 +262,7 @@ function StreakScreenContent() {
           </BlurView>
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </ResponsiveImmersiveBackground>
   );
 }
 

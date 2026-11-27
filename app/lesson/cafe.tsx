@@ -1,9 +1,9 @@
+import { ResponsiveImmersiveBackground } from "../../components/ui/responsive-immersive-background";
 import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
 import { router } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-  ImageBackground,
-  Pressable,
+    Pressable,
   ScrollView,
   StyleSheet,
   View,
@@ -293,7 +293,7 @@ function CafeLessonContent() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground
+      <ResponsiveImmersiveBackground
         source={CAFE_IMAGE}
         style={styles.background}
         imageStyle={styles.backgroundImage}
@@ -457,7 +457,7 @@ function CafeLessonContent() {
             </View>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
     </SafeAreaView>
   );
 }

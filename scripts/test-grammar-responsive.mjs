@@ -118,8 +118,8 @@ test("lesson wallpaper and overlay follow the scrolling content", () => {
     "utf8",
   );
   const scrollStart = lesson.search(/<ScrollView\s+ref=\{scrollRef\}/u);
-  const backgroundStart = lesson.indexOf("<ImageBackground", scrollStart);
-  const backgroundEnd = lesson.indexOf("</ImageBackground>", backgroundStart);
+  const backgroundStart = lesson.indexOf("<ResponsiveImmersiveBackground", scrollStart);
+  const backgroundEnd = lesson.indexOf("</ResponsiveImmersiveBackground>", backgroundStart);
   const scrollEnd = lesson.indexOf("</ScrollView>", backgroundEnd);
   assert.ok(scrollStart >= 0 && scrollStart < backgroundStart);
   assert.ok(backgroundStart < backgroundEnd && backgroundEnd < scrollEnd);

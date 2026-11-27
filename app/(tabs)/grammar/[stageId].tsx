@@ -1,3 +1,4 @@
+import { ResponsiveImmersiveBackground } from "../../../components/ui/responsive-immersive-background";
 import type { ScrollViewInstance } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
@@ -5,8 +6,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ImageBackground,
-  Pressable,
+    Pressable,
   ScrollView,
   StyleSheet,
   Vibration,
@@ -680,7 +680,7 @@ export default function GrammarLessonScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
       >
-        <ImageBackground
+        <ResponsiveImmersiveBackground
           source={BACKGROUND_SOURCE}
           style={[
             styles.backgroundContent,
@@ -752,7 +752,7 @@ export default function GrammarLessonScreen() {
 
             {renderContent()}
           </View>
-        </ImageBackground>
+        </ResponsiveImmersiveBackground>
       </ScrollView>
 
       <GrammarLessonGuideModal

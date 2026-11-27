@@ -1,3 +1,4 @@
+import { ResponsiveImmersiveBackground } from "../../components/ui/responsive-immersive-background";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Speech from "@/lib/speechPlayback";
@@ -5,8 +6,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
-  ImageBackground,
-  Pressable,
+    Pressable,
   ScrollView,
   StyleSheet,
   Vibration,
@@ -190,7 +190,7 @@ export default function ClassifierImmersionScreen({
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground source={{ uri: activeScene.image }} style={styles.bg}>
+      <ResponsiveImmersiveBackground source={{ uri: activeScene.image }} style={styles.bg}>
         <View style={styles.overlay} />
 
         <ScrollView
@@ -466,7 +466,7 @@ export default function ClassifierImmersionScreen({
             </View>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
     </SafeAreaView>
   );
 }

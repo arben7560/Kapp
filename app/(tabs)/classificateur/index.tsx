@@ -1,11 +1,11 @@
+import { ResponsiveImmersiveBackground } from "../../../components/ui/responsive-immersive-background";
 import { BlurView } from "expo-blur";
 import { AppBackButton } from "@/components/ui/app-back-button";
 import React, { useEffect, useMemo } from "react";
 import {
   Animated,
   Easing,
-  ImageBackground,
-  Pressable,
+    Pressable,
   ScrollView,
   StyleSheet,
   type StyleProp,
@@ -102,7 +102,7 @@ export default function ClassifiersHub() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground source={BACKGROUND_SOURCE} style={styles.background}>
+      <ResponsiveImmersiveBackground source={BACKGROUND_SOURCE} style={styles.background}>
         <BlurView intensity={70} tint="dark" style={styles.backgroundBlur} />
         <View pointerEvents="none" style={styles.vignette} />
         <View pointerEvents="none" style={styles.bottomFade} />
@@ -160,7 +160,7 @@ export default function ClassifiersHub() {
             </View>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
     </SafeAreaView>
   );
 }

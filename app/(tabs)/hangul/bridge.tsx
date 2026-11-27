@@ -1,3 +1,4 @@
+import { ResponsiveImmersiveBackground } from "../../../components/ui/responsive-immersive-background";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -6,7 +7,6 @@ import { hangulUiText, type HangulUiKey } from "../../../lib/i18n/hangulDisplay"
 import { AppBackButton } from "../../../components/ui/app-back-button";
 import { ABSOLUTE_FILL } from "../../../constants/layout";
 import {
-  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -87,7 +87,7 @@ export default function HangulBridgeScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground source={BACKGROUND_SOURCE} style={styles.bgImage} resizeMode="cover">
+      <ResponsiveImmersiveBackground source={BACKGROUND_SOURCE} style={styles.bgImage} resizeMode="cover">
         <BlurView intensity={18} tint="dark" style={styles.bgBlur} />
         <View style={styles.vignetteOverlay} />
         <LinearGradient
@@ -150,7 +150,7 @@ export default function HangulBridgeScreen() {
             </View>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
     </SafeAreaView>
   );
 }

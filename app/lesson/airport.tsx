@@ -1,11 +1,11 @@
+import { ResponsiveImmersiveBackground } from "../../components/ui/responsive-immersive-background";
 import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
 import { BlurView } from "expo-blur";
 import React, { useState } from "react";
 import {
   Animated,
   Easing,
-  ImageBackground,
-  ImageSourcePropType,
+    ImageSourcePropType,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -279,7 +279,7 @@ function AirportLessonContent() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.bg}>
-        <ImageBackground
+        <ResponsiveImmersiveBackground
           source={activeScene.image}
           style={styles.bgLayer}
           fadeDuration={0}
@@ -290,7 +290,7 @@ function AirportLessonContent() {
             pointerEvents="none"
             style={[ABSOLUTE_FILL, { opacity: bgFadeAnim }]}
           >
-            <ImageBackground
+            <ResponsiveImmersiveBackground
               source={previousBackground}
               style={styles.bgLayer}
               fadeDuration={0}

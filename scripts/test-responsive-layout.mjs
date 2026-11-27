@@ -43,6 +43,21 @@ test("immersive routes share Web framing and retain the native ImageBackground",
   const source = path => readFileSync(new URL("../" + path, import.meta.url), "utf8");
   for (const path of [
     "app/(tabs)/speak.tsx",
+    "app/(tabs)/index.tsx",
+    "app/(tabs)/grammar/index.tsx",
+    "app/(tabs)/grammar/[stageId].tsx",
+    "app/(tabs)/hangul/index.tsx",
+    "app/(tabs)/hangul/assessment.tsx",
+    "app/(tabs)/hangul/bridge.tsx",
+    "app/(tabs)/comptage/index.tsx",
+    "app/(tabs)/classificateur/index.tsx",
+    "app/(tabs)/listen.tsx",
+    "app/streak.tsx",
+    "components/hangul/HangulLessonScreen.tsx",
+    "components/comptage/CountingImmersionScreen.tsx",
+    "components/classificateur/ClassifierImmersionScreen.tsx",
+    ...["cafe", "metro", "restaurant", "airport", "cafeIA", "metroIA", "restaurantIA", "aeroportIA", "cafeMissions", "metroMissions", "restaurantMissions", "aeroportMissions"]
+      .map(name => `app/lesson/${name}.tsx`),
     ...["index", "basics", "emotion", "famille", "gastronomie", "health", "kdrama", "lieux", "meteo", "nuit", "objets", "romance", "sante", "transport", "voyage", "work"]
       .map(name => `app/(tabs)/voc/${name}.tsx`),
   ]) {
@@ -54,6 +69,11 @@ test("immersive routes share Web framing and retain the native ImageBackground",
   assert.match(web, /onLayout=\{handleLayout\}/u);
   assert.match(web, /maskImage: edgeMask/u);
   assert.match(web, /WebkitMaskImage: edgeMask/u);
+  assert.match(source("app/index.tsx"), /<ResponsiveImmersiveImage\s+source=\{HERO_IMAGE\}/u);
+  assert.match(source("app/onboarding.tsx"), /<ResponsiveImmersiveImage\s+source=\{SCENE_BACKGROUND\}/u);
+  assert.match(source("components/ui/responsive-immersive-image.tsx"), /export \{ Image as ResponsiveImmersiveImage \} from "expo-image"/u);
+  assert.match(source("components/ui/responsive-immersive-image.web.tsx"), /<ResponsiveImmersiveBackground\b/u);
+  assert.match(source("app/onboarding.tsx"), /<Image\s+source=\{scene.image\}/u);
   assert.doesNotMatch(web, /if\s*\(width\s*<\s*600\)/u);
 });
 

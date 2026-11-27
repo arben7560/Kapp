@@ -1,3 +1,4 @@
+import { ResponsiveImmersiveBackground } from "../../components/ui/responsive-immersive-background";
 import type { ScrollViewInstance } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
@@ -6,8 +7,7 @@ import { useTranslation } from "react-i18next";
 import {
   AccessibilityInfo,
   Animated,
-  ImageBackground,
-  Pressable,
+    Pressable,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
@@ -619,7 +619,7 @@ export default function ListenScreen() {
   };
 
   return (
-    <ImageBackground
+    <ResponsiveImmersiveBackground
       source={{ uri: BG_URL }}
       style={styles.bg}
       resizeMode="cover"
@@ -1077,7 +1077,7 @@ export default function ListenScreen() {
         onRestart={restartTraining}
         onNext={goToNextExercise}
       />
-    </ImageBackground>
+    </ResponsiveImmersiveBackground>
   );
 }
 

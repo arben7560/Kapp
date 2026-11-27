@@ -1,3 +1,4 @@
+import { ResponsiveImmersiveBackground } from "../../components/ui/responsive-immersive-background";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, usePathname } from "expo-router";
@@ -5,8 +6,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
-  ImageBackground,
-  Pressable,
+    Pressable,
   ScrollView,
   StyleSheet,
   Vibration,
@@ -255,7 +255,7 @@ export default function CountingImmersionScreen({
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground
+      <ResponsiveImmersiveBackground
         source={BACKGROUND_SOURCE}
         style={styles.bg}
         resizeMode="cover"
@@ -568,7 +568,7 @@ export default function CountingImmersionScreen({
             </View>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
     </SafeAreaView>
   );
 }

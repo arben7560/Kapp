@@ -1,10 +1,10 @@
+import { ResponsiveImmersiveBackground } from "../../components/ui/responsive-immersive-background";
 import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
-  ImageBackground,
   type ImageSourcePropType,
   StyleSheet,
   View,
@@ -135,7 +135,7 @@ function AeroportMissionsContent() {
   const isVocalMission = selectedMission?.id === AEROPORT_VOCAL_MISSION_ID;
 
   return (
-    <ImageBackground source={airportBackground} style={styles.background}>
+    <ResponsiveImmersiveBackground source={airportBackground} style={styles.background}>
       <BlurView
         intensity={22}
         tint="dark"
@@ -221,7 +221,7 @@ function AeroportMissionsContent() {
           onStart={startSelectedMission}
         />
       </SafeAreaView>
-    </ImageBackground>
+    </ResponsiveImmersiveBackground>
   );
 }
 

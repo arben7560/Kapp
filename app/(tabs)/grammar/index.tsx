@@ -1,3 +1,4 @@
+import { ResponsiveImmersiveBackground } from "../../../components/ui/responsive-immersive-background";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -11,8 +12,7 @@ import React, { useEffect, useMemo } from "react";
 import {
   Animated,
   Easing,
-  ImageBackground,
-  Platform,
+    Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -165,7 +165,7 @@ export default function GrammarHubScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground
+      <ResponsiveImmersiveBackground
         source={BACKGROUND_SOURCE}
         style={styles.background}
         resizeMode="cover"
@@ -334,7 +334,7 @@ export default function GrammarHubScreen() {
             ))}
           </View>
         </ScrollView>
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
     </SafeAreaView>
   );
 }

@@ -1,9 +1,9 @@
+import { ResponsiveImmersiveBackground } from "../../components/ui/responsive-immersive-background";
 import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
 import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
-  ImageBackground,
-  ImageSourcePropType,
+    ImageSourcePropType,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -276,7 +276,7 @@ function MetroLessonScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground
+      <ResponsiveImmersiveBackground
         source={METRO_IMAGE}
         style={styles.background}
         imageStyle={styles.backgroundImage}
@@ -439,7 +439,7 @@ function MetroLessonScreen() {
             </View>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
     </SafeAreaView>
   );
 }

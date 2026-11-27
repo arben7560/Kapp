@@ -1,3 +1,4 @@
+import { ResponsiveImmersiveBackground } from "../../components/ui/responsive-immersive-background";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -12,8 +13,7 @@ import { useTranslation } from "react-i18next";
 import {
   Animated,
   Easing,
-  ImageBackground,
-  Pressable,
+    Pressable,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
@@ -441,7 +441,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
   if (!moduleUnlocked && prerequisite) {
     return (
       <SafeAreaView style={styles.safe}>
-        <ImageBackground
+        <ResponsiveImmersiveBackground
           source={BACKGROUND_SOURCE}
           style={styles.bgImage}
           resizeMode="cover"
@@ -513,14 +513,14 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
               </Pressable>
             </BlurView>
           </View>
-        </ImageBackground>
+        </ResponsiveImmersiveBackground>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground
+      <ResponsiveImmersiveBackground
         source={BACKGROUND_SOURCE}
         style={styles.bgImage}
         resizeMode="cover"
@@ -1462,7 +1462,7 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
             </BlurView>
           </View>
         ) : null}
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
     </SafeAreaView>
   );
 }

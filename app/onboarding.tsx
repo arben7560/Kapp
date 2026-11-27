@@ -1,3 +1,4 @@
+import { ResponsiveImmersiveImage } from "../components/ui/responsive-immersive-image";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
@@ -98,7 +99,7 @@ async function lightTap() {
 function SceneBackground({ dimmed = false }: { dimmed?: boolean }) {
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <Image
+      <ResponsiveImmersiveImage
         source={SCENE_BACKGROUND}
         style={StyleSheet.absoluteFill}
         contentFit="cover"

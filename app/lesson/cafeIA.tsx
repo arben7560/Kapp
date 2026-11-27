@@ -1,3 +1,4 @@
+import { ResponsiveImmersiveBackground } from "../../components/ui/responsive-immersive-background";
 import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
 import type { ScrollViewInstance } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -5,7 +6,6 @@ import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-    ImageBackground,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -822,7 +822,7 @@ function CafeIaScreenContent() {
   }
 
   return (
-    <ImageBackground
+    <ResponsiveImmersiveBackground
       source={cafeBackground}
       style={styles.backgroundImage}
       resizeMode="cover"
@@ -1279,7 +1279,7 @@ function CafeIaScreenContent() {
         Fermeture du background précédent :
         </LinearGradient>
       */}
-    </ImageBackground>
+    </ResponsiveImmersiveBackground>
   );
 }
 

@@ -1,9 +1,10 @@
+import { ResponsiveImmersiveBackground } from "../../components/ui/responsive-immersive-background";
 import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { ImageBackground, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
@@ -172,7 +173,7 @@ function RestaurantMissionsContent() {
   };
 
   return (
-    <ImageBackground source={restaurantBackground} style={styles.background}>
+    <ResponsiveImmersiveBackground source={restaurantBackground} style={styles.background}>
       <BlurView
         intensity={22}
         tint="dark"
@@ -254,7 +255,7 @@ function RestaurantMissionsContent() {
           onStart={startSelectedMission}
         />
       </SafeAreaView>
-    </ImageBackground>
+    </ResponsiveImmersiveBackground>
   );
 }
 
