@@ -1,3 +1,4 @@
+import { ResponsiveImmersiveBackground } from "../../../components/ui/responsive-immersive-background";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { AppBackButton } from "../../../components/ui/app-back-button";
@@ -5,7 +6,6 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
-  ImageBackground,
   ImageSourcePropType,
   Pressable,
   ScrollView,
@@ -504,7 +504,7 @@ export default function TransportCity() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground source={activeScene.image} style={styles.bg}>
+      <ResponsiveImmersiveBackground source={activeScene.image} style={styles.bg}>
         <LinearGradient
           colors={[
             "rgba(2,3,6,0.34)",
@@ -780,7 +780,7 @@ export default function TransportCity() {
             </View>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
     </SafeAreaView>
   );
 }

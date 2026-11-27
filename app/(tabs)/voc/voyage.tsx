@@ -1,3 +1,5 @@
+import { usePedagogicalLayout } from "../../../hooks/usePedagogicalLayout";
+import { ResponsiveImmersiveBackground } from "../../../components/ui/responsive-immersive-background";
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -7,9 +9,9 @@ import React, { useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
-  ImageBackground,
   Pressable,
   ScrollView,
+  Platform,
   StatusBar,
   StyleSheet,
   View,
@@ -85,6 +87,7 @@ const speakKo = (text: string) => {
 };
 
 export default function TravelCyber() {
+  const pedagogicalFrame = usePedagogicalLayout();
   useSpeechLifecycle();
   const [wordIndex, setWordIndex] = useState(0);
   const [quizIndex, setQuizIndex] = useState(0);
@@ -148,7 +151,7 @@ export default function TravelCyber() {
       <StatusBar
         barStyle="light-content"
       />
-      <ImageBackground
+      <ResponsiveImmersiveBackground
         source={BACKGROUND_SOURCE}
         style={ABSOLUTE_FILL}
         resizeMode="cover"
@@ -157,7 +160,7 @@ export default function TravelCyber() {
         <SafeAreaView style={{ flex: 1 }}>
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, Platform.OS === "web" && pedagogicalFrame]}
           >
             {/* Header Navigation */}
             <View style={styles.topNav}>
@@ -352,7 +355,7 @@ export default function TravelCyber() {
             <View style={{ height: 80 }} />
           </ScrollView>
         </SafeAreaView>
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
     </View>
   );
 }

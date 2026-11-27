@@ -2,7 +2,39 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { getImmersiveLandscapeLayout, getImmersivePhoneLandscapeLayout, IMMERSIVE_PORTRAIT_MEDIA_ASPECT_RATIO } from "../constants/immersive-layout.ts";
-import { getViewportClass, getSafeContentWidth, getHubGrid, getGridColumns, getGridItemWidth, getPedagogicalFrame, getTabletDialogFrame } from "../constants/responsive-layout.ts";
+import { getViewportClass, getSafeContentWidth, getWebImmersiveSceneWidth, getCenteredCarouselMetrics, getHubGrid, getGridColumns, getGridItemWidth, getPedagogicalFrame, getTabletDialogFrame } from "../constants/responsive-layout.ts";
+
+test("portrait scene framing adapts at the requested browser widths", () => {
+  for (const [width, height] of [[360, 800], [390, 844], [412, 915], [768, 1024], [1024, 768], [1440, 900], [1920, 1080]]) {
+    const sceneWidth = getWebImmersiveSceneWidth(width, height);
+    assert.ok(sceneWidth <= width);
+    assert.equal(sceneWidth, width < 1024 ? width : Math.min(width, Math.max(720, Math.min(960, height * 0.82))));
+    if (width >= 1024) assert.ok(sceneWidth <= 960);
+  }
+});
+
+test("Speak cards and pagination stay centered across browser resizes", () => {
+  for (const viewportWidth of [280, 320, 342, 364, 712, 920]) {
+    const { cardWidth, itemSize, sidePadding } = getCenteredCarouselMetrics(viewportWidth);
+    assert.ok(cardWidth <= viewportWidth);
+    assert.ok(itemSize <= viewportWidth);
+    assert.equal(sidePadding + itemSize / 2, viewportWidth / 2);
+    assert.equal(2 * sidePadding + 4 * itemSize - viewportWidth, 3 * itemSize);
+  }
+});
+
+test("immersive routes share Web framing and retain the native ImageBackground", () => {
+  const source = path => readFileSync(new URL("../" + path, import.meta.url), "utf8");
+  for (const path of [
+    "app/(tabs)/speak.tsx",
+    ...["index", "basics", "emotion", "famille", "gastronomie", "health", "kdrama", "lieux", "meteo", "nuit", "objets", "romance", "sante", "transport", "voyage", "work"]
+      .map(name => `app/(tabs)/voc/${name}.tsx`),
+  ]) {
+    assert.match(source(path), /<ResponsiveImmersiveBackground\b/u, path);
+  }
+  assert.match(source("components/ui/responsive-immersive-background.tsx"), /return <ImageBackground \{\.\.\.props\}>\{children\}<\/ImageBackground>/u);
+  assert.match(source("components/ui/responsive-immersive-background.web.tsx"), /getWebImmersiveSceneWidth\(width, height\)/u);
+});
 
 test("native tablets remain tablets in both orientations", () => {
   for (const [width, height] of [[600, 960], [768, 1024], [834, 1194], [800, 1280], [1024, 1366]]) {

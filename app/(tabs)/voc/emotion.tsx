@@ -1,3 +1,5 @@
+import { usePedagogicalLayout } from "../../../hooks/usePedagogicalLayout";
+import { ResponsiveImmersiveBackground } from "../../../components/ui/responsive-immersive-background";
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -7,9 +9,9 @@ import React, { useRef, useState } from "react";
 import {
   Animated,
   Easing,
-  ImageBackground,
   Pressable,
   ScrollView,
+  Platform,
   StatusBar,
   StyleSheet,
   View,
@@ -86,6 +88,7 @@ const speakKo = (text: string) => {
 };
 
 export default function EmotionCyber() {
+  const pedagogicalFrame = usePedagogicalLayout();
   useSpeechLifecycle();
   const [wordIndex, setWordIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -137,7 +140,7 @@ export default function EmotionCyber() {
       <StatusBar
         barStyle="light-content"
       />
-      <ImageBackground
+      <ResponsiveImmersiveBackground
         source={BACKGROUND_SOURCE}
         style={ABSOLUTE_FILL}
         resizeMode="cover"
@@ -146,7 +149,7 @@ export default function EmotionCyber() {
         <SafeAreaView style={{ flex: 1 }}>
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, Platform.OS === "web" && pedagogicalFrame]}
           >
             {/* Header Navigation */}
             <View style={styles.topNav}>
@@ -316,7 +319,7 @@ export default function EmotionCyber() {
             <View style={{ height: 80 }} />
           </ScrollView>
         </SafeAreaView>
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
     </View>
   );
 }

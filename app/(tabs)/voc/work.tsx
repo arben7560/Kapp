@@ -1,10 +1,10 @@
+import { ResponsiveImmersiveBackground } from "../../../components/ui/responsive-immersive-background";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
-  ImageBackground,
   ImageSourcePropType,
   Pressable,
   ScrollView,
@@ -567,7 +567,7 @@ export default function BusinessImmersion() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.bg}>
-        <ImageBackground
+        <ResponsiveImmersiveBackground
           source={activeScene.image}
           style={styles.bgLayer}
           fadeDuration={0}
@@ -578,7 +578,7 @@ export default function BusinessImmersion() {
             pointerEvents="none"
             style={[ABSOLUTE_FILL, { opacity: bgFadeAnim }]}
           >
-            <ImageBackground
+            <ResponsiveImmersiveBackground
               source={previousBackground}
               style={styles.bgLayer}
               fadeDuration={0}

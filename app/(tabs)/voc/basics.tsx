@@ -1,10 +1,10 @@
+import { ResponsiveImmersiveBackground } from "../../../components/ui/responsive-immersive-background";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
-  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -437,7 +437,7 @@ export default function FirstStepsImmersion() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground
+      <ResponsiveImmersiveBackground
         source={activeScene.image}
         style={styles.bg}
         resizeMode="cover"
@@ -766,7 +766,7 @@ export default function FirstStepsImmersion() {
             </View>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
     </SafeAreaView>
   );
 }

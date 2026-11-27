@@ -1,10 +1,10 @@
+import { ResponsiveImmersiveBackground } from "../../../components/ui/responsive-immersive-background";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
-  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -422,7 +422,7 @@ export default function HealthEmergency() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground source={activeScene.image} style={styles.bg}>
+      <ResponsiveImmersiveBackground source={activeScene.image} style={styles.bg}>
         <LinearGradient
           colors={["rgba(2,3,6,0.34)", "rgba(2,3,6,0.64)", "rgba(2,3,6,0.93)"]}
           locations={[0, 0.48, 1]}
@@ -774,7 +774,7 @@ export default function HealthEmergency() {
             </View>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
     </SafeAreaView>
   );
 }

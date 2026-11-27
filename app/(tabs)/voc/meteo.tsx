@@ -1,3 +1,5 @@
+import { usePedagogicalLayout } from "../../../hooks/usePedagogicalLayout";
+import { ResponsiveImmersiveBackground } from "../../../components/ui/responsive-immersive-background";
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -8,9 +10,9 @@ import React, { useRef, useState } from "react";
 import {
   Animated,
   Easing,
-  ImageBackground,
   Pressable,
   ScrollView,
+  Platform,
   StyleSheet,
   View,
 } from "react-native";
@@ -82,6 +84,7 @@ const AudioVisualizer = () => (
 );
 
 export default function MeteoCyberScreen() {
+  const pedagogicalFrame = usePedagogicalLayout();
   useSpeechLifecycle();
   const [wordIndex, setWordIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -125,7 +128,7 @@ export default function MeteoCyberScreen() {
 
   return (
     <View style={styles.container}>
-      <ImageBackground
+      <ResponsiveImmersiveBackground
         source={BACKGROUND_SOURCE}
         style={ABSOLUTE_FILL}
         resizeMode="cover"
@@ -134,7 +137,7 @@ export default function MeteoCyberScreen() {
         <SafeAreaView style={{ flex: 1 }}>
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, Platform.OS === "web" && pedagogicalFrame]}
           >
             {/* Navigation Header */}
             <View style={styles.topNav}>
@@ -271,7 +274,7 @@ export default function MeteoCyberScreen() {
             <View style={{ height: 80 }} />
           </ScrollView>
         </SafeAreaView>
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
     </View>
   );
 }

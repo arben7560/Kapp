@@ -33,6 +33,25 @@ export function getSafeContentWidth(width: number, maxWidth: number, padding: nu
   return Math.min(maxWidth, Math.max(0, width - left - right - padding * 2));
 }
 
+/** Portrait backgrounds stay legible on wide browser windows. The full-bleed
+ * copy remains behind this centered frame; native and narrow Web keep cover. */
+export function getWebImmersiveSceneWidth(width: number, height: number): number {
+  if (width < 1024) return width;
+  return Math.min(width, Math.max(720, Math.min(960, height * 0.82)));
+}
+
+/** Center a card inside its scrolling interval, including the gap. */
+export function getCenteredCarouselMetrics(viewportWidth: number, gap = 14) {
+  const cardWidth = Math.max(0, Math.min(Math.max(viewportWidth - 62, 278), 590, viewportWidth - gap));
+  const itemSize = cardWidth + gap;
+  return {
+    gap,
+    cardWidth,
+    itemSize,
+    sidePadding: Math.max(0, (viewportWidth - itemSize) / 2),
+  };
+}
+
 export function getGridColumns(contentWidth: number, minColumnWidth: number, maxColumns: number, gap: number): number {
   return Math.max(1, Math.min(maxColumns, Math.floor((contentWidth + gap) / (minColumnWidth + gap))));
 }

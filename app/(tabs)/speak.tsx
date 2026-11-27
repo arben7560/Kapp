@@ -12,6 +12,7 @@ import {
   Modal,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -25,11 +26,12 @@ import {
 
 import { AppText } from "../../components/app-text";
 import { AppBackButton } from "../../components/ui/app-back-button";
+import { ResponsiveImmersiveBackground } from "../../components/ui/responsive-immersive-background";
 import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
 import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import { HubModuleAccents, SeoulMidnightGlass } from "../../constants/theme";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
-import { getTabletDialogFrame } from "../../constants/responsive-layout";
+import { getCenteredCarouselMetrics, getTabletDialogFrame } from "../../constants/responsive-layout";
 
 const BACKGROUND_SOURCE = require("../../assets/images/speak.jpg");
 
@@ -187,7 +189,7 @@ function SpeakScreenContent() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground
+      <ResponsiveImmersiveBackground
         source={BACKGROUND_SOURCE}
         style={styles.background}
         resizeMode="cover"
@@ -250,7 +252,7 @@ function SpeakScreenContent() {
           selectedTheme={selectedTheme}
           backButtonLeft={(responsive.width - responsive.contentWidth) / 2}
         />
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
     </SafeAreaView>
   );
 }
@@ -345,15 +347,28 @@ function Scenes({
   const [viewportWidth, setViewportWidth] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
 
+  const webCarousel = getCenteredCarouselMetrics(viewportWidth);
   const gap = 14;
-  const cardWidth = Math.min(Math.max(viewportWidth - 62, 278), 590);
+  const cardWidth = Platform.OS === "web"
+    ? webCarousel.cardWidth
+    : Math.min(Math.max(viewportWidth - 62, 278), 590);
   const itemSize = cardWidth + gap;
-  const sidePadding = Math.max(0, (viewportWidth - cardWidth) / 2);
+  const sidePadding = Platform.OS === "web"
+    ? webCarousel.sidePadding
+    : Math.max(0, (viewportWidth - cardWidth) / 2);
+  const previousItemSize = useRef(itemSize);
   const defaultCardHeight = Math.min(Math.max(cardWidth * 1.16, 372), 520);
   const isLandscapePhone = windowWidth > windowHeight && windowHeight < 600;
   const cardHeight = isLandscapePhone
     ? Math.min(windowHeight * 0.66, 360)
     : defaultCardHeight;
+
+  useEffect(() => {
+    if (Platform.OS !== "web" || viewportWidth === 0 || previousItemSize.current === itemSize) return;
+    previousItemSize.current = itemSize;
+    scrollX.setValue(activeIndex * itemSize);
+    listRef.current?.scrollToOffset({ offset: activeIndex * itemSize, animated: false });
+  }, [activeIndex, itemSize, scrollX, viewportWidth]);
 
   const scrollToIndex = (index: number) => {
     const nextIndex = Math.max(
@@ -393,6 +408,7 @@ function Scenes({
           data={PUBLIC_THEME_KEYS}
           keyExtractor={(item) => item}
           horizontal
+          style={Platform.OS === "web" ? styles.carouselListWeb : undefined}
           bounces={false}
           overScrollMode="never"
           showsHorizontalScrollIndicator={false}
@@ -407,7 +423,17 @@ function Scenes({
           onMomentumScrollEnd={handleMomentumEnd}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-            { useNativeDriver: true },
+            {
+              useNativeDriver: true,
+              listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+                if (Platform.OS !== "web") return;
+                const index = Math.max(0, Math.min(
+                  Math.round(event.nativeEvent.contentOffset.x / itemSize),
+                  PUBLIC_THEME_KEYS.length - 1,
+                ));
+                setActiveIndex((current) => current === index ? current : index);
+              },
+            },
           )}
           getItemLayout={(_, index) => ({
             length: itemSize,
@@ -441,7 +467,7 @@ function Scenes({
             });
 
             return (
-              <View style={{ width: itemSize }}>
+              <View style={[{ width: itemSize }, Platform.OS === "web" && styles.carouselItemWeb]}>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={`${translate(config.title)}. ${translate(config.sub)}. ${translate("Ouvrir les options de la scène.")}`}
@@ -1383,6 +1409,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "visible",
   },
+  carouselListWeb: { width: "100%", scrollSnapType: "x mandatory" } as any,
+  carouselItemWeb: { scrollSnapAlign: "center" } as any,
   scenePressable: {
     flex: 1,
     alignItems: "center",

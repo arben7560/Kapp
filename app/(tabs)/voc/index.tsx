@@ -22,6 +22,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from "react-native";
+import { ResponsiveImmersiveBackground } from "../../../components/ui/responsive-immersive-background";
 import {
   SafeAreaView,
 } from "react-native-safe-area-context";
@@ -207,7 +208,7 @@ export default function VocabHub() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground
+      <ResponsiveImmersiveBackground
         source={BACKGROUND_SOURCE}
         style={styles.background}
         resizeMode="cover"
@@ -360,7 +361,7 @@ export default function VocabHub() {
             </View>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </ResponsiveImmersiveBackground>
     </SafeAreaView>
   );
 }
