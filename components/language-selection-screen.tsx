@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Globe2, MoveRight } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AccessibilityInfo, Animated, Pressable, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, Animated, Platform, Pressable, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAppLanguage } from '../lib/i18n/LanguageProvider';
@@ -27,7 +27,7 @@ export function LanguageSelectionScreen({ onComplete, onCancel }: LanguageSelect
 
   useEffect(() => {
     let active = true;
-    const animation = Animated.timing(opacity, { toValue: 1, duration: 420, useNativeDriver: true });
+    const animation = Animated.timing(opacity, { toValue: 1, duration: 420, useNativeDriver: Platform.OS !== 'web' });
     void AccessibilityInfo.isReduceMotionEnabled().catch(() => false).then((reduceMotion) => {
       if (!active) return;
       if (reduceMotion) opacity.setValue(1);

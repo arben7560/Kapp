@@ -24,6 +24,7 @@ import {
   Modal,
   Easing,
   ImageBackground,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -807,14 +808,14 @@ function HomeContent() {
           toValue: 1,
           duration: 1700,
           easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== "web",
         }),
 
         Animated.timing(livePulse, {
           toValue: 0.35,
           duration: 1700,
           easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== "web",
         }),
       ]),
     );
@@ -1883,7 +1884,7 @@ function AnimatedFragment({
         duration: 620,
         delay: index * 90,
         easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== "web",
       }),
 
       Animated.timing(slideAnim, {
@@ -1891,7 +1892,7 @@ function AnimatedFragment({
         duration: 720,
         delay: index * 90,
         easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== "web",
       }),
     ]).start();
   }, [fadeAnim, index, slideAnim]);
