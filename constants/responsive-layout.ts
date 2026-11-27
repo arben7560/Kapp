@@ -33,11 +33,11 @@ export function getSafeContentWidth(width: number, maxWidth: number, padding: nu
   return Math.min(maxWidth, Math.max(0, width - left - right - padding * 2));
 }
 
-/** Portrait backgrounds stay legible on wide browser windows. The full-bleed
- * copy remains behind this centered frame; native and narrow Web keep cover. */
+/** Web tablet and desktop scenes retain the portrait composition of the
+ * background assets (roughly 0.56 width / height). Phones keep full-bleed cover. */
 export function getWebImmersiveSceneWidth(width: number, height: number): number {
-  if (width < 1024) return width;
-  return Math.min(width, Math.max(720, Math.min(960, height * 0.82)));
+  if (width < 600) return width;
+  return Math.min(width, Math.max(560, Math.min(960, height * 0.56)));
 }
 
 /** Center a card inside its scrolling interval, including the gap. */

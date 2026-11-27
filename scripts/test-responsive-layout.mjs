@@ -5,12 +5,13 @@ import { getImmersiveLandscapeLayout, getImmersivePhoneLandscapeLayout, IMMERSIV
 import { getViewportClass, getSafeContentWidth, getWebImmersiveSceneWidth, getCenteredCarouselMetrics, getHubGrid, getGridColumns, getGridItemWidth, getPedagogicalFrame, getTabletDialogFrame } from "../constants/responsive-layout.ts";
 
 test("portrait scene framing adapts at the requested browser widths", () => {
-  for (const [width, height] of [[360, 800], [390, 844], [412, 915], [768, 1024], [1024, 768], [1440, 900], [1920, 1080]]) {
+  for (const [width, height] of [[360, 800], [390, 844], [412, 915], [599, 900], [600, 960], [768, 1024], [1024, 768], [1440, 900], [1920, 1080]]) {
     const sceneWidth = getWebImmersiveSceneWidth(width, height);
     assert.ok(sceneWidth <= width);
-    assert.equal(sceneWidth, width < 1024 ? width : Math.min(width, Math.max(720, Math.min(960, height * 0.82))));
-    if (width >= 1024) assert.ok(sceneWidth <= 960);
+    assert.equal(sceneWidth, width < 600 ? width : Math.min(width, Math.max(560, Math.min(960, height * 0.56))));
+    if (width >= 600) assert.ok(sceneWidth <= 960);
   }
+  assert.ok(getWebImmersiveSceneWidth(768, 1024) < 600);
 });
 
 test("Speak cards and pagination stay centered across browser resizes", () => {
