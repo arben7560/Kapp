@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 
 import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
 import { EXERCISES_BY_KIND, type ExerciseKind } from "../../data/listen/activeExercises";
@@ -33,6 +34,8 @@ export function ListenTrainingCompletionModal({
   onRestart,
   onNext,
 }: Props) {
+  const responsive = useResponsiveLayout();
+  const isTabletLandscape = responsive.isLandscape && (responsive.isTablet || responsive.isDesktop) && responsive.height >= 600;
   const { i18n } = useTranslation("listening");
   const uiScript = i18n.resolvedLanguage === "ja" ? "japanese" : "latin";
   const l = (key: ListeningKey, values?: Record<string, string | number>) =>
@@ -53,6 +56,7 @@ export function ListenTrainingCompletionModal({
 
   return (
     <Modal
+      supportedOrientations={responsive.isTablet || responsive.isDesktop ? ["portrait", "portrait-upside-down", "landscape-left", "landscape-right"] : undefined}
       animationType="slide"
       transparent
       visible={visible}
@@ -60,8 +64,8 @@ export function ListenTrainingCompletionModal({
       statusBarTranslucent
       navigationBarTranslucent
     >
-      <SafeAreaProvider style={styles.backdrop}>
-        <SafeAreaView style={styles.sheet}>
+      <SafeAreaProvider style={[styles.backdrop, isTabletLandscape && styles.tabletBackdrop]}>
+        <SafeAreaView accessibilityViewIsModal style={[styles.sheet, isTabletLandscape && styles.tabletSheet]}>
           <View style={styles.header}>
             <View style={styles.headerText}>
               <AppText script={uiScript} variant="caption" tone="premium" style={styles.eyebrow}>
@@ -209,6 +213,8 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.10)",
     overflow: "hidden",
   },
+  tabletBackdrop: { justifyContent: "center" },
+  tabletSheet: { width: "90%", maxWidth: 760, maxHeight: "88%", borderRadius: 30, overflow: "hidden" },
   header: {
     flexDirection: "row",
     alignItems: "center",

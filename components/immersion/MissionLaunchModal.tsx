@@ -7,6 +7,7 @@ import { AppDialog, DialogActions } from "../ui/app-dialog";
 import type { ImmersionMission } from "../../lib/immersion/missions";
 import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import { MissionAccessBadge } from "./MissionAccessBadge";
+import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 
 const LINE = "rgba(255,255,255,0.12)";
 const CYAN = "#22D3EE";
@@ -71,7 +72,10 @@ export function MissionLaunchModal({
   const translate = useVocabularyText();
   const startLockRef = React.useRef(false);
   const { height, width } = useWindowDimensions();
-  const isPhoneLandscape = width > height && height <= 600;
+  const responsive = useResponsiveLayout();
+  const isTabletLandscape = responsive.isLandscape && (responsive.isTablet || responsive.isDesktop) && height >= 600;
+  const isPhoneLandscape = !isTabletLandscape && width > height && height <= 600;
+  const useFixedActions = isPhoneLandscape || isTabletLandscape;
   const landscapeProgress = isPhoneLandscape
     ? Math.min(1, Math.max(0, (height - 360) / 240))
     : 1;
@@ -166,7 +170,7 @@ export function MissionLaunchModal({
             <View style={[styles.immersionNoticeDot, { backgroundColor: accent }]} />
             <AppText
               variant="sectionLabel"
-              lineContract="singleLine"
+              lineContract="localizedLabel"
               style={[styles.immersionNoticeTitle, { color: accent }]}
             >
               {immersionNoticeTitle}
@@ -228,19 +232,21 @@ export function MissionLaunchModal({
       onRequestClose={onCancel}
       accentColor={accent}
       accessibilityLabel={translate(`Lancer la mission ${mission.title}`)}
-      maxHeight={landscapeModalHeight}
-      fillAvailableHeight={isPhoneLandscape}
-      respectHorizontalSafeArea={isPhoneLandscape}
-      scrollable={!isPhoneLandscape}
+      maxWidth={isTabletLandscape ? 640 : undefined}
+      maxHeight={isTabletLandscape ? 660 : landscapeModalHeight}
+      fillAvailableHeight={useFixedActions}
+      respectHorizontalSafeArea={useFixedActions}
+      scrollable={!useFixedActions}
       contentContainerStyle={[
         styles.cardContent,
+        isTabletLandscape && { flex: 1, padding: 24 },
         isPhoneLandscape && {
           flex: 1,
           paddingVertical: interpolateLandscape(10, 18),
         },
       ]}
     >
-      {isPhoneLandscape ? (
+      {useFixedActions ? (
         <>
           <ScrollView
             style={styles.landscapeDetailsScroller}

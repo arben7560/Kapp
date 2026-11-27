@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { getImmersiveLandscapeLayout, getImmersivePhoneLandscapeLayout, IMMERSIVE_PORTRAIT_MEDIA_ASPECT_RATIO } from "../constants/immersive-layout.ts";
-import { getViewportClass, getSafeContentWidth, getHubGrid, getGridColumns, getGridItemWidth, getPedagogicalFrame } from "../constants/responsive-layout.ts";
+import { getViewportClass, getSafeContentWidth, getHubGrid, getGridColumns, getGridItemWidth, getPedagogicalFrame, getTabletDialogFrame } from "../constants/responsive-layout.ts";
 
 test("native tablets remain tablets in both orientations", () => {
   for (const [width, height] of [[600, 960], [768, 1024], [834, 1194], [800, 1280], [1024, 1366]]) {
@@ -137,5 +137,52 @@ test("all four immersive simulations share the landscape layout without replacin
     assert.match(screen, /<VideoView\b/u, name);
     assert.match(screen, /<ScrollView\s+ref=\{scrollRef\}/u, name);
     assert.match(screen, /IMMERSIVE_TABLET_LANDSCAPE_STYLES\.transcriptCard/u, name);
+  }
+});
+
+test("landscape tablet modal frame respects safe areas and explicit content caps", () => {
+  for (const [width, height] of [[800, 600], [960, 600], [1024, 768], [1194, 834], [1280, 800], [1366, 1024]]) {
+    for (const [left, right, top, bottom] of [[0, 0, 0, 0], [50, 16, 24, 24], [80, 60, 50, 40]]) {
+      const frame = getTabletDialogFrame(width, height, true, left, right, top, bottom);
+      assert.ok(frame.width + frame.leftInset + frame.rightInset <= width);
+      assert.ok(frame.maxHeight + frame.topInset + frame.bottomInset <= height);
+      assert.ok(frame.width <= 720 && frame.maxHeight <= 760);
+      assert.ok(frame.leftInset >= left + 8 && frame.rightInset >= right + 8);
+      assert.ok(frame.topInset >= top + 8 && frame.bottomInset >= bottom + 8);
+      const explicit = getTabletDialogFrame(width, height, true, left, right, top, bottom, 460, 300);
+      assert.equal(explicit.width, 460);
+      assert.equal(explicit.maxHeight, 300);
+    }
+  }
+});
+
+test("tablet modal adaptation leaves phone and portrait frames unchanged", () => {
+  for (const [width, height, wide] of [[390, 844, false], [844, 390, false], [800, 1280, true], [600, 960, true]]) {
+    assert.equal(getTabletDialogFrame(width, height, wide, 0, 0, 0, 0), undefined);
+  }
+});
+
+test("modal integration preserves mission actions and scrollable details", () => {
+  const source = path => readFileSync(new URL("../" + path, import.meta.url), "utf8");
+  const speak = source("app/(tabs)/speak.tsx");
+  assert.match(speak, /tabletFrame\?\.width/u);
+  assert.match(speak, /tabletFrame\?\.maxHeight/u);
+  assert.match(speak, /onPress=\{goToImmersive\}/u);
+  assert.match(speak, /onPress=\{goToText\}/u);
+  const mission = source("components/immersion/MissionLaunchModal.tsx");
+  assert.match(mission, /const useFixedActions = isPhoneLandscape \|\| isTabletLandscape/u);
+  assert.match(mission, /onPress=\{handleStart\}/u);
+  assert.match(mission, /onPress=\{onCancel\}/u);
+  assert.match(mission, /\{details\}\s*<\/ScrollView>\s*\{actions\}/u);
+  for (const path of [
+    "components/cafe/CafeConversationSummaryModal.tsx",
+    "components/metro/MetroConversationSummaryModal.tsx",
+    "components/aeroport/AeroportConversationSummaryModal.tsx",
+    "components/listen/ListenTrainingCompletionModal.tsx",
+  ]) {
+    const screen = source(path);
+    assert.match(screen, /isTabletLandscape && styles\.tabletSheet/u, path);
+    assert.match(screen, /<ScrollView/u, path);
+    assert.match(screen, /accessibilityViewIsModal/u, path);
   }
 });

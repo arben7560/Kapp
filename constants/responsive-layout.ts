@@ -64,3 +64,21 @@ export function getPedagogicalFrame(isWideViewport: boolean, isLandscape: boolea
     paddingHorizontal: horizontalPadding,
   };
 }
+
+/** Landscape tablet dialogs remain within the safe viewport and are capped
+ * independently of the full-screen lesson frame. */
+export function getTabletDialogFrame(width: number, height: number, isWideViewport: boolean, left: number, right: number, top: number, bottom: number, preferredWidth = 720, preferredHeight = 760) {
+  if (!isWideViewport || width <= height) return undefined;
+  const leftInset = Math.max(24, left + 8);
+  const rightInset = Math.max(24, right + 8);
+  const topInset = Math.max(24, top + 8);
+  const bottomInset = Math.max(24, bottom + 8);
+  return {
+    leftInset,
+    rightInset,
+    topInset,
+    bottomInset,
+    width: Math.min(preferredWidth, Math.max(0, width - leftInset - rightInset)),
+    maxHeight: Math.min(preferredHeight, Math.max(0, height - topInset - bottomInset)),
+  };
+}

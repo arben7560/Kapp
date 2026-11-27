@@ -29,6 +29,7 @@ import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationP
 import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import { HubModuleAccents, SeoulMidnightGlass } from "../../constants/theme";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
+import { getTabletDialogFrame } from "../../constants/responsive-layout";
 
 const BACKGROUND_SOURCE = require("../../assets/images/speak.jpg");
 
@@ -719,14 +720,19 @@ function ThemeModeSheet({
   const insets = useSafeAreaInsets();
 
   const isLandscapePhone = windowWidth > windowHeight && windowHeight < 600;
-  const sheetWidth = Math.min(Math.max(windowWidth - 32, 0), 520);
+  const responsive = useResponsiveLayout();
+  const tabletFrame = getTabletDialogFrame(
+    windowWidth, windowHeight, responsive.isTablet || responsive.isDesktop,
+    insets.left, insets.right, insets.top, insets.bottom,
+  );
+  const sheetWidth = tabletFrame?.width ?? Math.min(Math.max(windowWidth - 32, 0), 520);
   const sheetTopInset = Math.max(12, insets.top + 8);
   const sheetBottomInset = Math.max(16, insets.bottom + 12);
   const availableSheetHeight = Math.max(
     300,
     windowHeight - sheetTopInset - sheetBottomInset,
   );
-  const sheetMaxHeight = isLandscapePhone
+  const sheetMaxHeight = tabletFrame?.maxHeight ?? (isLandscapePhone
     ? Math.max(
         0,
         (windowHeight - insets.top - insets.bottom) * 0.88,
@@ -735,8 +741,8 @@ function ThemeModeSheet({
         Math.max(300, availableSheetHeight * (windowHeight < 600 ? 0.94 : 0.9)),
         availableSheetHeight,
         680,
-      );
-  const heroHeight = isLandscapePhone
+      ));
+  const heroHeight = tabletFrame ? 184 : isLandscapePhone
     ? Math.min(Math.max(windowHeight * 0.23, 72), 96)
     : windowHeight < 500
       ? 104
@@ -834,6 +840,7 @@ function ThemeModeSheet({
 
   return (
     <Modal
+      supportedOrientations={responsive.isTablet || responsive.isDesktop ? ["portrait", "portrait-upside-down", "landscape-left", "landscape-right"] : undefined}
       visible={mounted}
       transparent
       animationType="none"
@@ -844,6 +851,12 @@ function ThemeModeSheet({
         style={[
           styles.sheetRoot,
           isLandscapePhone && styles.sheetRootLandscapePhone,
+          tabletFrame && [styles.sheetRootLandscapePhone, {
+            paddingLeft: tabletFrame.leftInset,
+            paddingRight: tabletFrame.rightInset,
+            paddingTop: tabletFrame.topInset,
+            paddingBottom: tabletFrame.bottomInset,
+          }],
         ]}
       >
         <Animated.View
@@ -857,7 +870,7 @@ function ThemeModeSheet({
 
         <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
 
-        <Pressable
+        {!tabletFrame && <Pressable
           accessibilityRole="button"
           accessibilityLabel={translate("Retour depuis la sélection de scène")}
           hitSlop={8}
@@ -866,13 +879,13 @@ function ThemeModeSheet({
             styles.sheetBackHitTarget,
             { top: sheetTopInset + 8, left: backButtonLeft },
           ]}
-        />
+        />}
 
         <Animated.View
           style={[
             styles.sheetAnimatedWrap,
             {
-              paddingBottom: isLandscapePhone ? 0 : sheetBottomInset,
+              paddingBottom: isLandscapePhone || tabletFrame ? 0 : sheetBottomInset,
               transform: [{ translateY }],
             },
           ]}
@@ -920,17 +933,19 @@ function ThemeModeSheet({
               style={[
                 styles.sheetHandle,
                 isLandscapePhone && styles.sheetHandleLandscapePhone,
+                tabletFrame && { opacity: 0 },
               ]}
             />
 
             <ScrollView
               style={[
                 styles.sheetScroll,
-                isLandscapePhone && styles.sheetScrollLandscapePhone,
+                (isLandscapePhone || tabletFrame) && styles.sheetScrollLandscapePhone,
               ]}
               contentContainerStyle={[
                 styles.sheetScrollContent,
                 isLandscapePhone && styles.sheetScrollContentLandscapePhone,
+                tabletFrame && { padding: 24 },
                 { paddingBottom: insets.bottom > 0 ? 8 : 2 },
               ]}
               showsVerticalScrollIndicator={false}
@@ -940,7 +955,8 @@ function ThemeModeSheet({
                 style={[
                   styles.sheetHeroFrame,
                   {
-                    height: heroHeight,
+                    height: tabletFrame ? undefined : heroHeight,
+                    minHeight: tabletFrame ? heroHeight : undefined,
                     borderColor: `${config.accent}48`,
                     shadowColor: config.accent,
                   },
@@ -969,12 +985,22 @@ function ThemeModeSheet({
                   style={StyleSheet.absoluteFill}
                 />
 
+                {tabletFrame && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={translate("Retour depuis la sélection de scène")}
+                    onPress={handleBack}
+                    style={[styles.sheetCloseIcon, { left: 12, right: undefined, width: 44, height: 44, borderRadius: 22 }]}
+                  >
+                    <ChevronRight size={18} strokeWidth={2} color={MUTED} style={{ transform: [{ rotate: "180deg" }] }} />
+                  </Pressable>
+                )}
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={translate("Fermer")}
                   onPress={onClose}
                   hitSlop={6}
-                  style={styles.sheetCloseIcon}
+                  style={[styles.sheetCloseIcon, tabletFrame && { width: 44, height: 44, borderRadius: 22 }]}
                 >
                   <X size={18} strokeWidth={2} color={MUTED} />
                 </Pressable>
@@ -983,6 +1009,7 @@ function ThemeModeSheet({
                   style={[
                     styles.sheetHeroCopy,
                     isLandscapePhone && styles.sheetHeroCopyLandscapePhone,
+                    tabletFrame && { paddingTop: 64, paddingRight: 24 },
                   ]}
                 >
                   <View style={styles.sheetKickerRow}>
@@ -1004,7 +1031,7 @@ function ThemeModeSheet({
                   <AppText
                     variant="sceneTitle"
                     tone="strong"
-                    lineContract="singleLine"
+                    lineContract="localizedLabel"
                   >
                     {config.title}
                   </AppText>
@@ -1012,7 +1039,7 @@ function ThemeModeSheet({
                   <AppText
                     variant="subtitle"
                     tone="muted"
-                    lineContract="singleLine"
+                    lineContract="localizedLabel"
                     style={styles.sheetSub}
                   >
                     {config.sub}

@@ -4,6 +4,7 @@ import { playKoreanReviewPhrase } from "@/lib/koreanReviewPlayback";
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 
 import {
   buildMetroConversationSummary,
@@ -59,6 +60,8 @@ export function MetroConversationSummaryModal({
   onClose,
   visible,
 }: Props) {
+  const responsive = useResponsiveLayout();
+  const isTabletLandscape = responsive.isLandscape && (responsive.isTablet || responsive.isDesktop) && responsive.height >= 600;
   useSpeechLifecycle();
   const translate = useVocabularyText();
   const [hasListened, setHasListened] = useState(false);
@@ -74,6 +77,7 @@ export function MetroConversationSummaryModal({
 
   return (
     <Modal
+      supportedOrientations={responsive.isTablet || responsive.isDesktop ? ["portrait", "portrait-upside-down", "landscape-left", "landscape-right"] : undefined}
       animationType="slide"
       transparent
       visible={visible}
@@ -81,10 +85,10 @@ export function MetroConversationSummaryModal({
       statusBarTranslucent
       navigationBarTranslucent
     >
-      <SafeAreaProvider style={styles.backdrop}>
-        <SafeAreaView style={styles.sheet}>
+      <SafeAreaProvider style={[styles.backdrop, isTabletLandscape && styles.tabletBackdrop]}>
+        <SafeAreaView accessibilityViewIsModal style={[styles.sheet, isTabletLandscape && styles.tabletSheet]}>
           <View style={styles.header}>
-            <View>
+            <View style={{ flex: 1, minWidth: 0, marginRight: 12 }}>
               <AppText variant="caption" tone="premium" script="latin">
                 MISSION MÉTRO
               </AppText>
@@ -183,6 +187,8 @@ export function MetroConversationSummaryModal({
 const styles = StyleSheet.create({
   backdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.62)" },
   sheet: { width: "100%", maxWidth: 680, maxHeight: "92%", alignSelf: "center", backgroundColor: "#0A0D1A", borderTopLeftRadius: 30, borderTopRightRadius: 30 },
+  tabletBackdrop: { justifyContent: "center" },
+  tabletSheet: { width: "90%", maxWidth: 760, maxHeight: "88%", borderRadius: 30, overflow: "hidden" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 18, paddingBottom: 12 },
   closeButton: { width: IMMERSIVE_MIN_TOUCH_TARGET, height: IMMERSIVE_MIN_TOUCH_TARGET, borderRadius: IMMERSIVE_MIN_TOUCH_TARGET / 2, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.07)" },
   content: { paddingHorizontal: 20, paddingBottom: 28, gap: 14 },

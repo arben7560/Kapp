@@ -14,6 +14,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { SeoulMidnightGlass } from "@/constants/theme";
+import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
+import { getTabletDialogFrame } from "../../constants/responsive-layout";
 
 export type AppDialogProps = React.PropsWithChildren<{
   visible: boolean;
@@ -47,6 +49,10 @@ export function AppDialog({
 }: AppDialogProps) {
   const { height, width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const responsive = useResponsiveLayout();
+  const tabletFrame = getTabletDialogFrame(width, height, responsive.isTablet || responsive.isDesktop,
+    respectHorizontalSafeArea ? insets.left : 0, respectHorizontalSafeArea ? insets.right : 0,
+    insets.top, insets.bottom, maxWidth, maxHeight ?? height);
   const isCompact = width <= 380 || height <= 680;
   const edgeInset = isCompact ? 12 : 24;
   const leftInset = respectHorizontalSafeArea
@@ -58,13 +64,13 @@ export function AppDialog({
   const topInset = Math.max(edgeInset, insets.top + 8);
   const bottomInset = Math.max(edgeInset, insets.bottom + 8);
   const availableCardHeight = Math.max(160, height - topInset - bottomInset);
-  const cardMaxHeight = maxHeight
+  const cardMaxHeight = tabletFrame?.maxHeight ?? (maxHeight
     ? Math.min(availableCardHeight, maxHeight)
-    : availableCardHeight;
+    : availableCardHeight);
 
   const content = scrollable ? (
     <ScrollView
-      style={styles.scroller}
+      style={[styles.scroller, tabletFrame && { flexShrink: 1 }]}
       contentContainerStyle={[styles.content, contentContainerStyle]}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
@@ -77,6 +83,7 @@ export function AppDialog({
 
   return (
     <Modal
+      supportedOrientations={responsive.isTablet || responsive.isDesktop ? ["portrait", "portrait-upside-down", "landscape-left", "landscape-right"] : undefined}
       visible={visible}
       transparent
       animationType={animationType}
@@ -88,10 +95,10 @@ export function AppDialog({
         style={[
           styles.root,
           {
-            paddingLeft: leftInset,
-            paddingRight: rightInset,
-            paddingTop: topInset,
-            paddingBottom: bottomInset,
+            paddingLeft: tabletFrame?.leftInset ?? leftInset,
+            paddingRight: tabletFrame?.rightInset ?? rightInset,
+            paddingTop: tabletFrame?.topInset ?? topInset,
+            paddingBottom: tabletFrame?.bottomInset ?? bottomInset,
           },
         ]}
       >
@@ -108,7 +115,7 @@ export function AppDialog({
             styles.card,
             {
               maxHeight: cardMaxHeight,
-              maxWidth,
+              maxWidth: tabletFrame?.width ?? maxWidth,
               height: fillAvailableHeight ? cardMaxHeight : undefined,
             },
             cardStyle,

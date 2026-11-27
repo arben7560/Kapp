@@ -4,6 +4,7 @@ import { playKoreanReviewPhrase } from "@/lib/koreanReviewPlayback";
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 
 import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
 import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
@@ -30,6 +31,8 @@ export function AeroportConversationSummaryModal({
   onClose,
   visible,
 }: Props) {
+  const responsive = useResponsiveLayout();
+  const isTabletLandscape = responsive.isLandscape && (responsive.isTablet || responsive.isDesktop) && responsive.height >= 600;
   useSpeechLifecycle();
   const translate = useVocabularyText();
   const [hasListened, setHasListened] = useState(false);
@@ -43,6 +46,7 @@ export function AeroportConversationSummaryModal({
 
   return (
     <Modal
+      supportedOrientations={responsive.isTablet || responsive.isDesktop ? ["portrait", "portrait-upside-down", "landscape-left", "landscape-right"] : undefined}
       animationType="slide"
       transparent
       visible={visible}
@@ -50,10 +54,10 @@ export function AeroportConversationSummaryModal({
       statusBarTranslucent
       navigationBarTranslucent
     >
-      <SafeAreaProvider style={styles.backdrop}>
-        <SafeAreaView style={styles.sheet}>
+      <SafeAreaProvider style={[styles.backdrop, isTabletLandscape && styles.tabletBackdrop]}>
+        <SafeAreaView accessibilityViewIsModal style={[styles.sheet, isTabletLandscape && styles.tabletSheet]}>
           <View style={styles.header}>
-            <View>
+            <View style={{ flex: 1, minWidth: 0, marginRight: 12 }}>
               <AppText variant="caption" tone="premium" script="latin">
                 MISSION AÉROPORT
               </AppText>
@@ -164,6 +168,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
   },
+  tabletBackdrop: { justifyContent: "center" },
+  tabletSheet: { width: "90%", maxWidth: 760, maxHeight: "88%", borderRadius: 30, overflow: "hidden" },
   header: {
     flexDirection: "row",
     alignItems: "center",

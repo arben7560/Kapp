@@ -5,6 +5,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { useTranslation } from "react-i18next";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 
 import { IMMERSIVE_MIN_TOUCH_TARGET } from "../../constants/immersive-layout";
 import { useSpeechLifecycle } from "../../hooks/useSpeechLifecycle";
@@ -119,6 +120,8 @@ export function CafeConversationSummaryModal({
   onClose,
   onFinish,
 }: CafeConversationSummaryModalProps) {
+  const responsive = useResponsiveLayout();
+  const isTabletLandscape = responsive.isLandscape && (responsive.isTablet || responsive.isDesktop) && responsive.height >= 600;
   const translate = useVocabularyText();
   useSpeechLifecycle();
   const [isReviewing, setIsReviewing] = useState(false);
@@ -157,6 +160,7 @@ export function CafeConversationSummaryModal({
 
   return (
     <Modal
+      supportedOrientations={responsive.isTablet || responsive.isDesktop ? ["portrait", "portrait-upside-down", "landscape-left", "landscape-right"] : undefined}
       animationType="fade"
       transparent
       visible={visible}
@@ -166,7 +170,7 @@ export function CafeConversationSummaryModal({
     >
       <SafeAreaProvider style={styles.backdrop}>
         <SafeAreaView style={styles.safeArea}>
-          <View style={styles.sheet}>
+          <View accessibilityViewIsModal style={[styles.sheet, isTabletLandscape && styles.tabletSheet]}>
             <View style={styles.header}>
               <AppText
                 accessibilityRole="header"
@@ -461,6 +465,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#0B0C14",
     overflow: "hidden",
   },
+  tabletSheet: { maxWidth: 760, maxHeight: 760, borderRadius: 30 },
   header: {
     flexDirection: "row",
     alignItems: "center",
