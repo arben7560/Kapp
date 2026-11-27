@@ -33,11 +33,19 @@ export function getSafeContentWidth(width: number, maxWidth: number, padding: nu
   return Math.min(maxWidth, Math.max(0, width - left - right - padding * 2));
 }
 
-/** Web tablet and desktop scenes retain the portrait composition of the
- * background assets (roughly 0.56 width / height). Phones keep full-bleed cover. */
+/** Full-bleed on small viewports, then widen the portrait scene gradually
+ * with the available width. The cap keeps desktop cover zoom bounded and
+ * accommodates the existing pedagogical frame (up to 944 px with padding). */
 export function getWebImmersiveSceneWidth(width: number, height: number): number {
-  if (width < 600) return width;
-  return Math.min(width, Math.max(560, Math.min(960, height * 0.56)));
+  const maxSceneWidth = 1040;
+  const widthDriven = 680 + Math.max(0, width - 680) * 0.65;
+  const portraitWidth = height * 0.56;
+  return Math.max(0, Math.min(width, maxSceneWidth, Math.max(widthDriven, portraitWidth)));
+}
+
+/** Only fade when there is a lateral extension; grow the blend continuously. */
+export function getWebImmersiveSceneFade(width: number, sceneWidth: number): number {
+  return Math.max(0, Math.min(120, (width - sceneWidth) * 0.9, sceneWidth * 0.12));
 }
 
 /** Center a card inside its scrolling interval, including the gap. */

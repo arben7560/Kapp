@@ -2,16 +2,31 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { getImmersiveLandscapeLayout, getImmersivePhoneLandscapeLayout, IMMERSIVE_PORTRAIT_MEDIA_ASPECT_RATIO } from "../constants/immersive-layout.ts";
-import { getViewportClass, getSafeContentWidth, getWebImmersiveSceneWidth, getCenteredCarouselMetrics, getHubGrid, getGridColumns, getGridItemWidth, getPedagogicalFrame, getTabletDialogFrame } from "../constants/responsive-layout.ts";
+import { getViewportClass, getSafeContentWidth, getWebImmersiveSceneWidth, getWebImmersiveSceneFade, getCenteredCarouselMetrics, getHubGrid, getGridColumns, getGridItemWidth, getPedagogicalFrame, getTabletDialogFrame } from "../constants/responsive-layout.ts";
 
-test("portrait scene framing adapts at the requested browser widths", () => {
-  for (const [width, height] of [[360, 800], [390, 844], [412, 915], [599, 900], [600, 960], [768, 1024], [1024, 768], [1440, 900], [1920, 1080]]) {
-    const sceneWidth = getWebImmersiveSceneWidth(width, height);
-    assert.ok(sceneWidth <= width);
-    assert.equal(sceneWidth, width < 600 ? width : Math.min(width, Math.max(560, Math.min(960, height * 0.56))));
-    if (width >= 600) assert.ok(sceneWidth <= 960);
+test("portrait scene fills phones and grows continuously with browser width", () => {
+  for (const height of [360, 768, 900, 1024, 1440, 2160]) {
+    let previous = 0;
+    for (let width = 320; width <= 3440; width++) {
+      const sceneWidth = getWebImmersiveSceneWidth(width, height);
+      const fade = getWebImmersiveSceneFade(width, sceneWidth);
+      if (width > 320) {
+        assert.ok(sceneWidth >= previous && sceneWidth - previous <= 1 + 1e-9);
+      }
+      assert.ok(sceneWidth <= Math.min(width, 1040));
+      assert.ok(fade >= 0 && fade * 2 <= sceneWidth);
+      if (width <= 680) {
+        assert.equal(sceneWidth, width);
+        assert.equal(fade, 0);
+      }
+      previous = sceneWidth;
+    }
   }
-  assert.ok(getWebImmersiveSceneWidth(768, 1024) < 600);
+  assert.ok(getWebImmersiveSceneWidth(768, 1024) > 720);
+  assert.ok(getWebImmersiveSceneWidth(1440, 900) > getWebImmersiveSceneWidth(1024, 900));
+  assert.ok(getWebImmersiveSceneWidth(1440, 900) >= getPedagogicalFrame(true, true, 32).maxWidth);
+  assert.equal(getWebImmersiveSceneWidth(3440, 1440), 1040);
+  assert.ok(getWebImmersiveSceneFade(1440, 1040) > 0);
 });
 
 test("Speak cards and pagination stay centered across browser resizes", () => {
@@ -34,7 +49,12 @@ test("immersive routes share Web framing and retain the native ImageBackground",
     assert.match(source(path), /<ResponsiveImmersiveBackground\b/u, path);
   }
   assert.match(source("components/ui/responsive-immersive-background.tsx"), /return <ImageBackground \{\.\.\.props\}>\{children\}<\/ImageBackground>/u);
-  assert.match(source("components/ui/responsive-immersive-background.web.tsx"), /getWebImmersiveSceneWidth\(width, height\)/u);
+  const web = source("components/ui/responsive-immersive-background.web.tsx");
+  assert.match(web, /getWebImmersiveSceneWidth\(width, height\)/u);
+  assert.match(web, /onLayout=\{handleLayout\}/u);
+  assert.match(web, /maskImage: edgeMask/u);
+  assert.match(web, /WebkitMaskImage: edgeMask/u);
+  assert.doesNotMatch(web, /if\s*\(width\s*<\s*600\)/u);
 });
 
 test("native tablets remain tablets in both orientations", () => {
