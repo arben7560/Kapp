@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
+import { getCardImageFrame } from "../components/ui/responsive-card-image-layout.ts";
 import { getImmersiveLandscapeLayout, getImmersivePhoneLandscapeLayout, IMMERSIVE_PORTRAIT_MEDIA_ASPECT_RATIO } from "../constants/immersive-layout.ts";
 import { getViewportClass, getSafeContentWidth, getWebImmersiveSceneWidth, getWebImmersiveSceneFade, getCenteredCarouselMetrics, getHubGrid, getGridColumns, getGridItemWidth, getPedagogicalFrame, getTabletDialogFrame } from "../constants/responsive-layout.ts";
 
@@ -258,4 +259,39 @@ test("modal integration preserves mission actions and scrollable details", () =>
     assert.match(screen, /<ScrollView/u, path);
     assert.match(screen, /accessibilityViewIsModal/u, path);
   }
+});
+
+test("card images fit their own container and blend only on wide cards", () => {
+  for (const height of [154, 174, 180, 214, 372, 520]) {
+    let previous = 0;
+    for (let width = 100; width <= 1200; width++) {
+      const { centralWidth, fade } = getCardImageFrame(width, height);
+      assert.ok(centralWidth <= width && centralWidth >= previous);
+      assert.ok(centralWidth - previous <= 1 || width === 100);
+      assert.ok(fade >= 0 && fade * 2 <= centralWidth);
+      assert.equal(fade === 0, centralWidth === width);
+      if (width <= 400) assert.equal(centralWidth, width);
+      previous = centralWidth;
+    }
+  }
+  assert.deepEqual(getCardImageFrame(0, 0), { centralWidth: 0, fade: 0 });
+  assert.deepEqual(getCardImageFrame(590, 520), { centralWidth: 590, fade: 0 });
+  assert.ok(getCardImageFrame(900, 214).centralWidth < 900);
+});
+
+test("only the requested hub card images use the dedicated Web framing", () => {
+  const source = path => readFileSync(new URL("../" + path, import.meta.url), "utf8");
+  for (const path of ["app/(tabs)/voc/index.tsx", "app/(tabs)/comptage/index.tsx", "app/(tabs)/speak.tsx"]) {
+    const screen = source(path);
+    assert.equal((screen.match(/<ResponsiveCardBackground\b/gu) ?? []).length, 2, path);
+    assert.match(screen, /<ResponsiveImmersiveBackground\b/u, path);
+    assert.doesNotMatch(screen, /<ImageBackground\b/u, path);
+  }
+  assert.doesNotMatch(source("app/(tabs)/grammar/index.tsx"), /<ResponsiveCardBackground\b/u);
+  assert.match(source("components/ui/responsive-card-background.tsx"), /export \{ ImageBackground as ResponsiveCardBackground \} from "react-native"/u);
+  const web = source("components/ui/responsive-card-background.web.tsx");
+  assert.match(web, /onLayout=\{handleLayout\}/u);
+  assert.match(web, /imageFill: \{ width: "100%", height: "100%" \}/u);
+  assert.match(web, /maskImage: edgeMask/u);
+  assert.doesNotMatch(web, /useWindowDimensions/u);
 });

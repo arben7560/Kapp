@@ -7,7 +7,6 @@ import {
   Animated,
   type FlatListInstance,
   Easing,
-  ImageBackground,
   ImageSourcePropType,
   Modal,
   NativeScrollEvent,
@@ -27,6 +26,7 @@ import {
 import { AppText } from "../../components/app-text";
 import { AppBackButton } from "../../components/ui/app-back-button";
 import { ResponsiveImmersiveBackground } from "../../components/ui/responsive-immersive-background";
+import { ResponsiveCardBackground } from "../../components/ui/responsive-card-background";
 import { ContentLocalizationProvider } from "../../lib/i18n/ContentLocalizationProvider";
 import { useVocabularyText } from "../../lib/i18n/VocabularyTextContext";
 import { HubModuleAccents, SeoulMidnightGlass } from "../../constants/theme";
@@ -495,7 +495,7 @@ function Scenes({
                         { borderColor: `${config.accent}38` },
                       ]}
                     >
-                      <ImageBackground
+                      <ResponsiveCardBackground
                         source={config.image}
                         resizeMode="cover"
                         style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
@@ -988,7 +988,7 @@ function ThemeModeSheet({
                   },
                 ]}
               >
-                <ImageBackground
+                <ResponsiveCardBackground
                   source={config.image}
                   style={StyleSheet.absoluteFill}
                   resizeMode="cover"

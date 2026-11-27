@@ -1,4 +1,5 @@
 import { ResponsiveImmersiveBackground } from "../../../components/ui/responsive-immersive-background";
+import { ResponsiveCardBackground } from "../../../components/ui/responsive-card-background";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
@@ -12,7 +13,6 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Animated,
   Easing,
-  ImageBackground,
   ImageSourcePropType,
   Pressable,
   ScrollView,
@@ -446,7 +446,7 @@ function FeaturedPathCard({
           landscape && styles.featuredCardLandscape,
         ]}
       >
-        <ImageBackground
+        <ResponsiveCardBackground
           source={module.background}
           resizeMode="cover"
           style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
@@ -735,7 +735,7 @@ function CountingPathCard({
           landscape && styles.collectionCardLandscape,
         ]}
       >
-        <ImageBackground
+        <ResponsiveCardBackground
           source={module.background}
           resizeMode="cover"
           style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}

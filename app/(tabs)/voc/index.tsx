@@ -12,7 +12,6 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Animated,
   Easing,
-  ImageBackground,
   ImageSourcePropType,
   Pressable,
   ScrollView,
@@ -23,6 +22,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { ResponsiveImmersiveBackground } from "../../../components/ui/responsive-immersive-background";
+import { ResponsiveCardBackground } from "../../../components/ui/responsive-card-background";
 import {
   SafeAreaView,
 } from "react-native-safe-area-context";
@@ -484,7 +484,7 @@ function FeaturedCollectionCard({
         ]}
       >
         {/* Image de la carte */}
-        <ImageBackground
+        <ResponsiveCardBackground
           source={theme.background}
           resizeMode="cover"
           style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
@@ -789,7 +789,7 @@ function VocabularyCollectionCard({
         ]}
       >
         {/* Image de fond */}
-        <ImageBackground
+        <ResponsiveCardBackground
           source={theme.background}
           resizeMode="cover"
           style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
