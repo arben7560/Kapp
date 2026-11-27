@@ -23,7 +23,6 @@ import {
 } from "react-native";
 import {
   SafeAreaView,
-  useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
 import { useStore } from "../../../_store";
@@ -204,7 +203,6 @@ export default function HangulHub() {
     hangulContentText(i18n, "module", [id], field, original);
   const { progress } = useStore();
   const { width, height } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
   const isLandscape = width > height;
 
   const responsive = useResponsiveLayout({
@@ -213,35 +211,8 @@ export default function HangulHub() {
   const effectiveGap = isLandscape
     ? 14
     : Math.max(16, responsive.gridGap);
-  const safeContentWidth = Math.min(
-    responsive.maxWidth,
-    Math.max(
-      0,
-      width -
-        insets.left -
-        insets.right -
-        responsive.horizontalPadding * 2,
-    ),
-  );
-
-  const autoGridColumns = responsive.getColumns({
-    minColumnWidth: 330,
-    maxColumns: 2,
-    gap: effectiveGap,
-  });
-
-  const gridColumns = !isLandscape
-    ? autoGridColumns
-    : safeContentWidth >= 900
-      ? 3
-      : safeContentWidth >= 640
-        ? 2
-        : 1;
-
-  const gridItemWidth =
-    isLandscape && gridColumns > 1
-      ? (safeContentWidth - effectiveGap * (gridColumns - 1)) / gridColumns
-      : responsive.getGridItemWidth(gridColumns, effectiveGap);
+  const { columns: gridColumns, itemWidth: gridItemWidth } =
+    responsive.getHubGrid(effectiveGap);
 
   const displayLevel = Math.max(1, progress?.hangulLevel ?? 1);
 

@@ -641,7 +641,7 @@ export default function GrammarLessonScreen() {
       return (
         <PracticePanel
           session={session}
-          isTablet={responsive.isTablet}
+          useWideOptions={responsive.safeContentWidth >= 700}
           onAnswer={chooseAnswer}
           onDraft={updateDraft}
           onContinue={continuePractice}
@@ -1047,14 +1047,14 @@ function LessonOverview({
 
 function PracticePanel({
   session,
-  isTablet,
+  useWideOptions,
   onAnswer,
   onDraft,
   onContinue,
   onReviewExplanation,
 }: {
   session: GrammarPracticeSession;
-  isTablet: boolean;
+  useWideOptions: boolean;
   onAnswer: (answer: GrammarPracticeAnswer) => void;
   onDraft: (answer: GrammarPracticeAnswer) => void;
   onContinue: () => void;
@@ -1179,7 +1179,7 @@ function PracticePanel({
           stripTokenPunctuation={question.stageId === "sentence-structure"}
         />
       ) : (
-        <View style={[styles.optionGrid, isTablet && styles.optionGridTablet]}>
+        <View style={[styles.optionGrid, useWideOptions && styles.optionGridTablet]}>
           {question.options.map((option) => {
             const isSelected = response?.answer === option;
             const isCorrectOption = response && question.answer === option;
@@ -1195,7 +1195,7 @@ function PracticePanel({
                 onPress={() => onAnswer(option)}
                 style={({ pressed }) => [
                   styles.optionButton,
-                  isTablet && styles.optionButtonTablet,
+                  useWideOptions && styles.optionButtonTablet,
                   isSelected &&
                     (response.correct
                       ? styles.optionCorrect

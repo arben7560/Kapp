@@ -22,7 +22,6 @@ import {
 } from "react-native";
 import {
   SafeAreaView,
-  useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
 import { useStore } from "../../../_store";
@@ -95,7 +94,6 @@ export default function GrammarHubScreen() {
   const { progress, setTrack } = useStore();
   const { hasPremiumAccess: isPremium } = usePaywall();
   const { width, height } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
   const isLandscape = width > height;
   const responsive = useResponsiveLayout({
     maxWidth: isLandscape ? 1120 : 920,
@@ -103,33 +101,8 @@ export default function GrammarHubScreen() {
   const effectiveGap = isLandscape
     ? 14
     : Math.max(15, responsive.gridGap);
-  const safeContentWidth = Math.min(
-    responsive.maxWidth,
-    Math.max(
-      0,
-      width -
-        insets.left -
-        insets.right -
-        responsive.horizontalPadding * 2,
-    ),
-  );
-
-  const portraitGridColumns = responsive.getColumns({
-    minColumnWidth: 330,
-    maxColumns: 2,
-    gap: effectiveGap,
-  });
-  const gridColumns = !isLandscape
-    ? portraitGridColumns
-    : safeContentWidth >= 900
-      ? 3
-      : safeContentWidth >= 640
-        ? 2
-        : 1;
-  const gridItemWidth =
-    isLandscape && gridColumns > 1
-      ? (safeContentWidth - effectiveGap * (gridColumns - 1)) / gridColumns
-      : responsive.getGridItemWidth(gridColumns, effectiveGap);
+  const { columns: gridColumns, itemWidth: gridItemWidth } =
+    responsive.getHubGrid(effectiveGap);
 
   const grammarProgress = progress.grammarProgress;
   const completedContentRefs = React.useMemo(

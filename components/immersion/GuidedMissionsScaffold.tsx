@@ -7,7 +7,6 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 
@@ -36,18 +35,8 @@ export function GuidedMissionsScaffold({
   renderHeader,
   renderMissions,
 }: GuidedMissionsScaffoldProps) {
-  const insets = useSafeAreaInsets();
   const [measuredMissionsWidth, setMeasuredMissionsWidth] = React.useState(0);
-  const landscapeContentWidth = Math.min(
-    responsive.maxWidth,
-    Math.max(
-      0,
-      responsive.width -
-        insets.left -
-        insets.right -
-        responsive.horizontalPadding * 2,
-    ),
-  );
+  const landscapeContentWidth = responsive.safeContentWidth;
   const isLandscape =
     responsive.isLandscape &&
     responsive.height <= LANDSCAPE_MAX_HEIGHT &&
@@ -64,7 +53,7 @@ export function GuidedMissionsScaffold({
   const landscapeGap = responsive.height <= 380 ? 12 : 14;
   const missionContentWidth = isLandscape
     ? measuredMissionsWidth || estimatedMissionsWidth
-    : responsive.contentWidth;
+    : responsive.safeContentWidth;
   const gap = isLandscape
     ? landscapeGap
     : Math.max(15, responsive.gridGap);

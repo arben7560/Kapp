@@ -28,6 +28,9 @@ jobs:
       - name: TypeScript
         run: npx tsc --noEmit
 
+      - name: Responsive viewport and grid contracts
+        run: npm run test:responsive
+
       - name: FR/JA catalogue integrity
         run: npm run validate:i18n
 

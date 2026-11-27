@@ -22,7 +22,6 @@ import {
 } from "react-native";
 import {
   SafeAreaView,
-  useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
@@ -92,32 +91,20 @@ export function HangulLessonScreen({ moduleId }: { moduleId: string }) {
 
   const { progress, updateHangulProgress, complete } = useStore();
   const { width, height } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
   const isLandscape = width > height;
   const responsive = useResponsiveLayout({
     maxWidth: isLandscape ? 1120 : 920,
   });
   const discoveryGridGap = 14;
   const discoveryMinCardWidth = 220;
-  const safeContentWidth = Math.min(
-    responsive.maxWidth,
-    Math.max(
-      0,
-      width - insets.left - insets.right - responsive.horizontalPadding * 2,
-    ),
-  );
-  const landscapeDiscoveryColumns = !isLandscape
-    ? 1
-    : Math.max(
-        1,
-        Math.min(
-          3,
-          Math.floor(
-            (responsive.contentWidth + discoveryGridGap) /
-              (discoveryMinCardWidth + discoveryGridGap),
-          ),
-        ),
-      );
+  const safeContentWidth = responsive.safeContentWidth;
+  const landscapeDiscoveryColumns = isLandscape
+    ? responsive.getColumns({
+        minColumnWidth: discoveryMinCardWidth,
+        maxColumns: 3,
+        gap: discoveryGridGap,
+      })
+    : 1;
   const landscapeCardWidth =
     isLandscape && landscapeDiscoveryColumns > 1
       ? responsive.getGridItemWidth(landscapeDiscoveryColumns, discoveryGridGap)
