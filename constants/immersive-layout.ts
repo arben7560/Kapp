@@ -140,3 +140,88 @@ export function getImmersivePhoneLandscapeLayout({
     transcriptMaxHeight,
   };
 }
+
+export const IMMERSIVE_TABLET_LANDSCAPE_STYLES = {
+  transcriptCard: {
+    marginTop: 12,
+    marginHorizontal: 0,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 24,
+  },
+  interactionScrollContent: {
+    paddingTop: 16,
+  },
+};
+
+type LandscapeLayoutOptions = PhoneLandscapeLayoutOptions & Readonly<{
+  isWideViewport: boolean;
+  bottomSafeArea?: number;
+}>;
+
+/** A tablet split uses the same mounted scene tree as phone landscape.
+ * Keep both columns inside the horizontal SafeAreaView, and reserve vertical
+ * space for the header, progress, transcript chrome and bottom system bar. */
+export function getImmersiveLandscapeLayout({
+  windowWidth,
+  windowHeight,
+  horizontalSafeArea = 0,
+  topSafeArea = 0,
+  bottomSafeArea = 0,
+  isWideViewport,
+}: LandscapeLayoutOptions) {
+  if (windowWidth <= windowHeight) return null;
+
+  if (!isWideViewport) {
+    if (windowHeight > IMMERSIVE_PHONE_LANDSCAPE_MAX_HEIGHT) return null;
+    return {
+      ...getImmersivePhoneLandscapeLayout({
+        windowWidth,
+        windowHeight,
+        horizontalSafeArea,
+        topSafeArea,
+      }),
+      mode: "phone" as const,
+    };
+  }
+
+  const safeWidth = Math.max(0, windowWidth - horizontalSafeArea);
+  const horizontalPadding = Math.max(
+    24,
+    Math.min(40, Math.round(safeWidth * 0.03)),
+    Math.ceil((safeWidth - 1200) / 2),
+  );
+  const availableWidth = Math.max(0, safeWidth - horizontalPadding * 2);
+  const columnGap = 24;
+  const columnsWidth = Math.max(0, availableWidth - columnGap);
+  const primaryColumnWidth = Math.floor(columnsWidth * 0.44);
+  const interactionColumnWidth = columnsWidth - primaryColumnWidth;
+  if (primaryColumnWidth < 300 || interactionColumnWidth < 360) return null;
+
+  const headerHeight = 44 + Math.max(6, topSafeArea * 0.15);
+  const bodyHeight = Math.floor(windowHeight - topSafeArea - bottomSafeArea - headerHeight);
+  const progressBudget = 100;
+  const transcriptChrome = 48;
+  const minTranscriptHeight = 144;
+  const mediaHeight = Math.floor(Math.min(
+    480,
+    bodyHeight * 0.55,
+    bodyHeight - progressBudget - transcriptChrome - minTranscriptHeight,
+    primaryColumnWidth / IMMERSIVE_PORTRAIT_MEDIA_ASPECT_RATIO,
+  ));
+  // Very small split-screen windows keep the original stacked layout.
+  if (mediaHeight < 160) return null;
+
+  return {
+    mode: "tablet" as const,
+    availableWidth,
+    columnGap,
+    horizontalPadding,
+    interactionContentWidth: Math.min(interactionColumnWidth, 680),
+    interactionColumnWidth,
+    mediaHeight,
+    mediaWidth: mediaHeight * IMMERSIVE_PORTRAIT_MEDIA_ASPECT_RATIO,
+    primaryColumnWidth,
+    transcriptMaxHeight: bodyHeight - progressBudget - transcriptChrome - mediaHeight,
+  };
+}

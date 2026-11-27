@@ -27,11 +27,11 @@ import { MetroConversationSummaryModal } from "../../components/metro/MetroConve
 import { AppBackButton } from "../../components/ui/app-back-button";
 import {
   getImmersiveBottomPadding,
-  getImmersivePhoneLandscapeLayout,
+  getImmersiveLandscapeLayout,
   getImmersivePortraitMediaLayout,
   IMMERSIVE_CONTENT_MAX_WIDTH,
   IMMERSIVE_MIN_TOUCH_TARGET,
-  IMMERSIVE_PHONE_LANDSCAPE_MAX_HEIGHT,
+  IMMERSIVE_TABLET_LANDSCAPE_STYLES,
   IMMERSIVE_PHONE_LANDSCAPE_STYLES,
   IMMERSIVE_VIDEO_VIEW_PROPS,
 } from "../../constants/immersive-layout";
@@ -483,17 +483,17 @@ function MetroIaContent() {
     viewportHeight: responsive.height,
     maxHeight: 420,
   });
-  const isPhoneLandscape =
-    responsive.isLandscape &&
-    responsive.height <= IMMERSIVE_PHONE_LANDSCAPE_MAX_HEIGHT;
-  const landscapeLayout = isPhoneLandscape
-    ? getImmersivePhoneLandscapeLayout({
-        windowWidth: responsive.width,
-        windowHeight: responsive.height,
-        horizontalSafeArea: insets.left + insets.right,
-        topSafeArea: insets.top,
-      })
-    : null;
+  const landscapeLayout = getImmersiveLandscapeLayout({
+    windowWidth: responsive.width,
+    windowHeight: responsive.height,
+    horizontalSafeArea: insets.left + insets.right,
+    topSafeArea: insets.top,
+    bottomSafeArea: insets.bottom,
+    isWideViewport:
+      responsive.isTablet || (responsive.isDesktop && responsive.height >= 600),
+  });
+  const isSplitLandscape = landscapeLayout !== null;
+  const isTabletLandscape = landscapeLayout?.mode === "tablet";
   const avatarFrameWidth =
     landscapeLayout?.mediaWidth ?? portraitMediaLayout.width;
   const avatarFrameHeight =
@@ -1183,13 +1183,13 @@ function MetroIaContent() {
         <View
           style={[
             styles.body,
-            isPhoneLandscape && IMMERSIVE_PHONE_LANDSCAPE_STYLES.body,
+            isSplitLandscape && IMMERSIVE_PHONE_LANDSCAPE_STYLES.body,
           ]}
         >
           <View
             style={[
               styles.topFixedSection,
-              isPhoneLandscape
+              isSplitLandscape
                 ? [
                     IMMERSIVE_PHONE_LANDSCAPE_STYLES.topFixedSection,
                     {
@@ -1206,7 +1206,7 @@ function MetroIaContent() {
               style={[
                 styles.topInner,
                 {
-                  maxWidth: isPhoneLandscape
+                  maxWidth: isSplitLandscape
                     ? landscapeLayout?.primaryColumnWidth
                     : responsive.maxWidth,
                 },
@@ -1217,7 +1217,7 @@ function MetroIaContent() {
                 activeIndex={progressIndex}
                 accent={mode === "real" ? CYAN : PURPLE}
                 compactLandscapeHeight={
-                  isPhoneLandscape ? responsive.height : undefined
+                  landscapeLayout?.mode === "phone" ? responsive.height : undefined
                 }
               />
 
@@ -1274,7 +1274,7 @@ function MetroIaContent() {
               </View>
 
               <ImmersiveTranscriptViewport
-                enabled={isPhoneLandscape}
+                enabled={isSplitLandscape}
                 maxHeight={landscapeLayout?.transcriptMaxHeight}
                 accessibilityRole="button"
                 accessibilityLabel={
@@ -1296,9 +1296,11 @@ function MetroIaContent() {
                 }}
                 style={[
                   styles.aiCard,
-                  isPhoneLandscape &&
+                  isSplitLandscape &&
                     IMMERSIVE_PHONE_LANDSCAPE_STYLES.transcriptCard,
                   isStartChoiceNode && styles.aiCardCompact,
+                  isTabletLandscape &&
+                    IMMERSIVE_TABLET_LANDSCAPE_STYLES.transcriptCard,
                   shouldCollapseTranscript && styles.aiCardCollapsed,
                 ]}
               >
@@ -1310,7 +1312,7 @@ function MetroIaContent() {
                     align="center"
                     style={[
                       styles.aiKr,
-                      isPhoneLandscape &&
+                      isSplitLandscape &&
                         IMMERSIVE_PHONE_LANDSCAPE_STYLES.transcriptKorean,
                       isStartChoiceNode && styles.aiIntroText,
                       shouldCollapseTranscript && styles.aiDotsText,
@@ -1351,7 +1353,7 @@ function MetroIaContent() {
           <ScrollView
             ref={scrollRef}
             style={
-              isPhoneLandscape
+              isSplitLandscape
                 ? [
                     IMMERSIVE_PHONE_LANDSCAPE_STYLES.interactionScroll,
                     { marginLeft: landscapeLayout?.columnGap },
@@ -1361,9 +1363,11 @@ function MetroIaContent() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={[
               styles.interactionScroll,
-              isPhoneLandscape
+              isSplitLandscape
                 ? [
                     IMMERSIVE_PHONE_LANDSCAPE_STYLES.interactionScrollContent,
+                    isTabletLandscape &&
+                      IMMERSIVE_TABLET_LANDSCAPE_STYLES.interactionScrollContent,
                     { paddingRight: landscapeLayout?.horizontalPadding },
                   ]
                 : { paddingHorizontal: responsive.horizontalPadding },
@@ -1374,7 +1378,7 @@ function MetroIaContent() {
               style={[
                 styles.interactionSection,
                 {
-                  maxWidth: isPhoneLandscape
+                  maxWidth: isSplitLandscape
                     ? landscapeLayout?.interactionContentWidth
                     : responsive.maxWidth,
                 },

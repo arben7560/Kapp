@@ -22,15 +22,9 @@ function assertRenderedGridGap(screen, styleName, gapPattern, path) {
 }
 
 function assertHubGridGap(screen, path) {
-  // The initializer may depend on orientation. The contract is a shared value
-  // for column selection, both item-width branches and every rendered grid.
+  // Phase 1 delegates column and width calculations to one shared helper.
   assert.match(screen, /const effectiveGap\s*=/u, path);
-  assert.match(screen, /getColumns\(\{[^}]*\bgap:\s*effectiveGap\s*,?\s*\}/u, path);
-  assert.match(
-    screen,
-    /const gridItemWidth\s*=\s*(?:isLandscape\s*&&\s*gridColumns > 1\s*\?\s*\(safeContentWidth - effectiveGap \* \(gridColumns - 1\)\) \/ gridColumns\s*:\s*)?responsive\.getGridItemWidth\(\s*gridColumns,\s*effectiveGap\s*,?\s*\)/u,
-    path,
-  );
+  assert.match(screen, /const \{ columns: gridColumns, itemWidth: gridItemWidth \}\s*=\s*responsive\.getHubGrid\(effectiveGap\)/u, path);
   assertRenderedGridGap(screen, "grid", /\{\s*gap:\s*effectiveGap\s*,?\s*\}/u, path);
   assert.match(screen, /width:\s*gridItemWidth\b/u, path);
 }
@@ -215,10 +209,9 @@ test("le contrôle des grilles refuse un gap différent dans les calculs ou le r
   const path = "app/(tabs)/hangul/index.tsx";
   const screen = source(path);
   for (const [before, after, fromEnd = false] of [
-    ["gap: effectiveGap,", "gap: responsive.gridGap,"],
-    ["getGridItemWidth(gridColumns, effectiveGap)", "getGridItemWidth(gridColumns, responsive.gridGap)"],
-    ["safeContentWidth - effectiveGap *", "safeContentWidth - responsive.gridGap *"],
-    ["gap: effectiveGap,", "gap: 99,", true],
+    ["getHubGrid(effectiveGap)", "getHubGrid(responsive.gridGap)"],
+    ["getHubGrid(effectiveGap)", "getHubGrid(99)"],
+    ["gap: effectiveGap", "gap: 99", true],
   ]) {
     // Mutate calculations and rendering separately, entirely in memory.
     const index = fromEnd ? screen.lastIndexOf(before) : screen.indexOf(before);

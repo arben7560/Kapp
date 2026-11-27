@@ -27,11 +27,11 @@ import { ImmersiveStepProgress } from "../../components/immersion/ImmersiveStepP
 import { ImmersiveTranscriptViewport } from "../../components/immersion/ImmersiveTranscriptViewport";
 import {
   getImmersiveBottomPadding,
-  getImmersivePhoneLandscapeLayout,
+  getImmersiveLandscapeLayout,
   getImmersivePortraitMediaLayout,
   IMMERSIVE_CONTENT_MAX_WIDTH,
   IMMERSIVE_MIN_TOUCH_TARGET,
-  IMMERSIVE_PHONE_LANDSCAPE_MAX_HEIGHT,
+  IMMERSIVE_TABLET_LANDSCAPE_STYLES,
   IMMERSIVE_PHONE_LANDSCAPE_STYLES,
   IMMERSIVE_VIDEO_VIEW_PROPS,
 } from "../../constants/immersive-layout";
@@ -403,17 +403,17 @@ function AeroportIaContent() {
     contentWidth: responsive.contentWidth,
     viewportHeight: responsive.height,
   });
-  const isPhoneLandscape =
-    responsive.isLandscape &&
-    responsive.height <= IMMERSIVE_PHONE_LANDSCAPE_MAX_HEIGHT;
-  const landscapeLayout = isPhoneLandscape
-    ? getImmersivePhoneLandscapeLayout({
-        windowWidth: responsive.width,
-        windowHeight: responsive.height,
-        horizontalSafeArea: insets.left + insets.right,
-        topSafeArea: insets.top,
-      })
-    : null;
+  const landscapeLayout = getImmersiveLandscapeLayout({
+    windowWidth: responsive.width,
+    windowHeight: responsive.height,
+    horizontalSafeArea: insets.left + insets.right,
+    topSafeArea: insets.top,
+    bottomSafeArea: insets.bottom,
+    isWideViewport:
+      responsive.isTablet || (responsive.isDesktop && responsive.height >= 600),
+  });
+  const isSplitLandscape = landscapeLayout !== null;
+  const isTabletLandscape = landscapeLayout?.mode === "tablet";
   const avatarFrameWidth =
     landscapeLayout?.mediaWidth ?? portraitMediaLayout.width;
   const avatarFrameHeight =
@@ -1022,13 +1022,13 @@ function AeroportIaContent() {
         <View
           style={[
             styles.body,
-            isPhoneLandscape && IMMERSIVE_PHONE_LANDSCAPE_STYLES.body,
+            isSplitLandscape && IMMERSIVE_PHONE_LANDSCAPE_STYLES.body,
           ]}
         >
           <View
             style={[
               styles.topFixedSection,
-              isPhoneLandscape
+              isSplitLandscape
                 ? [
                     IMMERSIVE_PHONE_LANDSCAPE_STYLES.topFixedSection,
                     {
@@ -1045,7 +1045,7 @@ function AeroportIaContent() {
               style={[
                 styles.topInner,
                 {
-                  maxWidth: isPhoneLandscape
+                  maxWidth: isSplitLandscape
                     ? landscapeLayout?.primaryColumnWidth
                     : responsive.maxWidth,
                 },
@@ -1056,7 +1056,7 @@ function AeroportIaContent() {
                 activeIndex={progressIndex}
                 accent={mode === "real" ? CYAN : PURPLE}
                 compactLandscapeHeight={
-                  isPhoneLandscape ? responsive.height : undefined
+                  landscapeLayout?.mode === "phone" ? responsive.height : undefined
                 }
               />
 
@@ -1110,7 +1110,7 @@ function AeroportIaContent() {
               </View>
 
               <ImmersiveTranscriptViewport
-                enabled={isPhoneLandscape}
+                enabled={isSplitLandscape}
                 maxHeight={landscapeLayout?.transcriptMaxHeight}
                 disabled={!isReviewableTranscript}
                 onPress={() => {
@@ -1119,9 +1119,11 @@ function AeroportIaContent() {
                 }}
                 style={[
                   styles.aiCard,
-                  isPhoneLandscape &&
+                  isSplitLandscape &&
                     IMMERSIVE_PHONE_LANDSCAPE_STYLES.transcriptCard,
                   isStartChoiceNode && styles.aiCardCompact,
+                  isTabletLandscape &&
+                    IMMERSIVE_TABLET_LANDSCAPE_STYLES.transcriptCard,
                   shouldCollapseTranscript && styles.aiCardCollapsed,
                 ]}
               >
@@ -1133,7 +1135,7 @@ function AeroportIaContent() {
                     align="center"
                     style={[
                       styles.aiKr,
-                      isPhoneLandscape &&
+                      isSplitLandscape &&
                         IMMERSIVE_PHONE_LANDSCAPE_STYLES.transcriptKorean,
                       isStartChoiceNode && styles.aiIntroText,
                       shouldCollapseTranscript && styles.aiDotsText,
@@ -1174,7 +1176,7 @@ function AeroportIaContent() {
           <ScrollView
             ref={scrollRef}
             style={
-              isPhoneLandscape
+              isSplitLandscape
                 ? [
                     IMMERSIVE_PHONE_LANDSCAPE_STYLES.interactionScroll,
                     { marginLeft: landscapeLayout?.columnGap },
@@ -1184,9 +1186,11 @@ function AeroportIaContent() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={[
               styles.interactionScroll,
-              isPhoneLandscape
+              isSplitLandscape
                 ? [
                     IMMERSIVE_PHONE_LANDSCAPE_STYLES.interactionScrollContent,
+                    isTabletLandscape &&
+                      IMMERSIVE_TABLET_LANDSCAPE_STYLES.interactionScrollContent,
                     { paddingRight: landscapeLayout?.horizontalPadding },
                   ]
                 : { paddingHorizontal: responsive.horizontalPadding },
@@ -1197,7 +1201,7 @@ function AeroportIaContent() {
               style={[
                 styles.interactionSection,
                 {
-                  maxWidth: isPhoneLandscape
+                  maxWidth: isSplitLandscape
                     ? landscapeLayout?.interactionContentWidth
                     : responsive.maxWidth,
                 },

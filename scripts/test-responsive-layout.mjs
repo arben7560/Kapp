@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
+import { getImmersiveLandscapeLayout, getImmersivePhoneLandscapeLayout, IMMERSIVE_PORTRAIT_MEDIA_ASPECT_RATIO } from "../constants/immersive-layout.ts";
 import { getViewportClass, getSafeContentWidth, getHubGrid, getGridColumns, getGridItemWidth, getPedagogicalFrame } from "../constants/responsive-layout.ts";
 
 test("native tablets remain tablets in both orientations", () => {
@@ -90,4 +91,51 @@ test("public pedagogical screens share the same frame without replacing the scro
   }
   const listen = readFileSync(new URL("../app/(tabs)/listen.tsx", import.meta.url), "utf8");
   assert.match(listen, /styles\.header, landscapeHeaderStyle, pedagogicalFrame/u);
+});
+
+test("tablet immersion landscape fits the safe viewport and reserves transcript space", () => {
+  for (const [windowWidth, windowHeight] of [[800, 600], [960, 600], [1024, 768], [1194, 834], [1280, 800], [1366, 1024], [1600, 1000]]) {
+    for (const [horizontalSafeArea, topSafeArea, bottomSafeArea] of [[0, 0, 0], [24, 24, 24]]) {
+      const layout = getImmersiveLandscapeLayout({ windowWidth, windowHeight, horizontalSafeArea, topSafeArea, bottomSafeArea, isWideViewport: true });
+      assert.equal(layout.mode, "tablet");
+      assert.equal(layout.primaryColumnWidth + layout.interactionColumnWidth + layout.columnGap + 2 * layout.horizontalPadding, windowWidth - horizontalSafeArea);
+      assert.ok(layout.availableWidth <= 1200);
+      assert.ok(layout.primaryColumnWidth >= 300 && layout.interactionColumnWidth >= 360);
+      assert.ok(layout.mediaWidth <= layout.primaryColumnWidth && layout.mediaHeight >= 160 && layout.mediaHeight <= 480);
+      assert.ok(Math.abs(layout.mediaWidth / layout.mediaHeight - IMMERSIVE_PORTRAIT_MEDIA_ASPECT_RATIO) < 1e-9);
+      assert.ok(layout.transcriptMaxHeight >= 144);
+      const bodyHeight = windowHeight - topSafeArea - bottomSafeArea - (44 + Math.max(6, topSafeArea * 0.15));
+      assert.ok(layout.mediaHeight + layout.transcriptMaxHeight + 148 <= bodyHeight);
+    }
+  }
+});
+
+test("phone immersion landscape calculations are unchanged", () => {
+  for (const [windowWidth, windowHeight] of [[640, 360], [844, 390], [932, 430], [1024, 480]]) {
+    const args = { windowWidth, windowHeight, horizontalSafeArea: 40, topSafeArea: 20 };
+    const { mode, ...layout } = getImmersiveLandscapeLayout({ ...args, isWideViewport: false });
+    assert.equal(mode, "phone");
+    assert.deepEqual(layout, getImmersivePhoneLandscapeLayout(args));
+  }
+});
+
+test("portrait and insufficient tablet split space retain the stacked immersion layout", () => {
+  for (const [windowWidth, windowHeight, horizontalSafeArea, isWideViewport] of [[800, 1280, 0, true], [390, 844, 0, false], [700, 600, 0, true], [800, 600, 150, true]]) {
+    assert.equal(getImmersiveLandscapeLayout({ windowWidth, windowHeight, horizontalSafeArea, isWideViewport }), null);
+  }
+});
+
+test("all four immersive simulations share the landscape layout without replacing the video or response scroll view", () => {
+  for (const name of ["cafeIA", "metroIA", "restaurantIA", "aeroportIA"]) {
+    const screen = readFileSync(new URL("../app/lesson/" + name + ".tsx", import.meta.url), "utf8");
+    assert.match(screen, /const landscapeLayout = getImmersiveLandscapeLayout\(\{/u, name);
+    assert.match(screen, /horizontalSafeArea: insets\.left \+ insets\.right/u, name);
+    assert.match(screen, /bottomSafeArea: insets\.bottom/u, name);
+    assert.match(screen, /const isSplitLandscape = landscapeLayout !== null/u, name);
+    assert.match(screen, /enabled=\{isSplitLandscape\}/u, name);
+    assert.match(screen, /maxHeight=\{landscapeLayout\?\.transcriptMaxHeight\}/u, name);
+    assert.match(screen, /<VideoView\b/u, name);
+    assert.match(screen, /<ScrollView\s+ref=\{scrollRef\}/u, name);
+    assert.match(screen, /IMMERSIVE_TABLET_LANDSCAPE_STYLES\.transcriptCard/u, name);
+  }
 });
