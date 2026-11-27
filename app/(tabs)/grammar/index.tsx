@@ -12,6 +12,7 @@ import {
   Animated,
   Easing,
   ImageBackground,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -58,7 +59,6 @@ const GRAMMAR = HubModuleAccents.grammar;
 const GRAMMAR_ACCENT = GRAMMAR.base;
 const GRAMMAR_LIGHT = "#B8B4E2";
 const PREMIUM_GOLD = SeoulMidnightGlass.colors.premiumGold;
-const PREMIUM_LIGHT = "#FFF1A8";
 const COMPLETED_MINT = "#A7D7C4";
 
 function getCompletedContentRefs(completed: Record<string, boolean>) {
@@ -789,14 +789,14 @@ function AnimatedFragment({
         duration: 620,
         delay: index * 70,
         easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== "web",
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
         duration: 720,
         delay: index * 70,
         easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== "web",
       }),
     ]);
     animation.start();

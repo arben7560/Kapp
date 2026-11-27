@@ -4,8 +4,8 @@ import React from "react";
 import {
   AccessibilityInfo,
   Animated,
+  Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   View,
 } from "react-native";
@@ -87,7 +87,7 @@ export function GrammarLessonGuideModal({
           damping: 22,
           stiffness: 185,
           mass: 0.85,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== "web",
         }).start();
       });
 
@@ -432,7 +432,7 @@ export function GrammarLessonGuideModal({
           scrollEventThrottle={16}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: headerScrollY } } }],
-            { useNativeDriver: true },
+            { useNativeDriver: Platform.OS !== "web" },
           )}
         >
           <View
@@ -532,13 +532,15 @@ const styles = StyleSheet.create({
   modalCard: {
     borderColor: GRAMMAR_ACCENT.cardBorder,
     backgroundColor: "rgba(5,7,13,0.985)",
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 24,
-    },
-    shadowOpacity: 0.48,
-    shadowRadius: 38,
+    ...Platform.select({
+      web: { boxShadow: "0 24px 38px rgba(0,0,0,0.48)" },
+      default: {
+        shadowColor: "#000000",
+        shadowOffset: { width: 0, height: 24 },
+        shadowOpacity: 0.48,
+        shadowRadius: 38,
+      },
+    }),
     elevation: 20,
   },
 
@@ -805,13 +807,15 @@ const styles = StyleSheet.create({
 
   exerciseButton: {
     borderRadius: 18,
-    shadowColor: GRAMMAR_ACCENT.base,
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.22,
-    shadowRadius: 18,
+    ...Platform.select({
+      web: { boxShadow: `0 10px 18px ${GRAMMAR_ACCENT.base}38` },
+      default: {
+        shadowColor: GRAMMAR_ACCENT.base,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.22,
+        shadowRadius: 18,
+      },
+    }),
     elevation: 5,
   },
 

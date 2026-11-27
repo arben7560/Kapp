@@ -3245,9 +3245,10 @@ test("the public screens keep explicit compact and tablet layouts", () => {
   const hub = readFileSync(join(projectRoot, "app/(tabs)/grammar/index.tsx"), "utf8");
   const lesson = readFileSync(join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"), "utf8");
   assert.match(hub, /useResponsiveLayout\(\{\s*maxWidth: isLandscape \? 1120 : 920/u);
-  assert.match(hub, /responsive\.getColumns/u);
-  assert.match(hub, /safeContentWidth/u);
+  assert.match(hub, /responsive\.getHubGrid\(effectiveGap\)/u);
+  assert.match(hub, /gridItemWidth/u);
   assert.match(lesson, /useResponsiveLayout\(\{ maxWidth: 900 \}\)/u);
   assert.match(lesson, /responsive\.isCompact/u);
-  assert.match(lesson, /responsive\.isTablet/u);
+  assert.match(lesson, /responsive\.safeContentWidth >= 700/u);
+  assert.match(lesson, /maxWidth: responsive\.maxWidth/u);
 });

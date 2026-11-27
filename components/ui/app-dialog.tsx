@@ -15,7 +15,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { SeoulMidnightGlass } from "@/constants/theme";
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
-import { getTabletDialogFrame } from "../../constants/responsive-layout";
+import {
+  getDialogCardWidth,
+  getTabletDialogFrame,
+} from "../../constants/responsive-layout";
 
 export type AppDialogProps = React.PropsWithChildren<{
   visible: boolean;
@@ -67,6 +70,11 @@ export function AppDialog({
   const cardMaxHeight = tabletFrame?.maxHeight ?? (maxHeight
     ? Math.min(availableCardHeight, maxHeight)
     : availableCardHeight);
+  // A numeric width keeps the card inside the modal's padded viewport on web,
+  // where a percentage width can be resolved against the unpadded root.
+  const cardWidth = tabletFrame?.width ?? getDialogCardWidth(
+    width, leftInset, rightInset, maxWidth,
+  );
 
   const content = scrollable ? (
     <ScrollView
@@ -115,7 +123,8 @@ export function AppDialog({
             styles.card,
             {
               maxHeight: cardMaxHeight,
-              maxWidth: tabletFrame?.width ?? maxWidth,
+              width: cardWidth,
+              maxWidth: cardWidth,
               height: fillAvailableHeight ? cardMaxHeight : undefined,
             },
             cardStyle,
@@ -161,7 +170,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.62)",
   },
   card: {
-    width: "100%",
+    flexShrink: 1,
     borderRadius: SeoulMidnightGlass.radii.card,
     borderWidth: 1,
     borderColor: SeoulMidnightGlass.colors.line,

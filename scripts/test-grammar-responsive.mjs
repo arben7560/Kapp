@@ -5,6 +5,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { getGrammarModalLayout } from "../components/grammar/grammar-modal-layout.ts";
+import { getDialogCardWidth, getTabletDialogFrame } from "../constants/responsive-layout.ts";
 
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
 
@@ -28,6 +29,25 @@ const TABLET_VIEWPORTS = [
   ["iPad Pro portrait", 1024, 1366],
   ["iPad Pro paysage", 1366, 1024],
 ];
+
+const REQUESTED_VIEWPORTS = [
+  [390, 844], [600, 960], [768, 1024], [800, 1280], [1032, 1376],
+];
+
+test("grammar dialog fits all requested portrait and landscape viewports", () => {
+  for (const [portraitWidth, portraitHeight] of REQUESTED_VIEWPORTS) {
+    for (const [width, height] of [[portraitWidth, portraitHeight], [portraitHeight, portraitWidth]]) {
+      const wide = Math.min(width, height) >= 600;
+      const frame = getTabletDialogFrame(width, height, wide, 0, 0, 0, 0, 920, 1040);
+      const leftInset = frame?.leftInset ?? (width <= 380 || height <= 680 ? 12 : 24);
+      const rightInset = frame?.rightInset ?? leftInset;
+      const cardWidth = frame?.width ?? getDialogCardWidth(width, leftInset, rightInset, 920);
+      assert.ok(cardWidth > 0, `${width} × ${height}`);
+      assert.ok(cardWidth + leftInset + rightInset <= width, `${width} × ${height}`);
+      assert.equal(getGrammarModalLayout(width, height).useWideLayout, width >= 768 && height >= 600);
+    }
+  }
+});
 
 test("phone viewports keep a single readable grammar column", () => {
   for (const [name, width, height] of PHONE_VIEWPORTS) {
@@ -78,7 +98,7 @@ test("the grammar modal keeps controls fixed around one scroll region", () => {
   assert.match(modal, /style=\{\{ height: expandedHeroHeight \}\}/u);
   assert.match(
     modal,
-    /onScroll=\{Animated\.event\([\s\S]*?\{ useNativeDriver: true \},\s*\)\}/u,
+    /onScroll=\{Animated\.event\([\s\S]*?\{ useNativeDriver: Platform\.OS !== "web" \},\s*\)\}/u,
   );
   assert.doesNotMatch(modal, /height: animatedHeroHeight/u);
   assert.doesNotMatch(modal, /animatedBodyTranslateY/u);
@@ -90,4 +110,31 @@ test("the grammar modal keeps controls fixed around one scroll region", () => {
   const exerciseButton = modal.indexOf('label="Accéder aux exercices"');
   assert.ok(closeButton >= 0 && closeButton < scrollEnd);
   assert.ok(exerciseButton > scrollEnd);
+});
+
+test("lesson wallpaper and overlay follow the scrolling content", () => {
+  const lesson = readFileSync(
+    join(projectRoot, "app/(tabs)/grammar/[stageId].tsx"),
+    "utf8",
+  );
+  const scrollStart = lesson.search(/<ScrollView\s+ref=\{scrollRef\}/u);
+  const backgroundStart = lesson.indexOf("<ImageBackground", scrollStart);
+  const backgroundEnd = lesson.indexOf("</ImageBackground>", backgroundStart);
+  const scrollEnd = lesson.indexOf("</ScrollView>", backgroundEnd);
+  assert.ok(scrollStart >= 0 && scrollStart < backgroundStart);
+  assert.ok(backgroundStart < backgroundEnd && backgroundEnd < scrollEnd);
+  assert.match(lesson.slice(backgroundStart, backgroundEnd), /styles\.backgroundBlur[\s\S]*?style=\{ABSOLUTE_FILL\}/u);
+  assert.match(lesson, /scroll: \{ flexGrow: 1 \}/u);
+  assert.match(lesson, /backgroundContent: \{[\s\S]*?flexGrow: 1,[\s\S]*?paddingBottom: 32/u);
+});
+
+test("grammar animations use the native driver only on native platforms", () => {
+  for (const path of [
+    "app/(tabs)/grammar/index.tsx",
+    "components/grammar/GrammarLessonGuideModal.tsx",
+  ]) {
+    const source = readFileSync(join(projectRoot, path), "utf8");
+    assert.doesNotMatch(source, /useNativeDriver: true/u, path);
+    assert.match(source, /useNativeDriver: Platform\.OS !== "web"/u, path);
+  }
 });

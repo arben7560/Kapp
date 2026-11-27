@@ -674,24 +674,31 @@ export default function GrammarLessonScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ImageBackground
-        source={BACKGROUND_SOURCE}
+      <ScrollView
+        ref={scrollRef}
         style={styles.background}
-        resizeMode="cover"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
       >
-        <BlurView intensity={84} tint="dark" style={styles.backgroundBlur} />
-        <LinearGradient
-          colors={["rgba(2,3,6,0.55)", "rgba(2,3,6,0.94)", "#020306"]}
-          style={ABSOLUTE_FILL}
-        />
-        <ScrollView
-          ref={scrollRef}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.scroll,
+        <ImageBackground
+          source={BACKGROUND_SOURCE}
+          style={[
+            styles.backgroundContent,
             { paddingHorizontal: responsive.horizontalPadding },
           ]}
+          resizeMode="cover"
         >
+          <BlurView
+            intensity={84}
+            tint="dark"
+            style={styles.backgroundBlur}
+            pointerEvents="none"
+          />
+          <LinearGradient
+            colors={["rgba(2,3,6,0.55)", "rgba(2,3,6,0.94)", "#020306"]}
+            style={ABSOLUTE_FILL}
+            pointerEvents="none"
+          />
           <View style={[styles.frame, { maxWidth: responsive.maxWidth }]}>
             <View style={styles.navRow}>
               <View style={styles.backButton}>
@@ -745,8 +752,8 @@ export default function GrammarLessonScreen() {
 
             {renderContent()}
           </View>
-        </ScrollView>
-      </ImageBackground>
+        </ImageBackground>
+      </ScrollView>
 
       <GrammarLessonGuideModal
         visible={theoryModalVisible}
@@ -1508,7 +1515,7 @@ function LessonResult({
 
       {isGeneralReview && !hasFamilyScores ? (
         <AppText variant="bodySecondary" tone="muted">
-          Cette session date de l'ancienne révision A1. Refais le bilan pour
+          Cette session date de l’ancienne révision A1. Refais le bilan pour
           retrouver les 25 questions et les résultats par famille.
         </AppText>
       ) : null}
@@ -1716,7 +1723,13 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bgDeep },
   background: { flex: 1, backgroundColor: COLORS.bgDeep },
   backgroundBlur: { ...ABSOLUTE_FILL },
-  scroll: { paddingTop: 12, paddingBottom: 100 },
+  scroll: { flexGrow: 1 },
+  backgroundContent: {
+    flexGrow: 1,
+    width: "100%",
+    paddingTop: 12,
+    paddingBottom: 32,
+  },
   frame: { width: "100%", alignSelf: "center" },
   centeredState: {
     flex: 1,

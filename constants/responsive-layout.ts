@@ -82,3 +82,7 @@ export function getTabletDialogFrame(width: number, height: number, isWideViewpo
     maxHeight: Math.min(preferredHeight, Math.max(0, height - topInset - bottomInset)),
   };
 }
+
+export function getDialogCardWidth(viewportWidth: number, leftInset: number, rightInset: number, preferredWidth: number) {
+  return Math.min(preferredWidth, Math.max(0, viewportWidth - leftInset - rightInset));
+}
