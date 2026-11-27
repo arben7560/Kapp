@@ -19,7 +19,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStore } from "../../_store";
 import { ApplicationLanguageSettings } from "../../components/application-language-settings";
-import { LanguageSelectionScreen } from "../../components/language-selection-screen";
 import { AppText } from "../../components/app-text";
 import { AccountActionButton as ActionButton } from "../../components/account/AccountActionButton";
 import { MicrosoftLogo } from "../../components/account/MicrosoftLogo";
@@ -177,7 +176,6 @@ function AccountScreenContent() {
   const sync = useProgressSync();
   const { resetProgress } = useStore();
   const responsive = useResponsiveLayout({ maxWidth: 760 });
-  const [showLanguagePreview, setShowLanguagePreview] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [profileFocused, setProfileFocused] = React.useState(false);
   const clearOAuthOutcome = auth.clearOAuthOutcome;
@@ -369,15 +367,6 @@ function AccountScreenContent() {
     router.push({ pathname: "/premium", params: { returnTo: "/account" } });
   };
 
-  if (__DEV__ && showLanguagePreview) {
-    return (
-      <LanguageSelectionScreen
-        onComplete={() => setShowLanguagePreview(false)}
-        onCancel={() => setShowLanguagePreview(false)}
-      />
-    );
-  }
-
   return (
     <LinearGradient
       colors={["#020306", "#070A12", "#090817", "#020306"]}
@@ -453,23 +442,6 @@ function AccountScreenContent() {
               <ApplicationLanguageSettings />
             </GlassCard>
 
-            {__DEV__ ? (
-              <GlassCard>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={translate("Tester l'écran de sélection de langue")}
-                  onPress={() => setShowLanguagePreview(true)}
-                  style={styles.settingsRow}
-                >
-                  <View style={styles.settingsCopy}>
-                    <AppText variant="bodyStrong">{"Tester l'écran de sélection de langue"}</AppText>
-                    <AppText variant="caption" tone="soft">Prévisualisation — développement uniquement</AppText>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={COLORS.soft} />
-                </Pressable>
-              </GlassCard>
-            ) : null}
-
             {!auth.isPermanentAccount ? (
               <GlassCard>
                 <StatusPill
@@ -503,9 +475,6 @@ function AccountScreenContent() {
                     onPress={() => void continueWithProvider("line")}
                   />
                   <View style={styles.linePrivacyNotice}>
-                    <AppText variant="caption" tone="soft">
-                      {t("lineEmailNotice")}
-                    </AppText>
                     <Pressable
                       accessibilityRole="link"
                       accessibilityLabel={t("privacyPolicy")}
@@ -884,22 +853,6 @@ const styles = StyleSheet.create({
     borderColor: COLORS.line,
     backgroundColor: "rgba(255,255,255,0.038)",
   },
-  settingsRow: {
-    minHeight: 64,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingTop: 14,
-  },
-  settingsIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 15,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.065)",
-  },
-  settingsCopy: { flex: 1, gap: 2 },
   subscriptionManageButton: { marginTop: 14, minHeight: 62 },
   subscriptionDialogSummary: {
     marginTop: 18,
