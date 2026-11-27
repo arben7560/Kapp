@@ -26,9 +26,10 @@ registerHooks({
         }
         export const StyleSheet = { flatten };
         export const Platform = { select: (values) => values.ios ?? values.default };
-        export function Text({ style, accessibilityLanguage, children }) {
+        export function Text({ style, accessibilityLanguage, children, numberOfLines, adjustsFontSizeToFit }) {
           return React.createElement('span', {
             'data-style': JSON.stringify(flatten(style)), lang: accessibilityLanguage,
+             'data-lines': numberOfLines, 'data-shrink': adjustsFontSizeToFit,
           }, children);
         }
         export const TextInput = Text;
@@ -48,8 +49,8 @@ registerHooks({
   },
 });
 
-const { AppText, AppTextInput, AppMixedText, AppTextProvider } = await import('../components/app-text.tsx');
-const { AppTypography, resolveAppFontFamily } = await import('../constants/theme.ts');
+const { AppText, AppTextInput, AppMixedText, AppTextProvider, useJapaneseHeroTypography } = await import('../components/app-text.tsx');
+const { AppTypography, resolveAppFontFamily, getJapaneseLineHeight } = await import('../constants/theme.ts');
 
 function render(Component, props, { frenchFonts = true, japaneseFonts = true } = {}) {
   return renderToStaticMarkup(React.createElement(AppTextProvider, {
@@ -145,4 +146,65 @@ test('vocabulary display copy is translated at render time and uses Japanese gly
   assert.ok(mixed.includes('文化のポイント'));
   assert.equal(decodedStyles(mixed)[2].fontFamily, 'NotoSansJP_400Regular');
   assert.ok(mixed.includes('lang="ja-JP"'));
+});
+
+test('Japanese metrics apply after translation and preserve compact Latin and Hangul tokens', () => {
+  for (const [variant, token] of Object.entries(AppTypography)) {
+    if (token.script === 'korean') continue;
+    const html = renderWithVocabularyCopy(AppText, { variant, children: 'Famille' }, () => '家族と一緒に練習');
+    const [style] = decodedStyles(html);
+    assert.equal(style.fontSize, token.fontSize);
+    assert.equal(style.lineHeight, Math.max(token.lineHeight, Math.ceil(token.fontSize * 1.4)));
+    assert.equal(style.letterSpacing, 0);
+    assert.equal(style.textTransform, 'none');
+    assert.equal(style.includeFontPadding, false);
+  }
+  const korean = decodedStyles(render(AppText, { variant: 'koreanSecondary', children: '한국어' }))[0];
+  assert.equal(korean.lineHeight, AppTypography.koreanSecondary.lineHeight);
+  const input = decodedStyles(render(AppTextInput, { script: 'japanese', variant: 'sectionLabel' }))[0];
+  assert.equal(input.lineHeight, getJapaneseLineHeight(AppTypography.sectionLabel.fontSize, AppTypography.sectionLabel.lineHeight));
+});
+
+test('localized labels wrap Japanese without shrinking; French and explicit compact labels keep their contracts', () => {
+  const props = { variant: 'label', lineContract: 'localizedLabel', children: 'Famille', adjustsFontSizeToFit: true };
+  const french = render(AppText, props);
+  assert.match(french, /data-lines="1"/u);
+  const japanese = renderWithVocabularyCopy(AppText, props, () => '家族と一緒に練習する');
+  assert.doesNotMatch(japanese, /data-lines=/u);
+  assert.match(japanese, /data-shrink="false"/u);
+  assert.equal(decodedStyles(japanese)[0].flexShrink, 1);
+  assert.match(render(AppText, { ...props, lineContract: 'singleLine', children: '日本語' }), /data-lines="1"/u);
+});
+
+test('Japanese gradient hero uses the registered bold font and a system fallback', () => {
+  function HeroProbe() {
+    return React.createElement('span', { 'data-style': JSON.stringify(useJapaneseHeroTypography()) });
+  }
+  const [loaded] = decodedStyles(render(HeroProbe, {}));
+  const [fallback] = decodedStyles(render(HeroProbe, {}, { japaneseFonts: false }));
+  assert.equal(loaded.fontFamily, 'NotoSansJP_700Bold');
+  assert.equal(loaded.fontWeight, 'normal');
+  assert.equal(fallback.fontFamily, 'Hiragino Sans');
+  assert.equal(loaded.lineHeight, getJapaneseLineHeight(42, 44));
+  assert.equal(loaded.letterSpacing, 0);
+  const home = readFileSync(new URL('../app/(tabs)/index.tsx', import.meta.url), 'utf8');
+  assert.equal([...home.matchAll(/styles\.heroTitle, heroTypography/g)].length, 3);
+});
+
+test('native permissions have matching French defaults and Japanese iOS localizations', () => {
+  const config = JSON.parse(readFileSync(new URL('../app.json', import.meta.url), 'utf8')).expo;
+  assert.equal(config.ios.infoPlist.CFBundleAllowMixedLocalizations, true);
+  for (const locale of ['fr', 'ja']) {
+    const copy = JSON.parse(readFileSync(new URL('../' + config.locales[locale], import.meta.url), 'utf8')).ios;
+    for (const key of ['NSMicrophoneUsageDescription', 'NSSpeechRecognitionUsageDescription']) {
+      assert.ok(copy[key].length > 10);
+      if (locale === 'fr') assert.equal(copy[key], config.ios.infoPlist[key]);
+      else assert.match(copy[key], /[\u3040-\u30ff\u4e00-\u9fff]/u);
+    }
+  }
+  const speech = config.plugins.find(plugin => Array.isArray(plugin) && plugin[0] === 'expo-speech-recognition')[1];
+  const audio = config.plugins.find(plugin => Array.isArray(plugin) && plugin[0] === 'expo-audio')[1];
+  assert.equal(speech.microphonePermission, config.ios.infoPlist.NSMicrophoneUsageDescription);
+  assert.equal(audio.microphonePermission, config.ios.infoPlist.NSMicrophoneUsageDescription);
+  assert.equal(speech.speechRecognitionPermission, config.ios.infoPlist.NSSpeechRecognitionUsageDescription);
 });

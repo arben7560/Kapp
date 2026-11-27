@@ -543,7 +543,7 @@ export default function TransportCity() {
                     },
                   ]}
                 >
-                  <AppText variant="label" lineContract="singleLine"
+                  <AppText variant="label" lineContract="localizedLabel"
                     style={[
                       styles.tabLabel,
                       isActive && {

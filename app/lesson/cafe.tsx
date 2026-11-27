@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { usePedagogicalLayout } from "../../hooks/usePedagogicalLayout";
 import { AppText } from "../../components/app-text";
 import { AppBackButton } from "../../components/ui/app-back-button";
@@ -269,6 +270,8 @@ const SCENES = [
 
 function CafeLessonContent() {
   const pedagogicalFrame = usePedagogicalLayout();
+  const { i18n } = useTranslation();
+  const isJapanese = (i18n.resolvedLanguage ?? i18n.language) === "ja";
   const [activeScene, setActiveScene] = useState(SCENES[0]);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const { playAudio, stopAudio } = useVocAudio(setSelectedWord);
@@ -313,7 +316,7 @@ function CafeLessonContent() {
               CAFÉ
             </AppText>
           </View>
-          <View style={styles.selectorRow}>
+          <View style={[styles.selectorRow, isJapanese && styles.selectorRowJapanese]}>
             {SCENES.map((scene) => (
               <Pressable
                 key={scene.id}
@@ -328,7 +331,7 @@ function CafeLessonContent() {
               >
                 <AppText
                   variant="label"
-                  lineContract="singleLine"
+                  lineContract="localizedLabel"
                   style={[
                     styles.selectorText,
                     activeScene.id === scene.id && { color: scene.accent },
@@ -506,6 +509,7 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 20,
   },
+  selectorRowJapanese: { flexWrap: "wrap", alignItems: "stretch" },
   selectorItem: {
     paddingHorizontal: 15,
     paddingVertical: 8,

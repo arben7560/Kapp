@@ -522,7 +522,7 @@ export default function NightlifeImmersion() {
               >
                 <AppText
                   variant="label"
-                  lineContract="singleLine"
+                  lineContract="localizedLabel"
                   style={[
                     styles.tabText,
                     activeScene.id === scene.id && {

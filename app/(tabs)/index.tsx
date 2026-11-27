@@ -40,7 +40,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { useStore, type Progress } from "../../_store";
-import { AppText } from "../../components/app-text";
+import { AppText, useJapaneseHeroTypography } from "../../components/app-text";
 import { HubModuleAccents } from "../../constants/theme";
 import { GRAMMAR_STAGE_BY_ID, GRAMMAR_STAGE_IDS } from "../../data/grammar";
 import {
@@ -639,6 +639,8 @@ function SeoulHero({ cityTime, landscape }: SeoulHeroProps) {
   const translate = useVocabularyText();
   const { i18n } = useTranslation("navigation");
   const isJapanese = (i18n.resolvedLanguage ?? i18n.language) === "ja";
+  const japaneseHeroTypography = useJapaneseHeroTypography();
+  const heroTypography = isJapanese ? japaneseHeroTypography : undefined;
   return (
     <View style={[styles.hero, landscape && styles.heroLandscape]}>
       <View style={styles.heroEyebrowRow}>
@@ -650,9 +652,9 @@ function SeoulHero({ cityTime, landscape }: SeoulHeroProps) {
       </View>
 
       <View style={styles.heroTitleRow}>
-        <Text style={[styles.heroTitle, styles.heroTitleShadow]}>{translate("Tu es à")}{isJapanese ? "" : " "}</Text>
+        <Text style={[styles.heroTitle, heroTypography, styles.heroTitleShadow]}>{translate("Tu es à")}{isJapanese ? "" : " "}</Text>
 
-        <MaskedView maskElement={<Text style={styles.heroTitle}>{translate("Séoul.")}</Text>}>
+        <MaskedView maskElement={<Text style={[styles.heroTitle, heroTypography]}>{translate("Séoul.")}</Text>}>
           <LinearGradient
             colors={[TEAL, CYAN, PINK]}
             start={{
@@ -664,7 +666,7 @@ function SeoulHero({ cityTime, landscape }: SeoulHeroProps) {
               y: 0,
             }}
           >
-            <Text style={[styles.heroTitle, styles.heroAccentPlaceholder]}>
+            <Text style={[styles.heroTitle, heroTypography, styles.heroAccentPlaceholder]}>
               {translate("Séoul.")}
             </Text>
           </LinearGradient>

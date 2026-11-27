@@ -521,7 +521,7 @@ export default function RomanceDating() {
               >
                 <AppText
                   variant="label"
-                  lineContract="singleLine"
+                  lineContract="localizedLabel"
                   style={[
                     styles.tabText,
                     activeScene.id === scene.id && { color: scene.accent },

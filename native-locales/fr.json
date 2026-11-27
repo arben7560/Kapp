@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "NSMicrophoneUsageDescription": "K-App utilise le microphone pour les exercices de prononciation coréenne.",
+    "NSSpeechRecognitionUsageDescription": "K-App utilise la reconnaissance vocale pour évaluer votre prononciation pendant les exercices de coréen."
+  }
+}

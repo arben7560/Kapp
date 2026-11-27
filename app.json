@@ -7,13 +7,16 @@
     "scheme": "kapp",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#000000",
-    "assetBundlePatterns": ["assets/**/*"],
+    "assetBundlePatterns": [
+      "assets/**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.arben60.kapp",
       "infoPlist": {
-        "NSSpeechRecognitionUsageDescription": "Allow $(PRODUCT_NAME) to use speech recognition.",
-        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to use the microphone."
+        "NSMicrophoneUsageDescription": "K-App utilise le microphone pour les exercices de prononciation coréenne.",
+        "NSSpeechRecognitionUsageDescription": "K-App utilise la reconnaissance vocale pour évaluer votre prononciation pendant les exercices de coréen.",
+        "CFBundleAllowMixedLocalizations": true
       },
       "bitcode": false
     },
@@ -54,8 +57,8 @@
       [
         "expo-speech-recognition",
         {
-          "microphonePermission": "Autoriser $(PRODUCT_NAME) à utiliser le microphone pour les exercices de prononciation coréenne.",
-          "speechRecognitionPermission": "Autoriser $(PRODUCT_NAME) à reconnaître votre voix pendant les exercices de prononciation coréenne."
+          "microphonePermission": "K-App utilise le microphone pour les exercices de prononciation coréenne.",
+          "speechRecognitionPermission": "K-App utilise la reconnaissance vocale pour évaluer votre prononciation pendant les exercices de coréen."
         }
       ],
       [
@@ -85,7 +88,7 @@
         {
           "enableBackgroundPlayback": false,
           "enableBackgroundRecording": false,
-          "microphonePermission": "Autoriser $(PRODUCT_NAME) à utiliser le microphone pour les exercices de prononciation coréenne.",
+          "microphonePermission": "K-App utilise le microphone pour les exercices de prononciation coréenne.",
           "recordAudioAndroid": true
         }
       ],
@@ -102,6 +105,10 @@
       "eas": {
         "projectId": "c5a0f75b-8753-4b3b-be78-dcf5769d8344"
       }
+    },
+    "locales": {
+      "fr": "./native-locales/fr.json",
+      "ja": "./native-locales/ja.json"
     }
   }
 }

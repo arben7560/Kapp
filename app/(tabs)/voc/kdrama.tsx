@@ -529,7 +529,7 @@ export default function KDramaCulture() {
               >
                 <AppText
                   variant="label"
-                  lineContract="singleLine"
+                  lineContract="localizedLabel"
                   style={[
                     styles.selectorText,
                     activeScene.id === scene.id && { color: scene.accent },

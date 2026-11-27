@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "NSMicrophoneUsageDescription": "K-Appは韓国語の発音練習でマイクを使用します。",
+    "NSSpeechRecognitionUsageDescription": "K-Appは韓国語の発音練習で音声認識を使用し、発音を確認します。"
+  }
+}

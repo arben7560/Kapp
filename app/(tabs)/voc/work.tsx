@@ -621,7 +621,7 @@ export default function BusinessImmersion() {
               >
                 <AppText
                   variant="label"
-                  lineContract="singleLine"
+                  lineContract="localizedLabel"
                   style={[
                     styles.tabText,
                     activeScene.id === scene.id && {

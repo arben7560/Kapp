@@ -499,6 +499,11 @@ export const AppTextLineContracts = {
     numberOfLines: 1,
     ellipsizeMode: 'tail',
   },
+  // Preserve compact Latin labels; Japanese labels may wrap without truncation.
+  localizedLabel: {
+    numberOfLines: 1,
+    ellipsizeMode: 'tail',
+  },
   twoLines: {
     numberOfLines: 2,
     ellipsizeMode: 'tail',
@@ -510,3 +515,8 @@ export const AppTextLineContracts = {
 } as const satisfies Record<string, AppTextLineProps>;
 
 export type AppTextLineContract = keyof typeof AppTextLineContracts;
+
+/** Japanese glyphs need more vertical room than compact Latin tokens. */
+export function getJapaneseLineHeight(fontSize: number, lineHeight: number) {
+  return Math.max(lineHeight, Math.ceil(fontSize * 1.4));
+}

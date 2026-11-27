@@ -18,6 +18,7 @@ import {
   AppTextTones,
   AppTypography,
   resolveAppFontFamily,
+  getJapaneseLineHeight,
   type AppFontRole,
   type AppTextAlignment,
   type AppTextLineContract,
@@ -172,6 +173,18 @@ function resolveFontStyle(
   };
 }
 
+/** Native Text exception for the gradient hero: share the registered font and fallback. */
+export function useJapaneseHeroTypography(): TextStyle {
+  const japaneseFontsAvailable = React.useContext(AppJapaneseFontsAvailableContext);
+  return {
+    ...resolveFontStyle('japanese', 'bold', japaneseFontsAvailable),
+    fontWeight: japaneseFontsAvailable ? 'normal' : AppFontWeightByRole.bold,
+    lineHeight: getJapaneseLineHeight(42, 44),
+    letterSpacing: 0,
+    includeFontPadding: false,
+  };
+}
+
 /**
  * Dynamic content can mix French, Japanese and Hangul. Keep the parent's
  * typography metrics authoritative and switch only script runs to their
@@ -259,25 +272,6 @@ export const AppText = React.forwardRef<
   const vocabularyText = React.useContext(VocabularyTextContext);
   const token = AppTypography[variant];
   const resolvedScript = script ?? token.script;
-  const lineProps = AppTextLineContracts[lineContract];
-
-  const baseStyle: TextStyle = {
-    ...resolveFontStyle(
-      resolvedScript,
-      token.fontRole,
-      resolvedScript === 'japanese' ? japaneseFontsAvailable : customFontsAvailable,
-    ),
-    color: AppTextTones[tone],
-    fontSize: token.fontSize,
-    lineHeight: token.lineHeight,
-    letterSpacing: resolvedScript === 'japanese' ? 0 : token.letterSpacing,
-    textAlign: AppTextAlignments[align],
-    textTransform: resolvedScript === 'japanese' ? 'none' : token.textTransform,
-    // Keep Latin and Noto Sans KR on the same visual baseline on Android.
-    // Every semantic token owns an explicit lineHeight, so the platform's
-    // extra font padding is neither needed nor allowed to shift compact rows.
-    includeFontPadding: false,
-  };
 
   const safeStyle = sanitizeTextStyle(style);
   const normalizedChildren = normalizeKoreanTitle(
@@ -289,6 +283,30 @@ export const AppText = React.forwardRef<
     typeof child === "string" && vocabularyText ? vocabularyText(child) : child,
   );
   const hasJapaneseText = containsJapaneseText(localizedChildren);
+  const usesJapaneseMetrics = resolvedScript === 'japanese' || hasJapaneseText;
+  const wrapJapaneseLabel = lineContract === 'localizedLabel' && usesJapaneseMetrics;
+  const lineProps = AppTextLineContracts[wrapJapaneseLabel ? 'fluid' : lineContract];
+  const baseStyle: TextStyle = {
+    ...resolveFontStyle(
+      resolvedScript,
+      token.fontRole,
+      resolvedScript === 'japanese' ? japaneseFontsAvailable : customFontsAvailable,
+    ),
+    color: AppTextTones[tone],
+    fontSize: token.fontSize,
+    lineHeight: usesJapaneseMetrics
+      ? getJapaneseLineHeight(token.fontSize, token.lineHeight)
+      : token.lineHeight,
+    letterSpacing: usesJapaneseMetrics ? 0 : token.letterSpacing,
+    textAlign: AppTextAlignments[align],
+    textTransform: usesJapaneseMetrics ? 'none' : token.textTransform,
+    ...(wrapJapaneseLabel ? { flexShrink: 1 } : {}),
+    // Keep Latin and Noto Sans KR on the same visual baseline on Android.
+    // Every semantic token owns an explicit lineHeight, so the platform's
+    // extra font padding is neither needed nor allowed to shift compact rows.
+    includeFontPadding: false,
+  };
+
   const renderedChildren = renderScriptAwareChildren(
     localizedChildren,
     resolvedScript,
@@ -314,6 +332,7 @@ export const AppText = React.forwardRef<
       accessibilityLanguage={resolvedScript === "japanese" || hasJapaneseText ? "ja-JP" : undefined}
       {...localizedRest}
       {...lineProps}
+      {...(wrapJapaneseLabel ? { adjustsFontSizeToFit: false } : {})}
       style={[baseStyle, safeStyle]}
     >
       {renderedChildren}
@@ -374,7 +393,9 @@ export const AppTextInput = React.forwardRef<
         {
           color: AppTextTones.default,
           fontSize: token.fontSize,
-          lineHeight: token.lineHeight,
+          lineHeight: resolvedScript === 'japanese'
+            ? getJapaneseLineHeight(token.fontSize, token.lineHeight)
+            : token.lineHeight,
           letterSpacing: resolvedScript === 'japanese' ? 0 : token.letterSpacing,
           includeFontPadding: false,
         },

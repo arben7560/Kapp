@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { usePedagogicalLayout } from "../../hooks/usePedagogicalLayout";
 import { AppText } from "../../components/app-text";
 import { AppBackButton } from "../../components/ui/app-back-button";
@@ -242,6 +243,8 @@ const SCENES: Scene[] = [
 
 function AirportLessonContent() {
   const pedagogicalFrame = usePedagogicalLayout();
+  const { i18n } = useTranslation();
+  const isJapanese = (i18n.resolvedLanguage ?? i18n.language) === "ja";
   const [activeScene, setActiveScene] = useState<Scene>(SCENES[0]);
   const [previousBackground, setPreviousBackground] =
     useState<ImageSourcePropType | null>(null);
@@ -306,7 +309,7 @@ function AirportLessonContent() {
             <AppText variant="sectionLabel" lineContract="singleLine" style={styles.headerTitle}>AÉROPORT</AppText>
           </View>
 
-          <View style={styles.selectorRow}>
+          <View style={[styles.selectorRow, isJapanese && styles.selectorRowJapanese]}>
             {SCENES.map((scene) => (
               <Pressable
                 key={scene.id}
@@ -319,7 +322,7 @@ function AirportLessonContent() {
                   },
                 ]}
               >
-                <AppText variant="label" lineContract="singleLine"
+                <AppText variant="label" lineContract="localizedLabel"
                   style={[
                     styles.selectorText,
                     activeScene.id === scene.id && { color: scene.accent },
@@ -482,6 +485,7 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 20,
   },
+  selectorRowJapanese: { flexWrap: "wrap", alignItems: "stretch" },
   selectorItem: {
     paddingHorizontal: 15,
     paddingVertical: 8,

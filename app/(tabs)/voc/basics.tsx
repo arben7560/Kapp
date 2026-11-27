@@ -477,7 +477,7 @@ export default function FirstStepsImmersion() {
               >
                 <AppText
                   variant="label"
-                  lineContract="singleLine"
+                  lineContract="localizedLabel"
                   style={[
                     styles.tabLabel,
                     activeScene.id === scene.id && {

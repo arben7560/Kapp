@@ -458,7 +458,7 @@ export default function HealthEmergency() {
               >
                 <AppText
                   variant="label"
-                  lineContract="singleLine"
+                  lineContract="localizedLabel"
                   style={[
                     styles.tabText,
                     activeScene.id === scene.id && {
